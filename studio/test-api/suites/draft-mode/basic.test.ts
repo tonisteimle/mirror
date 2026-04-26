@@ -1,7 +1,7 @@
 /**
  * Draft Mode Basic Tests
  *
- * Tests fundamental -- marker detection and parsing.
+ * Tests fundamental ?? marker detection and parsing.
  */
 
 import type { TestCase } from '../../types'
@@ -37,10 +37,10 @@ async function withDraftContext(
 
 export const detectionTests: TestCase[] = [
   {
-    name: 'Draft Mode: -- at line start activates draft mode',
+    name: 'Draft Mode: ?? at line start activates draft mode',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame bg #1a1a1a\n--')
+        await ctx.setCode('Frame bg #1a1a1a\n??')
 
         assert.isActive()
         assert.startsAtLine(2)
@@ -49,10 +49,10 @@ export const detectionTests: TestCase[] = [
   },
 
   {
-    name: 'Draft Mode: -- with trailing space works',
+    name: 'Draft Mode: ?? with trailing space works',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n-- ')
+        await ctx.setCode('Frame\n?? ')
 
         assert.isActive()
         assert.hasNoPrompt()
@@ -61,10 +61,10 @@ export const detectionTests: TestCase[] = [
   },
 
   {
-    name: 'Draft Mode: -- with prompt extracts text',
+    name: 'Draft Mode: ?? with prompt extracts text',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n-- make responsive')
+        await ctx.setCode('Frame\n?? make responsive')
 
         assert.isActive()
         assert.hasPrompt('make responsive')
@@ -73,10 +73,10 @@ export const detectionTests: TestCase[] = [
   },
 
   {
-    name: 'Draft Mode: -- with long prompt extracts full text',
+    name: 'Draft Mode: ?? with long prompt extracts full text',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n-- add a blue button with hover effect and padding')
+        await ctx.setCode('Frame\n?? add a blue button with hover effect and padding')
 
         assert.isActive()
         assert.hasPrompt('add a blue button with hover effect and padding')
@@ -85,7 +85,7 @@ export const detectionTests: TestCase[] = [
   },
 
   {
-    name: 'Draft Mode: no -- means inactive',
+    name: 'Draft Mode: no ?? means inactive',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
         await ctx.setCode('Frame bg #1a1a1a\n  Text "Hello"')
@@ -96,10 +96,10 @@ export const detectionTests: TestCase[] = [
   },
 
   {
-    name: 'Draft Mode: -- on first line works',
+    name: 'Draft Mode: ?? on first line works',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('-- generate a form')
+        await ctx.setCode('?? generate a form')
 
         assert.isActive()
         assert.startsAtLine(1)
@@ -109,10 +109,10 @@ export const detectionTests: TestCase[] = [
   },
 
   {
-    name: 'Draft Mode: -- only at line start (not middle)',
+    name: 'Draft Mode: ?? only at line start (not middle)',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Text "hello -- world"')
+        await ctx.setCode('Text "hello ?? world"')
 
         assert.isNotActive()
       })
@@ -126,10 +126,10 @@ export const detectionTests: TestCase[] = [
 
 export const indentationTests: TestCase[] = [
   {
-    name: 'Draft Mode: 2-space indented -- works',
+    name: 'Draft Mode: 2-space indented ?? works',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n  -- add child')
+        await ctx.setCode('Frame\n  ?? add child')
 
         assert.isActive()
         assert.hasIndent(2)
@@ -139,10 +139,10 @@ export const indentationTests: TestCase[] = [
   },
 
   {
-    name: 'Draft Mode: 4-space indented -- works',
+    name: 'Draft Mode: 4-space indented ?? works',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n  Frame\n    -- nested content')
+        await ctx.setCode('Frame\n  Frame\n    ?? nested content')
 
         assert.isActive()
         assert.hasIndent(4)
@@ -152,10 +152,10 @@ export const indentationTests: TestCase[] = [
   },
 
   {
-    name: 'Draft Mode: tab indented -- works',
+    name: 'Draft Mode: tab indented ?? works',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n\t-- with tab')
+        await ctx.setCode('Frame\n\t?? with tab')
 
         assert.isActive()
         assert.hasIndent(1) // Tab counts as 1 character
@@ -167,7 +167,7 @@ export const indentationTests: TestCase[] = [
     name: 'Draft Mode: deep nesting preserves indent',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n  Frame\n    Frame\n      -- deep')
+        await ctx.setCode('Frame\n  Frame\n    Frame\n      ?? deep')
 
         assert.isActive()
         assert.hasIndent(6)
@@ -186,7 +186,7 @@ export const blockStructureTests: TestCase[] = [
     name: 'Draft Mode: open block (no end marker)',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nBtn "Test"')
+        await ctx.setCode('Frame\n??\nBtn "Test"')
 
         assert.isActive()
         assert.startsAtLine(2)
@@ -196,10 +196,10 @@ export const blockStructureTests: TestCase[] = [
   },
 
   {
-    name: 'Draft Mode: closed block with two -- markers',
+    name: 'Draft Mode: closed block with two ?? markers',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nBtn "Test"\n--')
+        await ctx.setCode('Frame\n??\nBtn "Test"\n??')
 
         assert.isActive()
         assert.startsAtLine(2)
@@ -212,7 +212,7 @@ export const blockStructureTests: TestCase[] = [
     name: 'Draft Mode: empty closed block',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\n--')
+        await ctx.setCode('Frame\n??\n??')
 
         assert.isActive()
         assert.startsAtLine(2)
@@ -222,10 +222,10 @@ export const blockStructureTests: TestCase[] = [
   },
 
   {
-    name: 'Draft Mode: second -- ends block definitively',
+    name: 'Draft Mode: second ?? ends block definitively',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nBtn "A"\n--\nText "After"')
+        await ctx.setCode('Frame\n??\nBtn "A"\n??\nText "After"')
 
         assert.isActive()
         assert.startsAtLine(2)
@@ -241,7 +241,7 @@ export const blockStructureTests: TestCase[] = [
     name: 'Draft Mode: closed block with prompt on start',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n-- fix this code\nBtn bg blue\n--')
+        await ctx.setCode('Frame\n?? fix this code\nBtn bg blue\n??')
 
         assert.isActive()
         assert.hasPrompt('fix this code')
@@ -261,9 +261,9 @@ export const lineDetectionTests: TestCase[] = [
     name: 'Draft Mode: isLineInDraft correct for open block',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\nText "A"\n--\nBtn "B"\nIcon "check"')
+        await ctx.setCode('Frame\nText "A"\n??\nBtn "B"\nIcon "check"')
 
-        // Lines 1-2 are before --
+        // Lines 1-2 are before ??
         assert.linesNotInDraft([1, 2])
 
         // Lines 3-5 are in draft block
@@ -276,7 +276,7 @@ export const lineDetectionTests: TestCase[] = [
     name: 'Draft Mode: isLineInDraft correct for closed block',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nBtn "A"\nText "B"\n--\nIcon "check"')
+        await ctx.setCode('Frame\n??\nBtn "A"\nText "B"\n??\nIcon "check"')
 
         // Line 1 is before block
         assert.linesNotInDraft([1])
@@ -291,10 +291,10 @@ export const lineDetectionTests: TestCase[] = [
   },
 
   {
-    name: 'Draft Mode: single line draft (just --)',
+    name: 'Draft Mode: single line draft (just ??)',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('--')
+        await ctx.setCode('??')
 
         assert.isActive()
         assert.linesInDraft([1])
@@ -364,7 +364,7 @@ export const scenarioTests: TestCase[] = DRAFT_MODE_SCENARIOS.map(scenario => ({
 
 export const dynamicEditingTests: TestCase[] = [
   {
-    name: 'Draft Mode: typing -- activates draft mode',
+    name: 'Draft Mode: typing ?? activates draft mode',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
         await ctx.setCode('Frame bg #1a1a1a')
@@ -372,8 +372,8 @@ export const dynamicEditingTests: TestCase[] = [
         // Initially not active
         assert.isNotActive()
 
-        // Type newline and --
-        await ctx.typeAtEnd('\n--')
+        // Type newline and ??
+        await ctx.typeAtEnd('\n??')
 
         // Now active
         assert.isActive()
@@ -386,7 +386,7 @@ export const dynamicEditingTests: TestCase[] = [
     name: 'Draft Mode: adding prompt updates state',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--')
+        await ctx.setCode('Frame\n??')
 
         assert.isActive()
         assert.hasNoPrompt()
@@ -400,16 +400,16 @@ export const dynamicEditingTests: TestCase[] = [
   },
 
   {
-    name: 'Draft Mode: adding second -- closes block',
+    name: 'Draft Mode: adding second ?? closes block',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nBtn "Test"')
+        await ctx.setCode('Frame\n??\nBtn "Test"')
 
         assert.isActive()
         assert.endsAtLine(null) // Open
 
-        // Add closing --
-        await ctx.typeAtEnd('\n--')
+        // Add closing ??
+        await ctx.typeAtEnd('\n??')
 
         assert.endsAtLine(4) // Now closed
       })
@@ -417,14 +417,14 @@ export const dynamicEditingTests: TestCase[] = [
   },
 
   {
-    name: 'Draft Mode: deleting -- deactivates draft mode',
+    name: 'Draft Mode: deleting ?? deactivates draft mode',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--')
+        await ctx.setCode('Frame\n??')
 
         assert.isActive()
 
-        // Replace code without --
+        // Replace code without ??
         await ctx.setCode('Frame')
 
         assert.isNotActive()

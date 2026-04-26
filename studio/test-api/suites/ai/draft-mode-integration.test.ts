@@ -64,37 +64,37 @@ const smokeTests: TestCase[] = [
 // =============================================================================
 
 const detectionTests: TestCase[] = [
-  test('Draft mode detects -- marker at line start', async api => {
-    await api.editor.setCode('Frame hor, gap 8\n  -- add buttons')
+  test('Draft mode detects ?? marker at line start', async api => {
+    await api.editor.setCode('Frame hor, gap 8\n  ?? add buttons')
     await api.utils.delay(100)
 
     const isActive = api.draftMode.isActive()
-    api.assert.ok(isActive, 'Draft mode should be active when -- is present')
+    api.assert.ok(isActive, 'Draft mode should be active when ?? is present')
 
     const state = api.draftMode.getState()
     api.assert.equals(state.startLine, 2, 'Start line should be 2')
     api.assert.equals(state.prompt, 'add buttons', 'Prompt should be extracted')
   }),
 
-  test('Draft mode detects -- with indentation', async api => {
-    await api.editor.setCode('Frame\n    -- four space indent')
+  test('Draft mode detects ?? with indentation', async api => {
+    await api.editor.setCode('Frame\n    ?? four space indent')
     await api.utils.delay(100)
 
     const state = api.draftMode.getState()
-    api.assert.ok(state.active, 'Should detect -- with indentation')
+    api.assert.ok(state.active, 'Should detect ?? with indentation')
     api.assert.equals(state.indent, 4, 'Indent should be 4')
   }),
 
-  test('Draft mode inactive when no -- marker', async api => {
+  test('Draft mode inactive when no ?? marker', async api => {
     await api.editor.setCode('Frame hor, gap 8\n  Button "Click"')
     await api.utils.delay(100)
 
     const isActive = api.draftMode.isActive()
-    api.assert.ok(!isActive, 'Draft mode should be inactive without --')
+    api.assert.ok(!isActive, 'Draft mode should be inactive without ??')
   }),
 
   test('isLineInDraft correctly identifies lines', async api => {
-    await api.editor.setCode('Frame\n  -- prompt\n  Button "A"\n  Text "B"')
+    await api.editor.setCode('Frame\n  ?? prompt\n  Button "A"\n  Text "B"')
     await api.utils.delay(100)
 
     // Line 1 is not in draft (Frame)
@@ -114,7 +114,7 @@ const detectionTests: TestCase[] = [
 const submitTests: TestCase[] = [
   test('Cmd+Enter triggers draft submit when in draft mode', async api => {
     // Setup: Create a draft block
-    await api.editor.setCode('Frame hor, gap 8\n  -- add three buttons')
+    await api.editor.setCode('Frame hor, gap 8\n  ?? add three buttons')
     await api.utils.delay(100)
 
     // Verify draft mode is active
@@ -173,7 +173,7 @@ const submitTests: TestCase[] = [
     // The smoke test verifies the keymap is registered.
     // For now, we verify basic cancel handling.
 
-    await api.editor.setCode('Frame\n  -- test cancel')
+    await api.editor.setCode('Frame\n  ?? test cancel')
     await api.utils.delay(100)
 
     api.assert.ok(api.draftMode.isActive(), 'Draft mode should be active')
@@ -194,7 +194,7 @@ const submitTests: TestCase[] = [
 
 const eventTests: TestCase[] = [
   test('draft:submit event is emitted with correct payload', async api => {
-    await api.editor.setCode('Frame\n  -- generate a button')
+    await api.editor.setCode('Frame\n  ?? generate a button')
     await api.utils.delay(100)
 
     // Start listening for the event BEFORE triggering submit
@@ -241,7 +241,7 @@ const eventTests: TestCase[] = [
 
 const replacementTests: TestCase[] = [
   test('replaceDraftBlock replaces draft content', async api => {
-    await api.editor.setCode('Frame\n  -- add button')
+    await api.editor.setCode('Frame\n  ?? add button')
     await api.utils.delay(100)
 
     const replaced = api.draftMode.replaceDraftBlock('  Button "Generated"')
@@ -260,11 +260,11 @@ const replacementTests: TestCase[] = [
     await api.utils.delay(100)
     const code = api.codemirror.getContent()
     api.assert.ok(code.includes('Button "Generated"'), 'Generated code should be in editor')
-    api.assert.ok(!code.includes('--'), '-- marker should be removed')
+    api.assert.ok(!code.includes('??'), '?? marker should be removed')
   }),
 
   test('Full AI generation simulation', async api => {
-    await api.editor.setCode('Frame hor, gap 8\n  -- add save and cancel buttons')
+    await api.editor.setCode('Frame hor, gap 8\n  ?? add save and cancel buttons')
     await api.utils.delay(100)
 
     const generatedCode = '  Button "Save", bg #2271C1\n  Button "Cancel", bg #333'
@@ -288,7 +288,7 @@ const replacementTests: TestCase[] = [
 
 const keyboardTests: TestCase[] = [
   test('Mod-Enter key binding is executable', async api => {
-    await api.editor.setCode('Frame\n  -- test')
+    await api.editor.setCode('Frame\n  ?? test')
     await api.utils.delay(100)
 
     api.codemirror.focus()

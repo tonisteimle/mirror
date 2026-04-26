@@ -4,11 +4,11 @@
  * Integrates draft mode with AI for code correction and generation.
  *
  * Flow:
- * 1. User types `--` to start a draft block
- * 2. User types code or prompt after `--`
- * 3. User presses Cmd+Enter to submit to AI
+ * 1. User types `??` to start a draft block
+ * 2. User types code or prompt after `??`
+ * 3. Either: types closing `??` (auto-submits) or presses Cmd+Enter
  * 4. AI processes and returns corrected/generated code
- * 5. Code replaces the draft block (-- markers removed)
+ * 5. Code replaces the draft block (?? markers removed)
  * 6. Undo restores original state
  */
 
@@ -22,6 +22,7 @@ import {
   replaceDraftBlock,
   cancelDraftProcessing,
   isDraftModeActive,
+  draftModeField,
   type DraftSubmitEvent,
   type DraftBlockState,
 } from './draft-mode'
@@ -308,6 +309,47 @@ export function createDraftModeKeymap(manager: DraftModeManager) {
 }
 
 // ===========================================
+// Auto-Submit Extension
+// ===========================================
+
+/**
+ * Create an updateListener extension that auto-submits when the user
+ * types the closing `??` marker (transitions from open block → closed block).
+ *
+ * This is the primary trigger — Cmd+Enter is the fallback for open blocks.
+ *
+ * @param manager - The DraftModeManager instance
+ */
+export function createDraftModeAutoSubmit(manager: DraftModeManager) {
+  return EditorView.updateListener.of(update => {
+    if (!update.docChanged) return
+
+    const oldState = update.startState.field(draftModeField, false)
+    const newState = update.state.field(draftModeField, false)
+    if (!oldState || !newState) return
+
+    // Trigger conditions: was open (endLine null) and just got closed (endLine set),
+    // not currently processing, and not the result of an AI replacement.
+    const justClosed =
+      oldState.active &&
+      oldState.endLine === null &&
+      newState.active &&
+      newState.endLine !== null &&
+      !oldState.processing &&
+      !newState.processing
+
+    if (!justClosed) return
+
+    // Defer to next microtask so the document settles before we read it
+    queueMicrotask(() => {
+      manager.handleSubmit().catch(err => {
+        log.error('auto-submit error:', err)
+      })
+    })
+  })
+}
+
+// ===========================================
 // Factory & Singleton
 // ===========================================
 
@@ -362,7 +404,7 @@ export function buildDraftModePrompt(event: DraftSubmitEvent): string {
       const promptSuffix = event.prompt ? `: ${event.prompt}` : ''
       return `--- DRAFT START${promptSuffix} ---`
     }
-    if (lineNum === event.endLine && line.trim().match(/^--\s*$/)) {
+    if (lineNum === event.endLine && line.trim().match(/^\?\?\s*$/)) {
       return `--- DRAFT END ---`
     }
     return line

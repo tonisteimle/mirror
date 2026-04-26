@@ -1,16 +1,21 @@
 /**
  * Draft Mode Extension
  *
- * CodeMirror extension that detects `--` markers for AI-assisted code editing.
- * When a line starts with `--`, the following content is treated as a "draft block"
+ * CodeMirror extension that detects `??` markers for AI-assisted code editing.
+ * When a line starts with `??`, the following content is treated as a "draft block"
  * that will be sent to AI for correction or generation.
  *
+ * Why `??`: chosen because (a) `--` at line start collides with the lexer's
+ * `---` section-header rule, and (b) `??` reads as "ask the AI" — symmetric,
+ * unambiguous, and not used anywhere else in the DSL.
+ *
  * Features:
- * - `--` at line start marks the beginning of a draft block
- * - Optional prompt after `--`: `-- make this responsive`
- * - Second `--` closes the block, or block stays open until Cmd+Enter
- * - Indented `--` is allowed (provides context to AI about parent element)
+ * - `??` at line start marks the beginning of a draft block
+ * - Optional prompt after `??`: `?? make this responsive`
+ * - Second `??` closes the block AND auto-submits to AI
+ * - Indented `??` is allowed (provides context to AI about parent element)
  * - Code in draft block is displayed with muted colors (via draft-lines)
+ * - Cmd+Enter as fallback for open (unclosed) blocks
  *
  * Usage:
  *   1. Add draftModeExtension() to EditorView extensions
@@ -38,13 +43,13 @@ const log = createLogger('DraftMode')
 export interface DraftBlockState {
   /** Whether a draft block is currently active */
   active: boolean
-  /** Line number where the -- marker is (1-indexed) */
+  /** Line number where the ?? marker is (1-indexed) */
   startLine: number | null
-  /** Optional prompt text after -- (e.g., "make responsive") */
+  /** Optional prompt text after ?? (e.g., "make responsive") */
   prompt: string | null
-  /** Line number where block ends (second -- or null for open) */
+  /** Line number where block ends (second ?? or null for open) */
   endLine: number | null
-  /** Indentation depth of the -- marker (number of spaces) */
+  /** Indentation depth of the ?? marker (number of spaces) */
   indent: number
   /** Whether AI is currently processing this block */
   processing: boolean
@@ -53,15 +58,15 @@ export interface DraftBlockState {
 }
 
 export interface DraftSubmitEvent {
-  /** The prompt text after -- (if any) */
+  /** The prompt text after ?? (if any) */
   prompt: string | null
   /** Start line of the draft block (1-indexed) */
   startLine: number
   /** End line of the draft block (1-indexed, or last line if open) */
   endLine: number
-  /** Indentation of the -- marker */
+  /** Indentation of the ?? marker */
   indent: number
-  /** The code content within the draft block (excluding -- lines) */
+  /** The code content within the draft block (excluding ?? lines) */
   content: string
   /** Full editor source for context */
   fullSource: string
@@ -73,8 +78,8 @@ export interface DraftSubmitEvent {
 // Parsing
 // ===========================================
 
-/** Regular expression to match -- at line start (after optional whitespace) */
-const DRAFT_MARKER_REGEX = /^(\s*)--\s*(.*)$/
+/** Regular expression to match ?? at line start (after optional whitespace) */
+const DRAFT_MARKER_REGEX = /^(\s*)\?\?\s*(.*)$/
 
 /**
  * Parse a line to check if it's a draft marker
@@ -123,13 +128,13 @@ export function parseDraftBlock(doc: Text): DraftBlockState {
 
     if (markerInfo !== null) {
       if (!foundStart) {
-        // First -- marker: start of draft block
+        // First ?? marker: start of draft block
         foundStart = true
         startLine = i
         prompt = markerInfo.prompt
         indent = markerInfo.indent
       } else {
-        // Second -- marker: end of draft block
+        // Second ?? marker: end of draft block
         endLine = i
         break
       }
@@ -171,7 +176,7 @@ export function getDraftLineNumbers(state: DraftBlockState, totalLines: number):
 }
 
 /**
- * Extract the content of a draft block (excluding -- marker lines)
+ * Extract the content of a draft block (excluding ?? marker lines)
  */
 export function extractDraftContent(doc: Text, state: DraftBlockState): string {
   if (!state.active || state.startLine === null) {
@@ -328,7 +333,7 @@ export const draftModeViewPlugin = ViewPlugin.fromClass(
 
       const decorations: { from: number; to: number; value: Decoration }[] = []
 
-      // Add marker decoration for the -- line
+      // Add marker decoration for the ?? line
       try {
         const startLine = view.state.doc.line(state.startLine)
         const decoration = state.processing ? draftProcessingDecoration : draftMarkerDecoration
@@ -337,7 +342,7 @@ export const draftModeViewPlugin = ViewPlugin.fromClass(
         // Line doesn't exist
       }
 
-      // Add marker decoration for the end -- line if closed
+      // Add marker decoration for the end ?? line if closed
       if (state.endLine !== null) {
         try {
           const endLine = view.state.doc.line(state.endLine)
@@ -371,7 +376,7 @@ export const draftModeViewPlugin = ViewPlugin.fromClass(
 // ===========================================
 
 const draftModeTheme = EditorView.baseTheme({
-  // Styling for the -- marker line
+  // Styling for the ?? marker line
   '.cm-draft-marker-line': {
     borderLeft: '2px solid #2271C1',
     paddingLeft: '4px',
@@ -450,7 +455,7 @@ export function setDraftProcessing(
 }
 
 /**
- * Clear the draft block (removes -- markers and content)
+ * Clear the draft block (removes ?? markers and content)
  */
 export function clearDraftBlock(view: EditorView): void {
   const state = view.state.field(draftModeField)

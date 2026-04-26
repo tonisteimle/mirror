@@ -362,6 +362,58 @@ export class FixerService {
   }
 
   /**
+   * Generate replacement code for a draft block (?? marker syntax).
+   *
+   * Unlike `fix()` and `quickFix()` which produce multi-file FixerResponse JSON,
+   * this returns a single code string ready to be spliced into the editor at
+   * the draft block position.
+   *
+   * @param prompt - User's prompt (text after the `??` marker), or null
+   * @param content - Code currently inside the draft block (between ?? markers)
+   * @param fullSource - Full editor source, used for surrounding context
+   * @throws if Tauri/Claude CLI is unavailable, or AI returns no code
+   */
+  async generateDraftCode(
+    prompt: string | null,
+    content: string,
+    fullSource: string
+  ): Promise<string> {
+    if (this.isProcessing) {
+      throw new Error('Fixer ist bereits aktiv')
+    }
+
+    const bridge = this.getTauriBridge()
+    if (!bridge || !bridge.isTauri()) {
+      throw new Error('Claude CLI ist nur in der Desktop-App verfügbar')
+    }
+    const cliAvailable = await bridge.agent.checkClaudeCli()
+    if (!cliAvailable) {
+      throw new Error(
+        'Claude CLI nicht gefunden. Bitte installieren: npm install -g @anthropic-ai/claude-code'
+      )
+    }
+
+    this.isProcessing = true
+    try {
+      const fullPrompt = buildDraftPrompt({ prompt, content, fullSource })
+      const result = await bridge.agent.runAgent(fullPrompt, 'draft', '', this.sessionId)
+      this.sessionId = result.session_id
+
+      if (!result.success) {
+        throw new Error(result.error || 'Claude CLI Fehler')
+      }
+
+      const code = extractCodeBlock(result.output)
+      if (!code) {
+        throw new Error('Keine Code-Antwort vom AI erhalten')
+      }
+      return code
+    } finally {
+      this.isProcessing = false
+    }
+  }
+
+  /**
    * Quick fix without streaming (for simple requests)
    */
   async quickFix(prompt: string): Promise<FixerResponse | null> {
@@ -630,6 +682,75 @@ export class FixerService {
   getHistory() {
     return this.contextCollector.getHistory()
   }
+}
+
+// ============================================
+// DRAFT PROMPT HELPERS
+// ============================================
+
+/**
+ * Build a focused prompt for draft-block code generation.
+ * Asks Claude to return ONLY a Mirror code block, no JSON, no prose.
+ */
+function buildDraftPrompt(input: {
+  prompt: string | null
+  content: string
+  fullSource: string
+}): string {
+  const userInstruction = input.prompt
+    ? `User-Anfrage: ${input.prompt}`
+    : 'Vervollständige oder korrigiere den Code im Draft-Block basierend auf dem Kontext.'
+
+  const draftContent = input.content.trim()
+    ? `\n\nAktueller Inhalt des Draft-Blocks:\n\`\`\`mirror\n${input.content}\n\`\`\``
+    : '\n\nDer Draft-Block ist leer — generiere neuen Code basierend auf User-Anfrage und Kontext.'
+
+  return `Du bist ein Mirror DSL Code-Generator. Im folgenden Editor-Source markieren \`??\` Zeilen einen "Draft-Block" — den Bereich, der durch deine generierte Code-Antwort ersetzt werden soll.
+
+## Editor-Source (mit ?? Markern)
+\`\`\`mirror
+${input.fullSource}
+\`\`\`
+${draftContent}
+
+## ${userInstruction}
+
+## ANTWORTFORMAT (kritisch)
+- Gib NUR den Mirror-Code zurück, eingeschlossen in einen einzigen \`\`\`mirror Code-Block
+- KEIN JSON, KEINE Erklärungen davor oder danach, KEINE \`??\` Marker im Output
+- Die Einrückung wird vom Editor automatisch angepasst (relative Einrückung im Code-Block ist OK)
+- Nutze existierende Tokens und Komponenten aus dem Source wenn möglich
+
+Beispiel:
+\`\`\`mirror
+Frame hor, gap 8
+  Button "Speichern", bg $primary
+  Button "Abbrechen"
+\`\`\`
+`
+}
+
+/**
+ * Extract the first \`\`\`mirror or \`\`\` code block from an AI response.
+ * Falls back to the trimmed response if no code block is found but the text
+ * looks like Mirror code (starts with a known primitive or a component name).
+ */
+function extractCodeBlock(response: string): string | null {
+  if (!response) return null
+
+  // Prefer a fenced code block (any language tag)
+  const fenceMatch = response.match(/```(?:mirror|mir)?\s*\n([\s\S]*?)\n```/)
+  if (fenceMatch) {
+    return fenceMatch[1].trim()
+  }
+
+  // Fallback: looks like Mirror DSL (capitalized identifier or known primitive)
+  const trimmed = response.trim()
+  if (/^[A-Z][A-Za-z0-9]*(\b|:)/.test(trimmed) || /^canvas\b/.test(trimmed)) {
+    return trimmed
+  }
+
+  return null
 }
 
 // ============================================

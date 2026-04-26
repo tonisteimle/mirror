@@ -1,7 +1,7 @@
 /**
  * Draft Mode Test API
  *
- * Provides helper functions for testing the draft mode feature (-- marker).
+ * Provides helper functions for testing the draft mode feature (?? marker).
  * This API abstracts the complexity of interacting with CodeMirror,
  * state management, and event handling for draft mode tests.
  */
@@ -351,8 +351,8 @@ export interface DraftModeScenario {
 export const DRAFT_MODE_SCENARIOS: DraftModeScenario[] = [
   {
     name: 'simple-open',
-    description: 'Simple -- at end opens draft block',
-    code: 'Frame bg #1a1a1a\n--',
+    description: 'Simple ?? at end opens draft block',
+    code: 'Frame bg #1a1a1a\n??',
     expected: {
       active: true,
       startLine: 2,
@@ -365,8 +365,8 @@ export const DRAFT_MODE_SCENARIOS: DraftModeScenario[] = [
   },
   {
     name: 'with-prompt',
-    description: '-- with prompt extracts text',
-    code: 'Frame\n-- add a blue button',
+    description: '?? with prompt extracts text',
+    code: 'Frame\n?? add a blue button',
     expected: {
       active: true,
       startLine: 2,
@@ -377,8 +377,8 @@ export const DRAFT_MODE_SCENARIOS: DraftModeScenario[] = [
   },
   {
     name: 'indented',
-    description: 'Indented -- preserves indent level',
-    code: 'Frame\n  -- add child element',
+    description: 'Indented ?? preserves indent level',
+    code: 'Frame\n  ?? add child element',
     expected: {
       active: true,
       startLine: 2,
@@ -388,8 +388,8 @@ export const DRAFT_MODE_SCENARIOS: DraftModeScenario[] = [
   },
   {
     name: 'closed-block',
-    description: 'Closed block with two -- markers',
-    code: 'Frame\n--\nBtn "Test"\n--',
+    description: 'Closed block with two ?? markers',
+    code: 'Frame\n??\nBtn "Test"\n??',
     expected: {
       active: true,
       startLine: 2,
@@ -401,7 +401,7 @@ export const DRAFT_MODE_SCENARIOS: DraftModeScenario[] = [
   {
     name: 'open-with-content',
     description: 'Open block with content after',
-    code: 'Frame\n--\nBtn "Test"\nText "Hello"',
+    code: 'Frame\n??\nBtn "Test"\nText "Hello"',
     expected: {
       active: true,
       startLine: 2,
@@ -412,7 +412,7 @@ export const DRAFT_MODE_SCENARIOS: DraftModeScenario[] = [
   },
   {
     name: 'no-marker',
-    description: 'No -- means no draft block',
+    description: 'No ?? means no draft block',
     code: 'Frame bg #1a1a1a\n  Text "Hello"',
     expected: {
       active: false,
@@ -421,8 +421,8 @@ export const DRAFT_MODE_SCENARIOS: DraftModeScenario[] = [
   },
   {
     name: 'first-line',
-    description: '-- on first line',
-    code: '-- generate a form',
+    description: '?? on first line',
+    code: '?? generate a form',
     expected: {
       active: true,
       startLine: 1,
@@ -431,8 +431,8 @@ export const DRAFT_MODE_SCENARIOS: DraftModeScenario[] = [
   },
   {
     name: 'deeply-indented',
-    description: 'Deeply indented --',
-    code: 'Frame\n  Frame\n    -- add nested content',
+    description: 'Deeply indented ??',
+    code: 'Frame\n  Frame\n    ?? add nested content',
     expected: {
       active: true,
       startLine: 3,

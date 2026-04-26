@@ -118,7 +118,7 @@ export {
   type DraftLinesManagerConfig,
 } from './draft-lines-manager'
 
-// Re-export draft mode extension (-- marker for AI-assisted editing)
+// Re-export draft mode extension (?? marker for AI-assisted editing)
 export {
   draftModeExtension,
   draftModeField,
@@ -145,6 +145,7 @@ export {
   getDraftModeManager,
   disposeDraftModeManager,
   createDraftModeKeymap,
+  createDraftModeAutoSubmit,
   buildDraftModePrompt,
   extractCodeFromAIResponse,
   type DraftModeManagerConfig,

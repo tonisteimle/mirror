@@ -40,7 +40,7 @@ export const cssClassTests: TestCase[] = [
     name: 'Visual: draft lines have cm-draft-line class',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame bg #1a1a1a\n--\n  Text "Draft"\n  Button "OK"')
+        await ctx.setCode('Frame bg #1a1a1a\n??\n  Text "Draft"\n  Button "OK"')
 
         // Lines 2, 3, 4 should have cm-draft-line class
         assert.linesHaveDraftClass([2, 3, 4])
@@ -55,7 +55,7 @@ export const cssClassTests: TestCase[] = [
     name: 'Visual: closed block only marks lines within block',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nBtn "Test"\n--\nText "After"')
+        await ctx.setCode('Frame\n??\nBtn "Test"\n??\nText "After"')
 
         // Lines 2-4 are in block
         assert.linesHaveDraftClass([2, 3, 4])
@@ -67,14 +67,14 @@ export const cssClassTests: TestCase[] = [
   },
 
   {
-    name: 'Visual: -- marker line has special class',
+    name: 'Visual: ?? marker line has special class',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nBtn "Test"')
+        await ctx.setCode('Frame\n??\nBtn "Test"')
 
         // Check marker class on line 2
         const hasMarker = ctx.hasMarkerClass(2)
-        api.assert.ok(hasMarker, 'Line 2 (-- marker) should have cm-draft-marker-line class')
+        api.assert.ok(hasMarker, 'Line 2 (?? marker) should have cm-draft-marker-line class')
       })
     },
   },
@@ -83,14 +83,14 @@ export const cssClassTests: TestCase[] = [
     name: 'Visual: both start and end markers have class',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nBtn "Test"\n--')
+        await ctx.setCode('Frame\n??\nBtn "Test"\n??')
 
         // Both line 2 and 4 should have marker class
         const hasStart = ctx.hasMarkerClass(2)
         const hasEnd = ctx.hasMarkerClass(4)
 
-        api.assert.ok(hasStart, 'Start -- should have marker class')
-        api.assert.ok(hasEnd, 'End -- should have marker class')
+        api.assert.ok(hasStart, 'Start ?? should have marker class')
+        api.assert.ok(hasEnd, 'End ?? should have marker class')
       })
     },
   },
@@ -112,10 +112,10 @@ export const cssClassTests: TestCase[] = [
   },
 
   {
-    name: 'Visual: single line -- gets draft class',
+    name: 'Visual: single line ?? gets draft class',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('--')
+        await ctx.setCode('??')
 
         assert.linesHaveDraftClass([1])
       })
@@ -132,7 +132,7 @@ export const mutedColorTests: TestCase[] = [
     name: 'Visual: draft lines have muted styling (class presence)',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame bg #2271C1, col white, pad 16\n--\n  Text "Draft", fs 24')
+        await ctx.setCode('Frame bg #2271C1, col white, pad 16\n??\n  Text "Draft", fs 24')
 
         // The cm-draft-line class applies muted CSS variables
         // We verify the class is applied, which triggers the styling
@@ -146,7 +146,7 @@ export const mutedColorTests: TestCase[] = [
     name: 'Visual: validated lines stay bright (no draft class)',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame bg #ef4444, col white\n  Text "Validated"\n--\n  Button "Draft"')
+        await ctx.setCode('Frame bg #ef4444, col white\n  Text "Validated"\n??\n  Button "Draft"')
 
         // Lines 1-2 should NOT have draft class (bright)
         assert.linesNoDraftClass([1, 2])
@@ -167,7 +167,7 @@ export const inspectorTests: TestCase[] = [
     name: 'Visual: inspectDraftVisualState returns correct info',
     run: async api => {
       await withDraftContext(api, async ctx => {
-        await ctx.setCode('Frame\n--\nBtn "A"\n--\nText')
+        await ctx.setCode('Frame\n??\nBtn "A"\n??\nText')
 
         const states = inspectDraftVisualState(ctx)
 
@@ -195,7 +195,7 @@ export const inspectorTests: TestCase[] = [
     name: 'Visual: formatDraftVisualState produces readable output',
     run: async api => {
       await withDraftContext(api, async ctx => {
-        await ctx.setCode('Frame\n--\nBtn')
+        await ctx.setCode('Frame\n??\nBtn')
 
         const states = inspectDraftVisualState(ctx)
         const formatted = formatDraftVisualState(states)
@@ -215,7 +215,7 @@ export const inspectorTests: TestCase[] = [
 
 export const dynamicVisualTests: TestCase[] = [
   {
-    name: 'Visual: adding -- updates visual state',
+    name: 'Visual: adding ?? updates visual state',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
         await ctx.setCode('Frame bg #1a1a1a\nText "Hello"')
@@ -224,8 +224,8 @@ export const dynamicVisualTests: TestCase[] = [
         const draftLines = ctx.getDraftClassLines()
         api.assert.ok(draftLines.length === 0, 'Initially no draft lines')
 
-        // Add --
-        await ctx.typeAtEnd('\n--')
+        // Add ??
+        await ctx.typeAtEnd('\n??')
         await ctx.delay(100)
 
         // Now line 3 should be draft
@@ -235,21 +235,21 @@ export const dynamicVisualTests: TestCase[] = [
   },
 
   {
-    name: 'Visual: removing -- clears visual state',
+    name: 'Visual: removing ?? clears visual state',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nBtn "Test"')
+        await ctx.setCode('Frame\n??\nBtn "Test"')
 
         // Initially has draft lines
         assert.linesHaveDraftClass([2, 3])
 
-        // Remove --
+        // Remove ??
         await ctx.setCode('Frame\nBtn "Test"')
         await ctx.delay(100)
 
         // No more draft lines
         const draftLines = ctx.getDraftClassLines()
-        api.assert.ok(draftLines.length === 0, 'Should have no draft lines after removing --')
+        api.assert.ok(draftLines.length === 0, 'Should have no draft lines after removing ??')
       })
     },
   },
@@ -258,7 +258,7 @@ export const dynamicVisualTests: TestCase[] = [
     name: 'Visual: extending draft block updates classes',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nBtn "A"')
+        await ctx.setCode('Frame\n??\nBtn "A"')
 
         // Initially 2 draft lines (2, 3)
         assert.linesHaveDraftClass([2, 3])
@@ -277,13 +277,13 @@ export const dynamicVisualTests: TestCase[] = [
     name: 'Visual: closing block limits draft lines',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nBtn "A"\nText "B"')
+        await ctx.setCode('Frame\n??\nBtn "A"\nText "B"')
 
         // Open block: lines 2-4 are draft
         assert.linesHaveDraftClass([2, 3, 4])
 
         // Close the block
-        await ctx.typeAtEnd('\n--\nIcon "check"')
+        await ctx.typeAtEnd('\n??\nIcon "check"')
         await ctx.delay(100)
 
         // Lines 2-5 are draft (block), line 6 is NOT
@@ -300,10 +300,10 @@ export const dynamicVisualTests: TestCase[] = [
 
 export const edgeCaseVisualTests: TestCase[] = [
   {
-    name: 'Visual: empty document with just --',
+    name: 'Visual: empty document with just ??',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('--')
+        await ctx.setCode('??')
 
         assert.linesHaveDraftClass([1])
       })
@@ -311,10 +311,10 @@ export const edgeCaseVisualTests: TestCase[] = [
   },
 
   {
-    name: 'Visual: -- with only whitespace after',
+    name: 'Visual: ?? with only whitespace after',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--   \n  ')
+        await ctx.setCode('Frame\n??   \n  ')
 
         assert.linesHaveDraftClass([2, 3])
       })
@@ -322,12 +322,12 @@ export const edgeCaseVisualTests: TestCase[] = [
   },
 
   {
-    name: 'Visual: indented -- still applies classes',
+    name: 'Visual: indented ?? still applies classes',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n  -- add child\n    Btn "Test"')
+        await ctx.setCode('Frame\n  ?? add child\n    Btn "Test"')
 
-        // Line 2 (indented --) and 3 should have draft class
+        // Line 2 (indented ??) and 3 should have draft class
         assert.linesHaveDraftClass([2, 3])
         assert.linesNoDraftClass([1])
       })
@@ -338,7 +338,7 @@ export const edgeCaseVisualTests: TestCase[] = [
     name: 'Visual: deeply nested content all marked',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\n  Frame\n    Frame\n      Text "Deep"')
+        await ctx.setCode('Frame\n??\n  Frame\n    Frame\n      Text "Deep"')
 
         // All lines from 2-5 should be draft
         assert.linesHaveDraftClass([2, 3, 4, 5])

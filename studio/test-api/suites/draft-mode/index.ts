@@ -1,10 +1,10 @@
 /**
  * Draft Mode Tests
  *
- * Comprehensive test suite for the AI-assisted draft mode feature (-- marker).
+ * Comprehensive test suite for the AI-assisted draft mode feature (?? marker).
  *
  * Features tested:
- * - Basic -- detection and parsing
+ * - Basic ?? detection and parsing
  * - Visual feedback (CSS classes, muted colors)
  * - Autocomplete suppression
  * - Real-world use case scenarios
@@ -146,15 +146,15 @@ export const allDraftModeTests: TestCase[] = [
  */
 export const quickDraftModeTests: TestCase[] = [
   // Basic detection
-  detectionTests[0], // -- activates
-  detectionTests[2], // -- with prompt
-  detectionTests[4], // no -- means inactive
+  detectionTests[0], // ?? activates
+  detectionTests[2], // ?? with prompt
+  detectionTests[4], // no ?? means inactive
 
   // Visual
   cssClassTests[0], // draft lines have class
 
   // Autocomplete
-  suppressionTests[0], // suppressed after --
+  suppressionTests[0], // suppressed after ??
 
   // Scenarios
   generationTests[0], // generate with prompt

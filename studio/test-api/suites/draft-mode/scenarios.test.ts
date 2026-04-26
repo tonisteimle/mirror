@@ -40,7 +40,7 @@ export const generationTests: TestCase[] = [
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
         // User has a Frame and wants to add a button
-        await ctx.setCode('Frame gap 12, pad 16\n  Text "Titel"\n  -- add a blue button')
+        await ctx.setCode('Frame gap 12, pad 16\n  Text "Titel"\n  ?? add a blue button')
 
         assert.isActive()
         assert.hasPrompt('add a blue button')
@@ -55,7 +55,7 @@ export const generationTests: TestCase[] = [
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
         // Empty file, user wants to generate a form
-        await ctx.setCode('-- generate a login form')
+        await ctx.setCode('?? generate a login form')
 
         assert.isActive()
         assert.hasPrompt('generate a login form')
@@ -69,7 +69,7 @@ export const generationTests: TestCase[] = [
     name: 'Scenario: generate multiple elements',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n  -- add navigation with 3 links')
+        await ctx.setCode('Frame\n  ?? add navigation with 3 links')
 
         assert.isActive()
         assert.hasPrompt('add navigation with 3 links')
@@ -81,7 +81,7 @@ export const generationTests: TestCase[] = [
     name: 'Scenario: generate deeply nested content',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n  Frame hor, gap 8\n    Frame\n      -- add icon and label')
+        await ctx.setCode('Frame\n  Frame hor, gap 8\n    Frame\n      ?? add icon and label')
 
         assert.isActive()
         assert.hasIndent(6)
@@ -101,7 +101,7 @@ export const correctionTests: TestCase[] = [
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
         // User has invalid code that needs fixing
-        await ctx.setCode('Frame\n--\nBtn "Test" bg blue col white\n--')
+        await ctx.setCode('Frame\n??\nBtn "Test" bg blue col white\n??')
 
         assert.isActive()
         assert.hasNoPrompt() // No explicit prompt = fix the code
@@ -118,7 +118,7 @@ export const correctionTests: TestCase[] = [
     name: 'Scenario: correct missing comma',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nText "Hello" fs 24 weight bold\n--')
+        await ctx.setCode('Frame\n??\nText "Hello" fs 24 weight bold\n??')
 
         assert.isActive()
         // The code has missing commas - AI should fix
@@ -131,7 +131,7 @@ export const correctionTests: TestCase[] = [
     name: 'Scenario: correct invalid property value',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nFrame w 100px h 200px\n--')
+        await ctx.setCode('Frame\n??\nFrame w 100px h 200px\n??')
 
         assert.isActive()
         // 100px is invalid (should be just 100)
@@ -147,11 +147,11 @@ export const correctionTests: TestCase[] = [
         await ctx.setCode(
           [
             'Frame',
-            '--',
+            '??',
             'btn "Test"', // lowercase btn
             'text fs=24', // = instead of space
             'Frame bg: #1a1a1a', // : not needed
-            '--',
+            '??',
           ].join('\n')
         )
 
@@ -175,12 +175,12 @@ export const refactoringTests: TestCase[] = [
         await ctx.setCode(
           [
             'Frame',
-            '-- make this responsive',
+            '?? make this responsive',
             '  Frame hor, gap 8',
             '    Button "A", w 100',
             '    Button "B", w 100',
             '    Button "C", w 100',
-            '--',
+            '??',
           ].join('\n')
         )
 
@@ -199,10 +199,10 @@ export const refactoringTests: TestCase[] = [
         await ctx.setCode(
           [
             'Frame',
-            '-- add hover effects to all buttons',
+            '?? add hover effects to all buttons',
             '  Button "Save", bg #2271C1, col white',
             '  Button "Cancel", bg #333, col white',
-            '--',
+            '??',
           ].join('\n')
         )
 
@@ -219,11 +219,11 @@ export const refactoringTests: TestCase[] = [
         await ctx.setCode(
           [
             'Frame',
-            '-- extract this as a Card component',
+            '?? extract this as a Card component',
             '  Frame bg #1a1a1a, pad 16, rad 8, gap 8',
             '    Text "Title", col white, fs 18',
             '    Text "Description", col #888',
-            '--',
+            '??',
           ].join('\n')
         )
 
@@ -238,7 +238,7 @@ export const refactoringTests: TestCase[] = [
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
         await ctx.setCode(
-          ['-- improve the styling', 'Frame', '  Text "Hello"', '  Button "Click"', '--'].join('\n')
+          ['?? improve the styling', 'Frame', '  Text "Hello"', '  Button "Click"', '??'].join('\n')
         )
 
         assert.isActive()
@@ -255,7 +255,7 @@ export const refactoringTests: TestCase[] = [
 
 export const workflowTests: TestCase[] = [
   {
-    name: 'Workflow: type code then add -- for fix',
+    name: 'Workflow: type code then add ?? for fix',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
         // Step 1: User types some code
@@ -263,8 +263,8 @@ export const workflowTests: TestCase[] = [
 
         assert.isNotActive()
 
-        // Step 2: User types -- on new line
-        await ctx.typeAtEnd('\n--')
+        // Step 2: User types ?? on new line
+        await ctx.typeAtEnd('\n??')
 
         assert.isActive()
         assert.startsAtLine(2)
@@ -276,7 +276,7 @@ export const workflowTests: TestCase[] = [
         assert.linesInDraft([2, 3])
 
         // Step 4: User closes block
-        await ctx.typeAtEnd('\n--')
+        await ctx.typeAtEnd('\n??')
 
         assert.endsAtLine(4)
       })
@@ -287,7 +287,7 @@ export const workflowTests: TestCase[] = [
     name: 'Workflow: add prompt incrementally',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--')
+        await ctx.setCode('Frame\n??')
 
         assert.isActive()
         assert.hasNoPrompt()
@@ -310,17 +310,17 @@ export const workflowTests: TestCase[] = [
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
         // Start with non-indented
-        await ctx.setCode('Frame\n-- add')
+        await ctx.setCode('Frame\n?? add')
 
         assert.hasIndent(0)
 
         // Change to indented
-        await ctx.setCode('Frame\n  -- add')
+        await ctx.setCode('Frame\n  ?? add')
 
         assert.hasIndent(2)
 
         // Change to more indented
-        await ctx.setCode('Frame\n    -- add')
+        await ctx.setCode('Frame\n    ?? add')
 
         assert.hasIndent(4)
       })
@@ -332,13 +332,13 @@ export const workflowTests: TestCase[] = [
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
         // Start with open block
-        await ctx.setCode('Frame\n--\nBtn "Test"')
+        await ctx.setCode('Frame\n??\nBtn "Test"')
 
         assert.isActive()
         assert.endsAtLine(null) // Open
 
         // Add closing marker
-        await ctx.typeAtEnd('\n--')
+        await ctx.typeAtEnd('\n??')
 
         assert.endsAtLine(4) // Now closed
 
@@ -358,22 +358,22 @@ export const workflowTests: TestCase[] = [
 
 export const contextTests: TestCase[] = [
   {
-    name: 'Context: -- inside Frame provides parent context',
+    name: 'Context: ?? inside Frame provides parent context',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
         await ctx.setCode(
-          ['Frame bg #1a1a1a, pad 16, gap 8', '  Text "Header"', '  -- add footer'].join('\n')
+          ['Frame bg #1a1a1a, pad 16, gap 8', '  Text "Header"', '  ?? add footer'].join('\n')
         )
 
         assert.isActive()
         assert.hasIndent(2)
-        // AI sees: Frame > Text, then -- (knows it's inside Frame)
+        // AI sees: Frame > Text, then ?? (knows it's inside Frame)
       })
     },
   },
 
   {
-    name: 'Context: -- inside nested Frames',
+    name: 'Context: ?? inside nested Frames',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
         await ctx.setCode(
@@ -381,7 +381,7 @@ export const contextTests: TestCase[] = [
             'Frame // Outer',
             '  Frame // Middle',
             '    Frame // Inner',
-            '      -- add content here',
+            '      ?? add content here',
           ].join('\n')
         )
 
@@ -397,11 +397,11 @@ export const contextTests: TestCase[] = [
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
         await ctx.setCode(
-          ['Frame', '  Text "Before A"', '  Text "Before B"', '  --', '  Text "After"'].join('\n')
+          ['Frame', '  Text "Before A"', '  Text "Before B"', '  ??', '  Text "After"'].join('\n')
         )
 
         assert.isActive()
-        // AI sees siblings before and after --
+        // AI sees siblings before and after ??
         assert.codeContains('Before A')
         assert.codeContains('After')
       })
@@ -415,10 +415,10 @@ export const contextTests: TestCase[] = [
 
 export const edgeCaseScenarioTests: TestCase[] = [
   {
-    name: 'Scenario: -- at very end of file',
+    name: 'Scenario: ?? at very end of file',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n  Text "A"\n--')
+        await ctx.setCode('Frame\n  Text "A"\n??')
 
         assert.isActive()
         assert.startsAtLine(3)
@@ -428,10 +428,10 @@ export const edgeCaseScenarioTests: TestCase[] = [
   },
 
   {
-    name: 'Scenario: only -- in file',
+    name: 'Scenario: only ?? in file',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('--')
+        await ctx.setCode('??')
 
         assert.isActive()
         assert.startsAtLine(1)
@@ -441,10 +441,10 @@ export const edgeCaseScenarioTests: TestCase[] = [
   },
 
   {
-    name: 'Scenario: -- with special characters in prompt',
+    name: 'Scenario: ?? with special characters in prompt',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n-- add "quoted text" and #color')
+        await ctx.setCode('Frame\n?? add "quoted text" and #color')
 
         assert.isActive()
         assert.hasPrompt('add "quoted text" and #color')
@@ -456,7 +456,7 @@ export const edgeCaseScenarioTests: TestCase[] = [
     name: 'Scenario: multiple spaces in prompt',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--   add    spaced   prompt')
+        await ctx.setCode('Frame\n??   add    spaced   prompt')
 
         assert.isActive()
         // Should trim/normalize
@@ -469,7 +469,7 @@ export const edgeCaseScenarioTests: TestCase[] = [
     name: 'Scenario: tab indentation',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n\t-- with tab')
+        await ctx.setCode('Frame\n\t?? with tab')
 
         assert.isActive()
         assert.hasIndent(1) // Tab = 1 char

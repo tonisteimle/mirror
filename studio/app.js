@@ -125,6 +125,7 @@ import {
   draftModeExtension,
   initDraftModeManager,
   createDraftModeKeymap,
+  createDraftModeAutoSubmit,
   // Indent Guides Extension (visual indentation guides)
   indentGuidesExtension,
   // Smart Paste Extension (auto-adjust indentation on paste)
@@ -1547,13 +1548,14 @@ const mirrorLinter = linter(view => {
   return currentDiagnostics
 })
 
-// Initialize Draft Mode Manager (AI-assisted editing with -- marker)
+// Initialize Draft Mode Manager (AI-assisted editing with ?? marker)
 // Note: We pass a getter function since editor isn't created yet
 let editor // Forward declaration for draft mode manager
 const draftModeManager = initDraftModeManager({
   getEditorView: () => editor,
 })
 const draftModeKeymap = createDraftModeKeymap(draftModeManager)
+const draftModeAutoSubmit = createDraftModeAutoSubmit(draftModeManager)
 
 // Initialize modular color picker API for property panel
 
@@ -1572,8 +1574,9 @@ editor = new EditorView({
       indentGuidesExtension(), // Visual indent guides (vertical lines)
       smartPasteExtension(), // Auto-adjust indentation on paste
       draftLinesExtension(),
-      draftModeExtension(), // AI-assisted editing: -- marker detection
-      draftModeKeymap, // AI-assisted editing: Cmd+Enter to submit, Escape to cancel
+      draftModeExtension(), // AI-assisted editing: ?? marker detection
+      draftModeAutoSubmit, // AI-assisted editing: auto-submit on closing ??
+      draftModeKeymap, // AI-assisted editing: Cmd+Enter (fallback), Escape to cancel
       mirrorHighlight,
       autocompletion({
         override: [mirrorCompletions],

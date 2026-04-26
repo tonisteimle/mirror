@@ -2,7 +2,7 @@
  * AI Features Test Suite Index
  *
  * Tests for AI-assist features including:
- * - Draft Mode (-- marker, Cmd+Enter submission)
+ * - Draft Mode (?? marker, auto-submit on closing ??, Cmd+Enter fallback)
  * - Draft Lines (visual feedback for validated vs unvalidated code)
  */
 

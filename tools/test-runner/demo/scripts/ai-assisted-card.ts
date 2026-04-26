@@ -30,7 +30,7 @@ export const demoScript: DemoScript = {
     { action: 'wait', duration: 800 },
     ...validateStudioReady(),
 
-    // === 2. AI-Prompt: User tippt --<text>-- und drückt Cmd+Enter ===
+    // === 2. AI-Prompt: User tippt ?? <text> ?? — der zweite ?? sendet automatisch ===
     { action: 'comment', text: 'Schritt 1: Prompt schreiben — die AI macht den Rest' },
     {
       action: 'aiPrompt',

@@ -1399,7 +1399,7 @@ const MIRROR_ACTIONS_API = `
     }
     const doc = editor.state.doc;
     const insertPos = doc.length;
-    const draftLines = '\\n-- ' + promptText + '\\n--';
+    const draftLines = '\\n?? ' + promptText + '\\n??';
     let pos = insertPos;
     for (const ch of draftLines) {
       editor.dispatch({

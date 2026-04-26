@@ -450,12 +450,58 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   })
   studio.draftLinesManager = draftLinesManager
 
-  // Draft Mode Manager - handles -- marker for AI code generation
-  // User types --, then Cmd+Enter submits to AI
+  // Draft Mode Manager - handles ?? marker for AI code generation
+  // User types ?? prompt ??, second marker auto-submits to Claude CLI
   const draftModeManager = initDraftModeManager({
     getEditorView: () => config.editor,
   })
   studio.draftModeManager = draftModeManager
+
+  // Wire draft:submit → Fixer (Claude CLI via Tauri)
+  // The default processWithAI in DraftModeManager emits draft:submit and waits
+  // for draft:ai-response — this listener is the production AI bridge.
+  if (config.getFiles && config.getCurrentFile && config.updateFile) {
+    const fixer = createFixer({
+      getFiles: config.getFiles,
+      getCurrentFile: config.getCurrentFile,
+      getEditorContent: () => state.get().source,
+      getCursor: () => {
+        const pos = state.get().cursor
+        return { line: pos.line, column: pos.column, offset: 0 }
+      },
+      getSelection: () => null,
+      getFileContent: filename => {
+        const files = config.getFiles!()
+        return files.find(f => f.name === filename)?.code ?? null
+      },
+      saveFile: async (filename, content) => {
+        config.updateFile!(filename, content)
+      },
+      createFile: async (filename, content) => {
+        config.updateFile!(filename, content)
+      },
+      updateEditor: content => {
+        config.editor.dispatch({
+          changes: { from: 0, to: config.editor.state.doc.length, insert: content },
+        })
+      },
+      refreshFileTree: () => {},
+      switchToFile: config.switchToFile,
+    })
+    studio.fixer = fixer
+
+    eventUnsubscribes.push(
+      events.on('draft:submit', async event => {
+        try {
+          const code = await fixer.generateDraftCode(event.prompt, event.content, event.fullSource)
+          events.emit('draft:ai-response', { code })
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Unbekannter AI-Fehler'
+          events.emit('draft:ai-response', { code: '', error: message })
+        }
+      })
+    )
+  }
 
   // Editor Drop Handler is now handled by createComponentDropExtension in app.js
   // Uses CodeMirror's native extension system for proper drop handling

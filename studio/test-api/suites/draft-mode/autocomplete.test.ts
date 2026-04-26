@@ -36,11 +36,11 @@ async function withDraftContext(
 
 export const suppressionTests: TestCase[] = [
   {
-    name: 'Autocomplete: suppressed after -- marker line',
+    name: 'Autocomplete: suppressed after ?? marker line',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        // Set code with -- and partial property
-        await ctx.setCode('Frame\n--\nFrame b')
+        // Set code with ?? and partial property
+        await ctx.setCode('Frame\n??\nFrame b')
 
         // Wait for potential autocomplete
         await ctx.delay(200)
@@ -56,7 +56,7 @@ export const suppressionTests: TestCase[] = [
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
         // Start typing a primitive inside draft block
-        await ctx.setCode('Frame\n--\nBu')
+        await ctx.setCode('Frame\n??\nBu')
 
         await ctx.delay(200)
 
@@ -67,11 +67,11 @@ export const suppressionTests: TestCase[] = [
   },
 
   {
-    name: 'Autocomplete: still works BEFORE -- line',
+    name: 'Autocomplete: still works BEFORE ?? line',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        // Code where line 1 is before --
-        await ctx.setCode('Frame b\n--')
+        // Code where line 1 is before ??
+        await ctx.setCode('Frame b\n??')
 
         // Move cursor to line 1
         ctx.moveCursor(1, 7) // After "Frame b"
@@ -89,7 +89,7 @@ export const suppressionTests: TestCase[] = [
     name: 'Autocomplete: suppressed for values in draft block',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nFrame bg bl')
+        await ctx.setCode('Frame\n??\nFrame bg bl')
 
         await ctx.delay(200)
 
@@ -103,7 +103,7 @@ export const suppressionTests: TestCase[] = [
     name: 'Autocomplete: suppressed in closed draft block',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nFrame b\n--')
+        await ctx.setCode('Frame\n??\nFrame b\n??')
 
         // Cursor is on line 3 (inside block)
         ctx.moveCursor(3, 8)
@@ -119,7 +119,7 @@ export const suppressionTests: TestCase[] = [
     name: 'Autocomplete: works after closed block',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nBtn "A"\n--\nFrame')
+        await ctx.setCode('Frame\n??\nBtn "A"\n??\nFrame')
 
         // Line 5 is after the block - should not be in draft
         assert.linesNotInDraft([5])
@@ -137,8 +137,8 @@ export const pickerTests: TestCase[] = [
     name: 'Picker: color trigger should work in draft block',
     run: async api => {
       await withDraftContext(api, async ctx => {
-        // Set code with -- and color position
-        await ctx.setCode('Frame\n--\nFrame bg #')
+        // Set code with ?? and color position
+        await ctx.setCode('Frame\n??\nFrame bg #')
 
         // The trigger for # should still work (EditorTriggerManager is separate)
         // We just verify the draft state is correct
@@ -153,7 +153,7 @@ export const pickerTests: TestCase[] = [
     run: async api => {
       await withDraftContext(api, async ctx => {
         // Set code with Icon in draft
-        await ctx.setCode('Frame\n--\nIcon "')
+        await ctx.setCode('Frame\n??\nIcon "')
 
         api.assert.ok(ctx.isDraftActive(), 'Draft mode should be active')
         // Icon picker trigger happens at ", should still work
@@ -165,7 +165,7 @@ export const pickerTests: TestCase[] = [
     name: 'Picker: animation trigger in draft block',
     run: async api => {
       await withDraftContext(api, async ctx => {
-        await ctx.setCode('Frame\n--\nFrame anim ')
+        await ctx.setCode('Frame\n??\nFrame anim ')
 
         api.assert.ok(ctx.isDraftActive(), 'Draft mode should be active')
         // Animation picker triggers at "anim ", should still work
@@ -180,17 +180,17 @@ export const pickerTests: TestCase[] = [
 
 export const edgeCaseAutocompleteTests: TestCase[] = [
   {
-    name: 'Autocomplete: -- line itself has no autocomplete',
+    name: 'Autocomplete: ?? line itself has no autocomplete',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n-- a')
+        await ctx.setCode('Frame\n?? a')
 
-        // Cursor on the -- line
+        // Cursor on the ?? line
         ctx.moveCursor(2, 5)
 
         await ctx.delay(200)
 
-        // No autocomplete on -- line (it's a prompt, not code)
+        // No autocomplete on ?? line (it's a prompt, not code)
         assert.noAutocomplete()
       })
     },
@@ -200,7 +200,7 @@ export const edgeCaseAutocompleteTests: TestCase[] = [
     name: 'Autocomplete: very long prompt line no autocomplete',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n-- add a blue button with hover effect and padding and rad')
+        await ctx.setCode('Frame\n?? add a blue button with hover effect and padding and rad')
 
         await ctx.delay(200)
 
@@ -213,7 +213,7 @@ export const edgeCaseAutocompleteTests: TestCase[] = [
     name: 'Autocomplete: multiple lines in draft all suppressed',
     run: async api => {
       await withDraftContext(api, async (ctx, assert) => {
-        await ctx.setCode('Frame\n--\nFrame b\nText c\nButton p')
+        await ctx.setCode('Frame\n??\nFrame b\nText c\nButton p')
 
         // Check each line in draft has no autocomplete
         for (const line of [3, 4, 5]) {
