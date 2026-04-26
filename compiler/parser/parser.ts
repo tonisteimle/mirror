@@ -3846,15 +3846,20 @@ export class Parser {
 
         for (let j = 0; j < collectedTokens.length; j++) {
           const t = collectedTokens[j]
+          // Re-quote STRING tokens — the lexer strips quotes off the value, but
+          // we need them in the JS expression we're building (otherwise a
+          // string compare like `category === "Geschäftlich"` becomes a bare
+          // identifier `Geschäftlich` and breaks the bare-identifier wrapper).
+          const tokenText = t.type === 'STRING' ? `"${t.value.replace(/"/g, '\\"')}"` : t.value
           // Don't add space before DOT or after DOT
           if (t.type === 'DOT') {
             condition += '.'
           } else if (j > 0 && collectedTokens[j - 1].type !== 'DOT' && t.type !== 'DOT') {
-            condition += ' ' + t.value
+            condition += ' ' + tokenText
           } else if (condition && !condition.endsWith('.')) {
-            condition += ' ' + t.value
+            condition += ' ' + tokenText
           } else {
-            condition += t.value
+            condition += tokenText
           }
         }
 
@@ -3893,8 +3898,11 @@ export class Parser {
 
             const token = this.current()
             if (token.type === 'STRING') {
-              // Keep raw string value - quotes are added during IR/codegen if needed
-              elseTokens.push(this.advance().value)
+              // Re-quote so strings survive into the JS expression. Lexer
+              // strips quotes from STRING values; without the quotes, an
+              // expression like `category === "Privat" ? #x : #y` becomes
+              // bare `Privat` and breaks at runtime as ReferenceError.
+              elseTokens.push(`"${this.advance().value.replace(/"/g, '\\"')}"`)
             } else if (token.type === 'DOT') {
               elseTokens.push(this.advance().value)
             } else if (token.type === 'QUESTION') {

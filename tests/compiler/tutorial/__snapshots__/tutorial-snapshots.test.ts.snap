@@ -33527,7 +33527,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 23 1`] = `
               "properties": [
                 {
                   "name": "textContent",
-                  "value": "__conditional:done?check:circle",
+                  "value": "__conditional:done?check:"circle"",
                 },
                 {
                   "name": "data-icon-color",
@@ -33768,7 +33768,7 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 24 1`] = `
         },
         {
           "property": "background",
-          "value": "__conditional:theme === dark?__loopVar:primary:__loopVar:muted",
+          "value": "__conditional:theme === "dark"?__loopVar:primary:__loopVar:muted",
         },
         {
           "property": "color",

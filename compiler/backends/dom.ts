@@ -1415,6 +1415,13 @@ class DOMGenerator {
         if (rest.slice(i).startsWith('__conditional:')) {
           inConditional = true
         }
+        // Skip the colon that belongs to a marker prefix like `__loopVar:`
+        // or `__conditional:`. `__loopVar:accent:__loopVar:danger` must not
+        // split at the first internal colon.
+        if (rest.slice(i).startsWith('__loopVar:') || rest.slice(i).startsWith('__conditional:')) {
+          i += rest.slice(i).indexOf(':')
+          continue
+        }
         if (char === '(') depth++
         else if (char === ')') depth--
         else if (char === ':' && depth === 0 && !inConditional) {
@@ -1436,7 +1443,7 @@ class DOMGenerator {
       const elseValue = rest.slice(colonPos + 1)
 
       // Resolve the condition (replace __loopVar: markers)
-      const resolvedCondition = this.resolveLoopVarMarkers(condition)
+      const resolvedCondition = this.resolveLoopVarMarkers(condition, itemVar)
 
       // Recursively parse then/else (may be nested conditionals)
       const resolvedThen = parseConditional(thenValue)
@@ -1454,12 +1461,21 @@ class DOMGenerator {
   private resolveConditionalValue(value: string, itemVar: string): string {
     // Handle __loopVar: markers
     if (value.includes('__loopVar:')) {
-      return this.resolveLoopVarMarkers(value)
+      return this.resolveLoopVarMarkers(value, itemVar)
     }
 
     // Handle item variable reference
     if (value.includes(`$${itemVar}.`)) {
       return value.replace(new RegExp(`\\$${itemVar}\\.`, 'g'), `${itemVar}.`)
+    }
+
+    // Already-quoted string from elseTokens — pass through.
+    if (
+      value.length >= 2 &&
+      ((value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'")))
+    ) {
+      return value
     }
 
     // Check if it's a color (hex)
@@ -1477,10 +1493,20 @@ class DOMGenerator {
   }
 
   /**
-   * Replace __loopVar: markers with actual variable references
+   * Replace __loopVar: markers with actual variable references.
+   *
+   * `__loopVar:name` is the IR's neutral marker for any reference originally
+   * written as `$name`. Whether it's actually a loop variable depends on
+   * context:
+   *  - If `name` matches the current `itemVar`, it stays bare (function arg).
+   *  - Otherwise it's a data/token reference, so it becomes `$get("name")`.
    */
-  private resolveLoopVarMarkers(str: string): string {
-    return str.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, '$1')
+  private resolveLoopVarMarkers(str: string, itemVar?: string): string {
+    return str.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, (_, ref) => {
+      const firstPart = ref.split('.')[0].split('[')[0]
+      if (itemVar && firstPart === itemVar) return ref
+      return `$get("${ref}")`
+    })
   }
 
   /**
@@ -1537,6 +1563,14 @@ class DOMGenerator {
       if (rest.slice(i).startsWith('__conditional:')) {
         inConditional = true
       }
+      // Skip the colon that belongs to a marker prefix like `__loopVar:`
+      // or `__conditional:`. Without this, `__loopVar:accent:__loopVar:danger`
+      // would split at the first internal `:` and produce invalid JS.
+      if (rest.slice(i).startsWith('__loopVar:') || rest.slice(i).startsWith('__conditional:')) {
+        // jump past the marker name + the colon
+        i += rest.slice(i).indexOf(':')
+        continue
+      }
       if (char === '(') depth++
       else if (char === ')') depth--
       else if (char === ':' && depth === 0 && !inConditional) {
@@ -1568,7 +1602,34 @@ class DOMGenerator {
   private resolveTopLevelCondition(condition: string): string {
     // Replace bare identifiers with $get("identifier")
     const reserved = new Set(['true', 'false', 'null', 'undefined', 'NaN', 'Infinity'])
-    return condition.replace(
+
+    // Mask strings BEFORE wrapping bare identifiers — otherwise identifiers
+    // inside user strings get wrapped (e.g. category === "Geschäftlich"
+    // would be split because `ä` is non-ASCII), and the result is invalid JS.
+    // Same trick as `resolveConditionVariables`: wrap placeholder in quotes
+    // so the lookbehind exclusion `["\w$.]` skips it.
+    const stringPlaceholders: string[] = []
+    const placeholderFor = (idx: number) => `"__MIRROR_STR_${idx}_END__"`
+    let result = condition.replace(/"((?:[^"\\]|\\.)*)"/g, m => {
+      const idx = stringPlaceholders.length
+      stringPlaceholders.push(m)
+      return placeholderFor(idx)
+    })
+    result = result.replace(/'((?:[^'\\]|\\.)*)'/g, m => {
+      const idx = stringPlaceholders.length
+      stringPlaceholders.push(m)
+      return placeholderFor(idx)
+    })
+
+    // Strip `__loopVar:` markers (set by IR for loop variable references).
+    // Without this, `__loopVar:item.field` would be wrapped as if `__loopVar`
+    // and `item.field` were two separate identifiers separated by ":" — which
+    // produces invalid JS (`$get("__loopVar"):$get("item.field")`).
+    result = result.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*)/g, '$1')
+
+    // Wrap bare identifiers with $get(). Non-ASCII identifiers (umlauts,
+    // emoji etc.) are NOT matched — they're left alone (treated as raw JS).
+    result = result.replace(
       /(?<!["\w$.])\b([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\b(?!["\w(])/g,
       (match, identifier) => {
         const firstPart = identifier.split('.')[0]
@@ -1576,9 +1637,26 @@ class DOMGenerator {
         return `$get("${identifier}")`
       }
     )
+
+    // Restore strings
+    result = result.replace(
+      /"__MIRROR_STR_(\d+)_END__"/g,
+      (_, idx) => stringPlaceholders[parseInt(idx, 10)]
+    )
+    return result
   }
 
   private resolveTopLevelValue(value: string): string {
+    // Already-quoted string (from elseTokens collection) — pass through.
+    // Otherwise we'd produce `""Nein""` for inputs that already came in
+    // wrapped, and JS would parse the empty `""` as a stray expression.
+    if (
+      value.length >= 2 &&
+      ((value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'")))
+    ) {
+      return value
+    }
     // Handle hex colors
     if (value.startsWith('#')) {
       return `"${value}"`

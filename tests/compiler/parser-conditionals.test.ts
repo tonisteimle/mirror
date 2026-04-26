@@ -125,7 +125,9 @@ describe('Parser: Inline Conditionals', () => {
     expect(cond.kind).toBe('conditional')
     expect(cond.condition).toBe('done === true')
     expect(cond.then).toBe('check')
-    expect(cond.else).toBe('circle')
+    // `else` is collected as a token sequence (might be a nested ternary), so
+    // STRING tokens stay quoted to survive into the JS expression.
+    expect(cond.else).toBe('"circle"')
   })
 
   it('parses ternary conditional with numbers', () => {
@@ -144,7 +146,7 @@ describe('Parser: Inline Conditionals', () => {
     expect(cond.kind).toBe('conditional')
     expect(cond.condition).toBe('task.done')
     expect(cond.then).toBe('check')
-    expect(cond.else).toBe('circle')
+    expect(cond.else).toBe('"circle"')
   })
 })
 

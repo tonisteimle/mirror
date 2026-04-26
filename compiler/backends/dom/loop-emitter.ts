@@ -40,10 +40,12 @@ export function emitEachLoop(ctx: LoopEmitterContext, each: IREach, parentVar: s
 
   // Check if collection is an inline array literal
   const isInlineArray = rawCollection.startsWith('[')
-  // Sanitize collection name for valid JS variable (replace dots with underscores)
+  // Sanitize collection name for valid JS variable. Prefix with containerId
+  // to ensure two `each X in $tasks` loops in the same scope get distinct
+  // variable names (without this, `const tasksData` would be redeclared).
   const collectionVarName = isInlineArray
     ? `${containerId}_inlineData`
-    : rawCollection.replace(/\./g, '_')
+    : `${containerId}_${rawCollection.replace(/\./g, '_')}`
 
   ctx.emit(
     `// Each loop: ${itemVar}${each.indexVar ? ', ' + indexVar : ''} in ${isInlineArray ? '[...]' : rawCollection}`
