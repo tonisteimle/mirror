@@ -234,6 +234,13 @@ interface Scenario {
   currentFile: string
   /** Text after the `??` marker (the user's prompt). Empty for pure-content drafts. */
   prompt: string
+  /**
+   * Optional code lines to put INSIDE the draft block (between the two `??`
+   * markers). Each line gets the same indent as the markers. Useful for
+   * "fix this code" or "refactor this" scenarios where the user has
+   * existing content in the block.
+   */
+  draftContent?: string[]
   /** Prose description of what success looks like — for manual analysis. */
   expectations: string
   /** Structural assertions checked automatically against output + DOM. */
@@ -396,6 +403,123 @@ m.fs: 14
       must.renderText('Language'),
     ],
   },
+
+  // ===========================================================================
+  // EDGE CASES — narrow, specific behaviors
+  // ===========================================================================
+
+  {
+    id: '6-empty-prompt-fix',
+    label: 'Edge: leerer Prompt + Code im Block (reine Korrektur)',
+    files: {
+      'index.mir': `canvas mobile, bg #18181b, col white\n\nFrame pad 16\n  ${PROMPT_MARKER}`,
+    },
+    currentFile: 'index.mir',
+    prompt: '', // no prompt — AI must work from draftContent + surrounding code
+    // "Buton" is a typo (capitalized custom name that isn't defined). Without
+    // a prompt the AI sees broken code in a draft block — should infer "fix this".
+    draftContent: ['Buton "Speichern", bg blu, pad 12 24'],
+    expectations:
+      'AI sollte den Typo erkennen (Buton → Button) und ungültiges "blu" zu validem Color/Token machen. Compile-clean.',
+    asserts: [
+      must.contain(/Button\b/, 'output uses Button primitive (typo fixed)'),
+      must.contain('"Speichern"'),
+      must.notContain(/\bbg\s+blu\b/, 'invalid "bg blu" was corrected'),
+      must.render(),
+      must.renderElement('Button', 1),
+      must.renderText('Speichern'),
+    ],
+  },
+
+  {
+    id: '7-refactor-to-tokens',
+    label: 'Edge: Refactor — bestehender Hex-Code soll Tokens nutzen',
+    files: {
+      'tokens.tok': `primary.bg: #2271C1
+text.col: #ffffff
+m.pad: 12
+l.pad: 24
+m.rad: 6
+`,
+      'index.mir': `canvas mobile\n\nFrame pad 16\n  ${PROMPT_MARKER}`,
+    },
+    currentFile: 'index.mir',
+    // Prompt explicitly asks to use tokens — content stays semantically the
+    // same but should switch from hex/raw values to $-references.
+    prompt: 'baue einen Speichern-Button und nutze die verfügbaren Tokens statt Hex-Werten',
+    expectations:
+      'Refactor-Pfad: AI sollte die existierenden Tokens nutzen, nicht ein paralleles Set erfinden. $primary für bg, $text für col, $m oder $l für padding/radius.',
+    asserts: [
+      must.useToken('primary'),
+      must.useToken('text'),
+      must.noInventedHex(),
+      must.contain('"Speichern"'),
+      must.render(),
+      must.renderElement('Button', 1),
+    ],
+  },
+
+  {
+    id: '8-deep-nesting',
+    label: 'Edge: tief verschachtelte Position (indent 6)',
+    files: {
+      // The `??` sits at indent 6 — deep inside Frame > Frame > Frame. Tests
+      // that replaceDraftBlock keeps the AI output at the right depth even
+      // for deeply-nested insertion points.
+      'index.mir': `canvas mobile, bg #18181b, col white
+
+Frame pad 16
+  Frame gap 8
+    Frame hor, gap 4
+      ${PROMPT_MARKER}`,
+    },
+    currentFile: 'index.mir',
+    prompt: 'icon und text nebeneinander',
+    expectations:
+      'Output muss mit 6 Spaces Indent landen (passend zum innersten Frame). Keine Code-Defines, einfache Inhalte (Icon + Text).',
+    asserts: [
+      // The final source must contain a line with exactly 6 leading spaces
+      // followed by a Mirror element (Icon, Text, etc.) — proves the indent
+      // was preserved end-to-end.
+      {
+        label: 'final source has element at indent 6',
+        level: 'must',
+        check: ctx => {
+          const re = /^ {6}[A-Z]\w*/m
+          return {
+            pass: re.test(ctx.finalSource),
+            detail: re.test(ctx.finalSource) ? undefined : 'no element at exact indent 6',
+          }
+        },
+      },
+      must.contain(/Icon\b/, 'contains Icon'),
+      must.contain(/Text\b/, 'contains Text'),
+      must.render(),
+      must.renderElement('Icon', 1),
+      must.renderElement('Text', 1),
+    ],
+  },
+
+  {
+    id: '9-form-with-inputs',
+    label: 'Edge: Login-Form mit Inputs',
+    files: {
+      'index.mir': `canvas mobile, bg #18181b, col white\n\nFrame pad 24, gap 12\n  ${PROMPT_MARKER}`,
+    },
+    currentFile: 'index.mir',
+    prompt: 'login form: email input, password input, submit button',
+    expectations:
+      'Mirror Input-Primitive mit placeholder. Zwei Inputs (email + password), ein Button. Vertical layout mit gap.',
+    asserts: [
+      must.contain(/Input\b.*Input\b/s, 'two Input elements'),
+      must.contain(/Button\b/, 'contains Button'),
+      should.contain(/placeholder/i, 'inputs have placeholder text'),
+      should.contain(/type ["']?password/i, 'password input has type=password'),
+      must.render(),
+      must.renderElement('Input', 2),
+      must.renderElement('Button', 1),
+    ],
+  },
 ]
 
 // =============================================================================
@@ -548,11 +672,14 @@ async function runScenario(cdp: CDPSession, scenario: Scenario): Promise<Scenari
   }
   const markerIndent = markerLineMatch[2] // leading whitespace on marker's line
 
-  // Open the draft block: replace __PROMPT_HERE__ with `?? <prompt>`
-  // (open marker + prompt text on the same line, at the user's indent level).
-  // Closing `??` will be added next via a separate dispatch to trigger
-  // the open→closed state transition the auto-submit watches for.
-  const initialContentOpen = sourceWithMarker.replace(PROMPT_MARKER, `?? ${scenario.prompt}`)
+  // Open the draft block: replace __PROMPT_HERE__ with `?? <prompt>` plus
+  // any draftContent lines (each at the marker's indent). Closing `??` is
+  // added separately to trigger the open→closed transition the auto-submit
+  // watches for.
+  const openMarkerLine = scenario.prompt ? `?? ${scenario.prompt}` : `??`
+  const contentLines = (scenario.draftContent ?? []).map(l => `${markerIndent}${l}`)
+  const replacement = [openMarkerLine, ...contentLines].join(`\n`)
+  const initialContentOpen = sourceWithMarker.replace(PROMPT_MARKER, replacement)
 
   await evaluate<void>(
     cdp,
