@@ -17,6 +17,8 @@
  *   npx tsx scripts/eval-ai-draft.ts --headed        # watch the browser drive itself
  *   npx tsx scripts/eval-ai-draft.ts --only=3        # run only scenario index 3
  *   npx tsx scripts/eval-ai-draft.ts --repeat=5      # variance mode: run each scenario 5x
+ *   npx tsx scripts/eval-ai-draft.ts --prompt-variant=minimal    # use a non-default prompt
+ *   npx tsx scripts/eval-ai-draft.ts --compare-variants=current,minimal  # A/B test prompts
  */
 
 import { mkdirSync, writeFileSync } from 'fs'
@@ -618,6 +620,8 @@ interface BridgeCall {
 
 interface ScenarioResult {
   scenario: Scenario
+  /** Which prompt variant was active during this run (for A/B reports). */
+  promptVariant: string
   bridgeCall: BridgeCall | null
   finalSource: string
   extractedCode: string | null
@@ -629,10 +633,18 @@ interface ScenarioResult {
   totalElapsedMs: number
 }
 
-async function runScenario(cdp: CDPSession, scenario: Scenario): Promise<ScenarioResult> {
+async function runScenario(
+  cdp: CDPSession,
+  scenario: Scenario,
+  opts: { promptVariant?: string } = {}
+): Promise<ScenarioResult> {
   const startTotal = Date.now()
+  const promptVariant = opts.promptVariant ?? 'current'
   console.log(`\n[${scenario.id}] ${scenario.label}`)
-  console.log(`  prompt: "${scenario.prompt}"`)
+  console.log(
+    `  prompt: "${scenario.prompt}"` +
+      (promptVariant !== 'current' ? ` (variant: ${promptVariant})` : '')
+  )
 
   // Fresh studio load — no leftover state from prior scenario
   await cdp.send('Page.navigate', { url: 'http://localhost:5173/studio/?clean=1' })
@@ -640,11 +652,14 @@ async function runScenario(cdp: CDPSession, scenario: Scenario): Promise<Scenari
   await waitForStudioReady(cdp)
   await sleep(500)
 
-  // Install bridge shim + spy on runAgent so we capture exact prompt + raw response
+  // Install bridge shim + spy on runAgent so we capture exact prompt + raw response.
+  // Also set the prompt variant so the fixer picks the right buildDraftPrompt
+  // function. 'current' is the production default — set explicitly for clarity.
   await evaluate<void>(
     cdp,
     `(() => {
        window.__installCliBridgeShim({ verbose: false });
+       window.__draftPromptVariant = ${JSON.stringify(promptVariant)};
        const orig = window.TauriBridge.agent.runAgent;
        window.__bridgeCalls = [];
        window.TauriBridge.agent.runAgent = async (prompt, agentType, projectPath, sessionId) => {
@@ -782,6 +797,7 @@ async function runScenario(cdp: CDPSession, scenario: Scenario): Promise<Scenari
 
   return {
     scenario,
+    promptVariant,
     bridgeCall,
     finalSource,
     extractedCode: response.code ?? null,
@@ -1063,6 +1079,120 @@ function formatReport(results: ScenarioResult[]): string {
 }
 
 // =============================================================================
+// COMPARE REPORT (A/B prompt variants)
+// =============================================================================
+
+/**
+ * Side-by-side comparison of multiple prompt variants on the same scenarios.
+ * Surfaces deltas: which variant uses tokens more, which produces less code,
+ * which fails more asserts, which is faster on average.
+ *
+ * Verdict per scenario: tie (identical asserts + similar output) vs winner
+ * (one variant strictly better) vs trade-off (each better at different things).
+ */
+function formatCompareReport(results: ScenarioResult[], variants: string[]): string {
+  const ts = new Date().toISOString()
+  const lines: string[] = []
+  lines.push(`# AI Draft-Mode Eval — A/B Variant Comparison — ${ts}`)
+  lines.push('')
+  lines.push(`Variants: ${variants.map(v => `\`${v}\``).join(' vs ')}`)
+  lines.push('')
+
+  // Group results: scenario id → variant name → result
+  const byScenario = new Map<string, Map<string, ScenarioResult>>()
+  for (const r of results) {
+    let inner = byScenario.get(r.scenario.id)
+    if (!inner) {
+      inner = new Map()
+      byScenario.set(r.scenario.id, inner)
+    }
+    inner.set(r.promptVariant, r)
+  }
+
+  // Aggregate stats per variant for top-line summary
+  lines.push(`## Aggregate stats`)
+  lines.push('')
+  lines.push(
+    '| Variant | Compile | Render | Must-asserts | Avg lines | Avg bridge ms | Avg prompt chars |'
+  )
+  lines.push(
+    '|---------|---------|--------|--------------|-----------|---------------|------------------|'
+  )
+  for (const variant of variants) {
+    const variantResults = results.filter(r => r.promptVariant === variant)
+    const compiled = variantResults.filter(r => r.compileOk).length
+    const rendered = variantResults.filter(r => r.dom && r.dom.mirrorElementCount > 0).length
+    const allMust = variantResults.flatMap(r => r.assertResults.filter(a => a.level === 'must'))
+    const mustPass = allMust.filter(a => a.pass).length
+    const avgLines = avg(variantResults.map(r => (r.extractedCode ?? '').split('\n').length))
+    const avgBridge = avg(variantResults.map(r => r.bridgeCall?.elapsedMs ?? 0))
+    const avgPromptChars = avg(variantResults.map(r => r.bridgeCall?.prompt.length ?? 0))
+    lines.push(
+      `| \`${variant}\` | ${compiled}/${variantResults.length} | ${rendered}/${variantResults.length} | ` +
+        `${mustPass}/${allMust.length} | ${avgLines.toFixed(1)} | ${Math.round(avgBridge)} | ${Math.round(avgPromptChars)} |`
+    )
+  }
+  lines.push('')
+
+  // Per-scenario side-by-side
+  for (const [id, byVariant] of byScenario) {
+    const sc = (byVariant.values().next().value as ScenarioResult).scenario
+    lines.push(`---`)
+    lines.push('')
+    lines.push(`## ${id}: ${sc.label}`)
+    lines.push('')
+    lines.push(`**Prompt:** \`${sc.prompt || '(empty)'}\``)
+    lines.push('')
+
+    // Per-variant assertion comparison
+    if (sc.asserts && sc.asserts.length > 0) {
+      lines.push(`### Asserts side-by-side`)
+      lines.push('')
+      const headerCells = ['Assertion', ...variants.map(v => `\`${v}\``)]
+      lines.push(`| ${headerCells.join(' | ')} |`)
+      lines.push(`| ${headerCells.map(() => '---').join(' | ')} |`)
+      for (let i = 0; i < sc.asserts.length; i++) {
+        const a = sc.asserts[i]
+        const cells = [
+          a.label + (a.level === 'should' ? ' _(should)_' : ''),
+          ...variants.map(v => {
+            const r = byVariant.get(v)
+            const ar = r?.assertResults[i]
+            if (!ar) return '—'
+            return ar.pass ? '✓' : ar.level === 'must' ? '✗' : '⚠'
+          }),
+        ]
+        lines.push(`| ${cells.join(' | ')} |`)
+      }
+      lines.push('')
+    }
+
+    // Side-by-side outputs
+    lines.push(`### Outputs side-by-side`)
+    lines.push('')
+    for (const variant of variants) {
+      const r = byVariant.get(variant)
+      if (!r) {
+        lines.push(`#### \`${variant}\` — (no result)`)
+        continue
+      }
+      const promptLen = r.bridgeCall?.prompt.length ?? 0
+      const elapsed = r.bridgeCall?.elapsedMs ?? 0
+      lines.push(
+        `#### \`${variant}\` — ${promptLen} prompt chars, ${elapsed}ms, ` +
+          `compile ${r.compileOk ? '✓' : '✗'}, render ${r.dom?.mirrorElementCount ?? 0} els`
+      )
+      lines.push('```mirror')
+      lines.push((r.extractedCode ?? '(no output)').trim())
+      lines.push('```')
+      lines.push('')
+    }
+  }
+
+  return lines.join('\n')
+}
+
+// =============================================================================
 // VARIANCE REPORT
 // =============================================================================
 
@@ -1199,12 +1329,33 @@ async function main() {
   const headed = process.argv.includes('--headed')
   const onlyArg = process.argv.find(a => a.startsWith('--only='))
   const repeatArg = process.argv.find(a => a.startsWith('--repeat='))
+  const promptVariantArg = process.argv.find(a => a.startsWith('--prompt-variant='))
+  const compareVariantsArg = process.argv.find(a => a.startsWith('--compare-variants='))
   const onlyId = onlyArg?.split('=')[1]
   const repeat = repeatArg ? parseInt(repeatArg.split('=')[1], 10) : 1
+  const singleVariant = promptVariantArg?.split('=')[1] ?? 'current'
+  const compareVariants = compareVariantsArg
+    ? compareVariantsArg
+        .split('=')[1]
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+    : null
   if (!Number.isFinite(repeat) || repeat < 1) {
     console.error(`--repeat must be a positive integer, got: ${repeatArg}`)
     process.exit(1)
   }
+  if (compareVariants && compareVariants.length < 2) {
+    console.error(`--compare-variants needs at least two names, got: ${compareVariantsArg}`)
+    process.exit(1)
+  }
+  if (compareVariants && repeat > 1) {
+    console.error(
+      `--compare-variants and --repeat are mutually exclusive (compare runs once per variant)`
+    )
+    process.exit(1)
+  }
+  const variantsToRun = compareVariants ?? [singleVariant]
   const scenarios = onlyId
     ? SCENARIOS.filter(s => s.id.startsWith(onlyId) || s.id === onlyId)
     : SCENARIOS
@@ -1216,17 +1367,29 @@ async function main() {
 
   await assertServers()
 
+  const suffix = compareVariants
+    ? `-vs-${compareVariants.join('-')}`
+    : repeat > 1
+      ? `-x${repeat}`
+      : singleVariant !== 'current'
+        ? `-${singleVariant}`
+        : ''
   const reportDir = join(
     'test-results',
-    `ai-eval-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)}` +
-      (repeat > 1 ? `-x${repeat}` : '')
+    `ai-eval-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)}${suffix}`
   )
   mkdirSync(reportDir, { recursive: true })
   console.log(`\nReport dir: ${reportDir}`)
-  if (repeat > 1) {
+  if (compareVariants) {
+    console.log(
+      `A/B mode: comparing ${compareVariants.join(' vs ')} (${scenarios.length * compareVariants.length} total calls)`
+    )
+  } else if (repeat > 1) {
     console.log(
       `Variance mode: each scenario runs ${repeat}× (${scenarios.length * repeat} total calls)`
     )
+  } else if (singleVariant !== 'current') {
+    console.log(`Prompt variant: ${singleVariant}`)
   }
 
   console.log(`\nLaunching Chrome (${headed ? 'headed' : 'headless'})...`)
@@ -1256,20 +1419,34 @@ async function main() {
     console.log(`  [browser:${level}] ${text.slice(0, 200)}`)
   })
 
+  const reportFile = compareVariants
+    ? 'report-compare.md'
+    : repeat > 1
+      ? 'report-variance.md'
+      : 'report.md'
+  const writeReport = (results: ScenarioResult[]) => {
+    if (compareVariants) {
+      return formatCompareReport(results, compareVariants)
+    }
+    if (repeat > 1) {
+      return formatVarianceReport(results, repeat)
+    }
+    return formatReport(results)
+  }
+
   const results: ScenarioResult[] = []
   try {
     for (const scenario of scenarios) {
-      for (let runIdx = 0; runIdx < repeat; runIdx++) {
-        if (repeat > 1) console.log(`\n--- run ${runIdx + 1}/${repeat} ---`)
-        try {
-          const result = await runScenario(cdp, scenario)
-          results.push(result)
-          writeFileSync(
-            join(reportDir, repeat > 1 ? 'report-variance.md' : 'report.md'),
-            repeat > 1 ? formatVarianceReport(results, repeat) : formatReport(results)
-          )
-        } catch (err) {
-          console.error(`  ✗ scenario ${scenario.id} run ${runIdx + 1} crashed:`, err)
+      for (const variant of variantsToRun) {
+        for (let runIdx = 0; runIdx < repeat; runIdx++) {
+          if (repeat > 1) console.log(`\n--- run ${runIdx + 1}/${repeat} ---`)
+          try {
+            const result = await runScenario(cdp, scenario, { promptVariant: variant })
+            results.push(result)
+            writeFileSync(join(reportDir, reportFile), writeReport(results))
+          } catch (err) {
+            console.error(`  ✗ scenario ${scenario.id} (${variant}) crashed:`, err)
+          }
         }
       }
     }
@@ -1278,11 +1455,8 @@ async function main() {
     chrome.kill()
   }
 
-  const reportPath = join(reportDir, repeat > 1 ? 'report-variance.md' : 'report.md')
-  writeFileSync(
-    reportPath,
-    repeat > 1 ? formatVarianceReport(results, repeat) : formatReport(results)
-  )
+  const reportPath = join(reportDir, reportFile)
+  writeFileSync(reportPath, writeReport(results))
 
   // Stats summary
   const ok = results.filter(r => r.compileOk && !r.draftError).length

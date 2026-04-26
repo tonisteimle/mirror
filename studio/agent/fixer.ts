@@ -413,7 +413,14 @@ export class FixerService {
         }
       }
 
-      const fullPrompt = buildDraftPrompt({
+      // Variant override (eval/A-B testing only). Production resolves to
+      // 'current' via the default branch in resolveDraftPromptBuilder.
+      const variantOverride =
+        typeof window !== 'undefined'
+          ? ((window as any).__draftPromptVariant as string | undefined)
+          : undefined
+      const builder = resolveDraftPromptBuilder(variantOverride)
+      const fullPrompt = builder({
         prompt,
         content,
         fullSource,
@@ -712,11 +719,7 @@ export class FixerService {
 // DRAFT PROMPT HELPERS
 // ============================================
 
-/**
- * Build a focused prompt for draft-block code generation.
- * Asks Claude to return ONLY a Mirror code block, no JSON, no prose.
- */
-function buildDraftPrompt(input: {
+interface DraftPromptInput {
   prompt: string | null
   content: string
   fullSource: string
@@ -724,7 +727,43 @@ function buildDraftPrompt(input: {
   tokenFiles?: Record<string, string>
   /** Other component files (.com) — keyed by filename → file content */
   componentFiles?: Record<string, string>
-}): string {
+}
+
+type DraftPromptBuilder = (input: DraftPromptInput) => string
+
+/**
+ * Registry of named draft prompt variants. The eval driver can pick a
+ * non-default variant via `window.__draftPromptVariant`, enabling A/B
+ * comparison without changing production code. Production always uses
+ * 'current' (the default in resolveDraftPromptBuilder).
+ *
+ * To add a new variant for an experiment:
+ *   1. Add an entry here with a tight, testable hypothesis encoded in name.
+ *   2. Run: `npx tsx scripts/eval-ai-draft.ts --compare-variants=current,<name>`
+ *   3. Diff the side-by-side report.
+ *   4. If wins → replace 'current' and delete the experiment variant.
+ */
+const DRAFT_PROMPT_VARIANTS: Record<string, DraftPromptBuilder> = {
+  current: buildDraftPromptCurrent,
+  minimal: buildDraftPromptMinimal,
+}
+
+export function resolveDraftPromptBuilder(name?: string): DraftPromptBuilder {
+  if (!name || !(name in DRAFT_PROMPT_VARIANTS)) return DRAFT_PROMPT_VARIANTS.current
+  return DRAFT_PROMPT_VARIANTS[name]
+}
+
+/** Names of registered variants — exposed for eval introspection. */
+export function listDraftPromptVariants(): string[] {
+  return Object.keys(DRAFT_PROMPT_VARIANTS)
+}
+
+/**
+ * The shipping prompt. All production calls go through this. Tightened from
+ * the original after eval surfaced over-invention + non-uniform patterns
+ * (see commit f8791268).
+ */
+function buildDraftPromptCurrent(input: DraftPromptInput): string {
   const userInstruction = input.prompt
     ? `User-Anfrage: ${input.prompt}`
     : 'Vervollständige oder korrigiere den Code im Draft-Block basierend auf dem Kontext.'
@@ -772,6 +811,40 @@ Frame hor, gap 8
   Button "Speichern", bg $primary
   Button "Abbrechen"
 \`\`\`
+`
+}
+
+/**
+ * Experimental: extremely terse prompt. Hypothesis: with token + component
+ * sections already structured, the long rule list adds tokens but little
+ * signal. Tests whether a much smaller prompt produces equivalent output.
+ *
+ * Use via `--compare-variants=current,minimal` to A/B test.
+ */
+function buildDraftPromptMinimal(input: DraftPromptInput): string {
+  const userInstruction = input.prompt || 'Korrigiere oder vervollständige den Draft-Block.'
+
+  const draftContent = input.content.trim()
+    ? `\n\nDraft-Block-Inhalt:\n\`\`\`mirror\n${input.content}\n\`\`\``
+    : ''
+
+  const tokenSection = formatProjectFileSection('Tokens', input.tokenFiles)
+  const componentSection = formatProjectFileSection('Komponenten', input.componentFiles)
+
+  return `Du generierst Mirror DSL Code. Ersetze den \`??\`-Block:
+${tokenSection}${componentSection}
+## Source
+\`\`\`mirror
+${input.fullSource}
+\`\`\`
+${draftContent}
+
+## Anfrage
+${userInstruction}
+
+## Antwort
+Nur \`\`\`mirror Code-Block. Keine Prosa. Tokens vor Hex. Komponenten wiederverwenden.
+Keine erfundenen Inhalte. Bei Wiederholungen: identische Struktur.
 `
 }
 
