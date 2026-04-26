@@ -6,6 +6,8 @@ export { marScenarios, marStepRunnerTests } from './mar.scenarios'
 export { marSidesScenarios, marSidesStepRunnerTests } from './mar-sides.scenarios'
 export { marAxisScenarios, marAxisStepRunnerTests } from './mar-axis.scenarios'
 export { gapScenarios, gapStepRunnerTests } from './gap.scenarios'
+export { fsScenarios, fsStepRunnerTests } from './fs.scenarios'
+export { radScenarios, radStepRunnerTests } from './rad.scenarios'
 
 import { padStepRunnerTests } from './pad.scenarios'
 import { padTStepRunnerTests } from './pad-t.scenarios'
@@ -15,6 +17,8 @@ import { marStepRunnerTests } from './mar.scenarios'
 import { marSidesStepRunnerTests } from './mar-sides.scenarios'
 import { marAxisStepRunnerTests } from './mar-axis.scenarios'
 import { gapStepRunnerTests } from './gap.scenarios'
+import { fsStepRunnerTests } from './fs.scenarios'
+import { radStepRunnerTests } from './rad.scenarios'
 
 export const allStepRunnerExampleTests = [
   ...padStepRunnerTests,
@@ -25,4 +29,6 @@ export const allStepRunnerExampleTests = [
   ...marSidesStepRunnerTests,
   ...marAxisStepRunnerTests,
   ...gapStepRunnerTests,
+  ...fsStepRunnerTests,
+  ...radStepRunnerTests,
 ]
