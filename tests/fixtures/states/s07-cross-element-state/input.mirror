@@ -1,0 +1,9 @@
+Button name MenuBtn, pad 10, bg #333, col white, toggle()
+  open:
+    bg #2271C1
+
+Frame bg #1a1a1a, pad 12, gap 4, hidden
+  MenuBtn.open:
+    visible
+  Text "Menu Item 1", col white
+  Text "Menu Item 2", col white

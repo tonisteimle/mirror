@@ -12,7 +12,7 @@ import type {
   ToolUseBlock,
   ToolResultBlockParam,
 } from '@anthropic-ai/sdk/resources/messages'
-import { buildSystemPrompt } from './prompts/system'
+import { buildSystemPrompt, selectPromptMode } from './prompts/system'
 import { coreTools } from './tools/core'
 import { writeTools } from './tools/write'
 import { analyzeTools } from './tools/analyze'
@@ -116,10 +116,12 @@ export class AnthropicSdkAgent {
     const maxIterations = this.config.maxIterations || 10
     let iterations = 0
 
-    // Build system prompt
+    // Build system prompt — full tutorial when generating from scratch,
+    // compact when iterating on existing code.
     const systemPrompt = buildSystemPrompt({
       tokens: this.config.tokens,
       components: this.config.components,
+      mode: selectPromptMode(this.config.getCode()),
     })
 
     // Build initial messages

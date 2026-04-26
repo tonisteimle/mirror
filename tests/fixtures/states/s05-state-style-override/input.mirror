@@ -1,0 +1,7 @@
+Btn: Button pad 10, bg #333, col white, fs 14, toggle()
+  on:
+    bg #ef4444
+    col #fff
+    fs 16
+
+Btn "Override demo"

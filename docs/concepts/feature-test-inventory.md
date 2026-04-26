@@ -54,15 +54,15 @@
 
 ## State & Interaktion
 
-| #   | Feature                 | Sub-Features                                                                           | Status | Schichten | Notizen                           |
-| --- | ----------------------- | -------------------------------------------------------------------------------------- | :----: | --------- | --------------------------------- |
-| 27  | **System-States**       | hover, focus, active, disabled                                                         |   🔵   | -         | DOM-Backend implementiert         |
-| 28  | **Custom-States**       | on/off, open/closed, selected/highlighted, expanded/collapsed, filled/valid/invalid, … |   🔵   | -         |                                   |
-| 29  | **toggle()**            | binäres on/off, mit Transitions, mit `on`-Initial-State                                |   🔵   | -         | Im Components-Pyramide angerissen |
-| 30  | **exclusive()**         | nur eines aktiv in Group, `selected` Initial-State, Cross-Element via `name`           |   🔵   | -         | dito                              |
-| 31  | **Size-States**         | compact (<400px), regular (400-800px), wide (>800px), Custom-Threshold                 |   🔵   | -         |                                   |
-| 32  | **State-Transitions**   | duration, easing, anim-Property                                                        |   🔵   | -         |                                   |
-| 33  | **Cross-Element-State** | `Element.state:` Selektor, `name`-Referenzen                                           |   🔵   | -         |                                   |
+| #   | Feature                 | Sub-Features                                                           | Status | Schichten | Notizen               |
+| --- | ----------------------- | ---------------------------------------------------------------------- | :----: | --------- | --------------------- |
+| 27  | **System-States**       | S9 hover, focus, active, disabled                                      |   ✅   | F·B·C·D·S | Sprint 3.1, ~42 Tests |
+| 28  | **Custom-States**       | S4 multi-state, S5 style-override, S8 state-children                   |   ✅   | F·B·C·D·S | Sprint 3.1            |
+| 29  | **toggle()**            | S1 basic, S2 initial, S3 transition, S10 multiple-independent          |   ✅   | F·B·C·D·S | Sprint 3.1            |
+| 30  | **exclusive()**         | S6 group, S7 cross-element                                             |   ✅   | F·B·C·D·S | Sprint 3.1            |
+| 31  | **Size-States**         | compact (<400px), regular (400-800px), wide (>800px), Custom-Threshold |   🔵   | -         |                       |
+| 32  | **State-Transitions**   | duration, easing, anim-Property                                        |   🔵   | -         |                       |
+| 33  | **Cross-Element-State** | `Element.state:` Selektor, `name`-Referenzen                           |   🔵   | -         |                       |
 
 ## Daten & Bindings
 

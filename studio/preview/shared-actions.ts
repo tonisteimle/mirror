@@ -13,6 +13,7 @@ import {
   RemovePropertyCommand,
   BatchCommand,
   SetLayoutDirectionCommand,
+  UpdateSourceCommand,
 } from '../core/commands'
 
 export interface ActionResult {
@@ -305,21 +306,30 @@ export function executeDuplicate(): ActionResult {
     return { success: false, error: 'Node position out of bounds' }
   }
 
-  // Extract the lines for this node
+  // Extract the lines for this node and compute the editor-relative
+  // character range to insert *after* the node ends.
   const nodeLines = lines.slice(startLine, endLine + 1)
+  const insertText = '\n' + nodeLines.join('\n')
 
-  // Insert after the node's end line
-  const insertIndex = endLine + 1
-  const newLines = [...lines]
-  newLines.splice(insertIndex, 0, ...nodeLines)
+  // Calculate insertion offset (end of the node's last line).
+  let insertOffset = 0
+  for (let i = 0; i <= endLine; i++) {
+    insertOffset += lines[i].length
+    if (i < lines.length - 1) insertOffset += 1 // account for the '\n' separator
+  }
 
-  const newSource = newLines.join('\n')
-
-  // Apply the change directly via source update
-  state.set({ source: newSource })
-  events.emit('source:changed', { source: newSource, origin: 'keyboard' })
-  events.emit('compile:requested', {})
-
+  // Route through the command pipeline so the editor doc, the source
+  // store and undo/redo all stay in sync. The previous direct
+  // `state.set({ source })` only updated the source store — the editor
+  // kept showing the old content because the editor doc was never
+  // dispatched. Same divergence pattern as the property-panel and
+  // ::-extract bugs we fixed earlier today.
+  const result = executor.execute(
+    new UpdateSourceCommand({ from: insertOffset, to: insertOffset, insert: insertText })
+  )
+  if (!result.success) {
+    return { success: false, error: result.error || 'UpdateSource failed' }
+  }
   return { success: true, message: 'Element duplicated' }
 }
 

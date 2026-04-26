@@ -1,0 +1,9 @@
+LikeBtn: Button pad 10, bg #333, hor, gap 8, toggle()
+  Icon "heart", ic #888, is 18
+  Text "Like", col #888
+  on:
+    bg #ef4444
+    Icon "heart", ic white, is 18, fill
+    Text "Liked!", col white
+
+LikeBtn

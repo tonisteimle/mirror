@@ -41,7 +41,7 @@ describe('E001 UNKNOWN_COMPONENT', () => {
   })
 
   it('errors on typo in primitive name in component definition', () => {
-    const result = validate('MyBtn as Btton: pad 10')  // Typo: should be Button
+    const result = validate('MyBtn as Btton: pad 10') // Typo: should be Button
     expect(result.valid).toBe(false)
     expect(result.errors.some(e => e.code === ERROR_CODES.UNKNOWN_COMPONENT)).toBe(true)
   })
@@ -88,7 +88,7 @@ describe('E100 UNKNOWN_PROPERTY', () => {
   })
 
   it('errors on typo in property name', () => {
-    const result = validate('Frame backgrund #333')  // Typo: should be background
+    const result = validate('Frame backgrund #333') // Typo: should be background
     expect(result.valid).toBe(false)
     expect(result.errors.some(e => e.code === ERROR_CODES.UNKNOWN_PROPERTY)).toBe(true)
   })
@@ -102,7 +102,11 @@ describe('E104 INVALID_COLOR / E101 INVALID_VALUE (color validation)', () => {
     const result = validate('Frame bg notacolor')
     expect(result.valid).toBe(false)
     // Reported as E101 INVALID_VALUE with descriptive message
-    expect(result.errors.some(e => e.code === ERROR_CODES.INVALID_VALUE && e.message.includes('Invalid color'))).toBe(true)
+    expect(
+      result.errors.some(
+        e => e.code === ERROR_CODES.INVALID_VALUE && e.message.includes('Invalid color')
+      )
+    ).toBe(true)
   })
 
   it('accepts valid named colors', () => {
@@ -244,7 +248,7 @@ describe('E200 UNKNOWN_EVENT', () => {
   })
 
   it.skip('errors on typo in event name (parsing issue with property-style events)', () => {
-    const result = validate('Frame onclck toggle()')  // Typo: should be onclick
+    const result = validate('Frame onclck toggle()') // Typo: should be onclick
     expect(result.valid).toBe(false)
     expect(result.errors.some(e => e.code === ERROR_CODES.UNKNOWN_EVENT)).toBe(true)
   })
@@ -258,7 +262,7 @@ describe('E201 UNKNOWN_KEY', () => {
   })
 
   it.skip('errors on typo in key name (parsing issue)', () => {
-    const result = validate('Frame onkeydown entr toggle()')  // Typo: should be enter
+    const result = validate('Frame onkeydown entr toggle()') // Typo: should be enter
     expect(result.valid).toBe(false)
     expect(result.errors.some(e => e.code === ERROR_CODES.UNKNOWN_KEY)).toBe(true)
   })
@@ -293,7 +297,7 @@ describe('E300 UNKNOWN_ACTION', () => {
   })
 
   it.skip('errors on typo in action name (parsing issue)', () => {
-    const result = validate('Button togle()')  // Typo: should be toggle
+    const result = validate('Button togle()') // Typo: should be toggle
     expect(result.valid).toBe(false)
     expect(result.errors.some(e => e.code === ERROR_CODES.UNKNOWN_ACTION)).toBe(true)
   })
@@ -315,8 +319,12 @@ describe('W500 UNDEFINED_TOKEN', () => {
   })
 })
 
+// W501 / W503 are intentionally NOT emitted — see compiler/validator/validator.ts
+// (checkUnusedDefinitions is disabled, commit ceda307d: "unused definitions are
+// allowed; only undefined references are errors"). The "warns on …" tests are
+// skipped to lock in this design without re-enabling the disabled check.
 describe('W501 UNUSED_TOKEN', () => {
-  it('warns on unused token definition', () => {
+  it.skip('warns on unused token definition (disabled — unused defs allowed)', () => {
     const result = validate(`primary.bg: #2563eb
 Frame bg #333`)
     expect(result.warnings.some(e => e.code === ERROR_CODES.UNUSED_TOKEN)).toBe(true)
@@ -336,7 +344,7 @@ Frame bg $card`)
 })
 
 describe('W503 UNUSED_COMPONENT', () => {
-  it('warns on unused component definition', () => {
+  it.skip('warns on unused component definition (disabled — unused defs allowed)', () => {
     const result = validate(`Btn as Button: pad 10
 Frame w 100`)
     expect(result.warnings.some(e => e.code === ERROR_CODES.UNUSED_COMPONENT)).toBe(true)

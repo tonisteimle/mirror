@@ -1,0 +1,5 @@
+Btn: Button pad 10, bg #333, col white, toggle()
+  on 0.2s ease-out:
+    bg #2271C1
+
+Btn "Animated"

@@ -5,10 +5,14 @@
 > Studio-Surfaces. CLAUDE.md ist für die DSL die Referenz; dieses Doc
 > ergänzt das, was Mirror Studio _selber_ als UI-Surface anbietet.
 >
-> **Status:** unverifiziert. Bevor ein Step ein Feature anfasst, muss die
-> Trigger-Mechanik (Tastenkombo, Selektor, Klick-Sequenz) durch ein kleines
-> Probe-Skript bestätigt werden — die Inventur ist eine Hypothese-Liste,
-> nicht eine API-Doku.
+> **Status:** Hauptpfade (Drop, Selection, Property-Panel, Pickers, Inline-
+> Edit, `::`-Extraktion, AI-Prompt, Visual Handles, Multi-File) sind durch
+> die Notion-Settings-Demo (`tools/test-runner/demo/scripts/notion-
+settings.ts`) end-to-end verifiziert. Die drei Refactoring-Tastaturen
+> (`Cmd+D`, `Cmd+G`, Right-Click-Context-Menü) werden ad-hoc von
+> `_verify-triggers.ts` bestätigt — Cmd+D + Right-Click-Menü brauchen
+> ein Element MIT Parent (Root-Elemente lehnen Duplicate ab), Cmd+G
+> braucht Multi-Selection ≥2.
 
 ## Surface: Component Panel (Palette)
 

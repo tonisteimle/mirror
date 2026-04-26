@@ -5,7 +5,7 @@
  * Only works in Desktop app (Tauri).
  */
 
-import { buildSystemPrompt } from './prompts/system'
+import { buildSystemPrompt, selectPromptMode } from './prompts/system'
 import type { AgentEvent, LLMCommand } from './types'
 
 // ============================================
@@ -25,7 +25,12 @@ interface TauriBridge {
   isTauri: () => boolean
   agent: {
     checkClaudeCli: () => Promise<boolean>
-    runAgent: (prompt: string, agentType: string, projectPath: string, sessionId?: string | null) => Promise<{
+    runAgent: (
+      prompt: string,
+      agentType: string,
+      projectPath: string,
+      sessionId?: string | null
+    ) => Promise<{
       session_id: string
       success: boolean
       output: string
@@ -89,17 +94,23 @@ export class ClaudeCliAgent {
     // Check if CLI is available
     const cliAvailable = await bridge.agent.checkClaudeCli()
     if (!cliAvailable) {
-      yield { type: 'error', error: 'Claude CLI nicht gefunden. Bitte installieren: npm install -g @anthropic-ai/claude-code' }
+      yield {
+        type: 'error',
+        error:
+          'Claude CLI nicht gefunden. Bitte installieren: npm install -g @anthropic-ai/claude-code',
+      }
       return
     }
 
     // Build the full prompt with context
     const contextPrompt = this.buildContextualPrompt(userPrompt)
 
-    // Build system prompt
+    // Build system prompt — full tutorial when generating from scratch,
+    // compact when iterating on existing code.
     const systemPrompt = buildSystemPrompt({
       tokens: this.config.tokens,
-      components: this.config.components
+      components: this.config.components,
+      mode: selectPromptMode(this.config.getCode()),
     })
 
     // Full prompt for Claude CLI
@@ -118,7 +129,7 @@ Wenn du Änderungen am bestehenden Code machst, gib den VOLLSTÄNDIGEN aktualisi
     const outputBuffer: AgentOutput[] = []
     let resolveNext: ((value: AgentOutput | null) => void) | null = null
 
-    this.unlistenFn = await bridge.agent.onAgentOutput((output) => {
+    this.unlistenFn = await bridge.agent.onAgentOutput(output => {
       if (resolveNext) {
         resolveNext(output)
         resolveNext = null
@@ -132,7 +143,7 @@ Wenn du Änderungen am bestehenden Code machst, gib den VOLLSTÄNDIGEN aktualisi
       if (outputBuffer.length > 0) {
         return Promise.resolve(outputBuffer.shift()!)
       }
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         resolveNext = resolve
         // Timeout after 60 seconds
         setTimeout(() => {
@@ -194,7 +205,6 @@ Wenn du Änderungen am bestehenden Code machst, gib den VOLLSTÄNDIGEN aktualisi
       }
 
       yield { type: 'done' }
-
     } catch (error: unknown) {
       yield { type: 'error', error: error instanceof Error ? error.message : 'Unbekannter Fehler' }
     } finally {
@@ -246,7 +256,9 @@ ${selection.text}
     if (tokens && Object.keys(tokens).length > 0) {
       context += `
 ## Verfügbare Tokens
-${Object.entries(tokens).map(([k, v]) => `- ${k}: ${v}`).join('\n')}
+${Object.entries(tokens)
+  .map(([k, v]) => `- ${k}: ${v}`)
+  .join('\n')}
 `
     }
 
@@ -271,7 +283,9 @@ ${userPrompt}`
     const lines = response.trim().split('\n')
     const looksLikeMirror = lines.some(line => {
       const trimmed = line.trim()
-      return /^(Box|Frame|Text|Button|Input|H[1-6]|Header|Main|Section|Nav|Footer|Image|Icon|Label|Select|Option)\b/.test(trimmed)
+      return /^(Box|Frame|Text|Button|Input|H[1-6]|Header|Main|Section|Nav|Footer|Image|Icon|Label|Select|Option)\b/.test(
+        trimmed
+      )
     })
 
     if (looksLikeMirror) {
@@ -287,7 +301,7 @@ ${userPrompt}`
   private createReplaceCommand(code: string): LLMCommand {
     return {
       type: 'REPLACE_ALL',
-      code
+      code,
     }
   }
 

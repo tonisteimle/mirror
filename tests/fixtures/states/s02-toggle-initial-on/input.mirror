@@ -1,0 +1,5 @@
+Like: Button pad 10, bg #333, col white, toggle()
+  on:
+    bg #ef4444
+
+Like "Liked", on

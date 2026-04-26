@@ -1,11 +1,19 @@
-# Mirror DSL Tutorial (Vollständige Referenz)
+/**
+ * Mirror DSL tutorial as a TypeScript string constant.
+ *
+ * AUTO-GENERATED — do not edit manually.
+ * Source: docs/tutorial/*.html
+ * Run `npm run generate:claude` to regenerate.
+ */
 
-> Auto-generated from `docs/tutorial/*.html` — do not edit manually.
-> Run `npm run generate:claude` to regenerate.
+export const MIRROR_TUTORIAL_MARKDOWN = `# Mirror DSL Tutorial (Vollständige Referenz)
+
+> Auto-generated from \`docs/tutorial/*.html\` — do not edit manually.
+> Run \`npm run generate:claude\` to regenerate.
 
 ## Elemente & Hierarchie
 
-_Die Grundbausteine jeder Mirror-Oberfläche_
+*Die Grundbausteine jeder Mirror-Oberfläche*
 
 In diesem Kapitel lernst du die Basis-Syntax von Mirror: Wie du Elemente erstellst, sie mit Properties gestaltest und durch Einrückung verschachtelst.
 
@@ -13,48 +21,48 @@ In diesem Kapitel lernst du die Basis-Syntax von Mirror: Wie du Elemente erstell
 
 Ein Mirror-Element besteht aus dem **Element-Namen**, optionalem **Text-Inhalt** in Anführungszeichen, und **Properties** getrennt durch Kommas:
 
-```mirror
+\`\`\`mirror
 Button "Speichern", bg #2271C1, col white, pad 12 24, rad 6
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `Button` – der Element-Typ
-- `"Speichern"` – der sichtbare Text
-- `bg #2271C1` – Hintergrundfarbe (Hex)
-- `col white` – Textfarbe
-- `pad 12 24` – Padding: 12px oben/unten, 24px links/rechts
-- `rad 6` – Eckenradius von 6px
+- \`Button\` – der Element-Typ
+- \`"Speichern"\` – der sichtbare Text
+- \`bg #2271C1\` – Hintergrundfarbe (Hex)
+- \`col white\` – Textfarbe
+- \`pad 12 24\` – Padding: 12px oben/unten, 24px links/rechts
+- \`rad 6\` – Eckenradius von 6px
 
 ### Primitives
 
 Primitives sind die Grundelemente von Mirror. Es gibt über 50 davon – hier die Basis-Elemente für den Einstieg:
 
-```mirror
+\`\`\`mirror
 Frame gap 12, pad 16, bg #1a1a1a, rad 8
   Text "Eine Überschrift", col white, fs 18
   Text "Normaler Text darunter", col #888
   Button "Klick mich", bg #2271C1, col white, pad 10 20, rad 6
   Input placeholder "E-Mail eingeben...", bg #333, col white, pad 10, rad 4
-```
+\`\`\`
 
-| Primitive | Beschreibung                            |
-| --------- | --------------------------------------- |
-| `Frame`   | Container – das zentrale Layout-Element |
-| `Text`    | Textinhalt                              |
-| `Image`   | Bild                                    |
-| `Icon`    | Icon (Lucide oder Material)             |
-| `Button`  | Klickbarer Button                       |
-| `Input`   | Einzeiliges Eingabefeld                 |
-| `Link`    | Anklickbarer Link                       |
+| Primitive | Beschreibung |
+| --- | --- |
+| \`Frame\` | Container – das zentrale Layout-Element |
+| \`Text\` | Textinhalt |
+| \`Image\` | Bild |
+| \`Icon\` | Icon (Lucide oder Material) |
+| \`Button\` | Klickbarer Button |
+| \`Input\` | Einzeiliges Eingabefeld |
+| \`Link\` | Anklickbarer Link |
 
-> **Hinweis:** Weitere Primitives: `Textarea`, `Label`, `Divider`, `Spacer`, semantische Elemente (`Header`, `Nav`, `Main`, `Section`, `Footer`, `H1`–`H6`) und über 50 Zag-Komponenten (`Dialog`, `Tabs`, `Menu`, `Select`, etc.).
+> **Hinweis:** Weitere Primitives: \`Textarea\`, \`Label\`, \`Divider\`, \`Spacer\`, semantische Elemente (\`Header\`, \`Nav\`, \`Main\`, \`Section\`, \`Footer\`, \`H1\`–\`H6\`) und über 50 Zag-Komponenten (\`Dialog\`, \`Tabs\`, \`Menu\`, \`Select\`, etc.).
 
 ### Styling-Properties
 
-Properties steuern das Aussehen. Zahlen sind Pixel, `#hex` sind Farben:
+Properties steuern das Aussehen. Zahlen sind Pixel, \`#hex\` sind Farben:
 
-```mirror
+\`\`\`mirror
 Frame gap 16, bg #0a0a0a, pad 16, rad 8
 
   // Farben: bg = Hintergrund, col = Textfarbe
@@ -75,25 +83,25 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
     Frame w 50, h 50, bg #f59e0b, rad 0
     Frame w 50, h 50, bg #f59e0b, rad 8
     Frame w 50, h 50, bg #f59e0b, rad 25
-```
+\`\`\`
 
-| Property          | Beschreibung                            | Beispiel                  |
-| ----------------- | --------------------------------------- | ------------------------- |
-| `bg`              | Hintergrundfarbe                        | `bg #2271C1`              |
-| `col`             | Textfarbe                               | `col white`               |
-| `pad`             | Innenabstand (zwischen Rand und Inhalt) | `pad 12` oder `pad 12 24` |
-| `pad-x` / `pad-y` | Horizontaler / vertikaler Innenabstand  | `pad-x 16` oder `px 16`   |
-| `mar`             | Außenabstand (zwischen Elementen)       | `mar 16`                  |
-| `mar-x` / `mar-y` | Horizontaler / vertikaler Außenabstand  | `mar-x 8` oder `mx 8`     |
-| `w` / `h`         | Breite / Höhe                           | `w 200, h 100`            |
-| `rad`             | Eckenradius                             | `rad 8`                   |
-| `fs`              | Schriftgröße                            | `fs 18`                   |
+| Property | Beschreibung | Beispiel |
+| --- | --- | --- |
+| \`bg\` | Hintergrundfarbe | \`bg #2271C1\` |
+| \`col\` | Textfarbe | \`col white\` |
+| \`pad\` | Innenabstand (zwischen Rand und Inhalt) | \`pad 12\` oder \`pad 12 24\` |
+| \`pad-x\` / \`pad-y\` | Horizontaler / vertikaler Innenabstand | \`pad-x 16\` oder \`px 16\` |
+| \`mar\` | Außenabstand (zwischen Elementen) | \`mar 16\` |
+| \`mar-x\` / \`mar-y\` | Horizontaler / vertikaler Außenabstand | \`mar-x 8\` oder \`mx 8\` |
+| \`w\` / \`h\` | Breite / Höhe | \`w 200, h 100\` |
+| \`rad\` | Eckenradius | \`rad 8\` |
+| \`fs\` | Schriftgröße | \`fs 18\` |
 
 ### Hierarchie durch Einrückung
 
 Kinder-Elemente werden mit **2 Leerzeichen** eingerückt. So entsteht die Struktur:
 
-```mirror
+\`\`\`mirror
 // Eltern-Element
 Frame bg #1a1a1a, pad 20, rad 8, gap 12
 
@@ -107,22 +115,22 @@ Frame bg #1a1a1a, pad 20, rad 8, gap 12
   Frame hor, gap 8
     Button "Abbrechen", pad 10 20, rad 6, bg #333, col white
     Button "OK", pad 10 20, rad 6, bg #2271C1, col white
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- Der äußere `Frame` ist das Eltern-Element mit dunklem Hintergrund
-- Zwei `Text`-Elemente sind direkte Kinder (eingerückt mit 2 Leerzeichen)
-- Ein innerer `Frame hor` enthält selbst zwei Buttons als Kinder
+- Der äußere \`Frame\` ist das Eltern-Element mit dunklem Hintergrund
+- Zwei \`Text\`-Elemente sind direkte Kinder (eingerückt mit 2 Leerzeichen)
+- Ein innerer \`Frame hor\` enthält selbst zwei Buttons als Kinder
 - Die Hierarchie ist beliebig tief verschachtelbar
 
-> **Hinweis:** **Wichtig:** `Frame` ist der wichtigste Container. Er ordnet seine Kinder standardmäßig **vertikal** an. Mit `hor` wird horizontal angeordnet.
+> **Hinweis:** **Wichtig:** \`Frame\` ist der wichtigste Container. Er ordnet seine Kinder standardmäßig **vertikal** an. Mit \`hor\` wird horizontal angeordnet.
 
 ### Kurzschreibweise mit Semicolon
 
 Für einfache Strukturen kannst du Kinder auch in **einer Zeile** schreiben. Trenne sie mit Semikolon:
 
-```mirror
+\`\`\`mirror
 // Mit Einrückung (3 Zeilen)
 Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6
   Icon "check", ic #10b981, is 20
@@ -130,19 +138,19 @@ Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6
 
 // Gleiche Struktur in einer Zeile
 Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6; Icon "check", ic #10b981, is 20; Text "Erfolgreich gespeichert", col white
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `Frame hor, gap 12, ...` – das Eltern-Element mit seinen Properties
-- `;` – Semicolon trennt Eltern von Kindern
-- `Icon "check", ...` – erstes Kind-Element
-- `; Text "Erfolgreich", ...` – zweites Kind-Element
+- \`Frame hor, gap 12, ...\` – das Eltern-Element mit seinen Properties
+- \`;\` – Semicolon trennt Eltern von Kindern
+- \`Icon "check", ...\` – erstes Kind-Element
+- \`; Text "Erfolgreich", ...\` – zweites Kind-Element
 
-```mirror
+\`\`\`mirror
 // Frame ohne Properties, nur Kinder
 Frame; Icon "star", ic #f59e0b, is 20; Text "Favorit", col white
-```
+\`\`\`
 
 > **Hinweis:** **Wann verwenden?** Die Semicolon-Syntax eignet sich für einfache, flache Strukturen wie Status-Meldungen oder Icon-Text-Kombinationen. Für komplexere Verschachtelungen ist Einrückung besser lesbar.
 
@@ -150,7 +158,7 @@ Frame; Icon "star", ic #f59e0b, is 20; Text "Favorit", col white
 
 Mit Layout-Properties steuerst du, wie Kinder innerhalb eines Frames angeordnet werden. Hier die wichtigsten – Details im Layout-Kapitel:
 
-```mirror
+\`\`\`mirror
 Frame gap 16, bg #0a0a0a, pad 16, rad 8
 
   // hor = horizontal anordnen
@@ -173,22 +181,22 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
     Text "A", col white
     Text "B", col white
     Text "C", col white
-```
+\`\`\`
 
-| Property | Beschreibung                        |
-| -------- | ----------------------------------- |
-| `hor`    | Kinder horizontal anordnen          |
-| `ver`    | Kinder vertikal anordnen (Standard) |
-| `gap`    | Abstand zwischen Kindern            |
-| `center` | Kinder zentrieren (beide Achsen)    |
-| `spread` | Kinder an Rändern verteilen         |
-| `wrap`   | Kinder umbrechen wenn kein Platz    |
+| Property | Beschreibung |
+| --- | --- |
+| \`hor\` | Kinder horizontal anordnen |
+| \`ver\` | Kinder vertikal anordnen (Standard) |
+| \`gap\` | Abstand zwischen Kindern |
+| \`center\` | Kinder zentrieren (beide Achsen) |
+| \`spread\` | Kinder an Rändern verteilen |
+| \`wrap\` | Kinder umbrechen wenn kein Platz |
 
 ### Icons
 
 Icons kommen von Lucide. Der Name kommt in Anführungszeichen:
 
-```mirror
+\`\`\`mirror
 Frame gap 16, bg #0a0a0a, pad 16, rad 8
 
   // Lucide Icons (Standard)
@@ -208,20 +216,20 @@ Frame gap 16, bg #0a0a0a, pad 16, rad 8
     Frame hor, gap 8, center
       Icon "save", ic white, is 16
       Text "Speichern"
-```
+\`\`\`
 
-| Property | Beschreibung         | Beispiel             |
-| -------- | -------------------- | -------------------- |
-| `is`     | Icon-Größe in Pixel  | `is 24`              |
-| `ic`     | Icon-Farbe           | `ic #2271C1`         |
-| `iw`     | Strichstärke         | `iw 1.5`             |
-| `fill`   | Ausgefüllte Variante | `Icon "heart", fill` |
+| Property | Beschreibung | Beispiel |
+| --- | --- | --- |
+| \`is\` | Icon-Größe in Pixel | \`is 24\` |
+| \`ic\` | Icon-Farbe | \`ic #2271C1\` |
+| \`iw\` | Strichstärke | \`iw 1.5\` |
+| \`fill\` | Ausgefüllte Variante | \`Icon "heart", fill\` |
 
 ### Praxisbeispiel: Card
 
 Kombiniere alles zu einer typischen UI-Komponente:
 
-```mirror
+\`\`\`mirror
 Frame w 300, bg #1a1a1a, rad 12, pad 20, gap 16
 
   // Header mit Icon
@@ -241,12 +249,12 @@ Frame w 300, bg #1a1a1a, rad 12, pad 20, gap 16
         Icon "mail", ic white, is 14
         Text "Nachricht"
     Button "Folgen", pad 10 16, rad 6, bg #333, col white
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- Die äußere `Frame` ist die Card mit fester Breite, Hintergrund und Padding
-- Der Header kombiniert ein Icon mit zwei Text-Zeilen horizontal (`hor`)
+- Die äußere \`Frame\` ist die Card mit fester Breite, Hintergrund und Padding
+- Der Header kombiniert ein Icon mit zwei Text-Zeilen horizontal (\`hor\`)
 - Die Buttons im Footer sind ebenfalls horizontal angeordnet
 - Alles was du gelernt hast – Primitives, Properties, Hierarchie – kommt zusammen
 
@@ -256,33 +264,34 @@ Frame w 300, bg #1a1a1a, rad 12, pad 20, gap 16
 
 ### Das Wichtigste
 
-| Syntax                          | Bedeutung        |
-| ------------------------------- | ---------------- |
-| `Element "Text", prop value`    | Grundsyntax      |
-| `Frame, Text, Button, Input`    | Primitives       |
-| `bg, col, pad, rad, w, h, fs`   | Styling          |
-| `hor, ver, gap, center, spread` | Layout           |
-| `2 Leerzeichen Einrückung`      | Kind-Element     |
-| `Frame props; Kind1; Kind2`     | Kurzschreibweise |
+| Syntax | Bedeutung |
+| --- | --- |
+| \`Element "Text", prop value\` | Grundsyntax |
+| \`Frame, Text, Button, Input\` | Primitives |
+| \`bg, col, pad, rad, w, h, fs\` | Styling |
+| \`hor, ver, gap, center, spread\` | Layout |
+| \`2 Leerzeichen Einrückung\` | Kind-Element |
+| \`Frame props; Kind1; Kind2\` | Kurzschreibweise |
+
 
 ---
 
 ## Wiederverwendbare Komponenten
 
-_Styles einmal definieren, überall verwenden_
+*Styles einmal definieren, überall verwenden*
 
-In diesem Kapitel lernst du, wie du eigene Komponenten erstellst. Das Kernkonzept: **Mit `:` definierst du, ohne `:` verwendest du.** Diese Regel gilt überall – für Komponenten, für Variationen, für Kind-Komponenten.
+In diesem Kapitel lernst du, wie du eigene Komponenten erstellst. Das Kernkonzept: **Mit \`:\` definierst du, ohne \`:\` verwendest du.** Diese Regel gilt überall – für Komponenten, für Variationen, für Kind-Komponenten.
 
 ### Das Problem: Wiederholung
 
 Wenn du mehrere Buttons mit dem gleichen Styling brauchst, musst du alles wiederholen:
 
-```mirror
+\`\`\`mirror
 Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
   Button "Speichern", pad 10 20, rad 6, bg #2271C1, col white
   Button "Abbrechen", pad 10 20, rad 6, bg #2271C1, col white
   Button "Löschen", pad 10 20, rad 6, bg #2271C1, col white
-```
+\`\`\`
 
 Das ist mühsam und fehleranfällig. Änderst du das Styling, musst du es überall anpassen. Besser: Eine Komponente definieren.
 
@@ -290,7 +299,7 @@ Das ist mühsam und fehleranfällig. Änderst du das Styling, musst du es übera
 
 Mit einem **Doppelpunkt nach dem Namen** definierst du eine wiederverwendbare Komponente. Bei der Verwendung lässt du den Doppelpunkt weg:
 
-```mirror
+\`\`\`mirror
 // Definition: Name endet mit :
 Btn: pad 10 20, rad 6, bg #2271C1, col white
 
@@ -299,20 +308,20 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
   Btn "Speichern"
   Btn "Abbrechen"
   Btn "Löschen"
-```
+\`\`\`
 
-Die Komponente `Btn:` speichert alle Properties. Bei `Btn "Text"` werden diese Properties angewendet und der Text eingefügt.
+Die Komponente \`Btn:\` speichert alle Properties. Bei \`Btn "Text"\` werden diese Properties angewendet und der Text eingefügt.
 
-| Syntax  | Bedeutung             |
-| ------- | --------------------- |
-| `Name:` | Komponente definieren |
-| `Name`  | Komponente verwenden  |
+| Syntax | Bedeutung |
+| --- | --- |
+| \`Name:\` | Komponente definieren |
+| \`Name\` | Komponente verwenden |
 
 ### Properties überschreiben
 
 Bei der Verwendung kannst du einzelne Properties überschreiben. Die übrigen bleiben erhalten:
 
-```mirror
+\`\`\`mirror
 Btn: pad 10 20, rad 6, bg #2271C1, col white
 
 Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
@@ -320,30 +329,30 @@ Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
   Btn "Grau", bg #333
   Btn "Rot", bg #dc2626
   Btn "Groß", pad 16 32, fs 18
-```
+\`\`\`
 
-`Btn "Grau", bg #333` überschreibt nur die Hintergrundfarbe. Padding, Radius und Textfarbe kommen weiterhin von der Definition.
+\`Btn "Grau", bg #333\` überschreibt nur die Hintergrundfarbe. Padding, Radius und Textfarbe kommen weiterhin von der Definition.
 
 ### Kinder hinzufügen
 
 Bei der Verwendung kannst du einer Komponente auch Kinder hinzufügen. Die Komponente wird zum Container für beliebige Inhalte:
 
-```mirror
+\`\`\`mirror
 Card: bg #1a1a1a, pad 16, rad 8, gap 8
 
 Card
   Text "Titel", col white, fs 16, weight 500
   Text "Beschreibung", col #888, fs 14
   Button "Aktion", pad 8 16, rad 6, bg #2271C1, col white
-```
+\`\`\`
 
-`Card:` definiert nur den Container (Hintergrund, Padding, Radius, Gap). Bei der Verwendung fügst du beliebige Kinder hinzu – Text, Buttons, weitere Frames, was immer du brauchst.
+\`Card:\` definiert nur den Container (Hintergrund, Padding, Radius, Gap). Bei der Verwendung fügst du beliebige Kinder hinzu – Text, Buttons, weitere Frames, was immer du brauchst.
 
 ### Variationen als Komponenten
 
-Du hast gesehen, wie du Properties bei der Verwendung überschreibst (`Btn "Rot", bg #333`). Das funktioniert gut für Einzelfälle. Aber was, wenn du dieselbe Variation mehrmals brauchst?
+Du hast gesehen, wie du Properties bei der Verwendung überschreibst (\`Btn "Rot", bg #333\`). Das funktioniert gut für Einzelfälle. Aber was, wenn du dieselbe Variation mehrmals brauchst?
 
-```mirror
+\`\`\`mirror
 Btn: pad 10 20, rad 6, bg #2271C1, col white
 
 // Immer wieder dieselbe Überschreibung...
@@ -351,15 +360,15 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
   Btn "Löschen", bg #ef4444
   Btn "Entfernen", bg #ef4444
   Btn "Abbrechen", bg #ef4444
-```
+\`\`\`
 
-Jetzt wiederholst du dich wieder – `bg #ef4444` steht dreimal. Änderst du die Farbe, musst du es überall anpassen.
+Jetzt wiederholst du dich wieder – \`bg #ef4444\` steht dreimal. Änderst du die Farbe, musst du es überall anpassen.
 
 #### Lösung: Variationen zu Komponenten machen
 
-Mit `as` machst du eine Variation selbst zur Komponente. Sie erbt alles von der Basis und fügt nur das Unterschiedliche hinzu:
+Mit \`as\` machst du eine Variation selbst zur Komponente. Sie erbt alles von der Basis und fügt nur das Unterschiedliche hinzu:
 
-```mirror
+\`\`\`mirror
 // Basis-Button
 Btn: pad 10 20, rad 6, cursor pointer
 
@@ -372,23 +381,23 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
   PrimaryBtn "Speichern"
   DangerBtn "Löschen"
   GhostBtn "Abbrechen"
-```
+\`\`\`
 
-`DangerBtn as Btn:` bedeutet: "DangerBtn ist ein Btn, aber mit rotem Hintergrund." Alle drei Varianten erben `pad 10 20, rad 6, cursor pointer` von `Btn`.
+\`DangerBtn as Btn:\` bedeutet: "DangerBtn ist ein Btn, aber mit rotem Hintergrund." Alle drei Varianten erben \`pad 10 20, rad 6, cursor pointer\` von \`Btn\`.
 
-> **Hinweis:** **Tipp:** Du kannst auch direkt von Primitives erben. `PrimaryBtn as Button: bg #2271C1` erzeugt einen Button mit allen Standard-Button-Eigenschaften plus blauem Hintergrund.
+> **Hinweis:** **Tipp:** Du kannst auch direkt von Primitives erben. \`PrimaryBtn as Button: bg #2271C1\` erzeugt einen Button mit allen Standard-Button-Eigenschaften plus blauem Hintergrund.
 
-| Syntax                  | Bedeutung              |
-| ----------------------- | ---------------------- |
-| `DangerBtn as Btn:`     | DangerBtn erbt von Btn |
-| `PrimaryBtn as Button:` | Von Primitive erben    |
-| `DangerBtn "Text"`      | DangerBtn verwenden    |
+| Syntax | Bedeutung |
+| --- | --- |
+| \`DangerBtn as Btn:\` | DangerBtn erbt von Btn |
+| \`PrimaryBtn as Button:\` | Von Primitive erben |
+| \`DangerBtn "Text"\` | DangerBtn verwenden |
 
 ### Komplexe Komponenten
 
-Bisher waren unsere Komponenten einfach: Ein Element mit Properties (`Btn: pad 10 20, bg #2271C1`). Aber eine Komponente kann beliebig komplex sein – eine ganze Struktur mit mehreren Kindern. Stell dir einen Footer vor:
+Bisher waren unsere Komponenten einfach: Ein Element mit Properties (\`Btn: pad 10 20, bg #2271C1\`). Aber eine Komponente kann beliebig komplex sein – eine ganze Struktur mit mehreren Kindern. Stell dir einen Footer vor:
 
-```mirror
+\`\`\`mirror
 Footer: w full, pad 20, bg #0a0a0a, hor, spread
   Text "© 2024 Meine App", col #666, fs 12
   Frame hor, gap 16
@@ -399,15 +408,15 @@ Footer: w full, pad 20, bg #0a0a0a, hor, spread
 Frame w full, gap 200, bg #1a1a1a
   Text "Seiteninhalt...", col white, pad 20
   Footer
-```
+\`\`\`
 
-`Footer:` enthält mehrere Elemente: Copyright-Text links, Links rechts. Bei der Verwendung schreibst du nur `Footer` – die gesamte Struktur wird eingefügt.
+\`Footer:\` enthält mehrere Elemente: Copyright-Text links, Links rechts. Bei der Verwendung schreibst du nur \`Footer\` – die gesamte Struktur wird eingefügt.
 
 #### Das Problem: Fester Inhalt
 
 Was aber, wenn du den Inhalt variieren möchtest? Zum Beispiel eine Card, die auf jeder Seite einen anderen Titel zeigt:
 
-```mirror
+\`\`\`mirror
 Card: bg #1a1a1a, pad 16, rad 8, gap 8
   Text "Projekt Alpha", fs 16, weight 500, col white
   Text "Beschreibung des Projekts.", col #888, fs 14
@@ -416,15 +425,15 @@ Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   Card
   Card
   Card
-```
+\`\`\`
 
 Alle drei Karten zeigen "Projekt Alpha". Der Inhalt ist fest in der Definition – du kannst ihn bei der Verwendung nicht ändern.
 
 ### Komponenten in Komponenten
 
-Die Lösung: Definiere Kind-Komponenten innerhalb der Eltern-Komponente. Es gilt dieselbe Regel wie immer – **mit `:` definierst du, ohne `:` verwendest du**:
+Die Lösung: Definiere Kind-Komponenten innerhalb der Eltern-Komponente. Es gilt dieselbe Regel wie immer – **mit \`:\` definierst du, ohne \`:\` verwendest du**:
 
-```mirror
+\`\`\`mirror
 // Card definiert zwei Kind-Komponenten: Title: und Desc:
 Card: bg #1a1a1a, pad 16, rad 8, gap 8, w 200
   Title: fs 16, weight 500, col white
@@ -438,20 +447,20 @@ Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   Card
     Title "Projekt Beta"
     Desc "Ein anderes Projekt."
-```
+\`\`\`
 
-`Title:` und `Desc:` sind Komponenten-Definitionen innerhalb von `Card:`. Sie haben eigene Styles (Schriftgröße, Farbe). Bei der Verwendung schreibst du `Title "Text"` und `Desc "Text"` – ohne Doppelpunkt, wie bei jeder Komponenten-Verwendung.
+\`Title:\` und \`Desc:\` sind Komponenten-Definitionen innerhalb von \`Card:\`. Sie haben eigene Styles (Schriftgröße, Farbe). Bei der Verwendung schreibst du \`Title "Text"\` und \`Desc "Text"\` – ohne Doppelpunkt, wie bei jeder Komponenten-Verwendung.
 
-| Syntax                        | Bedeutung                  |
-| ----------------------------- | -------------------------- |
-| `Title:` in Definition        | Kind-Komponente definieren |
-| `Title "Text"` bei Verwendung | Kind-Komponente befüllen   |
+| Syntax | Bedeutung |
+| --- | --- |
+| \`Title:\` in Definition | Kind-Komponente definieren |
+| \`Title "Text"\` bei Verwendung | Kind-Komponente befüllen |
 
 ### Kind-Komponenten mit mehreren Elementen
 
 Eine Kind-Komponente kann auch mehrere Kinder aufnehmen. Das ist nützlich für Bereiche wie "Content" oder "Actions":
 
-```mirror
+\`\`\`mirror
 Card: bg #1a1a1a, pad 16, rad 8, gap 12
   Title: fs 16, weight 500, col white
   Content: gap 8
@@ -462,15 +471,15 @@ Card
     Text "Max Mustermann", col white, fs 14
     Text "max@example.com", col #888, fs 12
     Button "Profil", pad 8 16, rad 6, bg #333, col white
-```
+\`\`\`
 
-`Content:` definiert nur `gap 8`. Die eigentlichen Inhalte (Text, Button) werden bei der Verwendung eingefügt.
+\`Content:\` definiert nur \`gap 8\`. Die eigentlichen Inhalte (Text, Button) werden bei der Verwendung eingefügt.
 
 ### Layouts
 
 Das Prinzip funktioniert genauso für App-Layouts. Du definierst die Struktur (Sidebar links, Main rechts), und befüllst die Bereiche bei der Verwendung:
 
-```mirror
+\`\`\`mirror
 // Layout mit Kind-Komponenten: Sidebar und Main
 AppShell: w full, h 180, hor
   Sidebar: w 140, h full, bg #1a1a1a, pad 12, gap 8
@@ -484,15 +493,15 @@ AppShell
     Text "Settings", col white, fs 14
   Main
     Text "Hauptinhalt", col white, fs 18
-```
+\`\`\`
 
-`AppShell:` definiert das Grundgerüst: horizontal (`hor`), Sidebar 140px breit, Main füllt den Rest (`w full`). `Sidebar:` und `Main:` sind Kind-Komponenten mit eigenem Styling – der Inhalt kommt bei der Verwendung.
+\`AppShell:\` definiert das Grundgerüst: horizontal (\`hor\`), Sidebar 140px breit, Main füllt den Rest (\`w full\`). \`Sidebar:\` und \`Main:\` sind Kind-Komponenten mit eigenem Styling – der Inhalt kommt bei der Verwendung.
 
 ### Praxisbeispiel: Card-Komponente
 
 Eine vollständige Card – alle Elemente sind in der Definition mit Formatierung vordefiniert. Bei der Verwendung gibst du nur noch die Texte an:
 
-```mirror
+\`\`\`mirror
 // Alle Elemente mit Formatierung in der Definition
 Card: w 260, bg #1a1a1a, rad 12, clip
   Title: w full, pad 16, bg #252525, col white, weight 500
@@ -508,39 +517,40 @@ Card
   Footer
     Status "Schritt 1/3"
     Action "Weiter"
-```
+\`\`\`
 
-Der Vorteil: Die gesamte Formatierung ist in der Definition. Bei der Verwendung schreibst du nur noch die Inhalte – kein `col white`, kein `fs 14`, keine Wiederholung.
+Der Vorteil: Die gesamte Formatierung ist in der Definition. Bei der Verwendung schreibst du nur noch die Inhalte – kein \`col white\`, kein \`fs 14\`, keine Wiederholung.
 
 ---
 
 ### Das Wichtigste
 
-**Eine Regel:** Mit `:` definierst du, ohne `:` verwendest du.
+**Eine Regel:** Mit \`:\` definierst du, ohne \`:\` verwendest du.
 
-| Syntax                 | Bedeutung                  |
-| ---------------------- | -------------------------- |
-| `Btn:`                 | Komponente definieren      |
-| `Btn "OK"`             | Komponente verwenden       |
-| `Btn "OK", bg #333`    | Properties überschreiben   |
-| `Card` + Kinder        | Kinder hinzufügen          |
-| `Title:` in Komponente | Kind-Komponente definieren |
-| `Title "Text"`         | Kind-Komponente befüllen   |
-| `DangerBtn as Btn:`    | Variation als Komponente   |
+| Syntax | Bedeutung |
+| --- | --- |
+| \`Btn:\` | Komponente definieren |
+| \`Btn "OK"\` | Komponente verwenden |
+| \`Btn "OK", bg #333\` | Properties überschreiben |
+| \`Card\` + Kinder | Kinder hinzufügen |
+| \`Title:\` in Komponente | Kind-Komponente definieren |
+| \`Title "Text"\` | Kind-Komponente befüllen |
+| \`DangerBtn as Btn:\` | Variation als Komponente |
+
 
 ---
 
 ## Design Tokens
 
-_Werte zentral definieren und überall verwenden_
+*Werte zentral definieren und überall verwenden*
 
 Im letzten Kapitel hast du gelernt, Struktur zu abstrahieren – mit Komponenten. Dieses Kapitel zeigt, wie du **Werte** abstrahierst: Farben, Abstände, Radien. Statt Hex-Codes überall zu wiederholen, definierst du sie einmal als Token.
 
 ### Das Problem: Magische Werte
 
-Schau dir diesen Code an – die Farbe `#2271C1` taucht dreimal auf:
+Schau dir diesen Code an – die Farbe \`#2271C1\` taucht dreimal auf:
 
-```mirror
+\`\`\`mirror
 Btn: pad 10 20, rad 6, bg #2271C1, col white
 Link: col #2271C1, underline
 Badge: bg #2271C1, col white, pad 4 8, rad 4, fs 12
@@ -549,7 +559,7 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
   Btn "Speichern"
   Link "Mehr erfahren"
   Badge "Neu"
-```
+\`\`\`
 
 > **Hinweis:** **Das Problem:** Was passiert, wenn du die Primärfarbe ändern willst? Du musst jede Stelle finden und anpassen. Bei großen Projekten ist das fehleranfällig – und du verlierst Zeit mit Suchen statt Gestalten.
 
@@ -557,10 +567,10 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
 
 Ein Token ist ein Name für einen Wert. Die Syntax:
 
-- **Definition:** `name.suffix: wert` – ohne `$`
-- **Verwendung:** `bg $name` – mit `$`
+- **Definition:** \`name.suffix: wert\` – ohne \`$\`
+- **Verwendung:** \`bg $name\` – mit \`$\`
 
-```mirror
+\`\`\`mirror
 // Token definieren (ohne $)
 primary.bg: #2271C1
 
@@ -571,34 +581,34 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
   Btn "Speichern"
   Btn "Senden"
   Btn "Weiter"
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `primary.bg: #2271C1` – definiert einen Token namens "primary" für Hintergrundfarben
-- `bg $primary` – verwendet den Token (`$` bedeutet "hole den Wert")
-- Änderst du jetzt `primary.bg` auf `#10b981`, werden alle drei Buttons grün
+- \`primary.bg: #2271C1\` – definiert einen Token namens "primary" für Hintergrundfarben
+- \`bg $primary\` – verwendet den Token (\`$\` bedeutet "hole den Wert")
+- Änderst du jetzt \`primary.bg\` auf \`#10b981\`, werden alle drei Buttons grün
 
-> **Hinweis:** **Die Regel:** Definition ohne `$`, Verwendung mit `$`. Das `$` ist ein Platzhalter – "hier den Wert einsetzen".
+> **Hinweis:** **Die Regel:** Definition ohne \`$\`, Verwendung mit \`$\`. Das \`$\` ist ein Platzhalter – "hier den Wert einsetzen".
 
 ### Warum Suffixe?
 
 Der Suffix sagt, wofür der Token gedacht ist:
 
-| Suffix | Bedeutung        | Beispiel              |
-| ------ | ---------------- | --------------------- |
-| `.bg`  | Hintergrundfarbe | `primary.bg: #2271C1` |
-| `.col` | Textfarbe        | `muted.col: #888`     |
-| `.boc` | Border-Farbe     | `border.boc: #333`    |
-| `.rad` | Radius           | `card.rad: 8`         |
-| `.pad` | Padding          | `space.pad: 16`       |
-| `.gap` | Abstand          | `space.gap: 12`       |
+| Suffix | Bedeutung | Beispiel |
+| --- | --- | --- |
+| \`.bg\` | Hintergrundfarbe | \`primary.bg: #2271C1\` |
+| \`.col\` | Textfarbe | \`muted.col: #888\` |
+| \`.boc\` | Border-Farbe | \`border.boc: #333\` |
+| \`.rad\` | Radius | \`card.rad: 8\` |
+| \`.pad\` | Padding | \`space.pad: 16\` |
+| \`.gap\` | Abstand | \`space.gap: 12\` |
 
-> **Hinweis:** **Warum das hilft:** Das ermöglicht intelligentes Autocomplete. Tippst du `bg $`, zeigt die IDE nur Tokens mit `.bg` Suffix. So siehst du sofort, welche Tokens für Hintergrundfarben gedacht sind.
+> **Hinweis:** **Warum das hilft:** Das ermöglicht intelligentes Autocomplete. Tippst du \`bg $\`, zeigt die IDE nur Tokens mit \`.bg\` Suffix. So siehst du sofort, welche Tokens für Hintergrundfarben gedacht sind.
 
 Hier ein Beispiel mit mehreren Token-Typen:
 
-```mirror
+\`\`\`mirror
 primary.bg: #2271C1
 primary.col: white
 card.bg: #1a1a1a
@@ -610,22 +620,22 @@ Card: bg $card, rad $card, pad 16
 
 Card
   Btn "In der Card"
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `primary.bg` und `primary.col` – zwei Tokens mit dem gleichen Namen aber unterschiedlichen Suffixen
-- `card.bg` und `card.rad` – Tokens für die Card: Hintergrund und Radius
-- Bei `bg $primary` wird automatisch `$primary.bg` verwendet
-- Bei `rad $card` wird automatisch `$card.rad` verwendet
+- \`primary.bg\` und \`primary.col\` – zwei Tokens mit dem gleichen Namen aber unterschiedlichen Suffixen
+- \`card.bg\` und \`card.rad\` – Tokens für die Card: Hintergrund und Radius
+- Bei \`bg $primary\` wird automatisch \`$primary.bg\` verwendet
+- Bei \`rad $card\` wird automatisch \`$card.rad\` verwendet
 
 ### Semantische Tokens
 
-Der wichtigste Tipp: Benenne Tokens nach ihrer _Bedeutung_, nicht nach ihrem Wert. Statt `$blue` schreib `$primary` – das beschreibt die Funktion, nicht die Farbe.
+Der wichtigste Tipp: Benenne Tokens nach ihrer *Bedeutung*, nicht nach ihrem Wert. Statt \`$blue\` schreib \`$primary\` – das beschreibt die Funktion, nicht die Farbe.
 
 Warum? Deine Komponenten wissen dann nicht, dass "primary" gerade blau ist – sie wissen nur, dass es die Hauptfarbe ist. Willst du später die Primärfarbe ändern, änderst du nur den Token.
 
-```mirror
+\`\`\`mirror
 // SEMANTISCHE TOKENS – benenne nach Bedeutung
 primary.bg: #2271C1
 danger.bg: #ef4444
@@ -643,19 +653,19 @@ Card
   Frame hor, gap 8
     Btn "Speichern"
     DangerBtn "Löschen"
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `primary`, `danger`, `card` – semantische Namen beschreiben die Funktion
-- Komponenten verwenden nur `$token` – sie kennen keine konkreten Farben
-- Willst du die Primärfarbe ändern, änderst du nur `primary.bg` – alle Buttons passen sich an
+- \`primary\`, \`danger\`, \`card\` – semantische Namen beschreiben die Funktion
+- Komponenten verwenden nur \`$token\` – sie kennen keine konkreten Farben
+- Willst du die Primärfarbe ändern, änderst du nur \`primary.bg\` – alle Buttons passen sich an
 
 ### Style-Bündel (Property Sets)
 
 Manchmal willst du nicht nur einen einzelnen Wert speichern, sondern eine **Kombination von Styles**. Das nennt sich Property Set – ein Bündel von Properties unter einem Namen:
 
-```mirror
+\`\`\`mirror
 // Property Sets definieren (ohne Suffix, mehrere Properties)
 standardtext: fs 14, col #888, weight 500
 cardstyle: bg #1a1a1a, pad 16, rad 8
@@ -669,22 +679,22 @@ Frame $cardstyle, gap 12
     Text "Zentriert", col white
     Text "•", col #444
     Text "In einer Reihe", col white
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `standardtext: fs 14, col #888, weight 500` – drei Properties in einem Namen gebündelt
-- `$standardtext` – wendet alle drei Properties auf einmal an
-- `$cardstyle` – setzt Hintergrund, Padding und Radius in einem
-- `$centeredrow` – kombiniert Layout-Properties (horizontal, zentriert, Abstand)
+- \`standardtext: fs 14, col #888, weight 500\` – drei Properties in einem Namen gebündelt
+- \`$standardtext\` – wendet alle drei Properties auf einmal an
+- \`$cardstyle\` – setzt Hintergrund, Padding und Radius in einem
+- \`$centeredrow\` – kombiniert Layout-Properties (horizontal, zentriert, Abstand)
 
-> **Hinweis:** **Syntax-Unterschied:** Einzelne Tokens haben einen Suffix (`primary.bg: #2271C1`), Property Sets haben keinen (`cardstyle: bg #1a1a1a, pad 16`). Das macht den Unterschied klar: Suffix = ein Wert, kein Suffix = mehrere Properties.
+> **Hinweis:** **Syntax-Unterschied:** Einzelne Tokens haben einen Suffix (\`primary.bg: #2271C1\`), Property Sets haben keinen (\`cardstyle: bg #1a1a1a, pad 16\`). Das macht den Unterschied klar: Suffix = ein Wert, kein Suffix = mehrere Properties.
 
 #### Property Sets mit Tokens kombinieren
 
 Property Sets können auch andere Tokens referenzieren:
 
-```mirror
+\`\`\`mirror
 // Einzelne Tokens
 primary.bg: #2271C1
 card.bg: #1a1a1a
@@ -697,13 +707,13 @@ Frame $cardbase
   Text "Card mit Token-Referenz", col white
   Frame $primarybutton
     Text "Button"
-```
+\`\`\`
 
 **Wann Property Sets nutzen?**
 
 - Für wiederkehrende Style-Kombinationen, die keine eigene Komponente brauchen
-- Für typografische Stile: `heading: fs 24, weight bold, col white`
-- Für Layout-Patterns: `stackedcenter: stacked, center`
+- Für typografische Stile: \`heading: fs 24, weight bold, col white\`
+- Für Layout-Patterns: \`stackedcenter: stacked, center\`
 
 > **Hinweis:** **Property Set vs Komponente:** Ein Property Set ist nur ein Bündel von Styles. Eine Komponente kann zusätzlich Kinder, States und Events haben. Nutze Property Sets für reine Style-Wiederverwendung, Komponenten für strukturelle Bausteine.
 
@@ -711,9 +721,9 @@ Frame $cardbase
 
 Jetzt siehst du das große Bild: Ein vollständiges Design System hat drei Ebenen, die aufeinander aufbauen:
 
-Am Ende sind die Instanzen komplett sauber – du siehst nur noch, _was_ angezeigt wird, nicht _wie_:
+Am Ende sind die Instanzen komplett sauber – du siehst nur noch, *was* angezeigt wird, nicht *wie*:
 
-```mirror
+\`\`\`mirror
 // 1. TOKENS – Werte zentral definieren
 btn.bg: #2271C1
 btn.col: white
@@ -735,13 +745,13 @@ Card
   Frame hor, gap 8
     Btn "Speichern"
     Btn "Abbrechen"
-```
+\`\`\`
 
 **Was passiert hier?**
 
 - **Stufe 1 (Tokens):** Definiert alle Werte an einer Stelle – Farben, Radien, Abstände
-- **Stufe 2 (Komponenten):** `Card` und `Btn` verwenden nur Tokens, keine Hex-Werte
-- **Stufe 3 (Instanzen):** Nur noch Inhalt! `Title "Design System"` – keine einzige Style-Property
+- **Stufe 2 (Komponenten):** \`Card\` und \`Btn\` verwenden nur Tokens, keine Hex-Werte
+- **Stufe 3 (Instanzen):** Nur noch Inhalt! \`Title "Design System"\` – keine einzige Style-Property
 
 > **Hinweis:** **Das Ergebnis:** Instanzen sind lesbar wie ein Dokument. Du siehst sofort die Struktur: Eine Card mit Titel, Beschreibung und zwei Buttons. Alle Design-Entscheidungen stecken in den oberen Ebenen.
 
@@ -751,29 +761,30 @@ Card
 
 #### Einzelne Tokens
 
-| Syntax                 | Bedeutung                     |
-| ---------------------- | ----------------------------- |
-| `primary.bg: #2271C1`  | Token definieren (mit Suffix) |
-| `bg $primary`          | Token verwenden (mit `$`)     |
-| `primary` statt `blue` | Semantisch benennen           |
+| Syntax | Bedeutung |
+| --- | --- |
+| \`primary.bg: #2271C1\` | Token definieren (mit Suffix) |
+| \`bg $primary\` | Token verwenden (mit \`$\`) |
+| \`primary\` statt \`blue\` | Semantisch benennen |
 
 #### Property Sets (Style-Bündel)
 
-| Syntax                                 | Bedeutung                             |
-| -------------------------------------- | ------------------------------------- |
-| `cardstyle: bg #1a1a1a, pad 16, rad 8` | Property Set definieren (ohne Suffix) |
-| `Frame $cardstyle`                     | Alle Properties auf einmal anwenden   |
-| `heading: fs 24, weight bold`          | Typografie-Stile bündeln              |
+| Syntax | Bedeutung |
+| --- | --- |
+| \`cardstyle: bg #1a1a1a, pad 16, rad 8\` | Property Set definieren (ohne Suffix) |
+| \`Frame $cardstyle\` | Alle Properties auf einmal anwenden |
+| \`heading: fs 24, weight bold\` | Typografie-Stile bündeln |
 
 **Drei Stufen:** Tokens → Komponenten → Instanzen
 
 Tokens abstrahieren Werte, Property Sets bündeln Styles, Komponenten abstrahieren Struktur. Zusammen ergeben sie ein konsistentes Design System.
 
+
 ---
 
 ## Layout
 
-_Flex, Grid und Positionierung_
+*Flex, Grid und Positionierung*
 
 Mirror bietet drei Layout-Systeme: **Flex** für fließende Layouts (Navigation, Cards), **Grid** für strukturierte Raster (Dashboards, Page-Layouts), und **Stacked** für überlagerte Elemente (Badges, Overlays).
 
@@ -781,13 +792,13 @@ Mirror bietet drei Layout-Systeme: **Flex** für fließende Layouts (Navigation,
 
 #### Richtung: hor und ver
 
-Standardmäßig fließen Kinder vertikal (untereinander). Mit `hor` wechselst du auf horizontal.
+Standardmäßig fließen Kinder vertikal (untereinander). Mit \`hor\` wechselst du auf horizontal.
 
-**Wichtig – Defaults:** Sowohl `hor` als auch `ver` haben dieselben Defaults: Kinder werden am **Anfang** ausgerichtet (`flex-start`). Bei `ver` = oben, bei `hor` = links. **Keine automatische Zentrierung!** Wenn du Zentrierung willst, sagst du es explizit mit `center` (beide Achsen) oder `ver-center` (nur vertikal).
+**Wichtig – Defaults:** Sowohl \`hor\` als auch \`ver\` haben dieselben Defaults: Kinder werden am **Anfang** ausgerichtet (\`flex-start\`). Bei \`ver\` = oben, bei \`hor\` = links. **Keine automatische Zentrierung!** Wenn du Zentrierung willst, sagst du es explizit mit \`center\` (beide Achsen) oder \`ver-center\` (nur vertikal).
 
-> **Hinweis:** **Wichtig – Defaults:** Sowohl `hor` als auch `ver` haben dieselben Defaults: Kinder werden am **Anfang** ausgerichtet (`flex-start`). Bei `ver` = oben, bei `hor` = links. **Keine automatische Zentrierung!** Wenn du Zentrierung willst, sagst du es explizit mit `center` (beide Achsen) oder `ver-center` (nur vertikal).
+> **Hinweis:** **Wichtig – Defaults:** Sowohl \`hor\` als auch \`ver\` haben dieselben Defaults: Kinder werden am **Anfang** ausgerichtet (\`flex-start\`). Bei \`ver\` = oben, bei \`hor\` = links. **Keine automatische Zentrierung!** Wenn du Zentrierung willst, sagst du es explizit mit \`center\` (beide Achsen) oder \`ver-center\` (nur vertikal).
 
-```mirror
+\`\`\`mirror
 Box: w 50, h 50, rad 6, center
 
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
@@ -802,19 +813,19 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
     Box "1", bg #2271C1
     Box "2", bg #10b981
     Box "3", bg #f59e0b
-```
+\`\`\`
 
 **Was passiert hier?**
 
 - Der erste Frame stapelt Text-Elemente vertikal (Standard-Verhalten)
-- Der zweite Frame mit `hor` legt die Boxen nebeneinander
-- `gap` definiert den Abstand zwischen den Kindern – ob vertikal oder horizontal
+- Der zweite Frame mit \`hor\` legt die Boxen nebeneinander
+- \`gap\` definiert den Abstand zwischen den Kindern – ob vertikal oder horizontal
 
 #### Größen: w und h
 
 Drei Optionen für Breite und Höhe:
 
-```mirror
+\`\`\`mirror
 Frame gap 8, w 300, bg #0a0a0a, pad 16, rad 8
   // Fester Wert in Pixeln
   Frame w 120, h 40, bg #f59e0b, rad 4, center
@@ -827,21 +838,21 @@ Frame gap 8, w 300, bg #0a0a0a, pad 16, rad 8
   // full = verfügbaren Platz füllen
   Frame w full, h 40, bg #2271C1, rad 4, center
     Text "w full", col white, fs 12
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `w 120` – feste Breite in Pixel
-- `w hug` – schrumpft auf die Größe des Inhalts (wie Shrink-to-fit)
-- `w full` – dehnt sich auf den verfügbaren Platz aus (wie 100%)
+- \`w 120\` – feste Breite in Pixel
+- \`w hug\` – schrumpft auf die Größe des Inhalts (wie Shrink-to-fit)
+- \`w full\` – dehnt sich auf den verfügbaren Platz aus (wie 100%)
 
-> **Hinweis:** **Merke:** `full` ist der häufigste Fall – Elemente füllen standardmäßig den verfügbaren Platz. `hug` brauchst du, wenn ein Element nur so groß wie nötig sein soll.
+> **Hinweis:** **Merke:** \`full\` ist der häufigste Fall – Elemente füllen standardmäßig den verfügbaren Platz. \`hug\` brauchst du, wenn ein Element nur so groß wie nötig sein soll.
 
 #### Device Presets
 
-Für App-Prototypen gibt es vordefinierte Device-Größen. Statt `w 375, h 812` schreibst du einfach `device mobile`:
+Für App-Prototypen gibt es vordefinierte Device-Größen. Statt \`w 375, h 812\` schreibst du einfach \`device mobile\`:
 
-```mirror
+\`\`\`mirror
 Frame hor, gap 16, bg #0a0a0a, pad 16, rad 8
 
   // Mobile: 375 × 812
@@ -858,15 +869,15 @@ Frame hor, gap 16, bg #0a0a0a, pad 16, rad 8
   Frame device desktop, bg #1a1a1a, rad 8, pad 16, gap 8
     Text "Desktop", col white, fs 14, weight 500
     Text "1440 × 900", col #888, fs 12
-```
+\`\`\`
 
-| Device           | Breite | Höhe   |
-| ---------------- | ------ | ------ |
-| `device mobile`  | 375px  | 812px  |
-| `device tablet`  | 768px  | 1024px |
-| `device desktop` | 1440px | 900px  |
+| Device | Breite | Höhe |
+| --- | --- | --- |
+| \`device mobile\` | 375px | 812px |
+| \`device tablet\` | 768px | 1024px |
+| \`device desktop\` | 1440px | 900px |
 
-```mirror
+\`\`\`mirror
 Frame hor, gap 16, bg #0a0a0a, pad 16, rad 8
   // Mobile-Breite, aber eigene Höhe
   Frame device mobile, h 400, bg #1a1a1a, rad 8, pad 16, gap 8
@@ -877,11 +888,11 @@ Frame hor, gap 16, bg #0a0a0a, pad 16, rad 8
   Frame device mobile, w 280, bg #1a1a1a, rad 8, pad 16, gap 8
     Text "Custom-Breite", col white, fs 14, weight 500
     Text "280 × 812 (w überschrieben)", col #888, fs 12
-```
+\`\`\`
 
 #### Zentrieren und Verteilen
 
-```mirror
+\`\`\`mirror
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
   // center – beide Achsen
   Frame w 200, h 80, bg #1a1a1a, rad 8, center
@@ -895,20 +906,20 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
   // hor-center – nur horizontal
   Frame w 200, h 60, bg #1a1a1a, rad 8, hor-center
     Text "nur horizontal", col white
-```
+\`\`\`
 
-| Ausrichtung  | Beschreibung                          |
-| ------------ | ------------------------------------- |
-| `center`     | Beide Achsen zentrieren               |
-| `ver-center` | Nur vertikal zentrieren (bei `hor`)   |
-| `hor-center` | Nur horizontal zentrieren (bei `ver`) |
-| `spread`     | Kinder an Rändern verteilen           |
+| Ausrichtung | Beschreibung |
+| --- | --- |
+| \`center\` | Beide Achsen zentrieren |
+| \`ver-center\` | Nur vertikal zentrieren (bei \`hor\`) |
+| \`hor-center\` | Nur horizontal zentrieren (bei \`ver\`) |
+| \`spread\` | Kinder an Rändern verteilen |
 
 #### 9 Positionen
 
 Kinder an einer von 9 Positionen platzieren:
 
-```mirror
+\`\`\`mirror
 Box: w 70, h 70, bg #1a1a1a, rad 6
   Label: col #888, fs 11
 
@@ -934,13 +945,13 @@ Frame gap 8, bg #0a0a0a, pad 12, rad 8
       Label "bc"
     Box br
       Label "br"
-```
+\`\`\`
 
 #### Wrap
 
 Bei Überlauf in die nächste Zeile umbrechen:
 
-```mirror
+\`\`\`mirror
 Box: w 60, h 40, bg #2271C1, rad 4, center
 
 Frame hor, wrap, gap 8, bg #1a1a1a, pad 16, rad 8, w 240
@@ -949,7 +960,7 @@ Frame hor, wrap, gap 8, bg #1a1a1a, pad 16, rad 8, w 240
   Box "3"
   Box "4"
   Box "5"
-```
+\`\`\`
 
 ### Grid Layout
 
@@ -957,9 +968,9 @@ Grid ist das zweite Layout-System – ideal für strukturierte Raster wie Dashbo
 
 #### Grid aktivieren
 
-Mit `grid N` aktivierst du ein N-Spalten-Grid. Wichtig: Im Grid-Kontext bedeutet `w` nicht mehr Pixel, sondern **Spalten-Span**:
+Mit \`grid N\` aktivierst du ein N-Spalten-Grid. Wichtig: Im Grid-Kontext bedeutet \`w\` nicht mehr Pixel, sondern **Spalten-Span**:
 
-```mirror
+\`\`\`mirror
 Frame w 500, grid 12, gap 8, bg #111, pad 16, rad 8, row-height 40
   // w = Spalten-Span (nicht Pixel!)
   Frame w 12, bg #2271C1, rad 4, center
@@ -974,23 +985,23 @@ Frame w 500, grid 12, gap 8, bg #111, pad 16, rad 8, row-height 40
     Text "w 4", col white, fs 12
   Frame w 4, bg #f59e0b, rad 4, center
     Text "w 4", col white, fs 12
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `grid 12` – teilt den Container in 12 gleich breite Spalten
-- `row-height 40` – jede Zeile ist 40 Pixel hoch
-- `w 12` – das Element spannt alle 12 Spalten (volle Breite)
-- `w 6` – das Element spannt 6 Spalten (halbe Breite)
-- `w 4` – das Element spannt 4 Spalten (ein Drittel)
+- \`grid 12\` – teilt den Container in 12 gleich breite Spalten
+- \`row-height 40\` – jede Zeile ist 40 Pixel hoch
+- \`w 12\` – das Element spannt alle 12 Spalten (volle Breite)
+- \`w 6\` – das Element spannt 6 Spalten (halbe Breite)
+- \`w 4\` – das Element spannt 4 Spalten (ein Drittel)
 
-> **Hinweis:** **Achtung:** Im Grid-Kontext haben `w` und `h` eine andere Bedeutung! `w 6` bedeutet 6 Spalten, `h 2` bedeutet 2 Zeilen – nicht Pixel. Für die Zeilenhöhe in Pixel nutzt du `row-height`.
+> **Hinweis:** **Achtung:** Im Grid-Kontext haben \`w\` und \`h\` eine andere Bedeutung! \`w 6\` bedeutet 6 Spalten, \`h 2\` bedeutet 2 Zeilen – nicht Pixel. Für die Zeilenhöhe in Pixel nutzt du \`row-height\`.
 
 #### Explizite Platzierung
 
-Mit `x` und `y` platzierst du Elemente exakt (1-indexed):
+Mit \`x\` und \`y\` platzierst du Elemente exakt (1-indexed):
 
-```mirror
+\`\`\`mirror
 Frame w 600, grid 12, gap 8, bg #111, pad 16, rad 8, row-height 35
   Frame x 1, y 1, w 12, h 2, bg #2271C1, rad 4, center
     Text "Hero", col white, fs 12
@@ -1003,11 +1014,11 @@ Frame w 600, grid 12, gap 8, bg #111, pad 16, rad 8, row-height 35
 
   Frame x 1, y 6, w 12, h 1, bg #1a1a1a, rad 4, center
     Text "Footer", col #888, fs 11
-```
+\`\`\`
 
 #### Grid als Komponente
 
-```mirror
+\`\`\`mirror
 // Layout-Komponente
 Dashboard: grid 12, gap 12, row-height 25, h 200
   Header: x 1, y 1, w 12, h 2, bg #1a1a1a, rad 6, pad 0 16, hor, spread, ver-center
@@ -1034,13 +1045,13 @@ Dashboard
     Widget
       Title "Revenue"
       Value "$12.4k"
-```
+\`\`\`
 
 ### Stacked Layout
 
-Das dritte Layout-System ist `stacked` – es stapelt alle Kinder übereinander an derselben Position. Das ist ideal für Overlays, Badges oder absolut positionierte Elemente. Die Positionierung erfolgt mit `x` und `y` in Pixel – genau wie in Figma:
+Das dritte Layout-System ist \`stacked\` – es stapelt alle Kinder übereinander an derselben Position. Das ist ideal für Overlays, Badges oder absolut positionierte Elemente. Die Positionierung erfolgt mit \`x\` und \`y\` in Pixel – genau wie in Figma:
 
-```mirror
+\`\`\`mirror
 Frame w 200, h 150, stacked, bg #1a1a1a, rad 8
   // Vier Ecken
   Frame x 0, y 0, w 30, h 30, bg #ef4444, rad 4
@@ -1050,20 +1061,20 @@ Frame w 200, h 150, stacked, bg #1a1a1a, rad 8
 
   // Mitte
   Frame x 80, y 55, w 40, h 40, bg white, rad 99
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `stacked` – alle Kinder werden übereinander gestapelt
-- `x 0, y 0` – Position von oben-links des Containers
-- `x 170, y 0` – 170px vom linken Rand, 0px vom oberen Rand
-- Anders als bei Grid sind `x` und `y` hier echte Pixel-Werte
+- \`stacked\` – alle Kinder werden übereinander gestapelt
+- \`x 0, y 0\` – Position von oben-links des Containers
+- \`x 170, y 0\` – 170px vom linken Rand, 0px vom oberen Rand
+- Anders als bei Grid sind \`x\` und \`y\` hier echte Pixel-Werte
 
 #### Praktisch: Badge auf Icon
 
-Das typische Anwendungsbeispiel für `stacked`: Ein Badge oder Status-Indikator über einem Icon:
+Das typische Anwendungsbeispiel für \`stacked\`: Ein Badge oder Status-Indikator über einem Icon:
 
-```mirror
+\`\`\`mirror
 // Badge-Komponente
 Badge: x 30, y -4, w 18, h 18, bg #ef4444, rad 99, center
   Count: col white, fs 10, weight 600
@@ -1084,7 +1095,7 @@ Frame hor, gap 24, bg #0a0a0a, pad 16, rad 8
     Frame w 44, h 44, bg #2271C1, rad 99, center
       Text "TS", col white, fs 14, weight 500
     Status
-```
+\`\`\`
 
 ### Responsive Layout
 
@@ -1094,9 +1105,9 @@ Size-States lösen dieses Problem: Komponenten passen sich an ihre **eigene Grö
 
 #### Das Konzept
 
-Size-States funktionieren wie andere States (`hover:`, `on:`) – aber sie werden durch die Breite des Elements selbst aktiviert:
+Size-States funktionieren wie andere States (\`hover:\`, \`on:\`) – aber sie werden durch die Breite des Elements selbst aktiviert:
 
-```mirror
+\`\`\`mirror
 Card: bg #1a1a1a, pad 16, rad 8, gap 12, ver
   // compact: wird aktiv wenn Card schmaler als 400px
   compact:
@@ -1110,28 +1121,28 @@ Frame gap 16
   Card w 300
     Text "Kompakte Card", col white
     Text "300px breit – compact: ist aktiv", col #888, fs 12
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- Die Card definiert einen `compact:` State mit weniger Padding
+- Die Card definiert einen \`compact:\` State mit weniger Padding
 - Bei 500px Breite: kein Size-State aktiv → normales Layout
-- Bei 300px Breite: `compact:` aktiv (unter 400px) → reduziertes Padding
+- Bei 300px Breite: \`compact:\` aktiv (unter 400px) → reduziertes Padding
 - Die Card entscheidet selbst – unabhängig vom Viewport
 
 #### Eingebaute Size-States
 
 Mirror hat drei vordefinierte Size-States:
 
-| Size-State | Aktiv wenn                  | Default-Schwelle |
-| ---------- | --------------------------- | ---------------- |
-| `compact:` | Element ist schmal          | < 400px          |
-| `regular:` | Element hat mittlere Breite | 400px – 800px    |
-| `wide:`    | Element ist breit           | > 800px          |
+| Size-State | Aktiv wenn | Default-Schwelle |
+| --- | --- | --- |
+| \`compact:\` | Element ist schmal | < 400px |
+| \`regular:\` | Element hat mittlere Breite | 400px – 800px |
+| \`wide:\` | Element ist breit | > 800px |
 
-> **Hinweis:** **Wichtig:** Ohne aktiven Size-State gilt das normale Layout (die Properties außerhalb der States). Size-States _überschreiben_ einzelne Properties – alles andere bleibt erhalten.
+> **Hinweis:** **Wichtig:** Ohne aktiven Size-State gilt das normale Layout (die Properties außerhalb der States). Size-States *überschreiben* einzelne Properties – alles andere bleibt erhalten.
 
-```mirror
+\`\`\`mirror
 Card: bg #1a1a1a, rad 8, gap 12, ver
   // Normales Layout (kein Size-State aktiv)
   pad 16
@@ -1156,13 +1167,13 @@ Frame gap 16
   Card w 900
     Icon "box", ic #f59e0b, is 24
     Text "Wide (900px)", col white, fs 13
-```
+\`\`\`
 
 #### Kind-Komponenten in Size-States
 
-Size-States können auch Kind-Komponenten überschreiben. Die Syntax: Innerhalb des States definierst du die Kind-Komponente mit `:` neu:
+Size-States können auch Kind-Komponenten überschreiben. Die Syntax: Innerhalb des States definierst du die Kind-Komponente mit \`:\` neu:
 
-```mirror
+\`\`\`mirror
 Panel: bg #1a1a1a, pad 20, rad 8, gap 8
   // Kind-Komponenten mit Default-Styling
   Title: col white, fs 16, weight 600
@@ -1191,20 +1202,20 @@ Frame gap 16
   Panel w 950
     Title "Breit"
     Desc "Große Schrift, viel Padding"
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `Title:` und `Desc:` haben Default-Styles (fs 16, fs 14)
-- Im `compact:` State werden sie kleiner (fs 13, fs 12)
-- Im `wide:` State werden sie größer (fs 20, fs 15)
-- Nicht überschriebene Properties (wie `col`) bleiben erhalten
+- \`Title:\` und \`Desc:\` haben Default-Styles (fs 16, fs 14)
+- Im \`compact:\` State werden sie kleiner (fs 13, fs 12)
+- Im \`wide:\` State werden sie größer (fs 20, fs 15)
+- Nicht überschriebene Properties (wie \`col\`) bleiben erhalten
 
 #### Eigene Size-States definieren
 
 Die Defaults (400px, 800px) passen nicht für jeden Anwendungsfall. Du kannst sie überschreiben oder komplett eigene Size-States definieren:
 
-```mirror
+\`\`\`mirror
 // Eingebaute Defaults überschreiben
 compact.max: 250
 wide.min: 500
@@ -1231,23 +1242,23 @@ Frame gap 12
     Icon "box", ic white, is 20
   Card w 600
     Icon "box", ic white, is 20
-```
+\`\`\`
 
 **Token-Syntax:**
 
-| Token                   | Bedeutung                          |
-| ----------------------- | ---------------------------------- |
-| `name.max: 400`         | State aktiv wenn Breite ≤ 400px    |
-| `name.min: 600`         | State aktiv wenn Breite ≥ 600px    |
-| `name.min` + `name.max` | State aktiv wenn Breite im Bereich |
+| Token | Bedeutung |
+| --- | --- |
+| \`name.max: 400\` | State aktiv wenn Breite ≤ 400px |
+| \`name.min: 600\` | State aktiv wenn Breite ≥ 600px |
+| \`name.min\` + \`name.max\` | State aktiv wenn Breite im Bereich |
 
-> **Hinweis:** **Bereiche definieren:** Für einen State wie `regular:` der nur in einem bestimmten Bereich aktiv ist, definierst du beide Grenzen: `regular.min: 400` `regular.max: 800` → State aktiv wenn 400px ≤ Breite ≤ 800px
+> **Hinweis:** **Bereiche definieren:** Für einen State wie \`regular:\` der nur in einem bestimmten Bereich aktiv ist, definierst du beide Grenzen: \`regular.min: 400\` \`regular.max: 800\` → State aktiv wenn 400px ≤ Breite ≤ 800px
 
 #### Praktisch: Responsive Navigation
 
 Eine Navigation die bei wenig Platz zu einer Icon-Leiste wird:
 
-```mirror
+\`\`\`mirror
 NavBar: bg #1a1a1a, pad 12, rad 8, hor, gap 8, ver-center
   NavItem: hor, gap 8, pad 8 12, rad 6, ver-center, cursor pointer
     Label: col #ccc, fs 13
@@ -1283,86 +1294,87 @@ Frame gap 16
     NavItem
       Icon "settings", ic #888, is 18
       Label "Settings"
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- NavBar definiert `compact.max: 200` – ein eigener Schwellenwert nur für diese Komponente
+- NavBar definiert \`compact.max: 200\` – ein eigener Schwellenwert nur für diese Komponente
 - Bei 350px: Normal – horizontal mit Text
-- Bei 80px: `compact:` aktiv – vertikal, nur Icons (`Label: hidden`)
+- Bei 80px: \`compact:\` aktiv – vertikal, nur Icons (\`Label: hidden\`)
 - Dieselbe Komponente, unterschiedliches Layout je nach verfügbarem Platz
 
 #### Wann Size-States verwenden?
 
-| Situation                             | Lösung                   |
-| ------------------------------------- | ------------------------ |
-| Card soll sich an Container anpassen  | Size-States              |
-| Sidebar vs. Hauptbereich              | Size-States              |
-| Mobile vs. Desktop App-Layout         | Media Queries (Viewport) |
-| Komponente in verschiedenen Kontexten | Size-States              |
+| Situation | Lösung |
+| --- | --- |
+| Card soll sich an Container anpassen | Size-States |
+| Sidebar vs. Hauptbereich | Size-States |
+| Mobile vs. Desktop App-Layout | Media Queries (Viewport) |
+| Komponente in verschiedenen Kontexten | Size-States |
 
-> **Hinweis:** **Zusammenspiel mit anderen States:** Size-States können mit `hover:`, `on:` etc. kombiniert werden. Alle aktiven States werden zusammengeführt – spezifischere States überschreiben allgemeinere.
+> **Hinweis:** **Zusammenspiel mit anderen States:** Size-States können mit \`hover:\`, \`on:\` etc. kombiniert werden. Alle aktiven States werden zusammengeführt – spezifischere States überschreiben allgemeinere.
 
 ---
 
 ### Zusammenfassung
 
-| System          | Verwendung                                 |
-| --------------- | ------------------------------------------ |
-| **Flex**        | Fließende Layouts (Navigation, Cards)      |
-| **Grid**        | Strukturierte Raster (Dashboards)          |
-| **Stacked**     | Überlagerungen (Badges, Overlays)          |
+| System | Verwendung |
+| --- | --- |
+| **Flex** | Fließende Layouts (Navigation, Cards) |
+| **Grid** | Strukturierte Raster (Dashboards) |
+| **Stacked** | Überlagerungen (Badges, Overlays) |
 | **Size-States** | Responsive Komponenten (Container Queries) |
 
 **Flex:**
 
-- `hor`, `ver` – Richtung (beide: `flex-start` als Default)
-- `gap N` – Abstand
-- `center` – beide Achsen zentrieren
-- `ver-center` – nur vertikal zentrieren
-- `hor-center` – nur horizontal zentrieren
-- `spread` – Kinder an Rändern verteilen
-- `tl` bis `br` – 9 Positionen
-- `w/h`: Pixel, `hug`, `full`
-- `device mobile/tablet/desktop` – vordefinierte App-Größen
-- `wrap` – Zeilenumbruch
+- \`hor\`, \`ver\` – Richtung (beide: \`flex-start\` als Default)
+- \`gap N\` – Abstand
+- \`center\` – beide Achsen zentrieren
+- \`ver-center\` – nur vertikal zentrieren
+- \`hor-center\` – nur horizontal zentrieren
+- \`spread\` – Kinder an Rändern verteilen
+- \`tl\` bis \`br\` – 9 Positionen
+- \`w/h\`: Pixel, \`hug\`, \`full\`
+- \`device mobile/tablet/desktop\` – vordefinierte App-Größen
+- \`wrap\` – Zeilenumbruch
 
 **Grid:**
 
-- `grid 12` – 12-Spalten-Grid
-- `w 4`, `h 2` – Spalten/Zeilen-Span
-- `x 1, y 1` – Position (1-indexed)
-- `row-height 40` – Zeilenhöhe
+- \`grid 12\` – 12-Spalten-Grid
+- \`w 4\`, \`h 2\` – Spalten/Zeilen-Span
+- \`x 1, y 1\` – Position (1-indexed)
+- \`row-height 40\` – Zeilenhöhe
 
 **Stacked:**
 
-- `stacked` – Kinder übereinander
-- `x`, `y` – Position (wie Figma)
-- `w`, `h` – Größe
-- `z N` – Stapelreihenfolge
+- \`stacked\` – Kinder übereinander
+- \`x\`, \`y\` – Position (wie Figma)
+- \`w\`, \`h\` – Größe
+- \`z N\` – Stapelreihenfolge
 
 **Size-States:**
 
-- `compact:` (<400px), `regular:` (400-800px), `wide:` (>800px)
-- `name.max: 400` – State aktiv wenn Breite ≤ 400px
-- `name.min: 800` – State aktiv wenn Breite ≥ 800px
-- Beide definieren für Bereiche: `name.min` + `name.max`
-- Kind-Komponenten überschreiben: `compact: Title: fs 12`
+- \`compact:\` (<400px), \`regular:\` (400-800px), \`wide:\` (>800px)
+- \`name.max: 400\` – State aktiv wenn Breite ≤ 400px
+- \`name.min: 800\` – State aktiv wenn Breite ≥ 800px
+- Beide definieren für Bereiche: \`name.min\` + \`name.max\`
+- Kind-Komponenten überschreiben: \`compact: Title: fs 12\`
 - Reagiert auf Element-Größe, nicht Viewport
+
 
 ---
 
 ## Styling
 
-_Farben, Typografie, Borders und Effekte_
+*Farben, Typografie, Borders und Effekte*
 
 In den vorherigen Kapiteln hast du Layout und Struktur kennengelernt. Dieses Kapitel zeigt alle **visuellen Properties** – von Farben über Typografie bis zu Effekten. Es ist als Referenz gedacht: Schau hier nach, wenn du wissen willst, wie ein bestimmter Effekt funktioniert.
 
 ### Farben
 
-Mirror unterstützt verschiedene Farbformate. Am häufigsten verwendest du Hex-Farben (`#2271C1`), aber auch benannte Farben und rgba sind möglich:
+Mirror unterstützt verschiedene Farbformate. Am häufigsten verwendest du Hex-Farben (\`#2271C1\`), aber auch benannte Farben und rgba sind möglich:
 
-```mirror
+\`\`\`mirror
 Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
   // Hex-Farben
   Frame w 50, h 50, bg #2271C1, rad 6
@@ -1377,22 +1389,22 @@ Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
   // Mit Transparenz
   Frame w 50, h 50, bg rgba(34,113,193,0.5), rad 6
   Frame w 50, h 50, bg #2271C188, rad 6
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `#2271C1` – Hex-Farbe (6 Zeichen für RGB)
-- `white`, `black` – benannte CSS-Farben funktionieren direkt
-- `rgba(34,113,193,0.5)` – Farbe mit 50% Transparenz
-- `#2271C188` – Hex mit Alpha-Kanal (8 Zeichen, die letzten zwei sind Transparenz)
+- \`#2271C1\` – Hex-Farbe (6 Zeichen für RGB)
+- \`white\`, \`black\` – benannte CSS-Farben funktionieren direkt
+- \`rgba(34,113,193,0.5)\` – Farbe mit 50% Transparenz
+- \`#2271C188\` – Hex mit Alpha-Kanal (8 Zeichen, die letzten zwei sind Transparenz)
 
-> **Hinweis:** **Tipp:** Für transparente Farben ist `#rrggbbaa` kürzer als `rgba()`. Die letzten zwei Hex-Zeichen geben die Transparenz an: `ff` = 100% sichtbar, `00` = unsichtbar.
+> **Hinweis:** **Tipp:** Für transparente Farben ist \`#rrggbbaa\` kürzer als \`rgba()\`. Die letzten zwei Hex-Zeichen geben die Transparenz an: \`ff\` = 100% sichtbar, \`00\` = unsichtbar.
 
 ### Gradients
 
-Farbverläufe machen UIs lebendiger. In Mirror verwendest du `grad` für horizontale Verläufe, `grad-ver` für vertikale, oder `grad N` für einen bestimmten Winkel:
+Farbverläufe machen UIs lebendiger. In Mirror verwendest du \`grad\` für horizontale Verläufe, \`grad-ver\` für vertikale, oder \`grad N\` für einen bestimmten Winkel:
 
-```mirror
+\`\`\`mirror
 Frame w 400, gap 8, bg #0a0a0a, pad 16, rad 8
   // Horizontal (Standard)
   Frame w full, h 50, rad 8, bg grad #2271C1 #7c3aed
@@ -1405,26 +1417,26 @@ Frame w 400, gap 8, bg #0a0a0a, pad 16, rad 8
 
   // Drei Farben
   Frame w full, h 50, rad 8, bg grad #10b981 #2271C1 #7c3aed
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `grad #a #b` – horizontaler Verlauf von links nach rechts
-- `grad-ver #a #b` – vertikaler Verlauf von oben nach unten
-- `grad 45 #a #b` – Verlauf im 45°-Winkel
-- `grad #a #b #c` – Verlauf mit drei Farben (funktioniert auch mit mehr)
+- \`grad #a #b\` – horizontaler Verlauf von links nach rechts
+- \`grad-ver #a #b\` – vertikaler Verlauf von oben nach unten
+- \`grad 45 #a #b\` – Verlauf im 45°-Winkel
+- \`grad #a #b #c\` – Verlauf mit drei Farben (funktioniert auch mit mehr)
 
-```mirror
+\`\`\`mirror
 Frame bg #1a1a1a, pad 20, rad 8, gap 8
   Text "Gradient Text", fs 24, weight bold, col grad #2271C1 #7c3aed
   Text "Vertical Gradient", fs 24, weight bold, col grad-ver #f59e0b #ef4444
-```
+\`\`\`
 
 ### Borders
 
-Borders bestehen aus zwei Properties: `bor` (Breite in Pixel) und `boc` (Farbe). Beide zusammen ergeben den sichtbaren Rahmen:
+Borders bestehen aus zwei Properties: \`bor\` (Breite in Pixel) und \`boc\` (Farbe). Beide zusammen ergeben den sichtbaren Rahmen:
 
-```mirror
+\`\`\`mirror
 Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   // Border rundum
   Frame w 70, h 70, bor 2, boc #2271C1, rad 8, center
@@ -1437,15 +1449,15 @@ Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   // Mit Hintergrund
   Frame w 70, h 70, bg #1a1a1a, bor 1, boc #333, rad 8, center
     Text "subtle", col #888, fs 11
-```
+\`\`\`
 
-> **Hinweis:** **Praxis-Tipp:** Ein subtiler 1px-Border (`bor 1, boc #333`) auf dunklem Hintergrund gibt Elementen Tiefe, ohne aufdringlich zu wirken. Das ist ein häufig genutztes Pattern für Cards und Inputs.
+> **Hinweis:** **Praxis-Tipp:** Ein subtiler 1px-Border (\`bor 1, boc #333\`) auf dunklem Hintergrund gibt Elementen Tiefe, ohne aufdringlich zu wirken. Das ist ein häufig genutztes Pattern für Cards und Inputs.
 
 #### Gerichtete Borders
 
 Für einzelne Seiten gibt es Shortcuts:
 
-```mirror
+\`\`\`mirror
 Frame gap 8, bg #0a0a0a, pad 16, rad 8
   // Nur unten
   Frame w 200, h 40, bg #1a1a1a, border-bottom 2, boc #2271C1, center
@@ -1458,20 +1470,20 @@ Frame gap 8, bg #0a0a0a, pad 16, rad 8
   // Oben und unten
   Frame w 200, h 40, bg #1a1a1a, bort 1, borb 1, boc #f59e0b, center
     Text "bort + borb", col #888, fs 11
-```
+\`\`\`
 
-| Property        | Alias           | Seite  |
-| --------------- | --------------- | ------ |
-| `border-top`    | `bor-t`, `bort` | Oben   |
-| `border-bottom` | `bor-b`, `borb` | Unten  |
-| `border-left`   | `bor-l`, `borl` | Links  |
-| `border-right`  | `bor-r`, `borr` | Rechts |
+| Property | Alias | Seite |
+| --- | --- | --- |
+| \`border-top\` | \`bor-t\`, \`bort\` | Oben |
+| \`border-bottom\` | \`bor-b\`, \`borb\` | Unten |
+| \`border-left\` | \`bor-l\`, \`borl\` | Links |
+| \`border-right\` | \`bor-r\`, \`borr\` | Rechts |
 
 ### Border Radius
 
 Von eckig bis rund:
 
-```mirror
+\`\`\`mirror
 Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   Frame w 60, h 60, bg #2271C1, rad 0, center
     Text "0", col white, fs 11
@@ -1481,58 +1493,58 @@ Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
     Text "12", col white, fs 11
   Frame w 60, h 60, bg #2271C1, rad 99, center
     Text "99", col white, fs 11
-```
+\`\`\`
 
-`rad 99` erzeugt einen Kreis bei quadratischen Elementen.
+\`rad 99\` erzeugt einen Kreis bei quadratischen Elementen.
 
 ### Typografie: Größe & Gewicht
 
-Die zwei wichtigsten Typografie-Properties sind `fs` (font-size, in Pixel) und `weight` (Schriftdicke). Eine klare Hierarchie entsteht durch die Kombination beider:
+Die zwei wichtigsten Typografie-Properties sind \`fs\` (font-size, in Pixel) und \`weight\` (Schriftdicke). Eine klare Hierarchie entsteht durch die Kombination beider:
 
-```mirror
+\`\`\`mirror
 Frame gap 4, bg #1a1a1a, pad 16, rad 8
   Text "Headline", col white, fs 24, weight bold
   Text "Subheadline", col white, fs 18, weight 500
   Text "Body Text", col #ccc, fs 14
   Text "Small Text", col #888, fs 12
   Text "Caption", col #666, fs 10, uppercase
-```
+\`\`\`
 
 **Was passiert hier?**
 
 - Größe und Farbe schaffen Hierarchie: Größer + heller = wichtiger
-- `weight` akzeptiert Zahlen (100-900) oder Namen (`bold`, `semibold`, etc.)
-- `uppercase` bei Captions ist ein gängiges Pattern für Labels und Kategorien
+- \`weight\` akzeptiert Zahlen (100-900) oder Namen (\`bold\`, \`semibold\`, etc.)
+- \`uppercase\` bei Captions ist ein gängiges Pattern für Labels und Kategorien
 
 ### Typografie: Stil
 
 Text-Transformationen und Stile:
 
-```mirror
+\`\`\`mirror
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "UPPERCASE TEXT", col white, uppercase
   Text "lowercase text", col white, lowercase
   Text "Italic Text", col white, italic
   Text "Underlined Text", col white, underline
   Text "Truncated text that is too long to fit...", col white, truncate, w 200
-```
+\`\`\`
 
 ### Typografie: Fonts
 
 Verschiedene Schriftarten:
 
-```mirror
+\`\`\`mirror
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "Sans Serif (default)", col white, font sans
   Text "Serif Font", col white, font serif
   Text "Monospace Font", col white, font mono
-```
+\`\`\`
 
 ### Shadows
 
 Schatten erzeugen Tiefe und Hierarchie. Mirror bietet drei vordefinierte Stufen – von subtil bis auffällig:
 
-```mirror
+\`\`\`mirror
 Frame hor, gap 16, pad 20, bg #0a0a0a
   Frame w 80, h 80, bg #1a1a1a, rad 8, shadow sm, center
     Text "sm", col #888, fs 11
@@ -1540,15 +1552,15 @@ Frame hor, gap 16, pad 20, bg #0a0a0a
     Text "md", col #888, fs 11
   Frame w 80, h 80, bg #1a1a1a, rad 8, shadow lg, center
     Text "lg", col #888, fs 11
-```
+\`\`\`
 
-> **Hinweis:** **Wann welche Stufe?** `sm` für subtile Erhöhung (Cards), `md` für schwebende Elemente (Dropdowns), `lg` für modale Dialoge die Aufmerksamkeit brauchen.
+> **Hinweis:** **Wann welche Stufe?** \`sm\` für subtile Erhöhung (Cards), \`md\` für schwebende Elemente (Dropdowns), \`lg\` für modale Dialoge die Aufmerksamkeit brauchen.
 
 ### Opacity
 
 Transparenz des gesamten Elements:
 
-```mirror
+\`\`\`mirror
 Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
   Frame w 60, h 60, bg #2271C1, rad 8, center, opacity 1
     Text "1", col white, fs 11
@@ -1558,13 +1570,13 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
     Text "0.4", col white, fs 11
   Frame w 60, h 60, bg #2271C1, rad 8, center, opacity 0.2
     Text "0.2", col white, fs 11
-```
+\`\`\`
 
 ### Cursor
 
 Mauszeiger-Stil ändern:
 
-```mirror
+\`\`\`mirror
 Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
   Frame w 70, h 50, bg #1a1a1a, rad 6, center, cursor pointer
     Text "pointer", col #888, fs 10
@@ -1574,13 +1586,13 @@ Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
     Text "move", col #888, fs 10
   Frame w 70, h 50, bg #1a1a1a, rad 6, center, cursor not-allowed
     Text "not-allowed", col #888, fs 9
-```
+\`\`\`
 
 ### Hover-Properties
 
-Für einfache Hover-Effekte ohne State-Block gibt es Inline-Properties. Diese sind kürzer als ein `hover:` State:
+Für einfache Hover-Effekte ohne State-Block gibt es Inline-Properties. Diese sind kürzer als ein \`hover:\` State:
 
-```mirror
+\`\`\`mirror
 Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
   // Mit hover-bg und hover-col
   Button "Hover mich", bg #333, col white, pad 10 20, rad 6, hover-bg #2271C1, hover-col white
@@ -1592,25 +1604,25 @@ Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
   // Mit hover-opacity
   Frame w 60, h 60, bg #10b981, rad 8, center, cursor pointer, hover-opacity 0.7
     Text "Opacity", col white, fs 10
-```
+\`\`\`
 
-| Property             | Alias                    | Beschreibung               |
-| -------------------- | ------------------------ | -------------------------- |
-| `hover-bg`           | `hover-background`       | Hintergrundfarbe bei Hover |
-| `hover-col`          | `hover-color`, `hover-c` | Textfarbe bei Hover        |
-| `hover-opacity`      | `hover-opa`, `hover-o`   | Transparenz bei Hover      |
-| `hover-scale`        | –                        | Skalierung bei Hover       |
-| `hover-border`       | `hover-bor`              | Border-Breite bei Hover    |
-| `hover-border-color` | `hover-boc`              | Border-Farbe bei Hover     |
-| `hover-radius`       | `hover-rad`              | Border-Radius bei Hover    |
+| Property | Alias | Beschreibung |
+| --- | --- | --- |
+| \`hover-bg\` | \`hover-background\` | Hintergrundfarbe bei Hover |
+| \`hover-col\` | \`hover-color\`, \`hover-c\` | Textfarbe bei Hover |
+| \`hover-opacity\` | \`hover-opa\`, \`hover-o\` | Transparenz bei Hover |
+| \`hover-scale\` | – | Skalierung bei Hover |
+| \`hover-border\` | \`hover-bor\` | Border-Breite bei Hover |
+| \`hover-border-color\` | \`hover-boc\` | Border-Farbe bei Hover |
+| \`hover-radius\` | \`hover-rad\` | Border-Radius bei Hover |
 
-> **Hinweis:** **Wann was nutzen?** Hover-Properties sind ideal für einfache Farbwechsel oder kleine Transformationen. Für komplexere Hover-Effekte (mehrere Properties ändern, Kinder hinzufügen) nutze den `hover:` State-Block aus dem States-Kapitel.
+> **Hinweis:** **Wann was nutzen?** Hover-Properties sind ideal für einfache Farbwechsel oder kleine Transformationen. Für komplexere Hover-Effekte (mehrere Properties ändern, Kinder hinzufügen) nutze den \`hover:\` State-Block aus dem States-Kapitel.
 
 ### Praktisch: Button Varianten
 
 Jetzt siehst du, wie die einzelnen Properties zusammenspielen. Hier sind sechs typische Button-Varianten, die du in fast jedem Design System findest:
 
-```mirror
+\`\`\`mirror
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
   // Filled Buttons
   Frame hor, gap 8
@@ -1627,21 +1639,21 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
   Frame hor, gap 8
     Button "Ghost", col #888, pad 10 20, rad 6
     Button "Link →", col #2271C1, pad 10 20, underline
-```
+\`\`\`
 
 **Was passiert hier?**
 
 - **Filled:** Volle Hintergrundfarbe – für primäre Aktionen
 - **Outline:** Nur Border, kein Hintergrund – für sekundäre Aktionen
-- **Subtle:** Transparenter Hintergrund mit `bg #2271C122` (22 = 13% Opacity)
+- **Subtle:** Transparenter Hintergrund mit \`bg #2271C122\` (22 = 13% Opacity)
 - **Ghost:** Nur Text, kein visueller Container – für tertiäre Aktionen
-- **Link:** Mit `underline` – für Inline-Navigation
+- **Link:** Mit \`underline\` – für Inline-Navigation
 
 ### Praktisch: Card Styles
 
 Cards sind Container für zusammengehörige Inhalte. Hier drei typische Varianten, die sich durch ihre visuelle "Erhöhung" unterscheiden:
 
-```mirror
+\`\`\`mirror
 Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   // Elevated
   Frame w 120, bg #1a1a1a, pad 16, rad 12, shadow md, gap 8
@@ -1657,7 +1669,7 @@ Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   Frame w 120, pad 16, rad 12, gap 8, bg grad 135 #1a1a2e #16213e
     Text "Gradient", col white, fs 13, weight 500
     Text "Mit Verlauf", col #888, fs 11
-```
+\`\`\`
 
 **Was passiert hier?**
 
@@ -1671,20 +1683,21 @@ Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
 
 ### Zusammenfassung
 
-- `bg, col` – Hintergrund & Textfarbe
-- `bg grad #a #b`, `col grad #a #b` – Gradients (auch `grad-ver`, `grad 45`)
-- `bor, boc, rad` – Border & Radius
-- `fs, weight, font` – Schriftgröße, -dicke, -art
-- `italic, underline, uppercase, truncate` – Text-Stile
-- `shadow sm/md/lg` – Schatten
-- `opacity` – Transparenz
-- `cursor pointer/grab/move` – Mauszeiger
+- \`bg, col\` – Hintergrund & Textfarbe
+- \`bg grad #a #b\`, \`col grad #a #b\` – Gradients (auch \`grad-ver\`, \`grad 45\`)
+- \`bor, boc, rad\` – Border & Radius
+- \`fs, weight, font\` – Schriftgröße, -dicke, -art
+- \`italic, underline, uppercase, truncate\` – Text-Stile
+- \`shadow sm/md/lg\` – Schatten
+- \`opacity\` – Transparenz
+- \`cursor pointer/grab/move\` – Mauszeiger
+
 
 ---
 
 ## States
 
-_Wie Elemente ihr Aussehen ändern_
+*Wie Elemente ihr Aussehen ändern*
 
 Bisher haben wir statische UIs gebaut. Jetzt lernen wir, wie Elemente ihr Aussehen ändern können – bei Hover, bei Klick, oder wenn etwas anderes passiert. Das Konzept dahinter: **States**.
 
@@ -1692,26 +1705,26 @@ Bisher haben wir statische UIs gebaut. Jetzt lernen wir, wie Elemente ihr Ausseh
 
 Ein **State** beschreibt, wie ein Element in einem bestimmten Zustand aussieht. Eine **Funktion** löst den Wechsel aus:
 
-```mirror
+\`\`\`mirror
 Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer, toggle()
   on:
     bg #2271C1
 
 Btn "Klick mich"
-```
+\`\`\`
 
 Der Button startet grau. Bei Klick wird er blau. Nochmal klicken – wieder grau.
 
-| Syntax     | Bedeutung                                   |
-| ---------- | ------------------------------------------- |
-| `on:`      | **State** – definiert das Aussehen          |
-| `toggle()` | **Funktion** – wechselt den State bei Klick |
+| Syntax | Bedeutung |
+| --- | --- |
+| \`on:\` | **State** – definiert das Aussehen |
+| \`toggle()\` | **Funktion** – wechselt den State bei Klick |
 
 ### System-States: hover, focus, active, disabled
 
 Manche States werden automatisch vom Browser ausgelöst – du brauchst keine Funktion:
 
-```mirror
+\`\`\`mirror
 Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
   hover:
     bg #444
@@ -1720,20 +1733,20 @@ Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
     scale 0.98
 
 Btn "Hover und Klick mich"
-```
+\`\`\`
 
-| System-State | Wann aktiv?                |
-| ------------ | -------------------------- |
-| `hover:`     | Maus ist über dem Element  |
-| `focus:`     | Element hat Tastatur-Fokus |
-| `active:`    | Während Mausklick gedrückt |
-| `disabled:`  | Element ist deaktiviert    |
+| System-State | Wann aktiv? |
+| --- | --- |
+| \`hover:\` | Maus ist über dem Element |
+| \`focus:\` | Element hat Tastatur-Fokus |
+| \`active:\` | Während Mausklick gedrückt |
+| \`disabled:\` | Element ist deaktiviert |
 
 #### Focus und Disabled
 
 Besonders wichtig für Formulare:
 
-```mirror
+\`\`\`mirror
 Field: bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w 200
   focus:
     boc #2271C1
@@ -1744,13 +1757,13 @@ Field: bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w 200
 Frame gap 8
   Input placeholder "Klick mich", Field
   Input placeholder "Deaktiviert", Field, disabled
-```
+\`\`\`
 
 ### Custom States
 
 Für eigene Interaktionen definierst du **Custom States**. Anders als System-States brauchst du eine Funktion, die sie auslöst:
 
-```mirror
+\`\`\`mirror
 FavBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, ver-center, gap 8, toggle()
   Icon "heart", ic #666, is 16
   "Merken"
@@ -1765,27 +1778,27 @@ FavBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, ver-center,
 Frame hor, ver-center, gap 8
   FavBtn
   FavBtn on
-```
+\`\`\`
 
-Dieses Beispiel kombiniert System-State (`hover:`) mit Custom State (`on:`):
+Dieses Beispiel kombiniert System-State (\`hover:\`) mit Custom State (\`on:\`):
 
-- `hover:` – Browser aktiviert bei Maus-Hover (kein Trigger nötig)
-- `on:` – `toggle()` aktiviert bei Klick
-- `FavBtn on` – Instanz startet im aktivierten State
+- \`hover:\` – Browser aktiviert bei Maus-Hover (kein Trigger nötig)
+- \`on:\` – \`toggle()\` aktiviert bei Klick
+- \`FavBtn on\` – Instanz startet im aktivierten State
 
 #### State-Namen sind frei wählbar
 
-Du kannst jeden Namen verwenden – `on`, `open`, `selected`, `expanded`. **Ausnahme:** Vermeide `hover`, `focus`, `active`, `disabled` – diese sind für CSS-Pseudo-States reserviert.
+Du kannst jeden Namen verwenden – \`on\`, \`open\`, \`selected\`, \`expanded\`. **Ausnahme:** Vermeide \`hover\`, \`focus\`, \`active\`, \`disabled\` – diese sind für CSS-Pseudo-States reserviert.
 
-**Tipp:** Für Toggle-Switches gibt es die fertige `Switch` Zag-Komponente (siehe Eingabe-Komponenten) mit Accessibility und Keyboard-Navigation.
+**Tipp:** Für Toggle-Switches gibt es die fertige \`Switch\` Zag-Komponente (siehe Eingabe-Komponenten) mit Accessibility und Keyboard-Navigation.
 
-> **Hinweis:** **Tipp:** Für Toggle-Switches gibt es die fertige `Switch` Zag-Komponente (siehe Eingabe-Komponenten) mit Accessibility und Keyboard-Navigation.
+> **Hinweis:** **Tipp:** Für Toggle-Switches gibt es die fertige \`Switch\` Zag-Komponente (siehe Eingabe-Komponenten) mit Accessibility und Keyboard-Navigation.
 
 ### States können alles ändern
 
 Bisher haben States nur Styles geändert (Farben, Größen). Aber States können auch **komplett andere Kinder** haben – wie Figma Variants:
 
-```mirror
+\`\`\`mirror
 ExpandBtn: pad 12, bg #333, col white, rad 6, hor, ver-center, gap 8, cursor pointer, toggle()
   "Mehr zeigen"
   Icon "chevron-down", ic white, is 16
@@ -1794,17 +1807,17 @@ ExpandBtn: pad 12, bg #333, col white, rad 6, hor, ver-center, gap 8, cursor poi
     Icon "chevron-up", ic white, is 16
 
 ExpandBtn
-```
+\`\`\`
 
-Im Base-State zeigt der Button "Mehr zeigen" mit Pfeil nach unten. Im `open`-State wird _alles_ ausgetauscht: anderer Text, anderes Icon.
+Im Base-State zeigt der Button "Mehr zeigen" mit Pfeil nach unten. Im \`open\`-State wird *alles* ausgetauscht: anderer Text, anderes Icon.
 
 > **Hinweis:** **Wie Figma Variants:** Jeder State kann eine komplett andere Version der Komponente sein – nicht nur andere Farben, sondern andere Inhalte, andere Struktur.
 
 ### Mehrere States
 
-Was wenn du mehr als zwei Zustände brauchst? Ein Task kann "todo", "doing" oder "done" sein. `toggle()` erkennt das automatisch und cyclet durch alle States:
+Was wenn du mehr als zwei Zustände brauchst? Ein Task kann "todo", "doing" oder "done" sein. \`toggle()\` erkennt das automatisch und cyclet durch alle States:
 
-```mirror
+\`\`\`mirror
 StatusBtn: pad 12 24, rad 6, col white, cursor pointer, hor, ver-center, gap 8, toggle()
   todo:
     bg #333
@@ -1817,21 +1830,21 @@ StatusBtn: pad 12 24, rad 6, col white, cursor pointer, hor, ver-center, gap 8, 
     Icon "check", ic white, is 14
 
 StatusBtn
-```
+\`\`\`
 
-`toggle()` cyclet durch alle definierten States:
+\`toggle()\` cyclet durch alle definierten States:
 
 - Klick 1: todo → doing (orange mit Uhr)
 - Klick 2: doing → done (grün mit Haken)
 - Klick 3: done → todo (zurück zum Anfang)
 
-> **Hinweis:** Die Reihenfolge der State-Definitionen bestimmt die Cycle-Reihenfolge. Der erste State (`todo`) ist der Startzustand.
+> **Hinweis:** Die Reihenfolge der State-Definitionen bestimmt die Cycle-Reihenfolge. Der erste State (\`todo\`) ist der Startzustand.
 
 ### Nur einer aktiv: exclusive()
 
-Bei Tabs oder Radio-Buttons soll immer nur _ein_ Element aktiv sein. Wenn du eines aktivierst, werden alle anderen automatisch deaktiviert:
+Bei Tabs oder Radio-Buttons soll immer nur *ein* Element aktiv sein. Wenn du eines aktivierst, werden alle anderen automatisch deaktiviert:
 
-```mirror
+\`\`\`mirror
 Tab: pad 12 20, rad 6, bg #333, col #888, cursor pointer, exclusive()
   selected:
     bg #2271C1
@@ -1841,15 +1854,15 @@ Frame hor, ver-center, gap 4, bg #1a1a1a, pad 4, rad 8
   Tab "Home"
   Tab "Projekte", selected
   Tab "Settings"
-```
+\`\`\`
 
-`exclusive()` macht zwei Dinge: Es aktiviert das geklickte Element und deaktiviert alle Geschwister des gleichen Typs.
+\`exclusive()\` macht zwei Dinge: Es aktiviert das geklickte Element und deaktiviert alle Geschwister des gleichen Typs.
 
 ### Auswahl-Wert verfolgen: bind
 
-Bei `exclusive()` ist immer nur ein Element aktiv – aber welcher Wert ist ausgewählt? Mit `bind varName` speicherst du den Textinhalt des aktiven Elements automatisch in einer Variable:
+Bei \`exclusive()\` ist immer nur ein Element aktiv – aber welcher Wert ist ausgewählt? Mit \`bind varName\` speicherst du den Textinhalt des aktiven Elements automatisch in einer Variable:
 
-```mirror
+\`\`\`mirror
 Option: pad 10, rad 6, bg #333, col #888, cursor pointer, exclusive()
   hover:
     bg #444
@@ -1862,22 +1875,22 @@ Frame gap 8, bind city
   Option "Berlin"
   Option "Hamburg"
   Option "München"
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `bind city` auf dem Frame – speichert den Textinhalt des aktiven Elements
-- `$city` im Text – zeigt den aktuell ausgewählten Wert
-- `exclusive()` auf Option – nur eine Option kann aktiv sein
-- Bei Klick auf eine Option wird deren Textinhalt ("Berlin", "Hamburg", etc.) in `$city` gespeichert
+- \`bind city\` auf dem Frame – speichert den Textinhalt des aktiven Elements
+- \`$city\` im Text – zeigt den aktuell ausgewählten Wert
+- \`exclusive()\` auf Option – nur eine Option kann aktiv sein
+- Bei Klick auf eine Option wird deren Textinhalt ("Berlin", "Hamburg", etc.) in \`$city\` gespeichert
 
-> **Hinweis:** **bind + exclusive() = Custom Select.** Für vollständige Dropdowns mit Auf-/Zuklappen, Accessibility und Keyboard-Navigation gibt es die fertige `Select` Zag-Komponente (siehe Eingabe).
+> **Hinweis:** **bind + exclusive() = Custom Select.** Für vollständige Dropdowns mit Auf-/Zuklappen, Accessibility und Keyboard-Navigation gibt es die fertige \`Select\` Zag-Komponente (siehe Eingabe).
 
 ### State-Propagation: Kinder reagieren auf Parent
 
-Wenn ein Parent `toggle()` hat, können seine Kinder mit `on:` darauf reagieren:
+Wenn ein Parent \`toggle()\` hat, können seine Kinder mit \`on:\` darauf reagieren:
 
-```mirror
+\`\`\`mirror
 LikeBtn: hor, gap 8, pad 12 16, bg #1a1a1a, rad 6, cursor pointer, toggle()
   Icon "heart", ic #888, is 18
     on:
@@ -1888,22 +1901,22 @@ LikeBtn: hor, gap 8, pad 12 16, bg #1a1a1a, rad 6, cursor pointer, toggle()
       col #ef4444
 
 LikeBtn
-```
+\`\`\`
 
-Der Parent (`LikeBtn`) hat `toggle()`. Die Kinder (`Icon`, `Text`) haben eigene `on:` States, die automatisch aktiviert werden, wenn der Parent aktiviert ist.
+Der Parent (\`LikeBtn\`) hat \`toggle()\`. Die Kinder (\`Icon\`, \`Text\`) haben eigene \`on:\` States, die automatisch aktiviert werden, wenn der Parent aktiviert ist.
 
 > **Hinweis:** **State-Propagation** macht Komponenten wie Checkbox oder Switch möglich: Der Parent hat die State-Machine, die Kinder ändern ihr Aussehen entsprechend.
 
 ### Auf andere Elemente reagieren
 
-Manchmal soll ein Element sein Aussehen ändern, wenn ein _anderes_ Element seinen State wechselt. Klassisches Beispiel: Ein Menü wird sichtbar, wenn ein Button aktiviert wird.
+Manchmal soll ein Element sein Aussehen ändern, wenn ein *anderes* Element seinen State wechselt. Klassisches Beispiel: Ein Menü wird sichtbar, wenn ein Button aktiviert wird.
 
 Dafür brauchst du zwei Dinge:
 
-- Gib dem steuernden Element einen **Namen** mit `name`
-- Referenziere diesen Namen mit `Name.state:`
+- Gib dem steuernden Element einen **Namen** mit \`name\`
+- Referenziere diesen Namen mit \`Name.state:\`
 
-```mirror
+\`\`\`mirror
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
   Button "Menü", name MenuBtn, pad 10 20, rad 6, bg #333, col white, toggle()
     open:
@@ -1914,15 +1927,15 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
       visible
     Text "Dashboard", col white, fs 14, pad 8
     Text "Einstellungen", col white, fs 14, pad 8
-```
+\`\`\`
 
-`MenuBtn.open:` bedeutet: "Wenn das Element namens MenuBtn im State 'open' ist, wende diese Styles an." Das Menü startet `hidden` und wird sichtbar, sobald der Button aktiviert wird.
+\`MenuBtn.open:\` bedeutet: "Wenn das Element namens MenuBtn im State 'open' ist, wende diese Styles an." Das Menü startet \`hidden\` und wird sichtbar, sobald der Button aktiviert wird.
 
 ### Praktisch: Accordion
 
 Ein Accordion mit State-Propagation – der Chevron rotiert, das Panel wird sichtbar:
 
-```mirror
+\`\`\`mirror
 AccordionItem: ver, bg #1a1a1a, rad 8, toggle()
   Frame hor, spread, ver-center, pad 12 16, cursor pointer
     Text "Abschnitt 1", col white
@@ -1935,15 +1948,15 @@ AccordionItem: ver, bg #1a1a1a, rad 8, toggle()
     Text "Hier ist der versteckte Inhalt.", col #888
 
 AccordionItem
-```
+\`\`\`
 
-Der Chevron hat `on: rot 180` – rotiert wenn Parent aktiv. Das Panel hat `on: visible` – wird sichtbar wenn Parent aktiv.
+Der Chevron hat \`on: rot 180\` – rotiert wenn Parent aktiv. Das Panel hat \`on: visible\` – wird sichtbar wenn Parent aktiv.
 
 ### Andere Events
 
 Klick ist der Default. Für andere Events gibt es Shorthands:
 
-```mirror
+\`\`\`mirror
 Field: bg #1a1a1a, bor 1, boc #333, col white, pad 12, rad 6, w 220
   focus:
     boc #2271C1
@@ -1957,15 +1970,15 @@ Frame gap 8
     on:
       boc #ef4444
       bg #ef444422
-```
+\`\`\`
 
-| Event                | Beschreibung        |
-| -------------------- | ------------------- |
-| `toggle()`           | Bei Klick (Default) |
-| `onenter toggle()`   | Bei Enter-Taste     |
-| `onescape toggle()`  | Bei Escape-Taste    |
-| `onspace toggle()`   | Bei Leertaste       |
-| `onkeydown arrow-up` | Bei Pfeiltaste hoch |
+| Event | Beschreibung |
+| --- | --- |
+| \`toggle()\` | Bei Klick (Default) |
+| \`onenter toggle()\` | Bei Enter-Taste |
+| \`onescape toggle()\` | Bei Escape-Taste |
+| \`onspace toggle()\` | Bei Leertaste |
+| \`onkeydown arrow-up\` | Bei Pfeiltaste hoch |
 
 ---
 
@@ -1975,47 +1988,48 @@ Frame gap 8
 
 #### System-States (automatisch)
 
-| State       | Wann aktiv?         |
-| ----------- | ------------------- |
-| `hover:`    | Maus über Element   |
-| `focus:`    | Tastatur-Fokus      |
-| `active:`   | Während Klick       |
-| `disabled:` | Element deaktiviert |
+| State | Wann aktiv? |
+| --- | --- |
+| \`hover:\` | Maus über Element |
+| \`focus:\` | Tastatur-Fokus |
+| \`active:\` | Während Klick |
+| \`disabled:\` | Element deaktiviert |
 
 #### Custom States (manuell)
 
-| Syntax           | Bedeutung                                   |
-| ---------------- | ------------------------------------------- |
-| `on:`            | Custom State definieren (Name frei wählbar) |
-| `toggle()`       | State bei Klick wechseln                    |
-| `exclusive()`    | Nur einer aktiv (Geschwister aus)           |
-| `bind varName`   | Aktiven Wert in Variable speichern          |
-| `Btn "Text", on` | Instanz startet im State                    |
+| Syntax | Bedeutung |
+| --- | --- |
+| \`on:\` | Custom State definieren (Name frei wählbar) |
+| \`toggle()\` | State bei Klick wechseln |
+| \`exclusive()\` | Nur einer aktiv (Geschwister aus) |
+| \`bind varName\` | Aktiven Wert in Variable speichern |
+| \`Btn "Text", on\` | Instanz startet im State |
 
 #### State-Propagation
 
-Kinder mit `on:` reagieren automatisch auf Parent mit `toggle()`.
+Kinder mit \`on:\` reagieren automatisch auf Parent mit \`toggle()\`.
 
 #### Cross-Element
 
-| Syntax          | Bedeutung                        |
-| --------------- | -------------------------------- |
-| `name MenuBtn`  | Element benennen                 |
-| `MenuBtn.open:` | Reagieren wenn MenuBtn in "open" |
+| Syntax | Bedeutung |
+| --- | --- |
+| \`name MenuBtn\` | Element benennen |
+| \`MenuBtn.open:\` | Reagieren wenn MenuBtn in "open" |
 
 #### Events
 
-| Event           | Beschreibung        |
-| --------------- | ------------------- |
-| `toggle()`      | Bei Klick (Default) |
-| `onenter fn()`  | Bei Enter-Taste     |
-| `onescape fn()` | Bei Escape-Taste    |
+| Event | Beschreibung |
+| --- | --- |
+| \`toggle()\` | Bei Klick (Default) |
+| \`onenter fn()\` | Bei Enter-Taste |
+| \`onescape fn()\` | Bei Escape-Taste |
+
 
 ---
 
 ## Animationen
 
-_Bewegung und Übergänge_
+*Bewegung und Übergänge*
 
 Im letzten Kapitel hast du States kennengelernt – wie Elemente ihr Aussehen ändern. Dieses Kapitel zeigt, wie diese Änderungen **animiert** werden: **Transitions** für sanfte Übergänge und **Presets** für typische Effekte (pulse, bounce, shake, spin).
 
@@ -2023,7 +2037,7 @@ Im letzten Kapitel hast du States kennengelernt – wie Elemente ihr Aussehen ä
 
 Ohne Transition springen Änderungen sofort. Mit Transition gleiten sie smooth. Du fügst einfach eine **Dauer** zum State hinzu:
 
-```mirror
+\`\`\`mirror
 // Ohne Transition: springt
 BtnHart: pad 12 24, rad 6, bg #333, col white, cursor pointer
   hover:
@@ -2037,12 +2051,12 @@ BtnSoft: pad 12 24, rad 6, bg #333, col white, cursor pointer
 Frame hor, gap 12
   BtnHart "Ohne"
   BtnSoft "Mit 0.3s"
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `hover:` — Änderung springt sofort
-- `hover 0.3s:` — Änderung gleitet über 300 Millisekunden
+- \`hover:\` — Änderung springt sofort
+- \`hover 0.3s:\` — Änderung gleitet über 300 Millisekunden
 - Die Dauer macht den Unterschied. Alles andere bleibt gleich.
 
 > **Hinweis:** **Faustregel für Dauer:** 100-200ms für Hover-Effekte, 200-300ms für State-Wechsel, 300-500ms für größere Übergänge. Im Zweifel lieber zu schnell als zu langsam.
@@ -2051,7 +2065,7 @@ Frame hor, gap 12
 
 Easing bestimmt die Beschleunigungskurve. Du kannst es nach der Dauer angeben:
 
-```mirror
+\`\`\`mirror
 Btn: pad 12 24, rad 6, bg #333, col white, cursor pointer
 
 // Verschiedene Easings
@@ -2065,27 +2079,27 @@ Frame gap 8
   Btn "ease-in-out"
     hover 0.3s ease-in-out:
       bg #2271C1
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `ease-out` — startet schnell, endet langsam (gut für Erscheinen)
-- `ease-in` — startet langsam, endet schnell (gut für Verschwinden)
-- `ease-in-out` — beides kombiniert (gut für Hin-und-her)
+- \`ease-out\` — startet schnell, endet langsam (gut für Erscheinen)
+- \`ease-in\` — startet langsam, endet schnell (gut für Verschwinden)
+- \`ease-in-out\` — beides kombiniert (gut für Hin-und-her)
 
-| Easing        | Gefühl              | Typische Verwendung   |
-| ------------- | ------------------- | --------------------- |
-| `ease`        | Natürlich (Default) | Allgemein             |
-| `ease-out`    | Langsames Ende      | Elemente erscheinen   |
-| `ease-in`     | Langsamer Start     | Elemente verschwinden |
-| `ease-in-out` | Beides              | Hin-und-her           |
-| `linear`      | Gleichmäßig         | Spinner, Fortschritt  |
+| Easing | Gefühl | Typische Verwendung |
+| --- | --- | --- |
+| \`ease\` | Natürlich (Default) | Allgemein |
+| \`ease-out\` | Langsames Ende | Elemente erscheinen |
+| \`ease-in\` | Langsamer Start | Elemente verschwinden |
+| \`ease-in-out\` | Beides | Hin-und-her |
+| \`linear\` | Gleichmäßig | Spinner, Fortschritt |
 
 ### Animation Presets
 
-Für typische Bewegungen gibt es vordefinierte Animationen. Du schreibst einfach `anim` mit dem Namen:
+Für typische Bewegungen gibt es vordefinierte Animationen. Du schreibst einfach \`anim\` mit dem Namen:
 
-```mirror
+\`\`\`mirror
 Frame hor, gap 12, wrap, bg #0a0a0a, pad 16, rad 8
   Frame w 60, h 60, bg #2271C1, rad 8, center, anim pulse
     Text "pulse", col white, fs 10
@@ -2095,29 +2109,29 @@ Frame hor, gap 12, wrap, bg #0a0a0a, pad 16, rad 8
     Text "shake", col white, fs 10
   Frame w 60, h 60, bg #ef4444, rad 8, center, anim spin
     Text "spin", col white, fs 10
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `anim pulse` — Element pulsiert (gut für "neu" oder "Aufmerksamkeit")
-- `anim bounce` — Element hüpft (gut für Bestätigung)
-- `anim shake` — Element schüttelt sich (gut für Fehler)
-- `anim spin` — Element dreht sich (gut für Loading)
+- \`anim pulse\` — Element pulsiert (gut für "neu" oder "Aufmerksamkeit")
+- \`anim bounce\` — Element hüpft (gut für Bestätigung)
+- \`anim shake\` — Element schüttelt sich (gut für Fehler)
+- \`anim spin\` — Element dreht sich (gut für Loading)
 
-| Preset   | Effekt    | Typische Verwendung |
-| -------- | --------- | ------------------- |
-| `pulse`  | Pulsieren | Hinweis, "neu"      |
-| `bounce` | Hüpfen    | Bestätigung, Erfolg |
-| `shake`  | Schütteln | Fehler, ungültig    |
-| `spin`   | Drehen    | Loading             |
+| Preset | Effekt | Typische Verwendung |
+| --- | --- | --- |
+| \`pulse\` | Pulsieren | Hinweis, "neu" |
+| \`bounce\` | Hüpfen | Bestätigung, Erfolg |
+| \`shake\` | Schütteln | Fehler, ungültig |
+| \`spin\` | Drehen | Loading |
 
-> **Hinweis:** **Weniger ist mehr:** Nicht alles animieren — nur was Bedeutung hat. `shake` = Fehler, `bounce` = Erfolg, `pulse` = Aufmerksamkeit. Nutze das bewusst.
+> **Hinweis:** **Weniger ist mehr:** Nicht alles animieren — nur was Bedeutung hat. \`shake\` = Fehler, \`bounce\` = Erfolg, \`pulse\` = Aufmerksamkeit. Nutze das bewusst.
 
 ### Animation bei State-Wechsel
 
 Animationen sind besonders nützlich bei State-Wechseln. Du kannst sie direkt im State definieren:
 
-```mirror
+\`\`\`mirror
 LikeBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, ver-center, gap 8, toggle()
   Icon "heart", ic #666, is 18
   "Gefällt mir"
@@ -2131,15 +2145,15 @@ LikeBtn: pad 12 20, rad 6, bg #1a1a1a, col #888, cursor pointer, hor, ver-center
     "Gefällt mir!"
 
 LikeBtn
-```
+\`\`\`
 
-Der Hover-Effekt (`hover 0.15s:`) gleitet sanft. Beim Aktivieren (`on:`) hüpft der Button mit `anim bounce` — sofortiges Feedback: "Dein Klick wurde registriert!"
+Der Hover-Effekt (\`hover 0.15s:\`) gleitet sanft. Beim Aktivieren (\`on:\`) hüpft der Button mit \`anim bounce\` — sofortiges Feedback: "Dein Klick wurde registriert!"
 
 ### Transition auf Custom States
 
-Nicht nur `hover:` kann animiert werden – auch eigene States wie `on:` oder `open:`:
+Nicht nur \`hover:\` kann animiert werden – auch eigene States wie \`on:\` oder \`open:\`:
 
-```mirror
+\`\`\`mirror
 Toggle: Frame w 48, h 28, rad 99, bg #333, cursor pointer, toggle()
   // Der Knopf
   Frame w 24, h 24, rad 99, bg white, mar 2
@@ -2148,15 +2162,15 @@ Toggle: Frame w 48, h 28, rad 99, bg #333, cursor pointer, toggle()
     Frame mar 2 2 2 22
 
 Toggle
-```
+\`\`\`
 
-`on 0.2s:` bedeutet: Beim Wechsel in den `on`-State über 200ms animieren. Der Knopf gleitet von links nach rechts.
+\`on 0.2s:\` bedeutet: Beim Wechsel in den \`on\`-State über 200ms animieren. Der Knopf gleitet von links nach rechts.
 
 ### Sichtbarkeit animieren
 
 Elemente können beim Ein-/Ausblenden animiert werden:
 
-```mirror
+\`\`\`mirror
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
   Button name Btn, "Hinweis zeigen", pad 10 20, bg #2271C1, col white, rad 6, toggle()
     open:
@@ -2166,15 +2180,15 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
     Btn.open 0.2s:
       visible
     Text "Dies ist ein Hinweis mit Animation.", col #ccc
-```
+\`\`\`
 
-`Btn.open 0.2s:` reagiert auf den State eines anderen Elements und animiert die Änderung über 200ms.
+\`Btn.open 0.2s:\` reagiert auf den State eines anderen Elements und animiert die Änderung über 200ms.
 
 ### Praktisch: Animiertes Menü
 
 Ein klassisches Pattern — Menü mit sanfter Animation:
 
-```mirror
+\`\`\`mirror
 Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
   Button name Btn, "Menü", pad 10 20, bg #333, col white, rad 6, toggle()
     open 0.15s:
@@ -2187,27 +2201,27 @@ Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
     Text "Dashboard", col white, pad 8 12
     Text "Einstellungen", col white, pad 8 12
     Text "Logout", col #888, pad 8 12
-```
+\`\`\`
 
-Das Menü startet `hidden` und `opacity 0`. Bei `Btn.open` wird es sichtbar und blendet sanft ein.
+Das Menü startet \`hidden\` und \`opacity 0\`. Bei \`Btn.open\` wird es sichtbar und blendet sanft ein.
 
 ### Praktisch: Loading Spinner
 
-Ein einfacher Spinner mit `spin`:
+Ein einfacher Spinner mit \`spin\`:
 
-```mirror
+\`\`\`mirror
 Frame hor, ver-center, gap 12, bg #1a1a1a, pad 16, rad 8
   Icon "loader-2", ic #2271C1, is 24, anim spin
   Text "Lädt...", col #888
-```
+\`\`\`
 
-`anim spin` auf dem Icon dreht es endlos. Das Lucide-Icon "loader-2" ist genau dafür designed.
+\`anim spin\` auf dem Icon dreht es endlos. Das Lucide-Icon "loader-2" ist genau dafür designed.
 
 ### Praktisch: Erfolgs-Feedback
 
 Visuelles Feedback bei erfolgreicher Aktion:
 
-```mirror
+\`\`\`mirror
 SaveBtn: pad 12 24, rad 6, bg #333, col white, cursor pointer, hor, ver-center, gap 8, toggle()
   Icon "save", ic white, is 16
   "Speichern"
@@ -2220,9 +2234,9 @@ SaveBtn: pad 12 24, rad 6, bg #333, col white, cursor pointer, hor, ver-center, 
     "Gespeichert!"
 
 SaveBtn
-```
+\`\`\`
 
-Nach dem Klick wechselt der Button in den `saved`-State mit grünem Hintergrund und einem kurzen Bounce-Effekt.
+Nach dem Klick wechselt der Button in den \`saved\`-State mit grünem Hintergrund und einem kurzen Bounce-Effekt.
 
 ---
 
@@ -2230,114 +2244,115 @@ Nach dem Klick wechselt der Button in den `saved`-State mit grünem Hintergrund 
 
 #### Transitions
 
-| Syntax                 | Bedeutung                  |
-| ---------------------- | -------------------------- |
-| `hover 0.2s:`          | State mit 200ms Übergang   |
-| `hover 0.3s ease-out:` | Mit Easing-Funktion        |
-| `on 0.2s:`             | Custom State mit Animation |
+| Syntax | Bedeutung |
+| --- | --- |
+| \`hover 0.2s:\` | State mit 200ms Übergang |
+| \`hover 0.3s ease-out:\` | Mit Easing-Funktion |
+| \`on 0.2s:\` | Custom State mit Animation |
 
 #### Animation Presets
 
-| Preset        | Effekt                     |
-| ------------- | -------------------------- |
-| `anim pulse`  | Pulsieren (Aufmerksamkeit) |
-| `anim bounce` | Hüpfen (Erfolg)            |
-| `anim shake`  | Schütteln (Fehler)         |
-| `anim spin`   | Drehen (Loading)           |
+| Preset | Effekt |
+| --- | --- |
+| \`anim pulse\` | Pulsieren (Aufmerksamkeit) |
+| \`anim bounce\` | Hüpfen (Erfolg) |
+| \`anim shake\` | Schütteln (Fehler) |
+| \`anim spin\` | Drehen (Loading) |
 
 #### Easing
 
-| Easing        | Gefühl              |
-| ------------- | ------------------- |
-| `ease`        | Natürlich (Default) |
-| `ease-out`    | Langsames Ende      |
-| `ease-in`     | Langsamer Start     |
-| `ease-in-out` | Beides kombiniert   |
+| Easing | Gefühl |
+| --- | --- |
+| \`ease\` | Natürlich (Default) |
+| \`ease-out\` | Langsames Ende |
+| \`ease-in\` | Langsamer Start |
+| \`ease-in-out\` | Beides kombiniert |
+
 
 ---
 
 ## Functions
 
-_Eingebaute und eigene Funktionen_
+*Eingebaute und eigene Funktionen*
 
-In Kapitel 6 hast du `toggle()` und `exclusive()` kennengelernt – zwei eingebaute Funktionen für State-Wechsel. Mirror bietet viele weitere **eingebaute Funktionen** für typische UI-Patterns: Feedback, Navigation, Zähler, Scroll und mehr.
+In Kapitel 6 hast du \`toggle()\` und \`exclusive()\` kennengelernt – zwei eingebaute Funktionen für State-Wechsel. Mirror bietet viele weitere **eingebaute Funktionen** für typische UI-Patterns: Feedback, Navigation, Zähler, Scroll und mehr.
 
 ### Syntax: Funktionen als Properties
 
-Funktionen werden direkt als Properties geschrieben – genau wie `bg` oder `pad`. Der Unterschied: Sie lösen Aktionen aus statt Styles zu setzen.
+Funktionen werden direkt als Properties geschrieben – genau wie \`bg\` oder \`pad\`. Der Unterschied: Sie lösen Aktionen aus statt Styles zu setzen.
 
-```mirror
+\`\`\`mirror
 // Kurzschreibweise – Klick ist Default
 Btn: Button pad 10 20, rad 6, bg #333, col white, toggle()
   on:
     bg #2271C1
 
 Btn "An/Aus"
-```
+\`\`\`
 
 Wenn du eine Funktion als Property schreibst, wird sie automatisch bei **Klick** ausgeführt. Das ist der häufigste Fall – deshalb ist Klick der Default.
 
-| Syntax                              | Bedeutung                     |
-| ----------------------------------- | ----------------------------- |
-| `Button "X", toggle()`              | Funktion bei Klick (Kurzform) |
-| `Button "X", show(Menu)`            | Element zeigen bei Klick      |
-| `Button "X", toggle(), toast("OK")` | Mehrere Funktionen            |
+| Syntax | Bedeutung |
+| --- | --- |
+| \`Button "X", toggle()\` | Funktion bei Klick (Kurzform) |
+| \`Button "X", show(Menu)\` | Element zeigen bei Klick |
+| \`Button "X", toggle(), toast("OK")\` | Mehrere Funktionen |
 
-> **Hinweis:** **Faustregel:** Kurzschreibweise für Klick-Events (99% der Fälle). Für andere Events wie Enter oder Escape gibt es Shorthands (`onenter`, `onescape`) – siehe States.
+> **Hinweis:** **Faustregel:** Kurzschreibweise für Klick-Events (99% der Fälle). Für andere Events wie Enter oder Escape gibt es Shorthands (\`onenter\`, \`onescape\`) – siehe States.
 
 ### Alle eingebauten Funktionen
 
 Mirror hat eingebaute Funktionen für die häufigsten UI-Patterns. Du musst sie nicht importieren – sie sind einfach da:
 
-| Kategorie                  | Funktion                     | Was sie tut                         |
-| -------------------------- | ---------------------------- | ----------------------------------- |
-| **State**                  | `toggle()`                   | State wechseln (an/aus oder cyclen) |
-| `exclusive()`              | Nur diesen aktivieren        |                                     |
-| **Sichtbarkeit**           | `show(Element)`              | Element sichtbar machen             |
-| `hide(Element)`            | Element verstecken           |                                     |
-| **Feedback**               | `toast("Text")`              | Toast-Benachrichtigung              |
-| **Input**                  | `focus(Element)`             | Fokus setzen                        |
-| `clear(Element)`           | Eingabe löschen              |                                     |
-| `setError(Element, "msg")` | Fehler-State setzen          |                                     |
-| `clearError(Element)`      | Fehler-State entfernen       |                                     |
-| **Zähler**                 | `increment(token)`           | Token +1                            |
-| `decrement(token)`         | Token -1                     |                                     |
-| `set(token, value)`        | Token auf Wert setzen        |                                     |
-| `reset(token)`             | Auf Initialwert zurücksetzen |                                     |
-| **Scroll**                 | `scrollTo(Element)`          | Zu Element scrollen                 |
-| `scrollToTop()`            | Zum Seitenanfang             |                                     |
-| `scrollToBottom()`         | Zum Seitenende               |                                     |
-| **Clipboard**              | `copy("Text")`               | In Zwischenablage kopieren          |
-| **Navigation**             | `navigate(View)`             | Zu View wechseln                    |
-| `back()`                   | Browser zurück               |                                     |
-| `forward()`                | Browser vorwärts             |                                     |
-| `openUrl("...")`           | URL öffnen (neuer Tab)       |                                     |
+| Kategorie | Funktion | Was sie tut |
+| --- | --- | --- |
+| **State** | \`toggle()\` | State wechseln (an/aus oder cyclen) |
+| \`exclusive()\` | Nur diesen aktivieren |  |
+| **Sichtbarkeit** | \`show(Element)\` | Element sichtbar machen |
+| \`hide(Element)\` | Element verstecken |  |
+| **Feedback** | \`toast("Text")\` | Toast-Benachrichtigung |
+| **Input** | \`focus(Element)\` | Fokus setzen |
+| \`clear(Element)\` | Eingabe löschen |  |
+| \`setError(Element, "msg")\` | Fehler-State setzen |  |
+| \`clearError(Element)\` | Fehler-State entfernen |  |
+| **Zähler** | \`increment(token)\` | Token +1 |
+| \`decrement(token)\` | Token -1 |  |
+| \`set(token, value)\` | Token auf Wert setzen |  |
+| \`reset(token)\` | Auf Initialwert zurücksetzen |  |
+| **Scroll** | \`scrollTo(Element)\` | Zu Element scrollen |
+| \`scrollToTop()\` | Zum Seitenanfang |  |
+| \`scrollToBottom()\` | Zum Seitenende |  |
+| **Clipboard** | \`copy("Text")\` | In Zwischenablage kopieren |
+| **Navigation** | \`navigate(View)\` | Zu View wechseln |
+| \`back()\` | Browser zurück |  |
+| \`forward()\` | Browser vorwärts |  |
+| \`openUrl("...")\` | URL öffnen (neuer Tab) |  |
 
 ### Feedback: toast()
 
 Toast-Benachrichtigungen erscheinen kurz und verschwinden automatisch – perfekt für Bestätigungen ohne Modal:
 
-```mirror
+\`\`\`mirror
 Frame hor, gap 8, wrap, bg #0a0a0a, pad 16, rad 8
   Button "Info", pad 10 20, bg #333, col white, rad 6, toast("Das ist eine Info")
   Button "Erfolg", pad 10 20, bg #10b981, col white, rad 6, toast("Gespeichert!", "success")
   Button "Fehler", pad 10 20, bg #ef4444, col white, rad 6, toast("Fehler aufgetreten", "error")
   Button "Warnung", pad 10 20, bg #f59e0b, col black, rad 6, toast("Achtung!", "warning")
-```
+\`\`\`
 
-| Syntax                         | Beschreibung                          |
-| ------------------------------ | ------------------------------------- |
-| `toast("Text")`                | Standard-Toast (info)                 |
-| `toast("Text", "success")`     | Grüner Erfolgs-Toast                  |
-| `toast("Text", "error")`       | Roter Fehler-Toast                    |
-| `toast("Text", "warning")`     | Gelber Warn-Toast                     |
-| `toast("Text", "info", "top")` | Position: top, bottom, top-left, etc. |
+| Syntax | Beschreibung |
+| --- | --- |
+| \`toast("Text")\` | Standard-Toast (info) |
+| \`toast("Text", "success")\` | Grüner Erfolgs-Toast |
+| \`toast("Text", "error")\` | Roter Fehler-Toast |
+| \`toast("Text", "warning")\` | Gelber Warn-Toast |
+| \`toast("Text", "info", "top")\` | Position: top, bottom, top-left, etc. |
 
 ### Input: focus(), clear(), setError()
 
 Funktionen zur Steuerung von Eingabefeldern – Fokus setzen, Werte löschen, Validierung anzeigen:
 
-```mirror
+\`\`\`mirror
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
   Frame gap 8
     Input name EmailInput, placeholder "E-Mail eingeben...", bg #1a1a1a, col white, pad 12, rad 6, w 260, bor 1, boc #333
@@ -2348,46 +2363,46 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
       Button "Löschen", pad 8 16, bg #333, col white, rad 6, clear(EmailInput)
       Button "Fehler", pad 8 16, bg #ef4444, col white, rad 6, setError(EmailInput, "Ungültige E-Mail")
       Button "OK", pad 8 16, bg #10b981, col white, rad 6, clearError(EmailInput)
-```
+\`\`\`
 
-| Funktion                   | Beschreibung                    |
-| -------------------------- | ------------------------------- |
-| `focus(Element)`           | Fokus auf Element setzen        |
-| `blur(Element)`            | Fokus entfernen                 |
-| `clear(Element)`           | Eingabewert löschen             |
-| `selectText(Element)`      | Text im Feld markieren          |
-| `setError(Element, "msg")` | Fehler-State + Nachricht setzen |
-| `clearError(Element)`      | Fehler-State entfernen          |
+| Funktion | Beschreibung |
+| --- | --- |
+| \`focus(Element)\` | Fokus auf Element setzen |
+| \`blur(Element)\` | Fokus entfernen |
+| \`clear(Element)\` | Eingabewert löschen |
+| \`selectText(Element)\` | Text im Feld markieren |
+| \`setError(Element, "msg")\` | Fehler-State + Nachricht setzen |
+| \`clearError(Element)\` | Fehler-State entfernen |
 
-> **Hinweis:** **Hinweis:** `setError()` aktiviert den `invalid:` State und zeigt die Fehlermeldung an. Mit `clearError()` wird beides zurückgesetzt.
+> **Hinweis:** **Hinweis:** \`setError()\` aktiviert den \`invalid:\` State und zeigt die Fehlermeldung an. Mit \`clearError()\` wird beides zurückgesetzt.
 
 ### Zähler: increment() und decrement()
 
 Perfekt für Warenkorb, Likes, oder jede Art von Zähler:
 
-```mirror
+\`\`\`mirror
 count: 0
 
 Frame hor, gap 12, ver-center, bg #1a1a1a, pad 16, rad 8
   Button "-", pad 8 16, bg #333, col white, rad 6, fs 18, decrement(count)
   Text "$count", col white, fs 24, weight 600, w 60, center
   Button "+", pad 8 16, bg #2271C1, col white, rad 6, fs 18, increment(count)
-```
+\`\`\`
 
-| Funktion           | Beschreibung                     |
-| ------------------ | -------------------------------- |
-| `increment(token)` | Token-Wert um 1 erhöhen          |
-| `decrement(token)` | Token-Wert um 1 verringern       |
-| `set(token, 5)`    | Token auf bestimmten Wert setzen |
-| `reset(token)`     | Auf Initialwert zurücksetzen     |
+| Funktion | Beschreibung |
+| --- | --- |
+| \`increment(token)\` | Token-Wert um 1 erhöhen |
+| \`decrement(token)\` | Token-Wert um 1 verringern |
+| \`set(token, 5)\` | Token auf bestimmten Wert setzen |
+| \`reset(token)\` | Auf Initialwert zurücksetzen |
 
-> **Hinweis:** **Hinweis:** Die Funktionen arbeiten mit Tokens (Variablen). Definiere den Token mit Startwert (`count: 0`) und verwende ihn mit `$count`.
+> **Hinweis:** **Hinweis:** Die Funktionen arbeiten mit Tokens (Variablen). Definiere den Token mit Startwert (\`count: 0\`) und verwende ihn mit \`$count\`.
 
 ### Praktisch: Warenkorb-Zähler
 
 Ein typisches E-Commerce Pattern – Artikelmenge mit Plus/Minus Buttons:
 
-```mirror
+\`\`\`mirror
 qty: 1
 price: 29
 
@@ -2405,13 +2420,13 @@ Frame bg #1a1a1a, pad 20, rad 12, gap 16, w 280
       Text "$qty", col white, fs 16, weight 600, w 32, center
       Button "+", pad 6 12, bg #333, col white, rad 4, increment(qty)
     Text "€" + ($price * $qty), col #10b981, fs 18, weight 600
-```
+\`\`\`
 
 ### Clipboard: copy()
 
 Text in die Zwischenablage kopieren – nützlich für Code-Snippets, Links, oder Referenz-Codes:
 
-```mirror
+\`\`\`mirror
 code: "SUMMER2024"
 
 Frame bg #1a1a1a, pad 16, rad 8, gap 12
@@ -2423,35 +2438,35 @@ Frame bg #1a1a1a, pad 16, rad 8, gap 12
       copied:
         bg #10b981
         "Kopiert!"
-```
+\`\`\`
 
-`copy()` kann mit einem `copied:` State kombiniert werden – der Button zeigt dann kurz "Kopiert!" an.
+\`copy()\` kann mit einem \`copied:\` State kombiniert werden – der Button zeigt dann kurz "Kopiert!" an.
 
 ### show() und hide(): Sichtbarkeit
 
-Mit `show(Element)` und `hide(Element)` machst du Elemente sichtbar oder versteckst sie:
+Mit \`show(Element)\` und \`hide(Element)\` machst du Elemente sichtbar oder versteckst sie:
 
-```mirror
+\`\`\`mirror
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
   Button "Info anzeigen", pad 10 20, bg #2271C1, col white, rad 6, show(InfoBox)
 
   Frame name InfoBox, hidden, bg #1a1a1a, pad 16, rad 8, gap 8
     Text "Hier sind weitere Informationen.", col #ccc, fs 14
     Button "Schließen", pad 8 16, bg #333, col white, rad 4, hide(InfoBox)
-```
+\`\`\`
 
-- `name InfoBox` gibt dem Element einen Namen
-- `hidden` macht das Element initial unsichtbar
-- `show(InfoBox)` macht es sichtbar
-- `hide(InfoBox)` versteckt es wieder
+- \`name InfoBox\` gibt dem Element einen Namen
+- \`hidden\` macht das Element initial unsichtbar
+- \`show(InfoBox)\` macht es sichtbar
+- \`hide(InfoBox)\` versteckt es wieder
 
-> **Hinweis:** **Wichtig:** Das Ziel-Element braucht einen `name`. Ohne Namen kann die Funktion das Element nicht finden.
+> **Hinweis:** **Wichtig:** Das Ziel-Element braucht einen \`name\`. Ohne Namen kann die Funktion das Element nicht finden.
 
 ### Navigation: navigate(), back(), openUrl()
 
 Funktionen für Navigation zwischen Views und Browser-History:
 
-```mirror
+\`\`\`mirror
 Frame gap 12, bg #0a0a0a, pad 16, rad 8
   Frame hor, gap 8
     Button "← Zurück", pad 10 20, bg #333, col white, rad 6, back()
@@ -2462,20 +2477,20 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
   Button "Mirror Website öffnen", pad 10 20, bg #2271C1, col white, rad 6, hor, gap 8
     Icon "external-link", ic white, is 16
     openUrl("https://mirror-lang.dev")
-```
+\`\`\`
 
-| Funktion             | Beschreibung                          |
-| -------------------- | ------------------------------------- |
-| `navigate(ViewName)` | Zu einer View wechseln (siehe Seiten) |
-| `back()`             | Browser-History zurück                |
-| `forward()`          | Browser-History vorwärts              |
-| `openUrl("...")`     | URL in neuem Tab öffnen               |
+| Funktion | Beschreibung |
+| --- | --- |
+| \`navigate(ViewName)\` | Zu einer View wechseln (siehe Seiten) |
+| \`back()\` | Browser-History zurück |
+| \`forward()\` | Browser-History vorwärts |
+| \`openUrl("...")\` | URL in neuem Tab öffnen |
 
 ### Scroll: scrollTo(), scrollToTop()
 
 Smooth-Scroll zu Elementen oder Seitenposition:
 
-```mirror
+\`\`\`mirror
 Frame gap 8, bg #0a0a0a, pad 16, rad 8, h 200, scroll
   Button "Zum Ende scrollen", pad 10 20, bg #2271C1, col white, rad 6, scrollToBottom()
 
@@ -2488,19 +2503,19 @@ Frame gap 8, bg #0a0a0a, pad 16, rad 8, h 200, scroll
     Text "Sed do eiusmod tempor...", col #888, fs 13
 
   Button "Nach oben", pad 10 20, bg #333, col white, rad 6, scrollToTop()
-```
+\`\`\`
 
-| Funktion            | Beschreibung                  |
-| ------------------- | ----------------------------- |
-| `scrollTo(Element)` | Zu benanntem Element scrollen |
-| `scrollToTop()`     | Zum Anfang scrollen           |
-| `scrollToBottom()`  | Zum Ende scrollen             |
+| Funktion | Beschreibung |
+| --- | --- |
+| \`scrollTo(Element)\` | Zu benanntem Element scrollen |
+| \`scrollToTop()\` | Zum Anfang scrollen |
+| \`scrollToBottom()\` | Zum Ende scrollen |
 
 ### Funktionen kombinieren
 
 Du kannst mehrere Funktionen bei einem Klick ausführen:
 
-```mirror
+\`\`\`mirror
 count: 0
 
 Frame gap 8, bg #0a0a0a, pad 16, rad 8
@@ -2510,9 +2525,9 @@ Frame gap 8, bg #0a0a0a, pad 16, rad 8
     on:
       bg #ef4444
       Icon "heart", ic white, is 18, fill
-```
+\`\`\`
 
-Der Button hat **drei** Funktionen: `toggle()` wechselt den State, `increment(count)` erhöht den Zähler, und `toast()` zeigt eine Bestätigung.
+Der Button hat **drei** Funktionen: \`toggle()\` wechselt den State, \`increment(count)\` erhöht den Zähler, und \`toast()\` zeigt eine Bestätigung.
 
 > **Hinweis:** **Reihenfolge:** Die Funktionen werden in der Reihenfolge ausgeführt, wie du sie schreibst.
 
@@ -2520,7 +2535,7 @@ Der Button hat **drei** Funktionen: `toggle()` wechselt den State, `increment(co
 
 Ein komplettes Beispiel das mehrere Funktionen kombiniert:
 
-```mirror
+\`\`\`mirror
 Frame bg #1a1a1a, pad 20, rad 12, gap 16, w 300
   Text "Newsletter", col white, fs 18, weight 600
 
@@ -2531,7 +2546,7 @@ Frame bg #1a1a1a, pad 20, rad 12, gap 16, w 300
         bg #2271C1
 
   Text "Spam-frei. Jederzeit abmeldbar.", col #666, fs 11, center
-```
+\`\`\`
 
 ### Eigene Funktionen
 
@@ -2541,9 +2556,9 @@ Das Prinzip: **Du greifst auf Elemente zu und änderst ihre Eigenschaften.**
 
 #### Elemente ansprechen
 
-Jedes Element mit einem `name` kannst du in einer Funktion ansprechen:
+Jedes Element mit einem \`name\` kannst du in einer Funktion ansprechen:
 
-```mirror
+\`\`\`mirror
 // Im Mirror-UI
 Input name EmailInput, placeholder "E-Mail"
 Button "Absenden", absenden()
@@ -2553,20 +2568,20 @@ function absenden() {
   const wert = api.EmailInput.value
   console.log(wert)
 }
-```
+\`\`\`
 
 #### Element-Eigenschaften
 
-| Eigenschaft | Lesen               | Schreiben           |
-| ----------- | ------------------- | ------------------- |
-| `.state`    | Aktueller State     | State wechseln      |
-| `.visible`  | Ist sichtbar?       | Sichtbarkeit ändern |
-| `.value`    | Eingabewert (Input) | Wert setzen         |
-| `.content`  | Textinhalt          | Text ändern         |
+| Eigenschaft | Lesen | Schreiben |
+| --- | --- | --- |
+| \`.state\` | Aktueller State | State wechseln |
+| \`.visible\` | Ist sichtbar? | Sichtbarkeit ändern |
+| \`.value\` | Eingabewert (Input) | Wert setzen |
+| \`.content\` | Textinhalt | Text ändern |
 
-**Zusammenspiel:** Du als Designer bestimmst _wie_ jeder State aussieht. Die Funktion bestimmt _wann_ welcher State aktiv wird. So könnt ihr unabhängig arbeiten.
+**Zusammenspiel:** Du als Designer bestimmst *wie* jeder State aussieht. Die Funktion bestimmt *wann* welcher State aktiv wird. So könnt ihr unabhängig arbeiten.
 
-> **Hinweis:** **Zusammenspiel:** Du als Designer bestimmst _wie_ jeder State aussieht. Die Funktion bestimmt _wann_ welcher State aktiv wird. So könnt ihr unabhängig arbeiten.
+> **Hinweis:** **Zusammenspiel:** Du als Designer bestimmst *wie* jeder State aussieht. Die Funktion bestimmt *wann* welcher State aktiv wird. So könnt ihr unabhängig arbeiten.
 
 ---
 
@@ -2574,74 +2589,75 @@ function absenden() {
 
 #### State & Sichtbarkeit
 
-| `toggle()`    | State wechseln        |
-| ------------- | --------------------- |
-| `exclusive()` | Nur diesen aktivieren |
-| `show(Name)`  | Element zeigen        |
-| `hide(Name)`  | Element verstecken    |
+| \`toggle()\` | State wechseln |
+| --- | --- |
+| \`exclusive()\` | Nur diesen aktivieren |
+| \`show(Name)\` | Element zeigen |
+| \`hide(Name)\` | Element verstecken |
 
 #### Feedback
 
-| `toast("Text")`            | Toast-Benachrichtigung                  |
-| -------------------------- | --------------------------------------- |
-| `toast("Text", "success")` | Mit Type: info, success, error, warning |
+| \`toast("Text")\` | Toast-Benachrichtigung |
+| --- | --- |
+| \`toast("Text", "success")\` | Mit Type: info, success, error, warning |
 
 #### Input Control
 
-| `focus(Element)`           | Fokus setzen     |
-| -------------------------- | ---------------- |
-| `blur(Element)`            | Fokus entfernen  |
-| `clear(Element)`           | Eingabe löschen  |
-| `selectText(Element)`      | Text markieren   |
-| `setError(Element, "msg")` | Fehler setzen    |
-| `clearError(Element)`      | Fehler entfernen |
+| \`focus(Element)\` | Fokus setzen |
+| --- | --- |
+| \`blur(Element)\` | Fokus entfernen |
+| \`clear(Element)\` | Eingabe löschen |
+| \`selectText(Element)\` | Text markieren |
+| \`setError(Element, "msg")\` | Fehler setzen |
+| \`clearError(Element)\` | Fehler entfernen |
 
 #### Zähler & Werte
 
-| `increment(token)`  | Token +1     |
-| ------------------- | ------------ |
-| `decrement(token)`  | Token -1     |
-| `set(token, value)` | Wert setzen  |
-| `reset(token)`      | Zurücksetzen |
+| \`increment(token)\` | Token +1 |
+| --- | --- |
+| \`decrement(token)\` | Token -1 |
+| \`set(token, value)\` | Wert setzen |
+| \`reset(token)\` | Zurücksetzen |
 
 #### Clipboard & Scroll
 
-| `copy("Text")`      | In Zwischenablage   |
-| ------------------- | ------------------- |
-| `scrollTo(Element)` | Zu Element scrollen |
-| `scrollToTop()`     | Zum Anfang          |
-| `scrollToBottom()`  | Zum Ende            |
+| \`copy("Text")\` | In Zwischenablage |
+| --- | --- |
+| \`scrollTo(Element)\` | Zu Element scrollen |
+| \`scrollToTop()\` | Zum Anfang |
+| \`scrollToBottom()\` | Zum Ende |
 
 #### Navigation
 
-| `navigate(View)` | Zu View wechseln |
-| ---------------- | ---------------- |
-| `back()`         | Browser zurück   |
-| `forward()`      | Browser vorwärts |
-| `openUrl("...")` | URL öffnen       |
+| \`navigate(View)\` | Zu View wechseln |
+| --- | --- |
+| \`back()\` | Browser zurück |
+| \`forward()\` | Browser vorwärts |
+| \`openUrl("...")\` | URL öffnen |
+
 
 ---
 
 ## Daten
 
-_Echte Daten statt Platzhalter_
+*Echte Daten statt Platzhalter*
 
-Bisher hast du Text direkt in Komponenten geschrieben: `Text "Max Mustermann"`. Das funktioniert – aber was, wenn derselbe Name an 10 Stellen steht und du ihn ändern willst? Oder wenn du den Prototyp mit verschiedenen Testdaten zeigen möchtest?
+Bisher hast du Text direkt in Komponenten geschrieben: \`Text "Max Mustermann"\`. Das funktioniert – aber was, wenn derselbe Name an 10 Stellen steht und du ihn ändern willst? Oder wenn du den Prototyp mit verschiedenen Testdaten zeigen möchtest?
 
 ### Das Problem: Hardcoded Text
 
 Stell dir vor, du baust eine Begrüßung. Der Name steht direkt im Code:
 
-```mirror
+\`\`\`mirror
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "Willkommen, Max!", col white, fs 18
   Text "Du hast 3 neue Nachrichten.", col #888
   Text "Max's Profil", col #2563eb
-```
+\`\`\`
 
 **Das Problem:** "Max" steht dreimal im Code. Willst du den Namen ändern, musst du jede Stelle finden. Bei einem echten Prototyp mit Dutzenden Screens wird das schnell unübersichtlich.
 
-```mirror
+\`\`\`mirror
 name: "Max"
 messageCount: 3
 
@@ -2649,28 +2665,28 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "Willkommen, $name!", col white, fs 18
   Text "Du hast $messageCount neue Nachrichten.", col #888
   Text "$name's Profil", col #2563eb
-```
+\`\`\`
 
 ### Variablen definieren
 
-Eine Variable wird mit Namen und Wert definiert. Bei der Verwendung steht `$` davor:
+Eine Variable wird mit Namen und Wert definiert. Bei der Verwendung steht \`$\` davor:
 
-```mirror
+\`\`\`mirror
 name: "Max"
 count: 42
 
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "Name: $name", col white
   Text "Count: $count", col #888
-```
+\`\`\`
 
-**Die Regel:** Definition ohne `$`, Verwendung mit `$` in Anführungszeichen.
+**Die Regel:** Definition ohne \`$\`, Verwendung mit \`$\` in Anführungszeichen.
 
 ### In Text verwenden
 
 Variablen werden in Anführungszeichen als Text angezeigt. Mit String-Interpolation kannst du Variablen direkt in Text einbetten:
 
-```mirror
+\`\`\`mirror
 firstName: "Max"
 lastName: "Mustermann"
 
@@ -2678,13 +2694,13 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "$firstName", col white, fs 18
   Text "$firstName $lastName", col #888
   Text "Hallo, $firstName!", col #10b981
-```
+\`\`\`
 
 ### Arithmetik
 
-Für Berechnungen verwendest du Expressions mit `+`, `-`, `*`, `/`:
+Für Berechnungen verwendest du Expressions mit \`+\`, \`-\`, \`*\`, \`/\`:
 
-```mirror
+\`\`\`mirror
 price: 29
 quantity: 3
 
@@ -2692,15 +2708,15 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "Preis: $$price", col white
   Text "Menge: $quantity", col #888
   Text "Total: $" + ($price * $quantity), col #10b981, weight 600
-```
+\`\`\`
 
-> **Hinweis:** **Hinweis:** Für ein Dollarzeichen im Text schreibe `$$`. Für Berechnungen brauchst du weiterhin den `+` Operator.
+> **Hinweis:** **Hinweis:** Für ein Dollarzeichen im Text schreibe \`$$\`. Für Berechnungen brauchst du weiterhin den \`+\` Operator.
 
 ### Einfache Listen
 
 Für einfache Listen ohne Attribute – nur Namen auflisten:
 
-```mirror
+\`\`\`mirror
 colors:
   red
   green
@@ -2710,15 +2726,15 @@ each color in $colors
   Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 6, mar 0 0 4 0
     Frame w 20, h 20, rad 4, bg $color
     Text "$color", col white
-```
+\`\`\`
 
-**Keine Doppelpunkte nötig** – der Eintrag _ist_ der Wert. Sauberer als JSON-Arrays und konsistent mit dem Rest von Mirror.
+**Keine Doppelpunkte nötig** – der Eintrag *ist* der Wert. Sauberer als JSON-Arrays und konsistent mit dem Rest von Mirror.
 
 ### Datenobjekte: Zusammengehörige Daten gruppieren
 
 Manchmal gehören mehrere Werte zusammen – Name, E-Mail und Status eines Benutzers zum Beispiel. Statt drei einzelne Variablen zu definieren, gruppierst du sie in einem **Datenobjekt**:
 
-```mirror
+\`\`\`mirror
 // OHNE Datenobjekt: drei einzelne Variablen
 userName: "Max Mustermann"
 userEmail: "max@example.com"
@@ -2734,29 +2750,29 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "$user.name", col white, weight 500
   Text "$user.email", col #888
   Text $user.active ? "Aktiv" : "Inaktiv", col #10b981
-```
+\`\`\`
 
 **Warum Datenobjekte?**
 
 - **Struktur:** Zusammengehörige Daten sind klar erkennbar
-- **Dot-Notation:** Zugriff mit `$user.name` statt `$userName`
+- **Dot-Notation:** Zugriff mit \`$user.name\` statt \`$userName\`
 - **Wiederverwendbar:** Das ganze Objekt kann übergeben oder iteriert werden
 
 #### Attribut-Typen
 
 Datenobjekte unterstützen Strings, Zahlen und Booleans:
 
-| Typ     | Beispiel       |
-| ------- | -------------- |
-| String  | `name: "Max"`  |
-| Zahl    | `age: 25`      |
-| Boolean | `active: true` |
+| Typ | Beispiel |
+| --- | --- |
+| String | \`name: "Max"\` |
+| Zahl | \`age: 25\` |
+| Boolean | \`active: true\` |
 
 ### Sammlungen: Mehrere Einträge
 
-Ein einzelnes Datenobjekt ist gut für _einen_ Benutzer. Aber was wenn du eine **Liste von Benutzern** hast? Dafür gibt es Sammlungen – mehrere benannte Einträge unter einem gemeinsamen Namen:
+Ein einzelnes Datenobjekt ist gut für *einen* Benutzer. Aber was wenn du eine **Liste von Benutzern** hast? Dafür gibt es Sammlungen – mehrere benannte Einträge unter einem gemeinsamen Namen:
 
-```mirror
+\`\`\`mirror
 users:
   max:
     name: "Max"
@@ -2772,19 +2788,19 @@ each user in $users
   Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6, mar 0 0 4 0
     Text "$user.name", col white, weight 500
     Text "$user.role", col #888, fs 12
-```
+\`\`\`
 
 **Warum Sammlungen?**
 
-- **Iteration:** Mit `each user in $users` über alle Einträge iterieren
-- **Direktzugriff:** Einzelne Einträge mit `$users.max.name` adressieren
-- **Eindeutige IDs:** Jeder Eintrag hat einen Namen (`max`, `anna`, `tom`)
+- **Iteration:** Mit \`each user in $users\` über alle Einträge iterieren
+- **Direktzugriff:** Einzelne Einträge mit \`$users.max.name\` adressieren
+- **Eindeutige IDs:** Jeder Eintrag hat einen Namen (\`max\`, \`anna\`, \`tom\`)
 
 ### Verschachtelte Datenobjekte
 
 Datenobjekte können beliebig tief verschachtelt werden:
 
-```mirror
+\`\`\`mirror
 method:
   name: "Agile"
   steps:
@@ -2805,15 +2821,15 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
       Frame hor, gap 8
         Text "$step.title", col white
         Text "$step.duration", col #888
-```
+\`\`\`
 
-Jedes verschachtelte Objekt hat einen Namen und ist direkt adressierbar: `$method.steps.planning.title`
+Jedes verschachtelte Objekt hat einen Namen und ist direkt adressierbar: \`$method.steps.planning.title\`
 
 ### Externe Daten: .data-Dateien
 
-Für größere Datenmengen oder Wiederverwendung: Daten in `.data`-Dateien auslagern. **Die Syntax ist identisch** – nur in einer separaten Datei:
+Für größere Datenmengen oder Wiederverwendung: Daten in \`.data\`-Dateien auslagern. **Die Syntax ist identisch** – nur in einer separaten Datei:
 
-```mirror
+\`\`\`mirror
 // data/customers.data
 
 max:
@@ -2825,35 +2841,35 @@ anna:
   name: Anna Schmidt
   email: anna@example.com
   plan: Basic
-```
+\`\`\`
 
-// data/customers.data max: name: Max Mustermann email: max@example.com plan: Pro anna: name: Anna Schmidt email: anna@example.com plan: Basic In Mirror mit `$dateiname.eintrag.attribut` zugreifen:
+// data/customers.data max: name: Max Mustermann email: max@example.com plan: Pro anna: name: Anna Schmidt email: anna@example.com plan: Basic In Mirror mit \`$dateiname.eintrag.attribut\` zugreifen:
 
-```mirror
+\`\`\`mirror
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "$customers.max.name", col white, weight 500
   Text "$customers.max.email", col #888
   Text "$customers.max.plan", col #2271C1
-```
+\`\`\`
 
 ### Über Einträge iterieren
 
-Mit `each` über alle Einträge einer `.data`-Datei:
+Mit \`each\` über alle Einträge einer \`.data\`-Datei:
 
-```mirror
+\`\`\`mirror
 each customer in $customers
   Frame hor, spread, ver-center, bg #1a1a1a, pad 12, rad 6, mar 0 0 4 0
     Frame gap 2
       Text "$customer.name", col white, weight 500
       Text "$customer.email", col #888, fs 12
     Text "$customer.plan", col #2271C1, fs 12
-```
+\`\`\`
 
 ### Relationen
 
-Daten können auf andere Daten verweisen. Eine Referenz ist ein Pfad mit `$`:
+Daten können auf andere Daten verweisen. Eine Referenz ist ein Pfad mit \`$\`:
 
-```mirror
+\`\`\`mirror
 // data/users.data
 
 toni:
@@ -2863,11 +2879,11 @@ toni:
 anna:
   name: Anna Schmidt
   role: Design
-```
+\`\`\`
 
 // data/users.data toni: name: Toni Steimle role: Lead anna: name: Anna Schmidt role: Design // data/tasks.data task1: title: Design Review assignee: $users.toni task2: title: Wireframes assignee: $users.anna **Zugriff durch die Relation:**
 
-```mirror
+\`\`\`mirror
 // data/tasks.data
 
 task1:
@@ -2877,30 +2893,30 @@ task1:
 task2:
   title: Wireframes
   assignee: $users.anna
-```
+\`\`\`
 
-```mirror
+\`\`\`mirror
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "$tasks.task1.title", col white, weight 500
   Text "Zuständig: $tasks.task1.assignee.name", col #888
-```
+\`\`\`
 
-Frame gap 8, bg #1a1a1a, pad 16, rad 8 Text "$tasks.task1.title", col white, weight 500 Text "Zuständig: $tasks.task1.assignee.name", col #888 `$tasks.task1.assignee`ist der User`$users.toni`. Mit `.name` greifst du auf dessen Attribute zu.
+Frame gap 8, bg #1a1a1a, pad 16, rad 8 Text "$tasks.task1.title", col white, weight 500 Text "Zuständig: $tasks.task1.assignee.name", col #888 \`$tasks.task1.assignee\` ist der User \`$users.toni\`. Mit \`.name\` greifst du auf dessen Attribute zu.
 
 #### N-zu-N Relationen
 
 Für viele-zu-viele Beziehungen: Arrays von Referenzen:
 
-```mirror
+\`\`\`mirror
 // data/projects.data
 
 website:
   name: Website Relaunch
   members: $users.toni, $users.anna
   lead: $users.toni
-```
+\`\`\`
 
-```mirror
+\`\`\`mirror
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "$projects.website.name", col white, weight 500
   Text "Lead: $projects.website.lead.name", col #888
@@ -2908,13 +2924,13 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
     Text "Team:", col #666, fs 12
     each member in $projects.website.members
       Text "• $member.name", col #888, fs 13
-```
+\`\`\`
 
 ### Aggregationsmethoden
 
 Sammlungen haben eingebaute Methoden für häufige Berechnungen:
 
-```mirror
+\`\`\`mirror
 tasks:
   t1:
     title: "Design Review"
@@ -2930,18 +2946,18 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "Anzahl: $tasks.count Tasks", col white
   Text "Erster: $tasks.first.title", col #888
   Text "Letzter: $tasks.last.title", col #888
-```
+\`\`\`
 
-| Methode   | Beschreibung        | Beispiel             |
-| --------- | ------------------- | -------------------- |
-| `.count`  | Anzahl der Einträge | `$tasks.count`       |
-| `.first`  | Erster Eintrag      | `$tasks.first.title` |
-| `.last`   | Letzter Eintrag     | `$tasks.last.title`  |
-| `.unique` | Deduplizierte Werte | `$colors.unique`     |
+| Methode | Beschreibung | Beispiel |
+| --- | --- | --- |
+| \`.count\` | Anzahl der Einträge | \`$tasks.count\` |
+| \`.first\` | Erster Eintrag | \`$tasks.first.title\` |
+| \`.last\` | Letzter Eintrag | \`$tasks.last.title\` |
+| \`.unique\` | Deduplizierte Werte | \`$colors.unique\` |
 
 #### Beispiel: Statistiken
 
-```mirror
+\`\`\`mirror
 colors:
   red
   blue
@@ -2953,11 +2969,11 @@ colors:
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "Alle: $colors.count Farben", col white
   Text "Einzigartig: $colors.unique", col #888
-```
+\`\`\`
 
 ### Praktisch: Produktliste
 
-```mirror
+\`\`\`mirror
 products:
   basic:
     name: "Basic"
@@ -2978,37 +2994,37 @@ Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
       Text "$product.name", col white, fs 16, weight 600
       Text "$$product.price", col #2271C1, fs 24, weight 700
       Text "$product.features", col #888, fs 12
-```
+\`\`\`
 
 ### Bedingte Anzeige: if / else
 
-Manchmal soll ein Element nur unter bestimmten Bedingungen angezeigt werden. Mit `if` zeigst du Elemente nur an, wenn eine Bedingung erfüllt ist:
+Manchmal soll ein Element nur unter bestimmten Bedingungen angezeigt werden. Mit \`if\` zeigst du Elemente nur an, wenn eine Bedingung erfüllt ist:
 
-```mirror
+\`\`\`mirror
 loggedIn: true
 
 if loggedIn
   Text "Willkommen zurück!", col white
-```
+\`\`\`
 
 #### if / else
 
-Mit `else` definierst du eine Alternative:
+Mit \`else\` definierst du eine Alternative:
 
-```mirror
+\`\`\`mirror
 loggedIn: false
 
 if loggedIn
   Text "Willkommen zurück!", col white
 else
   Button "Anmelden", bg #2271C1, col white, pad 10 20, rad 6
-```
+\`\`\`
 
 #### Mehrere Elemente
 
-Ein `if`-Block kann mehrere Kinder haben:
+Ein \`if\`-Block kann mehrere Kinder haben:
 
-```mirror
+\`\`\`mirror
 showDetails: true
 
 Frame bg #1a1a1a, pad 16, rad 8, gap 8
@@ -3017,7 +3033,7 @@ Frame bg #1a1a1a, pad 16, rad 8, gap 8
     Text "Beschreibung des Produkts", col #888, fs 13
     Text "Preis: €29", col #10b981, fs 14
     Button "Kaufen", bg #2271C1, col white, pad 8 16, rad 4
-```
+\`\`\`
 
 ### Komplexe Bedingungen
 
@@ -3025,7 +3041,7 @@ Du kannst JavaScript-Ausdrücke verwenden:
 
 #### Logische Operatoren
 
-```mirror
+\`\`\`mirror
 isAdmin: true
 hasPermission: true
 
@@ -3033,11 +3049,11 @@ if isAdmin && hasPermission
   Frame bg #1a1a1a, pad 16, rad 8
     Text "Admin Panel", col white, fs 16, weight 500
     Text "Voller Zugriff", col #10b981, fs 12
-```
+\`\`\`
 
 #### Vergleiche
 
-```mirror
+\`\`\`mirror
 count: 5
 
 Frame bg #1a1a1a, pad 16, rad 8, gap 8
@@ -3045,20 +3061,20 @@ Frame bg #1a1a1a, pad 16, rad 8, gap 8
     Text "$count Artikel im Warenkorb", col white
   else
     Text "Warenkorb ist leer", col #888
-```
+\`\`\`
 
 #### Negation
 
-```mirror
+\`\`\`mirror
 disabled: false
 
 if !disabled
   Button "Absenden", bg #2271C1, col white, pad 10 20, rad 6
-```
+\`\`\`
 
 #### Kombiniert
 
-```mirror
+\`\`\`mirror
 user:
   role: "admin"
 feature:
@@ -3066,13 +3082,13 @@ feature:
 
 if user.role === "admin" && feature.enabled
   Text "Feature aktiv", col #10b981
-```
+\`\`\`
 
 ### Verschachtelte Bedingungen
 
-`if`-Blöcke können verschachtelt werden:
+\`if\`-Blöcke können verschachtelt werden:
 
-```mirror
+\`\`\`mirror
 hasData: true
 isLoading: false
 
@@ -3085,13 +3101,13 @@ if hasData
     Text "Daten geladen!", col #10b981
 else
   Text "Keine Daten", col #888
-```
+\`\`\`
 
 ### if mit each kombinieren
 
 Conditionals und Loops arbeiten zusammen:
 
-```mirror
+\`\`\`mirror
 tasks:
   task1:
     title: "Task 1"
@@ -3111,23 +3127,23 @@ Frame bg #1a1a1a, pad 16, rad 8, gap 8
       else
         Icon "circle", ic #666, is 16
       Text "$task.title", col white, fs 13
-```
+\`\`\`
 
 ### Inline Conditionals (Ternary)
 
-Für einzelne Property-Werte gibt es die Kurzschreibweise mit `?` und `:`:
+Für einzelne Property-Werte gibt es die Kurzschreibweise mit \`?\` und \`:\`:
 
-```mirror
+\`\`\`mirror
 active: true
 
 Button "Status", bg active ? #2271C1 : #333, col white, pad 10 20, rad 6
-```
+\`\`\`
 
-Das entspricht: "Wenn `active` wahr ist, nimm `#2271C1`, sonst `#333`."
+Das entspricht: "Wenn \`active\` wahr ist, nimm \`#2271C1\`, sonst \`#333\`."
 
 #### Weitere Beispiele
 
-```mirror
+\`\`\`mirror
 visible: true
 done: false
 count: 3
@@ -3143,35 +3159,35 @@ Frame gap 12, bg #0a0a0a, pad 16, rad 8
 
   // Text basierend auf Anzahl
   Text count > 0 ? "$count Einträge" : "Keine Einträge", col #888
-```
+\`\`\`
 
 #### Mit Variablen
 
-```mirror
+\`\`\`mirror
 theme: "dark"
 primary.bg: #2271C1
 muted.bg: #333
 
 Button "Themed", bg theme === "dark" ? $primary : $muted, col white, pad 10 20, rad 6
-```
+\`\`\`
 
 ### Block vs. Inline
 
-| Syntax              | Verwendung                     |
-| ------------------- | ------------------------------ |
-| `if` / `else` Block | Ganze Elemente ein-/ausblenden |
-| `condition ? a : b` | Einzelne Property-Werte        |
+| Syntax | Verwendung |
+| --- | --- |
+| \`if\` / \`else\` Block | Ganze Elemente ein-/ausblenden |
+| \`condition ? a : b\` | Einzelne Property-Werte |
 
 **Faustregel:**
 
-- Soll ein Element komplett erscheinen/verschwinden? → `if` Block
+- Soll ein Element komplett erscheinen/verschwinden? → \`if\` Block
 - Soll nur eine Farbe, Größe, Icon wechseln? → Ternary
 
 ### Praktisch: Leerer Zustand
 
 Ein typisches Pattern - zeige Inhalt oder "Empty State":
 
-```mirror
+\`\`\`mirror
 hasItems: false
 
 Frame bg #1a1a1a, pad 20, rad 12, gap 12, w 280, center
@@ -3181,13 +3197,13 @@ Frame bg #1a1a1a, pad 20, rad 12, gap 12, w 280, center
     Icon "inbox", ic #444, is 48
     Text "Keine Einträge", col #666, fs 14
     Text "Füge deinen ersten Eintrag hinzu", col #444, fs 12
-```
+\`\`\`
 
-Ändere `hasItems: true` um den Inhalt zu sehen.
+Ändere \`hasItems: true\` um den Inhalt zu sehen.
 
 ### Praktisch: Ladeindikator
 
-```mirror
+\`\`\`mirror
 loading: true
 data: "Inhalt geladen"
 
@@ -3198,11 +3214,11 @@ Frame bg #1a1a1a, pad 20, rad 12, w 200, center
       Text "Lädt...", col #888
   else
     Text "$data", col white
-```
+\`\`\`
 
 ### Praktisch: Benutzer-Status
 
-```mirror
+\`\`\`mirror
 user:
   loggedIn: true
   name: "Max"
@@ -3218,7 +3234,7 @@ Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 8
         Text "Online", col #10b981, fs 11
   else
     Button "Anmelden", bg #2271C1, col white, pad 8 16, rad 6
-```
+\`\`\`
 
 ---
 
@@ -3226,76 +3242,77 @@ Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 8
 
 #### Variablen & Daten
 
-| Konzept              | Syntax                          |
-| -------------------- | ------------------------------- |
-| Variable definieren  | `name: "Wert"`                  |
-| In Text verwenden    | `Text "$name"`                  |
-| String-Interpolation | `Text "Hallo $name!"`           |
-| Arithmetik           | `$a * $b`                       |
-| Datenobjekt          | `users:` + eingerückte Einträge |
-| Eintrag adressieren  | `Text "$users.max.name"`        |
-| Iteration            | `each user in $users`           |
-| Loop-Variable        | `Text "$user.name"`             |
-| Relation             | `assignee: $users.toni`         |
+| Konzept | Syntax |
+| --- | --- |
+| Variable definieren | \`name: "Wert"\` |
+| In Text verwenden | \`Text "$name"\` |
+| String-Interpolation | \`Text "Hallo $name!"\` |
+| Arithmetik | \`$a * $b\` |
+| Datenobjekt | \`users:\` + eingerückte Einträge |
+| Eintrag adressieren | \`Text "$users.max.name"\` |
+| Iteration | \`each user in $users\` |
+| Loop-Variable | \`Text "$user.name"\` |
+| Relation | \`assignee: $users.toni\` |
 
 #### Aggregationsmethoden
 
-| Methode   | Beispiel             |
-| --------- | -------------------- |
-| `.count`  | `$tasks.count`       |
-| `.first`  | `$tasks.first.title` |
-| `.last`   | `$tasks.last.title`  |
-| `.unique` | `$colors.unique`     |
+| Methode | Beispiel |
+| --- | --- |
+| \`.count\` | \`$tasks.count\` |
+| \`.first\` | \`$tasks.first.title\` |
+| \`.last\` | \`$tasks.last.title\` |
+| \`.unique\` | \`$colors.unique\` |
 
 #### Bedingungen
 
-| Syntax          | Beispiel                     |
-| --------------- | ---------------------------- | ------ | ------------------------- |
-| `if bedingung`  | `if loggedIn`                |
-| `if ... else`   | `if count > 0 ... else`      |
-| `&&`, `         |                              | `, `!` | `if isAdmin && hasAccess` |
-| `===`, `>`, `<` | `if status === "active"`     |
-| Ternary         | `bg active ? #2271C1 : #333` |
+| Syntax | Beispiel |
+| --- | --- |
+| \`if bedingung\` | \`if loggedIn\` |
+| \`if ... else\` | \`if count > 0 ... else\` |
+| \`&&\`, \`||\`, \`!\` | \`if isAdmin && hasAccess\` |
+| \`===\`, \`>\`, \`<\` | \`if status === "active"\` |
+| Ternary | \`bg active ? #2271C1 : #333\` |
 
-**Variablen:** Definition mit `name:`, Verwendung in Text mit `"$name"`.
+**Variablen:** Definition mit \`name:\`, Verwendung in Text mit \`"$name"\`.
 
 **Bedingungen:** Block Conditionals für Elemente, Inline Conditionals für Properties.
+
 
 ---
 
 ## Seiten & Navigation
 
-_Content referenzieren mit show_
+*Content referenzieren mit show*
 
-Mit `show` referenzierst du Content – aus der gleichen Datei oder aus anderen Dateien. Das ist die Basis für Apps mit mehreren Seiten.
+Mit \`show\` referenzierst du Content – aus der gleichen Datei oder aus anderen Dateien. Das ist die Basis für Apps mit mehreren Seiten.
 
 ### Das Konzept: show
 
-`show` sagt: "Zeige diesen Content an". Der Content kann aus drei Quellen kommen:
+\`show\` sagt: "Zeige diesen Content an". Der Content kann aus drei Quellen kommen:
 
-| Syntax          | Bedeutung                         | Beispiel                                                           |
-| --------------- | --------------------------------- | ------------------------------------------------------------------ |
-| `show X`        | Zeige lokales Element X           | `show HomeView` → Element mit `name HomeView`                      |
-| `show X`        | Oder: Lade Datei X.mirror         | `show Home` → `Home.mirror`                                        |
-| `show X from Y` | Lade Element X aus Datei Y.mirror | `show Settings from Pages` → Element "Settings" aus `Pages.mirror` |
+| Syntax | Bedeutung | Beispiel |
+| --- | --- | --- |
+| \`show X\` | Zeige lokales Element X | \`show HomeView\` → Element mit \`name HomeView\` |
+| \`show X\` | Oder: Lade Datei X.mirror | \`show Home\` → \`Home.mirror\` |
+| \`show X from Y\` | Lade Element X aus Datei Y.mirror | \`show Settings from Pages\` → Element "Settings" aus \`Pages.mirror\` |
 
 **Priorität:** Wenn ein lokales Element mit dem Namen existiert, wird es verwendet. Sonst wird eine Datei geladen.
 
 ### Inline vs. show
 
-Tabs ohne `show` haben ihren Content als Kinder:
+Tabs ohne \`show\` haben ihren Content als Kinder:
 
-```mirror
+\`\`\`mirror
 Tabs defaultValue "Home"
   Tab "Home"
     Text "Das ist der Home-Content"
   Tab "Settings"
     Text "Das sind die Einstellungen"
-```
+\`\`\`
 
-Mit `show` kommt der Content von woanders:
+Mit \`show\` kommt der Content von woanders:
 
-```mirror
+\`\`\`mirror
 Tabs defaultValue "Home"
   Tab "Home", show HomeView
   Tab "Settings", show SettingsView
@@ -3306,47 +3323,47 @@ HomeView: Frame name HomeView, pad 20
 
 SettingsView: Frame name SettingsView, pad 20
   Text "Das sind die Einstellungen"
-```
+\`\`\`
 
 ### Content aus Dateien: show X
 
-Wenn kein lokales Element existiert, lädt `show X` die Datei `X.mirror`:
+Wenn kein lokales Element existiert, lädt \`show X\` die Datei \`X.mirror\`:
 
-```mirror
+\`\`\`mirror
 // app.mirror
 Tabs defaultValue "Home"
   Tab "Home", show Home        // → lädt Home.mirror
   Tab "Settings", show Settings  // → lädt Settings.mirror
-```
+\`\`\`
 
 // app.mirror Tabs defaultValue "Home" Tab "Home", show Home // → lädt Home.mirror Tab "Settings", show Settings // → lädt Settings.mirror // Home.mirror Frame pad 20, gap 16 Text "Willkommen", fs 24, weight bold Text "Das ist die Startseite." // Settings.mirror Frame pad 20, gap 16 Text "Einstellungen", fs 24, weight bold Switch "Dark Mode" Switch "Benachrichtigungen" Die Dateistruktur:
 
-```mirror
+\`\`\`mirror
 // Home.mirror
 Frame pad 20, gap 16
   Text "Willkommen", fs 24, weight bold
   Text "Das ist die Startseite."
-```
+\`\`\`
 
-```mirror
+\`\`\`mirror
 // Settings.mirror
 Frame pad 20, gap 16
   Text "Einstellungen", fs 24, weight bold
   Switch "Dark Mode"
   Switch "Benachrichtigungen"
-```
+\`\`\`
 
-```mirror
+\`\`\`mirror
 app.mirror       ← Navigation
 Home.mirror      ← Home-Content
 Settings.mirror  ← Settings-Content
-```
+\`\`\`
 
 ### Element aus Datei: show X from Y
 
-Mit `show X from Y` lädst du ein spezifisches Element aus einer Datei. Das ist nützlich wenn eine Datei mehrere Views enthält:
+Mit \`show X from Y\` lädst du ein spezifisches Element aus einer Datei. Das ist nützlich wenn eine Datei mehrere Views enthält:
 
-```mirror
+\`\`\`mirror
 // Pages.mirror – enthält mehrere Views
 HomeView: Frame name HomeView, pad 20, gap 16
   Text "Home", fs 24, weight bold
@@ -3359,30 +3376,30 @@ SettingsView: Frame name SettingsView, pad 20, gap 16
 ProfileView: Frame name ProfileView, pad 20, gap 16
   Text "Profil", fs 24, weight bold
   Input "Name"
-```
+\`\`\`
 
 // Pages.mirror – enthält mehrere Views HomeView: Frame name HomeView, pad 20, gap 16 Text "Home", fs 24, weight bold Text "Willkommen auf der Startseite" SettingsView: Frame name SettingsView, pad 20, gap 16 Text "Einstellungen", fs 24, weight bold Switch "Dark Mode" ProfileView: Frame name ProfileView, pad 20, gap 16 Text "Profil", fs 24, weight bold Input "Name" // app.mirror – referenziert Views aus Pages Tabs defaultValue "Home" Tab "Home", show HomeView from Pages Tab "Settings", show SettingsView from Pages Tab "Profile", show ProfileView from Pages **Vorteil:** Zusammengehörige Views bleiben in einer Datei. Du brauchst nicht für jeden Tab eine eigene Datei.
 
-```mirror
+\`\`\`mirror
 // app.mirror – referenziert Views aus Pages
 Tabs defaultValue "Home"
   Tab "Home", show HomeView from Pages
   Tab "Settings", show SettingsView from Pages
   Tab "Profile", show ProfileView from Pages
-```
+\`\`\`
 
 ### Wann was verwenden?
 
-| Situation                   | Empfehlung                 |
-| --------------------------- | -------------------------- |
-| Kleiner, einfacher Content  | Inline (als Kinder)        |
-| Views in der gleichen Datei | `show ViewName`            |
-| Jede Seite ist eigenständig | `show Dateiname`           |
-| Mehrere Views gruppiert     | `show ViewName from Datei` |
+| Situation | Empfehlung |
+| --- | --- |
+| Kleiner, einfacher Content | Inline (als Kinder) |
+| Views in der gleichen Datei | \`show ViewName\` |
+| Jede Seite ist eigenständig | \`show Dateiname\` |
+| Mehrere Views gruppiert | \`show ViewName from Datei\` |
 
 Mischen ist erlaubt:
 
-```mirror
+\`\`\`mirror
 Tabs defaultValue "Quick"
   Tab "Quick"
     Text "Kurzer Inline-Content"
@@ -3391,13 +3408,13 @@ Tabs defaultValue "Quick"
 
 DetailsView: Frame name DetailsView, pad 20
   Text "Details aus lokaler View"
-```
+\`\`\`
 
 ### SideNav mit show
 
-`show` funktioniert genauso bei SideNav:
+\`show\` funktioniert genauso bei SideNav:
 
-```mirror
+\`\`\`mirror
 Frame hor, h 300
   SideNav defaultValue "Dashboard", w 180
     NavItem "Dashboard", icon "home", show DashboardView
@@ -3411,33 +3428,33 @@ Frame hor, h 300
       Text "Projects Content"
     SettingsView: Frame name SettingsView, hidden
       Text "Settings Content"
-```
+\`\`\`
 
 Oder mit externen Dateien:
 
-```mirror
+\`\`\`mirror
 SideNav defaultValue "Dashboard"
   NavItem "Dashboard", icon "home", show Dashboard
   NavItem "Projects", icon "folder", show Projects
   NavItem "Settings", icon "settings", show Settings
-```
+\`\`\`
 
 ### Komponenten teilen mit use
 
-Gemeinsame Komponenten definierst du in einer eigenen Datei und importierst sie mit `use`:
+Gemeinsame Komponenten definierst du in einer eigenen Datei und importierst sie mit \`use\`:
 
-```mirror
+\`\`\`mirror
 // components.mirror
 Card: bg #1a1a1a, pad 16, rad 8, gap 8
   Title: col white, fs 16, weight 500
   Body: col #888, fs 14
 
 PrimaryBtn as Button: bg #2271C1, col white, pad 10 20, rad 6
-```
+\`\`\`
 
-// components.mirror Card: bg #1a1a1a, pad 16, rad 8, gap 8 Title: col white, fs 16, weight 500 Body: col #888, fs 14 PrimaryBtn as Button: bg #2271C1, col white, pad 10 20, rad 6 // dashboard.mirror use components Frame gap 16 Card Title "Willkommen" Body "Schön dass du da bist." PrimaryBtn "Los geht's" `use` importiert Komponenten-Definitionen. `show` zeigt Content an. Beides ergänzt sich.
+// components.mirror Card: bg #1a1a1a, pad 16, rad 8, gap 8 Title: col white, fs 16, weight 500 Body: col #888, fs 14 PrimaryBtn as Button: bg #2271C1, col white, pad 10 20, rad 6 // dashboard.mirror use components Frame gap 16 Card Title "Willkommen" Body "Schön dass du da bist." PrimaryBtn "Los geht's" \`use\` importiert Komponenten-Definitionen. \`show\` zeigt Content an. Beides ergänzt sich.
 
-```mirror
+\`\`\`mirror
 // dashboard.mirror
 use components
 
@@ -3446,7 +3463,7 @@ Frame gap 16
     Title "Willkommen"
     Body "Schön dass du da bist."
   PrimaryBtn "Los geht's"
-```
+\`\`\`
 
 ---
 
@@ -3454,79 +3471,80 @@ Frame gap 16
 
 #### show Syntax
 
-| Syntax          | Wirkung                                         |
-| --------------- | ----------------------------------------------- |
-| `show X`        | Zeige lokales Element X (braucht `name X`)      |
-| `show X`        | Oder: Lade X.mirror (wenn kein lokales Element) |
-| `show X from Y` | Lade Element X aus Y.mirror                     |
+| Syntax | Wirkung |
+| --- | --- |
+| \`show X\` | Zeige lokales Element X (braucht \`name X\`) |
+| \`show X\` | Oder: Lade X.mirror (wenn kein lokales Element) |
+| \`show X from Y\` | Lade Element X aus Y.mirror |
 
 #### Vergleich
 
-| Methode          | Verwendung                     |
-| ---------------- | ------------------------------ |
-| Inline (Kinder)  | Kleiner Content direkt im Tab  |
-| `show ViewName`  | Lokale Views in gleicher Datei |
-| `show Dateiname` | Content aus eigener Datei      |
-| `show X from Y`  | Spezifisches Element aus Datei |
-| `use datei`      | Komponenten importieren        |
+| Methode | Verwendung |
+| --- | --- |
+| Inline (Kinder) | Kleiner Content direkt im Tab |
+| \`show ViewName\` | Lokale Views in gleicher Datei |
+| \`show Dateiname\` | Content aus eigener Datei |
+| \`show X from Y\` | Spezifisches Element aus Datei |
+| \`use datei\` | Komponenten importieren |
+
 
 ---
 
 ## Eingabe
 
-_Formular-Komponenten_
+*Formular-Komponenten*
 
 Formular-Komponenten sind die Grundbausteine für Benutzereingaben. Mirror bietet sie mit Default-Styling – du kannst sie direkt verwenden oder anpassen.
 
 ### Input
 
-Das einzeilige Textfeld – der Klassiker für Namen, E-Mail-Adressen, Passwörter und Suchfelder. Mit `placeholder` gibst du einen Hilfstext, mit `type` definierst du den Eingabetyp:
+Das einzeilige Textfeld – der Klassiker für Namen, E-Mail-Adressen, Passwörter und Suchfelder. Mit \`placeholder\` gibst du einen Hilfstext, mit \`type\` definierst du den Eingabetyp:
 
-```mirror
+\`\`\`mirror
 Frame gap 12, w 280
   Input placeholder "Name eingeben..."
   Input placeholder "E-Mail", type "email"
   Input placeholder "Passwort", type "password"
   Input placeholder "Deaktiviert", disabled
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `placeholder` – zeigt Hilfstext, solange das Feld leer ist
-- `type "email"` – aktiviert E-Mail-Validierung und mobile Tastatur
-- `type "password"` – versteckt die Eingabe mit Punkten
-- `disabled` – deaktiviert das Feld (keine Eingabe möglich)
+- \`placeholder\` – zeigt Hilfstext, solange das Feld leer ist
+- \`type "email"\` – aktiviert E-Mail-Validierung und mobile Tastatur
+- \`type "password"\` – versteckt die Eingabe mit Punkten
+- \`disabled\` – deaktiviert das Feld (keine Eingabe möglich)
 
-| Type              | Verwendung               |
-| ----------------- | ------------------------ |
-| `type "text"`     | Standard (default)       |
-| `type "email"`    | E-Mail mit @-Validierung |
-| `type "password"` | Versteckte Eingabe       |
-| `type "number"`   | Nur Zahlen               |
+| Type | Verwendung |
+| --- | --- |
+| \`type "text"\` | Standard (default) |
+| \`type "email"\` | E-Mail mit @-Validierung |
+| \`type "password"\` | Versteckte Eingabe |
+| \`type "number"\` | Nur Zahlen |
 
 ### Textarea
 
 Für längere Texte – Kommentare, Beschreibungen, Nachrichten. Textarea wächst über mehrere Zeilen:
 
-```mirror
+\`\`\`mirror
 Frame gap 12, w 280
   Textarea placeholder "Deine Nachricht...", h 80
-  Textarea placeholder "Mit Inhalt", value "Zeile 1\nZeile 2", h 80
-```
+  Textarea placeholder "Mit Inhalt", value "Zeile 1\\nZeile 2", h 80
+\`\`\`
 
 **Was passiert hier?**
 
-- `h 80` – definiert die Höhe in Pixeln (wichtig bei Textarea)
-- `value` – setzt einen Startwert
-- `\n` – Zeilenumbruch im value
+- \`h 80\` – definiert die Höhe in Pixeln (wichtig bei Textarea)
+- \`value\` – setzt einen Startwert
+- \`\\n\` – Zeilenumbruch im value
 
-> **Hinweis:** **Tipp:** Textarea hat dieselben Properties wie Input: `placeholder`, `value`, `disabled`, `readonly`.
+> **Hinweis:** **Tipp:** Textarea hat dieselben Properties wie Input: \`placeholder\`, \`value\`, \`disabled\`, \`readonly\`.
 
 ### Checkbox & Switch
 
-Zwei Wege für An/Aus-Auswahlen: `Checkbox` ist der klassische Haken, `Switch` der moderne Schieberegler. Beide funktionieren gleich:
+Zwei Wege für An/Aus-Auswahlen: \`Checkbox\` ist der klassische Haken, \`Switch\` der moderne Schieberegler. Beide funktionieren gleich:
 
-```mirror
+\`\`\`mirror
 Frame gap 16
   Frame gap 8
     Checkbox "Newsletter abonnieren"
@@ -3537,13 +3555,13 @@ Frame gap 16
     Switch "Dark Mode"
     Switch "Notifications", checked
     Switch "Premium", disabled
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `Checkbox "Text"` – das Label erscheint neben dem Kästchen
-- `checked` – startet im aktivierten Zustand
-- `disabled` – deaktiviert (ausgegraut, nicht klickbar)
+- \`Checkbox "Text"\` – das Label erscheint neben dem Kästchen
+- \`checked\` – startet im aktivierten Zustand
+- \`disabled\` – deaktiviert (ausgegraut, nicht klickbar)
 
 > **Hinweis:** **Wann was?** Checkbox für Mehrfachauswahlen oder Zustimmungen ("Ich akzeptiere..."). Switch für An/Aus-Einstellungen ("Dark Mode", "Notifications").
 
@@ -3551,19 +3569,19 @@ Frame gap 16
 
 Ein Dropdown zur Auswahl aus mehreren Optionen. Anders als HTML-Selects ist dieses vollständig stylebar und tastaturgesteuert:
 
-```mirror
+\`\`\`mirror
 Frame gap 12
   Select placeholder "Stadt wählen..."
     Option "Berlin"
     Option "Hamburg"
     Option "München"
     Option "Köln"
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `placeholder` – zeigt Text, wenn nichts ausgewählt ist
-- `Option "Text"` – definiert eine Auswahloption
+- \`placeholder\` – zeigt Text, wenn nichts ausgewählt ist
+- \`Option "Text"\` – definiert eine Auswahloption
 - Klick öffnet das Dropdown, Pfeiltasten navigieren, Enter wählt aus
 - Escape oder Klick außerhalb schließt das Dropdown
 
@@ -3571,39 +3589,39 @@ Frame gap 12
 
 Standardmäßig ist der Value gleich dem Label. Für Datenbanken oder APIs brauchst du oft andere Values:
 
-```mirror
+\`\`\`mirror
 Select placeholder "Status..."
   Option "In Bearbeitung", value "in_progress"
   Option "Abgeschlossen", value "done"
   Option "Abgebrochen", value "cancelled"
-```
+\`\`\`
 
 > **Hinweis:** **Accessibility:** Select unterstützt volle Tastaturnavigation – wichtig für Barrierefreiheit. Nutzer können mit Pfeiltasten navigieren und mit Enter auswählen, ohne die Maus zu verwenden.
 
 ### Two-Way Binding
 
-Mit `bind` verknüpfst du ein Eingabefeld mit einer Variable. Änderungen im Feld aktualisieren die Variable automatisch – und umgekehrt:
+Mit \`bind\` verknüpfst du ein Eingabefeld mit einer Variable. Änderungen im Feld aktualisieren die Variable automatisch – und umgekehrt:
 
-```mirror
+\`\`\`mirror
 searchTerm: ""
 
 Frame gap 12, w 280
   Input bind searchTerm, placeholder "Suchen..."
   Text "Du suchst: $searchTerm", col #888
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `searchTerm: ""` – definiert eine Variable mit Startwert
-- `bind searchTerm` – verknüpft Input mit der Variable
-- `$searchTerm` – zeigt den aktuellen Wert der Variable
+- \`searchTerm: ""\` – definiert eine Variable mit Startwert
+- \`bind searchTerm\` – verknüpft Input mit der Variable
+- \`$searchTerm\` – zeigt den aktuellen Wert der Variable
 - Tippe in das Feld → der Text darunter aktualisiert sich sofort
 
 #### Binding mit Select
 
-Auch Select unterstützt `bind` – der ausgewählte Value wird in der Variable gespeichert:
+Auch Select unterstützt \`bind\` – der ausgewählte Value wird in der Variable gespeichert:
 
-```mirror
+\`\`\`mirror
 selectedCity: ""
 
 Frame gap 12, w 280
@@ -3612,15 +3630,15 @@ Frame gap 12, w 280
     Option "Hamburg"
     Option "München"
   Text "Gewählt: $selectedCity", col #888
-```
+\`\`\`
 
-> **Hinweis:** **Kurzform:** `bind varName` ersetzt die alte Syntax `value $varName, onchange set(varName, event.value)`. Eine Property, alles erledigt.
+> **Hinweis:** **Kurzform:** \`bind varName\` ersetzt die alte Syntax \`value $varName, onchange set(varName, event.value)\`. Eine Property, alles erledigt.
 
 ### Praktisch: Login-Formular
 
 Ein typisches Login-Formular, das die Konzepte kombiniert:
 
-```mirror
+\`\`\`mirror
 email: ""
 password: ""
 
@@ -3638,53 +3656,53 @@ Frame gap 16, w 300, bg #1a1a1a, pad 24, rad 12
   Checkbox "Angemeldet bleiben"
 
   Button "Anmelden", w full, pad 12, bg #2271C1, col white, rad 6
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- Zwei Variablen (`email`, `password`) speichern die Eingaben
+- Zwei Variablen (\`email\`, \`password\`) speichern die Eingaben
 - Labels über den Inputs als separate Text-Elemente
-- `type "email"` und `type "password"` für korrekte Eingabetypen
+- \`type "email"\` und \`type "password"\` für korrekte Eingabetypen
 - Checkbox für "Angemeldet bleiben" Option
 
 ### Input Mask
 
-Mit `mask` definierst du ein Eingabeformat. Literale Zeichen werden automatisch eingefügt, ungültige Zeichen werden blockiert:
+Mit \`mask\` definierst du ein Eingabeformat. Literale Zeichen werden automatisch eingefügt, ungültige Zeichen werden blockiert:
 
-```mirror
+\`\`\`mirror
 Frame gap 12, w 280
   Input mask "###.####.####.##", placeholder "AHV-Nummer"
   Input mask "(###) ###-####", placeholder "Telefon"
   Input mask "####-##-##", placeholder "Datum"
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `#` – erlaubt eine Ziffer (0-9)
-- `A` – erlaubt einen Buchstaben (a-z, A-Z)
-- `*` – erlaubt Ziffer oder Buchstabe
+- \`#\` – erlaubt eine Ziffer (0-9)
+- \`A\` – erlaubt einen Buchstaben (a-z, A-Z)
+- \`*\` – erlaubt Ziffer oder Buchstabe
 - Alle anderen Zeichen sind Literale (Punkte, Bindestriche, Klammern)
 
-| Pattern            | Beispiel-Ausgabe | Verwendung  |
-| ------------------ | ---------------- | ----------- |
-| `###.####.####.##` | 756.1234.5678.90 | AHV-Nummer  |
-| `(###) ###-####`   | (079) 123-4567   | Telefon     |
-| `####-##-##`       | 2024-01-15       | Datum       |
-| `##'###.##`        | 12'345.67        | Währung CHF |
-| `AAA-###`          | ABC-123          | Kennzeichen |
+| Pattern | Beispiel-Ausgabe | Verwendung |
+| --- | --- | --- |
+| \`###.####.####.##\` | 756.1234.5678.90 | AHV-Nummer |
+| \`(###) ###-####\` | (079) 123-4567 | Telefon |
+| \`####-##-##\` | 2024-01-15 | Datum |
+| \`##'###.##\` | 12'345.67 | Währung CHF |
+| \`AAA-###\` | ABC-123 | Kennzeichen |
 
 #### Mask mit Data Binding
 
-Bei `bind` wird der **rohe Wert** (ohne Formatierung) in der Variable gespeichert:
+Bei \`bind\` wird der **rohe Wert** (ohne Formatierung) in der Variable gespeichert:
 
-```mirror
+\`\`\`mirror
 ahv: ""
 
 Frame gap 12, w 280
   Input mask "###.####.####.##", bind ahv, placeholder "AHV-Nummer"
   Text "Formatiert: $ahv", col #888
   Text "Hinweis: Der rohe Wert (ohne Punkte) wird gespeichert", fs 11, col #666
-```
+\`\`\`
 
 > **Hinweis:** **Tipp:** Die Maske validiert während der Eingabe – ungültige Zeichen werden ignoriert. Das verbessert die Datenqualität und die User Experience.
 
@@ -3692,27 +3710,28 @@ Frame gap 12, w 280
 
 ### Zusammenfassung
 
-| Komponente | Verwendung               | Wichtige Properties                       |
-| ---------- | ------------------------ | ----------------------------------------- |
-| `Input`    | Einzeiliges Textfeld     | `placeholder`, `type`, `mask`, `disabled` |
-| `Textarea` | Mehrzeiliges Textfeld    | `placeholder`, `h`, `value`               |
-| `Checkbox` | An/Aus mit Haken         | `checked`, `disabled`                     |
-| `Switch`   | An/Aus als Schieberegler | `checked`, `disabled`                     |
-| `Select`   | Dropdown-Auswahl         | `placeholder`, `bind`                     |
+| Komponente | Verwendung | Wichtige Properties |
+| --- | --- | --- |
+| \`Input\` | Einzeiliges Textfeld | \`placeholder\`, \`type\`, \`mask\`, \`disabled\` |
+| \`Textarea\` | Mehrzeiliges Textfeld | \`placeholder\`, \`h\`, \`value\` |
+| \`Checkbox\` | An/Aus mit Haken | \`checked\`, \`disabled\` |
+| \`Switch\` | An/Aus als Schieberegler | \`checked\`, \`disabled\` |
+| \`Select\` | Dropdown-Auswahl | \`placeholder\`, \`bind\` |
 
-**Binding:** `Input bind varName` verknüpft Eingabe bidirektional mit einer Variable.
+**Binding:** \`Input bind varName\` verknüpft Eingabe bidirektional mit einer Variable.
 
-**Startzustand:** `checked` für aktivierte Checkboxen/Switches, `value` für vorausgefüllte Textfelder.
+**Startzustand:** \`checked\` für aktivierte Checkboxen/Switches, \`value\` für vorausgefüllte Textfelder.
 
-**Option-Values:** `Option "Label", value "key"` wenn Label und Value unterschiedlich sein sollen.
+**Option-Values:** \`Option "Label", value "key"\` wenn Label und Value unterschiedlich sein sollen.
 
-**Input Mask:** `mask "###-####"` formatiert Eingaben automatisch. `#`=Ziffer, `A`=Buchstabe, `*`=beides.
+**Input Mask:** \`mask "###-####"\` formatiert Eingaben automatisch. \`#\`=Ziffer, \`A\`=Buchstabe, \`*\`=beides.
+
 
 ---
 
 ## Navigation
 
-_Tabs und SideNav_
+*Tabs und SideNav*
 
 Zwei fertige Komponenten für Navigation: **Tabs** für horizontales Umschalten zwischen Inhalten, **SideNav** für vertikale Sidebar-Navigation mit Icons.
 
@@ -3720,7 +3739,7 @@ Zwei fertige Komponenten für Navigation: **Tabs** für horizontales Umschalten 
 
 Tabs organisieren Inhalte in horizontale Reiter. Klick auf einen Tab zeigt dessen Inhalt:
 
-```mirror
+\`\`\`mirror
 Tabs defaultValue "Home"
   Tab "Home"
     Frame pad 16, gap 8
@@ -3734,19 +3753,19 @@ Tabs defaultValue "Home"
     Frame pad 16, gap 8
       Text "Einstellungen", fs 18, weight bold
       Text "App-Konfiguration hier."
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `Tabs` – der Container für alle Tabs
-- `defaultValue "Home"` – welcher Tab beim Start aktiv ist
-- `Tab "Label"` – ein einzelner Tab mit seinem Label
-- Kinder von `Tab` – der Inhalt, der bei Auswahl erscheint
+- \`Tabs\` – der Container für alle Tabs
+- \`defaultValue "Home"\` – welcher Tab beim Start aktiv ist
+- \`Tab "Label"\` – ein einzelner Tab mit seinem Label
+- Kinder von \`Tab\` – der Inhalt, der bei Auswahl erscheint
 
-| Property              | Beschreibung             |
-| --------------------- | ------------------------ |
-| `defaultValue "name"` | Anfangs aktiver Tab      |
-| `Tab "Label"`         | Tab mit sichtbarem Label |
+| Property | Beschreibung |
+| --- | --- |
+| \`defaultValue "name"\` | Anfangs aktiver Tab |
+| \`Tab "Label"\` | Tab mit sichtbarem Label |
 
 > **Hinweis:** **Tipp:** Der Tab-Inhalt kann beliebig komplex sein – Frames, Listen, Formulare. Tabs eignen sich für Einstellungsseiten, Dashboards oder Produktdetails.
 
@@ -3754,39 +3773,39 @@ Tabs defaultValue "Home"
 
 SideNav ist eine vertikale Navigation mit Icons – typisch für Dashboards und Admin-Panels:
 
-```mirror
+\`\`\`mirror
 SideNav defaultValue "dashboard", w 200
   NavItem "Dashboard", icon "home", value "dashboard"
   NavItem "Projects", icon "folder", value "projects"
   NavItem "Messages", icon "mail", value "messages"
   NavItem "Settings", icon "settings", value "settings"
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `SideNav` – der Container mit `w 200` für die Breite
-- `defaultValue` – welches Item beim Start ausgewählt ist
-- `NavItem "Label"` – ein Navigationselement
-- `icon "name"` – Lucide-Icon vor dem Label
-- `value "key"` – interner Wert für die Auswahl
+- \`SideNav\` – der Container mit \`w 200\` für die Breite
+- \`defaultValue\` – welches Item beim Start ausgewählt ist
+- \`NavItem "Label"\` – ein Navigationselement
+- \`icon "name"\` – Lucide-Icon vor dem Label
+- \`value "key"\` – interner Wert für die Auswahl
 
 #### Mit Badges
 
 Badges zeigen Zähler oder Status an – ideal für ungelesene Nachrichten oder Benachrichtigungen:
 
-```mirror
+\`\`\`mirror
 SideNav defaultValue "dashboard", w 220
   NavItem "Dashboard", icon "home", value "dashboard"
   NavItem "Messages", icon "mail", value "messages", badge "5"
   NavItem "Notifications", icon "bell", value "notifications", badge "12"
   NavItem "Tasks", icon "check-square", value "tasks", badge "3"
-```
+\`\`\`
 
 #### Gruppierte Navigation
 
-Mit `NavGroup` organisierst du Items in Kategorien. `collapsible` macht die Gruppe auf-/zuklappbar:
+Mit \`NavGroup\` organisierst du Items in Kategorien. \`collapsible\` macht die Gruppe auf-/zuklappbar:
 
-```mirror
+\`\`\`mirror
 SideNav defaultValue "dashboard", w 220
   NavItem "Dashboard", icon "home", value "dashboard"
   NavItem "Projects", icon "folder", value "projects"
@@ -3799,20 +3818,20 @@ SideNav defaultValue "dashboard", w 220
   NavGroup "Help", collapsible
     NavItem "Documentation", icon "book", value "docs"
     NavItem "Support", icon "help-circle", value "support"
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `NavGroup "Label"` – gruppiert mehrere NavItems
-- `collapsible` – macht die Gruppe auf-/zuklappbar
+- \`NavGroup "Label"\` – gruppiert mehrere NavItems
+- \`collapsible\` – macht die Gruppe auf-/zuklappbar
 - NavItems in NavGroup werden eingerückt dargestellt
 
-| Property       | Beschreibung              |
-| -------------- | ------------------------- |
-| `icon "name"`  | Lucide-Icon vor dem Label |
-| `value "key"`  | Interner Wert für Auswahl |
-| `badge "text"` | Zähler/Status rechts      |
-| `collapsible`  | Gruppe auf-/zuklappbar    |
+| Property | Beschreibung |
+| --- | --- |
+| \`icon "name"\` | Lucide-Icon vor dem Label |
+| \`value "key"\` | Interner Wert für Auswahl |
+| \`badge "text"\` | Zähler/Status rechts |
+| \`collapsible\` | Gruppe auf-/zuklappbar |
 
 > **Hinweis:** **Tipp:** SideNav eignet sich für App-Shells mit fester Sidebar. Kombiniere es mit einem Content-Bereich rechts davon.
 
@@ -3820,33 +3839,34 @@ SideNav defaultValue "dashboard", w 220
 
 ### Zusammenfassung
 
-| Komponente | Verwendung                   | Wichtige Properties        |
-| ---------- | ---------------------------- | -------------------------- |
-| `Tabs`     | Horizontale Tab-Navigation   | `defaultValue`             |
-| `Tab`      | Einzelner Tab mit Inhalt     | Label als erster Parameter |
-| `SideNav`  | Vertikale Sidebar-Navigation | `defaultValue`, `w`        |
-| `NavItem`  | Navigationselement           | `icon`, `value`, `badge`   |
-| `NavGroup` | Gruppiert NavItems           | `collapsible`              |
+| Komponente | Verwendung | Wichtige Properties |
+| --- | --- | --- |
+| \`Tabs\` | Horizontale Tab-Navigation | \`defaultValue\` |
+| \`Tab\` | Einzelner Tab mit Inhalt | Label als erster Parameter |
+| \`SideNav\` | Vertikale Sidebar-Navigation | \`defaultValue\`, \`w\` |
+| \`NavItem\` | Navigationselement | \`icon\`, \`value\`, \`badge\` |
+| \`NavGroup\` | Gruppiert NavItems | \`collapsible\` |
 
-**Tabs:** Für horizontales Umschalten zwischen Inhalten. Jeder `Tab` enthält seinen eigenen Content.
+**Tabs:** Für horizontales Umschalten zwischen Inhalten. Jeder \`Tab\` enthält seinen eigenen Content.
 
-**SideNav:** Für vertikale Sidebar-Navigation. `NavItem` mit Icons und optionalen Badges.
+**SideNav:** Für vertikale Sidebar-Navigation. \`NavItem\` mit Icons und optionalen Badges.
 
-**NavGroup:** Gruppiert Items in Kategorien, mit `collapsible` auf-/zuklappbar.
+**NavGroup:** Gruppiert Items in Kategorien, mit \`collapsible\` auf-/zuklappbar.
+
 
 ---
 
 ## Overlays
 
-_Dialog und Tooltip_
+*Dialog und Tooltip*
 
-Overlays erscheinen über dem normalen Content. Beide folgen dem gleichen Slot-Muster: `Trigger:` löst aus, `Content:` zeigt den Inhalt.
+Overlays erscheinen über dem normalen Content. Beide folgen dem gleichen Slot-Muster: \`Trigger:\` löst aus, \`Content:\` zeigt den Inhalt.
 
 ### Dialog
 
 Dialoge sind modale Fenster – sie blockieren die Interaktion mit dem Rest der Seite, bis sie geschlossen werden:
 
-```mirror
+\`\`\`mirror
 Dialog
   Trigger: Button "Dialog öffnen", bg #2271C1, col white, pad 10 20, rad 6
   Backdrop: bg rgba(0,0,0,0.5)
@@ -3858,28 +3878,28 @@ Dialog
     Frame hor, gap 8
       CloseTrigger: Button "Abbrechen", bg #333, col white, pad 10 20, rad 6, grow
       Button "Bestätigen", bg #2271C1, col white, pad 10 20, rad 6, grow
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `Dialog` – der Container für das modale Fenster
-- `Trigger:` – das Element, das den Dialog öffnet (Klick)
-- `Backdrop:` – der halbtransparente Hintergrund
-- `Content:` – der eigentliche Dialog-Inhalt
-- `CloseTrigger:` – Elemente, die den Dialog schließen
+- \`Dialog\` – der Container für das modale Fenster
+- \`Trigger:\` – das Element, das den Dialog öffnet (Klick)
+- \`Backdrop:\` – der halbtransparente Hintergrund
+- \`Content:\` – der eigentliche Dialog-Inhalt
+- \`CloseTrigger:\` – Elemente, die den Dialog schließen
 
-| Slot            | Beschreibung                                 |
-| --------------- | -------------------------------------------- |
-| `Trigger:`      | Öffnet den Dialog bei Klick                  |
-| `Backdrop:`     | Hintergrund-Overlay (klickbar zum Schließen) |
-| `Content:`      | Der Dialog-Inhalt                            |
-| `CloseTrigger:` | Schließt den Dialog bei Klick                |
+| Slot | Beschreibung |
+| --- | --- |
+| \`Trigger:\` | Öffnet den Dialog bei Klick |
+| \`Backdrop:\` | Hintergrund-Overlay (klickbar zum Schließen) |
+| \`Content:\` | Der Dialog-Inhalt |
+| \`CloseTrigger:\` | Schließt den Dialog bei Klick |
 
 #### Dialog mit Formular
 
 Dialoge eignen sich für Formulare, die den Fokus des Nutzers erfordern:
 
-```mirror
+\`\`\`mirror
 Dialog
   Trigger: Button "Neuer Kontakt", bg #10b981, col white, pad 10 20, rad 6
   Backdrop: bg rgba(0,0,0,0.6)
@@ -3895,7 +3915,7 @@ Dialog
     Frame hor, gap 8
       CloseTrigger: Button "Abbrechen", bg #333, col white, pad 10 20, rad 6, grow
       Button "Speichern", bg #10b981, col white, pad 10 20, rad 6, grow
-```
+\`\`\`
 
 > **Hinweis:** **Accessibility:** Dialoge fangen den Fokus – Tab navigiert nur innerhalb des Dialogs. Escape schließt den Dialog. Das ist wichtig für Tastaturnutzer.
 
@@ -3903,7 +3923,7 @@ Dialog
 
 Tooltips zeigen kurze Hilfetexte bei Hover. Sie eignen sich für Icons oder Buttons, die zusätzliche Erklärung brauchen:
 
-```mirror
+\`\`\`mirror
 Frame hor, gap 16
   Tooltip positioning "bottom"
     Trigger: Icon "info", ic #888, is 20, cursor pointer
@@ -3916,27 +3936,27 @@ Frame hor, gap 16
   Tooltip positioning "right"
     Trigger: Icon "help-circle", ic #888, is 20, cursor pointer
     Content: Text "Hilfe anzeigen", fs 12
-```
+\`\`\`
 
 **Was passiert hier?**
 
-- `Tooltip` – der Container für Tooltip-Verhalten
-- `positioning` – wo der Tooltip erscheint (top, bottom, left, right)
-- `Trigger:` – das Element, bei dem Hover den Tooltip zeigt
-- `Content:` – der Tooltip-Inhalt
+- \`Tooltip\` – der Container für Tooltip-Verhalten
+- \`positioning\` – wo der Tooltip erscheint (top, bottom, left, right)
+- \`Trigger:\` – das Element, bei dem Hover den Tooltip zeigt
+- \`Content:\` – der Tooltip-Inhalt
 
-| Positioning | Beschreibung           |
-| ----------- | ---------------------- |
-| `"top"`     | Oberhalb des Triggers  |
-| `"bottom"`  | Unterhalb des Triggers |
-| `"left"`    | Links vom Trigger      |
-| `"right"`   | Rechts vom Trigger     |
+| Positioning | Beschreibung |
+| --- | --- |
+| \`"top"\` | Oberhalb des Triggers |
+| \`"bottom"\` | Unterhalb des Triggers |
+| \`"left"\` | Links vom Trigger |
+| \`"right"\` | Rechts vom Trigger |
 
 #### Tooltip mit mehr Inhalt
 
 Tooltips können auch komplexere Inhalte enthalten:
 
-```mirror
+\`\`\`mirror
 Tooltip positioning "bottom"
   Trigger: Frame hor, gap 8, pad 8 12, bg #1a1a1a, rad 6, cursor pointer
     Icon "user", ic #888, is 16
@@ -3944,15 +3964,15 @@ Tooltip positioning "bottom"
   Content: Frame ver, gap 4, pad 8
     Text "Profil anzeigen", fs 12, weight 500
     Text "Letzte Aktivität: vor 5 Min.", fs 11, col #888
-```
+\`\`\`
 
 > **Hinweis:** **Tipp:** Tooltips sollten kurz und informativ sein. Für längere Inhalte oder Interaktionen nutze lieber einen Dialog oder ein Popover.
 
 ### Das Slot-Muster
 
-Beide Komponenten folgen dem gleichen Muster mit benannten Slots (`Name:`):
+Beide Komponenten folgen dem gleichen Muster mit benannten Slots (\`Name:\`):
 
-```mirror
+\`\`\`mirror
 // Dialog-Muster
 Dialog
   Trigger: [Element das öffnet]
@@ -3964,38 +3984,39 @@ Dialog
 Tooltip positioning "position"
   Trigger: [Element bei Hover]
   Content: [Tooltip-Inhalt]
-```
+\`\`\`
 
-Der Doppelpunkt (`:`) nach dem Namen markiert einen **Slot** – einen benannten Bereich, der von der Komponente speziell behandelt wird.
+Der Doppelpunkt (\`:\`) nach dem Namen markiert einen **Slot** – einen benannten Bereich, der von der Komponente speziell behandelt wird.
 
 ---
 
 ### Zusammenfassung
 
-| Komponente | Verwendung       | Wichtige Slots                                       |
-| ---------- | ---------------- | ---------------------------------------------------- |
-| `Dialog`   | Modale Fenster   | `Trigger:`, `Backdrop:`, `Content:`, `CloseTrigger:` |
-| `Tooltip`  | Hover-Hilfetexte | `Trigger:`, `Content:`                               |
+| Komponente | Verwendung | Wichtige Slots |
+| --- | --- | --- |
+| \`Dialog\` | Modale Fenster | \`Trigger:\`, \`Backdrop:\`, \`Content:\`, \`CloseTrigger:\` |
+| \`Tooltip\` | Hover-Hilfetexte | \`Trigger:\`, \`Content:\` |
 
-**Dialog:** Modale Fenster, die die Seite blockieren. Mit `Backdrop:` für Hintergrund und `CloseTrigger:` zum Schließen.
+**Dialog:** Modale Fenster, die die Seite blockieren. Mit \`Backdrop:\` für Hintergrund und \`CloseTrigger:\` zum Schließen.
 
-**Tooltip:** Kurze Hilfetexte bei Hover. Mit `positioning` für die Richtung (top, bottom, left, right).
+**Tooltip:** Kurze Hilfetexte bei Hover. Mit \`positioning\` für die Richtung (top, bottom, left, right).
 
-**Gemeinsames Muster:** Beide nutzen `Trigger:` und `Content:` Slots – `Trigger:` löst aus, `Content:` zeigt den Inhalt.
+**Gemeinsames Muster:** Beide nutzen \`Trigger:\` und \`Content:\` Slots – \`Trigger:\` löst aus, \`Content:\` zeigt den Inhalt.
+
 
 ---
 
 ## Tabellen
 
-_Statische und datengebundene Tabellen mit each_
+*Statische und datengebundene Tabellen mit each*
 
-Tabellen in Mirror sind normale Komponenten. Du baust sie mit `Table`, `TableHeader`, `TableRow` und `each` Loops. Keine Magie, volle Kontrolle.
+Tabellen in Mirror sind normale Komponenten. Du baust sie mit \`Table\`, \`TableHeader\`, \`TableRow\` und \`each\` Loops. Keine Magie, volle Kontrolle.
 
 ### Statische Tabellen
 
-Die einfachste Art, eine Tabelle zu erstellen. Mit `TableHeader` markierst du die Kopfzeile, jede `TableRow` enthält die Zellen:
+Die einfachste Art, eine Tabelle zu erstellen. Mit \`TableHeader\` markierst du die Kopfzeile, jede \`TableRow\` enthält die Zellen:
 
-```mirror
+\`\`\`mirror
 Table bg #1a1a1a, rad 8
   TableHeader hor, gap 24, pad 12 16, bg #252525
     Text "Name", col #888, fs 11, uppercase
@@ -4009,17 +4030,17 @@ Table bg #1a1a1a, rad 8
     Text "Anna", col white
     Text "30", col white
     Text "München", col white
-```
+\`\`\`
 
-Die Struktur ist klar: `Table` als Container, `TableHeader` für Spaltenüberschriften, `TableRow` für Datenzeilen.
+Die Struktur ist klar: \`Table\` als Container, \`TableHeader\` für Spaltenüberschriften, \`TableRow\` für Datenzeilen.
 
 > **Hinweis:** **Wann statisch?** Verwende statische Tabellen für: Preislisten, Feature-Vergleiche, Kontaktdaten, Referenztabellen – alles mit festen, bekannten Werten.
 
 ### Datengebundene Tabellen
 
-Für dynamische Daten nutzt du `each` um über eine Datenquelle zu iterieren:
+Für dynamische Daten nutzt du \`each\` um über eine Datenquelle zu iterieren:
 
-```mirror
+\`\`\`mirror
 tasks:
   task1:
     title: "Design Review"
@@ -4039,11 +4060,11 @@ Table bg #1a1a1a, rad 8, w full
     TableRow hor, gap 24, pad 12 16, bor 0 0 1 0, boc #222
       Text task.title, col white
       Text task.status, col #888
-```
+\`\`\`
 
-- `each task in $tasks` – Iteriert über alle Einträge
-- `task.title` – Zugriff auf Felder des aktuellen Eintrags
-- Der Header steht vor dem `each`, wird nur einmal gerendert
+- \`each task in $tasks\` – Iteriert über alle Einträge
+- \`task.title\` – Zugriff auf Felder des aktuellen Eintrags
+- Der Header steht vor dem \`each\`, wird nur einmal gerendert
 
 ### Tabellen stylen
 
@@ -4051,9 +4072,9 @@ Tabellen können auf allen Ebenen gestylt werden – von der Tabelle selbst bis 
 
 #### Table-Level Styles
 
-Styles direkt auf `Table` wirken auf den Container:
+Styles direkt auf \`Table\` wirken auf den Container:
 
-```mirror
+\`\`\`mirror
 tasks:
   t1:
     name: "Design"
@@ -4067,13 +4088,13 @@ Table bg #0a0a0a, pad 16, rad 12, gap 4, w full
     TableRow hor, spread, pad 12 16, bg #1a1a1a, rad 6
       Text task.name, col white
       Text task.status, col #888
-```
+\`\`\`
 
 #### Header und Footer
 
-Mit `TableHeader` und `TableFooter` stylst du Kopf- und Fußbereich separat:
+Mit \`TableHeader\` und \`TableFooter\` stylst du Kopf- und Fußbereich separat:
 
-```mirror
+\`\`\`mirror
 tasks:
   t1:
     name: "Task 1"
@@ -4093,13 +4114,13 @@ Table bg #1a1a1a, rad 12, w full
   TableFooter hor, spread, pad 12 16, bg #252525, rad 0 0 8 8
     Text "Total", col white, weight 500
     Text "8h", col #10b981, weight 600
-```
+\`\`\`
 
 #### Zeilen mit Hover
 
 Füge Hover-Effekte zu Zeilen hinzu:
 
-```mirror
+\`\`\`mirror
 users:
   u1:
     name: "Anna"
@@ -4121,13 +4142,13 @@ Table bg #1a1a1a, rad 8, w full
         bg #252525
       Text user.name, col white
       Text user.role, col #888
-```
+\`\`\`
 
 #### Zebra-Muster
 
 Für alternierende Zeilenfarben definiere separate Komponenten:
 
-```mirror
+\`\`\`mirror
 users:
   u1:
     name: "Anna"
@@ -4153,17 +4174,17 @@ Table bg #1a1a1a, rad 8, w full
     TableRow hor, spread, pad 12 16
       Text user.name, col white
       Text user.role, col #888
-```
+\`\`\`
 
-**Tipp:** Für echtes Zebra-Muster mit Runtime-Index kannst du CSS `:nth-child(odd)` verwenden oder separate Komponenten definieren.
+**Tipp:** Für echtes Zebra-Muster mit Runtime-Index kannst du CSS \`:nth-child(odd)\` verwenden oder separate Komponenten definieren.
 
-> **Hinweis:** **Tipp:** Für echtes Zebra-Muster mit Runtime-Index kannst du CSS `:nth-child(odd)` verwenden oder separate Komponenten definieren.
+> **Hinweis:** **Tipp:** Für echtes Zebra-Muster mit Runtime-Index kannst du CSS \`:nth-child(odd)\` verwenden oder separate Komponenten definieren.
 
 ### Filtern mit where
 
-Mit `where` filterst du Einträge nach einer Bedingung:
+Mit \`where\` filterst du Einträge nach einer Bedingung:
 
-```mirror
+\`\`\`mirror
 tasks:
   task1:
     title: "Design Review"
@@ -4185,11 +4206,11 @@ Table bg #1a1a1a, rad 8, w full
     TableRow hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center
       Icon "circle", ic #f59e0b, is 16
       Text task.title, col white, grow
-```
+\`\`\`
 
-**Vergleichsoperatoren:** `==`, `!=`, `>`, `<`, `>=`, `<=`
+**Vergleichsoperatoren:** \`==\`, \`!=\`, \`>\`, \`<\`, \`>=\`, \`<=\`
 
-```mirror
+\`\`\`mirror
 tasks:
   task1:
     title: "Critical Bug"
@@ -4211,13 +4232,13 @@ Table bg #1a1a1a, rad 8, w full
     TableRow hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center
       Icon "alert-circle", ic #ef4444, is 16
       Text task.title, col white, grow
-```
+\`\`\`
 
 ### Sortieren mit by
 
-Mit `by` sortierst du nach einem Feld. Mit `desc` wird absteigend sortiert:
+Mit \`by\` sortierst du nach einem Feld. Mit \`desc\` wird absteigend sortiert:
 
-```mirror
+\`\`\`mirror
 tasks:
   task1:
     title: "Low Priority"
@@ -4236,11 +4257,11 @@ Table bg #1a1a1a, rad 8, w full
     TableRow hor, gap 12, pad 12 16, bor 0 0 1 0, boc #222, ver-center
       Text task.priority, col #2563eb, fs 14, weight 600, w 24
       Text task.title, col white, grow
-```
+\`\`\`
 
 **Absteigend sortieren:**
 
-```mirror
+\`\`\`mirror
 products:
   tshirt:
     name: "T-Shirt"
@@ -4260,13 +4281,13 @@ Table bg #1a1a1a, rad 8, w full
     TableRow hor, spread, pad 12 16, bor 0 0 1 0, boc #222, ver-center
       Text product.name, col white, weight 500
       Text product.price + " EUR", col #10b981, fs 14, weight 600
-```
+\`\`\`
 
 ### Tabellen mit Aktionen
 
 Füge Buttons oder Icons für Aktionen hinzu:
 
-```mirror
+\`\`\`mirror
 users:
   u1:
     name: "Max Mustermann"
@@ -4287,50 +4308,51 @@ Table bg #1a1a1a, rad 8, w full
       Frame hor, gap 8, w 100
         Icon "edit", ic #888, is 18, cursor pointer
         Icon "trash-2", ic #ef4444, is 18, cursor pointer
-```
+\`\`\`
 
 ---
 
 ### Zusammenfassung
 
-**Statische Tabellen:** `Table` + `TableHeader` + `TableRow` für feste Werte.
+**Statische Tabellen:** \`Table\` + \`TableHeader\` + \`TableRow\` für feste Werte.
 
-**Datengebundene Tabellen:** `each item in $data` um über Daten zu iterieren.
+**Datengebundene Tabellen:** \`each item in $data\` um über Daten zu iterieren.
 
 #### Struktur
 
-| `Table bg #1a1a1a, rad 8`             | Container  |
-| ------------------------------------- | ---------- |
-| `TableHeader hor, pad 12, bg #252525` | Kopfzeile  |
-| `TableRow hor, pad 12`                | Datenzeile |
-| `TableFooter hor, pad 12, bg #252525` | Fußzeile   |
+| \`Table bg #1a1a1a, rad 8\` | Container |
+| --- | --- |
+| \`TableHeader hor, pad 12, bg #252525\` | Kopfzeile |
+| \`TableRow hor, pad 12\` | Datenzeile |
+| \`TableFooter hor, pad 12, bg #252525\` | Fußzeile |
 
 #### Daten-Operationen
 
-| `each task in $tasks`        | Über Daten iterieren  |
-| ---------------------------- | --------------------- |
-| `each task, index in $tasks` | Mit Index             |
-| `where task.done == false`   | Filtern               |
-| `by priority`                | Aufsteigend sortieren |
-| `by price desc`              | Absteigend sortieren  |
+| \`each task in $tasks\` | Über Daten iterieren |
+| --- | --- |
+| \`each task, index in $tasks\` | Mit Index |
+| \`where task.done == false\` | Filtern |
+| \`by priority\` | Aufsteigend sortieren |
+| \`by price desc\` | Absteigend sortieren |
 
 #### Zebra-Muster
 
-Für alternierende Farben nutze CSS `:nth-child(odd/even)` oder definiere separate Row-Komponenten.
+Für alternierende Farben nutze CSS \`:nth-child(odd/even)\` oder definiere separate Row-Komponenten.
+
 
 ---
 
 ## Charts
 
-_Datenvisualisierung mit Chart.js_
+*Datenvisualisierung mit Chart.js*
 
 Charts machen Daten sichtbar. Mirror bietet einfache Primitives für die häufigsten Chart-Typen – **Line**, **Bar**, **Pie** und mehr. Die Daten kommen aus Variablen, das Styling ist minimal.
 
 ### Das Prinzip
 
-Ein Chart ist ein Primitive wie `Frame` oder `Button`. Du gibst ihm Daten und optional Größe – fertig:
+Ein Chart ist ein Primitive wie \`Frame\` oder \`Button\`. Du gibst ihm Daten und optional Größe – fertig:
 
-```mirror
+\`\`\`mirror
 sales:
   Jan: 120
   Feb: 180
@@ -4339,9 +4361,9 @@ sales:
   May: 280
 
 Line $sales, w 400, h 200
-```
+\`\`\`
 
-`Line $sales` erzeugt ein Liniendiagramm. Die Daten kommen aus dem `sales`-Objekt – die Keys werden zu Labels (Jan, Feb, ...), die Werte zur Linie.
+\`Line $sales\` erzeugt ein Liniendiagramm. Die Daten kommen aus dem \`sales\`-Objekt – die Keys werden zu Labels (Jan, Feb, ...), die Werte zur Linie.
 
 ### Chart-Typen
 
@@ -4349,7 +4371,7 @@ Mirror unterstützt sieben Chart-Typen. Jeder hat seinen Einsatzzweck:
 
 #### Line – Trends über Zeit
 
-```mirror
+\`\`\`mirror
 revenue:
   Q1: 45
   Q2: 62
@@ -4357,11 +4379,11 @@ revenue:
   Q4: 95
 
 Line $revenue, w 350, h 180
-```
+\`\`\`
 
 #### Bar – Werte vergleichen
 
-```mirror
+\`\`\`mirror
 teams:
   Design: 8
   Engineering: 12
@@ -4369,11 +4391,11 @@ teams:
   Sales: 7
 
 Bar $teams, w 350, h 180
-```
+\`\`\`
 
 #### Pie – Anteile zeigen
 
-```mirror
+\`\`\`mirror
 browsers:
   Chrome: 65
   Safari: 20
@@ -4381,22 +4403,22 @@ browsers:
   Other: 5
 
 Pie $browsers, w 250, h 200
-```
+\`\`\`
 
 #### Donut – Anteile mit Loch
 
-```mirror
+\`\`\`mirror
 status:
   Done: 45
   Progress: 30
   Todo: 25
 
 Donut $status, w 200, h 200
-```
+\`\`\`
 
 #### Area – Gefüllte Linie
 
-```mirror
+\`\`\`mirror
 users:
   Jan: 1200
   Feb: 1800
@@ -4404,17 +4426,17 @@ users:
   Apr: 3100
 
 Area $users, w 350, h 180
-```
+\`\`\`
 
-| Typ       | Verwendung                                |
-| --------- | ----------------------------------------- |
-| `Line`    | Trends, Entwicklung über Zeit             |
-| `Bar`     | Kategorien vergleichen                    |
-| `Pie`     | Anteile eines Ganzen                      |
-| `Donut`   | Anteile (mit Platz für Zahl in der Mitte) |
-| `Area`    | Volumen, kumulative Werte                 |
-| `Scatter` | Korrelationen zwischen zwei Werten        |
-| `Radar`   | Mehrdimensionale Vergleiche               |
+| Typ | Verwendung |
+| --- | --- |
+| \`Line\` | Trends, Entwicklung über Zeit |
+| \`Bar\` | Kategorien vergleichen |
+| \`Pie\` | Anteile eines Ganzen |
+| \`Donut\` | Anteile (mit Platz für Zahl in der Mitte) |
+| \`Area\` | Volumen, kumulative Werte |
+| \`Scatter\` | Korrelationen zwischen zwei Werten |
+| \`Radar\` | Mehrdimensionale Vergleiche |
 
 ### Datenformate
 
@@ -4424,7 +4446,7 @@ Charts akzeptieren verschiedene Datenformate:
 
 Das einfachste Format – Keys werden Labels, Werte die Datenpunkte:
 
-```mirror
+\`\`\`mirror
 // Keys = Labels, Values = Datenpunkte
 sales:
   Jan: 120
@@ -4432,13 +4454,13 @@ sales:
   Mar: 240
 
 Bar $sales, w 300, h 160
-```
+\`\`\`
 
 #### Objekte mit Feldern
 
-Für komplexere Daten mit `x` und `y` die Felder angeben:
+Für komplexere Daten mit \`x\` und \`y\` die Felder angeben:
 
-```mirror
+\`\`\`mirror
 products:
   a:
     name: "Widget"
@@ -4451,28 +4473,28 @@ products:
     sales: 200
 
 Bar $products, x "name", y "sales", w 300, h 180
-```
+\`\`\`
 
-`x "name"` sagt: "Nimm das `name`-Feld für die Labels." `y "sales"` sagt: "Nimm `sales` für die Werte."
+\`x "name"\` sagt: "Nimm das \`name\`-Feld für die Labels." \`y "sales"\` sagt: "Nimm \`sales\` für die Werte."
 
 ### Styling
 
 #### Farben
 
-Mit `colors` definierst du die Farbpalette:
+Mit \`colors\` definierst du die Farbpalette:
 
-```mirror
+\`\`\`mirror
 data:
   A: 30
   B: 50
   C: 20
 
 Pie $data, w 200, h 180, colors #2271C1 #10b981 #f59e0b
-```
+\`\`\`
 
 #### Titel
 
-```mirror
+\`\`\`mirror
 revenue:
   Q1: 45
   Q2: 62
@@ -4480,24 +4502,24 @@ revenue:
   Q4: 95
 
 Line $revenue, w 350, h 200, title "Quartalsumsatz 2024"
-```
+\`\`\`
 
 #### Legende
 
-Bei Pie/Donut ist die Legende automatisch an. Bei anderen Charts mit `legend true` aktivieren:
+Bei Pie/Donut ist die Legende automatisch an. Bei anderen Charts mit \`legend true\` aktivieren:
 
-```mirror
+\`\`\`mirror
 months:
   Jan: 120
   Feb: 180
   Mar: 240
 
 Bar $months, w 350, h 200, legend true
-```
+\`\`\`
 
 #### Raster ausblenden
 
-```mirror
+\`\`\`mirror
 data:
   A: 30
   B: 50
@@ -4505,7 +4527,7 @@ data:
   D: 60
 
 Line $data, w 350, h 180, grid false
-```
+\`\`\`
 
 ### Subkomponenten
 
@@ -4513,9 +4535,9 @@ Für präzise Kontrolle über jeden Aspekt eines Charts gibt es **Subkomponenten
 
 #### Achsen anpassen
 
-Mit `XAxis:` und `YAxis:` kontrollierst du Farben, Labels und Wertebereiche:
+Mit \`XAxis:\` und \`YAxis:\` kontrollierst du Farben, Labels und Wertebereiche:
 
-```mirror
+\`\`\`mirror
 revenue:
   Jan: 45
   Feb: 62
@@ -4527,15 +4549,15 @@ revenue:
 Line $revenue, w 400, h 220
   XAxis: col #888, label "Monat", fs 11
   YAxis: col #888, label "Umsatz (k€)", min 0, max 120
-```
+\`\`\`
 
-`label` fügt einen Achsentitel hinzu. `min` und `max` fixieren den Wertebereich.
+\`label\` fügt einen Achsentitel hinzu. \`min\` und \`max\` fixieren den Wertebereich.
 
 #### Datenpunkte stylen
 
-`Point:` kontrolliert die Datenpunkte bei Line- und Scatter-Charts:
+\`Point:\` kontrolliert die Datenpunkte bei Line- und Scatter-Charts:
 
-```mirror
+\`\`\`mirror
 data:
   Q1: 30
   Q2: 45
@@ -4544,13 +4566,13 @@ data:
 
 Line $data, w 350, h 180
   Point: size 8, bg #2271C1, hover-size 12
-```
+\`\`\`
 
 #### Grid anpassen
 
-`Grid:` steuert die Rasterlinien:
+\`Grid:\` steuert die Rasterlinien:
 
-```mirror
+\`\`\`mirror
 sales:
   Mon: 120
   Tue: 180
@@ -4560,15 +4582,15 @@ sales:
 
 Bar $sales, w 350, h 180
   Grid: col #333, dash 4
-```
+\`\`\`
 
-`dash 4` macht die Linien gestrichelt (4px Segmente).
+\`dash 4\` macht die Linien gestrichelt (4px Segmente).
 
 #### Legende und Titel
 
 Für volle Kontrolle über Legende und Titel:
 
-```mirror
+\`\`\`mirror
 status:
   Done: 45
   Progress: 30
@@ -4577,13 +4599,13 @@ status:
 Pie $status, w 280, h 220, colors #10b981 #f59e0b #ef4444
   Title: text "Projektstatus", col white, fs 16
   Legend: pos right, col #888, fs 12
-```
+\`\`\`
 
 #### Linien anpassen
 
-`Line:` (bei Line/Area-Charts) kontrolliert die Liniendarstellung:
+\`Line:\` (bei Line/Area-Charts) kontrolliert die Liniendarstellung:
 
-```mirror
+\`\`\`mirror
 trend:
   Jan: 20
   Feb: 35
@@ -4593,15 +4615,15 @@ trend:
 
 Line $trend, w 350, h 180
   Line: width 3, tension 0.4, fill true
-```
+\`\`\`
 
-`tension` steuert die Kurvenstärke (0 = eckig, 1 = sehr rund). `fill` füllt die Fläche unter der Linie.
+\`tension\` steuert die Kurvenstärke (0 = eckig, 1 = sehr rund). \`fill\` füllt die Fläche unter der Linie.
 
 #### Balken stylen
 
-`Bar:` für Balken-spezifische Optionen:
+\`Bar:\` für Balken-spezifische Optionen:
 
-```mirror
+\`\`\`mirror
 teams:
   Design: 8
   Dev: 12
@@ -4609,13 +4631,13 @@ teams:
 
 Bar $teams, w 300, h 180, colors #2271C1
   Bar: rad 6, bor 2, boc #2271C1
-```
+\`\`\`
 
 #### Alle Subkomponenten kombinieren
 
 Ein vollständig angepasstes Chart:
 
-```mirror
+\`\`\`mirror
 revenue:
   Jan: 45
   Feb: 62
@@ -4632,25 +4654,25 @@ Frame bg #0a0a0a, pad 20, rad 12
     Grid: col #222
     Point: size 5, bg #2271C1, hover-size 8
     Line: width 2, tension 0.3
-```
+\`\`\`
 
-| Subkomponente | Charts                    | Properties                          |
-| ------------- | ------------------------- | ----------------------------------- |
-| `XAxis:`      | Line, Bar, Scatter        | col, label, fs, min, max, visible   |
-| `YAxis:`      | Line, Bar, Scatter        | col, label, fs, min, max, visible   |
-| `Grid:`       | Line, Bar, Scatter, Radar | col, width, dash, visible           |
-| `Point:`      | Line, Scatter, Radar      | size, bg, boc, bor, hover-size      |
-| `Legend:`     | Alle                      | visible, pos, col, fs               |
-| `Title:`      | Alle                      | text, col, fs, weight, pos, visible |
-| `Line:`       | Line, Area                | width, tension, fill, dash          |
-| `Bar:`        | Bar                       | rad, bor, boc                       |
-| `Arc:`        | Pie, Donut                | bor, boc, offset, hover-offset      |
+| Subkomponente | Charts | Properties |
+| --- | --- | --- |
+| \`XAxis:\` | Line, Bar, Scatter | col, label, fs, min, max, visible |
+| \`YAxis:\` | Line, Bar, Scatter | col, label, fs, min, max, visible |
+| \`Grid:\` | Line, Bar, Scatter, Radar | col, width, dash, visible |
+| \`Point:\` | Line, Scatter, Radar | size, bg, boc, bor, hover-size |
+| \`Legend:\` | Alle | visible, pos, col, fs |
+| \`Title:\` | Alle | text, col, fs, weight, pos, visible |
+| \`Line:\` | Line, Area | width, tension, fill, dash |
+| \`Bar:\` | Bar | rad, bor, boc |
+| \`Arc:\` | Pie, Donut | bor, boc, offset, hover-offset |
 
 ### In Layouts einbetten
 
 Charts sind normale Elemente – du kannst sie in Frames, Cards oder Grids einbetten:
 
-```mirror
+\`\`\`mirror
 sales:
   Jan: 120
   Feb: 180
@@ -4665,13 +4687,13 @@ Card
   Title "Monatsumsatz"
   Subtitle "Januar - April 2024"
   Line $sales, w full, h 160
-```
+\`\`\`
 
 ### Dashboard-Beispiel
 
 Mehrere Charts in einem Grid:
 
-```mirror
+\`\`\`mirror
 revenue:
   Q1: 45
   Q2: 62
@@ -4695,7 +4717,7 @@ Frame gap 16
     Stat
       Label "Users"
       Donut $users, w 100, h 100
-```
+\`\`\`
 
 ---
 
@@ -4703,43 +4725,45 @@ Frame gap 16
 
 #### Chart-Typen
 
-| Primitive | Beschreibung                |
-| --------- | --------------------------- |
-| `Line`    | Liniendiagramm (Trends)     |
-| `Bar`     | Balkendiagramm (Vergleiche) |
-| `Pie`     | Kreisdiagramm (Anteile)     |
-| `Donut`   | Ring-Diagramm               |
-| `Area`    | Flächendiagramm             |
-| `Scatter` | Streudiagramm               |
-| `Radar`   | Netzdiagramm                |
+| Primitive | Beschreibung |
+| --- | --- |
+| \`Line\` | Liniendiagramm (Trends) |
+| \`Bar\` | Balkendiagramm (Vergleiche) |
+| \`Pie\` | Kreisdiagramm (Anteile) |
+| \`Donut\` | Ring-Diagramm |
+| \`Area\` | Flächendiagramm |
+| \`Scatter\` | Streudiagramm |
+| \`Radar\` | Netzdiagramm |
 
 #### Properties
 
-| Property       | Beschreibung            |
-| -------------- | ----------------------- |
-| `$data`        | Datenquelle (Variable)  |
-| `x "field"`    | Feld für Labels         |
-| `y "field"`    | Feld für Werte          |
-| `colors #a #b` | Farbpalette             |
-| `title "Text"` | Chart-Titel             |
-| `legend true`  | Legende anzeigen        |
-| `grid false`   | Rasterlinien ausblenden |
-| `axes false`   | Achsen ausblenden       |
+| Property | Beschreibung |
+| --- | --- |
+| \`$data\` | Datenquelle (Variable) |
+| \`x "field"\` | Feld für Labels |
+| \`y "field"\` | Feld für Werte |
+| \`colors #a #b\` | Farbpalette |
+| \`title "Text"\` | Chart-Titel |
+| \`legend true\` | Legende anzeigen |
+| \`grid false\` | Rasterlinien ausblenden |
+| \`axes false\` | Achsen ausblenden |
 
 #### Subkomponenten
 
-| Slot                | Wichtige Properties      |
-| ------------------- | ------------------------ |
-| `XAxis:` / `YAxis:` | col, label, fs, min, max |
-| `Grid:`             | col, dash, visible       |
-| `Point:`            | size, bg, hover-size     |
-| `Legend:`           | pos, col, fs, visible    |
-| `Title:`            | text, col, fs, weight    |
-| `Line:`             | width, tension, fill     |
-| `Bar:`              | rad, bor, boc            |
+| Slot | Wichtige Properties |
+| --- | --- |
+| \`XAxis:\` / \`YAxis:\` | col, label, fs, min, max |
+| \`Grid:\` | col, dash, visible |
+| \`Point:\` | size, bg, hover-size |
+| \`Legend:\` | pos, col, fs, visible |
+| \`Title:\` | text, col, fs, weight |
+| \`Line:\` | width, tension, fill |
+| \`Bar:\` | rad, bor, boc |
 
-**Sizing:** Charts nehmen `w` und `h` wie jedes andere Element. Mit `w full` füllen sie den Container.
+**Sizing:** Charts nehmen \`w\` und \`h\` wie jedes andere Element. Mit \`w full\` füllen sie den Container.
 
-**Subkomponenten:** Mit `XAxis:`, `Point:` etc. passt du jeden Aspekt des Charts an – konsistent mit Mirrors Komponenten-Syntax.
+**Subkomponenten:** Mit \`XAxis:\`, \`Point:\` etc. passt du jeden Aspekt des Charts an – konsistent mit Mirrors Komponenten-Syntax.
+
 
 ---
+`

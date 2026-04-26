@@ -1,0 +1,12 @@
+TaskStatus: Button pad 8 16, rad 6, toggle()
+  todo:
+    bg #333
+    col #888
+  doing:
+    bg #f59e0b
+    col white
+  done:
+    bg #10b981
+    col white
+
+TaskStatus "Status", todo

@@ -202,11 +202,15 @@ Bei Änderungen an `studio/app.js` oder `studio/styles.css`:
 
 ---
 
-<!-- GENERATED:TUTORIAL:START -->
+<!-- Diese Kurzreferenz ist HANDKURIERT — bewusst kompakt für den Always-Loaded-Context.
+     Die didaktische Vollversion (`docs/MIRROR-TUTORIAL-FULL.md`) wird auto-generiert
+     aus `docs/tutorial/*.html` via `npm run generate:claude`. -->
 
 ## Mirror DSL Kurzreferenz
 
-> Vollständige Dokumentation: `docs/MIRROR-TUTORIAL-FULL.md`
+> **Diese Kurzreferenz reicht für ~80% der Tasks (Syntax-Lookup, kleine Änderungen).**
+> Bei tieferen DSL-Fragen, neuen Features oder unklaren Patterns:
+> **`Read docs/MIRROR-TUTORIAL-FULL.md`** (Vollversion, ~140 KB, didaktisch).
 
 ### Canvas (App-Basis)
 
@@ -916,8 +920,6 @@ Icon "x", is #ef4444           Icon "x", ic #ef4444         // ic für Farbe, is
 | **Komponenten** | `Name:` Definition, `Name` Verwendung, `as` erben                                                 |
 | **Tokens**      | `name.bg: #hex` Definition, `bg $name` Verwendung                                                 |
 | **Daten**       | `name: value`, `$name`, `each x in $list`, `if cond`                                              |
-
-<!-- GENERATED:TUTORIAL:END -->
 
 <!-- GENERATED:DSL-PROPERTIES:START -->
 

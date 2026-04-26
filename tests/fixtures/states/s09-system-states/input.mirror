@@ -1,0 +1,11 @@
+Btn: Button pad 10, bg #333, col white, rad 6
+  hover:
+    bg #444
+  active:
+    scale 0.98
+  focus:
+    bor 2, boc #2271C1
+  disabled:
+    opacity 0.5, cursor not-allowed
+
+Btn "Try me"

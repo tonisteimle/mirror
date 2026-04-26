@@ -16,14 +16,34 @@ const mockChartRuntime = {
 
 // Make mock available globally for generated code
 if (typeof globalThis !== 'undefined') {
-  (globalThis as any)._chartMock = mockChartRuntime
+  ;(globalThis as any)._chartMock = mockChartRuntime
+}
+
+// jsdom does not implement IntersectionObserver; the runtime uses it for
+// onviewenter/onviewexit (and reveal-* animations). Provide a no-op stub so
+// generated code that wires up an observer doesn't throw at module init.
+if (
+  typeof globalThis !== 'undefined' &&
+  typeof (globalThis as any).IntersectionObserver === 'undefined'
+) {
+  ;(globalThis as any).IntersectionObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return []
+    }
+  }
 }
 
 /**
  * Rendert Mirror-Code und gibt UI-Objekt zurück.
  * Inkludiert die Runtime, sodass Events funktionieren.
  */
-export function renderWithRuntime(code: string, container: HTMLElement): {
+export function renderWithRuntime(
+  code: string,
+  container: HTMLElement
+): {
   root: HTMLElement
   elements: Record<string, HTMLElement>
   update: () => void
@@ -58,7 +78,7 @@ export function renderWithRuntime(code: string, container: HTMLElement): {
   return {
     root,
     elements: root.elements || {},
-    update: root.update || (() => {})
+    update: root.update || (() => {}),
   }
 }
 

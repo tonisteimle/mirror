@@ -5,7 +5,7 @@
  * Implements an agentic loop: prompt → tools → response → repeat.
  */
 
-import { buildSystemPrompt } from './prompts/system'
+import { buildSystemPrompt, selectPromptMode } from './prompts/system'
 import { coreTools } from './tools/core'
 import { writeTools } from './tools/write'
 import { analyzeTools } from './tools/analyze'
@@ -20,11 +20,19 @@ import type {
   ToolContext,
   ToolResult,
   LLMCommand,
-  FileInfo
+  FileInfo,
 } from './types'
 
 // All available tools (validate tools first - they're critical)
-const allTools = [...validateTools, ...projectTools, ...coreTools, ...writeTools, ...analyzeTools, ...generateTools, ...visualTools]
+const allTools = [
+  ...validateTools,
+  ...projectTools,
+  ...coreTools,
+  ...writeTools,
+  ...analyzeTools,
+  ...generateTools,
+  ...visualTools,
+]
 
 // ============================================
 // TYPES FOR OPENROUTER/OPENAI API
@@ -104,22 +112,24 @@ export class MirrorAgent {
     const maxIterations = this.config.maxIterations || 10
     let iterations = 0
 
-    // Build system prompt
+    // Build system prompt — full tutorial when generating from scratch,
+    // compact when iterating on existing code.
     const systemPrompt = buildSystemPrompt({
       tokens: this.config.tokens,
-      components: this.config.components
+      components: this.config.components,
+      mode: selectPromptMode(this.config.getCode()),
     })
 
     // Build initial messages
     const messages: ChatMessage[] = [
       {
         role: 'system',
-        content: systemPrompt
+        content: systemPrompt,
       },
       {
         role: 'user',
-        content: this.buildContextualPrompt(userPrompt)
-      }
+        content: this.buildContextualPrompt(userPrompt),
+      },
     ]
 
     // Build tool definitions
@@ -171,7 +181,7 @@ export class MirrorAgent {
           yield {
             type: 'tool_start',
             tool: toolName,
-            input: toolInput
+            input: toolInput,
           }
 
           // Execute the tool
@@ -180,7 +190,7 @@ export class MirrorAgent {
           yield {
             type: 'tool_end',
             tool: toolName,
-            result
+            result,
           }
 
           // Collect commands
@@ -195,7 +205,7 @@ export class MirrorAgent {
           toolResults.push({
             role: 'tool',
             tool_call_id: toolCall.id,
-            content: JSON.stringify(result)
+            content: JSON.stringify(result),
           })
         }
 
@@ -203,7 +213,7 @@ export class MirrorAgent {
         messages.push({
           role: 'assistant',
           content: message.content,
-          tool_calls: toolCalls
+          tool_calls: toolCalls,
         })
 
         for (const toolResult of toolResults) {
@@ -217,11 +227,10 @@ export class MirrorAgent {
       }
 
       yield { type: 'done' }
-
     } catch (error: unknown) {
       yield {
         type: 'error',
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
       }
     }
   }
@@ -229,21 +238,24 @@ export class MirrorAgent {
   /**
    * Call the LLM API (OpenRouter/OpenAI format)
    */
-  private async callLLM(messages: ChatMessage[], tools: OpenAITool[]): Promise<ChatCompletionResponse> {
+  private async callLLM(
+    messages: ChatMessage[],
+    tools: OpenAITool[]
+  ): Promise<ChatCompletionResponse> {
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
         'HTTP-Referer': 'https://mirror-studio.dev',
-        'X-Title': 'Mirror Studio'
+        'X-Title': 'Mirror Studio',
       },
       body: JSON.stringify({
         model: this.model,
         messages,
         tools: tools.length > 0 ? tools : undefined,
-        max_tokens: 4096
-      })
+        max_tokens: 4096,
+      }),
     })
 
     if (!response.ok) {
@@ -313,7 +325,9 @@ ${selection.text}
     if (tokens && Object.keys(tokens).length > 0) {
       context += `
 ## Available Tokens
-${Object.entries(tokens).map(([k, v]) => `- ${k}: ${v}`).join('\n')}
+${Object.entries(tokens)
+  .map(([k, v]) => `- ${k}: ${v}`)
+  .join('\n')}
 `
     }
 
@@ -335,7 +349,7 @@ ${userPrompt}`
       for (const [name, def] of Object.entries(tool.parameters)) {
         properties[name] = {
           type: def.type,
-          description: def.description
+          description: def.description,
         }
 
         if (def.enum) {
@@ -355,9 +369,9 @@ ${userPrompt}`
           parameters: {
             type: 'object' as const,
             properties,
-            required
-          }
-        }
+            required,
+          },
+        },
       }
     })
   }
@@ -372,11 +386,13 @@ ${userPrompt}`
     }
 
     // Build default file info if not provided
-    const defaultFiles: FileInfo[] = [{
-      name: this.config.getCurrentFile?.() || 'main.mirror',
-      type: 'layout',
-      code: this.config.getCode()
-    }]
+    const defaultFiles: FileInfo[] = [
+      {
+        name: this.config.getCurrentFile?.() || 'main.mirror',
+        type: 'layout',
+        code: this.config.getCode(),
+      },
+    ]
 
     const ctx: ToolContext = {
       // Code access
@@ -391,7 +407,7 @@ ${userPrompt}`
       getPreviewElement: this.config.getPreviewElement,
       getElementByNodeId: this.config.getElementByNodeId,
       highlightElement: this.config.highlightElement,
-      clearHighlights: this.config.clearHighlights
+      clearHighlights: this.config.clearHighlights,
     }
 
     try {

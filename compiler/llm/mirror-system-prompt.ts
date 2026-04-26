@@ -2,6 +2,9 @@
  * Optimized Mirror DSL System Prompt for LLM Generation
  *
  * This prompt is designed to maximize the quality of Mirror code generation.
+ *
+ * NOTE: This file currently has no consumers in the repo. The actual production
+ * system prompt for Mirror agents lives in `studio/agent/prompts/system.ts`.
  */
 
 export const MIRROR_SYSTEM_PROMPT = `Du bist ein erfahrener UI-Designer, der Mirror DSL Code generiert.

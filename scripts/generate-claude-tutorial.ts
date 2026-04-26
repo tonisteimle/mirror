@@ -13,6 +13,7 @@ const __dirname = dirname(__filename)
 
 const TUTORIAL_DIR = join(__dirname, '../docs/tutorial')
 const TUTORIAL_FULL_MD = join(__dirname, '../docs/MIRROR-TUTORIAL-FULL.md')
+const TUTORIAL_GENERATED_TS = join(__dirname, '../compiler/llm/mirror-tutorial.generated.ts')
 
 // Tutorial files in order
 const TUTORIAL_FILES = [
@@ -306,8 +307,8 @@ function main() {
 
   output.push('# Mirror DSL Tutorial (Vollständige Referenz)')
   output.push('')
-  output.push('> Diese Datei wird automatisch aus den HTML-Tutorials generiert.')
-  output.push('> Für die kompakte Version siehe CLAUDE.md')
+  output.push('> Auto-generated from `docs/tutorial/*.html` — do not edit manually.')
+  output.push('> Run `npm run generate:claude` to regenerate.')
   output.push('')
 
   for (const file of TUTORIAL_FILES) {
@@ -328,12 +329,36 @@ function main() {
 
   const tutorialContent = output.join('\n')
 
-  // Write to separate file
+  // Write markdown file
   console.log(`\nWriting to ${TUTORIAL_FULL_MD}...`)
   writeFileSync(TUTORIAL_FULL_MD, tutorialContent)
 
-  console.log(`\nDone! Tutorial written to docs/MIRROR-TUTORIAL-FULL.md`)
-  console.log(`Tutorial length: ${tutorialContent.length} characters`)
+  // Write TS string-constant file (for LLM consumption)
+  console.log(`Writing to ${TUTORIAL_GENERATED_TS}...`)
+  writeFileSync(TUTORIAL_GENERATED_TS, buildGeneratedTs(tutorialContent))
+
+  console.log(`\nDone!`)
+  console.log(`  docs/MIRROR-TUTORIAL-FULL.md       (${tutorialContent.length} chars)`)
+  console.log(`  compiler/llm/mirror-tutorial.generated.ts`)
+}
+
+function buildGeneratedTs(markdown: string): string {
+  // Escape for TS template literal: backslash, backtick, and ${
+  const escaped = markdown.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${')
+
+  return [
+    '/**',
+    ' * Mirror DSL tutorial as a TypeScript string constant.',
+    ' *',
+    ' * AUTO-GENERATED — do not edit manually.',
+    ' * Source: docs/tutorial/*.html',
+    ' * Run `npm run generate:claude` to regenerate.',
+    ' */',
+    '',
+    '/* eslint-disable */',
+    'export const MIRROR_TUTORIAL_MARKDOWN = `' + escaped + '`',
+    '',
+  ].join('\n')
 }
 
 main()

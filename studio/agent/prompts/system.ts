@@ -1,20 +1,55 @@
 /**
  * System Prompt for Mirror Agent
  *
- * Based on the Mirror DSL Tutorial - the single source of truth.
- * Contains positive examples, negative examples, and structural rules.
+ * Two modes:
+ * - 'compact' (default): handcrafted reference (~10 KB) — focused on common patterns
+ *   and the "HÄUFIGE FEHLER" catalog. Good for iterative edits and short tasks.
+ * - 'full': compact reference + full auto-generated tutorial (~150 KB total).
+ *   Use for high-stakes code generation where the LLM needs the complete DSL
+ *   surface area (every property, every UI pattern, every edge case).
+ *
+ * Tutorial source: docs/tutorial/*.html → compiler/llm/mirror-tutorial.generated.ts
+ * Regenerate with `npm run generate:claude`.
  */
+
+import { MIRROR_TUTORIAL_MARKDOWN } from '../../../compiler/llm/mirror-tutorial.generated'
 
 export interface SystemPromptContext {
   tokens?: Record<string, string>
   components?: string[]
+  mode?: 'compact' | 'full'
+}
+
+/**
+ * Pick the right prompt mode for the agent based on the current editor state.
+ *
+ * Heuristic: when the editor is empty or near-empty (typically just a `canvas`
+ * declaration), the agent is generating UI from scratch and benefits from the
+ * full DSL surface. Once there's substantial existing code, the agent is doing
+ * focused edits — the compact reference is enough and saves tokens per turn.
+ *
+ * Threshold of 200 chars covers `canvas mobile, bg #1a1a1a` plus a header.
+ */
+export function selectPromptMode(code: string): 'compact' | 'full' {
+  return code.trim().length <= 200 ? 'full' : 'compact'
 }
 
 /**
  * Build the system prompt with optional context
  */
 export function buildSystemPrompt(context: SystemPromptContext = {}): string {
-  return `${MIRROR_DSL_REFERENCE}
+  const reference =
+    context.mode === 'full'
+      ? `${MIRROR_DSL_REFERENCE}
+
+---
+
+# Vollständige Tutorial-Referenz
+
+${MIRROR_TUTORIAL_MARKDOWN}`
+      : MIRROR_DSL_REFERENCE
+
+  return `${reference}
 
 ${TOOL_USAGE}
 
