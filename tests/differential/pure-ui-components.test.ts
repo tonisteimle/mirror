@@ -88,19 +88,18 @@ describe('Pure UI Components — DOM emits expected attributes', () => {
   })
 })
 
-describe('Pure UI Components — known limitations (pinned)', () => {
-  // Bug #32 + #33: keyword args are parsed but not surfaced as DOM attributes.
-  it('Bug #32: Tooltip `positioning` accepts but does not emit attribute', () => {
+describe('Pure UI Components — keyword props surface as data attributes', () => {
+  it('Tooltip positioning surfaces as data-positioning attribute (Bug #32 fixed)', () => {
     const dom = generateDOM(
       parse(`Tooltip positioning "bottom"\n  Trigger: Text "T"\n  Content: Text "X"`)
     )
-    // Compiles — but `positioning="bottom"` does not appear in setAttribute
-    // calls (this is the known limitation pinned by tests/behavior).
-    expect(dom).not.toContain('positioning="bottom"')
+    expect(dom).toMatch(/data-positioning/)
+    expect(dom).toContain('"bottom"')
   })
 
-  it('Bug #33: Tabs `defaultValue` accepts but does not emit attribute', () => {
+  it('Tabs defaultValue surfaces as data-default-value attribute (Bug #33 fixed)', () => {
     const dom = generateDOM(parse(`Tabs defaultValue "home"\n  Tab "Home"\n    Text "H"`))
-    expect(dom).not.toContain('defaultValue="home"')
+    expect(dom).toMatch(/data-default-value/)
+    expect(dom).toContain('"home"')
   })
 })

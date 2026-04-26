@@ -4,6 +4,7 @@
   node_1.dataset.mirrorId = 'node-1'
   node_1.dataset.mirrorRoot = 'true'
   node_1.dataset.mirrorName = 'Tabs'
+  node_1.setAttribute('data-default-value', "home")
   Object.assign(node_1.style, {
     'display': 'flex',
     'flex-direction': 'column',

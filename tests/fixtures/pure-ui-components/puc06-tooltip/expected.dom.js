@@ -4,6 +4,7 @@
   node_1.dataset.mirrorId = 'node-1'
   node_1.dataset.mirrorRoot = 'true'
   node_1.dataset.mirrorName = 'Tooltip'
+  node_1.setAttribute('data-positioning', "bottom")
   Object.assign(node_1.style, {
     'display': 'flex',
     'flex-direction': 'column',

@@ -316,6 +316,20 @@ export function extractHTMLProperties(
       // Numeric input bounds (Slider, Input number)
       htmlProps.push({ name: prop.name, value: resolveValue(prop.values, tokenSet) })
     }
+    if (prop.name === 'defaultValue') {
+      // Tabs / RangeSlider / DatePicker initial value
+      htmlProps.push({
+        name: 'data-default-value',
+        value: resolveValue(prop.values, tokenSet, undefined, true),
+      })
+    }
+    if (prop.name === 'positioning') {
+      // Tooltip / Popover / Dialog positioning hint
+      htmlProps.push({
+        name: 'data-positioning',
+        value: resolveValue(prop.values, tokenSet, undefined, true),
+      })
+    }
     if (prop.name === 'checked') {
       // If checked has a value (like todo.done), preserve it as a binding reference
       // Otherwise, just set checked to true (standalone flag)

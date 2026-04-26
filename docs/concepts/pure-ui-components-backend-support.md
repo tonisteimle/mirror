@@ -13,9 +13,9 @@
 | PUC7 Tabs            | ✅  | ✅    | ✅        | Tab tabs + Content                |
 | PUC8 Select          | ✅  | ✅    | ✅        | Trigger, Content, Item            |
 
-## Bekannte Einschränkungen
+## Keyword-Properties → data-attributes
 
-| Bug | Sub-Feature                    | Problem                                                 |
-| --- | ------------------------------ | ------------------------------------------------------- |
-| #32 | `Tooltip positioning "bottom"` | Keyword wird geparst, aber nicht als Attribut emittiert |
-| #33 | `Tabs defaultValue "home"`     | Keyword wird geparst, aber nicht als Attribut emittiert |
+| Property           | Surface                  | Bemerkung                       |
+| ------------------ | ------------------------ | ------------------------------- |
+| `positioning "X"`  | `data-positioning="X"`   | Tooltip / Popover (Bug #32 ✅)  |
+| `defaultValue "X"` | `data-default-value="X"` | Tabs / RangeSlider (Bug #33 ✅) |

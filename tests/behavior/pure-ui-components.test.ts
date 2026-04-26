@@ -234,16 +234,13 @@ describe('Pure UI Components — Behavior Spec', () => {
       expect(findByName(root, 'Content')).toBeTruthy()
     })
 
-    // Bug #32: `Tooltip positioning "bottom"` parses, but the
-    // `positioning` attribute is not emitted on the rendered div. Pinned as
-    // current behavior — compiler accepts the keyword without surfacing it.
-    it('positioning is parsed without throwing (Bug #32: not surfaced as attribute)', () => {
-      expect(() =>
-        render(
-          `Tooltip positioning "bottom"\n  Trigger: Text "T"\n  Content: Text "Help"`,
-          container
-        )
-      ).not.toThrow()
+    it('positioning surfaces as data-positioning attribute', () => {
+      const root = render(
+        `Tooltip positioning "bottom"\n  Trigger: Text "T"\n  Content: Text "Help"`,
+        container
+      )
+      const tt = findByName(root, 'Tooltip') as HTMLElement
+      expect(tt.dataset.positioning).toBe('bottom')
     })
 
     it('Content contains the help text', () => {
@@ -266,13 +263,10 @@ describe('Pure UI Components — Behavior Spec', () => {
       expect(allByName(root, 'Tab').length).toBe(3)
     })
 
-    // Bug #33: `Tabs defaultValue "home"` parses but the `defaultValue`
-    // attribute is not emitted on the rendered div. Pinned as current
-    // behavior — compiler accepts the keyword without surfacing it.
-    it('defaultValue is parsed without throwing (Bug #33: not surfaced as attribute)', () => {
-      expect(() =>
-        render(`Tabs defaultValue "home"\n  Tab "Home"\n    Text "H"`, container)
-      ).not.toThrow()
+    it('defaultValue surfaces as data-default-value attribute', () => {
+      const root = render(`Tabs defaultValue "home"\n  Tab "Home"\n    Text "H"`, container)
+      const tabs = findByName(root, 'Tabs') as HTMLElement
+      expect(tabs.dataset.defaultValue).toBe('home')
     })
 
     it('compiles + renders without throwing', () => {

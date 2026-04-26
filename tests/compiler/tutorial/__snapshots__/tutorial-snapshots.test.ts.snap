@@ -34907,7 +34907,12 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 1 1`] = `
       "isDefinition": false,
       "name": "Tabs",
       "primitive": "tabs",
-      "properties": [],
+      "properties": [
+        {
+          "name": "data-default-value",
+          "value": "Home",
+        },
+      ],
       "styles": [
         {
           "property": "display",
@@ -35012,7 +35017,12 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 2 1`] = `
       "isDefinition": false,
       "name": "Tabs",
       "primitive": "tabs",
-      "properties": [],
+      "properties": [
+        {
+          "name": "data-default-value",
+          "value": "Home",
+        },
+      ],
       "styles": [
         {
           "property": "display",
@@ -35167,7 +35177,12 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 3 1`] = `
       "isDefinition": false,
       "name": "Tabs",
       "primitive": "tabs",
-      "properties": [],
+      "properties": [
+        {
+          "name": "data-default-value",
+          "value": "Quick",
+        },
+      ],
       "styles": [
         {
           "property": "display",
@@ -35307,7 +35322,12 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
           "isDefinition": false,
           "name": "SideNav",
           "primitive": "sidenav",
-          "properties": [],
+          "properties": [
+            {
+              "name": "data-default-value",
+              "value": "Dashboard",
+            },
+          ],
           "styles": [
             {
               "property": "display",
@@ -37998,7 +38018,12 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 1 1`] = `
       "isDefinition": false,
       "name": "Tabs",
       "primitive": "tabs",
-      "properties": [],
+      "properties": [
+        {
+          "name": "data-default-value",
+          "value": "Home",
+        },
+      ],
       "styles": [
         {
           "property": "display",
@@ -38185,7 +38210,12 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 2 1`] = `
       "isDefinition": false,
       "name": "SideNav",
       "primitive": "sidenav",
-      "properties": [],
+      "properties": [
+        {
+          "name": "data-default-value",
+          "value": "dashboard",
+        },
+      ],
       "styles": [
         {
           "property": "display",
@@ -38376,7 +38406,12 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 3 1`] = `
       "isDefinition": false,
       "name": "SideNav",
       "primitive": "sidenav",
-      "properties": [],
+      "properties": [
+        {
+          "name": "data-default-value",
+          "value": "dashboard",
+        },
+      ],
       "styles": [
         {
           "property": "display",
@@ -38748,7 +38783,12 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 4 1`] = `
       "isDefinition": false,
       "name": "SideNav",
       "primitive": "sidenav",
-      "properties": [],
+      "properties": [
+        {
+          "name": "data-default-value",
+          "value": "dashboard",
+        },
+      ],
       "styles": [
         {
           "property": "display",
@@ -40242,7 +40282,12 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 3 1`] = `
           "isDefinition": false,
           "name": "Tooltip",
           "primitive": "tooltip",
-          "properties": [],
+          "properties": [
+            {
+              "name": "data-positioning",
+              "value": "bottom",
+            },
+          ],
           "styles": [
             {
               "property": "display",
@@ -40411,7 +40456,12 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 3 1`] = `
           "isDefinition": false,
           "name": "Tooltip",
           "primitive": "tooltip",
-          "properties": [],
+          "properties": [
+            {
+              "name": "data-positioning",
+              "value": "top",
+            },
+          ],
           "styles": [
             {
               "property": "display",
@@ -40580,7 +40630,12 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 3 1`] = `
           "isDefinition": false,
           "name": "Tooltip",
           "primitive": "tooltip",
-          "properties": [],
+          "properties": [
+            {
+              "name": "data-positioning",
+              "value": "right",
+            },
+          ],
           "styles": [
             {
               "property": "display",
@@ -40927,7 +40982,12 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 4 1`] = `
       "isDefinition": false,
       "name": "Tooltip",
       "primitive": "tooltip",
-      "properties": [],
+      "properties": [
+        {
+          "name": "data-positioning",
+          "value": "bottom",
+        },
+      ],
       "styles": [
         {
           "property": "display",
@@ -41332,7 +41392,12 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
       "isDefinition": false,
       "name": "Tooltip",
       "primitive": "tooltip",
-      "properties": [],
+      "properties": [
+        {
+          "name": "data-positioning",
+          "value": "position",
+        },
+      ],
       "styles": [
         {
           "property": "display",
