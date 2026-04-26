@@ -151,32 +151,139 @@
 
 ## Test-Pyramide-Roadmap
 
-Empfohlene Reihenfolge nach Impact und Bug-Anfälligkeit:
+### Priorisierungs-Kriterien
 
-| Rang | Feature                | Begründung                                         | Geschätzter Aufwand |
-| ---- | ---------------------- | -------------------------------------------------- | ------------------- |
-| 1    | Components             | ✅ done                                            | 1.5h (real)         |
-| 2    | **Tokens**             | Design-System-Fundament, durchdringt alle Features | 2h                  |
-| 3    | **Each-Loop**          | Bug-Cluster (#17, #19, #20)                        | 2h                  |
-| 4    | **Conditionals**       | Bug-Cluster (#18-20)                               | 2h                  |
-| 5    | **Properties+Layout**  | Foundational, jede Mirror-Zeile betroffen          | 3-4h (groß)         |
-| 6    | **Bind**               | Two-Way komplex, viele Edge-Cases mit Loops/Slots  | 2h                  |
-| 7    | **Toggle/Exclusive**   | State-Machine-Bugs gefährlich                      | 2h                  |
-| 8    | **Events+Actions**     | Side-Effects, Cross-Element-Refs                   | 3h                  |
-| 9    | **Variables+Data**     | Interpolation-Bugs (XSS-relevant)                  | 2h                  |
-| 10   | **Animations**         | Selten Bug-Träger, aber visible                    | 1h                  |
-| 11   | **Multi-File**         | Integration-tief, schwer reproduzierbar            | 2h                  |
-| 12   | **Pure UI Components** | je 30-60 min, summiert auf ~5h                     | 5h                  |
-| 13   | **Tables+Charts**      | Compound + externe Lib (Chart.js)                  | 3h                  |
-| 14   | **Canvas + Icons**     | klein, oft beiläufig getestet                      | 1h                  |
-| 15   | **DatePicker (Zag)**   | letzte Zag-Komponente                              | 1h                  |
+Jedes Feature wird auf 5 Achsen gewichtet (1-5, höher = wichtiger):
 
-**Gesamt-Aufwand**: ~32h fokussierte Arbeit AI-paired (~4 Tage),
-~150-200h ohne AI (~4-5 Wochen).
+| Achse                 | Bedeutung                                            | Gewicht |
+| --------------------- | ---------------------------------------------------- | ------- |
+| **B** Bug-Density     | Bekannte Bugs / wahrscheinliche Bugs pro Sub-Feature | ×3      |
+| **F** Foundationality | Wieviele andere Features hängen davon ab             | ×2      |
+| **S** Surface         | Wie häufig im echten App-Code                        | ×2      |
+| **R** ROI             | Erwartete Bugs pro Stunde Test-Arbeit                | ×2      |
+| **E** Effort          | Stunden bis fertig (negativer Faktor)                | ×−1     |
 
-**Erwarteter Test-Zuwachs**: ~1500-2500 zusätzliche Tests (Schicht 1-4
-pro Feature). Mit aktuellem Stand 10064 Tests landet das Repo in der
-**TypeScript-/Svelte-/Babel-Liga** (~12000-15000 Tests).
+**Score** = `B×3 + F×2 + S×2 + R×2 − E`. Höher = höhere Priorität.
+
+### Bewertung & Ranking
+
+| Rang | Feature              |  B  |  F  |  S  |  R  |  E  | **Score** | Status                |
+| :--: | -------------------- | :-: | :-: | :-: | :-: | :-: | :-------: | --------------------- |
+|  1   | **Variables/Data**   |  5  |  5  |  5  |  4  |  2  |  **41**   | ⬜ Höchste Prio       |
+|  2   | **Conditionals**     |  5  |  3  |  4  |  5  |  2  |  **37**   | ⬜ Just-fixed-Region  |
+|  3   | **Each-Loop**        |  4  |  3  |  4  |  5  |  2  |  **34**   | ⬜ Just-fixed-Region  |
+|  4   | **Tokens**           |  2  |  5  |  5  |  4  |  2  |  **32**   | ⬜ Foundation         |
+|  5   | **Bind**             |  3  |  3  |  4  |  4  |  2  |  **29**   | ⬜                    |
+|  6   | **Toggle/Exclusive** |  3  |  3  |  4  |  3  |  2  |  **27**   | ⬜                    |
+|  7   | **Layout**           |  2  |  5  |  5  |  2  |  4  |  **26**   | 🔵 partial            |
+|  8   | **Properties**       |  2  |  5  |  5  |  2  |  4  |  **26**   | 🔵 partial            |
+|  9   | **Events**           |  2  |  3  |  4  |  3  |  3  |  **23**   | 🔵 partial            |
+|  10  | **Actions**          |  2  |  3  |  4  |  3  |  3  |  **23**   | 🔵 partial            |
+|  11  | **Multi-File**       |  2  |  3  |  3  |  3  |  2  |  **22**   | 🔵 partial            |
+|  12  | **Primitives**       |  1  |  5  |  5  |  1  |  3  |  **22**   | 🔵 mature             |
+|  13  | **Canvas**           |  1  |  2  |  4  |  1  |  1  |  **16**   | 🔵 partial            |
+|  14  | **Pure UI Compons.** |  2  |  1  |  3  |  3  |  5  |  **15**   | 🔵 (erbt v. Compons.) |
+|  15  | **Tables+Charts**    |  2  |  1  |  2  |  2  |  3  |  **13**   | 🔵                    |
+|  16  | **Animationen**      |  1  |  1  |  3  |  1  |  1  |  **12**   | 🔵                    |
+|  17  | **Custom Icons**     |  1  |  1  |  2  |  1  |  1  |  **10**   | 🔵                    |
+|  18  | **DatePicker (Zag)** |  1  |  1  |  1  |  1  |  1  |   **8**   | 🔵 (last Zag)         |
+|  ✅  | Components           |  3  |  4  |  5  |  3  |  -  |   done    | Commit `44fd84ae`     |
+
+### Sprint-Plan
+
+Statt einzeln durchzulaufen, in **Sprints von 1-2 Tagen** gruppiert
+nach thematischer Nähe und Bug-Cluster:
+
+#### Sprint 1: Daten-Fluss (~6h, ~250 Tests)
+
+**Höchste Bug-Density. Just-fixed-Regions zementieren.**
+
+1. **Variables/Data** (#34-36) — `name: "X"`, `$name`-Referenzen, Objekt-
+   Access, Collections, Aggregationen, Interpolation in Text. **Pinning
+   für die XSS-relevanten Bugs aus Tier-1-4**.
+2. **Conditionals** (#43-44) — if/else Block + Inline-Ternary, nested,
+   in Style-Properties. **Pinning für #18-20 (gerade gefixt)**.
+3. **Each-Loop** (#42) — basic, with-index, where, by, nested, inline-
+   array, over-object. **Pinning für #17, #19 (gerade gefixt)**.
+
+#### Sprint 2: Foundation (~6h, ~300 Tests)
+
+**Cross-cutting, alles andere baut darauf.**
+
+4. **Tokens** (#2) — single-value, property-set, suffix, $-ref, nested,
+   Token-in-Token, Runtime-Resolution.
+5. **Bind** (#37-41) — One-way, Two-way, in Loops, exclusive-bind, mit
+   Mask. Hier lauern Reactivity-Bugs.
+
+#### Sprint 3: Interaktion (~5h, ~200 Tests)
+
+**State-Machines + Side-Effects.**
+
+6. **Toggle/Exclusive** (#29-30) — binär, exclusive-Group, Cross-Element,
+   Initial-State (`on`, `selected`), Transitionen.
+7. **Events** (#47-54) — onclick, onhover, onkey\*, oninput, click-outside,
+   viewenter/exit. Genug Granularität.
+8. **Actions** (#55-65) — show/hide, navigate, scroll, set/get, CRUD,
+   multi-action.
+
+#### Sprint 4: Layout & Properties (~4h, ~250 Tests)
+
+**Größte Surface, niedrige Bug-Density. Bestehende Tests schon vorhanden,
+nur Pyramide drumherum.**
+
+9. **Layout** (#7-17) — direction, gap, center/spread, 9-position, sizing,
+   grow/shrink, wrap, grid, stacked, device-presets, position.
+10. **Properties** (#18-26) — color, gradients, typo, effects, visibility,
+    hover-properties, cursor, aspect, transform.
+
+#### Sprint 5: Integration & Compound (~5h, ~250 Tests)
+
+11. **Multi-File** (#80-83) — `use`-Statement, File-Load-Order,
+    Page-Navigation. Smoke-Tests aufwerten zu echtem Contract.
+12. **Pure UI Components** (#69-76) — Dialog, Tooltip, Tabs, Select,
+    Checkbox, Switch, Slider, RadioGroup. Erben bereits viel von
+    Components-Pyramide; pro Komponente nur ~5 Tests.
+13. **Tables + Charts** (#78-79) — Compound, mit externer Lib.
+
+#### Sprint 6: Cleanup (~2h, ~80 Tests)
+
+14. **Animationen** (#66-68) — Presets, Custom-Anim, State-Transitions.
+15. **Canvas + Custom Icons** (#5-6) — gemeinsam, beide klein.
+16. **DatePicker** (#77) — letzte Zag-Komponente.
+
+### Aufwand Total
+
+| Sprint | Aufwand | Test-Zuwachs |
+| -----: | ------: | -----------: |
+|      1 |     ~6h |         ~250 |
+|      2 |     ~6h |         ~300 |
+|      3 |     ~5h |         ~200 |
+|      4 |     ~4h |         ~250 |
+|      5 |     ~5h |         ~250 |
+|      6 |     ~2h |          ~80 |
+|  Summe |    ~28h |        ~1330 |
+
+AI-paired-Schätzung. Solo: 5-7× Faktor (~5-6 Wochen).
+
+Mit aktuellem Stand 10064 Tests → nach allen Sprints **~11400 Tests**,
+strukturell pyramidisiert. Damit Test-Niveau **Svelte/Babel/TypeScript-
+Liga** erreicht.
+
+### Empfehlung: nächster PR
+
+**Sprint 1, Schritt 1: Variables/Data**.
+
+Begründung:
+
+- Höchster Score (41)
+- Foundational für Conditionals + Each + Bind
+- 5 der 21 gefundenen Bugs lagen in Interpolation/Templates (XSS-relevant)
+- 0 Sub-Features davon haben heute eine Pyramide
+- Ergibt sofort Pinning für die zuletzt gefixten String-Quote-Bugs
+
+Wenn Sprint 1 fertig: re-evaluieren, ob Sprint 2 in der vorgeschlagenen
+Reihenfolge oder anders priorisiert wird (Erkenntnisse aus Sprint 1
+können Bug-Density-Schätzungen für andere Features korrigieren).
 
 ## Laufende Notiz: Bekannte Bugs aus Pyramide-Arbeit
 
