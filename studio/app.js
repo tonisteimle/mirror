@@ -135,7 +135,7 @@ import {
   toCodeMirrorDiagnostics,
   // Wrap-aware change adjuster (single source of truth — see studio/core/wrap-utils.ts)
   adjustChangeForWrap,
-} from './dist/index.js?v=149'
+} from './dist/index.js?v=150'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -585,7 +585,9 @@ function switchFile(filename) {
   document.querySelectorAll('.file').forEach(f => f.classList.remove('active'))
   document.querySelector(`[data-file="${filename}"]`)?.classList.add('active')
 
-  // Compile
+  // Compile. compile() now applies the sibling-files prelude (tokens
+  // and components) in test mode too, so cross-file token + component
+  // resolution survives a switchFile during a test run.
   compile(files[filename])
 }
 
@@ -2064,11 +2066,27 @@ function compile(code) {
     // For layout files, prepend all tokens and components
     // and wrap user code in an implicit full-screen root container
     let resolvedCode = code
-    // In test mode, skip prelude processing to keep preludeOffset at 0
-    if (testModeActive) {
-      console.log('[Test] Test mode active - skipping prelude, using code directly')
+    // In test mode, build the same tokens/components prelude as
+    // production so cross-file token + component resolution is
+    // available. The App-wrapping is intentionally skipped (tests want
+    // node-1 to be the user's first element, not the synthetic App).
+    if (testModeActive && fileType === 'layout') {
+      const prelude = getPreludeCode(currentFile)
+      if (prelude) {
+        const separator = '\n\n// === ' + currentFile + ' ===\n'
+        resolvedCode = prelude + separator + code
+        currentPreludeOffset = prelude.length + separator.length
+        currentPreludeLineOffset =
+          resolvedCode.substring(0, currentPreludeOffset).split('\n').length - 1
+      } else {
+        currentPreludeOffset = 0
+        currentPreludeLineOffset = 0
+      }
+    } else if (testModeActive) {
+      // Non-layout in test mode (tokens.tok, components.com): compile alone.
       resolvedCode = code
-      // Don't reset currentPreludeOffset - keep it at 0 as set by __compileTestCode
+      currentPreludeOffset = 0
+      currentPreludeLineOffset = 0
     } else if (fileType === 'layout') {
       currentPreludeOffset = 0 // Reset prelude offset only in normal mode
       const prelude = getPreludeCode(currentFile)
@@ -2125,10 +2143,11 @@ function compile(code) {
     // Update global variables for DropResultApplier
     resolvedSource = resolvedCode
 
-    // Update state with resolved source and prelude offsets for Commands
+    // Update state with resolved source and prelude offsets for Commands.
     // - preludeOffset: CHARACTER count (for change position adjustment)
     // - preludeLineOffset: LINE count (for selection resolution)
-    // In test mode, skip prelude offset updates to preserve test-set values
+    // In test mode the offsets were computed in the test-aware branch
+    // above, so a unified update applies here too.
     if (studio?.state && !testModeActive) {
       const preludeLineCount =
         currentPreludeOffset > 0
@@ -2143,9 +2162,17 @@ function compile(code) {
         isWrappedWithApp: isWrappedWithApp,
       })
     } else if (studio?.state) {
-      // In test mode, only update resolvedSource (which is just the code itself)
-      currentPreludeLineOffset = 0
-      studio.state.set({ resolvedSource: resolvedCode, isWrappedWithApp: false })
+      // In test mode, push the just-computed prelude offsets so editor →
+      // sourceMap line resolution in tests matches the resolved source.
+      studio.state.set({
+        resolvedSource: resolvedCode,
+        preludeOffset: currentPreludeOffset,
+        preludeLineOffset: currentPreludeLineOffset,
+        isWrappedWithApp: false,
+      })
+      if (studio?.sync?.lineOffset) {
+        studio.sync.lineOffset.setOffset(currentPreludeLineOffset)
+      }
     }
 
     // Parse
@@ -2457,6 +2484,7 @@ if (typeof window !== 'undefined') {
     }
   }
   window.__getPreludeOffset = () => currentPreludeOffset
+  window.__getPreludeLineOffset = () => currentPreludeLineOffset
   window.__isTestMode = () => testModeActive
   window.__exitTestMode = () => {
     console.log('[Test] Exiting test mode')
@@ -2464,40 +2492,69 @@ if (typeof window !== 'undefined') {
   }
 
   /**
-   * Test Mode: Compile code directly without prelude
-   * This ensures sourceMap positions match the actual editor content
+   * Test Mode: Compile code with sibling tokens/components prelude.
+   *
+   * The active file's source is concatenated AFTER the prelude so:
+   *   - $primary in the active file resolves to its tokens.tok value
+   *   - <Card> instances pick up properties from components.com
+   *
+   * Prelude offsets (character + line) are tracked the same way the
+   * regular compile() does, so the editor → sourceMap mapping shifts
+   * correctly. Single-file scenarios end up with zero offsets and
+   * behave exactly like the pre-prelude implementation.
    */
   window.__compileTestCode = code => {
-    console.log('[Test] Compiling test code without prelude, length:', code.length)
     // Enable test mode to prevent normal compile from overwriting preludeOffset
     testModeActive = true
     // Cancel any pending compile
     if (debouncedCompile?.cancel) {
       debouncedCompile.cancel()
     }
-    // Set prelude offset to 0 BEFORE compile
-    currentPreludeOffset = 0
-    currentPreludeLineOffset = 0
-    resolvedSource = code
-    isWrappedWithApp = false
-    if (studio?.state?.set) {
-      studio.state.set({ preludeOffset: 0, preludeLineOffset: 0, resolvedSource: code })
-    }
-    // CRITICAL: Update SyncCoordinator's lineOffset to 0 for tests
-    // Without this, handleCursorMove uses wrong line offset
-    if (studio?.sync?.lineOffset) {
-      studio.sync.lineOffset.setOffset(0)
-    }
 
-    // Update files object so getAllProjectSource() returns the test code
-    // This is necessary for PropertyPanel token extraction to work in tests
+    // Update files object FIRST so getPreludeCode() / getAllProjectSource()
+    // see the latest editor content for the active file.
     if (currentFile && files) {
       files[currentFile] = code
     }
 
+    // Build prelude for layout files; tokens/component files compile alone.
+    const fileType = getFileType(currentFile)
+    let resolvedCode = code
+    let preludeOffset = 0
+    let preludeLineOffset = 0
+    if (fileType === 'layout') {
+      const prelude = getPreludeCode(currentFile)
+      if (prelude) {
+        const separator = '\n\n// === ' + currentFile + ' ===\n'
+        resolvedCode = prelude + separator + code
+        preludeOffset = prelude.length + separator.length
+        preludeLineOffset = resolvedCode.substring(0, preludeOffset).split('\n').length - 1
+      }
+    }
+
+    currentPreludeOffset = preludeOffset
+    currentPreludeLineOffset = preludeLineOffset
+    resolvedSource = resolvedCode
+    isWrappedWithApp = false
+    if (studio?.state?.set) {
+      studio.state.set({
+        preludeOffset,
+        preludeLineOffset,
+        resolvedSource: resolvedCode,
+      })
+    }
+    // CRITICAL: Update SyncCoordinator's lineOffset so editor → sourceMap
+    // line resolution accounts for the prepended prelude.
+    if (studio?.sync?.lineOffset) {
+      studio.sync.lineOffset.setOffset(preludeLineOffset)
+    }
+
     try {
-      // Parse
-      const ast = MirrorLang.parse(code)
+      // Parse the RESOLVED code (prelude + active) so cross-file
+      // references resolve. The sourceMap that comes back uses resolved
+      // coordinates; consumers subtract preludeLineOffset to map into
+      // editor coordinates.
+      const ast = MirrorLang.parse(resolvedCode)
       if (ast.errors && ast.errors.length > 0) {
         const errorMsg = ast.errors.map(e => `Line ${e.line}: ${e.message}`).join('\n')
         throw new Error(errorMsg)
@@ -2510,12 +2567,14 @@ if (typeof window !== 'undefined') {
       // Generate DOM code
       const jsCode = MirrorLang.generateDOM(ast)
 
-      // Update codeModifier with the new source and sourceMap
+      // CodeModifier needs the resolved source so its positions line up
+      // with the sourceMap. Editor-side translation happens via
+      // preludeOffset/preludeLineOffset.
       if (studioCodeModifier) {
-        studioCodeModifier.updateSource(code)
+        studioCodeModifier.updateSource(resolvedCode)
         studioCodeModifier.updateSourceMap(sourceMap)
       } else {
-        studioCodeModifier = new MirrorLang.CodeModifier(code, sourceMap)
+        studioCodeModifier = new MirrorLang.CodeModifier(resolvedCode, sourceMap)
       }
 
       // Update robust modifier
@@ -2523,13 +2582,14 @@ if (typeof window !== 'undefined') {
         studioRobustModifier = MirrorLang.createRobustModifier(studioCodeModifier)
       }
 
-      // Update state using setCompileResult for proper selection validation
-      // This ensures selection is cleared when the selected node no longer exists
+      // Update state with the resolved source + the actual prelude
+      // offsets so downstream consumers (selection validation, change
+      // adjustment) translate editor positions correctly.
       if (studio?.actions?.setCompileResult) {
         studio.state.set({
-          source: code,
-          preludeOffset: 0,
-          preludeLineOffset: 0,
+          source: resolvedCode,
+          preludeOffset,
+          preludeLineOffset,
         })
         studio.actions.setCompileResult({
           ast,
@@ -2542,9 +2602,9 @@ if (typeof window !== 'undefined') {
         studio.state.set({
           ast,
           sourceMap,
-          source: code,
-          preludeOffset: 0,
-          preludeLineOffset: 0,
+          source: resolvedCode,
+          preludeOffset,
+          preludeLineOffset,
         })
       }
 
@@ -2556,10 +2616,11 @@ if (typeof window !== 'undefined') {
         studioPropertyExtractor = new MirrorLang.PropertyExtractor(ast, sourceMap)
       }
 
-      // Update PropertyPanel via updateStudioState (creates panel if not exists, updates dependencies)
-      // This ensures proper PropertyPanel initialization for test code
+      // Update PropertyPanel via updateStudioState (creates panel if not
+      // exists, updates dependencies). Pass the resolved code so the
+      // panel sees both prelude (tokens/components) and active file.
       if (typeof updateStudioState === 'function') {
-        updateStudioState(ast, irResult, sourceMap, code)
+        updateStudioState(ast, irResult, sourceMap, resolvedCode)
       } else if (studio?.propertyPanel?.updateDependencies) {
         // Fallback: Update PropertyPanel dependencies so it can extract tokens from new source
         studio.propertyPanel.updateDependencies(studioPropertyExtractor, studioCodeModifier)
