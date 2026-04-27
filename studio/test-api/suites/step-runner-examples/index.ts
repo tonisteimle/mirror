@@ -18,6 +18,18 @@ export { editTextScenarios, editTextStepRunnerTests } from './edit-text.scenario
 export { hoverScenarios, hoverStepRunnerTests } from './hover.scenarios'
 export { multiSelectScenarios, multiSelectStepRunnerTests } from './multiselect.scenarios'
 export { useCaseCardScenarios, useCaseCardStepRunnerTests } from './use-case-card.scenarios'
+export {
+  useCaseThemingScenarios,
+  useCaseThemingStepRunnerTests,
+} from './use-case-theming.scenarios'
+export {
+  useCaseBuildButtonScenarios,
+  useCaseBuildButtonStepRunnerTests,
+} from './use-case-build-button.scenarios'
+export {
+  useCaseUndoRedoScenarios,
+  useCaseUndoRedoStepRunnerTests,
+} from './use-case-undo-redo.scenarios'
 
 import { padStepRunnerTests } from './pad.scenarios'
 import { padTStepRunnerTests } from './pad-t.scenarios'
@@ -39,6 +51,9 @@ import { editTextStepRunnerTests } from './edit-text.scenarios'
 import { hoverStepRunnerTests } from './hover.scenarios'
 import { multiSelectStepRunnerTests } from './multiselect.scenarios'
 import { useCaseCardStepRunnerTests } from './use-case-card.scenarios'
+import { useCaseThemingStepRunnerTests } from './use-case-theming.scenarios'
+import { useCaseBuildButtonStepRunnerTests } from './use-case-build-button.scenarios'
+import { useCaseUndoRedoStepRunnerTests } from './use-case-undo-redo.scenarios'
 
 export const allStepRunnerExampleTests = [
   ...padStepRunnerTests,
@@ -61,4 +76,7 @@ export const allStepRunnerExampleTests = [
   ...hoverStepRunnerTests,
   ...multiSelectStepRunnerTests,
   ...useCaseCardStepRunnerTests,
+  ...useCaseThemingStepRunnerTests,
+  ...useCaseBuildButtonStepRunnerTests,
+  ...useCaseUndoRedoStepRunnerTests,
 ]
