@@ -175,8 +175,12 @@ function performExtraction(
   // Get the value after ::
   const valueAfterColons = lineText.slice(colonIndex + 2).trim()
 
-  // Parse the value - take until comma or end of line
-  const valueMatch = valueAfterColons.match(/^(\S+)/)
+  // Parse the value - take until comma or end of line.
+  // `\S+` would greedily include a trailing comma when the property is
+  // followed by another (`bg primary::#hex, w 100` → value `#hex,`),
+  // which produces a malformed token AND breaks downstream batch
+  // matching (the unclassified value never matches a clean `bg #hex`).
+  const valueMatch = valueAfterColons.match(/^([^,\s]+)/)
   if (!valueMatch) {
     log.info('No value after ::, removing ::')
     // Just remove the ::
@@ -232,10 +236,15 @@ function performExtraction(
 
   // Project-scan for batch-replace candidates: other lines using the
   // same `<property> <value>` pair that should also be replaced.
+  // IMPORTANT: read from `view.state.doc`, not the captured `doc` —
+  // the dispatch above replaced the doc; the local `doc` reference is
+  // now stale. Using it would feed projectFiles the pre-extraction
+  // source, and the eventual batch-replace dispatch would clobber the
+  // extraction.
   const currentFilename = callbacks.getCurrentFile()
   const projectFiles = files.map(f => ({
     filename: f.name,
-    source: f.name === currentFilename ? doc.toString() : f.code,
+    source: f.name === currentFilename ? view.state.doc.toString() : f.code,
   }))
 
   const matches = findSegmentMatches({

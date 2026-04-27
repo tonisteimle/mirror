@@ -845,6 +845,13 @@ class FilesPanelAPIImpl implements FilesPanelAPI {
   }
 
   getCurrentFile(): string | null {
+    // app.js's `currentFile` is a module-scoped binding, not in studio
+    // state. The legacy state lookup stayed null even after switchFile,
+    // so prefer the explicit getter exposed by app.js.
+    const getter = (window as any).getCurrentFile as undefined | (() => string | null)
+    if (typeof getter === 'function') {
+      return getter() ?? null
+    }
     const studio = this.studio
     return studio?.state?.get()?.currentFile ?? null
   }

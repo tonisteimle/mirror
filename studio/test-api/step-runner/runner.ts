@@ -100,10 +100,17 @@ async function runScenario(
     try {
       await executeAction(step, api)
 
-      // Most actions trigger a recompile; waitForCompile is a no-op if nothing
-      // is pending. The post-delay lets event-driven UI (panel, handles) settle.
-      await api.utils.waitForCompile()
-      await api.utils.delay(200)
+      // Most actions trigger a recompile; waitForCompile is a no-op if
+      // nothing is pending. While the active file is non-layout (tokens
+      // or components — no preview nodes by design), waitForCompile
+      // would time out — settle via plain delay instead. The post-delay
+      // lets event-driven UI (panel, handles) settle.
+      if (isOnNonLayoutFile(step, api)) {
+        await api.utils.delay(300)
+      } else {
+        await api.utils.waitForCompile()
+        await api.utils.delay(200)
+      }
 
       const issues = validateExpectations(step.expect, api, {
         prevUndoStackSize,
@@ -124,6 +131,21 @@ async function runScenario(
       throw new Error(`${label}\n  ${err.message}`)
     }
   }
+}
+
+function isOnNonLayoutFile(step: Step, api: TestAPI): boolean {
+  // After a `switchFile` step we trust the step's target.
+  if (step.do === 'switchFile') {
+    const type = api.panel.files.getFileType(step.filename)
+    return type !== 'layout' && type !== 'unknown'
+  }
+  // Otherwise inspect the editor's active file. Falls back to "layout"
+  // (i.e. wait for compile) when the file API is unavailable so single-
+  // file scenarios behave unchanged.
+  const current = api.panel.files.getCurrentFile()
+  if (!current) return false
+  const type = api.panel.files.getFileType(current)
+  return type !== 'layout' && type !== 'unknown'
 }
 
 // =============================================================================
@@ -344,9 +366,34 @@ function validateExpectations(
   }
 
   // ----- Panel -----
+  // For properties with a registered PropertyReader (e.g. bg/col/boc),
+  // route through reader.fromPanel so we get the same token-aware,
+  // normalised value our `props:` checks use. That gives `$primary`
+  // → `#2271c1` resolution via allSources, matching what the user sees
+  // in the panel swatch. Properties without a reader fall back to the
+  // raw panel API (the historical behaviour).
   if (expect.panel) {
+    const source = api.editor.getCode()
+    const allSources = collectAllProjectSources(api, source)
+    const sourceMap = api.studio.getSourceMap() as SourceMapLike | null
+    const container = document.getElementById('preview')
+    const selectedId = api.studio.getSelection()
     for (const [property, expected] of Object.entries(expect.panel)) {
-      const actual = api.panel.property.getPropertyValue(property)
+      const reader = getReader(property)
+      let actual: string | null
+      if (reader && sourceMap && container && selectedId) {
+        const ctx = { source, allSources, sourceMap, container, api }
+        const norm = reader.normalize ?? ((v: string | null) => v)
+        actual = norm(reader.fromPanel(selectedId, ctx))
+        const expectedN = norm(expected)
+        if (actual !== expectedN) {
+          issues.push(
+            `panel[${property}]: expected ${formatPanelValue(expectedN)}, got ${formatPanelValue(actual)}`
+          )
+        }
+        continue
+      }
+      actual = api.panel.property.getPropertyValue(property)
       if (actual !== expected) {
         issues.push(
           `panel[${property}]: expected ${formatPanelValue(expected)}, got ${formatPanelValue(actual)}`

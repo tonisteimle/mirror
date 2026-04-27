@@ -43,3 +43,6 @@ coverage/
 # Test project files
 Testproject/
 Testproject.zip
+
+# Claude Code local config + runtime
+.claude/

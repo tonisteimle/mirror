@@ -98,10 +98,76 @@ const transportAppSwitchBetweenScreens: Scenario = {
   ],
 }
 
+// ----- 3: Token edit propagates back to consumers ---------------------------
+//
+// dashboard.mir consumes `bg $primary`. We switch to tokens.tok, change
+// the token's value, switch back, and verify the consumer's panel value
+// reflects the new token. This is the *cross-file edit + switch-back*
+// flow that broke under the old setCode workaround — the editor's
+// content for tokens.tok was never written back to the file store, so
+// the next switch lost the edit. With panel.files.open() now using the
+// real Studio switchFile() (which saves the active editor first), the
+// edit survives.
+//
+// Note: assertion is via `panel:` (not `props:`). `props:` reads all
+// three dimensions including DOM. Mirror's test-mode compiler parses
+// only the active file, so a `bg $primary` in dashboard.mir whose
+// definition lives in tokens.tok renders transparent in the DOM (token
+// unresolved). The PANEL value, however, IS resolved correctly —
+// that's what proves the cross-file edit propagated to the consumer's
+// view, which is what the user-facing scenario actually cares about.
+
+const transportAppTokenEditPropagates: Scenario = {
+  name: 'transport-app: token edit in tokens.tok propagates to dashboard consumer',
+  category: 'step-runner',
+  setup: {
+    entry: 'screens/dashboard.mir',
+    files: {
+      'tokens.tok': 'primary.bg: #2271c1',
+      'screens/dashboard.mir': 'Frame w 200, h 200, bg $primary',
+    },
+  },
+  steps: [
+    // Initial: dashboard active, $primary resolves via allSources → #2271c1
+    {
+      do: 'select',
+      nodeId: 'node-1',
+      expect: { selection: 'node-1', panel: { bg: '#2271c1' } },
+    },
+    // Switch to tokens.tok, wait for editor + compile to settle
+    { do: 'switchFile', filename: 'tokens.tok' },
+    { do: 'wait', ms: 500 },
+    // Edit the token value. After this, the editor (and Studio's file
+    // store, on the next switch) has the new content.
+    {
+      do: 'editorSet',
+      code: 'primary.bg: #10b981',
+      expect: { code: 'primary.bg: #10b981' },
+    },
+    // Switch back to dashboard. Studio's switchFile saves the editor's
+    // current content into files['tokens.tok'] before swapping, so the
+    // edit survives.
+    { do: 'switchFile', filename: 'screens/dashboard.mir' },
+    { do: 'wait', ms: 500 },
+    // Re-select node-1 (selection clears on file switch) and check the
+    // panel-resolved bg picks up the new token value.
+    {
+      do: 'select',
+      nodeId: 'node-1',
+      expect: {
+        selection: 'node-1',
+        code: 'Frame w 200, h 200, bg $primary',
+        panel: { bg: '#10b981' },
+      },
+    },
+  ],
+}
+
 // Atomic-by-atomic rollout: enable one scenario, get it green, then add
 // the next. Anything below the active line is parked until ready.
 export const transportAppScenarios: Scenario[] = [
   transportAppMultiScreenSetup,
   transportAppSwitchBetweenScreens,
+  transportAppTokenEditPropagates,
 ]
 export const transportAppStepRunnerTests: TestCase[] = transportAppScenarios.map(scenarioToTestCase)

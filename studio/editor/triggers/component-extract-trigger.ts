@@ -422,9 +422,14 @@ function performExtraction(view: EditorView, componentName: string, lineNumber: 
   // Build the file list using the AT-EDIT in-memory state for the
   // current file (the editor has unsaved changes), and the on-disk
   // version for all others.
+  // IMPORTANT: read from `view.state.doc`, not the captured `doc` —
+  // the dispatch above replaced the doc; the local `doc` reference is
+  // now stale. Using it would feed projectFiles the pre-extraction
+  // source, and the eventual batch-replace dispatch would clobber the
+  // extraction.
   const projectFiles = files.map(f => ({
     filename: f.name,
-    source: f.name === currentFilename ? doc.toString() : f.code,
+    source: f.name === currentFilename ? view.state.doc.toString() : f.code,
   }))
 
   const exactMatches = findProjectMatches({
