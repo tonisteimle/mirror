@@ -14,7 +14,7 @@
  */
 
 import type { FileInfo } from './types'
-import { resolveDraftPromptBuilder, extractCodeBlock } from './draft-prompts'
+import { buildDraftPrompt, extractCodeBlock } from './draft-prompts'
 
 // ============================================
 // TYPES
@@ -117,13 +117,7 @@ export class FixerService {
         }
       }
 
-      // Variant override (eval/A-B testing only). Production resolves to 'current'.
-      const variantOverride =
-        typeof window !== 'undefined'
-          ? ((window as any).__draftPromptVariant as string | undefined)
-          : undefined
-      const builder = resolveDraftPromptBuilder(variantOverride)
-      const fullPrompt = builder({
+      const fullPrompt = buildDraftPrompt({
         prompt,
         content,
         fullSource,
@@ -161,16 +155,15 @@ export class FixerService {
 // ============================================
 // DRAFT PROMPT RE-EXPORTS
 // ============================================
-// Prompt builders + extractor live in draft-prompts.ts (no deps) so the
-// eval driver can import them without dragging in the agent module tree.
-// Re-exported here for API stability of the existing consumers.
+// Prompt builder + extractor + splice live in draft-prompts.ts (no deps)
+// so the eval driver can import them without dragging in the agent module
+// tree. Re-exported here for API stability of the existing consumers.
 export {
-  buildDraftPromptCurrent,
+  buildDraftPrompt,
   extractCodeBlock,
-  listDraftPromptVariants,
-  resolveDraftPromptBuilder,
+  indentBlock,
+  spliceDraftBlock,
   type DraftPromptInput,
-  type DraftPromptBuilder,
 } from './draft-prompts'
 
 // ============================================

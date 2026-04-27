@@ -18,7 +18,7 @@ import { spawn } from 'child_process'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
-import { buildDraftPromptCurrent, extractCodeBlock } from '../studio/agent/draft-prompts'
+import { buildDraftPrompt, extractCodeBlock, spliceDraftBlock } from '../studio/agent/draft-prompts'
 
 // =============================================================================
 // SCENARIOS — same shape as the eval-ai-draft.ts driver, minus the asserts
@@ -453,35 +453,6 @@ async function compileProject(
 }
 
 // =============================================================================
-// SPLICE — pure, in-Node version of replaceDraftBlock
-// =============================================================================
-
-function spliceDraftCode(code: string, originalSource: string): string {
-  const lines = originalSource.split('\n')
-  let startIdx = -1
-  let endIdx = -1
-  let indent = ''
-  for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].match(/^(\s*)\?\?(.*)$/)
-    if (!m) continue
-    if (startIdx === -1) {
-      startIdx = i
-      indent = m[1]
-    } else {
-      endIdx = i
-      break
-    }
-  }
-  if (startIdx === -1) return originalSource + '\n' + code
-  const closingIdx = endIdx === -1 ? lines.length - 1 : endIdx
-  const indentedCode = code
-    .split('\n')
-    .map(l => (l.trim() ? indent + l : l))
-    .join('\n')
-  return [...lines.slice(0, startIdx), indentedCode, ...lines.slice(closingIdx + 1)].join('\n')
-}
-
-// =============================================================================
 // SCENARIO RUNNER
 // =============================================================================
 
@@ -540,8 +511,8 @@ async function runScenario(scenario: Scenario): Promise<ScenarioResult> {
   }
 
   // Build the production prompt (same function the live ?? feature uses)
-  console.log(ts('🔨 building prompt with buildDraftPromptCurrent (production fn)...'))
-  const prompt = buildDraftPromptCurrent({
+  console.log(ts('🔨 building prompt with buildDraftPrompt (production fn)...'))
+  const prompt = buildDraftPrompt({
     prompt: scenario.prompt || null,
     content: scenario.draftContent?.join('\n') ?? '',
     fullSource: sourceWithBlock,
@@ -572,7 +543,7 @@ async function runScenario(scenario: Scenario): Promise<ScenarioResult> {
   extractedLines.forEach(l => console.log(`     │ ${l}`))
 
   // Splice into source
-  const finalSource = spliceDraftCode(extractedCode, sourceWithBlock)
+  const finalSource = spliceDraftBlock(sourceWithBlock, extractedCode)
 
   // Compile
   console.log(ts('🔧 compile-checking final source via compiler CLI...'))

@@ -19,11 +19,10 @@
 export { FixerService, createFixer, getFixer } from './fixer'
 export type { FixerConfig } from './fixer'
 export {
-  buildDraftPromptCurrent,
+  buildDraftPrompt,
   extractCodeBlock,
-  listDraftPromptVariants,
-  resolveDraftPromptBuilder,
+  indentBlock,
+  spliceDraftBlock,
   type DraftPromptInput,
-  type DraftPromptBuilder,
 } from './draft-prompts'
 export type { FileType, FileInfo } from './types'

@@ -146,8 +146,6 @@ export {
   disposeDraftModeManager,
   createDraftModeKeymap,
   createDraftModeAutoSubmit,
-  buildDraftModePrompt,
-  extractCodeFromAIResponse,
   type DraftModeManagerConfig,
   type DraftModeResult,
 } from './draft-mode-manager'

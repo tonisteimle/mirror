@@ -1,11 +1,9 @@
 /**
- * Draft Prompt Builders + Code Extraction — pure functions, no dependencies.
+ * Draft Prompt Builder + Code Extraction + Splice — pure functions, no deps.
  *
- * Extracted from fixer.ts so the eval driver can import these without dragging
- * in the full studio/agent module tree (which transitively pulls studio/core
- * and other browser-only modules). Production code in fixer.ts re-exports.
- *
- * Keep this file dependency-free.
+ * Lives outside the studio module tree (no imports from studio/core etc.)
+ * so the eval driver and any future Node-only consumer can import these
+ * without dragging in browser-only modules.
  */
 
 export interface DraftPromptInput {
@@ -18,32 +16,13 @@ export interface DraftPromptInput {
   componentFiles?: Record<string, string>
 }
 
-export type DraftPromptBuilder = (input: DraftPromptInput) => string
-
 /**
- * Registry of named draft prompt variants. The eval driver can pick a
- * non-default variant via `window.__draftPromptVariant`. Production always
- * uses 'current'.
+ * The shipping prompt. All production calls go through this. Tightened
+ * after eval surfaced over-invention + non-uniform patterns (commit
+ * f8791268) and again after the no-prompt-with-content branch threw the
+ * draft content away (commit 1b83bc2b).
  */
-export const DRAFT_PROMPT_VARIANTS: Record<string, DraftPromptBuilder> = {
-  current: buildDraftPromptCurrent,
-}
-
-export function resolveDraftPromptBuilder(name?: string): DraftPromptBuilder {
-  if (!name || !(name in DRAFT_PROMPT_VARIANTS)) return DRAFT_PROMPT_VARIANTS.current
-  return DRAFT_PROMPT_VARIANTS[name]
-}
-
-export function listDraftPromptVariants(): string[] {
-  return Object.keys(DRAFT_PROMPT_VARIANTS)
-}
-
-/**
- * The shipping prompt. All production calls go through this. Tightened from
- * the original after eval surfaced over-invention + non-uniform patterns
- * (see commit f8791268).
- */
-export function buildDraftPromptCurrent(input: DraftPromptInput): string {
+export function buildDraftPrompt(input: DraftPromptInput): string {
   const hasContent = input.content.trim().length > 0
   const userInstruction = input.prompt
     ? `User-Anfrage: ${input.prompt}`
@@ -114,8 +93,8 @@ function formatProjectFileSection(
 
 /**
  * Extract the first \`\`\`mirror or \`\`\` code block from an AI response.
- * Falls back to the trimmed response if no code block is found but the first
- * line is a recognizable Mirror DSL construct.
+ * Falls back to the trimmed response if no code block is found but the
+ * first line is a recognizable Mirror DSL construct.
  */
 export function extractCodeBlock(response: string): string | null {
   if (!response) return null
@@ -196,4 +175,50 @@ function looksLikeMirrorLine(line: string): boolean {
   if (rest === '' && MIRROR_PRIMITIVES.has(name)) return true
   if (/:/.test(rest)) return true
   return /["$#(]|\b\d/.test(rest)
+}
+
+/**
+ * Re-indent a block of code: prefix each non-blank line with `indent`,
+ * leave blank lines untouched. Used for splicing AI output into a draft
+ * block that lives at some indentation depth.
+ */
+export function indentBlock(code: string, indent: string): string {
+  return code
+    .split('\n')
+    .map(line => (line.trim() ? indent + line : line))
+    .join('\n')
+}
+
+/**
+ * Replace the `??`-bracketed draft block in `source` with `newContent`.
+ *
+ * The first `??` line marks the start (its indentation becomes the new
+ * block's indentation); the next `??` line marks the end. If only one
+ * `??` is present, `newContent` is appended at the end of the source.
+ *
+ * Pure string operation — no editor state. The production splice in
+ * studio/editor/draft-mode.ts goes through CodeMirror because it needs
+ * to dispatch a transaction; the eval driver and any other Node-only
+ * consumer should call this instead of reimplementing the parse.
+ */
+export function spliceDraftBlock(source: string, newContent: string): string {
+  const lines = source.split('\n')
+  let startIdx = -1
+  let endIdx = -1
+  let indent = ''
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^(\s*)\?\?(.*)$/)
+    if (!m) continue
+    if (startIdx === -1) {
+      startIdx = i
+      indent = m[1]
+    } else {
+      endIdx = i
+      break
+    }
+  }
+  if (startIdx === -1) return source + '\n' + newContent
+  const closingIdx = endIdx === -1 ? lines.length - 1 : endIdx
+  const indented = indentBlock(newContent, indent)
+  return [...lines.slice(0, startIdx), indented, ...lines.slice(closingIdx + 1)].join('\n')
 }

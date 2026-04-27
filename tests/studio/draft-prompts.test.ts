@@ -1,21 +1,20 @@
 /**
  * Pure-function tests for studio/agent/draft-prompts.ts.
  *
- * These cover the prompt builder + code extractor + variant registry
+ * These cover the prompt builder + code extractor + indent/splice helpers
  * directly (no FixerService wrapper, no mocked bridge). The integration
  * tests in agent-fixer.draft-mode.test.ts exercise the same functions
  * through the service; this file pins down their behavior in isolation
- * so prompt-engineering changes get caught even if no service-level
- * test happens to exercise the relevant branch.
+ * so prompt-engineering or splice changes get caught even if no service-
+ * level test happens to exercise the relevant branch.
  */
 
 import { describe, test, expect } from 'vitest'
 import {
-  buildDraftPromptCurrent,
+  buildDraftPrompt,
   extractCodeBlock,
-  resolveDraftPromptBuilder,
-  listDraftPromptVariants,
-  DRAFT_PROMPT_VARIANTS,
+  indentBlock,
+  spliceDraftBlock,
 } from '../../studio/agent/draft-prompts'
 
 const baseInput = {
@@ -24,10 +23,10 @@ const baseInput = {
   fullSource: 'canvas mobile\n\nFrame pad 16\n  ??\n  ??',
 }
 
-describe('buildDraftPromptCurrent', () => {
+describe('buildDraftPrompt', () => {
   describe('instruction selection (4 branches)', () => {
     test('user prompt + empty content → "User-Anfrage" line', () => {
-      const out = buildDraftPromptCurrent({
+      const out = buildDraftPrompt({
         ...baseInput,
         prompt: 'blauer button',
       })
@@ -36,7 +35,7 @@ describe('buildDraftPromptCurrent', () => {
     })
 
     test('user prompt + draft content → "User-Anfrage" line (prompt wins)', () => {
-      const out = buildDraftPromptCurrent({
+      const out = buildDraftPrompt({
         ...baseInput,
         prompt: 'mehr buttons',
         content: 'Button "A"',
@@ -47,7 +46,7 @@ describe('buildDraftPromptCurrent', () => {
     })
 
     test('no prompt + draft content → fix-mode instruction (intent preservation)', () => {
-      const out = buildDraftPromptCurrent({
+      const out = buildDraftPrompt({
         ...baseInput,
         content: 'Button "Save", bg primary',
       })
@@ -61,7 +60,7 @@ describe('buildDraftPromptCurrent', () => {
     })
 
     test('no prompt + empty content → "Generiere neuen Code" instruction', () => {
-      const out = buildDraftPromptCurrent(baseInput)
+      const out = buildDraftPrompt(baseInput)
       expect(out).toContain('Generiere neuen Code')
       expect(out).toContain('Der Draft-Block ist leer')
       expect(out).not.toContain('Korrigiere Syntax-Fehler')
@@ -71,13 +70,13 @@ describe('buildDraftPromptCurrent', () => {
 
   describe('always-present sections', () => {
     test('contains the role line + ?? marker explanation', () => {
-      const out = buildDraftPromptCurrent(baseInput)
+      const out = buildDraftPrompt(baseInput)
       expect(out).toContain('Mirror DSL Code-Generator')
       expect(out).toContain('??')
     })
 
     test('contains the editor-source block with the original source', () => {
-      const out = buildDraftPromptCurrent({
+      const out = buildDraftPrompt({
         ...baseInput,
         fullSource: 'canvas mobile\n\nFrame\n  ??\n  ??',
       })
@@ -86,7 +85,7 @@ describe('buildDraftPromptCurrent', () => {
     })
 
     test('answer-format section is present + lists $token + component rules', () => {
-      const out = buildDraftPromptCurrent(baseInput)
+      const out = buildDraftPrompt(baseInput)
       expect(out).toContain('## ANTWORTFORMAT')
       expect(out).toContain('```mirror')
       expect(out).toContain('Wenn Tokens existieren')
@@ -96,7 +95,7 @@ describe('buildDraftPromptCurrent', () => {
 
   describe('project-file injection', () => {
     test('tokenFiles appear under their own heading', () => {
-      const out = buildDraftPromptCurrent({
+      const out = buildDraftPrompt({
         ...baseInput,
         tokenFiles: { 'tokens.tok': 'primary.bg: #2271C1\nm.pad: 12' },
       })
@@ -106,7 +105,7 @@ describe('buildDraftPromptCurrent', () => {
     })
 
     test('componentFiles appear under their own heading', () => {
-      const out = buildDraftPromptCurrent({
+      const out = buildDraftPrompt({
         ...baseInput,
         componentFiles: { 'components.com': 'Btn: pad 10 20' },
       })
@@ -116,7 +115,7 @@ describe('buildDraftPromptCurrent', () => {
     })
 
     test('empty file content is filtered out (avoid noise)', () => {
-      const out = buildDraftPromptCurrent({
+      const out = buildDraftPrompt({
         ...baseInput,
         tokenFiles: { 'empty.tok': '   \n\t\n' },
       })
@@ -125,7 +124,7 @@ describe('buildDraftPromptCurrent', () => {
     })
 
     test('no token/component sections when both maps absent', () => {
-      const out = buildDraftPromptCurrent(baseInput)
+      const out = buildDraftPrompt(baseInput)
       expect(out).not.toContain('Token-Dateien')
       expect(out).not.toContain('Komponenten-Dateien')
     })
@@ -189,26 +188,58 @@ describe('extractCodeBlock', () => {
   })
 })
 
-describe('resolveDraftPromptBuilder', () => {
-  test('returns the current builder when name is undefined', () => {
-    expect(resolveDraftPromptBuilder()).toBe(buildDraftPromptCurrent)
+describe('indentBlock', () => {
+  test('prefixes each non-blank line with the given indent', () => {
+    expect(indentBlock('Frame\n  Text "Hi"', '    ')).toBe('    Frame\n      Text "Hi"')
   })
 
-  test('returns the current builder when name is unknown', () => {
-    expect(resolveDraftPromptBuilder('does-not-exist')).toBe(buildDraftPromptCurrent)
+  test('leaves blank lines untouched (no trailing whitespace)', () => {
+    expect(indentBlock('a\n\nb', '  ')).toBe('  a\n\n  b')
   })
 
-  test('returns the matching builder when name is known', () => {
-    expect(resolveDraftPromptBuilder('current')).toBe(buildDraftPromptCurrent)
+  test('treats whitespace-only lines as blank', () => {
+    expect(indentBlock('a\n   \nb', '  ')).toBe('  a\n   \n  b')
+  })
+
+  test('empty input returns empty (single empty line is preserved)', () => {
+    expect(indentBlock('', '  ')).toBe('')
+  })
+
+  test('zero indent is a no-op', () => {
+    expect(indentBlock('Frame\n  Text', '')).toBe('Frame\n  Text')
   })
 })
 
-describe('listDraftPromptVariants', () => {
-  test('always includes "current"', () => {
-    expect(listDraftPromptVariants()).toContain('current')
+describe('spliceDraftBlock', () => {
+  test('replaces a closed ?? block + indents new content to match marker', () => {
+    const source = 'canvas mobile\n\nFrame pad 16\n  ??\n  ??'
+    const result = spliceDraftBlock(source, 'Button "OK"\nText "x"')
+    expect(result).toBe('canvas mobile\n\nFrame pad 16\n  Button "OK"\n  Text "x"')
   })
 
-  test('list matches the registry keys', () => {
-    expect(listDraftPromptVariants().sort()).toEqual(Object.keys(DRAFT_PROMPT_VARIANTS).sort())
+  test('replaces ?? block including the user prompt + draft content lines', () => {
+    const source = ['Frame', '  ?? hello', '  Button "Old"', '  ??'].join('\n')
+    expect(spliceDraftBlock(source, 'Button "New"')).toBe('Frame\n  Button "New"')
+  })
+
+  test('handles top-level (zero-indent) ?? block', () => {
+    const source = '??\nButton "Stuff"\n??'
+    expect(spliceDraftBlock(source, 'Frame\n  Text "Hi"')).toBe('Frame\n  Text "Hi"')
+  })
+
+  test('open block (only one ??) — replaces from the marker to end of source', () => {
+    const source = 'canvas mobile\n\nFrame\n  ?? something'
+    expect(spliceDraftBlock(source, 'Button "X"')).toBe('canvas mobile\n\nFrame\n  Button "X"')
+  })
+
+  test('no ?? marker present → appends new content with leading newline', () => {
+    expect(spliceDraftBlock('Frame\n  Button', 'Text "added"')).toBe(
+      'Frame\n  Button\nText "added"'
+    )
+  })
+
+  test('preserves lines before + after the block exactly', () => {
+    const source = 'A\nB\n  ??\n  garbage\n  ??\nC\nD'
+    expect(spliceDraftBlock(source, 'X')).toBe('A\nB\n  X\nC\nD')
   })
 })

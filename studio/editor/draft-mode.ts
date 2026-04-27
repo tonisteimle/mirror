@@ -32,6 +32,7 @@ import {
 } from '@codemirror/view'
 import { StateField, StateEffect, type Text } from '@codemirror/state'
 import { setDraftLines, clearDraftLines } from './draft-lines'
+import { indentBlock } from '../agent/draft-prompts'
 import { createLogger } from '../../compiler/utils/logger'
 
 const log = createLogger('DraftMode')
@@ -489,12 +490,7 @@ export function replaceDraftBlock(view: EditorView, newContent: string): void {
   const endLineNum = state.endLine ?? view.state.doc.lines
   const endLineInfo = view.state.doc.line(endLineNum)
 
-  // Build the replacement content with proper indentation
-  const baseIndent = ' '.repeat(state.indent)
-  const indentedContent = newContent
-    .split('\n')
-    .map(line => (line.trim() ? baseIndent + line : line))
-    .join('\n')
+  const indentedContent = indentBlock(newContent, ' '.repeat(state.indent))
 
   view.dispatch({
     changes: { from: startLineInfo.from, to: endLineInfo.to, insert: indentedContent },
