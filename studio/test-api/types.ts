@@ -1080,11 +1080,21 @@ export interface DraftModeAPI {
   /** Check if draft mode keymap is registered */
   isKeymapRegistered(): boolean
 
-  /** Check if draft mode is active (-- marker detected) */
+  /** Check if draft mode is active (?? marker detected) */
   isActive(): boolean
 
   /** Get current draft state */
   getState(): DraftModeState
+
+  /**
+   * Get the live DraftModeManager instance (for tests that need to call
+   * `provideAIResponse(code)` to short-circuit the AI bridge). Returns
+   * null if the manager isn't initialized in this build.
+   */
+  getManager(): {
+    handleSubmit: () => Promise<boolean>
+    provideAIResponse: (code: string) => void
+  } | null
 
   /** Check if a line is in the draft block */
   isLineInDraft(lineNumber: number): boolean

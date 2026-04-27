@@ -140,6 +140,7 @@ import {
 } from './draft-lines'
 import { allDraftModeTests } from './draft-mode'
 import { draftModeIntegrationTests } from './ai/draft-mode-integration.test'
+import { draftModeSafetyTests } from './ai/draft-mode-safety.test'
 
 // Tutorial
 import { allTutorialTests } from './tutorial'
@@ -320,6 +321,7 @@ export const compilerTests: TestCase[] = [
  */
 export const aiTests: TestCase[] = [
   ...draftModeIntegrationTests, // CRITICAL: Smoke tests that verify integration is working
+  ...draftModeSafetyTests, // Production-deploy-readiness (auto-submit, splice, failure modes)
   ...allDraftLineTests,
   ...allComprehensiveDraftLineTests,
   ...allAIWorkflowTests,

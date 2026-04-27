@@ -534,22 +534,42 @@ export function createDraftModeTestAPI(): DraftModeTestAPI {
         return false
       }
 
-      // 1. Start the submit (don't await - it waits for AI response)
-      const submitPromise = this.triggerSubmit()
+      // The bootstrap registers its OWN listener on `draft:submit` that
+      // calls fixer.generateDraftCode → window.TauriBridge. In a browser
+      // test there is no Tauri runtime, so that path emits a fast
+      // `draft:ai-response` with an error BEFORE we get a chance to call
+      // `manager.provideAIResponse(code)`. The manager listens once on
+      // that event, so the error wins the race and the splice never
+      // happens. Install a one-shot fake bridge that returns the canned
+      // code wrapped in a ```mirror block — the production fixer parses
+      // it and emits the success response itself.
+      const win = window as unknown as { TauriBridge?: unknown }
+      const previousBridge = win.TauriBridge
+      win.TauriBridge = {
+        isTauri: () => true,
+        agent: {
+          checkClaudeCli: async () => true,
+          runAgent: async () => ({
+            session_id: 'simulate-ai-generation',
+            success: true,
+            output: '```mirror\n' + generatedCode + '\n```',
+            error: null,
+          }),
+          onAgentOutput: async () => () => {},
+        },
+      }
 
-      // 2. Wait a tick for the processing to start
-      await new Promise(resolve => setTimeout(resolve, 50))
-
-      // 3. Provide the AI response (this completes the submit)
-      manager.provideAIResponse(generatedCode)
-
-      // 4. Wait for the submit to complete
       try {
-        await submitPromise
+        await this.triggerSubmit()
+        // Settle the dispatch + state effects.
+        await new Promise(resolve => setTimeout(resolve, 30))
         return true
       } catch (e) {
         console.error('simulateAIGeneration failed:', e)
         return false
+      } finally {
+        if (previousBridge === undefined) delete win.TauriBridge
+        else win.TauriBridge = previousBridge
       }
     },
   }

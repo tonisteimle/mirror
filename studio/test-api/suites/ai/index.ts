@@ -10,12 +10,14 @@ import type { TestCase } from '../../types'
 
 // Import test suites
 import { draftModeIntegrationTests } from './draft-mode-integration.test'
+import { draftModeSafetyTests } from './draft-mode-safety.test'
 
 // Re-export individual suites
 export { draftModeIntegrationTests } from './draft-mode-integration.test'
+export { draftModeSafetyTests } from './draft-mode-safety.test'
 
 // Combined AI tests
-export const allAITests: TestCase[] = [...draftModeIntegrationTests]
+export const allAITests: TestCase[] = [...draftModeIntegrationTests, ...draftModeSafetyTests]
 
 // Smoke tests that should always pass (tests integration is working)
 export const aiSmokeTests: TestCase[] = draftModeIntegrationTests.filter(t =>

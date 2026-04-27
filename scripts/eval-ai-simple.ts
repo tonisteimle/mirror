@@ -337,6 +337,94 @@ const SCENARIOS: Scenario[] = [
       must.contain('"OK"'),
     ],
   },
+
+  // ===========================================================================
+  // Coverage-Lücken: each-loop, States, Conditionals, Tables, Forms
+  // ===========================================================================
+  {
+    id: '20-each-loop',
+    label: 'Daten-Binding: each-loop über users',
+    files: {
+      'index.mir': `canvas mobile, bg #18181b, col white\n\nusers:\n  alice:\n    name: "Alice"\n    role: "Admin"\n  bob:\n    name: "Bob"\n    role: "Designer"\n\nFrame pad 16, gap 8\n  ${PROMPT_MARKER}`,
+    },
+    currentFile: 'index.mir',
+    prompt: 'liste die users mit name und role nebeneinander',
+    asserts: [
+      must.compileOk(),
+      must.contain(/each\s+\w+\s+in\s+\$users/),
+      must.contain(/\.name/),
+      must.contain(/\.role/),
+    ],
+  },
+  {
+    id: '21-toggle-state',
+    label: 'State: Like-Button mit toggle()',
+    files: {
+      'index.mir': `canvas mobile, bg #18181b, col white\n\nFrame pad 16\n  ${PROMPT_MARKER}`,
+    },
+    currentFile: 'index.mir',
+    prompt: 'like-button — wechselt bei klick zwischen leerem und ausgefülltem herz',
+    asserts: [
+      must.compileOk(),
+      must.contain(/toggle\(\)/),
+      must.contain(/^\s*on:/m),
+      must.contain(/Icon\s+"heart"/),
+    ],
+  },
+  {
+    id: '22-conditional',
+    label: 'Conditional: if loggedIn else',
+    files: {
+      'index.mir': `canvas mobile, bg #18181b, col white\n\nloggedIn: false\nuserName: "Anna"\n\nFrame pad 16, gap 12\n  ${PROMPT_MARKER}`,
+    },
+    currentFile: 'index.mir',
+    prompt: 'wenn loggedIn: zeige "Hallo $userName" + Logout-Button. sonst: Login-Button',
+    asserts: [
+      must.compileOk(),
+      must.contain(/^\s*if\s+loggedIn\b/m),
+      must.contain(/^\s*else\b/m),
+      must.contain(/\$userName/),
+    ],
+  },
+  {
+    id: '23-static-table',
+    label: 'Tabelle: statisch mit Header + 3 Rows',
+    files: {
+      'index.mir': `canvas mobile, bg #18181b, col white\n\nFrame pad 16\n  ${PROMPT_MARKER}`,
+    },
+    currentFile: 'index.mir',
+    prompt: 'tabelle mit spalten Name, Status, Aktion und 3 zeilen mit beispieldaten',
+    asserts: [
+      must.compileOk(),
+      must.contain(/^\s*Table\b/m),
+      must.contain(/Header:/),
+      must.contain(/Row\s/),
+      // Should have at least 3 data rows + 1 header row
+      {
+        label: 'has at least 3 data Row entries',
+        check: ctx => {
+          const rowCount = (ctx.extractedCode.match(/^\s*Row\s/gm) ?? []).length
+          return { pass: rowCount >= 3, detail: `${rowCount} Row lines` }
+        },
+      },
+    ],
+  },
+  {
+    id: '24-form-input-bind',
+    label: 'Form: Input mit bind + display',
+    files: {
+      'index.mir': `canvas mobile, bg #18181b, col white\n\nemail: ""\n\nFrame pad 16, gap 12\n  ${PROMPT_MARKER}`,
+    },
+    currentFile: 'index.mir',
+    prompt:
+      'Input für Email mit bind email + placeholder "deine@email.de" + darunter "Eingabe: $email"',
+    asserts: [
+      must.compileOk(),
+      must.contain(/Input\b[^,\n]*bind\s+email/),
+      must.contain(/placeholder\s+"deine@email\.de"/),
+      must.contain(/\$email/),
+    ],
+  },
 ]
 
 // =============================================================================
