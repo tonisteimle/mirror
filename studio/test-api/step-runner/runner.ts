@@ -235,16 +235,15 @@ async function executeAction(step: Step, api: TestAPI): Promise<void> {
       return
     }
     case 'switchFile': {
-      // Studio's `window.switchFile` isn't exposed, so panel.files.open
-      // returns false silently. Workaround: read the file content and
-      // setCode it directly. This loses the "currentFile" tracking on
-      // the Studio side but achieves the framework's goal — the editor
-      // and preview reflect the requested file's source.
-      const content = api.panel.files.getContent(step.filename)
-      if (content === null) {
-        throw new Error(`switchFile: ${step.filename} not in project files`)
+      // Save active editor content into the file store, then ask Studio
+      // to switch — switchFile() in app.js itself does the editor save
+      // before swapping content, so cross-file edits survive a switch.
+      const ok = await api.panel.files.open(step.filename)
+      if (!ok) {
+        throw new Error(
+          `switchFile: ${step.filename} could not be opened (not in project? window.switchFile missing?)`
+        )
       }
-      await api.editor.setCode(content)
       return
     }
     case 'wait':

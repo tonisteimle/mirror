@@ -52,7 +52,56 @@ const transportAppMultiScreenSetup: Scenario = {
   ],
 }
 
+// ----- 2: Switch between screens --------------------------------------------
+//
+// Same realistic setup; navigate dashboard → orders → dashboard via
+// switchFile. After each switch, the active file's source must match
+// the file we switched to. Compile + UI propagation is debounced, so
+// each switch is followed by a wait before asserting (same shape as
+// multifile-basics atom 3, but with screens/ subdir paths and the
+// tokens.tok / components.com siblings in the project).
+
+const transportAppSwitchBetweenScreens: Scenario = {
+  name: 'transport-app: switchFile navigates between dashboard and orders',
+  category: 'step-runner',
+  setup: {
+    entry: 'screens/dashboard.mir',
+    files: {
+      'tokens.tok': 'primary.bg: #2271c1\ndanger.bg: #ef4444',
+      'components.com': 'Card: bg #1a1a1a, pad 16, rad 8',
+      'screens/dashboard.mir': 'Frame w 200, h 200, bg #2271c1',
+      'screens/orders.mir': 'Frame w 100, h 100, bg #ef4444',
+    },
+  },
+  steps: [
+    // Initially: dashboard is open
+    {
+      do: 'wait',
+      ms: 100,
+      comment: 'dashboard active on entry',
+      expect: { code: 'Frame w 200, h 200, bg #2271c1' },
+    },
+    // Switch to orders, wait for compile + UI to settle, assert source
+    { do: 'switchFile', filename: 'screens/orders.mir' },
+    {
+      do: 'wait',
+      ms: 500,
+      expect: { code: 'Frame w 100, h 100, bg #ef4444' },
+    },
+    // Switch back to dashboard
+    { do: 'switchFile', filename: 'screens/dashboard.mir' },
+    {
+      do: 'wait',
+      ms: 500,
+      expect: { code: 'Frame w 200, h 200, bg #2271c1' },
+    },
+  ],
+}
+
 // Atomic-by-atomic rollout: enable one scenario, get it green, then add
 // the next. Anything below the active line is parked until ready.
-export const transportAppScenarios: Scenario[] = [transportAppMultiScreenSetup]
+export const transportAppScenarios: Scenario[] = [
+  transportAppMultiScreenSetup,
+  transportAppSwitchBetweenScreens,
+]
 export const transportAppStepRunnerTests: TestCase[] = transportAppScenarios.map(scenarioToTestCase)

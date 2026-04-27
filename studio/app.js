@@ -3830,6 +3830,7 @@ window.studioSelectionManager = studioSelectionManager
 window.startCompletion = startCompletion
 window.closeCompletion = closeCompletion
 window.files = files
+window.switchFile = switchFile // For test API (panel.files.open) and external scripts
 window.studio = studio // New architecture
 window.generateComponentCodeFromDragData = generateComponentCodeFromDragData // For editor drop tests
 window.resetCode = async () => {
