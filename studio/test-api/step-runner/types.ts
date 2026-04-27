@@ -73,6 +73,12 @@ export type StepAction =
   | { do: 'unhover'; target: string }
 
   // ---------------------------------------------------------------------------
+  // Multi-select — click the first node, then shift-click the rest.
+  // Equivalent to the user's Cmd-click / Shift-click selection flow.
+  // ---------------------------------------------------------------------------
+  | { do: 'multiSelect'; nodeIds: readonly string[] }
+
+  // ---------------------------------------------------------------------------
   // Utility
   // ---------------------------------------------------------------------------
   | { do: 'wait'; ms: number }
@@ -104,6 +110,12 @@ export interface Expectations {
    * know the new node's id yet.
    */
   selectionNot?: string
+
+  /**
+   * Multi-selection assertion. Order-insensitive — checks the set of
+   * selected node ids matches.
+   */
+  multiSelection?: readonly string[]
 
   /**
    * Per-node computed-style assertions. Reads via window.getComputedStyle —

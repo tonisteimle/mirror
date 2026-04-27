@@ -16,6 +16,7 @@ export { useCaseButtonScenarios, useCaseButtonStepRunnerTests } from './use-case
 export { tokensScenarios, tokensStepRunnerTests } from './tokens.scenarios'
 export { editTextScenarios, editTextStepRunnerTests } from './edit-text.scenarios'
 export { hoverScenarios, hoverStepRunnerTests } from './hover.scenarios'
+export { multiSelectScenarios, multiSelectStepRunnerTests } from './multiselect.scenarios'
 
 import { padStepRunnerTests } from './pad.scenarios'
 import { padTStepRunnerTests } from './pad-t.scenarios'
@@ -35,6 +36,7 @@ import { useCaseButtonStepRunnerTests } from './use-case-button.scenarios'
 import { tokensStepRunnerTests } from './tokens.scenarios'
 import { editTextStepRunnerTests } from './edit-text.scenarios'
 import { hoverStepRunnerTests } from './hover.scenarios'
+import { multiSelectStepRunnerTests } from './multiselect.scenarios'
 
 export const allStepRunnerExampleTests = [
   ...padStepRunnerTests,
@@ -55,4 +57,5 @@ export const allStepRunnerExampleTests = [
   ...tokensStepRunnerTests,
   ...editTextStepRunnerTests,
   ...hoverStepRunnerTests,
+  ...multiSelectStepRunnerTests,
 ]

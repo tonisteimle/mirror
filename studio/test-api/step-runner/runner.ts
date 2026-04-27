@@ -179,6 +179,21 @@ async function executeAction(step: Step, api: TestAPI): Promise<void> {
     case 'unhover':
       await api.interact.unhover(step.target)
       return
+    case 'multiSelect': {
+      if (step.nodeIds.length === 0) {
+        api.studio.clearMultiSelection()
+        return
+      }
+      // First node: regular click (replaces any existing selection).
+      await api.interact.click(step.nodeIds[0])
+      await api.utils.delay(50)
+      // Remaining nodes: shift-click to extend the selection.
+      for (let i = 1; i < step.nodeIds.length; i++) {
+        await api.interact.shiftClick(step.nodeIds[i])
+        await api.utils.delay(50)
+      }
+      return
+    }
     case 'wait':
       await api.utils.delay(step.ms)
       return
@@ -241,6 +256,18 @@ function validateExpectations(
     const actual = api.studio.getSelection()
     if (actual === expect.selectionNot) {
       issues.push(`selection: expected NOT ${expect.selectionNot}, but it is`)
+    }
+  }
+  if (expect.multiSelection !== undefined) {
+    const actual = api.studio.getMultiSelection()
+    const expectedSet = new Set(expect.multiSelection)
+    const actualSet = new Set(actual)
+    const missing = [...expectedSet].filter(id => !actualSet.has(id))
+    const extra = [...actualSet].filter(id => !expectedSet.has(id))
+    if (missing.length > 0 || extra.length > 0) {
+      issues.push(
+        `multiSelection: expected [${[...expectedSet].sort().join(', ')}], got [${[...actualSet].sort().join(', ')}]`
+      )
     }
   }
 
@@ -376,6 +403,8 @@ function describeStep(step: Step): string {
       return `${prefix}hover ${step.target}${suffix}`
     case 'unhover':
       return `${prefix}unhover ${step.target}${suffix}`
+    case 'multiSelect':
+      return `${prefix}multiSelect [${step.nodeIds.join(', ')}]${suffix}`
     case 'wait':
       return `${prefix}wait ${step.ms}ms${suffix}`
   }
