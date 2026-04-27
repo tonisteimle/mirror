@@ -163,11 +163,67 @@ const transportAppTokenEditPropagates: Scenario = {
   ],
 }
 
+// ----- 4: Component edit propagates to instances ---------------------------
+//
+// A `Card` component definition lives at the top of the file; below it
+// is a `Card` instance. Editing the definition's `bg` updates the
+// instance's panel reading — that's the user-meaningful sync we care
+// about.
+//
+// Cross-file note: when the definition lives in `components.com` and
+// the instance lives in `screens/dashboard.mir`, the panel reader can
+// not resolve the component's properties — Studio's panel state only
+// inspects the active file's source. Token cross-file resolution works
+// because PropertyReader.fromPanel for colors has an explicit
+// allSources fallback (`$primary` → hex). Components would need
+// equivalent component-aware lookup in the reader OR Studio's
+// __compileTestCode to include sibling files as a prelude. Tracked as
+// a separate Studio gap; see crossFileComponentEditPropagates below
+// (disabled).
+
+const transportAppComponentEditPropagates: Scenario = {
+  name: 'transport-app: Card definition edit propagates to instance bg',
+  category: 'step-runner',
+  setup: 'Card: bg #1a1a1a, pad 16, rad 8\n\nCard',
+  steps: [
+    // Initial: instance picks up bg from definition.
+    {
+      do: 'select',
+      nodeId: 'node-1',
+      expect: { selection: 'node-1', panel: { bg: '#1a1a1a' } },
+    },
+    // Change the definition's bg in place.
+    {
+      do: 'editorSet',
+      code: 'Card: bg #ef4444, pad 16, rad 8\n\nCard',
+      expect: { code: 'Card: bg #ef4444, pad 16, rad 8\n\nCard' },
+    },
+    // Re-select node-1 (selection clears on full-source replace) and
+    // verify the panel reads the new bg.
+    {
+      do: 'select',
+      nodeId: 'node-1',
+      expect: { selection: 'node-1', panel: { bg: '#ef4444' } },
+    },
+  ],
+}
+
+// Disabled: cross-file component property propagation. Requires either
+// component-aware lookup in PropertyReader.fromPanel or Studio prelude
+// support in test mode. Same shape as the active scenario above but
+// with the definition in components.com.
+//
+// const crossFileComponentEditPropagates: Scenario = {
+//   name: 'cross-file: Card definition in components.com propagates to dashboard instance',
+//   ...
+// }
+
 // Atomic-by-atomic rollout: enable one scenario, get it green, then add
 // the next. Anything below the active line is parked until ready.
 export const transportAppScenarios: Scenario[] = [
   transportAppMultiScreenSetup,
   transportAppSwitchBetweenScreens,
   transportAppTokenEditPropagates,
+  transportAppComponentEditPropagates,
 ]
 export const transportAppStepRunnerTests: TestCase[] = transportAppScenarios.map(scenarioToTestCase)
