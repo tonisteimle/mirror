@@ -104,8 +104,13 @@ const switchFileChangesActiveFile: Scenario = {
 // limitation, not a framework limitation.
 //
 // What we CAN test: the framework's source-side resolver finds the
-// token across files (allSources scan). DOM verification of cross-file
-// tokens needs Studio prelude support in test mode — tracked separately.
+// token across files (allSources scan). The runner routes `panel:` for
+// readable properties through PropertyReader.fromPanel, which uses the
+// allSources fallback for color tokens — so we get the resolved hex on
+// the panel dimension even though the DOM stays transparent.
+//
+// DOM verification of cross-file tokens still needs Studio prelude
+// support in test mode — tracked separately.
 
 const crossFileTokenResolves: Scenario = {
   name: 'cross-file: token defined in tokens.tok resolves at the source level',
@@ -118,6 +123,7 @@ const crossFileTokenResolves: Scenario = {
     },
   },
   steps: [
+    { do: 'select', nodeId: 'node-1', expect: { selection: 'node-1' } },
     {
       do: 'wait',
       ms: 100,
@@ -139,10 +145,7 @@ export const multifileBasicsScenarios: Scenario[] = [
   multifileEntryRenders,
   multifileSidecarFilesExist,
   switchFileChangesActiveFile,
-  // crossFileTokenResolves — disabled: needs Studio's __compileTestCode
-  // to include sibling files as a prelude (currently it parses only the
-  // active file). The framework's allSources resolver IS in place; the
-  // missing piece is on Studio's side.
+  crossFileTokenResolves,
 ]
 export const multifileBasicsStepRunnerTests: TestCase[] =
   multifileBasicsScenarios.map(scenarioToTestCase)
