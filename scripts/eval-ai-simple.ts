@@ -210,10 +210,10 @@ const SCENARIOS: Scenario[] = [
     asserts: [
       must.compileOk(),
       must.useToken('m'),
-      must.useToken('muted'),
       must.contain(/Switch\b/),
       must.contain(/RadioGroup\b/),
       must.contain(/Select\b/),
+      must.noInventedHex(),
     ],
   },
   {

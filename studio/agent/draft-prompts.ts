@@ -44,11 +44,14 @@ export function listDraftPromptVariants(): string[] {
  * (see commit f8791268).
  */
 export function buildDraftPromptCurrent(input: DraftPromptInput): string {
+  const hasContent = input.content.trim().length > 0
   const userInstruction = input.prompt
     ? `User-Anfrage: ${input.prompt}`
-    : 'Vervollständige oder korrigiere den Code im Draft-Block basierend auf dem Kontext.'
+    : hasContent
+      ? `Korrigiere Syntax-Fehler im Draft-Block und vervollständige fehlende Details — bewahre dabei die User-Intention. Wenn der Draft einen Button "Save" enthält, gib einen Button "Save" zurück (nicht ein anderes Element). Häufige zu behebende Probleme: Tippfehler in Property-Namen, fehlende Kommas, fehlende Quotes um Strings, fehlende \`$\` vor Token-Verweisen (z.B. \`bg primary\` → \`bg $primary\` wenn \`primary\` ein Token ist), falsche Einrückung, CSS-Syntax statt Mirror-Syntax.`
+      : 'Generiere neuen Code basierend auf dem Datei-Kontext.'
 
-  const draftContent = input.content.trim()
+  const draftContent = hasContent
     ? `\n\nAktueller Inhalt des Draft-Blocks:\n\`\`\`mirror\n${input.content}\n\`\`\``
     : '\n\nDer Draft-Block ist leer — generiere neuen Code basierend auf User-Anfrage und Kontext.'
 
