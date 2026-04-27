@@ -7,7 +7,6 @@
  */
 
 import { spawn } from 'child_process'
-import type { FixerResponse } from '../../studio/agent/types'
 
 // ============================================
 // TYPES
@@ -31,12 +30,10 @@ export interface AgentResult {
 export interface MockTauriBridgeConfig {
   /** Use real Claude CLI instead of mocks */
   useRealCli?: boolean
-  /** Mock response to return (for mock mode) — JSON-stringified into output */
-  mockResponse?: FixerResponse
   /**
-   * Raw output string to return (for mock mode). Takes precedence over
-   * `mockResponse`. Use this when testing code paths that expect raw text
-   * (e.g. `generateDraftCode` returning a ```mirror code block).
+   * Raw output string returned for the next mock call. The live AI path
+   * (`generateDraftCode`) consumes raw text — typically a ```mirror code
+   * block. Defaults to an empty string if unset.
    */
   mockRawOutput?: string
   /** Mock error to return (for mock mode) */
@@ -134,7 +131,7 @@ export class MockTauriBridge {
   // ============================================
 
   private async runMockAgent(
-    prompt: string,
+    _prompt: string,
     agentType: string,
     sessionId: string
   ): Promise<AgentResult> {
@@ -167,10 +164,7 @@ export class MockTauriBridge {
       }
     }
 
-    // Determine output: raw text takes precedence over JSON response
-    const output =
-      this.config.mockRawOutput ??
-      JSON.stringify(this.config.mockResponse || this.generateMockResponse(prompt), null, 2)
+    const output = this.config.mockRawOutput ?? ''
 
     // Emit streaming output
     this.emitOutput({
@@ -294,62 +288,11 @@ export class MockTauriBridge {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
 
-  private generateMockResponse(prompt: string): FixerResponse {
-    // Generate a simple mock response based on the prompt
-    const lowerPrompt = prompt.toLowerCase()
-
-    if (lowerPrompt.includes('button')) {
-      return {
-        explanation: 'Button-Komponente erstellt',
-        changes: [
-          {
-            file: 'app.mir',
-            action: 'insert',
-            code: 'Button "Click me"\n  bg #3B82F6\n  col white\n  pad 12 24\n  rad 8',
-            position: { line: 1 },
-          },
-        ],
-      }
-    }
-
-    if (lowerPrompt.includes('card')) {
-      return {
-        explanation: 'Card-Komponente erstellt',
-        changes: [
-          {
-            file: 'app.mir',
-            action: 'insert',
-            code: 'Card\n  pad 20\n  bg #1a1a1a\n  rad 12\n  Title "Card Title"\n  Text "Card content"',
-            position: { line: 1 },
-          },
-        ],
-      }
-    }
-
-    // Default response
-    return {
-      explanation: 'Änderung durchgeführt',
-      changes: [
-        {
-          file: 'app.mir',
-          action: 'insert',
-          code: '// Generated from: ' + prompt.slice(0, 50),
-          position: { line: 1 },
-        },
-      ],
-    }
-  }
-
   // ============================================
   // TEST HELPERS
   // ============================================
 
-  /** Set mock response for next call */
-  setMockResponse(response: FixerResponse) {
-    this.config.mockResponse = response
-  }
-
-  /** Set raw text output for next call (takes precedence over response) */
+  /** Set raw text output for next call */
   setMockRawOutput(output: string) {
     this.config.mockRawOutput = output
   }
@@ -359,9 +302,8 @@ export class MockTauriBridge {
     this.config.mockError = error
   }
 
-  /** Clear mock response/error/output */
+  /** Clear mock output + error */
   clearMocks() {
-    this.config.mockResponse = undefined
     this.config.mockRawOutput = undefined
     this.config.mockError = undefined
   }

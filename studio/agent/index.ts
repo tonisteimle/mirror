@@ -1,30 +1,29 @@
 /**
  * Mirror Agent — Fixer-only AI integration
  *
- * Single AI path: Claude Code CLI via Tauri Bridge (uses user's CLI subscription).
+ * Single AI path: Claude Code CLI via Tauri Bridge (uses the user's CLI
+ * subscription). Triggered by the editor's `??` draft-mode marker.
  *
  * @example
  * ```typescript
  * import { createFixer } from './agent'
  *
- * const fixer = createFixer({ ... })
- *
- * for await (const event of fixer.fix("füge einen roten button hinzu")) {
- *   if (event.type === 'text') console.log(event.content)
- *   if (event.type === 'done') console.log('Fertig!')
- * }
+ * const fixer = createFixer({
+ *   getFiles: () => [...],
+ *   getCurrentFile: () => 'index.mir',
+ * })
+ * const code = await fixer.generateDraftCode('blauer button', '', source)
  * ```
  */
 
 export { FixerService, createFixer, getFixer } from './fixer'
 export type { FixerConfig } from './fixer'
 export {
-  ContextCollector,
-  createContextCollector,
-  getContextCollector,
-  extractProjectContext,
-} from './context-collector'
-export { CodeApplicator, createCodeApplicator, getCodeApplicator } from './code-applicator'
-export { buildFixerSystemPrompt, buildFixerPrompt } from './prompts/fixer-system'
-
-export * from './types'
+  buildDraftPromptCurrent,
+  extractCodeBlock,
+  listDraftPromptVariants,
+  resolveDraftPromptBuilder,
+  type DraftPromptInput,
+  type DraftPromptBuilder,
+} from './draft-prompts'
+export type { FileType, FileInfo } from './types'

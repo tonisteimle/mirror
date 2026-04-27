@@ -571,10 +571,14 @@ function switchFile(filename) {
     studio.sync.resetInitialSync()
   }
 
-  // Dispatch with fileSwitchAnnotation to bypass the App lock filter
+  // Dispatch with fileSwitchAnnotation to bypass the App lock filter.
+  // addToHistory:false keeps file navigation out of CodeMirror's undo
+  // history — switching files is navigation, not an edit, and a stale
+  // history entry would let undo replace the just-loaded file with the
+  // previous file's content.
   editor.dispatch({
     changes: { from: 0, to: editor.state.doc.length, insert: files[filename] || '' },
-    annotations: fileSwitchAnnotation.of(true),
+    annotations: [fileSwitchAnnotation.of(true), Transaction.addToHistory.of(false)],
   })
 
   // Update active state in UI
@@ -1442,60 +1446,11 @@ function initializeFixer() {
         if (ext === 'tok' || name.includes('token')) type = 'tokens'
         else if (ext === 'com' || name.includes('component')) type = 'component'
 
-        // FIX #6: Use 'code' to match FileInfo interface
         fileList.push({ name, type, code: content })
       }
       return fileList
     },
     getCurrentFile: () => currentFile,
-    getEditorContent: () => window.editor?.state.doc.toString() || '',
-    getCursor: () => {
-      if (!window.editor) return { line: 1, column: 1, offset: 0 }
-      const offset = window.editor.state.selection.main.head
-      const line = window.editor.state.doc.lineAt(offset)
-      return { line: line.number, column: offset - line.from + 1, offset }
-    },
-    getSelection: () => {
-      if (!window.editor) return null
-      const { from, to } = window.editor.state.selection.main
-      if (from === to) return null
-      return {
-        from,
-        to,
-        text: window.editor.state.sliceDoc(from, to),
-      }
-    },
-    getFileContent: filename => files[filename] || null,
-    saveFile: async (filename, content) => {
-      files[filename] = content
-      if (filename === currentFile) {
-        window.editor?.dispatch({
-          changes: { from: 0, to: window.editor.state.doc.length, insert: content },
-        })
-      }
-    },
-    createFile: async (filename, content) => {
-      files[filename] = content
-      // Refresh file tree if desktop-files module is available
-      if (window.DesktopFiles?.renderFileTree) {
-        window.DesktopFiles.renderFileTree()
-      }
-    },
-    updateEditor: content => {
-      window.editor?.dispatch({
-        changes: { from: 0, to: window.editor.state.doc.length, insert: content },
-      })
-    },
-    refreshFileTree: () => {
-      if (window.DesktopFiles?.renderFileTree) {
-        window.DesktopFiles.renderFileTree()
-      }
-    },
-    switchToFile: filename => {
-      if (window.DesktopFiles?.selectFile) {
-        window.DesktopFiles.selectFile(filename)
-      }
-    },
   })
 
   return fixerService

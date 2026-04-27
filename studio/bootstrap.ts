@@ -460,33 +460,10 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   // Wire draft:submit → Fixer (Claude CLI via Tauri)
   // The default processWithAI in DraftModeManager emits draft:submit and waits
   // for draft:ai-response — this listener is the production AI bridge.
-  if (config.getFiles && config.getCurrentFile && config.updateFile) {
+  if (config.getFiles && config.getCurrentFile) {
     const fixer = createFixer({
       getFiles: config.getFiles,
       getCurrentFile: config.getCurrentFile,
-      getEditorContent: () => state.get().source,
-      getCursor: () => {
-        const pos = state.get().cursor
-        return { line: pos.line, column: pos.column, offset: 0 }
-      },
-      getSelection: () => null,
-      getFileContent: filename => {
-        const files = config.getFiles!()
-        return files.find(f => f.name === filename)?.code ?? null
-      },
-      saveFile: async (filename, content) => {
-        config.updateFile!(filename, content)
-      },
-      createFile: async (filename, content) => {
-        config.updateFile!(filename, content)
-      },
-      updateEditor: content => {
-        config.editor.dispatch({
-          changes: { from: 0, to: config.editor.state.doc.length, insert: content },
-        })
-      },
-      refreshFileTree: () => {},
-      switchToFile: config.switchToFile,
     })
     studio.fixer = fixer
 
