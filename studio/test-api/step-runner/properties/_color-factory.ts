@@ -39,7 +39,7 @@ export function createColorReader(config: ColorPropertyConfig): PropertyReader {
       if (raw === null) return null
       // Resolve `$tokenName` against the project source before normalising.
       // If the value isn't a token, maybeResolveToken returns it unchanged.
-      const resolved = maybeResolveToken(raw, config.name, ctx.source)
+      const resolved = maybeResolveToken(raw, config.name, ctx.allSources)
       return normalizeColor(resolved)
     },
 
@@ -53,7 +53,7 @@ export function createColorReader(config: ColorPropertyConfig): PropertyReader {
     fromPanel(nodeId, ctx): PropertyValue {
       const raw = ctx.api.panel.property.getPropertyValue(config.name)
       if (raw !== null) {
-        const resolved = maybeResolveToken(raw, config.name, ctx.source)
+        const resolved = maybeResolveToken(raw, config.name, ctx.allSources)
         return normalizeColor(resolved)
       }
       // Studio's panel-api currently returns null for token-bound
@@ -67,7 +67,7 @@ export function createColorReader(config: ColorPropertyConfig): PropertyReader {
       if (!line) return null
       const fromSrc = readColorFromLine(line, config.aliases)
       if (fromSrc === null || !fromSrc.startsWith('$')) return null
-      const resolved = maybeResolveToken(fromSrc, config.name, ctx.source)
+      const resolved = maybeResolveToken(fromSrc, config.name, ctx.allSources)
       if (resolved === fromSrc) return null
       return normalizeColor(resolved)
     },

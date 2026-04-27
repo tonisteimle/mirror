@@ -79,6 +79,12 @@ export type StepAction =
   | { do: 'multiSelect'; nodeIds: readonly string[] }
 
   // ---------------------------------------------------------------------------
+  // Project files — switch the editor's active file. The compile target
+  // changes accordingly; readers thereafter resolve against the new file.
+  // ---------------------------------------------------------------------------
+  | { do: 'switchFile'; filename: string }
+
+  // ---------------------------------------------------------------------------
   // Utility
   // ---------------------------------------------------------------------------
   | { do: 'wait'; ms: number }
@@ -174,10 +180,26 @@ export type Step = StepAction & {
   expect?: Expectations
 }
 
+/**
+ * Multi-file project setup. Each entry maps a filename (e.g.
+ * `tokens.tok`, `components.com`, `screens/overview.mir`) to its
+ * source. `entry` names the file the editor should be focused on
+ * after setup — typically the main app file or the screen being
+ * exercised.
+ */
+export interface SetupProject {
+  entry: string
+  files: Record<string, string>
+}
+
 export interface Scenario {
   name: string
   category?: string
-  /** Initial Mirror source loaded before the first step runs. */
-  setup: string
+  /**
+   * Initial source loaded before the first step. Either a single string
+   * (treated as a one-file project), or a SetupProject for cross-file
+   * scenarios (tokens + components + screens).
+   */
+  setup: string | SetupProject
   steps: Step[]
 }

@@ -240,8 +240,14 @@ export const handlesTests: TestCase[] = [
   ...componentExtractTests,
   ...batchReplaceTests,
   ...allKeyboardEditingTests,
-  ...allStepRunnerExampleTests,
 ]
+
+/**
+ * 8b. STEP-RUNNER - New declarative test framework (separate category so
+ * iteration on step-runner scenarios doesn't have to wait for the full
+ * handles suite to enumerate).
+ */
+export const stepRunnerTests: TestCase[] = [...allStepRunnerExampleTests]
 
 /**
  * 9. SELECTION - Multi-select, editor multiselect, ungroup, spread toggle
@@ -372,6 +378,7 @@ export type CategoryName =
   | 'tutorial'
   | 'stress'
   | 'headed'
+  | 'stepRunner'
 
 export interface CategoryInfo {
   name: CategoryName
@@ -419,6 +426,11 @@ export const categories: Record<CategoryName, CategoryInfo> = {
     name: 'handles',
     description: 'Visual manipulation (padding, margin, gap, resize, snapping)',
     tests: handlesTests,
+  },
+  stepRunner: {
+    name: 'stepRunner',
+    description: 'Step-runner (declarative scenarios, 3-D validation)',
+    tests: stepRunnerTests,
   },
   selection: {
     name: 'selection',

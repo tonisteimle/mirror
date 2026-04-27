@@ -23,8 +23,14 @@ import type { TestAPI } from '../../types'
 export type PropertyValue = string | null
 
 export interface ReaderContext {
-  /** Full Mirror source as the editor currently sees it. */
+  /** Source of the currently active file. */
   source: string
+  /**
+   * Concatenated source of ALL project files (tokens + components +
+   * screens + ...). Token-resolver and other cross-file lookups scan
+   * this. For single-file scenarios this equals `source`.
+   */
+  allSources: string
   /** SourceMap for line→nodeId resolution. */
   sourceMap: SourceMapLike
   /** Preview container for DOM queries. */

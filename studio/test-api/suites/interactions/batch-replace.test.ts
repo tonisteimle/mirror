@@ -117,6 +117,29 @@ function getComFile(): { name: string; content: string } | null {
   return null
 }
 
+/**
+ * Reset project files (.com / .tok) before a test runs. Without this,
+ * earlier tests' extractions accumulate in the in-memory file cache and
+ * interact with later tests (e.g. an existing `Card:` definition would
+ * be merged into instead of created fresh).
+ *
+ * Editor content is reset by `testWithSetup` itself; this only handles
+ * the side-files.
+ */
+function clearProjectFiles(): void {
+  const files = window.desktopFiles?.getFiles?.() || {}
+  for (const name of Object.keys(files)) {
+    if (
+      name.endsWith('.com') ||
+      name.endsWith('.components') ||
+      name.endsWith('.tok') ||
+      name.endsWith('.tokens')
+    ) {
+      window.desktopFiles?.updateFileCache?.(name, '')
+    }
+  }
+}
+
 function getTokFile(): { name: string; content: string } | null {
   const files = window.desktopFiles?.getFiles?.() || {}
   for (const [name, content] of Object.entries(files)) {
@@ -159,6 +182,7 @@ Frame pad 12, bg #1a1a1a, rad 8
 Frame pad 12, bg #1a1a1a, rad 8
   Text "Gamma"`,
     async (api: TestAPI) => {
+      clearProjectFiles()
       await api.utils.waitForCompile()
 
       await typeDoubleColon(api, {
@@ -208,6 +232,7 @@ Frame pad 12, bg #1a1a1a, rad 8
 Frame pad 12, bg #1a1a1a, rad 8
 Frame pad 12, bg #1a1a1a, rad 8`,
     async (api: TestAPI) => {
+      clearProjectFiles()
       await api.utils.waitForCompile()
 
       await typeDoubleColon(api, {
@@ -249,6 +274,7 @@ Frame pad 12, bg #1a1a1a, rad 8`,
     `Frame pad 12, bg #1a1a1a, rad 8
 Frame pad 12, bg #1a1a1a, rad 8`,
     async (api: TestAPI) => {
+      clearProjectFiles()
       await api.utils.waitForCompile()
 
       await typeDoubleColon(api, {
@@ -284,6 +310,7 @@ Frame pad 12, bg #1a1a1a, rad 8`,
     `Frame pad 12, bg #1a1a1a, rad 8
 Frame w 100, h 50, bg #fff`,
     async (api: TestAPI) => {
+      clearProjectFiles()
       await api.utils.waitForCompile()
 
       await typeDoubleColon(api, {
@@ -316,6 +343,7 @@ Btn pad 10, bg #2271C1, col white
 Text col #2271C1
 Card bg #2271C1, rad 8`,
     async (api: TestAPI) => {
+      clearProjectFiles()
       await api.utils.waitForCompile()
 
       // Build `bg primary::#2271C1` on first line.
@@ -381,6 +409,7 @@ Card bg #2271C1, rad 8`,
     'Phase B: no other bg #XXX → no dialog (just local extract)',
     `Frame bg #2271C1, w 100, h 50`,
     async (api: TestAPI) => {
+      clearProjectFiles()
       await api.utils.waitForCompile()
 
       const editor = window.editor!
@@ -426,6 +455,7 @@ Frame pad 16, bg #2271C1, rad 8
 Frame pad 16, bg #ef4444, rad 8
   Text "Danger"`,
     async (api: TestAPI) => {
+      clearProjectFiles()
       await api.utils.waitForCompile()
 
       await typeDoubleColon(api, {
@@ -474,6 +504,7 @@ Frame pad 16, bg #ef4444, rad 8
     `Frame pad 16, bg #1a1a1a, rad 8
 Frame pad 16, bg #2271C1, rad 8`,
     async (api: TestAPI) => {
+      clearProjectFiles()
       await api.utils.waitForCompile()
 
       await typeDoubleColon(api, {
@@ -513,6 +544,7 @@ Frame pad 16, bg #2271C1, rad 8`,
 Frame pad 16, bg #1a1a1a, rad 8
 Frame pad 16, bg #2271C1, rad 8`,
     async (api: TestAPI) => {
+      clearProjectFiles()
       await api.utils.waitForCompile()
 
       await typeDoubleColon(api, {

@@ -16,16 +16,29 @@
 
 import type { TestCase, TestAPI } from '../types'
 import { testWithSetup } from '../test-runner'
-import type { Scenario, Step, Expectations } from './types'
+import type { Scenario, SetupProject, Step, Expectations } from './types'
 import { installConsoleCollector, type ConsoleCollector } from './console-collector'
 import { codeDiff, canonicalizeCode } from './diff'
 import { getReader, PROPERTY_READERS, type SourceMapLike } from './properties'
 import { getWriter } from './writers'
 
 export function scenarioToTestCase(scenario: Scenario): TestCase {
-  const tc = testWithSetup(scenario.name, scenario.setup, async (api: TestAPI) => {
+  // Single-file scenario: pass setup string straight to testWithSetup so
+  // the existing single-file path keeps working unchanged.
+  // Multi-file scenario: setup the entry file's content as the editor's
+  // initial code, then create the rest of the project files in the
+  // scenario body before any steps run.
+  const initialCode =
+    typeof scenario.setup === 'string'
+      ? scenario.setup
+      : (scenario.setup.files[scenario.setup.entry] ?? '')
+
+  const tc = testWithSetup(scenario.name, initialCode, async (api: TestAPI) => {
     const collector = installConsoleCollector()
     try {
+      if (typeof scenario.setup !== 'string') {
+        await setupProjectFiles(scenario.setup, api)
+      }
       await runScenario(scenario, api, collector)
     } finally {
       collector.dispose()
@@ -35,6 +48,33 @@ export function scenarioToTestCase(scenario: Scenario): TestCase {
     return { ...tc, category: scenario.category }
   }
   return tc
+}
+
+/**
+ * Create non-entry project files via the panel.files API, then re-open
+ * the entry file so the editor focus matches the scenario's intent.
+ * Tokens defined in `tokens.tok`/`*.tok` and components in `*.com`
+ * become available across the whole project after this step.
+ */
+async function setupProjectFiles(setup: SetupProject, api: TestAPI): Promise<void> {
+  const entry = setup.entry
+  for (const [filename, content] of Object.entries(setup.files)) {
+    // Important: also create the entry file. testWithSetup put its
+    // content in the editor, but Studio's `files{}` global doesn't know
+    // about it under the entry name (it's still under whatever
+    // currentFile defaulted to — index.mir or similar). Without this,
+    // panel.files.open(entry) silently fails (returns false) because
+    // files[entry] doesn't exist.
+    const exists = api.panel.files.list().includes(filename)
+    if (exists) {
+      await api.panel.files.delete(filename)
+    }
+    await api.panel.files.create(filename, content)
+  }
+  // Switch to entry so the editor + preview reflect that file.
+  await api.panel.files.open(entry)
+  await api.utils.waitForCompile()
+  await api.utils.delay(100)
 }
 
 export function scenariosToTestCases(scenarios: Scenario[]): TestCase[] {
@@ -194,6 +234,19 @@ async function executeAction(step: Step, api: TestAPI): Promise<void> {
       }
       return
     }
+    case 'switchFile': {
+      // Studio's `window.switchFile` isn't exposed, so panel.files.open
+      // returns false silently. Workaround: read the file content and
+      // setCode it directly. This loses the "currentFile" tracking on
+      // the Studio side but achieves the framework's goal — the editor
+      // and preview reflect the requested file's source.
+      const content = api.panel.files.getContent(step.filename)
+      if (content === null) {
+        throw new Error(`switchFile: ${step.filename} not in project files`)
+      }
+      await api.editor.setCode(content)
+      return
+    }
     case 'wait':
       await api.utils.delay(step.ms)
       return
@@ -306,6 +359,7 @@ function validateExpectations(
   // ----- Properties (3-dimension check) -----
   if (expect.props) {
     const source = api.editor.getCode()
+    const allSources = collectAllProjectSources(api, source)
     const sourceMap = api.studio.getSourceMap() as SourceMapLike | null
     const container = document.getElementById('preview')
     if (!sourceMap) {
@@ -313,7 +367,7 @@ function validateExpectations(
     } else if (!container) {
       issues.push('props: preview container not found')
     } else {
-      const ctx = { source, sourceMap, container, api }
+      const ctx = { source, allSources, sourceMap, container, api }
       for (const [nodeId, propMap] of Object.entries(expect.props)) {
         for (const [propName, expected] of Object.entries(propMap)) {
           const reader = getReader(propName)
@@ -405,6 +459,8 @@ function describeStep(step: Step): string {
       return `${prefix}unhover ${step.target}${suffix}`
     case 'multiSelect':
       return `${prefix}multiSelect [${step.nodeIds.join(', ')}]${suffix}`
+    case 'switchFile':
+      return `${prefix}switchFile ${step.filename}${suffix}`
     case 'wait':
       return `${prefix}wait ${step.ms}ms${suffix}`
   }
@@ -420,4 +476,29 @@ function formatPanelValue(v: string | null): string {
 
 function supportedReaderNames(): string {
   return Object.keys(PROPERTY_READERS).join(', ')
+}
+
+/**
+ * Concatenate the source of every project file. Used by readers that need
+ * cross-file lookups (notably the token resolver: a `bg $primary` in one
+ * screen file references a definition in `tokens.tok`). For single-file
+ * scenarios this collapses to the active source.
+ *
+ * Failure modes (file API not available, file read throws) fall back to
+ * the active source — the worst that happens is tokens defined in other
+ * files won't resolve.
+ */
+function collectAllProjectSources(api: TestAPI, activeSource: string): string {
+  try {
+    const filenames = api.panel.files.list()
+    if (filenames.length === 0) return activeSource
+    const parts: string[] = []
+    for (const name of filenames) {
+      const content = api.panel.files.getContent(name)
+      if (typeof content === 'string') parts.push(content)
+    }
+    return parts.length > 0 ? parts.join('\n') : activeSource
+  } catch {
+    return activeSource
+  }
 }
