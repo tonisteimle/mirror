@@ -218,6 +218,49 @@ const transportAppComponentEditPropagates: Scenario = {
 //   ...
 // }
 
+// ----- 5: Per-instance change isolation ------------------------------------
+//
+// Two Card instances share one definition. Override the FIRST instance's
+// `bg` via the panel; the second instance must not be affected. This is
+// the inverse of atom 4: edits at the instance level are local, edits
+// at the definition level are global.
+
+const transportAppPerInstanceIsolation: Scenario = {
+  name: 'transport-app: panel edit on one Card instance leaves siblings unchanged',
+  category: 'step-runner',
+  setup: 'Card: bg #1a1a1a, pad 16, rad 8\n\nCard\nCard',
+  steps: [
+    // Both instances start with the definition's bg.
+    {
+      do: 'select',
+      nodeId: 'node-1',
+      expect: { selection: 'node-1', panel: { bg: '#1a1a1a' } },
+    },
+    {
+      do: 'select',
+      nodeId: 'node-2',
+      expect: { selection: 'node-2', panel: { bg: '#1a1a1a' } },
+    },
+    // Override node-1's bg via the panel.
+    { do: 'select', nodeId: 'node-1', expect: { selection: 'node-1' } },
+    {
+      do: 'setProperty',
+      via: 'panel',
+      target: 'node-1',
+      property: 'bg',
+      value: '#2271c1',
+      comment: 'panel-edit on node-1 only',
+      expect: { panel: { bg: '#2271c1' } },
+    },
+    // node-2 must still read the definition's original bg.
+    {
+      do: 'select',
+      nodeId: 'node-2',
+      expect: { selection: 'node-2', panel: { bg: '#1a1a1a' } },
+    },
+  ],
+}
+
 // Atomic-by-atomic rollout: enable one scenario, get it green, then add
 // the next. Anything below the active line is parked until ready.
 export const transportAppScenarios: Scenario[] = [
@@ -225,5 +268,6 @@ export const transportAppScenarios: Scenario[] = [
   transportAppSwitchBetweenScreens,
   transportAppTokenEditPropagates,
   transportAppComponentEditPropagates,
+  transportAppPerInstanceIsolation,
 ]
 export const transportAppStepRunnerTests: TestCase[] = transportAppScenarios.map(scenarioToTestCase)
