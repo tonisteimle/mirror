@@ -34,6 +34,7 @@ export {
   multifileBasicsScenarios,
   multifileBasicsStepRunnerTests,
 } from './multifile-basics.scenarios'
+export { transportAppScenarios, transportAppStepRunnerTests } from './transport-app.scenarios'
 
 import { padStepRunnerTests } from './pad.scenarios'
 import { padTStepRunnerTests } from './pad-t.scenarios'
@@ -59,6 +60,7 @@ import { useCaseThemingStepRunnerTests } from './use-case-theming.scenarios'
 import { useCaseBuildButtonStepRunnerTests } from './use-case-build-button.scenarios'
 import { useCaseUndoRedoStepRunnerTests } from './use-case-undo-redo.scenarios'
 import { multifileBasicsStepRunnerTests } from './multifile-basics.scenarios'
+import { transportAppStepRunnerTests } from './transport-app.scenarios'
 
 export const allStepRunnerExampleTests = [
   ...padStepRunnerTests,
@@ -85,4 +87,5 @@ export const allStepRunnerExampleTests = [
   ...useCaseBuildButtonStepRunnerTests,
   ...useCaseUndoRedoStepRunnerTests,
   ...multifileBasicsStepRunnerTests,
+  ...transportAppStepRunnerTests,
 ]
