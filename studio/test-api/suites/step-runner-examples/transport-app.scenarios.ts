@@ -261,6 +261,78 @@ const transportAppPerInstanceIsolation: Scenario = {
   ],
 }
 
+// ----- 6: Cross-file edit persistence ---------------------------------------
+//
+// An edit on orders.mir must SURVIVE a round-trip through dashboard
+// and back. Without that, multi-file work would be a data-loss
+// minefield. This is the user-meaningful "save my work" guarantee.
+//
+// Undo across files is intentionally NOT tested here. CodeMirror's
+// undo history is per-EditorView, not per-file: switching files
+// replaces the document but doesn't snapshot the previous file's
+// history, so undoing after a round-trip would re-apply an inverse
+// against the wrong baseline. Proper per-file history (à la VS Code)
+// requires per-file EditorState snapshots in switchFile — tracked as a
+// separate Studio change. The disabled variant below documents that
+// gap.
+
+const transportAppCrossFileEditPersists: Scenario = {
+  name: 'transport-app: edit on orders survives a round-trip through dashboard',
+  category: 'step-runner',
+  setup: {
+    entry: 'screens/dashboard.mir',
+    files: {
+      'screens/dashboard.mir': 'Frame w 100, h 100, bg #2271c1',
+      'screens/orders.mir': 'Frame w 50, h 50, bg #ef4444',
+    },
+  },
+  steps: [
+    // Edit orders.mir's bg via panel
+    { do: 'switchFile', filename: 'screens/orders.mir' },
+    { do: 'wait', ms: 500 },
+    {
+      do: 'select',
+      nodeId: 'node-1',
+      expect: { selection: 'node-1', panel: { bg: '#ef4444' } },
+    },
+    {
+      do: 'setProperty',
+      via: 'panel',
+      target: 'node-1',
+      property: 'bg',
+      value: '#10b981',
+      comment: 'edit on orders.mir',
+      expect: { panel: { bg: '#10b981' } },
+    },
+    // Round-trip: switch to dashboard, then back to orders.
+    { do: 'switchFile', filename: 'screens/dashboard.mir' },
+    { do: 'wait', ms: 500 },
+    { do: 'switchFile', filename: 'screens/orders.mir' },
+    { do: 'wait', ms: 500 },
+    // Edit must have survived.
+    {
+      do: 'select',
+      nodeId: 'node-1',
+      comment: 'edit survived round-trip through dashboard',
+      expect: {
+        selection: 'node-1',
+        code: 'Frame w 50, h 50, bg #10b981',
+        panel: { bg: '#10b981' },
+      },
+    },
+  ],
+}
+
+// Disabled: per-file undo after switching files. Edits on orders → switch
+// to dashboard → switch back → undo would need per-file CodeMirror
+// history snapshots in switchFile. Currently CodeMirror's per-EditorView
+// history is shared across files, so undoing after a round-trip re-applies
+// the inverse against the wrong baseline.
+//
+// Disabled: cross-file (global) undo. Pressing undo while on dashboard
+// would not affect an edit made on orders — would need a Studio
+// command-stack spanning files.
+
 // Atomic-by-atomic rollout: enable one scenario, get it green, then add
 // the next. Anything below the active line is parked until ready.
 export const transportAppScenarios: Scenario[] = [
@@ -269,5 +341,6 @@ export const transportAppScenarios: Scenario[] = [
   transportAppTokenEditPropagates,
   transportAppComponentEditPropagates,
   transportAppPerInstanceIsolation,
+  transportAppCrossFileEditPersists,
 ]
 export const transportAppStepRunnerTests: TestCase[] = transportAppScenarios.map(scenarioToTestCase)
