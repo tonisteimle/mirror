@@ -66,6 +66,13 @@ export type StepAction =
   | { do: 'editText'; target: string; text: string }
 
   // ---------------------------------------------------------------------------
+  // Hover state — triggers/clears the :hover pseudo-class on a node.
+  // The element's source `hover:` block (if any) becomes the active state.
+  // ---------------------------------------------------------------------------
+  | { do: 'hover'; target: string }
+  | { do: 'unhover'; target: string }
+
+  // ---------------------------------------------------------------------------
   // Utility
   // ---------------------------------------------------------------------------
   | { do: 'wait'; ms: number }

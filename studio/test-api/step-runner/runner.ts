@@ -173,6 +173,12 @@ async function executeAction(step: Step, api: TestAPI): Promise<void> {
       await api.editor.setCode(lines.join('\n'))
       return
     }
+    case 'hover':
+      await api.interact.hover(step.target)
+      return
+    case 'unhover':
+      await api.interact.unhover(step.target)
+      return
     case 'wait':
       await api.utils.delay(step.ms)
       return
@@ -366,6 +372,10 @@ function describeStep(step: Step): string {
       return `${prefix}editorInsert@${step.line}${suffix}`
     case 'editText':
       return `${prefix}editText ${step.target}=${JSON.stringify(step.text)}${suffix}`
+    case 'hover':
+      return `${prefix}hover ${step.target}${suffix}`
+    case 'unhover':
+      return `${prefix}unhover ${step.target}${suffix}`
     case 'wait':
       return `${prefix}wait ${step.ms}ms${suffix}`
   }
