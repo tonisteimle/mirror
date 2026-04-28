@@ -11,12 +11,29 @@ export { generateDOM } from './backends/dom'
 export { generateFramework } from './backends/framework'
 export { generateReact } from './backends/react'
 // Note: generateStatic is not exported - it's an incomplete stub
-export { combineProjectFiles, combineProjectFilesWithData, combineFiles, DIRECTORY_ORDER } from './preprocessor'
+export {
+  combineProjectFiles,
+  combineProjectFilesWithData,
+  combineFiles,
+  DIRECTORY_ORDER,
+} from './preprocessor'
 export type { ReadFileFn, ListFilesFn, ProjectFiles } from './preprocessor'
 
 // Data parser for .data files
-export { parseDataFile, parseDataFiles, mergeDataFiles, serializeDataForJS } from './parser/data-parser'
-export type { DataFile, DataEntry, DataAttribute, DataMarkdownBlock, DataParseError, DataValue } from './parser/data-types'
+export {
+  parseDataFile,
+  parseDataFiles,
+  mergeDataFiles,
+  serializeDataForJS,
+} from './parser/data-parser'
+export type {
+  DataFile,
+  DataEntry,
+  DataAttribute,
+  DataMarkdownBlock,
+  DataParseError,
+  DataValue,
+} from './parser/data-types'
 
 // Logger utilities
 export { createLogger, setLogLevel, getLogLevel } from './utils/logger'
@@ -38,11 +55,15 @@ export * from './studio'
 
 // Zag integration exports
 export * from './schema/zag-primitives'
-export * from './compiler/zag'
 
 import { parse } from './parser'
 import { generateDOM } from './backends/dom'
-import { combineProjectFiles, combineProjectFilesWithData, ReadFileFn, ListFilesFn } from './preprocessor'
+import {
+  combineProjectFiles,
+  combineProjectFilesWithData,
+  ReadFileFn,
+  ListFilesFn,
+} from './preprocessor'
 import { parseDataFiles } from './parser/data-parser'
 import type { DataFile } from './parser/data-types'
 
