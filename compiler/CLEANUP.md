@@ -133,11 +133,11 @@ Gleiches Vorgehen, neuer Plan. Erst eines fertig, dann das nächste.
 
 ## Status
 
-| Phase                   | Status            | Letzte Aktion                                                           |
-| ----------------------- | ----------------- | ----------------------------------------------------------------------- |
-| 0 — Inventur            | ✅ fertig         | 2026-04-28 — `compiler/INVENTORY.md` angelegt                           |
-| 1 — Mechanische Putze   | ✅ fertig         | 2026-04-28 — 21 Files / 4 Verzeichnisse gelöscht, alle 10920 Tests grün |
-| 2 — Validator-Tests     | ⬜ offen          | —                                                                       |
-| 3 — `compiler/studio/`  | ⬜ offen          | inkl. Klärung selection-manager (verdächtig, aber Bundle-relevant)      |
-| 4 — IR & Backend Polish | ⬜ kontinuierlich | —                                                                       |
-| 5 — Parser zerlegen     | ⬜ offen          | —                                                                       |
+| Phase                   | Status            | Letzte Aktion                                                                                                 |
+| ----------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| 0 — Inventur            | ✅ fertig         | 2026-04-28 — `compiler/INVENTORY.md` angelegt                                                                 |
+| 1 — Mechanische Putze   | ✅ fertig         | 2026-04-28 — 21 Files / 4 Verzeichnisse gelöscht, alle 10920 Tests grün                                       |
+| 2 — Validator-Tests     | ✅ fertig         | 2026-04-28 — Coverage 67% → 77% Lines / 83% Funcs; validator/ in vitest.config; broken validate-script gefixt |
+| 3 — `compiler/studio/`  | ⬜ offen          | inkl. Klärung selection-manager (verdächtig, aber Bundle-relevant)                                            |
+| 4 — IR & Backend Polish | ⬜ kontinuierlich | —                                                                                                             |
+| 5 — Parser zerlegen     | ⬜ offen          | —                                                                                                             |

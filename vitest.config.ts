@@ -15,8 +15,19 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'json-summary'],
-      include: ['compiler/parser/**/*.ts', 'compiler/ir/**/*.ts', 'compiler/backends/**/*.ts'],
-      exclude: ['tests/**'],
+      include: [
+        'compiler/parser/**/*.ts',
+        'compiler/ir/**/*.ts',
+        'compiler/backends/**/*.ts',
+        'compiler/validator/**/*.ts',
+      ],
+      exclude: [
+        'tests/**',
+        // CLI entry points are integration-tested by invocation, not unit-tested.
+        'compiler/validator/cli.ts',
+        // Pure type definitions — nothing to execute.
+        'compiler/validator/types.ts',
+      ],
       thresholds: {
         lines: 80,
         functions: 80,

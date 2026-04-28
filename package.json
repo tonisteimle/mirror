@@ -19,11 +19,11 @@
     "mirror-compile": "./dist/cli.js"
   },
   "scripts": {
-    "validate": "npx tsx src/validator/cli.ts",
+    "validate": "npx tsx compiler/validator/cli.ts",
     "build": "tsup && npm run build:studio && cp assets/mirror-defaults.css dist/ && cp assets/mirror-defaults.css studio/dist/ && cp dist/browser/index.global.js studio/dist/browser/",
     "build:studio": "tsup --config studio/tsup.config.ts",
-    "dev": "tsup src/index.ts --format esm --dts --watch",
-    "dev:studio": "tsup src/index.ts --format iife --global-name Mirror --outDir dist/browser --watch",
+    "dev": "tsup compiler/index.ts --format esm --dts --watch",
+    "dev:studio": "tsup compiler/index.ts --format iife --global-name Mirror --outDir dist/browser --watch",
     "studio": "npx serve . -p 5173",
     "ai-bridge": "npx tsx scripts/ai-bridge-server.ts",
     "eval:ai": "npx tsx scripts/eval-ai-simple.ts",
