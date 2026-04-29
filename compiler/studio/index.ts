@@ -67,15 +67,6 @@ export {
 } from './services/smart-sizing'
 
 export {
-  findIconForComponent,
-  findIconsForComponents,
-  extractKeywords,
-  getIconPath,
-  generateIconSVG,
-  ICON_PATHS,
-} from './component-icon-matcher'
-
-export {
   parseLine,
   updatePropertyInLine,
   addPropertyToLine,
