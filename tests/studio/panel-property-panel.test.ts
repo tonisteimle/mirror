@@ -6,9 +6,14 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { PropertyPanel, createPropertyPanel, type SelectionProvider } from '../../studio/panels'
-import type { PropertyExtractor, ExtractedElement, ExtractedProperty, PropertyCategory } from '../../compiler/studio/property-extractor'
+import type {
+  PropertyExtractor,
+  ExtractedElement,
+  ExtractedProperty,
+  PropertyCategory,
+} from '../../compiler/studio/property-extractor'
 import type { CodeModifier, ModificationResult } from '../../compiler/studio/code-modifier'
-import type { BreadcrumbItem } from '../../compiler/studio/selection-manager'
+import type { BreadcrumbItem } from '../../studio/core'
 
 // Mock SelectionProvider
 function createMockSelectionProvider(): SelectionProvider & {
@@ -56,7 +61,9 @@ function createMockSelectionProvider(): SelectionProvider & {
 }
 
 // Mock PropertyExtractor
-function createMockPropertyExtractor(elements: Map<string, ExtractedElement> = new Map()): PropertyExtractor {
+function createMockPropertyExtractor(
+  elements: Map<string, ExtractedElement> = new Map()
+): PropertyExtractor {
   return {
     getProperties: vi.fn((nodeId: string) => elements.get(nodeId) || null),
     getPropertiesForComponentDefinition: vi.fn(() => null),
@@ -67,10 +74,17 @@ function createMockPropertyExtractor(elements: Map<string, ExtractedElement> = n
 }
 
 // Mock CodeModifier
-function createMockCodeModifier(): CodeModifier & { _lastUpdate: { nodeId: string; prop: string; value: string } | null } {
+function createMockCodeModifier(): CodeModifier & {
+  _lastUpdate: { nodeId: string; prop: string; value: string } | null
+} {
   return {
     _lastUpdate: null,
-    updateProperty: vi.fn(function(this: any, nodeId: string, prop: string, value: string): ModificationResult {
+    updateProperty: vi.fn(function (
+      this: any,
+      nodeId: string,
+      prop: string,
+      value: string
+    ): ModificationResult {
       this._lastUpdate = { nodeId, prop, value }
       return { success: true, newSource: `// updated ${prop}=${value}` }
     }),
@@ -79,7 +93,9 @@ function createMockCodeModifier(): CodeModifier & { _lastUpdate: { nodeId: strin
     updateSource: vi.fn(),
     updateSourceMap: vi.fn(),
     getSource: vi.fn(() => '// mock source'),
-  } as unknown as CodeModifier & { _lastUpdate: { nodeId: string; prop: string; value: string } | null }
+  } as unknown as CodeModifier & {
+    _lastUpdate: { nodeId: string; prop: string; value: string } | null
+  }
 }
 
 // Create a sample ExtractedElement
@@ -224,9 +240,9 @@ describe('PropertyPanel', () => {
           createSampleCategory({
             name: 'color',
             label: 'Color',
-            properties: [createSampleProperty({ name: 'bg', value: '#5BA8F5' })]
-          })
-        ]
+            properties: [createSampleProperty({ name: 'bg', value: '#5BA8F5' })],
+          }),
+        ],
       })
 
       propertyExtractor = createMockPropertyExtractor(new Map([['test-node', element]]))
@@ -267,7 +283,7 @@ describe('PropertyPanel', () => {
       const element = createSampleElement({
         nodeId: 'child-node',
         componentName: 'Text',
-        allProperties: []
+        allProperties: [],
       })
       propertyExtractor = createMockPropertyExtractor(new Map([['child-node', element]]))
 
@@ -340,7 +356,11 @@ describe('PropertyPanel', () => {
 
       selectionManager._triggerSelection('node-1')
 
-      const newExtractor = createMockPropertyExtractor(new Map([['node-1', createSampleElement({ nodeId: 'node-1', componentName: 'NewComponent' })]]))
+      const newExtractor = createMockPropertyExtractor(
+        new Map([
+          ['node-1', createSampleElement({ nodeId: 'node-1', componentName: 'NewComponent' })],
+        ])
+      )
       const newModifier = createMockCodeModifier()
 
       panel.updateDependencies(newExtractor, newModifier)
@@ -354,7 +374,7 @@ describe('PropertyPanel', () => {
       const element = createSampleElement({
         nodeId: 'node-1',
         componentName: 'Box',
-        allProperties: [createSampleProperty({ name: 'w', value: '100' })]
+        allProperties: [createSampleProperty({ name: 'w', value: '100' })],
       })
       propertyExtractor = createMockPropertyExtractor(new Map([['node-1', element]]))
 
@@ -373,7 +393,7 @@ describe('PropertyPanel', () => {
       const updatedElement = createSampleElement({
         nodeId: 'node-1',
         componentName: 'Box',
-        allProperties: [createSampleProperty({ name: 'h', value: '200' })]
+        allProperties: [createSampleProperty({ name: 'h', value: '200' })],
       })
       ;(propertyExtractor.getProperties as ReturnType<typeof vi.fn>).mockReturnValue(updatedElement)
 
@@ -393,7 +413,9 @@ describe('PropertyPanel', () => {
         allProperties: [createSampleProperty({ name: 'bg', value: '#blue' })],
       })
 
-      ;(propertyExtractor.getPropertiesForComponentDefinition as ReturnType<typeof vi.fn>).mockReturnValue(compDef)
+      ;(
+        propertyExtractor.getPropertiesForComponentDefinition as ReturnType<typeof vi.fn>
+      ).mockReturnValue(compDef)
 
       panel = new PropertyPanel(
         container,
@@ -411,7 +433,9 @@ describe('PropertyPanel', () => {
     })
 
     it('should return false when component not found', () => {
-      ;(propertyExtractor.getPropertiesForComponentDefinition as ReturnType<typeof vi.fn>).mockReturnValue(null)
+      ;(
+        propertyExtractor.getPropertiesForComponentDefinition as ReturnType<typeof vi.fn>
+      ).mockReturnValue(null)
 
       panel = new PropertyPanel(
         container,
@@ -432,7 +456,7 @@ describe('PropertyPanel', () => {
       const element = createSampleElement({
         nodeId: 'node-1',
         componentName: 'Card',
-        allProperties: []
+        allProperties: [],
       })
       propertyExtractor = createMockPropertyExtractor(new Map([['node-1', element]]))
 
@@ -454,7 +478,7 @@ describe('PropertyPanel', () => {
         nodeId: 'node-1',
         componentName: 'Button',
         instanceName: 'submitBtn',
-        allProperties: []
+        allProperties: [],
       })
       propertyExtractor = createMockPropertyExtractor(new Map([['node-1', element]]))
 
@@ -482,9 +506,9 @@ describe('PropertyPanel', () => {
           createSampleCategory({
             name: 'layout',
             label: 'Layout',
-            properties: [createSampleProperty({ name: 'hor', value: 'true', type: 'boolean' })]
+            properties: [createSampleProperty({ name: 'hor', value: 'true', type: 'boolean' })],
           }),
-        ]
+        ],
       })
       propertyExtractor = createMockPropertyExtractor(new Map([['node-1', element]]))
 
@@ -513,9 +537,9 @@ describe('PropertyPanel', () => {
           createSampleCategory({
             name: 'color',
             label: 'Color',
-            properties: [createSampleProperty({ name: 'bg', value: '#FF0000', type: 'color' })]
-          })
-        ]
+            properties: [createSampleProperty({ name: 'bg', value: '#FF0000', type: 'color' })],
+          }),
+        ],
       })
       propertyExtractor = createMockPropertyExtractor(new Map([['node-1', element]]))
 
@@ -538,7 +562,7 @@ describe('PropertyPanel', () => {
       const element = createSampleElement({
         nodeId: 'node-1',
         componentName: 'Box',
-        allProperties: []
+        allProperties: [],
       })
       propertyExtractor = createMockPropertyExtractor(new Map([['node-1', element]]))
 

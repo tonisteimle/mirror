@@ -19,19 +19,6 @@ export {
   type NodeMapping,
 } from '../ir/source-map'
 
-/**
- * @deprecated Since v2.0. Use StateSelectionAdapter from studio/core instead.
- * Will be removed in v3.0.
- */
-export {
-  SelectionManager,
-  getSelectionManager,
-  resetSelectionManager,
-  type SelectionListener,
-  type BreadcrumbItem,
-  type BreadcrumbListener,
-} from './selection-manager'
-
 export {
   PropertyExtractor,
   createPropertyExtractor,

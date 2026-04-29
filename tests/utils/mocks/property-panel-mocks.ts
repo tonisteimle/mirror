@@ -12,11 +12,8 @@ import type {
   PropertyCategory,
   PropertyType,
 } from '../../../compiler/studio/property-extractor'
-import type {
-  ModificationResult,
-  CodeChange,
-} from '../../../compiler/studio/code-modifier'
-import type { BreadcrumbItem } from '../../../compiler/studio/selection-manager'
+import type { ModificationResult, CodeChange } from '../../../compiler/studio/code-modifier'
+import type { BreadcrumbItem } from '../../../studio/core'
 
 // Use ReturnType to get correct Mock type
 type MockFn<T extends (...args: any[]) => any> = ReturnType<typeof vi.fn<T>>
@@ -76,7 +73,9 @@ export interface MockSelectionProvider {
 /**
  * Creates a sample ExtractedProperty
  */
-export function createSampleProperty(overrides: Partial<ExtractedProperty> = {}): ExtractedProperty {
+export function createSampleProperty(
+  overrides: Partial<ExtractedProperty> = {}
+): ExtractedProperty {
   return {
     name: 'bg',
     value: '#1a1a1a',
@@ -188,10 +187,7 @@ export function createMockCodeModifier(initialSource = ''): MockCodeModifier {
       lastUpdate = { nodeId, prop, value }
       mock._lastUpdate = lastUpdate
       updateHistory.push({ nodeId, prop, value })
-      const newSource = source.replace(
-        new RegExp(`${prop}\\s+[^,\\n]+`),
-        `${prop} ${value}`
-      )
+      const newSource = source.replace(new RegExp(`${prop}\\s+[^,\\n]+`), `${prop} ${value}`)
       source = newSource
       mock._source = source
       return createSuccessResult(newSource)
@@ -238,12 +234,12 @@ export function createMockSelectionProvider(): MockSelectionProvider {
     _breadcrumbListeners: breadcrumbListeners,
     _selection: selection,
 
-    subscribe: vi.fn((listener) => {
+    subscribe: vi.fn(listener => {
       listeners.add(listener)
       return () => listeners.delete(listener)
     }),
 
-    subscribeBreadcrumb: vi.fn((listener) => {
+    subscribeBreadcrumb: vi.fn(listener => {
       breadcrumbListeners.add(listener)
       return () => breadcrumbListeners.delete(listener)
     }),
@@ -262,11 +258,11 @@ export function createMockSelectionProvider(): MockSelectionProvider {
       const prev = selection
       selection = nodeId
       mock._selection = nodeId
-      listeners.forEach((l) => l(nodeId, prev))
+      listeners.forEach(l => l(nodeId, prev))
     },
 
     _triggerBreadcrumb(chain: BreadcrumbItem[]) {
-      breadcrumbListeners.forEach((l) => l(chain))
+      breadcrumbListeners.forEach(l => l(chain))
     },
   }
 
@@ -294,9 +290,7 @@ export function createStandardFrameElement(nodeId = 'node-1'): ExtractedElement 
       createSampleCategory({
         name: 'colors',
         label: 'Colors',
-        properties: [
-          createSampleProperty({ name: 'bg', value: '#1a1a1a', type: 'color' }),
-        ],
+        properties: [createSampleProperty({ name: 'bg', value: '#1a1a1a', type: 'color' })],
       }),
       createSampleCategory({
         name: 'spacing',
@@ -309,9 +303,7 @@ export function createStandardFrameElement(nodeId = 'node-1'): ExtractedElement 
       createSampleCategory({
         name: 'border',
         label: 'Border',
-        properties: [
-          createSampleProperty({ name: 'rad', value: '8', type: 'number' }),
-        ],
+        properties: [createSampleProperty({ name: 'rad', value: '8', type: 'number' })],
       }),
     ],
   })
@@ -379,7 +371,12 @@ export function createComponentDefinitionElement(
         name: 'colors',
         label: 'Colors',
         properties: [
-          createSampleProperty({ name: 'bg', value: '#2563eb', type: 'color', source: 'component' }),
+          createSampleProperty({
+            name: 'bg',
+            value: '#2563eb',
+            type: 'color',
+            source: 'component',
+          }),
           createSampleProperty({ name: 'col', value: 'white', type: 'color', source: 'component' }),
         ],
       }),
@@ -406,7 +403,12 @@ export function createInstanceWithInheritance(nodeId = 'node-1'): ExtractedEleme
         name: 'colors',
         label: 'Colors',
         properties: [
-          createSampleProperty({ name: 'bg', value: '#2563eb', type: 'color', source: 'component' }),
+          createSampleProperty({
+            name: 'bg',
+            value: '#2563eb',
+            type: 'color',
+            source: 'component',
+          }),
           createSampleProperty({ name: 'col', value: 'white', type: 'color', source: 'component' }),
         ],
       }),
@@ -414,7 +416,12 @@ export function createInstanceWithInheritance(nodeId = 'node-1'): ExtractedEleme
         name: 'spacing',
         label: 'Spacing',
         properties: [
-          createSampleProperty({ name: 'pad', value: '16 32', type: 'spacing', source: 'instance' }),
+          createSampleProperty({
+            name: 'pad',
+            value: '16 32',
+            type: 'spacing',
+            source: 'instance',
+          }),
         ],
       }),
     ],

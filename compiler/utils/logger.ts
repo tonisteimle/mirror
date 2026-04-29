@@ -80,7 +80,6 @@ export function createLogger(prefix: string) {
 // Pre-configured loggers for common modules
 export const logPropertyExtractor = createLogger('PropertyExtractor')
 export const logCodeModifier = createLogger('CodeModifier')
-export const logSelectionManager = createLogger('SelectionManager')
 export const logIR = createLogger('IR')
 export const logParser = createLogger('Parser')
 export const logZagTransformer = createLogger('ZagTransformer')
