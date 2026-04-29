@@ -100,6 +100,10 @@ import { isStateBlockStart as isStateBlockStartExtracted } from './state-detecto
 import { parseTernaryExpression as parseTernaryExpressionExtracted } from './ternary-parser'
 import { parseDataObject as parseDataObjectExtracted } from './data-object-parser'
 import { parseProperty as parsePropertyExtracted } from './property-parser'
+import {
+  parseInlineProperties as parseInlinePropertiesExtracted,
+  type InlinePropertiesCallbacks,
+} from './inline-property-parser'
 import { KEYWORD_TOKEN_TYPES } from './parser-context'
 
 /** Property value type - union of all possible values in Property.values (includes number[] for array props like slider defaultValue) */
@@ -2847,386 +2851,59 @@ export class Parser {
     }
   }
 
+  // Implementation in inline-property-parser.ts. Uses callbacks for the
+  // parser-level methods that haven't been extracted yet (parseEvent,
+  // parseRoutePath, parseDataBindingValues, parseImplicitOnclick, etc.).
   private parseInlineProperties(
     properties: Property[],
     events?: Event[],
     options?: { stopAtSemicolon?: boolean }
   ): void {
-    const stopAtSemicolon = options?.stopAtSemicolon ?? false
-    while (
-      !this.check('NEWLINE') &&
-      !this.check('INDENT') &&
-      !this.check('DEDENT') &&
-      !this.check('COLON') &&
-      !this.isAtEnd()
-    ) {
-      // Skip commas (and semicolons unless stopAtSemicolon is true)
-      if (this.check('COMMA')) {
-        this.advance()
-        continue
+    this.withSubParserContext(ctx => {
+      const callbacks: InlinePropertiesCallbacks = {
+        collectExpressionOperand: (parts, operators) => {
+          this.pos = ctx.pos
+          this.collectExpressionOperand(parts, operators)
+          ctx.pos = this.pos
+        },
+        parseDataBindingValues: () => {
+          this.pos = ctx.pos
+          const result = this.parseDataBindingValues()
+          ctx.pos = this.pos
+          return result
+        },
+        parseRoutePath: () => {
+          this.pos = ctx.pos
+          const result = this.parseRoutePath()
+          ctx.pos = this.pos
+          return result
+        },
+        isImplicitOnclickCandidate: name => this.isImplicitOnclickCandidate(name),
+        parseImplicitOnclick: () => {
+          this.pos = ctx.pos
+          const result = this.parseImplicitOnclick()
+          ctx.pos = this.pos
+          return result
+        },
+        parseEvent: () => {
+          this.pos = ctx.pos
+          const result = this.parseEvent()
+          ctx.pos = this.pos
+          return result
+        },
+        checkNextIsPropertyName: () => {
+          this.pos = ctx.pos
+          return this.checkNextIsPropertyName()
+        },
+        advancePropertyName: () => {
+          this.pos = ctx.pos
+          const result = this.advancePropertyName()
+          ctx.pos = this.pos
+          return result
+        },
       }
-      if (this.check('SEMICOLON')) {
-        if (stopAtSemicolon) break
-        this.advance()
-        continue
-      }
-
-      // String content - check for concatenation with + operator
-      if (this.check('STRING')) {
-        const str = this.advance()
-        const startLine = str.line
-        const startColumn = str.column
-
-        // Check if followed by + for expression
-        if (this.check('PLUS')) {
-          // Build a computed expression, handling parentheses properly
-          const parts: ComputedExpression['parts'] = [str.value]
-          const operators: string[] = []
-
-          while (
-            this.check('PLUS') ||
-            this.check('MINUS') ||
-            this.check('STAR') ||
-            this.check('SLASH')
-          ) {
-            operators.push(this.advance().value)
-
-            // Get the next operand (may be a parenthesized sub-expression)
-            this.collectExpressionOperand(parts, operators)
-          }
-
-          const expr: ComputedExpression = { kind: 'expression', parts, operators }
-          properties.push({
-            type: 'Property',
-            name: 'content',
-            values: [expr],
-            line: startLine,
-            column: startColumn,
-          })
-        } else {
-          // Simple string content
-          properties.push({
-            type: 'Property',
-            name: 'content',
-            values: [str.value],
-            line: startLine,
-            column: startColumn,
-          })
-        }
-        continue
-      }
-
-      // Data binding: data Collection where condition
-      if (this.check('DATA')) {
-        const dataToken = this.advance()
-        const binding = this.parseDataBindingValues()
-        if (binding) {
-          // Data binding values have special structure (collection + optional filter)
-          const values: unknown[] = [binding.collection]
-          if (binding.filter) {
-            values.push({ filter: binding.filter })
-          }
-          properties.push({
-            type: 'Property',
-            name: 'data',
-            values: values as Property['values'],
-            line: dataToken.line,
-            column: dataToken.column,
-          })
-        }
-        continue
-      }
-
-      // Route: route TargetComponent or route path/to/page (stored as property, moved to instance.route later)
-      if (this.check('ROUTE')) {
-        const routeToken = this.advance()
-        const routePath = this.parseRoutePath()
-        if (routePath) {
-          properties.push({
-            type: 'Property',
-            name: '_route', // Special prefix to identify route properties
-            values: [routePath],
-            line: routeToken.line,
-            column: routeToken.column,
-          })
-        }
-        continue
-      }
-
-      // Bind: bind varName (or dot-path: bind user.email — Bug #31 fix)
-      if (this.check('BIND')) {
-        const bindToken = this.advance()
-        if (this.check('IDENTIFIER')) {
-          let path = this.advance().value
-          while (this.check('DOT') && this.checkNext('IDENTIFIER')) {
-            this.advance() // consume DOT
-            path += '.' + this.advance().value
-          }
-          properties.push({
-            type: 'Property',
-            name: 'bind',
-            values: [path],
-            line: bindToken.line,
-            column: bindToken.column,
-          })
-        }
-        continue
-      }
-
-      // Token reference as property set: Frame $cardstyle applies styles
-      // Also handles expressions like: Text $count + " items" (computed expression)
-      // For text content, use quotes: Text "$firstName" or Text "Hello $firstName"
-      if (this.check('IDENTIFIER') && this.current().value.startsWith('$')) {
-        const token = this.advance()
-        const startLine = token.line
-        const startColumn = token.column
-        let tokenName = token.value.slice(1) // Remove leading $
-
-        // Handle method call arguments immediately after identifier: $users.sum(hours), $users.sum(data.stats.value)
-        // The lexer combines $users.sum into a single IDENTIFIER, so check for LPAREN here
-        if (this.check('LPAREN')) {
-          this.advance() // consume (
-          const args: string[] = []
-          while (!this.check('RPAREN') && !this.isAtEnd()) {
-            if (this.check('IDENTIFIER') || this.check('DATA')) {
-              // Collect full path: data.stats.value (DATA token) or item.name (IDENTIFIER)
-              let argPath = this.advance().value
-              while (this.check('DOT')) {
-                this.advance() // consume .
-                if (this.check('IDENTIFIER') || this.check('DATA')) {
-                  argPath += '.' + this.advance().value
-                } else {
-                  break
-                }
-              }
-              args.push(argPath)
-            } else if (this.check('COMMA')) {
-              this.advance() // skip comma
-            } else {
-              break
-            }
-          }
-          if (this.check('RPAREN')) {
-            this.advance() // consume )
-          }
-          tokenName += '(' + args.join(', ') + ')'
-        }
-
-        // Handle property access: $item.name → item.name
-        // Also handles method calls: $users.sum(hours), $tasks.avg(priority)
-        while (this.check('DOT')) {
-          this.advance() // consume .
-          if (this.check('IDENTIFIER')) {
-            tokenName += '.' + this.advance().value
-            // Check for method call arguments: .sum(hours), .sum(data.stats.value)
-            if (this.check('LPAREN')) {
-              this.advance() // consume (
-              const args: string[] = []
-              while (!this.check('RPAREN') && !this.isAtEnd()) {
-                if (this.check('IDENTIFIER') || this.check('DATA')) {
-                  // Collect full path: data.stats.value (DATA token) or item.name (IDENTIFIER)
-                  let argPath = this.advance().value
-                  while (this.check('DOT')) {
-                    this.advance() // consume .
-                    if (this.check('IDENTIFIER') || this.check('DATA')) {
-                      argPath += '.' + this.advance().value
-                    } else {
-                      break
-                    }
-                  }
-                  args.push(argPath)
-                } else if (this.check('COMMA')) {
-                  this.advance() // skip comma
-                } else {
-                  break
-                }
-              }
-              if (this.check('RPAREN')) {
-                this.advance() // consume )
-              }
-              tokenName += '(' + args.join(', ') + ')'
-            }
-          }
-        }
-
-        const tokenRef: TokenReference = { kind: 'token', name: tokenName }
-
-        // Check if followed by + for expression
-        if (
-          this.check('PLUS') ||
-          this.check('MINUS') ||
-          this.check('STAR') ||
-          this.check('SLASH')
-        ) {
-          // Build a computed expression, handling parentheses properly
-          const parts: ComputedExpression['parts'] = [tokenRef]
-          const operators: string[] = []
-
-          while (
-            this.check('PLUS') ||
-            this.check('MINUS') ||
-            this.check('STAR') ||
-            this.check('SLASH')
-          ) {
-            operators.push(this.advance().value)
-
-            // Get the next operand (may be a parenthesized sub-expression)
-            this.collectExpressionOperand(parts, operators)
-          }
-
-          const expr: ComputedExpression = { kind: 'expression', parts, operators }
-          properties.push({
-            type: 'Property',
-            name: 'content',
-            values: [expr],
-            line: startLine,
-            column: startColumn,
-          })
-        } else {
-          // Simple token reference → property set (styles)
-          // For text content, use quotes: "$token" or "text with $token"
-          properties.push({
-            type: 'Property',
-            name: 'propset',
-            values: [tokenRef],
-            line: startLine,
-            column: startColumn,
-          })
-        }
-        continue
-      }
-
-      // Property: name value (or boolean property)
-      if (this.check('IDENTIFIER')) {
-        const identName = this.current().value
-
-        // Check if this is a loop variable reference (e.g., user.name, item, index)
-        // Loop variables should be treated as content, not as property names
-        if (this.loopVariables.has(identName)) {
-          const token = this.advance()
-          const startLine = token.line
-          const startColumn = token.column
-          let varAccess = identName
-
-          // Handle property access: user.name, item.nested.value, card.desc
-          // Note: property names can be reserved keywords like 'desc'
-          while (this.check('DOT') && this.checkNextIsPropertyName()) {
-            this.advance() // .
-            varAccess += '.' + this.advancePropertyName()
-          }
-
-          // Handle array indexing: user.name[0], items[1]
-          while (this.check('LBRACKET')) {
-            this.advance() // [
-            if (this.check('NUMBER')) {
-              varAccess += '[' + this.advance().value + ']'
-            }
-            if (this.check('RBRACKET')) {
-              this.advance() // ]
-            }
-          }
-
-          // Check if followed by + for expression (e.g., index + 1)
-          if (
-            this.check('PLUS') ||
-            this.check('MINUS') ||
-            this.check('STAR') ||
-            this.check('SLASH')
-          ) {
-            const loopVarRef = { kind: 'loopVar' as const, name: varAccess }
-            const parts: ComputedExpression['parts'] = [loopVarRef]
-            const operators: string[] = []
-
-            while (
-              this.check('PLUS') ||
-              this.check('MINUS') ||
-              this.check('STAR') ||
-              this.check('SLASH')
-            ) {
-              operators.push(this.advance().value)
-              this.collectExpressionOperand(parts, operators)
-            }
-
-            const expr: ComputedExpression = { kind: 'expression', parts, operators }
-            properties.push({
-              type: 'Property',
-              name: 'content',
-              values: [expr],
-              line: startLine,
-              column: startColumn,
-            })
-          } else {
-            // Simple loop variable reference as content
-            const loopVarRef = { kind: 'loopVar' as const, name: varAccess }
-            properties.push({
-              type: 'Property',
-              name: 'content',
-              values: [loopVarRef],
-              line: startLine,
-              column: startColumn,
-            })
-          }
-          continue
-        }
-
-        // Check for implicit onclick: toggle(), show(Menu), save()
-        // Identifier followed by ( that's not a known property starter
-        if (events && this.checkNext('LPAREN') && this.isImplicitOnclickCandidate(identName)) {
-          const implicitEvent = this.parseImplicitOnclick()
-          if (implicitEvent) {
-            events.push(implicitEvent)
-            continue
-          }
-        }
-
-        // Check for inline event syntax: "onkeydown enter: submit"
-        // Must be an actual event name (onclick, onhover, etc.), not just anything starting with "on"
-        // "on" by itself is a state name, not an event
-        if (EVENT_NAMES.has(identName) && events) {
-          const event = this.parseEvent()
-          if (event) events.push(event)
-          continue
-        }
-
-        // Check for inline state syntax: "hover: bg light"
-        // State names are lowercase (hover, focus, active, selected, etc.)
-        // Exception: keyboard keys like "enter:" are NOT states
-        if (
-          this.checkNext('COLON') &&
-          identName[0] === identName[0].toLowerCase() &&
-          !KEYBOARD_KEYS.has(identName)
-        ) {
-          // This is an inline state - stop here, let parseInstanceBody handle it
-          break
-        }
-
-        // Check for boolean properties first - they don't take values
-        if (ALL_BOOLEAN_PROPERTIES.has(identName)) {
-          const token = this.advance()
-          properties.push({
-            type: 'Property',
-            name: token.value,
-            values: [true],
-            line: token.line,
-            column: token.column,
-          })
-          continue
-        }
-        const prop = this.parseProperty()
-        if (prop) properties.push(prop)
-        continue
-      }
-
-      // Number (might be standalone value)
-      if (this.check('NUMBER')) {
-        this.advance()
-        continue
-      }
-
-      // Skip any other tokens to prevent infinite loops
-      // (COLON, EQUALS, etc. that appear unexpectedly)
-      this.advance()
-    }
+      parseInlinePropertiesExtracted(ctx, properties, callbacks, events, options)
+    })
   }
 
   private parseDataBindingValues(): { collection: string; filter?: Expression } | null {
