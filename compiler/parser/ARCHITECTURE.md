@@ -186,9 +186,19 @@ Code-Duplikat zwischen Variante 1 und 2 (~95 %), aber **nicht zusammenlegbar ohn
 
 ---
 
-## 8. Was vor der ersten Extraktion passieren sollte
+## 8. Voraussetzungen vor der ersten Extraktion
 
-1. **Test-Coverage für `compiler/parser/parser.ts` messen** (analog zu Phase 2 Validator).
-2. **Bei Coverage < 80 %**: Lücken füllen, _bevor_ irgendein Code verschoben wird.
-3. **Pre-Commit-Snapshot** der Test-Suite, damit Regression nach jeder Extraktion erkennbar ist.
-4. **Definition-of-Done** pro Extraktion (analog zu CLEANUP.md): API minimal, isoliert testbar, in 5 Min erklärbar.
+| #   | Voraussetzung                                           | Status                                                    |
+| --- | ------------------------------------------------------- | --------------------------------------------------------- |
+| 1   | Test-Coverage `compiler/parser/parser.ts` ≥ 80 %        | ✅ **82.3 % Lines / 94.94 % Funcs** (gemessen 2026-04-29) |
+| 2   | Coverage des gesamten `compiler/parser/`-Verzeichnisses | ✅ 83.88 % Lines / 95.18 % Funcs                          |
+| 3   | Pre-Commit-Snapshot der Test-Suite                      | ✅ 10857 Tests grün                                       |
+| 4   | Definition-of-Done pro Extraktion                       | siehe `compiler/CLEANUP.md`                               |
+
+**Coverage-Lücken (nicht Blocker, aber gut zu wissen):**
+
+- `parser-context.ts` 69.56 % — Context-Utilities, weniger kritisch
+- `zag-parser.ts` 69.69 % — bereits extrahiertes Modul; bei Anpassungen im Rahmen von Phase 5 ggf. mitziehen
+- `parser.ts` Uncovered-Hotspots: Z. ~5553, 5564–5570 (Error-Recovery / Edge-Cases)
+
+**→ Phase 5 kann starten. Erster Schritt: Option A (TokenParser).**
