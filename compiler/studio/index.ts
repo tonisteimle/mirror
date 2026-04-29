@@ -47,13 +47,6 @@ export {
 // DropZoneCalculator removed in v2.2 - use studio/drag-drop instead
 
 export {
-  createSmartSizingService,
-  type SmartSizingService,
-  type SizingResult,
-  type ResidualSpace,
-} from './services/smart-sizing'
-
-export {
   parseLine,
   updatePropertyInLine,
   addPropertyToLine,
