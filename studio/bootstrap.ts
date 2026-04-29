@@ -48,8 +48,7 @@ import {
 } from './preview'
 import { RenderPipeline, createRenderPipeline } from './preview/render-pipeline'
 import { createFixer, type FixerService } from './agent'
-import { PropertyExtractor, CodeModifier, setGridSettingsProvider } from '../compiler/studio'
-import { gridSettings } from './core/settings'
+import { PropertyExtractor, CodeModifier } from '../compiler/studio'
 import { PropertyPanel, createPropertyPanel, SettingsPanel, createSettingsPanel } from './panels'
 import {
   ComponentPanel,
@@ -344,9 +343,6 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   initUserSettings().catch(err => {
     logBootstrap.warn(' Failed to load user settings:', err)
   })
-
-  // Initialize grid settings provider (breaks circular dependency)
-  setGridSettingsProvider(gridSettings)
 
   // Create studio context with initial state
   studioContext = createStudioContext({

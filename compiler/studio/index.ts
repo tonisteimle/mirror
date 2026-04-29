@@ -95,19 +95,6 @@ export { SpatialCache, createSpatialCache, type SpatialItem } from './spatial-ca
 // Drop indicator rendering - removed in v2.2, use studio/drag-drop/visual instead
 // Drop Strategies - removed in v2.2, use studio/drag-drop/strategies instead
 
-// Coordinate transformation (centralized coordinate handling)
-export {
-  CoordinateTransformer,
-  createCoordinateTransformer,
-  setGridSettingsProvider,
-  type Point,
-  type Size,
-  type Bounds,
-  type TransformResult,
-  type TransformOptions,
-  type GridSettingsProvider,
-} from './coordinate-transformer'
-
 // Z-Index management for absolute containers
 export {
   ZIndexManager,
