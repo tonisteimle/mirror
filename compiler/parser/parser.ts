@@ -97,6 +97,7 @@ import {
   parseLegacyTokenDefinition as parseLegacyTokenDefinitionExtracted,
 } from './token-parser'
 import { isStateBlockStart as isStateBlockStartExtracted } from './state-detector'
+import { parseTernaryExpression as parseTernaryExpressionExtracted } from './ternary-parser'
 
 /** Property value type - union of all possible values in Property.values (includes number[] for array props like slider defaultValue) */
 type PropertyValue =
@@ -596,10 +597,10 @@ export class Parser {
 
   /**
    * Build a ParserContext from current state, run an extracted sub-parser,
-   * and sync the resulting position/errors back. Used by all token-parsing
-   * wrappers below — see compiler/parser/token-parser.ts for the implementations.
+   * and sync the resulting position/errors back. Shared by all sub-parser
+   * wrappers (token-parser, ternary-parser, ...) — see compiler/parser/*.ts.
    */
-  private withTokenContext<T>(fn: (ctx: ParserContext) => T): T {
+  private withSubParserContext<T>(fn: (ctx: ParserContext) => T): T {
     const ctx: ParserContext = {
       tokens: this.tokens,
       source: this.source,
@@ -618,23 +619,23 @@ export class Parser {
   // need to know the parsing details.
 
   private parseTokenDefinition(section?: string): TokenDefinition | null {
-    return this.withTokenContext(ctx => parseTokenDefinitionExtracted(ctx, section))
+    return this.withSubParserContext(ctx => parseTokenDefinitionExtracted(ctx, section))
   }
 
   private parseTokenWithSuffixSingleToken(section?: string): TokenDefinition | null {
-    return this.withTokenContext(ctx => parseTokenWithSuffixSingleTokenExtracted(ctx, section))
+    return this.withSubParserContext(ctx => parseTokenWithSuffixSingleTokenExtracted(ctx, section))
   }
 
   private parseTokenWithSuffix(section?: string): TokenDefinition | null {
-    return this.withTokenContext(ctx => parseTokenWithSuffixExtracted(ctx, section))
+    return this.withSubParserContext(ctx => parseTokenWithSuffixExtracted(ctx, section))
   }
 
   private parseTokenReference(section?: string): TokenDefinition | null {
-    return this.withTokenContext(ctx => parseTokenReferenceExtracted(ctx, section))
+    return this.withSubParserContext(ctx => parseTokenReferenceExtracted(ctx, section))
   }
 
   private parseLegacyTokenDefinition(section?: string): TokenDefinition | null {
-    return this.withTokenContext(ctx => parseLegacyTokenDefinitionExtracted(ctx, section))
+    return this.withSubParserContext(ctx => parseLegacyTokenDefinitionExtracted(ctx, section))
   }
 
   /**
@@ -3700,157 +3701,11 @@ export class Parser {
       !this.check('DEDENT') &&
       !this.isAtEnd()
     ) {
-      // Check for ternary operator
+      // Ternary operator — implementation in ternary-parser.ts.
       if (this.check('QUESTION')) {
-        this.advance() // consume ?
-
-        // Everything collected so far is the condition
-        // Build condition string, combining property accesses (user.name → user.name)
-        let condition = ''
-
-        // If collected tokens start with DOT, include the property name (it's actually part of the condition)
-        // e.g., `Icon task.done ? "check" : "circle"` - task is parsed as property name but is really part of condition
-        const startsWithDot = collectedTokens.length > 0 && collectedTokens[0].type === 'DOT'
-        // Also, if NO tokens were collected and we hit ?, the "property name" IS the condition
-        // e.g., `Text active ? "Aktiv" : "Inaktiv"` - active is the condition, not a property name
-        const isSimpleTernary = collectedTokens.length === 0
-        // Bug #23 fix: if collected tokens start with a comparison operator,
-        // the "property name" was actually the LHS of the comparison.
-        // e.g., `Text level == 1 ? "A" : "B"` — `level` is part of condition,
-        // not a property name. Without this, condition becomes "== 1" and
-        // the parser treats `level` as a property, producing nonsense AST.
-        const COMPARISON_OPS = new Set([
-          'STRICT_EQUAL',
-          'STRICT_NOT_EQUAL',
-          'NOT_EQUAL',
-          'EQUALS',
-          'GT',
-          'LT',
-          'GTE',
-          'LTE',
-        ])
-        const startsWithComparison =
-          collectedTokens.length > 0 && COMPARISON_OPS.has(collectedTokens[0].type)
-        if (startsWithDot || isSimpleTernary || startsWithComparison) {
-          condition = name.value
-        }
-
-        for (let j = 0; j < collectedTokens.length; j++) {
-          const t = collectedTokens[j]
-          // Re-quote STRING tokens — the lexer strips quotes off the value, but
-          // we need them in the JS expression we're building (otherwise a
-          // string compare like `category === "Geschäftlich"` becomes a bare
-          // identifier `Geschäftlich` and breaks the bare-identifier wrapper).
-          const tokenText = t.type === 'STRING' ? `"${t.value.replace(/"/g, '\\"')}"` : t.value
-          // Don't add space before DOT or after DOT
-          if (t.type === 'DOT') {
-            condition += '.'
-          } else if (j > 0 && collectedTokens[j - 1].type !== 'DOT' && t.type !== 'DOT') {
-            condition += ' ' + tokenText
-          } else if (condition && !condition.endsWith('.')) {
-            condition += ' ' + tokenText
-          } else {
-            condition += tokenText
-          }
-        }
-
-        // Parse then value. Re-quote STRING tokens so the IR's
-        // `__conditional:cond?then:else` format isn't broken by colons
-        // inside the then-string (Bug #26 fix).
-        let thenValue: string | number = ''
-        if (this.check('STRING')) {
-          thenValue = `"${this.advance().value.replace(/"/g, '\\"')}"`
-        } else if (this.check('NUMBER')) {
-          thenValue = this.advance().value
-        } else if (this.check('IDENTIFIER')) {
-          thenValue = this.advance().value
-        }
-
-        // Expect colon for else - collect the entire else expression including nested ternaries
-        let elseValue: string | number = ''
-        if (this.check('COLON')) {
-          this.advance()
-          // Collect the entire else part, which might be a nested ternary
-          // e.g., $a === "B" ? #222 : #333
-          const elseTokens: string[] = []
-          while (
-            !this.check('COMMA') &&
-            !this.check('SEMICOLON') &&
-            !this.check('NEWLINE') &&
-            !this.check('INDENT') &&
-            !this.check('DEDENT') &&
-            !this.isAtEnd()
-          ) {
-            // Check for inline state syntax: "hover:" - stop collecting
-            if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
-              const identValue = this.current().value
-              if (identValue[0] === identValue[0].toLowerCase() && !KEYBOARD_KEYS.has(identValue)) {
-                break
-              }
-            }
-
-            const token = this.current()
-            if (token.type === 'STRING') {
-              // Re-quote so strings survive into the JS expression. Lexer
-              // strips quotes from STRING values; without the quotes, an
-              // expression like `category === "Privat" ? #x : #y` becomes
-              // bare `Privat` and breaks at runtime as ReferenceError.
-              elseTokens.push(`"${this.advance().value.replace(/"/g, '\\"')}"`)
-            } else if (token.type === 'DOT') {
-              elseTokens.push(this.advance().value)
-            } else if (token.type === 'QUESTION') {
-              elseTokens.push(' ? ')
-              this.advance()
-            } else if (token.type === 'COLON') {
-              elseTokens.push(' : ')
-              this.advance()
-            } else if (token.type === 'STRICT_EQUAL') {
-              elseTokens.push(' === ')
-              this.advance()
-            } else if (token.type === 'STRICT_NOT_EQUAL') {
-              elseTokens.push(' !== ')
-              this.advance()
-            } else if (token.type === 'NOT_EQUAL') {
-              elseTokens.push(' != ')
-              this.advance()
-            } else if (
-              token.type === 'GT' ||
-              token.type === 'LT' ||
-              token.type === 'GTE' ||
-              token.type === 'LTE'
-            ) {
-              elseTokens.push(` ${this.advance().value} `)
-            } else {
-              // Add space before token if needed (except after DOT)
-              if (elseTokens.length > 0 && elseTokens[elseTokens.length - 1] !== '.') {
-                elseTokens.push(' ')
-              }
-              elseTokens.push(this.advance().value)
-            }
-          }
-          elseValue = elseTokens.join('').trim()
-        }
-
-        values.push({
-          kind: 'conditional',
-          condition,
-          then: thenValue,
-          else: elseValue,
-        })
-
-        // If the condition started with a dot, was a simple ternary, or
-        // started with a comparison op, the "property name" was actually
-        // part of the expression — use 'content' as the implicit property.
-        const propertyName =
-          startsWithDot || isSimpleTernary || startsWithComparison ? 'content' : name.value
-
-        return {
-          type: 'Property',
-          name: propertyName,
-          values,
-          line: name.line,
-          column: name.column,
-        }
+        return this.withSubParserContext(ctx =>
+          parseTernaryExpressionExtracted(ctx, name, collectedTokens)
+        )
       }
 
       // Collect comparison, logical, and arithmetic operators for expressions
