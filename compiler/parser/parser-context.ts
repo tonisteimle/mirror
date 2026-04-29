@@ -57,6 +57,37 @@ export const MAX_LOOKAHEAD = 1000
 export const MAX_CONDITION_DEPTH = 100
 
 /**
+ * Token types for reserved keywords that can be used as identifier/property
+ * names in certain contexts (e.g. `card.desc` where `desc` is a keyword
+ * elsewhere). Shared by parser.ts (property-access chains) and
+ * data-object-parser.ts (data-attribute keys).
+ */
+export const KEYWORD_TOKEN_TYPES: TokenType[] = [
+  'AS',
+  'EXTENDS',
+  'EACH',
+  'IN',
+  'IF',
+  'ELSE',
+  'THEN',
+  'WHERE',
+  'AND',
+  'OR',
+  'NOT',
+  'DATA',
+  'KEYS',
+  'SELECTION',
+  'BIND',
+  'ROUTE',
+  'WITH',
+  'BY',
+  'ASC',
+  'DESC',
+  'GROUPED',
+  'USE',
+]
+
+/**
  * Parser utility functions - can be used by any sub-parser.
  */
 export class ParserUtils {

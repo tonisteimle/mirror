@@ -98,6 +98,8 @@ import {
 } from './token-parser'
 import { isStateBlockStart as isStateBlockStartExtracted } from './state-detector'
 import { parseTernaryExpression as parseTernaryExpressionExtracted } from './ternary-parser'
+import { parseDataObject as parseDataObjectExtracted } from './data-object-parser'
+import { KEYWORD_TOKEN_TYPES } from './parser-context'
 
 /** Property value type - union of all possible values in Property.values (includes number[] for array props like slider defaultValue) */
 type PropertyValue =
@@ -872,276 +874,17 @@ export class Parser {
    *   $post:
    *     title: "Mein Artikel"
    */
+  // Implementation in data-object-parser.ts. Recurses into parseDataAttribute,
+  // parseDataArray, parseDataReference, parseDataBlock — all extracted along
+  // with parseDataObject, so the wrapper here is the only entry point left.
   private parseDataObject(section?: string): TokenDefinition | null {
-    const nameToken = this.advance() // post or $post
-    this.advance() // :
-
-    // Remove $ prefix if present (for backwards compatibility)
-    // The name is stored without $ - $ is only used when referencing
-    let name = nameToken.value
-    if (name.startsWith('$')) {
-      name = name.slice(1)
-    }
-
-    // Skip newlines if any, then expect INDENT
-    while (this.check('NEWLINE')) {
-      this.advance()
-    }
-    if (!this.check('INDENT')) {
-      return null
-    }
-    this.advance() // consume INDENT
-
-    // Skip the NEWLINE that often follows INDENT
-    if (this.check('NEWLINE')) {
-      this.advance()
-    }
-
-    const attributes: DataAttribute[] = []
-    const blocks: DataBlock[] = []
-
-    // Parse attributes and blocks until DEDENT
-    for (
-      let iter = 0;
-      !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS;
-      iter++
-    ) {
-      this.skipNewlines()
-      if (this.check('DEDENT') || this.isAtEnd()) break
-
-      // Check for markdown block: @blockname (AT followed by IDENTIFIER)
-      if (this.check('AT') && this.checkNext('IDENTIFIER')) {
-        const block = this.parseDataBlock()
-        if (block) blocks.push(block)
-        continue
-      }
-
-      // Check for attribute: key: value
-      // Allow reserved keywords like 'desc' as attribute keys
-      if (this.checkIsIdentifierOrKeyword() && this.checkNext('COLON')) {
-        const attr = this.parseDataAttribute()
-        if (attr) attributes.push(attr)
-        continue
-      }
-
-      // Check for simple list item: identifier without colon
-      // e.g., colors: \n  rot \n  grün \n  blau
-      if (
-        this.checkIsIdentifierOrKeyword() &&
-        (this.checkNext('NEWLINE') || this.checkNext('DEDENT') || this.peekAt(1) === undefined)
-      ) {
-        const key = this.advanceIdentifierOrKeyword()
-        const line = this.tokens[this.pos - 1].line
-        attributes.push({
-          key,
-          value: key, // key IS the value for simple list items
-          line,
-        })
-        continue
-      }
-
-      // Unknown content - skip
-      this.advance()
-    }
-
-    // Consume DEDENT
-    if (this.check('DEDENT')) {
-      this.advance()
-    }
-
-    return {
-      type: 'Token',
-      name: name,
-      attributes,
-      blocks,
-      section,
-      line: nameToken.line,
-      column: nameToken.column,
-    }
-  }
-
-  /**
-   * Parse a single data attribute: key: value
-   *
-   * Can be nested:
-   *   steps:
-   *     planning:
-   *       title: "Sprint Planning"
-   */
-  private parseDataAttribute(): DataAttribute | null {
-    // Use advanceIdentifierOrKeyword to handle reserved keywords like 'desc' as keys
-    const key = this.advanceIdentifierOrKeyword()
-    const line = this.tokens[this.pos - 1].line
-    this.advance() // :
-
-    // Check for nested object: NEWLINE followed by INDENT
-    // Look ahead past any newlines to check for INDENT
-    let lookAhead = 0
-    while (this.checkAt(lookAhead, 'NEWLINE')) {
-      lookAhead++
-    }
-
-    if (this.checkAt(lookAhead, 'INDENT')) {
-      // Skip newlines
-      while (this.check('NEWLINE')) {
-        this.advance()
-      }
-      // Consume INDENT
-      this.advance()
-
-      // Parse nested attributes recursively
-      const children: DataAttribute[] = []
-
-      for (
-        let iter = 0;
-        !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS;
-        iter++
-      ) {
-        this.skipNewlines()
-        if (this.check('DEDENT') || this.isAtEnd()) break
-
-        // Check for nested attribute: key: ...
-        // Allow reserved keywords like 'desc' as attribute keys
-        if (this.checkIsIdentifierOrKeyword() && this.checkNext('COLON')) {
-          const nestedAttr = this.parseDataAttribute()
-          if (nestedAttr) children.push(nestedAttr)
-          continue
-        }
-
-        // Skip unknown content
-        this.advance()
-      }
-
-      // Consume DEDENT
-      if (this.check('DEDENT')) {
-        this.advance()
-      }
-
-      return {
-        key,
-        children,
-        line,
-      }
-    }
-
-    // Parse simple value - can be string, number, boolean, array, reference, or external reference
-    let value: string | number | boolean | string[] | DataReference | DataReferenceArray
-
-    if (this.check('STRING')) {
-      value = this.advance().value
-    } else if (this.check('NUMBER')) {
-      const numToken = this.advance()
-      // Keep hex colors as strings
-      if (numToken.value.startsWith('#')) {
-        value = numToken.value
-      } else {
-        const num = parseFloat(numToken.value)
-        value = isNaN(num) ? numToken.value : num
-      }
-    } else if (this.check('AT')) {
-      // External reference: @filename
-      this.advance() // consume @
-      if (this.check('IDENTIFIER')) {
-        value = '@' + this.advance().value
-      } else {
-        value = '@'
-      }
-    } else if (this.check('IDENTIFIER')) {
-      const identValue = this.advance().value
-      // Check for boolean
-      if (identValue === 'true') {
-        value = true
-      } else if (identValue === 'false') {
-        value = false
-      } else if (identValue.startsWith('$') && identValue.includes('.')) {
-        // Reference: $collection.entry
-        const ref = this.parseDataReference(identValue)
-        if (ref) {
-          // Check for multiple references (comma-separated)
-          const refs: DataReference[] = [ref]
-          while (this.check('COMMA')) {
-            const savedPos = this.pos
-            this.advance() // consume comma
-            if (this.check('IDENTIFIER')) {
-              const nextIdent = this.current().value
-              if (nextIdent.startsWith('$') && nextIdent.includes('.')) {
-                this.advance() // consume identifier
-                const nextRef = this.parseDataReference(nextIdent)
-                if (nextRef) {
-                  refs.push(nextRef)
-                }
-              } else {
-                // Not a reference, revert
-                this.pos = savedPos
-                break
-              }
-            } else {
-              // Not an identifier, revert
-              this.pos = savedPos
-              break
-            }
-          }
-          if (refs.length === 1) {
-            value = refs[0]
-          } else {
-            value = { kind: 'referenceArray' as const, references: refs }
-          }
-        } else {
-          value = identValue
-        }
-      } else {
-        value = identValue
-      }
-    } else if (this.check('LBRACKET')) {
-      // Array: [a, b, c]
-      value = this.parseDataArray()
-    } else {
-      // Unknown value type
-      value = ''
-    }
-
-    return {
-      key,
-      value,
-      line,
-    }
-  }
-
-  /**
-   * Parse a data array: [a, b, c]
-   */
-  private parseDataArray(): string[] {
-    const items: string[] = []
-    this.advance() // [
-
-    for (
-      let iter = 0;
-      !this.isAtEnd() && !this.check('RBRACKET') && iter < Parser.MAX_ITERATIONS;
-      iter++
-    ) {
-      if (this.check('STRING')) {
-        items.push(this.advance().value)
-      } else if (this.check('IDENTIFIER')) {
-        items.push(this.advance().value)
-      } else if (this.check('NUMBER')) {
-        items.push(this.advance().value)
-      } else if (this.check('COMMA')) {
-        this.advance()
-      } else {
-        break
-      }
-    }
-
-    if (this.check('RBRACKET')) {
-      this.advance()
-    }
-
-    return items
+    return this.withSubParserContext(ctx => parseDataObjectExtracted(ctx, section))
   }
 
   /**
    * Parse a numeric array: [20, 80] → number[]
-   * Used for properties like defaultValue in RangeSlider
+   * Used for properties like defaultValue in RangeSlider.
+   * Stays in parser.ts because it's exposed via ZagParserCallbacks.
    */
   private parseNumericArray(): number[] {
     const items: number[] = []
@@ -1166,134 +909,6 @@ export class Parser {
     }
 
     return items
-  }
-
-  /**
-   * Parse a data reference from string: $collection.entry
-   * Returns DataReference or null if invalid format
-   */
-  private parseDataReference(value: string): DataReference | null {
-    // Remove $ prefix
-    const withoutDollar = value.slice(1)
-    const dotIndex = withoutDollar.indexOf('.')
-    if (dotIndex === -1) {
-      return null
-    }
-    const collection = withoutDollar.slice(0, dotIndex)
-    const entry = withoutDollar.slice(dotIndex + 1)
-    if (!collection || !entry) {
-      return null
-    }
-    return {
-      kind: 'reference',
-      collection,
-      entry,
-    }
-  }
-
-  /**
-   * Parse a markdown block: @blockname followed by indented content
-   *
-   * Markdown content is reconstructed from tokens, trying to preserve formatting.
-   * For special characters like ** or *, we avoid adding unnecessary spaces.
-   */
-  private parseDataBlock(): DataBlock | null {
-    this.advance() // @ (AT token)
-    const nameToken = this.advance() // blockname (IDENTIFIER)
-    const blockName = nameToken.value
-    const line = nameToken.line
-
-    this.skipNewlines()
-
-    // Check for indent (block content)
-    if (!this.check('INDENT')) {
-      // No content - empty block
-      return {
-        name: blockName,
-        content: '',
-        line,
-      }
-    }
-
-    this.advance() // consume INDENT
-
-    // Collect all content lines until DEDENT
-    const contentLines: string[] = []
-
-    // Token types that should not have space before them
-    const noSpaceBefore = new Set(['STAR', 'DOT', 'COMMA', 'COLON', 'RPAREN', 'RBRACKET'])
-    // Token types that should not have space after them
-    const noSpaceAfter = new Set(['STAR', 'LPAREN', 'LBRACKET', 'AT'])
-
-    for (
-      let outerIter = 0;
-      !this.isAtEnd() && !this.check('DEDENT') && outerIter < Parser.MAX_ITERATIONS;
-      outerIter++
-    ) {
-      if (this.check('NEWLINE')) {
-        contentLines.push('')
-        this.advance()
-        continue
-      }
-
-      // Collect all tokens on this line as raw content
-      const lineTokens: { type: string; value: string }[] = []
-      for (
-        let innerIter = 0;
-        !this.isAtEnd() &&
-        !this.check('NEWLINE') &&
-        !this.check('DEDENT') &&
-        innerIter < Parser.MAX_ITERATIONS;
-        innerIter++
-      ) {
-        const token = this.advance()
-        lineTokens.push({ type: token.type, value: token.value })
-      }
-
-      // Reconstruct line with smart spacing
-      let lineContent = ''
-      for (let i = 0; i < lineTokens.length; i++) {
-        const token = lineTokens[i]
-        const prevToken = i > 0 ? lineTokens[i - 1] : null
-
-        // Determine if we need a space before this token
-        const needSpace =
-          lineContent.length > 0 &&
-          !lineContent.endsWith(' ') &&
-          !noSpaceBefore.has(token.type) &&
-          (prevToken ? !noSpaceAfter.has(prevToken.type) : true)
-
-        if (needSpace) {
-          lineContent += ' '
-        }
-        lineContent += token.value
-      }
-
-      if (lineContent) {
-        contentLines.push(lineContent)
-      }
-
-      // Consume newline if present
-      if (this.check('NEWLINE')) {
-        this.advance()
-      }
-    }
-
-    // Consume DEDENT
-    if (this.check('DEDENT')) {
-      this.advance()
-    }
-
-    // Remove trailing empty lines
-    while (contentLines.length > 0 && contentLines[contentLines.length - 1] === '') {
-      contentLines.pop()
-    }
-
-    return {
-      name: blockName,
-      content: contentLines.join('\n'),
-      line,
-    }
   }
 
   /**
@@ -4839,60 +4454,6 @@ export class Parser {
     return this.current().type === type
   }
 
-  /**
-   * Reserved keyword token types that can be used as property/attribute names.
-   * These are words like 'desc', 'in', 'if' that have special meaning in certain
-   * contexts but can also be valid property names like `card.desc` or `item.in`.
-   */
-  private static readonly KEYWORD_TOKEN_TYPES: TokenType[] = [
-    'AS',
-    'EXTENDS',
-    'EACH',
-    'IN',
-    'IF',
-    'ELSE',
-    'THEN',
-    'WHERE',
-    'AND',
-    'OR',
-    'NOT',
-    'DATA',
-    'KEYS',
-    'SELECTION',
-    'BIND',
-    'ROUTE',
-    'WITH',
-    'BY',
-    'ASC',
-    'DESC',
-    'GROUPED',
-    'USE',
-  ]
-
-  /**
-   * Check if the current token can be used as an identifier/property name.
-   * This includes IDENTIFIER and reserved keywords that get their own token types.
-   * Used for data attribute keys like `desc: "value"` where 'desc' is a reserved keyword.
-   */
-  private checkIsIdentifierOrKeyword(): boolean {
-    if (this.isAtEnd()) return false
-    const type = this.current().type
-    return type === 'IDENTIFIER' || Parser.KEYWORD_TOKEN_TYPES.includes(type)
-  }
-
-  /**
-   * Get the value of the current token if it's an identifier or keyword.
-   * For reserved keywords, returns the lowercase version of the token type.
-   */
-  private advanceIdentifierOrKeyword(): string {
-    const token = this.advance()
-    if (token.type === 'IDENTIFIER') {
-      return token.value
-    }
-    // For reserved keywords, the value is the lowercase of the token type
-    return token.type.toLowerCase()
-  }
-
   private checkNext(type: TokenType): boolean {
     if (this.pos + 1 >= this.tokens.length) return false
     return this.tokens[this.pos + 1].type === type
@@ -4900,13 +4461,13 @@ export class Parser {
 
   /**
    * Check if the next token can be used as a property name.
-   * This includes IDENTIFIER and reserved keywords that get their own token types.
-   * Used for property access chains like `card.desc` where `desc` is a reserved keyword.
+   * Includes IDENTIFIER and reserved keywords (KEYWORD_TOKEN_TYPES).
+   * Used for property access chains like `card.desc` where `desc` is a keyword.
    */
   private checkNextIsPropertyName(): boolean {
     if (this.pos + 1 >= this.tokens.length) return false
     const nextType = this.tokens[this.pos + 1].type
-    return nextType === 'IDENTIFIER' || Parser.KEYWORD_TOKEN_TYPES.includes(nextType)
+    return nextType === 'IDENTIFIER' || KEYWORD_TOKEN_TYPES.includes(nextType)
   }
 
   /**
