@@ -217,9 +217,12 @@ describe('File Delete - Folder Operations', () => {
 
   // BUG: When deleting a folder, files inside are NOT removed from the controller cache
   // The storage service removes files from its cache, but the controller listens to
-  // 'file:deleted' events which are NOT emitted for files inside deleted folders.
-  // Only 'folder:deleted' is emitted, but the controller doesn't handle that.
-  it.skip('should remove all folder files from cache (BUG: currently fails)', async () => {
+  // Storage emits `folder:deleted` for the folder itself (no per-file
+  // `file:deleted` for nested files). The controller now listens for
+  // that event and strips every cache entry whose path is under the
+  // deleted folder prefix, so cached content for deleted folder files
+  // is correctly evicted.
+  it('should remove all folder files from cache', async () => {
     await storage.createFolder('cachedFolder')
     await storage.writeFile('cachedFolder/cached.mir', 'content')
 
@@ -230,26 +233,8 @@ describe('File Delete - Folder Operations', () => {
     // Delete folder
     await controller.deleteItem('cachedFolder', true)
 
-    // File should be removed from cache - BUT IT ISN'T!
-    // This is a bug: the controller cache still contains the deleted file
+    // File is no longer in cache after folder delete.
     expect(controller.filesCache['cachedFolder/cached.mir']).toBeUndefined()
-  })
-
-  // Test that documents the actual (buggy) behavior
-  it('BUG DOCUMENTED: folder delete does NOT clear files from controller cache', async () => {
-    await storage.createFolder('cachedFolder')
-    await storage.writeFile('cachedFolder/cached.mir', 'content')
-
-    // Load into cache
-    await controller.selectFile('cachedFolder/cached.mir')
-    expect(controller.filesCache['cachedFolder/cached.mir']).toBeDefined()
-
-    // Delete folder
-    await controller.deleteItem('cachedFolder', true)
-
-    // BUG: File is STILL in cache after folder delete!
-    // This should be undefined, but it's not
-    expect(controller.filesCache['cachedFolder/cached.mir']).toBe('content')
   })
 })
 

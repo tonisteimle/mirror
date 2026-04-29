@@ -89,20 +89,6 @@ export {
   type ParsedLine,
 } from './line-property-parser'
 
-// Spatial indexing for performance
-export { SpatialCache, createSpatialCache, type SpatialItem } from './spatial-cache'
-
-// Drop indicator rendering - removed in v2.2, use studio/drag-drop/visual instead
-// Drop Strategies - removed in v2.2, use studio/drag-drop/strategies instead
-
-// Z-Index management for absolute containers
-export {
-  ZIndexManager,
-  createZIndexManager,
-  type ZIndexResult,
-  type ElementZInfo,
-} from './z-index-manager'
-
 // Robust modification layer (atomic updates, validation, rollback)
 export {
   RobustModifier,
