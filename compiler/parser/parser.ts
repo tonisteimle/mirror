@@ -89,6 +89,13 @@ import {
 } from './zag-parser'
 import { parseAnimationDefinition as parseAnimationDefinitionExtracted } from './animation-parser'
 import type { ParserContext } from './parser-context'
+import {
+  parseTokenDefinition as parseTokenDefinitionExtracted,
+  parseTokenWithSuffixSingleToken as parseTokenWithSuffixSingleTokenExtracted,
+  parseTokenWithSuffix as parseTokenWithSuffixExtracted,
+  parseTokenReference as parseTokenReferenceExtracted,
+  parseLegacyTokenDefinition as parseLegacyTokenDefinitionExtracted,
+} from './token-parser'
 
 /** Property value type - union of all possible values in Property.values (includes number[] for array props like slider defaultValue) */
 type PropertyValue =
@@ -587,172 +594,46 @@ export class Parser {
   }
 
   /**
-   * Convert a token value to the proper type (number or string)
-   * NUMBER tokens should become actual numbers for arithmetic operations
+   * Build a ParserContext from current state, run an extracted sub-parser,
+   * and sync the resulting position/errors back. Used by all token-parsing
+   * wrappers below — see compiler/parser/token-parser.ts for the implementations.
    */
-  private parseTokenValue(token: Token): string | number | boolean {
-    if (token.type === 'NUMBER') {
-      if (token.value.startsWith('#')) return token.value
-      const num = parseFloat(token.value)
-      return isNaN(num) ? token.value : num
+  private withTokenContext<T>(fn: (ctx: ParserContext) => T): T {
+    const ctx: ParserContext = {
+      tokens: this.tokens,
+      source: this.source,
+      loopVariables: this.loopVariables,
+      pos: this.pos,
+      errors: this.errors,
     }
-    if (token.type === 'IDENTIFIER' && (token.value === 'true' || token.value === 'false')) {
-      return token.value === 'true'
-    }
-    return token.value
+    const result = fn(ctx)
+    this.pos = ctx.pos
+    this.errors = ctx.errors
+    return result
   }
 
-  // New simplified syntax: name: value (supports NUMBER, STRING, or boolean IDENTIFIER)
+  // Five token-definition variants — implementations live in token-parser.ts.
+  // Wrappers below delegate via a shared ParserContext so this class doesn't
+  // need to know the parsing details.
+
   private parseTokenDefinition(section?: string): TokenDefinition | null {
-    const name = this.advance() // identifier
-    this.advance() // :
-    const value = this.advance() // value (NUMBER, STRING, or true/false)
-
-    // Infer type from value
-    const tokenType = this.inferTokenType(value.value)
-
-    return {
-      type: 'Token',
-      name: name.value,
-      tokenType,
-      value: this.parseTokenValue(value),
-      section,
-      line: name.line,
-      column: name.column,
-    }
+    return this.withTokenContext(ctx => parseTokenDefinitionExtracted(ctx, section))
   }
 
-  // Token with suffix (single token from lexer): name.suffix: value
-  // e.g., primary.bg: #2271C1 or card.rad: 12 or btn.col: white
-  // Also supports legacy syntax: $primary.bg: #2271C1
-  // The name is stored WITHOUT $ - $ is only used when referencing
   private parseTokenWithSuffixSingleToken(section?: string): TokenDefinition | null {
-    const nameToken = this.advance() // primary.bg or $primary.bg (single token)
-    this.advance() // :
-    const value = this.advance() // value (NUMBER, STRING, or IDENTIFIER like "white")
-
-    // Remove $ prefix if present (for backwards compatibility)
-    let fullName = nameToken.value
-    if (fullName.startsWith('$')) {
-      fullName = fullName.slice(1)
-    }
-
-    // Extract suffix from name (e.g., "bg" from "primary.bg")
-    const dotIndex = fullName.lastIndexOf('.')
-    const suffix = dotIndex > 0 ? fullName.slice(dotIndex + 1) : ''
-
-    // Infer type from suffix
-    let tokenType: 'color' | 'size' | 'font' | 'icon' = 'color'
-    if (suffix === 'pad' || suffix === 'gap' || suffix === 'margin' || suffix === 'rad') {
-      tokenType = 'size'
-    } else if (suffix === 'font') {
-      tokenType = 'font'
-    }
-
-    return {
-      type: 'Token',
-      name: fullName,
-      tokenType,
-      value: this.parseTokenValue(value),
-      section,
-      line: nameToken.line,
-      column: nameToken.column,
-    }
+    return this.withTokenContext(ctx => parseTokenWithSuffixSingleTokenExtracted(ctx, section))
   }
 
-  // Token with suffix (legacy: separate tokens): name.suffix: value
-  // e.g., primary.bg: #2271C1 or $primary.bg: #2271C1
   private parseTokenWithSuffix(section?: string): TokenDefinition | null {
-    const baseName = this.advance() // primary or $primary
-    this.advance() // .
-    const suffix = this.advance() // bg
-    this.advance() // :
-    const value = this.advance() // value (NUMBER or STRING)
-
-    // Remove $ prefix if present (for backwards compatibility)
-    let baseNameValue = baseName.value
-    if (baseNameValue.startsWith('$')) {
-      baseNameValue = baseNameValue.slice(1)
-    }
-
-    // Combine name with suffix: primary.bg
-    const fullName = `${baseNameValue}.${suffix.value}`
-
-    // Infer type from suffix
-    let tokenType: 'color' | 'size' | 'font' | 'icon' = 'color'
-    if (
-      suffix.value === 'pad' ||
-      suffix.value === 'gap' ||
-      suffix.value === 'margin' ||
-      suffix.value === 'rad'
-    ) {
-      tokenType = 'size'
-    } else if (suffix.value === 'font') {
-      tokenType = 'font'
-    }
-
-    return {
-      type: 'Token',
-      name: fullName,
-      tokenType,
-      value: this.parseTokenValue(value),
-      section,
-      line: baseName.line,
-      column: baseName.column,
-    }
+    return this.withTokenContext(ctx => parseTokenWithSuffixExtracted(ctx, section))
   }
 
-  // Token reference: name.suffix: $other (token referencing another token)
-  // e.g., accent.bg: $primary or $accent.bg: $primary (legacy)
-  // Left side stored WITHOUT $, right side keeps $ (it's a reference)
   private parseTokenReference(section?: string): TokenDefinition | null {
-    const nameToken = this.advance() // identifier (e.g., accent.bg or $accent.bg)
-    this.advance() // :
-    const value = this.advance() // identifier (e.g., $primary)
-
-    // Remove $ prefix from name if present (for backwards compatibility)
-    let name = nameToken.value
-    if (name.startsWith('$')) {
-      name = name.slice(1)
-    }
-
-    // Infer type from token name suffix
-    let tokenType: 'color' | 'size' | 'font' | 'icon' = 'color'
-    if (name.includes('.pad') || name.includes('.gap') || name.includes('.margin')) {
-      tokenType = 'size'
-    } else if (name.includes('.rad')) {
-      tokenType = 'size'
-    } else if (name.includes('.font')) {
-      tokenType = 'font'
-    }
-
-    return {
-      type: 'Token',
-      name: name,
-      tokenType,
-      value: value.value,
-      section,
-      line: nameToken.line,
-      column: nameToken.column,
-    }
+    return this.withTokenContext(ctx => parseTokenReferenceExtracted(ctx, section))
   }
 
-  // Legacy syntax: name: type = value (backwards compatible)
   private parseLegacyTokenDefinition(section?: string): TokenDefinition | null {
-    const name = this.advance()
-    this.advance() // identifier, :
-    const tokenType = this.advance()
-    this.advance() // type, =
-    const value = this.advance()
-    return {
-      type: 'Token',
-      name: name.value,
-      tokenType: tokenType.value as 'color' | 'size' | 'font' | 'icon',
-      value: this.parseTokenValue(value),
-      section,
-      line: name.line,
-      column: name.column,
-    }
+    return this.withTokenContext(ctx => parseLegacyTokenDefinitionExtracted(ctx, section))
   }
 
   /**
@@ -1509,29 +1390,6 @@ export class Parser {
     }
 
     return path
-  }
-
-  // Infer token type from value
-  private inferTokenType(value: string | number): 'color' | 'size' | 'font' | 'icon' | undefined {
-    const str = String(value)
-
-    // Color: starts with # (hex)
-    if (str.startsWith('#')) {
-      return 'color'
-    }
-
-    // Size: pure number or number with unit
-    if (/^\d+(%|px|rem|em)?$/.test(str)) {
-      return 'size'
-    }
-
-    // Font: quoted string (already unquoted by lexer)
-    // If it's a string that's not a color or size, assume font
-    if (typeof value === 'string' && !str.startsWith('#') && !/^\d/.test(str)) {
-      return 'font'
-    }
-
-    return undefined
   }
 
   private parseComponentOrInstance():

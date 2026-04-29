@@ -99,13 +99,19 @@ export class ParserUtils {
   }
 
   /**
-   * Advance to next token and return current.
+   * Advance to next token and return the previously-current one.
+   *
+   * EOF acts as a wall: once `pos` lands on an EOF token (or past the end),
+   * further calls return the last consumed token without incrementing `pos`.
+   * This mirrors parser.ts:advance and prevents sub-parsers from running
+   * `pos` off the end on malformed input (e.g. `primary: color =` with no
+   * value), which would crash later callers of `current()`.
    */
   static advance(ctx: ParserContext): Token {
-    if (ctx.pos < ctx.tokens.length) {
-      return ctx.tokens[ctx.pos++]
+    if (!ParserUtils.isAtEnd(ctx)) {
+      ctx.pos++
     }
-    return ctx.tokens[ctx.tokens.length - 1]
+    return ctx.tokens[ctx.pos - 1]
   }
 
   /**
@@ -139,11 +145,7 @@ export class ParserUtils {
   /**
    * Report a parse error.
    */
-  static reportError(
-    ctx: ParserContext,
-    message: string,
-    token?: Token
-  ): void {
+  static reportError(ctx: ParserContext, message: string, token?: Token): void {
     const t = token || ParserUtils.current(ctx)
     ctx.errors.push({
       message,
