@@ -96,6 +96,7 @@ import {
   parseTokenReference as parseTokenReferenceExtracted,
   parseLegacyTokenDefinition as parseLegacyTokenDefinitionExtracted,
 } from './token-parser'
+import { isStateBlockStart as isStateBlockStartExtracted } from './state-detector'
 
 /** Property value type - union of all possible values in Property.values (includes number[] for array props like slider defaultValue) */
 type PropertyValue =
@@ -5105,144 +5106,16 @@ export class Parser {
    *   visible when Menu open:                → +1 is 'when', +2 is Element, +3 is state, +4 is COLON
    *   visible when Menu open or Sidebar open: → with conditions
    */
+  // Implementation lives in state-detector.ts. Pure read-only lookahead —
+  // we just construct a minimal context (no errors mutation possible).
   private isStateBlockStart(): boolean {
-    let offset = 1
-
-    // Check for modifier (exclusive, toggle, initial)
-    const token1 = this.peekAt(offset)
-    // IMPORTANT: If the current identifier is an event name (onclick, onhover, etc.)
-    // and followed by COLON, this is an EVENT not a state block
-    // Events are parsed separately via parseEvent()
-    const currentName = this.current()?.value || ''
-    if (token1?.type === 'COLON') {
-      // Event names should NOT be treated as state blocks
-      if (EVENT_NAMES.has(currentName)) return false
-      // Slot definitions start with uppercase (Placeholder:, Value:, Header:)
-      // State names start with lowercase (selected:, hover:, open:)
-      const isLikelyState = currentName[0] === currentName[0].toLowerCase()
-      if (!isLikelyState) return false
-      return true
-    }
-
-    // Check for duration directly after state name (no trigger required)
-    // Enables: hover 0.2s: or hover 0.3s ease-out:
-    if (token1?.type === 'NUMBER') {
-      const val = token1.value
-      if (val.endsWith('s') || val.endsWith('ms')) {
-        let durationOffset = 2
-        // Check for optional easing after duration
-        const easingToken = this.peekAt(durationOffset)
-        if (easingToken?.type === 'IDENTIFIER' && EASING_FUNCTIONS.has(easingToken.value)) {
-          durationOffset++
-        }
-        const colonToken = this.peekAt(durationOffset)
-        if (colonToken?.type === 'COLON') {
-          // Verify this is a valid state name (lowercase, not an event)
-          const isLikelyState =
-            currentName[0] === currentName[0].toLowerCase() && !EVENT_NAMES.has(currentName)
-          return isLikelyState
-        }
-      }
-    }
-
-    // Check for external state reference: ElementName.state:
-    // Pattern: IDENTIFIER DOT IDENTIFIER COLON (e.g., MenuBtn.open:)
-    if (token1?.type === 'DOT') {
-      const token2 = this.peekAt(2)
-      const token3 = this.peekAt(3)
-      if (token2?.type === 'IDENTIFIER' && token3?.type === 'COLON') {
-        return true
-      }
-    }
-
-    if (token1?.type === 'IDENTIFIER' && STATE_MODIFIERS.has(token1.value)) {
-      offset++
-    }
-
-    // Check for 'when' keyword (dependency pattern)
-    const tokenWhen = this.peekAt(offset)
-    if (tokenWhen?.type === 'IDENTIFIER' && tokenWhen.value === 'when') {
-      // Skip through the when clause to find the colon
-      // Pattern: when Element state [and/or Element state]* :
-      offset++ // skip 'when'
-
-      // Must have at least one Element + state pair
-      const targetToken = this.peekAt(offset)
-      if (targetToken?.type !== 'IDENTIFIER') return false
-      offset++ // skip Element name
-
-      const stateToken = this.peekAt(offset)
-      if (stateToken?.type !== 'IDENTIFIER') return false
-      offset++ // skip state name
-
-      // Check for additional conditions (and/or)
-      // Use MAX_CONDITION_DEPTH to prevent infinite loops on malformed input
-      let conditionDepth = 0
-      while (conditionDepth++ < Parser.MAX_CONDITION_DEPTH) {
-        const condToken = this.peekAt(offset)
-        if (condToken?.type === 'COLON') return true
-        // Note: 'and'/'or' are tokenized as AND/OR types, not IDENTIFIER
-        if (condToken?.type === 'AND' || condToken?.type === 'OR') {
-          offset++ // skip and/or
-          offset++ // skip Element name
-          offset++ // skip state name
-        } else {
-          break
-        }
-      }
-
-      // Check for animation duration after when clause
-      // Syntax: visible when Menu open 0.3s:
-      const tokenAfterWhen = this.peekAt(offset)
-      if (tokenAfterWhen?.type === 'NUMBER') {
-        const val = tokenAfterWhen.value
-        if (val.endsWith('s') || val.endsWith('ms')) {
-          offset++
-          // Check for easing
-          const easingToken = this.peekAt(offset)
-          if (easingToken?.type === 'IDENTIFIER' && EASING_FUNCTIONS.has(easingToken.value)) {
-            offset++
-          }
-        }
-      }
-
-      const finalToken = this.peekAt(offset)
-      return finalToken?.type === 'COLON'
-    }
-
-    // Check for event name (onclick, onhover, onkeydown, etc.)
-    const token2 = this.peekAt(offset)
-    if (token2?.type === 'COLON') return true
-    if (token2?.type === 'IDENTIFIER' && EVENT_NAMES.has(token2.value)) {
-      offset++
-      // Check for keyboard key (for onkeydown, onkeyup)
-      if (token2.value === 'onkeydown' || token2.value === 'onkeyup') {
-        const token3 = this.peekAt(offset)
-        if (token3?.type === 'IDENTIFIER' && KEYBOARD_KEYS.has(token3.value)) {
-          offset++
-        }
-      }
-    }
-
-    // Check for animation config (duration and/or easing) after trigger
-    // Syntax: selected onclick 0.2s ease-out:
-    const tokenAfterTrigger = this.peekAt(offset)
-    if (tokenAfterTrigger?.type === 'NUMBER') {
-      // Duration token (e.g., 0.2s, 200ms)
-      const val = tokenAfterTrigger.value
-      if (val.endsWith('s') || val.endsWith('ms')) {
-        offset++
-        // Check for easing after duration
-        const easingToken = this.peekAt(offset)
-        if (easingToken?.type === 'IDENTIFIER' && EASING_FUNCTIONS.has(easingToken.value)) {
-          offset++
-        }
-      }
-    }
-
-    // Final check: must end with COLON
-    const finalToken = this.peekAt(offset)
-    return finalToken?.type === 'COLON'
+    return isStateBlockStartExtracted({
+      tokens: this.tokens,
+      source: this.source,
+      loopVariables: this.loopVariables,
+      pos: this.pos,
+      errors: this.errors,
+    })
   }
 
   private checkAt(offset: number, type: TokenType): boolean {
