@@ -458,27 +458,6 @@
       box-sizing: border-box;
     }
 
-    .mode-tab {
-      padding: var(--space-3) 12px;
-      font-size: var(--font-sm);
-      font-weight: var(--weight-semibold);
-      text-transform: var(--text-uppercase);
-      letter-spacing: var(--tracking-wide);
-      color: var(--text-disabled);
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      transition: color 0.15s;
-    }
-
-    .mode-tab:hover {
-      color: var(--text-muted);
-    }
-
-    .mode-tab.active {
-      color: var(--text-primary);
-    }
-
     .file-tree {
       flex: 1;
       overflow: hidden;
