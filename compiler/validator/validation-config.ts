@@ -32,6 +32,34 @@ export const KNOWN_STATE_STYLE_EXTRAS = new Set([
 ])
 
 /**
+ * Known actions that aren't (yet) registered in DSL.actions but are
+ * documented in the tutorial / used by built-in templates. Treat these as
+ * valid to avoid false-positive E300 errors. Long-term these should be
+ * lifted into compiler/schema/dsl.ts; this set is the pragmatic bridge.
+ */
+export const KNOWN_NON_SCHEMA_ACTIONS = new Set([
+  // Feedback / UI
+  'toast',
+  // Navigation
+  'back',
+  'forward',
+  'openUrl',
+  // Form / input control
+  'clear',
+  'setError',
+  'clearError',
+  // List / collection mutation
+  'add',
+  'remove',
+  // List-navigation helpers (Select, Dropdown, …)
+  'highlightNext',
+  'highlightPrev',
+  'selectHighlighted',
+  // Custom-state cycling helpers
+  'exclusive',
+])
+
+/**
  * Known non-schema properties (HTML attributes, icon props, hover states, animation)
  */
 export const KNOWN_NON_SCHEMA_PROPERTIES = new Set([
@@ -43,6 +71,7 @@ export const KNOWN_NON_SCHEMA_PROPERTIES = new Set([
   'type',
   'name',
   'id',
+  'icon',
   'icon-size',
   'is',
   'icon-color',
@@ -63,6 +92,37 @@ export const KNOWN_NON_SCHEMA_PROPERTIES = new Set([
   'hover-border-color',
   'hover-rad',
   'hover-radius',
+  // Internal markers produced by the parser
+  'propset', // Property-set token reference (Frame $cardstyle)
+  // Input
+  'mask', // Input mask pattern
+  'bind', // Two-way data binding
+  'checked', // Checkbox/Switch initial state
+  // Zag DatePicker props (and shared by other Zag primitives)
+  'defaultValue',
+  'selectionMode',
+  'fixedWeeks',
+  'startOfWeek',
+  'closeOnSelect',
+  'positioning',
+  'readOnly',
+  'min',
+  'max',
+  'locale',
+  'disabled',
+  // Component-template props (Tabs, Dialog, Select, …)
+  'open',
+  'show',
+  'badge',
+  // Chart properties (Line, Bar, Pie, Donut, Area)
+  'colors',
+  'x',
+  'y',
+  'where',
+  // Chart slot inline shortcuts
+  'title',
+  'legend',
+  'axes',
 ])
 
 /**

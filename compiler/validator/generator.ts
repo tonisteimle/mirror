@@ -57,8 +57,10 @@ export function isValidColor(value: string): boolean {
  * This includes colors, gradient keywords, and rgba() syntax.
  */
 export function isValidColorValue(value: string | number): boolean {
-  // Numbers are valid (gradient angles like `grad 45 #a #b`)
+  // Numbers are valid (gradient angles like `grad 45 #a #b`).
+  // Accept numeric strings too — the parser sometimes hands us "45".
   if (typeof value === 'number') return true
+  if (/^-?\d+(\.\d+)?$/.test(value)) return true
 
   // Token references
   if (value.startsWith('$')) return true

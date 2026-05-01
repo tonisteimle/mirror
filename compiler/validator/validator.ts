@@ -30,10 +30,14 @@ import { suggestSimilar } from './string-utils'
 import {
   KNOWN_STATE_STYLE_EXTRAS,
   KNOWN_NON_SCHEMA_PROPERTIES,
+  KNOWN_NON_SCHEMA_ACTIONS,
   REQUIRED_PROPERTIES,
   PROPERTY_RANGES,
   ZONE_ALIGNMENT_PROPS,
 } from './validation-config'
+import { CHART_PRIMITIVES } from '../schema/chart-primitives'
+
+const CHART_PRIMITIVE_NAMES = new Set(Object.keys(CHART_PRIMITIVES))
 
 // ============================================================================
 // Validator Class
@@ -48,6 +52,8 @@ export class Validator {
   private componentExtends: Map<string, string> = new Map() // For circular reference detection
   private componentDefinitions: Map<string, { line: number; column: number }> = new Map() // Track definition locations
   private tokenDefinitions: Map<string, { line: number; column: number }> = new Map() // Track token definition locations
+  /** Names assigned to instances via `Element name Foo` — valid cross-element state-ref targets. */
+  private namedInstances: Set<string> = new Set()
   private errors: ValidationError[] = []
   private warnings: ValidationError[] = []
   // Prelude definitions (from other files, e.g., tokens.tok)
@@ -79,6 +85,7 @@ export class Validator {
     this.componentExtends.clear()
     this.componentDefinitions.clear()
     this.tokenDefinitions.clear()
+    this.namedInstances.clear()
     this.errors = []
     this.warnings = []
 
@@ -145,9 +152,12 @@ export class Validator {
       this.tokenDefinitions.set(rootName, { line: token.line, column: token.column })
     }
 
-    // First pass: collect all component names
+    // First pass: collect all component names. Names already present from
+    // the prelude (built-ins, other files) can be shadowed by a local
+    // definition without triggering a duplicate-definition error.
+    const userDefined = new Set<string>()
     for (const component of ast.components) {
-      if (this.definedComponents.has(component.name)) {
+      if (userDefined.has(component.name)) {
         this.addError(
           ERROR_CODES.DUPLICATE_DEFINITION,
           `Component "${component.name}" is already defined`,
@@ -155,12 +165,31 @@ export class Validator {
           component.column
         )
       }
+      userDefined.add(component.name)
       this.definedComponents.add(component.name)
       // Track definition location for unused warnings
       this.componentDefinitions.set(component.name, {
         line: component.line,
         column: component.column,
       })
+
+      // Slot definitions: capitalised Instance children of a component
+      // definition (`Card:\n  Title: pad 16\n  Footer:\n    Status: …`)
+      // declare local slot names at any depth. Register them so usages
+      // (`Card\n  Title "Hello"`) resolve.
+      const collectSlotNames = (inst: Instance): void => {
+        if (/^[A-Z]/.test(inst.component) && !this.definedComponents.has(inst.component)) {
+          this.definedComponents.add(inst.component)
+        }
+        for (const grandchild of inst.children ?? []) {
+          if (grandchild && (grandchild as Instance).type === 'Instance') {
+            collectSlotNames(grandchild as Instance)
+          }
+        }
+      }
+      for (const child of component.children ?? []) {
+        if (child && child.type === 'Instance') collectSlotNames(child as Instance)
+      }
     }
 
     // Second pass: track extends relationships (need all names first)
@@ -173,6 +202,51 @@ export class Validator {
       // The parser uses 'primitive' for both primitives and component references
       if (component.primitive && this.definedComponents.has(component.primitive)) {
         this.componentExtends.set(component.name, component.primitive)
+      }
+    }
+
+    // Third pass: walk all Instances to collect (a) element names (`Button
+    // name Btn`) for cross-element state references and (b) slot
+    // definitions used as inline children (`DashboardView: Frame name …`)
+    // so usages elsewhere don't false-positive as undefined components.
+    const visitInstance = (inst: Instance, depth: number): void => {
+      if (inst.name) this.namedInstances.add(inst.name)
+      // Inline slot definitions. The parser only sets `isDefinition` when
+      // a colon is followed by a NEWLINE (`Foo:` on its own line). The
+      // inline-child form (`Foo: Bar baz`) parses the same way as
+      // `Foo bar` — so we can't distinguish them post-parse without a
+      // marker. Be conservative and only register slot names when the
+      // parser explicitly tagged them, OR when the instance has a primitive
+      // (or known component) as its first child — the inline-define
+      // signature.
+      if (
+        depth > 0 &&
+        /^[A-Z]/.test(inst.component) &&
+        !this.definedComponents.has(inst.component)
+      ) {
+        const firstChild = inst.children?.[0] as Instance | undefined
+        const firstChildLower = firstChild?.component?.toLowerCase()
+        const firstChildIsPrimitive =
+          !!firstChildLower &&
+          (this.rules.validPrimitives.has(firstChildLower) ||
+            this.rules.primitiveAliases.has(firstChildLower))
+        if (inst.isDefinition === true || firstChildIsPrimitive) {
+          this.definedComponents.add(inst.component)
+        }
+      }
+      const children = inst.children ?? []
+      for (const child of children) {
+        if (child && (child as Instance).type === 'Instance') {
+          visitInstance(child as Instance, depth + 1)
+        }
+      }
+    }
+    for (const inst of ast.instances ?? []) visitInstance(inst, 0)
+    for (const component of ast.components) {
+      for (const child of component.children ?? []) {
+        if (child && (child as Instance).type === 'Instance') {
+          visitInstance(child as Instance, 1)
+        }
       }
     }
   }
@@ -224,13 +298,15 @@ export class Validator {
   }
 
   private validateComponent(component: ComponentDefinition): void {
-    // Check primitive
+    // Check primitive (`Foo as Bar`). Bar can be a real primitive, a
+    // primitive alias, or another user-defined component (component
+    // inheritance — Mirror's `as` syntax does not distinguish the two).
     if (component.primitive) {
       const primLower = component.primitive.toLowerCase()
-      // Check both direct primitives and aliases
       const isValidPrimitive =
         this.rules.validPrimitives.has(primLower) || this.rules.primitiveAliases.has(primLower)
-      if (!isValidPrimitive) {
+      const isDefinedComponent = this.definedComponents.has(component.primitive)
+      if (!isValidPrimitive && !isDefinedComponent) {
         const suggestion = suggestSimilar(component.primitive, this.rules.validPrimitives)
         this.addError(
           ERROR_CODES.UNKNOWN_COMPONENT,
@@ -239,6 +315,8 @@ export class Validator {
           component.column,
           suggestion ? `Did you mean "${suggestion}"?` : undefined
         )
+      } else if (isDefinedComponent) {
+        this.trackUsedComponent(component.primitive, component.line, component.column)
       }
     }
 
@@ -304,6 +382,15 @@ export class Validator {
     // - For undefined components: track for E002 error reporting
     if (!isPrimitive && !isAlias) {
       this.trackUsedComponent(instance.component, instance.line, instance.column)
+    }
+
+    // Chart primitives (Line, Bar, Pie, Donut, Area, Scatter, Radar, Chart)
+    // accept domain-specific property values (`grid false`, `x "name"`,
+    // `colors #a #b`) that don't fit the generic flex-grid/numeric schema.
+    // Skip per-property value validation in this context — only structural
+    // checks remain useful.
+    if (CHART_PRIMITIVE_NAMES.has(instance.component)) {
+      return
     }
 
     // Note: We no longer validate child alignment properties because:
@@ -402,7 +489,7 @@ export class Validator {
       const actionName = prop.name
       const target = prop.values[0]
 
-      if (!this.rules.validActions.has(actionName)) {
+      if (!this.rules.validActions.has(actionName) && !KNOWN_NON_SCHEMA_ACTIONS.has(actionName)) {
         const suggestion = suggestSimilar(actionName, this.rules.validActions)
         this.addError(
           ERROR_CODES.UNKNOWN_ACTION,
@@ -489,8 +576,12 @@ export class Validator {
 
     // Check for unknown property
     if (!propDef) {
-      // Check if it's a known non-schema property
-      if (!KNOWN_NON_SCHEMA_PROPERTIES.has(prop.name)) {
+      // Check if it's a known non-schema property, OR a defined component
+      // applied as a property bundle (`Input placeholder "x", Field` where
+      // Field is a component). The latter is Mirror's component-as-mixin
+      // syntax, equivalent to a property-set token.
+      const isComponentMixin = this.definedComponents.has(prop.name)
+      if (!KNOWN_NON_SCHEMA_PROPERTIES.has(prop.name) && !isComponentMixin) {
         const suggestion = suggestSimilar(prop.name, this.rules.validProperties.keys())
         this.addError(
           ERROR_CODES.UNKNOWN_PROPERTY,
@@ -500,22 +591,33 @@ export class Validator {
           suggestion ? `Did you mean "${suggestion}"?` : undefined
         )
       }
+      if (isComponentMixin) {
+        this.trackUsedComponent(prop.name, prop.line, prop.column)
+      }
       return
     }
 
-    // Extract actual values (handle TokenReference objects)
+    // Extract actual values (handle TokenReference objects). If the
+    // property carries a Conditional / ComputedExpression / LoopVarReference
+    // we treat the value as opaque-but-present — skip per-value validation
+    // since we can't statically resolve the runtime value.
+    let hasOpaqueExpression = false
     const values = prop.values
       .map(v => {
-        if (typeof v === 'object' && v !== null && 'kind' in v && v.kind === 'token') {
-          return '$' + (v as TokenReference).name
+        if (typeof v === 'object' && v !== null && 'kind' in v) {
+          if (v.kind === 'token') return '$' + (v as TokenReference).name
+          if (v.kind === 'conditional' || v.kind === 'expression' || v.kind === 'loopVar') {
+            hasOpaqueExpression = true
+            return null
+          }
         }
         return v
       })
-      .filter(v => typeof v !== 'object') as (string | number | boolean)[]
+      .filter(v => v !== null && typeof v !== 'object') as (string | number | boolean)[]
 
     // Validate values
     const validator = this.rules.propertyValueValidators.get(propDef.name)
-    if (validator) {
+    if (validator && !hasOpaqueExpression) {
       const result = validator(values)
       for (const err of result.errors) {
         this.addError(ERROR_CODES.INVALID_VALUE, err, prop.line, prop.column)
@@ -569,7 +671,7 @@ export class Validator {
     }
 
     const actionName = values[actionIndex]
-    if (!this.rules.validActions.has(actionName)) {
+    if (!this.rules.validActions.has(actionName) && !KNOWN_NON_SCHEMA_ACTIONS.has(actionName)) {
       const suggestion = suggestSimilar(actionName, this.rules.validActions)
       this.addError(
         ERROR_CODES.UNKNOWN_ACTION,
@@ -722,7 +824,7 @@ export class Validator {
   }
 
   private validateAction(action: Action): void {
-    if (!this.rules.validActions.has(action.name)) {
+    if (!this.rules.validActions.has(action.name) && !KNOWN_NON_SCHEMA_ACTIONS.has(action.name)) {
       const suggestion = suggestSimilar(action.name, this.rules.validActions)
       this.addError(
         ERROR_CODES.UNKNOWN_ACTION,
@@ -773,8 +875,11 @@ export class Validator {
       const isPrimitive = this.rules.validPrimitives.has(nameLower)
       const isAlias = this.rules.primitiveAliases.has(nameLower)
       const isDefined = this.definedComponents.has(name)
+      // Cross-element state target: `Button name Btn` then `Btn.open:` —
+      // Btn refers to the named instance, not a separate component.
+      const isNamedInstance = this.namedInstances.has(name)
 
-      if (!isPrimitive && !isAlias && !isDefined) {
+      if (!isPrimitive && !isAlias && !isDefined && !isNamedInstance) {
         const suggestion = suggestSimilar(name, [
           ...this.definedComponents,
           ...this.rules.validPrimitives,
@@ -944,6 +1049,11 @@ export class Validator {
     const required = REQUIRED_PROPERTIES[compLower]
 
     if (!required) return
+
+    // If the user defined a component with this same name, it shadows the
+    // primitive. The user component's contract supersedes the primitive's
+    // required-properties rule.
+    if (this.definedComponents.has(componentName)) return
 
     const propNames = new Set(properties.map(p => p.name.toLowerCase()))
 

@@ -18,43 +18,55 @@
  *   const result2 = validator.validate(ast2)
  */
 
-import { tokenizeWithErrors, LexerError } from '../parser/lexer'
+import { tokenizeWithErrors, LexerError, LexerErrorCode } from '../parser/lexer'
 import { Parser } from '../parser/parser'
-import { AST } from '../parser/ast'
+import { AST, ParseError, ParseErrorCode } from '../parser/ast'
 import { Validator } from './validator'
 import { ValidationResult, ValidationError, ERROR_CODES } from './types'
+import { getBuiltinComponents, getBuiltinTokens } from './builtin-prelude'
 
 /**
- * Map lexer error message to error code
+ * Map lexer error category to validator error code.
+ * The lexer tags each error with a stable category — no string-matching needed.
  */
-function getLexerErrorCode(message: string): string {
-  if (message.includes('Unclosed string')) return ERROR_CODES.UNCLOSED_STRING
-  if (message.includes('hex') || message.includes("'#'")) return ERROR_CODES.INVALID_HEX_COLOR
-  if (message.includes('Unexpected character')) return ERROR_CODES.UNKNOWN_CHARACTER
-  if (message.includes('too deep')) return ERROR_CODES.INDENTATION_TOO_DEEP
-  if (message.includes('decimal') || message.includes('multiple')) return ERROR_CODES.INVALID_NUMBER
-  if (message.includes('Inconsistent indentation')) return ERROR_CODES.INCONSISTENT_INDENTATION
-  return 'E010' // Fallback
+const LEXER_CODE_MAP: Record<LexerErrorCode, string> = {
+  'unclosed-string': ERROR_CODES.UNCLOSED_STRING,
+  'invalid-hex': ERROR_CODES.INVALID_HEX_COLOR,
+  'unknown-character': ERROR_CODES.UNKNOWN_CHARACTER,
+  'indent-too-deep': ERROR_CODES.INDENTATION_TOO_DEEP,
+  'invalid-number': ERROR_CODES.INVALID_NUMBER,
+  'inconsistent-indent': ERROR_CODES.INCONSISTENT_INDENTATION,
+  'invalid-indent': ERROR_CODES.INCONSISTENT_INDENTATION,
+  'leading-decimal': ERROR_CODES.INVALID_NUMBER,
+  'trailing-decimal': ERROR_CODES.INVALID_NUMBER,
 }
 
 /**
- * Map parser error message to error code
+ * Lexer error categories that are reported as warnings, not errors —
+ * style suggestions the compiler can recover from.
  */
-function getParserErrorCode(message: string): string {
-  if (message.includes('Expected COLON')) return ERROR_CODES.MISSING_COLON
-  if (message.includes('Expected')) return ERROR_CODES.UNEXPECTED_TOKEN
-  return ERROR_CODES.PARSER_ERROR
+const LEXER_WARNING_CODES: ReadonlySet<LexerErrorCode> = new Set([
+  'leading-decimal',
+  'trailing-decimal',
+  'inconsistent-indent',
+])
+
+/**
+ * Map parser error category to validator error code.
+ */
+const PARSER_CODE_MAP: Record<ParseErrorCode, string> = {
+  'missing-colon': ERROR_CODES.MISSING_COLON,
+  'unexpected-token': ERROR_CODES.UNEXPECTED_TOKEN,
+  'unrecognized-definition': ERROR_CODES.PARSER_ERROR,
 }
 
 /**
  * Convert parser errors to validation errors
  */
-function convertParserErrors(
-  parserErrors: Array<{ message: string; line: number; column: number; hint?: string }>
-): ValidationError[] {
+function convertParserErrors(parserErrors: ParseError[]): ValidationError[] {
   return parserErrors.map(err => ({
     severity: 'error' as const,
-    code: getParserErrorCode(err.message),
+    code: err.code ? PARSER_CODE_MAP[err.code] : ERROR_CODES.PARSER_ERROR,
     message: err.message,
     line: err.line,
     column: err.column,
@@ -63,24 +75,13 @@ function convertParserErrors(
 }
 
 /**
- * Check if a lexer error should be treated as a warning
- */
-function isLexerWarning(message: string): boolean {
-  // These are style suggestions, not critical errors
-  return (
-    message.includes('Leading decimal') ||
-    message.includes('Trailing decimal') ||
-    message.includes('Inconsistent indentation')
-  )
-}
-
-/**
  * Convert lexer errors to validation errors
  */
 function convertLexerErrors(lexerErrors: LexerError[]): ValidationError[] {
   return lexerErrors.map(err => ({
-    severity: isLexerWarning(err.message) ? ('warning' as const) : ('error' as const),
-    code: getLexerErrorCode(err.message),
+    severity:
+      err.code && LEXER_WARNING_CODES.has(err.code) ? ('warning' as const) : ('error' as const),
+    code: err.code ? LEXER_CODE_MAP[err.code] : 'E010',
     message: err.message,
     line: err.line,
     column: err.column,
@@ -143,10 +144,14 @@ export function validate(source: string, options?: ValidateOptions): ValidationR
   // Validate AST
   const validator = new Validator()
 
-  // Set prelude if provided
-  if (options?.preludeTokens || options?.preludeComponents) {
-    validator.setPrelude(options.preludeTokens || new Set(), options.preludeComponents || new Set())
-  }
+  // Always seed the prelude with built-in components/tokens (templates,
+  // chart primitives, Zag primitives, slot aliases). User-supplied prelude
+  // entries are merged on top.
+  const tokens = new Set<string>(getBuiltinTokens())
+  const components = new Set<string>(getBuiltinComponents())
+  if (options?.preludeTokens) for (const t of options.preludeTokens) tokens.add(t)
+  if (options?.preludeComponents) for (const c of options.preludeComponents) components.add(c)
+  validator.setPrelude(tokens, components)
 
   const validatorResult = validator.validate(ast)
 

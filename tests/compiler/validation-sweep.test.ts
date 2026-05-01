@@ -87,7 +87,11 @@ function findMirrorFiles(dir: string, out: string[] = []): string[] {
 }
 
 describe('Validation sweep: Mirror fixtures', () => {
-  const fixtures = findMirrorFiles(join(repoRoot, 'tests'))
+  // Multi-file fixtures only validate when concatenated by the project
+  // compiler (tokens.tok / components.com supply prelude entries). Their
+  // own runner.test.ts handles project-mode validation; the snippet sweep
+  // is unit-level and would always false-positive here.
+  const fixtures = findMirrorFiles(join(repoRoot, 'tests')).filter(f => !f.includes('/multi-file/'))
 
   it('finds at least 100 fixture files', () => {
     expect(fixtures.length).toBeGreaterThanOrEqual(100)
