@@ -2923,9 +2923,6 @@ function initStudio() {
   // Set up notification handlers for user feedback
   setupNotificationHandlers()
 
-  // Set up move event handlers for debugging
-  setupMoveEventHandlers()
-
   // Set up icon picker for property panel (delegated to studio/panels/property)
   setupPropertyPanelIconPicker()
 
@@ -3121,29 +3118,6 @@ function setupNotificationHandlers() {
 
   studio.events.on('notification:error', ({ message, duration }) => {
     showNotification(message, 'error', duration ?? 5000)
-  })
-}
-
-/**
- * Setup move event handlers for debugging and coordination
- * Listens to move:completed events from DragDropService
- */
-function setupMoveEventHandlers() {
-  if (!studio?.events) return
-
-  // Log move:completed events for debugging
-  studio.events.on('move:completed', data => {
-    console.log('[Move] Completed:', {
-      nodeId: data.nodeId,
-      targetId: data.targetId,
-      position: data.position,
-      layoutTransition: data.layoutTransition,
-    })
-
-    // Future: Could trigger additional actions here, such as:
-    // - Updating breadcrumb
-    // - Triggering analytics
-    // - Refreshing property panel
   })
 }
 

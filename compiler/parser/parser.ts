@@ -96,6 +96,14 @@ import {
   type InstanceBodyCallbacks,
   type ComponentBodyCallbacks,
 } from './body-parser'
+import { parseExpression as parseExpressionExtracted } from './expression-parser'
+import {
+  parseEach as parseEachExtracted,
+  parseConditionalBlock as parseConditionalBlockExtracted,
+  parseArrayLiteral as parseArrayLiteralExtracted,
+  parseObjectLiteral as parseObjectLiteralExtracted,
+  type EachParserCallbacks,
+} from './each-parser'
 import { KEYWORD_TOKEN_TYPES } from './parser-context'
 
 /** Property value type - union of all possible values in Property.values (includes number[] for array props like slider defaultValue) */
@@ -549,6 +557,34 @@ export class Parser {
     this.pos = ctx.pos
     this.errors = ctx.errors
     return result
+  }
+
+  /**
+   * Build the callback record passed to each-parser. Each callback syncs
+   * `this.pos` ↔ `ctx.pos` so the main parser sees the right position when
+   * a sub-parser delegates back into it.
+   */
+  private eachParserCallbacks(ctx: ParserContext): EachParserCallbacks {
+    return {
+      parseInstance: token => {
+        this.pos = ctx.pos
+        const result = this.parseInstance(token)
+        ctx.pos = this.pos
+        return result
+      },
+      checkNextIsPropertyName: () => {
+        this.pos = ctx.pos
+        const result = this.checkNextIsPropertyName()
+        ctx.pos = this.pos
+        return result
+      },
+      advancePropertyName: () => {
+        this.pos = ctx.pos
+        const result = this.advancePropertyName()
+        ctx.pos = this.pos
+        return result
+      },
+    }
   }
 
   // Five token-definition variants — implementations live in token-parser.ts.
@@ -2328,118 +2364,7 @@ export class Parser {
   // ============================================================================
 
   private parseEach(): Each | null {
-    const eachToken = this.advance() // each
-
-    // Get item variable name
-    if (!this.check('IDENTIFIER')) return null
-    const item = this.advance().value
-
-    // Check for optional index variable with comma syntax: each item, index in collection
-    let index: string | undefined
-    if (this.check('COMMA')) {
-      this.advance() // consume comma
-      if (this.check('IDENTIFIER')) {
-        index = this.advance().value
-      }
-    }
-
-    // Expect 'in'
-    if (!this.check('IN')) return null
-    this.advance()
-
-    // Get collection: either identifier or inline array literal
-    let collection: string
-    if (this.check('LBRACKET')) {
-      // Parse inline array literal: ["Apple", "Banana", "Cherry"]
-      collection = this.parseArrayLiteral()
-    } else if (this.check('IDENTIFIER')) {
-      collection = this.advance().value
-      // Handle property access for nested loop collections: category.items
-      while (this.check('DOT') && this.checkNextIsPropertyName()) {
-        this.advance() // .
-        collection += '.' + this.advancePropertyName()
-      }
-    } else {
-      return null
-    }
-
-    // Also support legacy syntax: each item in collection with index
-    if (!index && this.check('WITH')) {
-      this.advance() // consume 'with'
-      if (this.check('IDENTIFIER')) {
-        index = this.advance().value
-      }
-    }
-
-    const each: Each = {
-      type: 'Each',
-      item,
-      index,
-      collection,
-      children: [],
-      line: eachToken.line,
-      column: eachToken.column,
-    }
-
-    // Optional filter: where condition
-    if (this.check('WHERE')) {
-      this.advance()
-      each.filter = this.parseExpression()
-    }
-
-    // Optional ordering: by field asc/desc
-    if (this.check('BY')) {
-      this.advance()
-      if (this.check('IDENTIFIER')) {
-        each.orderBy = this.advance().value
-        // Check for ascending/descending
-        if (this.check('DESC')) {
-          this.advance()
-          each.orderDesc = true
-        } else if (this.check('ASC')) {
-          this.advance()
-          each.orderDesc = false
-        }
-      }
-    }
-
-    // Parse indented children
-    // Add loop variables to context so they can be recognized as content
-    this.loopVariables.add(item)
-    if (index) this.loopVariables.add(index)
-
-    try {
-      this.skipNewlines()
-      if (this.check('INDENT')) {
-        this.advance()
-        while (!this.check('DEDENT') && !this.isAtEnd()) {
-          this.skipNewlines()
-          if (this.check('DEDENT')) break
-
-          if (this.check('IDENTIFIER')) {
-            const child = this.parseInstance(this.advance())
-            if (child.type !== 'ZagComponent') {
-              each.children.push(child as Instance | Slot)
-            }
-          } else if (this.check('EACH')) {
-            const nestedEach = this.parseEach()
-            if (nestedEach) each.children.push(nestedEach)
-          } else if (this.check('IF')) {
-            const conditional = this.parseConditionalBlock()
-            if (conditional) each.children.push(conditional)
-          } else {
-            this.advance()
-          }
-        }
-        if (this.check('DEDENT')) this.advance()
-      }
-    } finally {
-      // Always remove loop variables from context, even on exception
-      this.loopVariables.delete(item)
-      if (index) this.loopVariables.delete(index)
-    }
-
-    return each
+    return this.withSubParserContext(ctx => parseEachExtracted(ctx, this.eachParserCallbacks(ctx)))
   }
 
   /**
@@ -2448,43 +2373,7 @@ export class Parser {
    * Returns the array as a JavaScript string representation.
    */
   private parseArrayLiteral(): string {
-    if (!this.check('LBRACKET')) return '[]'
-    this.advance() // consume [
-
-    const elements: string[] = []
-
-    while (!this.check('RBRACKET') && !this.isAtEnd()) {
-      this.skipNewlines()
-      if (this.check('RBRACKET')) break
-
-      if (this.check('LBRACE')) {
-        // Parse object literal: { name: "Alice", age: 30 }
-        elements.push(this.parseObjectLiteral())
-      } else if (this.check('STRING')) {
-        const str = this.advance().value
-        elements.push(`"${str}"`)
-      } else if (this.check('NUMBER')) {
-        elements.push(this.advance().value)
-      } else if (this.check('IDENTIFIER')) {
-        const value = this.advance().value
-        // Handle boolean literals
-        if (value === 'true' || value === 'false' || value === 'null') {
-          elements.push(value)
-        } else {
-          elements.push(`"${value}"`)
-        }
-      } else {
-        this.advance() // skip unknown
-      }
-
-      // Skip comma between elements
-      if (this.check('COMMA')) {
-        this.advance()
-      }
-    }
-
-    if (this.check('RBRACKET')) this.advance() // consume ]
-    return `[${elements.join(', ')}]`
+    return this.withSubParserContext(ctx => parseArrayLiteralExtracted(ctx))
   }
 
   /**
@@ -2492,59 +2381,7 @@ export class Parser {
    * Returns the object as a JavaScript string representation.
    */
   private parseObjectLiteral(): string {
-    if (!this.check('LBRACE')) return '{}'
-    this.advance() // consume {
-
-    const props: string[] = []
-
-    while (!this.check('RBRACE') && !this.isAtEnd()) {
-      this.skipNewlines()
-      if (this.check('RBRACE')) break
-
-      // Parse property name
-      if (!this.check('IDENTIFIER')) {
-        this.advance()
-        continue
-      }
-      const key = this.advance().value
-
-      // Expect colon
-      if (this.check('COLON')) {
-        this.advance()
-      }
-
-      // Parse property value
-      let value: string
-      if (this.check('STRING')) {
-        value = `"${this.advance().value}"`
-      } else if (this.check('NUMBER')) {
-        value = this.advance().value
-      } else if (this.check('IDENTIFIER')) {
-        const v = this.advance().value
-        if (v === 'true' || v === 'false' || v === 'null') {
-          value = v
-        } else {
-          value = `"${v}"`
-        }
-      } else if (this.check('LBRACKET')) {
-        value = this.parseArrayLiteral()
-      } else if (this.check('LBRACE')) {
-        value = this.parseObjectLiteral()
-      } else {
-        value = 'null'
-        this.advance()
-      }
-
-      props.push(`${key}: ${value}`)
-
-      // Skip comma between properties
-      if (this.check('COMMA')) {
-        this.advance()
-      }
-    }
-
-    if (this.check('RBRACE')) this.advance() // consume }
-    return `{ ${props.join(', ')} }`
+    return this.withSubParserContext(ctx => parseObjectLiteralExtracted(ctx))
   }
 
   // ============================================================================
@@ -2552,77 +2389,9 @@ export class Parser {
   // ============================================================================
 
   private parseConditionalBlock(): ConditionalNode {
-    const ifToken = this.advance() // if
-
-    // Parse condition
-    const condition = this.parseExpression()
-
-    const conditional: ConditionalNode = {
-      type: 'Conditional',
-      condition,
-      then: [],
-      else: [],
-      line: ifToken.line,
-      column: ifToken.column,
-    }
-
-    // Parse 'then' block
-    this.skipNewlines()
-    if (this.check('INDENT')) {
-      this.advance()
-      while (!this.check('DEDENT') && !this.check('ELSE') && !this.isAtEnd()) {
-        this.skipNewlines()
-        if (this.check('DEDENT') || this.check('ELSE')) break
-
-        if (this.check('IDENTIFIER')) {
-          const child = this.parseInstance(this.advance())
-          if (child.type !== 'ZagComponent') {
-            conditional.then.push(child as Instance | Slot)
-          }
-        } else if (this.check('EACH')) {
-          const each = this.parseEach()
-          if (each) conditional.then.push(each)
-        } else if (this.check('IF')) {
-          const nested = this.parseConditionalBlock()
-          if (nested) conditional.then.push(nested)
-        } else {
-          this.advance()
-        }
-      }
-      if (this.check('DEDENT')) this.advance()
-    }
-
-    // Parse optional 'else' block
-    this.skipNewlines()
-    if (this.check('ELSE')) {
-      this.advance()
-      this.skipNewlines()
-      if (this.check('INDENT')) {
-        this.advance()
-        while (!this.check('DEDENT') && !this.isAtEnd()) {
-          this.skipNewlines()
-          if (this.check('DEDENT')) break
-
-          if (this.check('IDENTIFIER')) {
-            const child = this.parseInstance(this.advance())
-            if (child.type !== 'ZagComponent') {
-              conditional.else.push(child as Instance | Slot)
-            }
-          } else if (this.check('EACH')) {
-            const each = this.parseEach()
-            if (each) conditional.else.push(each)
-          } else if (this.check('IF')) {
-            const nested = this.parseConditionalBlock()
-            if (nested) conditional.else.push(nested)
-          } else {
-            this.advance()
-          }
-        }
-        if (this.check('DEDENT')) this.advance()
-      }
-    }
-
-    return conditional
+    return this.withSubParserContext(ctx =>
+      parseConditionalBlockExtracted(ctx, this.eachParserCallbacks(ctx))
+    )
   }
 
   /**
@@ -2791,90 +2560,7 @@ export class Parser {
   }
 
   private parseExpression(): Expression {
-    // Capture everything until NEWLINE, INDENT, or DEDENT as raw JavaScript expression
-    let expr = ''
-    let parenDepth = 0
-
-    for (let iter = 0; !this.isAtEnd() && iter < Parser.MAX_ITERATIONS; iter++) {
-      // Track parentheses depth
-      if (this.check('LPAREN')) {
-        parenDepth++
-        // Add space before ( if needed (but not after . or !)
-        if (expr && !expr.endsWith('(') && !expr.endsWith('.') && !expr.endsWith(' ')) {
-          expr += ' '
-        }
-        expr += '('
-        this.advance()
-        continue
-      }
-      if (this.check('RPAREN')) {
-        if (parenDepth > 0) {
-          parenDepth--
-          expr += ')'
-          this.advance()
-          continue
-        }
-        // Unmatched ) - stop
-        break
-      }
-
-      // Stop at newline/indent when not inside parentheses
-      if (
-        parenDepth === 0 &&
-        (this.check('NEWLINE') || this.check('INDENT') || this.check('DEDENT'))
-      ) {
-        break
-      }
-
-      // Stop at THEN for inline conditionals
-      if (this.check('THEN')) {
-        break
-      }
-
-      // Stop at BY for each loop ordering (each item in $items where x == y by field)
-      if (this.check('BY')) {
-        break
-      }
-
-      // Append token value with appropriate spacing
-      const token = this.advance()
-
-      // No space before/after DOT
-      if (token.type === 'DOT') {
-        expr += '.'
-        continue
-      }
-
-      // BANG (!) - add space before if needed, no space after
-      if (token.type === 'BANG') {
-        if (expr && !expr.endsWith('(') && !expr.endsWith(' ')) {
-          expr += ' '
-        }
-        expr += '!'
-        continue
-      }
-
-      if (token.type === 'STRING') {
-        if (expr && !expr.endsWith('(') && !expr.endsWith('!') && !expr.endsWith('.')) {
-          expr += ' '
-        }
-        expr += `"${token.value}"`
-      } else {
-        // Add space before token if needed
-        if (
-          expr &&
-          !expr.endsWith('(') &&
-          !expr.endsWith('!') &&
-          !expr.endsWith('.') &&
-          !expr.endsWith(' ')
-        ) {
-          expr += ' '
-        }
-        expr += token.value
-      }
-    }
-
-    return expr.trim()
+    return this.withSubParserContext(ctx => parseExpressionExtracted(ctx))
   }
 
   // Helpers
