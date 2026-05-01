@@ -27,7 +27,11 @@ import {
 } from '../schema/properties'
 import { isZagPrimitive } from '../schema/zag-primitives'
 import { logPropertyExtractor as log } from '../utils/logger'
-import { getZagPropMetadata, hasZagPropMetadata, type ZagPropMeta } from '../schema/zag-prop-metadata'
+import {
+  getZagPropMetadata,
+  hasZagPropMetadata,
+  type ZagPropMeta,
+} from '../schema/zag-prop-metadata'
 
 /**
  * Property types for UI rendering
@@ -127,215 +131,90 @@ export interface ExtractedElement {
 }
 
 /**
- * Property name to type mapping
+ * Convert a schema PropertyType (boolean/number/string/color/size/spacing/
+ * border/enum/direction) to the UI PropertyType (boolean/number/text/color/
+ * size/spacing/select). Direction collapses to size; border collapses to
+ * number. The string-to-text rename is the only renaming, the rest are
+ * 1:1 or coerced for UI rendering.
  */
-const PROPERTY_TYPES: Record<string, PropertyType> = {
-  // Colors
-  color: 'color',
-  col: 'color',
-  c: 'color',
-  background: 'color',
-  bg: 'color',
-  'border-color': 'color',
-  boc: 'color',
-  'hover-bg': 'color',
-  'hover-col': 'color',
-  'hover-boc': 'color',
-
-  // Sizes
-  width: 'size',
-  w: 'size',
-  height: 'size',
-  h: 'size',
-  'min-width': 'size',
-  minw: 'size',
-  'max-width': 'size',
-  maxw: 'size',
-  'min-height': 'size',
-  minh: 'size',
-  'max-height': 'size',
-  maxh: 'size',
-  'font-size': 'size',
-  fs: 'size',
-  size: 'size',
-
-  // Spacing
-  padding: 'spacing',
-  pad: 'spacing',
-  p: 'spacing',
-  margin: 'spacing',
-  m: 'spacing',
-  gap: 'spacing',
-  g: 'spacing',
-
-  // Numbers
-  opacity: 'number',
-  o: 'number',
-  z: 'number',
-  weight: 'number',
-  line: 'number',
-  radius: 'number',
-  rad: 'number',
-  border: 'number',
-  bor: 'number',
-  x: 'number',
-  y: 'number',
-
-  // Booleans
-  horizontal: 'boolean',
-  hor: 'boolean',
-  vertical: 'boolean',
-  ver: 'boolean',
-  center: 'boolean',
-  cen: 'boolean',
-  spread: 'boolean',
-  wrap: 'boolean',
-  stacked: 'boolean',
-  pos: 'boolean',
-  positioned: 'boolean',
-  grid: 'boolean',
-  abs: 'boolean',
-  absolute: 'boolean',
-  hidden: 'boolean',
-  visible: 'boolean',
-  disabled: 'boolean',
-  italic: 'boolean',
-  underline: 'boolean',
-  truncate: 'boolean',
-  uppercase: 'boolean',
-  lowercase: 'boolean',
-
-  // Text
-  content: 'text',
-  placeholder: 'text',
-  href: 'text',
-  src: 'text',
-  font: 'text',
-
-  // Select
-  cursor: 'select',
-  shadow: 'select',
-  'text-align': 'select',
+function schemaTypeToUIType(type: string): PropertyType {
+  switch (type) {
+    case 'color':
+      return 'color'
+    case 'size':
+    case 'direction':
+      return 'size'
+    case 'spacing':
+      return 'spacing'
+    case 'boolean':
+      return 'boolean'
+    case 'number':
+    case 'border':
+      return 'number'
+    case 'string':
+      return 'text'
+    case 'enum':
+      return 'select'
+    default:
+      return 'unknown'
+  }
 }
 
 /**
- * Property categories for UI grouping
+ * UI-only PropertyType overrides — properties whose schema type
+ * (input shape) differs from the UI grouping that the property panel
+ * should render. Schema is the source of truth; this map exists only
+ * because a few properties (gap) are technically a single number but
+ * the panel groups them visually with spacing controls.
  */
-const CATEGORY_MAP: Record<string, string> = {
-  // Layout
-  horizontal: 'layout',
-  hor: 'layout',
-  vertical: 'layout',
-  ver: 'layout',
-  spread: 'layout',
-  wrap: 'layout',
-  stacked: 'layout',
-  pos: 'layout',
-  positioned: 'layout',
-  grid: 'layout',
-  gap: 'layout',
-  g: 'layout',
-
-  // Position (Absolute)
-  abs: 'position',
-  absolute: 'position',
-  x: 'position',
-  y: 'position',
-
-  // Alignment
-  center: 'alignment',
-  cen: 'alignment',
-  left: 'alignment',
-  right: 'alignment',
-  'hor-center': 'alignment',
-  top: 'alignment',
-  bottom: 'alignment',
-  'ver-center': 'alignment',
-
-  // Sizing (matches schema category 'sizing')
-  width: 'sizing',
-  w: 'sizing',
-  height: 'sizing',
-  h: 'sizing',
-  'min-width': 'sizing',
-  minw: 'sizing',
-  'max-width': 'sizing',
-  maxw: 'sizing',
-  'min-height': 'sizing',
-  minh: 'sizing',
-  'max-height': 'sizing',
-  maxh: 'sizing',
-  size: 'sizing',
-  'icon-size': 'sizing',
-  is: 'sizing',
-
-  // Spacing
-  padding: 'spacing',
-  pad: 'spacing',
-  p: 'spacing',
-  margin: 'spacing',
-  m: 'spacing',
-
-  // Color (matches schema category 'color')
-  color: 'color',
-  col: 'color',
-  c: 'color',
-  background: 'color',
-  bg: 'color',
-  'border-color': 'color',
-  boc: 'color',
-  'icon-color': 'color',
-  ic: 'color',
-
-  // Border
-  border: 'border',
-  bor: 'border',
-  radius: 'border',
-  rad: 'border',
-
-  // Typography
-  'font-size': 'typography',
-  fs: 'typography',
-  weight: 'typography',
-  line: 'typography',
-  font: 'typography',
-  'text-align': 'typography',
-  italic: 'typography',
-  underline: 'typography',
-  truncate: 'typography',
-  uppercase: 'typography',
-  lowercase: 'typography',
-
-  // Visual
-  opacity: 'visual',
-  o: 'visual',
-  shadow: 'visual',
-  cursor: 'visual',
-  z: 'visual',
-  hidden: 'visual',
-  visible: 'visual',
-  disabled: 'visual',
-  scroll: 'visual',
-  'scroll-ver': 'visual',
-  fill: 'visual',
-  'scroll-hor': 'visual',
-  clip: 'visual',
+const PROPERTY_TYPE_UI_OVERRIDES: Record<string, PropertyType> = {
+  gap: 'spacing',
+  g: 'spacing',
 }
+
+/**
+ * Property name → UI PropertyType. Derived from the schema (single source
+ * of truth in `compiler/schema/properties.ts`). Each schema property
+ * registers under its canonical name and every alias.
+ */
+const PROPERTY_TYPES: Record<string, PropertyType> = (() => {
+  const map: Record<string, PropertyType> = {}
+  for (const def of allPropertyDefinitions) {
+    const ui = schemaTypeToUIType(def.type)
+    map[def.name] = ui
+    for (const alias of def.aliases) map[alias] = ui
+  }
+  for (const [name, override] of Object.entries(PROPERTY_TYPE_UI_OVERRIDES)) {
+    map[name] = override
+  }
+  return map
+})()
+
+/**
+ * Property name → category for UI grouping. Derived from the schema
+ * (single source of truth in `compiler/schema/properties.ts`). Each
+ * schema property registers under its canonical name and every alias.
+ */
+const CATEGORY_MAP: Record<string, string> = (() => {
+  const map: Record<string, string> = {}
+  for (const def of allPropertyDefinitions) {
+    map[def.name] = def.category
+    for (const alias of def.aliases) map[alias] = def.category
+  }
+  return map
+})()
 
 /** Category name for Zag behavior properties */
 const BEHAVIOR_CATEGORY = 'behavior' as const
 
+/**
+ * UI labels for category groups. Schema-derived labels (Layout, Color,
+ * Typography, …) come from `categoryLabels` in the schema; the two
+ * extras (`behavior` for Zag props, `other` for un-categorised) are
+ * UI-only.
+ */
 const CATEGORY_LABELS: Record<string, string> = {
-  layout: 'Layout',
-  position: 'Position',
-  alignment: 'Alignment',
-  sizing: 'Size',
-  spacing: 'Spacing',
-  color: 'Color',
-  border: 'Border',
-  typography: 'Typography',
-  visual: 'Visual',
-  hover: 'Hover',
+  ...categoryLabels,
   [BEHAVIOR_CATEGORY]: 'Behavior',
   other: 'Other',
 }
@@ -492,7 +371,11 @@ export class PropertyExtractor {
     }
 
     // Add behavior props for components with metadata (Zag primitives, Pure Mirror components)
-    if (isZagPrimitive(nodeMapping.componentName) || astNode.type === 'ZagComponent' || hasZagPropMetadata(nodeMapping.componentName)) {
+    if (
+      isZagPrimitive(nodeMapping.componentName) ||
+      astNode.type === 'ZagComponent' ||
+      hasZagPropMetadata(nodeMapping.componentName)
+    ) {
       const behaviorProps = this.extractZagBehaviorProps(
         nodeMapping.componentName,
         astNode as Instance | ZagNode
@@ -632,29 +515,12 @@ export class PropertyExtractor {
   }
 
   /**
-   * Convert schema type to PropertyType
+   * Convert schema PropertyType to UI PropertyType — delegates to the
+   * module-level `schemaTypeToUIType` so PROPERTY_TYPES (derived map)
+   * and per-call conversion stay in lockstep.
    */
   private schemaTypeToPropertyType(type: string): PropertyType {
-    switch (type) {
-      case 'color':
-        return 'color'
-      case 'number':
-        return 'number'
-      case 'size':
-        return 'size'
-      case 'spacing':
-        return 'spacing'
-      case 'boolean':
-        return 'boolean'
-      case 'string':
-        return 'text'
-      case 'enum':
-        return 'select'
-      case 'border':
-        return 'number'
-      default:
-        return 'unknown'
-    }
+    return schemaTypeToUIType(type)
   }
 
   /**
