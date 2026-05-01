@@ -68,7 +68,19 @@ export function createUniformReader(kind: UniformKind): PropertyReader {
     },
 
     fromPanel(nodeId, ctx): PropertyValue {
-      return ctx.api.panel.property.getPropertyValue(info.prop)
+      // Panel UI state is per-selection. See _color-factory for the
+      // full rationale; behaviour is: live panel for the selected node,
+      // source-parsed value for others.
+      const selectedId = ctx.api.studio.getSelection?.() ?? null
+      if (selectedId === nodeId) {
+        const raw = ctx.api.panel.property.getPropertyValue(info.prop)
+        if (raw !== null) return raw
+      }
+      const node = ctx.sourceMap.getNodeById(nodeId)
+      if (!node) return null
+      const line = ctx.source.split('\n')[node.position.line - 1]
+      if (!line) return null
+      return readUniformFromLine(line, info)
     },
   }
 }

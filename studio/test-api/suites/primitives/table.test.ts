@@ -326,7 +326,10 @@ MyTable
   // Use CSS :nth-child or separate components for zebra patterns
   // =============================================================================
 
-  testSkip('Zebra striping with index - requires ternary with modulo (not supported)'),
+  testSkip(
+    'Zebra striping with index - requires ternary with modulo (not supported)',
+    async () => {}
+  ),
 
   // =============================================================================
   // Complex Table Layout

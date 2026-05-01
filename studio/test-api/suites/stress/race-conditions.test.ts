@@ -79,7 +79,7 @@ export const compileRaceTests: TestSuite = [
       await api.utils.delay(100)
 
       // Change property
-      const success = await api.panel.property.setProperty('pad', '24')
+      await api.panel.property.setProperty('pad', '24')
 
       // Immediately trigger another compile
       api.editor.setCode(`Frame pad 24, bg #444, rad 8`)
@@ -142,6 +142,7 @@ export const eventRaceTests: TestSuite = [
 
       // State should be deterministic (odd number of clicks = on)
       const styles = api.preview.inspect('node-1')?.styles
+      api.assert.ok(styles, 'styles should exist')
       api.assert.ok(
         styles.backgroundColor === 'rgb(34, 113, 193)',
         `Should be on after 5 clicks, got ${styles.backgroundColor}`
@@ -169,6 +170,7 @@ export const eventRaceTests: TestSuite = [
 
       // B should be hovered, A should not
       const stylesB = api.preview.inspect('node-3')?.styles
+      api.assert.ok(stylesB, 'stylesB should exist')
 
       // Allow tolerance for browser rendering quirks (67 vs 68)
       const bgColor = stylesB.backgroundColor

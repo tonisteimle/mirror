@@ -23,6 +23,22 @@ import { getReader, PROPERTY_READERS, type SourceMapLike } from './properties'
 import { getWriter } from './writers'
 
 export function scenarioToTestCase(scenario: Scenario): TestCase {
+  // Skipped scenarios become a TestCase with skip:true so the runner
+  // reports them as "skipped" (⏭️) instead of swallowing them. The
+  // reason surfaces via a name suffix — visible in the console + JUnit
+  // output without needing reporter changes.
+  if (scenario.skip) {
+    const name = `${scenario.name} [SKIP: ${scenario.skip.reason}]`
+    const tc: TestCase = {
+      name,
+      run: async () => {
+        /* never invoked — runner respects skip:true */
+      },
+      skip: true,
+    }
+    return scenario.category ? { ...tc, category: scenario.category } : tc
+  }
+
   // Single-file scenario: pass setup string straight to testWithSetup so
   // the existing single-file path keeps working unchanged.
   // Multi-file scenario: setup the entry file's content as the editor's
@@ -36,8 +52,27 @@ export function scenarioToTestCase(scenario: Scenario): TestCase {
   const tc = testWithSetup(scenario.name, initialCode, async (api: TestAPI) => {
     const collector = installConsoleCollector()
     try {
+      // Wipe stale prelude-contributing files (tokens.tok, components.com,
+      // …) left behind by an earlier multi-file scenario. Without this,
+      // __compileTestCode would prepend that stale content to the
+      // current single-file scenario's source and shift sourceMap line
+      // numbers, breaking single-file tests after a multi-file run.
+      //
+      // Note: testRunner already called setCode() with the scenario's
+      // initial code BEFORE this callback fires, so a __compileTestCode
+      // pass already happened with the stale prelude in window.files.
+      // After wiping, re-trigger __compileTestCode so the CodeModifier
+      // and sourceMap drop the stale prelude offsets. setupProjectFiles
+      // does its own wipe-and-compile dance, so single-file scenarios
+      // are the only path that needs this re-trigger.
+      wipeStraySideFiles(api, new Set([api.panel.files.getCurrentFile() ?? '']))
       if (typeof scenario.setup !== 'string') {
         await setupProjectFiles(scenario.setup, api)
+      } else {
+        const recompile = (window as { __compileTestCode?: (code: string) => unknown })
+          .__compileTestCode
+        if (recompile) recompile(api.editor.getCode())
+        await api.utils.delay(50)
       }
       await runScenario(scenario, api, collector)
     } finally {
@@ -55,26 +90,103 @@ export function scenarioToTestCase(scenario: Scenario): TestCase {
  * the entry file so the editor focus matches the scenario's intent.
  * Tokens defined in `tokens.tok`/`*.tok` and components in `*.com`
  * become available across the whole project after this step.
+ *
+ * Test isolation note: pre-existing files NOT listed in setup.files
+ * are wiped to empty content (but not deleted — deleting the file the
+ * editor is currently on or the scenario's entry breaks Studio's file
+ * cache). Empty content keeps cross-file scans (`findSegmentMatches`,
+ * `findProjectMatches`) from picking up stale lines an earlier test
+ * left behind. Files explicitly in setup.files are recreated normally.
  */
 async function setupProjectFiles(setup: SetupProject, api: TestAPI): Promise<void> {
+  // Close any leftover Studio dialogs from a prior scenario. A
+  // batch-replace dialog left open because the previous test didn't
+  // cancel it would otherwise sit on top and intercept the next
+  // test's `batchReplace` step (it queries for the *first* matching
+  // dialog and reads the wrong checkbox count). Atom 7 is a typical
+  // case — it triggers `::` on a project that may have stale leftover
+  // matches but doesn't include a cancel step itself.
+  for (const d of Array.from(document.querySelectorAll('dialog.mirror-batch-replace-dialog'))) {
+    const dialog = d as HTMLDialogElement
+    try {
+      dialog.close()
+    } catch {
+      /* may not be open */
+    }
+    dialog.remove()
+  }
+
   const entry = setup.entry
+  const setupNames = new Set(Object.keys(setup.files))
+
+  // Studio has TWO file caches that need to stay in sync:
+  //   1. `window.files` — written by panel.files.create/delete
+  //      (the test-API path), read by panel.files.getContent.
+  //   2. `window.desktopFiles.filesCache` — read by the `::` trigger
+  //      callbacks (componentExtractConfig.getFilesWithType in app.js).
+  // Both caches must reflect the same project state, otherwise the
+  // trigger scans a stale file map while assertions read a fresh one.
+  const desktop = (
+    window as {
+      desktopFiles?: {
+        getFiles?: () => Record<string, string>
+        updateFileCache?: (p: string, c: string | undefined) => void
+      }
+    }
+  ).desktopFiles
+
+  wipeStraySideFiles(api, setupNames)
+
   for (const [filename, content] of Object.entries(setup.files)) {
-    // Important: also create the entry file. testWithSetup put its
-    // content in the editor, but Studio's `files{}` global doesn't know
-    // about it under the entry name (it's still under whatever
-    // currentFile defaulted to — index.mir or similar). Without this,
-    // panel.files.open(entry) silently fails (returns false) because
-    // files[entry] doesn't exist.
     const exists = api.panel.files.list().includes(filename)
     if (exists) {
       await api.panel.files.delete(filename)
     }
     await api.panel.files.create(filename, content)
+    // Mirror into desktopFiles cache so the `::` trigger sees the
+    // same content panel.files.getContent reports.
+    desktop?.updateFileCache?.(filename, content)
   }
   // Switch to entry so the editor + preview reflect that file.
   await api.panel.files.open(entry)
   await api.utils.waitForCompile()
   await api.utils.delay(100)
+}
+
+/**
+ * Drop any project files NOT in `keep` from window.files +
+ * desktopFiles cache. Files are *deleted* from window.files (not just
+ * emptied) so a subsequent `panel.files.create(name, content)` on the
+ * same name actually writes — `create` treats `files[name] !== undefined`
+ * as "already exists" and returns false. The desktop cache is set to
+ * empty string because its `updateFileCache(name, undefined)` does
+ * nothing useful for our purposes; an empty string contributes no lines
+ * to getPreludeCode() (which trims before checking).
+ *
+ * The currently-edited file is preserved (deleting it would corrupt
+ * Studio's editor binding). Caller passes it via `keep`.
+ */
+function wipeStraySideFiles(api: TestAPI, keep: Set<string>): void {
+  const desktop = (
+    window as {
+      desktopFiles?: {
+        getFiles?: () => Record<string, string>
+        updateFileCache?: (p: string, c: string | undefined) => void
+      }
+      files?: Record<string, string>
+    }
+  ).desktopFiles
+  const filesGlobal = (window as { files?: Record<string, string> }).files
+
+  const existingPanel = api.panel.files.list()
+  const existingDesktop = desktop?.getFiles ? Object.keys(desktop.getFiles()) : []
+  const existingFilesGlobal = filesGlobal ? Object.keys(filesGlobal) : []
+  const allExisting = new Set([...existingPanel, ...existingDesktop, ...existingFilesGlobal])
+  for (const filename of allExisting) {
+    if (keep.has(filename)) continue
+    desktop?.updateFileCache?.(filename, '')
+    if (filesGlobal) delete filesGlobal[filename]
+  }
 }
 
 export function scenariosToTestCases(scenarios: Scenario[]): TestCase[] {
@@ -91,7 +203,8 @@ async function runScenario(
   await api.utils.delay(50)
 
   let prevUndoStackSize = api.studio.history.getUndoStackSize()
-  let prevConsoleCount = collector.count()
+  let prevErrorCount = collector.errorCount()
+  let prevWarnCount = collector.warnCount()
 
   for (let i = 0; i < scenario.steps.length; i++) {
     const step = scenario.steps[i]
@@ -114,8 +227,10 @@ async function runScenario(
 
       const issues = validateExpectations(step.expect, api, {
         prevUndoStackSize,
-        newConsoleErrors: collector.count() - prevConsoleCount,
-        consoleErrorMessages: collector.errorsSince(prevConsoleCount),
+        newConsoleErrors: collector.errorCount() - prevErrorCount,
+        consoleErrorMessages: collector.errorsSince(prevErrorCount),
+        newConsoleWarnings: collector.warnCount() - prevWarnCount,
+        consoleWarningMessages: collector.warningsSince(prevWarnCount),
       })
 
       if (issues.length > 0) {
@@ -123,7 +238,8 @@ async function runScenario(
       }
 
       prevUndoStackSize = api.studio.history.getUndoStackSize()
-      prevConsoleCount = collector.count()
+      prevErrorCount = collector.errorCount()
+      prevWarnCount = collector.warnCount()
     } catch (e) {
       const err = e as Error
       // Don't double-prefix already-labeled errors
@@ -268,14 +384,323 @@ async function executeAction(step: Step, api: TestAPI): Promise<void> {
       }
       return
     }
+    case 'replaceFile': {
+      // Delete + create rewrites BOTH window.files and (via panel.create)
+      // the desktopFiles cache for non-active files. The editor-based
+      // path (switchFile + editorSet + switchFile back) doesn't reliably
+      // commit YAML/tokens edits because saveFile reads editor.state.doc
+      // which can lag behind setCode in test mode.
+      if (step.filename === api.panel.files.getCurrentFile()) {
+        throw new Error(`replaceFile: ${step.filename} is the active file; switchFile away first`)
+      }
+      const exists = api.panel.files.list().includes(step.filename)
+      if (exists) {
+        await api.panel.files.delete(step.filename)
+      }
+      await api.panel.files.create(step.filename, step.content)
+      // Trigger a recompile of the active file so YAML re-injection
+      // picks up the new content. We need the full compile() path
+      // (not __compileTestCode) because YAML injection lives there.
+      // Re-opening the active file via panel.files.open does the right
+      // thing: it goes through window.switchFile, which calls compile()
+      // and runs generateYAMLDataInjection.
+      const active = api.panel.files.getCurrentFile()
+      if (active) {
+        await api.panel.files.open(active)
+      }
+      await api.utils.delay(150)
+      return
+    }
+    case 'extractComponent': {
+      const lineNumber = resolveTargetLineNumber(step.target, api)
+      await dispatchExtractTrigger(api, {
+        kind: 'component',
+        lineNumber,
+        name: step.name,
+        properties: step.properties,
+      })
+      return
+    }
+    case 'extractToken': {
+      const lineNumber = resolveTargetLineNumber(step.target, api)
+      await dispatchExtractTrigger(api, {
+        kind: 'token',
+        lineNumber,
+        property: step.property,
+        tokenName: step.tokenName,
+        value: step.value,
+      })
+      return
+    }
+    case 'batchReplace':
+      await applyBatchReplaceAction(step, api)
+      return
     case 'wait':
       await api.utils.delay(step.ms)
       return
+    case 'waitFor': {
+      const timeout = step.timeoutMs ?? 2000
+      const interval = step.intervalMs ?? 50
+      const deadline = Date.now() + timeout
+      let lastIssues: string[] = []
+      while (Date.now() < deadline) {
+        lastIssues = checkStatePredicates(step.until, api)
+        if (lastIssues.length === 0) return
+        await api.utils.delay(interval)
+      }
+      // One last eval so the message reflects the final state, not a stale poll.
+      lastIssues = checkStatePredicates(step.until, api)
+      if (lastIssues.length === 0) return
+      throw new Error(
+        `waitFor timed out after ${timeout}ms — predicates still unmet:\n${lastIssues.map(l => '      • ' + l).join('\n')}`
+      )
+    }
     default: {
       const _exhaustive: never = step
       throw new Error(`Unknown action: ${JSON.stringify(_exhaustive)}`)
     }
   }
+}
+
+// =============================================================================
+// `::` Extract trigger helpers
+// =============================================================================
+
+interface ComponentExtractInput {
+  kind: 'component'
+  lineNumber: number
+  name: string
+  properties: string
+}
+interface TokenExtractInput {
+  kind: 'token'
+  lineNumber: number
+  property: string
+  tokenName: string
+  value: string
+}
+type ExtractInput = ComponentExtractInput | TokenExtractInput
+
+/**
+ * Locate the 1-based line number of a target. Either via SourceMap node
+ * lookup (preferred — survives positional resolution) or by string
+ * search in the active editor.
+ */
+function resolveTargetLineNumber(
+  target: { nodeId: string } | { searchFor: string },
+  api: TestAPI
+): number {
+  if ('nodeId' in target) {
+    const sourceMap = api.studio.getSourceMap() as {
+      getNodeById: (id: string) => { position: { line: number } } | null
+    } | null
+    if (!sourceMap) throw new Error('extract: SourceMap not available')
+    const node = sourceMap.getNodeById(target.nodeId)
+    if (!node) throw new Error(`extract: node ${target.nodeId} not in SourceMap`)
+    return node.position.line
+  }
+  const code = api.editor.getCode()
+  const idx = code.indexOf(target.searchFor)
+  if (idx === -1) {
+    throw new Error(`extract: searchFor "${target.searchFor}" not found in active source`)
+  }
+  // Reject ambiguous matches — accidental multi-match is a real foot-gun.
+  if (code.indexOf(target.searchFor, idx + 1) !== -1) {
+    throw new Error(`extract: searchFor "${target.searchFor}" matches more than once`)
+  }
+  return code.slice(0, idx).split('\n').length
+}
+
+/**
+ * Drive the `::` trigger by mutating the line through the same two
+ * dispatches a real user produces: first replace the line with
+ * `Name:<rest>` (single colon, no trigger fires), then insert a second
+ * `:` at the right position (the editor's CodeMirror update listener
+ * sees a single-`:` insertion preceded by `Name:`, matches the
+ * EXTRACT_PATTERN, and schedules the extraction).
+ *
+ * The trigger uses a 10ms setTimeout before running, so we wait long
+ * enough for both the trigger and the dialog (if any) to settle before
+ * returning.
+ */
+async function dispatchExtractTrigger(api: TestAPI, input: ExtractInput): Promise<void> {
+  const editor = (window as { editor?: EditorViewLike }).editor
+  if (!editor) throw new Error('extract: window.editor not available')
+
+  const doc = editor.state.doc
+  if (input.lineNumber < 1 || input.lineNumber > doc.lines) {
+    throw new Error(`extract: lineNumber ${input.lineNumber} out of range (1..${doc.lines})`)
+  }
+  const line = doc.line(input.lineNumber)
+
+  // Compute the single-colon replacement. Component-extract is line-
+  // level (the user types `Name::props` at the start of a line, the
+  // trigger consumes the whole line). Token-extract is mid-line (the
+  // user finds an existing `prop value` segment and rewrites that
+  // exact segment to `prop name::value`, leaving siblings intact).
+  let replaceFrom: number
+  let replaceTo: number
+  let singleColonText: string
+  let cursorAbsPos: number
+
+  if (input.kind === 'component') {
+    const indent = line.text.match(/^(\s*)/)?.[1] ?? ''
+    const head = `${indent}${input.name}:`
+    const propsTail = input.properties.startsWith(' ')
+      ? input.properties
+      : input.properties
+        ? ' ' + input.properties
+        : ''
+    replaceFrom = line.from
+    replaceTo = line.to
+    singleColonText = head + propsTail
+    cursorAbsPos = line.from + head.length
+  } else {
+    // Find `<property> <value>` as a contiguous substring in the line.
+    // The replacement leaves indent + everything else in place.
+    const segment = `${input.property} ${input.value}`
+    const segIdx = line.text.indexOf(segment)
+    if (segIdx === -1) {
+      throw new Error(
+        `extractToken: line ${input.lineNumber} does not contain "${segment}"\n  line: "${line.text}"`
+      )
+    }
+    if (line.text.indexOf(segment, segIdx + 1) !== -1) {
+      throw new Error(
+        `extractToken: segment "${segment}" appears more than once on line ${input.lineNumber} — ambiguous`
+      )
+    }
+    const head = `${input.property} ${input.tokenName}:` // single colon
+    replaceFrom = line.from + segIdx
+    replaceTo = replaceFrom + segment.length
+    singleColonText = head + input.value
+    cursorAbsPos = replaceFrom + head.length
+  }
+
+  editor.dispatch({
+    changes: { from: replaceFrom, to: replaceTo, insert: singleColonText },
+    selection: { anchor: cursorAbsPos },
+  })
+  await api.utils.delay(50)
+
+  // Insert the second `:` at the position right after the first `:`.
+  // The CodeMirror update listener sees a single-`:` insertion preceded
+  // by `Name:` / `prop name:` and matches its EXTRACT_PATTERN.
+  editor.dispatch({
+    changes: { from: cursorAbsPos, to: cursorAbsPos, insert: ':' },
+    selection: { anchor: cursorAbsPos + 1 },
+  })
+
+  // Trigger uses setTimeout(10ms); add room for the extraction dispatch
+  // and any dialog mount before returning.
+  await api.utils.delay(300)
+}
+
+interface EditorViewLike {
+  state: { doc: { lines: number; line(n: number): { from: number; to: number; text: string } } }
+  dispatch(spec: {
+    changes: { from: number; to: number; insert: string }
+    selection?: { anchor: number }
+  }): void
+}
+
+// =============================================================================
+// Batch-replace dialog interaction
+// =============================================================================
+
+const BATCH_DIALOG_SELECTOR = 'dialog.mirror-batch-replace-dialog'
+
+interface BatchReplaceStep {
+  do: 'batchReplace'
+  action: 'acceptAll' | 'cancel' | 'acceptNear' | 'selectOnly'
+  expectMatches?: number
+  expectNearMatches?: number
+  nearIndices?: readonly number[]
+  exactIndices?: readonly number[]
+}
+
+async function applyBatchReplaceAction(step: BatchReplaceStep, api: TestAPI): Promise<void> {
+  const dialog = document.querySelector(BATCH_DIALOG_SELECTOR) as HTMLDialogElement | null
+  if (!dialog || !dialog.open) {
+    throw new Error('batchReplace: dialog not open (extract action did not produce matches?)')
+  }
+
+  // The dialog renders matches in two sections, each with its own list
+  // of `<input type=checkbox>` elements wrapped in labels. We
+  // distinguish them by their containing section's heading text.
+  const { exactBoxes, nearBoxes } = collectDialogCheckboxes(dialog)
+
+  if (step.expectMatches !== undefined && exactBoxes.length !== step.expectMatches) {
+    throw new Error(
+      `batchReplace: expected ${step.expectMatches} exact match(es), got ${exactBoxes.length}`
+    )
+  }
+  if (step.expectNearMatches !== undefined && nearBoxes.length !== step.expectNearMatches) {
+    throw new Error(
+      `batchReplace: expected ${step.expectNearMatches} near match(es), got ${nearBoxes.length}`
+    )
+  }
+
+  switch (step.action) {
+    case 'acceptAll':
+      // Defaults: exact pre-checked, near unchecked. Click "Anwenden".
+      clickDialogButton(dialog, 'Anwenden')
+      break
+    case 'cancel':
+      clickDialogButton(dialog, 'Abbrechen')
+      break
+    case 'acceptNear': {
+      if (!step.nearIndices) throw new Error('batchReplace acceptNear: nearIndices required')
+      for (const idx of step.nearIndices) {
+        if (idx < 0 || idx >= nearBoxes.length) {
+          throw new Error(
+            `batchReplace acceptNear: index ${idx} out of range (0..${nearBoxes.length - 1})`
+          )
+        }
+        if (!nearBoxes[idx].checked) nearBoxes[idx].click()
+      }
+      clickDialogButton(dialog, 'Anwenden')
+      break
+    }
+    case 'selectOnly': {
+      if (!step.exactIndices) throw new Error('batchReplace selectOnly: exactIndices required')
+      const keep = new Set(step.exactIndices)
+      for (let i = 0; i < exactBoxes.length; i++) {
+        const wantChecked = keep.has(i)
+        if (exactBoxes[i].checked !== wantChecked) exactBoxes[i].click()
+      }
+      clickDialogButton(dialog, 'Anwenden')
+      break
+    }
+  }
+
+  // Let the apply dispatch + side-file write settle.
+  await api.utils.delay(300)
+}
+
+function collectDialogCheckboxes(dialog: HTMLDialogElement): {
+  exactBoxes: HTMLInputElement[]
+  nearBoxes: HTMLInputElement[]
+} {
+  // The dialog tags each list item with `data-match-kind="exact|near"`
+  // on the wrapping <label>. The checkbox is the first input child.
+  const exactBoxes = Array.from(
+    dialog.querySelectorAll('[data-match-kind="exact"] input[type="checkbox"]')
+  ) as HTMLInputElement[]
+  const nearBoxes = Array.from(
+    dialog.querySelectorAll('[data-match-kind="near"] input[type="checkbox"]')
+  ) as HTMLInputElement[]
+  return { exactBoxes, nearBoxes }
+}
+
+function clickDialogButton(dialog: HTMLDialogElement, label: string): void {
+  const buttons = Array.from(dialog.querySelectorAll('button')) as HTMLButtonElement[]
+  const btn = buttons.find(b => (b.textContent ?? '').trim() === label)
+  if (!btn) {
+    const labels = buttons.map(b => `"${(b.textContent ?? '').trim()}"`).join(', ')
+    throw new Error(`batchReplace: button "${label}" not found in dialog (have: ${labels})`)
+  }
+  btn.click()
 }
 
 // =============================================================================
@@ -286,6 +711,8 @@ interface ValidationCtx {
   prevUndoStackSize: number
   newConsoleErrors: number
   consoleErrorMessages: string[]
+  newConsoleWarnings: number
+  consoleWarningMessages: string[]
 }
 
 function validateExpectations(
@@ -294,15 +721,64 @@ function validateExpectations(
   ctx: ValidationCtx
 ): string[] {
   const issues: string[] = []
-  // consoleClean defaults to true even when no `expect` block was given —
-  // unexpected console errors should always fail.
-  const consoleCleanRequired = expect?.consoleClean !== false
-  if (consoleCleanRequired && ctx.newConsoleErrors > 0) {
+  // consoleClean defaults to true (errors + warnings must be clean)
+  // even when no `expect` block was given — unexpected console output
+  // should always fail. `'errors-only'` tolerates warnings, `false`
+  // tolerates everything (use sparingly; prefer fixing root cause).
+  const cleanMode: boolean | 'errors-only' = expect?.consoleClean ?? true
+  const checkErrors = cleanMode !== false
+  const checkWarnings = cleanMode === true
+  if (checkErrors && ctx.newConsoleErrors > 0) {
     issues.push(
       `console: ${ctx.newConsoleErrors} unexpected error(s)\n      ${ctx.consoleErrorMessages.join('\n      ')}`
     )
   }
+  if (checkWarnings && ctx.newConsoleWarnings > 0) {
+    issues.push(
+      `console: ${ctx.newConsoleWarnings} unexpected warning(s)\n      ${ctx.consoleWarningMessages.join('\n      ')}`
+    )
+  }
   if (!expect) return issues
+
+  issues.push(...checkStatePredicates(expect, api))
+
+  // ----- Undo stack (uses ctx — not part of state predicates) -----
+  if (expect.undoStackDelta !== undefined) {
+    const currentSize = api.studio.history.getUndoStackSize()
+    const actualDelta = currentSize - ctx.prevUndoStackSize
+    if (actualDelta !== expect.undoStackDelta) {
+      issues.push(`undoStackDelta: expected ${expect.undoStackDelta}, got ${actualDelta}`)
+    }
+  }
+
+  return issues
+}
+
+/**
+ * Pure state-predicate checks usable both for one-shot post-step
+ * validation and for the `waitFor` polling loop. No console / undo
+ * inspection — those are point-in-time deltas, not predicates.
+ *
+ * Accepts the full `Expectations` shape but only reads the state-related
+ * fields (code/codeMatches/files/selection/multiSelection/dom/panel/props).
+ * Other fields are ignored.
+ */
+function checkStatePredicates(
+  expect: Pick<
+    Expectations,
+    | 'code'
+    | 'codeMatches'
+    | 'files'
+    | 'selection'
+    | 'selectionNot'
+    | 'multiSelection'
+    | 'dom'
+    | 'panel'
+    | 'props'
+  >,
+  api: TestAPI
+): string[] {
+  const issues: string[] = []
 
   // ----- Code -----
   if (expect.code !== undefined) {
@@ -316,6 +792,37 @@ function validateExpectations(
     const actual = api.editor.getCode()
     if (!expect.codeMatches.test(actual)) {
       issues.push(`codeMatches did not match. Pattern: ${expect.codeMatches}\n  Actual:\n${actual}`)
+    }
+  }
+
+  // ----- Files (per-file source assertions) -----
+  // For the active file we read from the editor (it may have unsaved
+  // edits). For other files we read from the project file cache.
+  if (expect.files) {
+    const activeFile = api.panel.files.getCurrentFile()
+    for (const [filename, expected] of Object.entries(expect.files)) {
+      let actualRaw: string | undefined
+      if (filename === activeFile) {
+        actualRaw = api.editor.getCode()
+      } else {
+        const content = api.panel.files.getContent(filename)
+        actualRaw = typeof content === 'string' ? content : undefined
+      }
+      if (expected === null) {
+        if (actualRaw !== undefined) {
+          issues.push(`files[${filename}]: expected file NOT to exist, but it does`)
+        }
+        continue
+      }
+      if (actualRaw === undefined) {
+        issues.push(`files[${filename}]: file does not exist (expected non-null content)`)
+        continue
+      }
+      const actual = canonicalizeCode(actualRaw)
+      const expectedCanon = canonicalizeCode(expected)
+      if (actual !== expectedCanon) {
+        issues.push(`files[${filename}] mismatch:\n` + codeDiff(expectedCanon, actual))
+      }
     }
   }
 
@@ -346,6 +853,11 @@ function validateExpectations(
   }
 
   // ----- DOM -----
+  // Most keys are computed-style names. The special keys below read from
+  // the element rather than computed style:
+  //   `textContent` → el.textContent.trim()  — useful for interpolated
+  //                   text where source carries `$varName` and only the
+  //                   runtime-rendered DOM holds the actual value.
   if (expect.dom) {
     for (const [nodeId, styles] of Object.entries(expect.dom)) {
       const el = document.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement | null
@@ -355,8 +867,13 @@ function validateExpectations(
       }
       const computed = window.getComputedStyle(el)
       for (const [prop, expected] of Object.entries(styles)) {
-        const actual =
-          (computed as unknown as Record<string, string>)[prop] ?? computed.getPropertyValue(prop)
+        let actual: string
+        if (prop === 'textContent') {
+          actual = (el.textContent ?? '').trim()
+        } else {
+          actual =
+            (computed as unknown as Record<string, string>)[prop] ?? computed.getPropertyValue(prop)
+        }
         const matches = expected instanceof RegExp ? expected.test(actual) : actual === expected
         if (!matches) {
           issues.push(`dom[${nodeId}].${prop}: expected ${expected}, got "${actual}"`)
@@ -373,18 +890,14 @@ function validateExpectations(
   // in the panel swatch. Properties without a reader fall back to the
   // raw panel API (the historical behaviour).
   if (expect.panel) {
-    const source = api.editor.getCode()
-    const allSources = collectAllProjectSources(api, source)
-    const sourceMap = api.studio.getSourceMap() as SourceMapLike | null
-    const container = document.getElementById('preview')
+    const ctxOrNull = buildReaderContext(api)
     const selectedId = api.studio.getSelection()
     for (const [property, expected] of Object.entries(expect.panel)) {
       const reader = getReader(property)
       let actual: string | null
-      if (reader && sourceMap && container && selectedId) {
-        const ctx = { source, allSources, sourceMap, container, api }
+      if (reader && ctxOrNull && selectedId) {
         const norm = reader.normalize ?? ((v: string | null) => v)
-        actual = norm(reader.fromPanel(selectedId, ctx))
+        actual = norm(reader.fromPanel(selectedId, ctxOrNull))
         const expectedN = norm(expected)
         if (actual !== expectedN) {
           issues.push(
@@ -404,16 +917,10 @@ function validateExpectations(
 
   // ----- Properties (3-dimension check) -----
   if (expect.props) {
-    const source = api.editor.getCode()
-    const allSources = collectAllProjectSources(api, source)
-    const sourceMap = api.studio.getSourceMap() as SourceMapLike | null
-    const container = document.getElementById('preview')
-    if (!sourceMap) {
-      issues.push('props: SourceMap not available (compile in progress?)')
-    } else if (!container) {
-      issues.push('props: preview container not found')
+    const ctx = buildReaderContext(api)
+    if (!ctx) {
+      issues.push('props: SourceMap or preview container not available')
     } else {
-      const ctx = { source, allSources, sourceMap, container, api }
       for (const [nodeId, propMap] of Object.entries(expect.props)) {
         for (const [propName, expected] of Object.entries(propMap)) {
           const reader = getReader(propName)
@@ -445,15 +952,6 @@ function validateExpectations(
           }
         }
       }
-    }
-  }
-
-  // ----- Undo stack -----
-  if (expect.undoStackDelta !== undefined) {
-    const currentSize = api.studio.history.getUndoStackSize()
-    const actualDelta = currentSize - ctx.prevUndoStackSize
-    if (actualDelta !== expect.undoStackDelta) {
-      issues.push(`undoStackDelta: expected ${expect.undoStackDelta}, got ${actualDelta}`)
     }
   }
 
@@ -507,8 +1005,20 @@ function describeStep(step: Step): string {
       return `${prefix}multiSelect [${step.nodeIds.join(', ')}]${suffix}`
     case 'switchFile':
       return `${prefix}switchFile ${step.filename}${suffix}`
+    case 'replaceFile':
+      return `${prefix}replaceFile ${step.filename} (${step.content.length} chars)${suffix}`
+    case 'extractComponent':
+      return `${prefix}extractComponent ${step.name}::${step.properties.trim()}${suffix}`
+    case 'extractToken':
+      return `${prefix}extractToken ${step.property} ${step.tokenName}::${step.value}${suffix}`
+    case 'batchReplace':
+      return `${prefix}batchReplace ${step.action}${suffix}`
     case 'wait':
       return `${prefix}wait ${step.ms}ms${suffix}`
+    case 'waitFor': {
+      const keys = Object.keys(step.until).join(',')
+      return `${prefix}waitFor [${keys}] ≤${step.timeoutMs ?? 2000}ms${suffix}`
+    }
   }
 }
 
@@ -547,4 +1057,52 @@ function collectAllProjectSources(api: TestAPI, activeSource: string): string {
   } catch {
     return activeSource
   }
+}
+
+/**
+ * Build the ReaderContext, accounting for any test-mode prelude offset.
+ *
+ * Studio's `__compileTestCode` prepends sibling tokens.tok / components.com
+ * as a prelude before parsing, so the SourceMap that comes back uses
+ * "resolved-source" line numbers (prelude + active). The editor's doc
+ * however still only contains the active file. To let readers index into
+ * the editor's content using `node.position.line - 1`, we wrap the
+ * SourceMap and subtract the prelude line offset.
+ *
+ * Returns null when SourceMap or preview container are not available
+ * (compile in progress, or no preview yet) — caller surfaces this as a
+ * dimension-readiness issue.
+ */
+function buildReaderContext(api: TestAPI): {
+  source: string
+  allSources: string
+  sourceMap: SourceMapLike
+  container: HTMLElement
+  api: TestAPI
+} | null {
+  const realSourceMap = api.studio.getSourceMap() as SourceMapLike | null
+  const container = document.getElementById('preview')
+  if (!realSourceMap || !container) return null
+
+  const source = api.editor.getCode()
+  const allSources = collectAllProjectSources(api, source)
+
+  const preludeLineOffset =
+    (window as { __getPreludeLineOffset?: () => number }).__getPreludeLineOffset?.() ?? 0
+
+  const sourceMap: SourceMapLike =
+    preludeLineOffset > 0
+      ? {
+          getNodeById: (id: string) => {
+            const node = realSourceMap.getNodeById(id)
+            if (!node) return null
+            return {
+              ...node,
+              position: { ...node.position, line: node.position.line - preludeLineOffset },
+            }
+          },
+        }
+      : realSourceMap
+
+  return { source, allSources, sourceMap, container, api }
 }

@@ -51,24 +51,36 @@ export function createColorReader(config: ColorPropertyConfig): PropertyReader {
     },
 
     fromPanel(nodeId, ctx): PropertyValue {
-      const raw = ctx.api.panel.property.getPropertyValue(config.name)
-      if (raw !== null) {
-        const resolved = maybeResolveToken(raw, config.name, ctx.allSources)
-        return normalizeColor(resolved)
+      // panel.property.getPropertyValue() reads the panel UI state for the
+      // *currently selected* node — there is no per-node accessor in the
+      // panel-api. To make per-node `props:` assertions reliable across
+      // multiple node IDs in one expectation block:
+      //
+      //   - If the queried node IS the selected one, use the live panel
+      //     value (still catches drift between panel and source).
+      //   - Otherwise, fall back to source parsing — same path as
+      //     fromCode, conceptually "what the panel would show if this
+      //     node were selected".
+      //
+      // This also handles the long-standing case where the panel returns
+      // null for token-bound properties (the UI shows a token chip but
+      // getPropertyValue doesn't expose it).
+      const selectedId = ctx.api.studio.getSelection?.() ?? null
+      if (selectedId === nodeId) {
+        const raw = ctx.api.panel.property.getPropertyValue(config.name)
+        if (raw !== null) {
+          const resolved = maybeResolveToken(raw, config.name, ctx.allSources)
+          return normalizeColor(resolved)
+        }
       }
-      // Studio's panel-api currently returns null for token-bound
-      // properties (the panel UI shows a token chip, but
-      // getPropertyValue doesn't expose that). For framework consistency,
-      // fall back to source parsing: if the source has `<prop> $tokenName`
-      // and we can resolve it, that IS what the panel logically displays.
+      // Source fallback (non-selected node OR selected with token binding)
       const node = ctx.sourceMap.getNodeById(nodeId)
       if (!node) return null
       const line = ctx.source.split('\n')[node.position.line - 1]
       if (!line) return null
       const fromSrc = readColorFromLine(line, config.aliases)
-      if (fromSrc === null || !fromSrc.startsWith('$')) return null
+      if (fromSrc === null) return null
       const resolved = maybeResolveToken(fromSrc, config.name, ctx.allSources)
-      if (resolved === fromSrc) return null
       return normalizeColor(resolved)
     },
 

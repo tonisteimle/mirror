@@ -735,7 +735,7 @@ export class DOMBridge {
   }
 }
 
-export interface TreeExpectation extends DOMExpectation {
+export interface TreeExpectation extends Omit<DOMExpectation, 'children'> {
   children?: TreeExpectation[]
 }
 

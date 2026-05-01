@@ -794,6 +794,15 @@ class FilesPanelAPIImpl implements FilesPanelAPI {
 
     files[name] = content
 
+    // Mirror the write into the desktopFiles cache too. The two caches
+    // can otherwise drift in test mode: window.files holds it, but the
+    // compile pipeline reads desktopFiles.getFiles() first, so a file
+    // that exists only in window.files is invisible to compilation
+    // (manifests as data files in `setup.files` not appearing in the
+    // prelude — discovered while building T4 cross-file table tests).
+    const desktopFiles = (window as any).desktopFiles
+    desktopFiles?.updateFileCache?.(name, content)
+
     // Trigger UI update
     const addFile = (window as any).addFile
     if (addFile) {
@@ -820,6 +829,11 @@ class FilesPanelAPIImpl implements FilesPanelAPI {
     if (!files[name]) return false
 
     delete files[name]
+
+    // Mirror the deletion into desktopFiles cache (same rationale as in
+    // create() — keep both caches in sync for the compile pipeline).
+    const desktopFiles = (window as any).desktopFiles
+    desktopFiles?.updateFileCache?.(name, undefined)
 
     // Trigger UI update
     const deleteFile = (window as any).deleteFile

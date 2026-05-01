@@ -43,7 +43,19 @@ export function createNumberReader(config: NumberPropertyConfig): PropertyReader
     },
 
     fromPanel(nodeId, ctx): PropertyValue {
-      return ctx.api.panel.property.getPropertyValue(config.name)
+      // Panel UI state is per-selection. For per-node props checks,
+      // honour live panel state for the selected node and fall back to
+      // source for others. See _color-factory for the full rationale.
+      const selectedId = ctx.api.studio.getSelection?.() ?? null
+      if (selectedId === nodeId) {
+        const raw = ctx.api.panel.property.getPropertyValue(config.name)
+        if (raw !== null) return raw
+      }
+      const node = ctx.sourceMap.getNodeById(nodeId)
+      if (!node) return null
+      const line = ctx.source.split('\n')[node.position.line - 1]
+      if (!line) return null
+      return readNumberFromLine(line, config.aliases)
     },
   }
 }

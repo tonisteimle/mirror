@@ -85,9 +85,117 @@ export type StepAction =
   | { do: 'switchFile'; filename: string }
 
   // ---------------------------------------------------------------------------
+  // Replace a project file's content directly through the panel.files
+  // API (delete + create). Useful for non-active files (data/yaml/tokens)
+  // where the editor-edit + switchFile path doesn't reliably commit
+  // updates to the desktopFiles cache.
+  // ---------------------------------------------------------------------------
+  | { do: 'replaceFile'; filename: string; content: string }
+
+  // ---------------------------------------------------------------------------
+  // `::` Extract triggers — emulate the user typing the second `:` after
+  // either a property+token name (token-extract) or a component name
+  // (component-extract). The action locates the matching line via
+  // `target` (node id) or `searchFor` (verbatim substring), reshapes it
+  // to `Name::props` / `prop name::value`, and triggers the editor's
+  // CodeMirror update listener so the trigger pipeline fires.
+  //
+  // After the action settles, the source has been rewritten by the
+  // trigger (Card:: pad …  →  Card; bg primary::#hex  →  bg $primary)
+  // and the side-file (.com / .tok) has the new definition. If the
+  // project contains other matching lines the batch-replace dialog
+  // appears — assert / accept / cancel via the `batchReplace` action.
+  // ---------------------------------------------------------------------------
+  | {
+      do: 'extractComponent'
+      /** Name of the new component (PascalCase). */
+      name: string
+      /** Properties to attach to the component definition. */
+      properties: string
+      /**
+       * Locate the line to extract from. Either a node id (preferred —
+       * stable across positional resolution) or a verbatim substring
+       * that occurs once in the editor's current text.
+       */
+      target: { nodeId: string } | { searchFor: string }
+    }
+  | {
+      do: 'extractToken'
+      /** Property the token will replace (e.g. `bg`). */
+      property: string
+      /** Token name (lowercase). */
+      tokenName: string
+      /** Verbatim value, no token-prefix (e.g. `#2271C1`). */
+      value: string
+      target: { nodeId: string } | { searchFor: string }
+    }
+
+  // ---------------------------------------------------------------------------
+  // Batch-replace dialog interaction. The two extract actions above
+  // *may* open the dialog (if other matching lines exist in the
+  // project). This action asserts the dialog state and applies an
+  // outcome. If `expectMatches` is set, the runner verifies the
+  // checkbox count before applying; if `expectNearMatches` is set,
+  // ditto for the near-match section.
+  //
+  //   acceptAll    — click "Anwenden" with all defaults (exact pre-
+  //                  checked, near unchecked).
+  //   acceptNear   — also opt-in the listed near-match indices, then
+  //                  click "Anwenden".
+  //   selectOnly   — uncheck all exact matches except the listed
+  //                  indices, then "Anwenden".
+  //   cancel       — click "Abbrechen". Original extraction stays.
+  // ---------------------------------------------------------------------------
+  | {
+      do: 'batchReplace'
+      action: 'acceptAll' | 'cancel'
+      expectMatches?: number
+      expectNearMatches?: number
+    }
+  | {
+      do: 'batchReplace'
+      action: 'acceptNear'
+      /** 0-based indices of the near-match checkboxes to opt in. */
+      nearIndices: readonly number[]
+      expectMatches?: number
+      expectNearMatches?: number
+    }
+  | {
+      do: 'batchReplace'
+      action: 'selectOnly'
+      /** 0-based indices of the exact-match checkboxes to keep checked. */
+      exactIndices: readonly number[]
+      expectMatches?: number
+      expectNearMatches?: number
+    }
+
+  // ---------------------------------------------------------------------------
   // Utility
   // ---------------------------------------------------------------------------
+  //
+  // `wait { ms }` — fixed delay. Code-smell: a fixed sleep is a bet that
+  // the system has settled in N ms. Prefer `waitFor` whenever the success
+  // condition is expressible (editor source, file content, panel value,
+  // selection). Use `wait` only when nothing observable changes and you
+  // genuinely just need the clock to tick (rare).
   | { do: 'wait'; ms: number }
+  //
+  // `waitFor` — poll until a state predicate holds (or timeout). The
+  // `until` block is the same shape as `Expectations`, minus the
+  // console / undo side-channels. Polling re-evaluates the predicate
+  // every `intervalMs` (default 50) until either all assertions pass
+  // or `timeoutMs` (default 2000) elapses, in which case the step
+  // fails with the unmatched expectations as the reason.
+  //
+  // This is the deterministic replacement for `wait { ms: <fixed> }`
+  // after operations whose completion produces an observable change
+  // (switchFile, editorSet, batchReplace).
+  | {
+      do: 'waitFor'
+      until: WaitForPredicates
+      timeoutMs?: number
+      intervalMs?: number
+    }
 
 // =============================================================================
 // Expectations — three readout dimensions plus side-channels
@@ -105,6 +213,24 @@ export interface Expectations {
    * (e.g. AI-generated content). Prefer `code` whenever possible.
    */
   codeMatches?: RegExp
+
+  /**
+   * Per-file source assertions. Each filename is matched against the
+   * project's in-memory file cache (window.desktopFiles.getFiles()),
+   * so this catches `::`-trigger side-effects on `components.com` /
+   * `tokens.tok` and edits on non-active screens. Whitespace is
+   * canonicalised the same way as `code`.
+   *
+   * Use `null` to assert a file does NOT exist.
+   *
+   * @example
+   *   files: {
+   *     'tokens.tok': 'primary.bg: #2271C1',
+   *     'components.com': 'Card: bg #1a1a1a, pad 16, rad 8',
+   *     'screens/dashboard.mir': 'Card\nCard',
+   *   }
+   */
+  files?: Record<string, string | null>
 
   /**
    * Selected node id. Use `null` to assert no selection.
@@ -157,10 +283,12 @@ export interface Expectations {
   props?: Record<string, Record<string, string | null>>
 
   /**
-   * Console must be free of new errors since the previous step. Default true.
-   * Set to false explicitly for steps where an error is expected.
+   * Console hygiene assertion for this step.
+   *   - `true` (default) — no new errors AND no new warnings
+   *   - `'errors-only'`  — no new errors; warnings tolerated
+   *   - `false`          — anything goes (use sparingly; prefer fixing the root cause)
    */
-  consoleClean?: boolean
+  consoleClean?: boolean | 'errors-only'
 
   /**
    * Expected delta in undo-stack size after this step. +1 = one new undo
@@ -168,6 +296,16 @@ export interface Expectations {
    */
   undoStackDelta?: number
 }
+
+/**
+ * Subset of `Expectations` usable as a predicate for the `waitFor` step.
+ * Excludes console / undo state — those are point-in-time deltas, not
+ * predicates that converge over time.
+ */
+export type WaitForPredicates = Pick<
+  Expectations,
+  'code' | 'codeMatches' | 'files' | 'selection' | 'multiSelection' | 'dom' | 'panel' | 'props'
+>
 
 // =============================================================================
 // Step + Scenario
@@ -202,4 +340,12 @@ export interface Scenario {
    */
   setup: string | SetupProject
   steps: Step[]
+  /**
+   * Skip this scenario (don't run any steps). The reason is reported
+   * back as a passing-but-skipped result so the test never silently
+   * disappears. Used to park scenarios that document a known Studio
+   * gap in the test suite — better than block-comment graveyards
+   * which rot when surrounding code renames.
+   */
+  skip?: { reason: string }
 }

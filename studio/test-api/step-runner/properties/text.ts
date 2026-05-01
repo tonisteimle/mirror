@@ -47,12 +47,16 @@ export const textReader: PropertyReader = {
   },
 
   fromPanel(nodeId, ctx): PropertyValue {
-    // Studio's panel-api doesn't expose text content via getPropertyValue
-    // (it's not stored as a regular property — text is the element's
-    // child content). Fall back to source: if the element has a quoted
-    // text segment, that IS what the panel's text input would show.
-    const raw = ctx.api.panel.property.getPropertyValue('text')
-    if (raw !== null) return raw
+    // Panel UI state is per-selection; only trust panel.getPropertyValue
+    // when the queried node is the selected one. See _color-factory for
+    // the broader rationale. text is mostly source-driven anyway (the
+    // panel doesn't expose it as a regular property), but the per-node
+    // guard here keeps multi-node `props` assertions reliable.
+    const selectedId = ctx.api.studio.getSelection?.() ?? null
+    if (selectedId === nodeId) {
+      const raw = ctx.api.panel.property.getPropertyValue('text')
+      if (raw !== null) return raw
+    }
     const node = ctx.sourceMap.getNodeById(nodeId)
     if (!node) return null
     const line = ctx.source.split('\n')[node.position.line - 1]

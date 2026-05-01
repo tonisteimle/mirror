@@ -1805,7 +1805,7 @@ export interface MarginZoneInfo {
   rect: { left: number; top: number; width: number; height: number }
   color: string
   visible: boolean
-  position?: 'top' | 'right' | 'bottom' | 'left' | 'unknown'
+  position: 'top' | 'right' | 'bottom' | 'left' | 'unknown'
 }
 
 export interface MarginHandleInfo {

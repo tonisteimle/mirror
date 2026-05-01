@@ -247,6 +247,7 @@ const rapidStateTests: TestSuite = [
       // Should be in final consistent state (even number of toggles = off)
       await api.utils.delay(100)
       const styles = api.preview.inspect('node-1')?.styles
+      api.assert.ok(styles, 'styles should exist')
       // 10 toggles = back to off state
       // Allow tolerance for browser rendering quirks (51,51,51 vs 51,52,53)
       const bg = styles.backgroundColor
@@ -287,6 +288,7 @@ const rapidStateTests: TestSuite = [
 
       // Only last clicked should be selected
       const stylesC = api.preview.inspect('node-4')?.styles
+      api.assert.ok(stylesC, 'stylesC should exist')
 
       // C was clicked last - allow for slight color variations
       const bgC = stylesC.backgroundColor

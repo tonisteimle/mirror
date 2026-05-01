@@ -87,9 +87,10 @@ export const effectTests: TestCase[] = describe('Effects', [
       api.assert.exists('node-1')
       const element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
       api.assert.ok(element !== null, 'Element should exist')
-      const backdropFilter =
-        window.getComputedStyle(element).backdropFilter ||
-        window.getComputedStyle(element).webkitBackdropFilter
+      const computedStyle = window.getComputedStyle(element) as CSSStyleDeclaration & {
+        webkitBackdropFilter?: string
+      }
+      const backdropFilter = computedStyle.backdropFilter || computedStyle.webkitBackdropFilter
       api.assert.ok(
         backdropFilter && backdropFilter.includes('blur'),
         `backdrop-blur should set backdropFilter with blur(), got "${backdropFilter}"`

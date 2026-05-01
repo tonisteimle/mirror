@@ -532,7 +532,7 @@ export const paddingHandleDragTests: TestCase[] = describe('Padding Handle Drag'
         const newPadding = parseInt(padMatch[1], 10)
         api.assert.ok(newPadding < 30, `Padding should have decreased from 30, got ${newPadding}`)
       } else {
-        api.assert.fail('Code should contain pad or pad-b value')
+        api.assert.ok(false, 'Code should contain pad or pad-b value')
       }
 
       // Verify CSS computed style - paddingBottom should be < 30

@@ -29,9 +29,8 @@ const multifileEntryRenders: Scenario = {
   steps: [
     { do: 'select', nodeId: 'node-1', expect: { selection: 'node-1' } },
     {
-      do: 'wait',
-      ms: 100,
-      expect: { props: { 'node-1': { bg: '#2271c1' } } },
+      do: 'waitFor',
+      until: { props: { 'node-1': { bg: '#2271c1' } } },
     },
   ],
 }
@@ -50,14 +49,12 @@ const multifileSidecarFilesExist: Scenario = {
   },
   steps: [
     {
-      // Just verify both files exist via the panel API. We don't render
-      // tokens.tok — the test is just about file presence.
-      do: 'wait',
-      ms: 100,
-      expect: {
-        // Use code expectation on the active file (still app.mir).
-        // tokens.tok presence is asserted in a follow-up step.
+      // Verify both files exist. Active editor shows app.mir; the
+      // tokens.tok sibling is asserted via `files`.
+      do: 'waitFor',
+      until: {
         code: 'Frame w 100, h 100, bg #2271c1',
+        files: { 'tokens.tok': 'primary.bg: #ef4444' },
       },
     },
   ],
@@ -78,19 +75,15 @@ const switchFileChangesActiveFile: Scenario = {
   steps: [
     // Initially: app.mir is open
     {
-      do: 'wait',
-      ms: 100,
+      do: 'waitFor',
       comment: 'app.mir active',
-      expect: { code: 'Frame w 100, h 100, bg #2271c1' },
+      until: { code: 'Frame w 100, h 100, bg #2271c1' },
     },
-    // Switch to other.mir, then wait for the editor + compile to settle
-    // before asserting the source. switchFile dispatches a CodeMirror
-    // change synchronously but compile + UI propagation are debounced.
+    // Switch to other.mir, then poll until editor reflects its content.
     { do: 'switchFile', filename: 'other.mir' },
     {
-      do: 'wait',
-      ms: 500,
-      expect: { code: 'Frame w 50, h 50, bg #ef4444' },
+      do: 'waitFor',
+      until: { code: 'Frame w 50, h 50, bg #ef4444' },
     },
   ],
 }
@@ -125,9 +118,8 @@ const crossFileTokenResolves: Scenario = {
   steps: [
     { do: 'select', nodeId: 'node-1', expect: { selection: 'node-1' } },
     {
-      do: 'wait',
-      ms: 100,
-      expect: {
+      do: 'waitFor',
+      until: {
         // The active file's source still has the literal `$primary`.
         code: 'Frame w 100, h 100, bg $primary',
         // The panel value (after the color reader's token resolution

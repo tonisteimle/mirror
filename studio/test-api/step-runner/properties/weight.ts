@@ -53,7 +53,19 @@ export const weightReader: PropertyReader = {
   },
 
   fromPanel(nodeId, ctx): PropertyValue {
-    return normalizeWeight(ctx.api.panel.property.getPropertyValue('weight'))
+    // See _color-factory for rationale: panel UI is per-selection, so
+    // for non-selected nodes we fall back to the source path.
+    const selectedId = ctx.api.studio.getSelection?.() ?? null
+    if (selectedId === nodeId) {
+      const raw = ctx.api.panel.property.getPropertyValue('weight')
+      if (raw !== null) return normalizeWeight(raw)
+    }
+    const node = ctx.sourceMap.getNodeById(nodeId)
+    if (!node) return null
+    const line = ctx.source.split('\n')[node.position.line - 1]
+    if (!line) return null
+    const m = line.match(/(?:^|[,\s])weight\s+(\w+)\s*(?=,|$)/)
+    return m ? normalizeWeight(m[1]) : null
   },
 
   normalize(value): PropertyValue {

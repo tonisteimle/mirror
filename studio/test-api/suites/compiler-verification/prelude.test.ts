@@ -150,7 +150,7 @@ export const codeIntegrityTests: TestCase[] = describe('Code Integrity', [
       api.assert.exists('node-1')
       // Frame without bg should have transparent background
       const info = api.preview.inspect('node-1')
-      const bg = info?.computedStyles?.backgroundColor || ''
+      const bg = info?.styles?.backgroundColor || ''
       // Should be transparent (rgba(0, 0, 0, 0)) or empty
       api.assert.ok(
         bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent' || bg === '',

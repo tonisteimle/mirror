@@ -4,7 +4,13 @@
  * Tests for: Frame, Text, Button, Input, Textarea, Image, Icon, Link, Divider, Spacer, Label
  */
 
-import { testWithSetup, testSkip, describe, type TestCase } from '../../test-runner'
+import {
+  testWithSetup,
+  testSkip,
+  testWithSetupSkip,
+  describe,
+  type TestCase,
+} from '../../test-runner'
 import type { TestAPI } from '../../types'
 
 // Helper to inspect with null check
@@ -204,13 +210,17 @@ export const basicPrimitives: TestCase[] = describe('Basic Primitives', [
   }),
 
   // Spacer
-  testSkip('Spacer renders as div', 'Frame\n  Spacer h 20, w 100', async (api: TestAPI) => {
-    api.assert.exists('node-2')
-    const info = inspectStrict(api, 'node-2', 'Spacer')
-    api.assert.ok(info.tagName === 'div', `Spacer should be div, got: ${info.tagName}`)
-    api.assert.hasStyle('node-2', 'height', '20px')
-    api.assert.hasStyle('node-2', 'width', '100px')
-  }),
+  testWithSetupSkip(
+    'Spacer renders as div',
+    'Frame\n  Spacer h 20, w 100',
+    async (api: TestAPI) => {
+      api.assert.exists('node-2')
+      const info = inspectStrict(api, 'node-2', 'Spacer')
+      api.assert.ok(info.tagName === 'div', `Spacer should be div, got: ${info.tagName}`)
+      api.assert.hasStyle('node-2', 'height', '20px')
+      api.assert.hasStyle('node-2', 'width', '100px')
+    }
+  ),
 
   // Label
   testWithSetup('Label renders as label', 'Label "Name:"', async (api: TestAPI) => {

@@ -86,7 +86,9 @@ function getCards(): HTMLElement[] {
   const preview = document.getElementById('preview')
   const wrappers = preview?.querySelectorAll('[data-each-item]') || []
   // The actual Card component is the first child of the wrapper
-  return Array.from(wrappers).map(w => w.children[0] as HTMLElement).filter(Boolean)
+  return Array.from(wrappers)
+    .map(w => w.children[0] as HTMLElement)
+    .filter(Boolean)
 }
 
 /** Get specific card by index (0, 1, 2) */
@@ -98,11 +100,11 @@ function getCard(index: number): HTMLElement | null {
 /** Get the root element (node-1) */
 function getRoot(): HTMLElement | null {
   // Try direct ID first
-  let root = document.getElementById('node-1')
+  const root = document.getElementById('node-1')
   if (root) return root
   // Fallback: find first element with node- prefix inside preview
   const preview = document.getElementById('preview')
-  return preview?.querySelector('[id^="node-"]') as HTMLElement || null
+  return (preview?.querySelector('[id^="node-"]') as HTMLElement) || null
 }
 
 /** Get text content of an element, excluding nested elements */
@@ -126,7 +128,7 @@ function findByText(parent: HTMLElement, text: string): HTMLElement | null {
 }
 
 /** Get computed style value */
-function getStyle(el: HTMLElement, prop: string): string {
+function getStyle(el: Element, prop: string): string {
   return window.getComputedStyle(el)[prop as any] || ''
 }
 
@@ -171,7 +173,6 @@ const CARD_DATA = [
 // =============================================================================
 
 export const demoProjectTests: TestCase[] = describe('Demo Project', [
-
   // ---------------------------------------------------------------------------
   // ROOT FRAME STRUCTURE
   // ---------------------------------------------------------------------------
@@ -182,14 +183,18 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
     api.assert.hasStyle('node-1', 'flexDirection', 'column')
   }),
 
-  testWithSetup('Demo: Root frame has surface background from token', DEMO_FULL, async (api: TestAPI) => {
-    const info = api.preview.inspect('node-1')
-    const bg = info?.styles.backgroundColor || ''
-    api.assert.ok(
-      colorMatches(bg, COLORS.surface),
-      `Root bg should be surface ${COLORS.surface.hex}, got: ${bg}`
-    )
-  }),
+  testWithSetup(
+    'Demo: Root frame has surface background from token',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const info = api.preview.inspect('node-1')
+      const bg = info?.styles.backgroundColor || ''
+      api.assert.ok(
+        colorMatches(bg, COLORS.surface),
+        `Root bg should be surface ${COLORS.surface.hex}, got: ${bg}`
+      )
+    }
+  ),
 
   testWithSetup('Demo: Root frame has white text color', DEMO_FULL, async (api: TestAPI) => {
     api.assert.hasStyle('node-1', 'color', 'rgb(255, 255, 255)')
@@ -199,9 +204,13 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
     api.assert.hasStyle('node-1', 'padding', SPACING.rootPad)
   }),
 
-  testWithSetup('Demo: Root frame has gap from $space token (12px)', DEMO_FULL, async (api: TestAPI) => {
-    api.assert.hasStyle('node-1', 'gap', SPACING.spaceGap)
-  }),
+  testWithSetup(
+    'Demo: Root frame has gap from $space token (12px)',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      api.assert.hasStyle('node-1', 'gap', SPACING.spaceGap)
+    }
+  ),
 
   testWithSetup('Demo: Root frame has h full style set', DEMO_FULL, async (api: TestAPI) => {
     // Note: In test environment, 100% resolves to container pixel size
@@ -214,13 +223,17 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
     )
   }),
 
-  testWithSetup('Demo: Root frame has exactly 4 direct children (header + 3 cards)', DEMO_FULL, async (api: TestAPI) => {
-    const info = api.preview.inspect('node-1')
-    api.assert.ok(
-      info?.children.length === 4,
-      `Root should have 4 children (header + 3 cards), got: ${info?.children.length}`
-    )
-  }),
+  testWithSetup(
+    'Demo: Root frame has exactly 4 direct children (header + 3 cards)',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const info = api.preview.inspect('node-1')
+      api.assert.ok(
+        info?.children.length === 4,
+        `Root should have 4 children (header + 3 cards), got: ${info?.children.length}`
+      )
+    }
+  ),
 
   // ---------------------------------------------------------------------------
   // HEADER
@@ -228,7 +241,7 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
 
   testWithSetup('Demo: Header is first child of root', DEMO_FULL, async (api: TestAPI) => {
     const rootInfo = api.preview.inspect('node-1')
-    api.assert.ok(rootInfo?.children.length! > 0, 'Root should have children')
+    api.assert.ok((rootInfo?.children.length ?? 0) > 0, 'Root should have children')
     const headerId = rootInfo!.children[0]
     const headerInfo = api.preview.inspect(headerId)
     api.assert.ok(headerInfo !== null, 'Header should exist')
@@ -244,25 +257,33 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
     )
   }),
 
-  testWithSetup('Demo: Header has spread layout (space-between)', DEMO_FULL, async (api: TestAPI) => {
-    const rootInfo = api.preview.inspect('node-1')
-    const headerId = rootInfo!.children[0]
-    const headerInfo = api.preview.inspect(headerId)
-    api.assert.ok(
-      headerInfo?.styles.justifyContent === 'space-between',
-      `Header should be space-between, got: ${headerInfo?.styles.justifyContent}`
-    )
-  }),
+  testWithSetup(
+    'Demo: Header has spread layout (space-between)',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const rootInfo = api.preview.inspect('node-1')
+      const headerId = rootInfo!.children[0]
+      const headerInfo = api.preview.inspect(headerId)
+      api.assert.ok(
+        headerInfo?.styles.justifyContent === 'space-between',
+        `Header should be space-between, got: ${headerInfo?.styles.justifyContent}`
+      )
+    }
+  ),
 
-  testWithSetup('Demo: Header has ver-center (align-items: center)', DEMO_FULL, async (api: TestAPI) => {
-    const rootInfo = api.preview.inspect('node-1')
-    const headerId = rootInfo!.children[0]
-    const headerInfo = api.preview.inspect(headerId)
-    api.assert.ok(
-      headerInfo?.styles.alignItems === 'center',
-      `Header should have alignItems center, got: ${headerInfo?.styles.alignItems}`
-    )
-  }),
+  testWithSetup(
+    'Demo: Header has ver-center (align-items: center)',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const rootInfo = api.preview.inspect('node-1')
+      const headerId = rootInfo!.children[0]
+      const headerInfo = api.preview.inspect(headerId)
+      api.assert.ok(
+        headerInfo?.styles.alignItems === 'center',
+        `Header should have alignItems center, got: ${headerInfo?.styles.alignItems}`
+      )
+    }
+  ),
 
   testWithSetup('Demo: Header contains "Demo App" text', DEMO_FULL, async (api: TestAPI) => {
     // Use API to get the header info
@@ -279,19 +300,23 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
     )
   }),
 
-  testWithSetup('Demo: Demo App text has correct styling (fs 20, bold)', DEMO_FULL, async (api: TestAPI) => {
-    // Find the text element directly in preview
-    const preview = document.getElementById('preview')
-    const textEl = findByText(preview!, 'Demo App')
-    api.assert.ok(textEl !== null, 'Demo App text element should exist')
-    const fontSize = getStyle(textEl!, 'fontSize')
-    const fontWeight = getStyle(textEl!, 'fontWeight')
-    api.assert.ok(fontSize === '20px', `Demo App fs should be 20px, got: ${fontSize}`)
-    api.assert.ok(
-      fontWeight === '700' || fontWeight === 'bold',
-      `Demo App weight should be bold, got: ${fontWeight}`
-    )
-  }),
+  testWithSetup(
+    'Demo: Demo App text has correct styling (fs 20, bold)',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      // Find the text element directly in preview
+      const preview = document.getElementById('preview')
+      const textEl = findByText(preview!, 'Demo App')
+      api.assert.ok(textEl !== null, 'Demo App text element should exist')
+      const fontSize = getStyle(textEl!, 'fontSize')
+      const fontWeight = getStyle(textEl!, 'fontWeight')
+      api.assert.ok(fontSize === '20px', `Demo App fs should be 20px, got: ${fontSize}`)
+      api.assert.ok(
+        fontWeight === '700' || fontWeight === 'bold',
+        `Demo App weight should be bold, got: ${fontWeight}`
+      )
+    }
+  ),
 
   testWithSetup('Demo: Header contains settings icon', DEMO_FULL, async (api: TestAPI) => {
     // Header should have one icon (settings)
@@ -309,33 +334,36 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
     )
   }),
 
-  testWithSetup('Demo: Settings icon has muted color (not inherited white)', DEMO_FULL, async (api: TestAPI) => {
-    // The icon uses ic $muted which should resolve to muted.ic token
-    // This tests that icon color is NOT inherited from parent's col white
-    const preview = document.getElementById('preview')
-    const allIcons = Array.from(preview?.querySelectorAll('svg') || [])
-    const cardIcons = new Set<Element>()
-    getCards().forEach(card => {
-      card.querySelectorAll('svg').forEach(icon => cardIcons.add(icon))
-    })
-    const headerIcons = allIcons.filter(icon => !cardIcons.has(icon))
-    api.assert.ok(headerIcons.length >= 1, 'Should have header icon')
+  testWithSetup(
+    'Demo: Settings icon has muted color (not inherited white)',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      // The icon uses ic $muted which should resolve to muted.ic token
+      // This tests that icon color is NOT inherited from parent's col white
+      const preview = document.getElementById('preview')
+      const allIcons = Array.from(preview?.querySelectorAll('svg') || [])
+      const cardIcons = new Set<Element>()
+      getCards().forEach(card => {
+        card.querySelectorAll('svg').forEach(icon => cardIcons.add(icon))
+      })
+      const headerIcons = allIcons.filter(icon => !cardIcons.has(icon))
+      api.assert.ok(headerIcons.length >= 1, 'Should have header icon')
 
-    const settingsIcon = headerIcons[0] as SVGElement
+      const settingsIcon = headerIcons[0] as SVGElement
 
-    // The SVG element should have color set directly via style
-    const svgColor = settingsIcon.style.color
+      // The SVG element should have color set directly via style
+      const svgColor = settingsIcon.style.color
 
-    // Accept either direct muted color or CSS variable reference
-    const hasMutedColor =
-      colorMatches(svgColor, COLORS.muted) ||
-      svgColor.includes('var(--muted-ic)')
+      // Accept either direct muted color or CSS variable reference
+      const hasMutedColor =
+        colorMatches(svgColor, COLORS.muted) || svgColor.includes('var(--muted-ic)')
 
-    api.assert.ok(
-      hasMutedColor,
-      `Settings icon SVG should have muted color via ic property, got: "${svgColor}"`
-    )
-  }),
+      api.assert.ok(
+        hasMutedColor,
+        `Settings icon SVG should have muted color via ic property, got: "${svgColor}"`
+      )
+    }
+  ),
 
   // ---------------------------------------------------------------------------
   // EACH LOOP - 3 CARDS
@@ -346,18 +374,22 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
     api.assert.ok(cards.length === 3, `Should have exactly 3 cards, got: ${cards.length}`)
   }),
 
-  testWithSetup('Demo: Cards are inside data-each-item wrappers', DEMO_FULL, async (api: TestAPI) => {
-    // Each Card is inside a wrapper with data-each-item attribute
-    const preview = document.getElementById('preview')
-    const wrappers = preview?.querySelectorAll('[data-each-item]') || []
-    api.assert.ok(wrappers.length === 3, `Should have 3 each-item wrappers, got: ${wrappers.length}`)
-    Array.from(wrappers).forEach((wrapper, i) => {
+  testWithSetup(
+    'Demo: Cards are inside data-each-item wrappers',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      // Each Card is inside a wrapper with data-each-item attribute
+      const preview = document.getElementById('preview')
+      const wrappers = preview?.querySelectorAll('[data-each-item]') || []
       api.assert.ok(
-        wrapper.children.length > 0,
-        `Wrapper ${i} should have Card as child`
+        wrappers.length === 3,
+        `Should have 3 each-item wrappers, got: ${wrappers.length}`
       )
-    })
-  }),
+      Array.from(wrappers).forEach((wrapper, i) => {
+        api.assert.ok(wrapper.children.length > 0, `Wrapper ${i} should have Card as child`)
+      })
+    }
+  ),
 
   // ---------------------------------------------------------------------------
   // CARD 1: WILLKOMMEN
@@ -380,17 +412,21 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
     )
   }),
 
-  testWithSetup('Demo: Card 1 does NOT contain other card titles', DEMO_FULL, async (api: TestAPI) => {
-    const card = getCard(0)
-    api.assert.ok(
-      !card!.textContent?.includes('Komponenten') || card!.textContent?.includes('Willkommen'),
-      'Card 1 should not contain "Komponenten" as title (may appear in description)'
-    )
-    api.assert.ok(
-      !card!.textContent?.includes('Live Preview'),
-      'Card 1 should not contain "Live Preview"'
-    )
-  }),
+  testWithSetup(
+    'Demo: Card 1 does NOT contain other card titles',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const card = getCard(0)
+      api.assert.ok(
+        !card!.textContent?.includes('Komponenten') || card!.textContent?.includes('Willkommen'),
+        'Card 1 should not contain "Komponenten" as title (may appear in description)'
+      )
+      api.assert.ok(
+        !card!.textContent?.includes('Live Preview'),
+        'Card 1 should not contain "Live Preview"'
+      )
+    }
+  ),
 
   // ---------------------------------------------------------------------------
   // CARD 2: KOMPONENTEN
@@ -413,17 +449,21 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
     )
   }),
 
-  testWithSetup('Demo: Card 2 does NOT contain other card data', DEMO_FULL, async (api: TestAPI) => {
-    const card = getCard(1)
-    api.assert.ok(
-      !card!.textContent?.includes('Willkommen'),
-      'Card 2 should not contain "Willkommen"'
-    )
-    api.assert.ok(
-      !card!.textContent?.includes('Live Preview'),
-      'Card 2 should not contain "Live Preview"'
-    )
-  }),
+  testWithSetup(
+    'Demo: Card 2 does NOT contain other card data',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const card = getCard(1)
+      api.assert.ok(
+        !card!.textContent?.includes('Willkommen'),
+        'Card 2 should not contain "Willkommen"'
+      )
+      api.assert.ok(
+        !card!.textContent?.includes('Live Preview'),
+        'Card 2 should not contain "Live Preview"'
+      )
+    }
+  ),
 
   // ---------------------------------------------------------------------------
   // CARD 3: LIVE PREVIEW
@@ -446,65 +486,85 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
     )
   }),
 
-  testWithSetup('Demo: Card 3 does NOT contain other card data', DEMO_FULL, async (api: TestAPI) => {
-    const card = getCard(2)
-    api.assert.ok(
-      !card!.textContent?.includes('Willkommen'),
-      'Card 3 should not contain "Willkommen"'
-    )
-    api.assert.ok(
-      !card!.textContent?.includes('wiederverwendbare'),
-      'Card 3 should not contain Card 2 description'
-    )
-  }),
+  testWithSetup(
+    'Demo: Card 3 does NOT contain other card data',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const card = getCard(2)
+      api.assert.ok(
+        !card!.textContent?.includes('Willkommen'),
+        'Card 3 should not contain "Willkommen"'
+      )
+      api.assert.ok(
+        !card!.textContent?.includes('wiederverwendbare'),
+        'Card 3 should not contain Card 2 description'
+      )
+    }
+  ),
 
   // ---------------------------------------------------------------------------
   // CARD COMPONENT STYLING (ALL CARDS)
   // ---------------------------------------------------------------------------
 
-  testWithSetup('Demo: All cards have card background from $card token', DEMO_FULL, async (api: TestAPI) => {
-    const cards = getCards()
-    cards.forEach((card, i) => {
-      const bg = getStyle(card, 'backgroundColor')
-      api.assert.ok(
-        colorMatches(bg, COLORS.card),
-        `Card ${i + 1} bg should be ${COLORS.card.hex}, got: ${bg}`
-      )
-    })
-  }),
+  testWithSetup(
+    'Demo: All cards have card background from $card token',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const cards = getCards()
+      cards.forEach((card, i) => {
+        const bg = getStyle(card, 'backgroundColor')
+        api.assert.ok(
+          colorMatches(bg, COLORS.card),
+          `Card ${i + 1} bg should be ${COLORS.card.hex}, got: ${bg}`
+        )
+      })
+    }
+  ),
 
-  testWithSetup('Demo: All cards have padding from $space token (16px)', DEMO_FULL, async (api: TestAPI) => {
-    const cards = getCards()
-    cards.forEach((card, i) => {
-      const pad = getStyle(card, 'padding')
-      api.assert.ok(
-        pad === SPACING.spacePad,
-        `Card ${i + 1} padding should be ${SPACING.spacePad}, got: ${pad}`
-      )
-    })
-  }),
+  testWithSetup(
+    'Demo: All cards have padding from $space token (16px)',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const cards = getCards()
+      cards.forEach((card, i) => {
+        const pad = getStyle(card, 'padding')
+        api.assert.ok(
+          pad === SPACING.spacePad,
+          `Card ${i + 1} padding should be ${SPACING.spacePad}, got: ${pad}`
+        )
+      })
+    }
+  ),
 
-  testWithSetup('Demo: All cards have radius from $radius token (8px)', DEMO_FULL, async (api: TestAPI) => {
-    const cards = getCards()
-    cards.forEach((card, i) => {
-      const rad = getStyle(card, 'borderRadius')
-      api.assert.ok(
-        rad === SPACING.radiusRad,
-        `Card ${i + 1} radius should be ${SPACING.radiusRad}, got: ${rad}`
-      )
-    })
-  }),
+  testWithSetup(
+    'Demo: All cards have radius from $radius token (8px)',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const cards = getCards()
+      cards.forEach((card, i) => {
+        const rad = getStyle(card, 'borderRadius')
+        api.assert.ok(
+          rad === SPACING.radiusRad,
+          `Card ${i + 1} radius should be ${SPACING.radiusRad}, got: ${rad}`
+        )
+      })
+    }
+  ),
 
-  testWithSetup('Demo: All cards have gap from component (8px, not token)', DEMO_FULL, async (api: TestAPI) => {
-    const cards = getCards()
-    cards.forEach((card, i) => {
-      const gap = getStyle(card, 'gap')
-      api.assert.ok(
-        gap === SPACING.cardGap,
-        `Card ${i + 1} gap should be ${SPACING.cardGap} (component value), got: ${gap}`
-      )
-    })
-  }),
+  testWithSetup(
+    'Demo: All cards have gap from component (8px, not token)',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const cards = getCards()
+      cards.forEach((card, i) => {
+        const gap = getStyle(card, 'gap')
+        api.assert.ok(
+          gap === SPACING.cardGap,
+          `Card ${i + 1} gap should be ${SPACING.cardGap} (component value), got: ${gap}`
+        )
+      })
+    }
+  ),
 
   testWithSetup('Demo: All cards are flex column layout', DEMO_FULL, async (api: TestAPI) => {
     const cards = getCards()
@@ -520,16 +580,17 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
   // CARD INTERNAL STRUCTURE
   // ---------------------------------------------------------------------------
 
-  testWithSetup('Demo: Each card has 3 children (title row, description, button)', DEMO_FULL, async (api: TestAPI) => {
-    const cards = getCards()
-    cards.forEach((card, i) => {
-      const childCount = card.children.length
-      api.assert.ok(
-        childCount === 3,
-        `Card ${i + 1} should have 3 children, got: ${childCount}`
-      )
-    })
-  }),
+  testWithSetup(
+    'Demo: Each card has 3 children (title row, description, button)',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const cards = getCards()
+      cards.forEach((card, i) => {
+        const childCount = card.children.length
+        api.assert.ok(childCount === 3, `Card ${i + 1} should have 3 children, got: ${childCount}`)
+      })
+    }
+  ),
 
   testWithSetup('Demo: Card title row is horizontal with gap', DEMO_FULL, async (api: TestAPI) => {
     const cards = getCards()
@@ -537,10 +598,7 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
       const titleRow = card.children[0] as HTMLElement
       const direction = getStyle(titleRow, 'flexDirection')
       const gap = getStyle(titleRow, 'gap')
-      api.assert.ok(
-        direction === 'row',
-        `Card ${i + 1} title row should be row, got: ${direction}`
-      )
+      api.assert.ok(direction === 'row', `Card ${i + 1} title row should be row, got: ${direction}`)
       api.assert.ok(
         gap === SPACING.spaceGap,
         `Card ${i + 1} title row gap should be ${SPACING.spaceGap}, got: ${gap}`
@@ -548,33 +606,41 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
     })
   }),
 
-  testWithSetup('Demo: Card title row has ver-center alignment', DEMO_FULL, async (api: TestAPI) => {
-    const cards = getCards()
-    cards.forEach((card, i) => {
-      const titleRow = card.children[0] as HTMLElement
-      const align = getStyle(titleRow, 'alignItems')
-      api.assert.ok(
-        align === 'center',
-        `Card ${i + 1} title row should be vertically centered, got: ${align}`
-      )
-    })
-  }),
+  testWithSetup(
+    'Demo: Card title row has ver-center alignment',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const cards = getCards()
+      cards.forEach((card, i) => {
+        const titleRow = card.children[0] as HTMLElement
+        const align = getStyle(titleRow, 'alignItems')
+        api.assert.ok(
+          align === 'center',
+          `Card ${i + 1} title row should be vertically centered, got: ${align}`
+        )
+      })
+    }
+  ),
 
   // ---------------------------------------------------------------------------
   // CARD ICONS
   // ---------------------------------------------------------------------------
 
-  testWithSetup('Demo: Each card has exactly one icon in title row', DEMO_FULL, async (api: TestAPI) => {
-    const cards = getCards()
-    cards.forEach((card, i) => {
-      const titleRow = card.children[0] as HTMLElement
-      const icons = titleRow.querySelectorAll('svg')
-      api.assert.ok(
-        icons.length === 1,
-        `Card ${i + 1} title row should have 1 icon, got: ${icons.length}`
-      )
-    })
-  }),
+  testWithSetup(
+    'Demo: Each card has exactly one icon in title row',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const cards = getCards()
+      cards.forEach((card, i) => {
+        const titleRow = card.children[0] as HTMLElement
+        const icons = titleRow.querySelectorAll('svg')
+        api.assert.ok(
+          icons.length === 1,
+          `Card ${i + 1} title row should have 1 icon, got: ${icons.length}`
+        )
+      })
+    }
+  ),
 
   testWithSetup('Demo: Card icons have primary color', DEMO_FULL, async (api: TestAPI) => {
     const cards = getCards()
@@ -590,9 +656,10 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
       const svgFill = svg.getAttribute('fill') || ''
       // currentColor means it inherits from parent
       const hasCurrentColor = svgStroke === 'currentColor' || svgFill === 'currentColor'
-      const directPrimary = colorMatches(wrapperColor, COLORS.primary) ||
-                            colorMatches(svgStroke, COLORS.primary) ||
-                            colorMatches(svgFill, COLORS.primary)
+      const directPrimary =
+        colorMatches(wrapperColor, COLORS.primary) ||
+        colorMatches(svgStroke, COLORS.primary) ||
+        colorMatches(svgFill, COLORS.primary)
       api.assert.ok(
         hasCurrentColor || directPrimary,
         `Card ${i + 1} icon should have primary color. Wrapper: ${wrapperColor}, stroke: ${svgStroke}, fill: ${svgFill}`
@@ -631,10 +698,7 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
       const titleEl = findByText(card, titles[i])
       api.assert.ok(titleEl !== null, `Card ${i + 1} should have title "${titles[i]}"`)
       const fontSize = getStyle(titleEl!, 'fontSize')
-      api.assert.ok(
-        fontSize === '16px',
-        `Card ${i + 1} title fs should be 16px, got: ${fontSize}`
-      )
+      api.assert.ok(fontSize === '16px', `Card ${i + 1} title fs should be 16px, got: ${fontSize}`)
     })
   }),
 
@@ -740,34 +804,35 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
     })
   }),
 
-  testWithSetup('Demo: Buttons have correct padding (10px 16px)', DEMO_FULL, async (api: TestAPI) => {
-    const cards = getCards()
-    cards.forEach((card, i) => {
-      const button = card.querySelector('button') as HTMLElement
-      const padTop = getStyle(button, 'paddingTop')
-      const padRight = getStyle(button, 'paddingRight')
-      const padBottom = getStyle(button, 'paddingBottom')
-      const padLeft = getStyle(button, 'paddingLeft')
-      api.assert.ok(
-        padTop === '10px' && padBottom === '10px',
-        `Card ${i + 1} button vertical padding should be 10px, got: ${padTop}/${padBottom}`
-      )
-      api.assert.ok(
-        padRight === '16px' && padLeft === '16px',
-        `Card ${i + 1} button horizontal padding should be 16px, got: ${padRight}/${padLeft}`
-      )
-    })
-  }),
+  testWithSetup(
+    'Demo: Buttons have correct padding (10px 16px)',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const cards = getCards()
+      cards.forEach((card, i) => {
+        const button = card.querySelector('button') as HTMLElement
+        const padTop = getStyle(button, 'paddingTop')
+        const padRight = getStyle(button, 'paddingRight')
+        const padBottom = getStyle(button, 'paddingBottom')
+        const padLeft = getStyle(button, 'paddingLeft')
+        api.assert.ok(
+          padTop === '10px' && padBottom === '10px',
+          `Card ${i + 1} button vertical padding should be 10px, got: ${padTop}/${padBottom}`
+        )
+        api.assert.ok(
+          padRight === '16px' && padLeft === '16px',
+          `Card ${i + 1} button horizontal padding should be 16px, got: ${padRight}/${padLeft}`
+        )
+      })
+    }
+  ),
 
   testWithSetup('Demo: Buttons have border-radius 6px', DEMO_FULL, async (api: TestAPI) => {
     const cards = getCards()
     cards.forEach((card, i) => {
       const button = card.querySelector('button') as HTMLElement
       const rad = getStyle(button, 'borderRadius')
-      api.assert.ok(
-        rad === '6px',
-        `Card ${i + 1} button radius should be 6px, got: ${rad}`
-      )
+      api.assert.ok(rad === '6px', `Card ${i + 1} button radius should be 6px, got: ${rad}`)
     })
   }),
 
@@ -802,14 +867,18 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
   // TOTAL ICON COUNT
   // ---------------------------------------------------------------------------
 
-  testWithSetup('Demo: Total of 4 icons in preview (1 header + 3 cards)', DEMO_FULL, async (api: TestAPI) => {
-    const preview = document.getElementById('preview')
-    const icons = preview?.querySelectorAll('svg') || []
-    api.assert.ok(
-      icons.length === 4,
-      `Should have exactly 4 icons (1 header + 3 cards), got: ${icons.length}`
-    )
-  }),
+  testWithSetup(
+    'Demo: Total of 4 icons in preview (1 header + 3 cards)',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const preview = document.getElementById('preview')
+      const icons = preview?.querySelectorAll('svg') || []
+      api.assert.ok(
+        icons.length === 4,
+        `Should have exactly 4 icons (1 header + 3 cards), got: ${icons.length}`
+      )
+    }
+  ),
 
   // ---------------------------------------------------------------------------
   // TOTAL BUTTON COUNT
@@ -818,35 +887,36 @@ export const demoProjectTests: TestCase[] = describe('Demo Project', [
   testWithSetup('Demo: Total of 3 buttons in preview', DEMO_FULL, async (api: TestAPI) => {
     const preview = document.getElementById('preview')
     const buttons = preview?.querySelectorAll('button') || []
-    api.assert.ok(
-      buttons.length === 3,
-      `Should have exactly 3 buttons, got: ${buttons.length}`
-    )
+    api.assert.ok(buttons.length === 3, `Should have exactly 3 buttons, got: ${buttons.length}`)
   }),
 
   // ---------------------------------------------------------------------------
   // DATA ORDER VERIFICATION
   // ---------------------------------------------------------------------------
 
-  testWithSetup('Demo: Cards are in correct order (Willkommen, Komponenten, Live Preview)', DEMO_FULL, async (api: TestAPI) => {
-    const cards = getCards()
-    const card1Text = cards[0]?.textContent || ''
-    const card2Text = cards[1]?.textContent || ''
-    const card3Text = cards[2]?.textContent || ''
+  testWithSetup(
+    'Demo: Cards are in correct order (Willkommen, Komponenten, Live Preview)',
+    DEMO_FULL,
+    async (api: TestAPI) => {
+      const cards = getCards()
+      const card1Text = cards[0]?.textContent || ''
+      const card2Text = cards[1]?.textContent || ''
+      const card3Text = cards[2]?.textContent || ''
 
-    // Check that each card has the right title
-    api.assert.ok(card1Text.includes('Willkommen'), 'First card should be Willkommen')
-    api.assert.ok(card2Text.includes('Komponenten'), 'Second card should be Komponenten')
-    api.assert.ok(card3Text.includes('Live Preview'), 'Third card should be Live Preview')
+      // Check that each card has the right title
+      api.assert.ok(card1Text.includes('Willkommen'), 'First card should be Willkommen')
+      api.assert.ok(card2Text.includes('Komponenten'), 'Second card should be Komponenten')
+      api.assert.ok(card3Text.includes('Live Preview'), 'Third card should be Live Preview')
 
-    // Verify order by checking indices in combined text
-    const allText = card1Text + '|||' + card2Text + '|||' + card3Text
-    const idx1 = allText.indexOf('Willkommen')
-    const idx2 = allText.indexOf('Komponenten')
-    const idx3 = allText.indexOf('Live Preview')
-    api.assert.ok(
-      idx1 < idx2 && idx2 < idx3,
-      `Cards should be in order: Willkommen(${idx1}) < Komponenten(${idx2}) < Live Preview(${idx3})`
-    )
-  }),
+      // Verify order by checking indices in combined text
+      const allText = card1Text + '|||' + card2Text + '|||' + card3Text
+      const idx1 = allText.indexOf('Willkommen')
+      const idx2 = allText.indexOf('Komponenten')
+      const idx3 = allText.indexOf('Live Preview')
+      api.assert.ok(
+        idx1 < idx2 && idx2 < idx3,
+        `Cards should be in order: Willkommen(${idx1}) < Komponenten(${idx2}) < Live Preview(${idx3})`
+      )
+    }
+  ),
 ])
