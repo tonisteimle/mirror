@@ -528,6 +528,11 @@ export function emitLoopFocus(ctx: NodeEmitterContext, node: IRNode, varName: st
 
   ctx.emit(`// Enable loop focus (wrap around at start/end)`)
   ctx.emit(`${varName}._loopFocus = true`)
+  // Hover-to-highlight pairs with arrow-key navigation: the mouse and
+  // keyboard share the same "current" item. Without this, hovering an
+  // Item in a Select dropdown only triggers CSS :hover (which Mirror
+  // doesn't use here) — `highlighted:` state stays unset.
+  ctx.emit(`_runtime.setupHoverHighlight(${varName})`)
 }
 
 /**

@@ -698,6 +698,56 @@ const _runtime = {
     container._triggerBinding = 'true'
   },
 
+  /**
+   * Hover-to-highlight for list items inside a loop-focus container.
+   * Mirrors the keyboard arrow behaviour so mouse-driven UX (Select,
+   * Menu, Combobox) and keyboard navigation share the same "current"
+   * item. A single delegated mouseover listener handles all items —
+   * cheaper than per-item and survives DOM swaps.
+   */
+  setupHoverHighlight(container) {
+    if (!container) return
+    if (container._hoverHighlightEnabled) return
+    container._hoverHighlightEnabled = true
+
+    const findItems = (el, requireState) => {
+      const items = []
+      for (const child of el.children) {
+        if (child._stateStyles?.highlighted) {
+          items.push(child)
+        } else if (!requireState && child.style.cursor === 'pointer') {
+          items.push(child)
+        } else {
+          items.push(...findItems(child, requireState))
+        }
+      }
+      return items
+    }
+
+    const getItems = () => {
+      let items = findItems(container, true)
+      if (!items.length) items = findItems(container, false)
+      return items
+    }
+
+    container.addEventListener('mouseover', (e) => {
+      const target = e.target
+      if (!target) return
+      const items = getItems()
+      const item = items.find(it => it === target || it.contains(target))
+      if (!item) return
+      // Unhighlight siblings, highlight current
+      for (const sibling of items) {
+        if (sibling !== item && sibling.dataset.highlighted === 'true') {
+          delete sibling.dataset.highlighted
+          this.removeState(sibling, 'highlighted')
+        }
+      }
+      item.dataset.highlighted = 'true'
+      this.applyState(item, 'highlighted')
+    })
+  },
+
   // ============================================
   // TABLE FUNCTIONS (Built-in)
   // ============================================

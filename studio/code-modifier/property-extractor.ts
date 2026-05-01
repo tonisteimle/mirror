@@ -36,7 +36,7 @@ import {
 /**
  * Property types for UI rendering
  */
-export type PropertyType =
+export type PropertyUIType =
   | 'color'
   | 'size'
   | 'spacing'
@@ -52,7 +52,7 @@ export type PropertyType =
 export interface ExtractedProperty {
   name: string
   value: string
-  type: PropertyType
+  type: PropertyUIType
   source: 'instance' | 'component' | 'inherited' | 'available'
   line: number
   column: number
@@ -131,13 +131,13 @@ export interface ExtractedElement {
 }
 
 /**
- * Convert a schema PropertyType (boolean/number/string/color/size/spacing/
- * border/enum/direction) to the UI PropertyType (boolean/number/text/color/
+ * Convert a schema PropertyUIType (boolean/number/string/color/size/spacing/
+ * border/enum/direction) to the UI PropertyUIType (boolean/number/text/color/
  * size/spacing/select). Direction collapses to size; border collapses to
  * number. The string-to-text rename is the only renaming, the rest are
  * 1:1 or coerced for UI rendering.
  */
-function schemaTypeToUIType(type: string): PropertyType {
+function schemaTypeToUIType(type: string): PropertyUIType {
   switch (type) {
     case 'color':
       return 'color'
@@ -161,24 +161,24 @@ function schemaTypeToUIType(type: string): PropertyType {
 }
 
 /**
- * UI-only PropertyType overrides — properties whose schema type
+ * UI-only PropertyUIType overrides — properties whose schema type
  * (input shape) differs from the UI grouping that the property panel
  * should render. Schema is the source of truth; this map exists only
  * because a few properties (gap) are technically a single number but
  * the panel groups them visually with spacing controls.
  */
-const PROPERTY_TYPE_UI_OVERRIDES: Record<string, PropertyType> = {
+const PROPERTY_TYPE_UI_OVERRIDES: Record<string, PropertyUIType> = {
   gap: 'spacing',
   g: 'spacing',
 }
 
 /**
- * Property name → UI PropertyType. Derived from the schema (single source
+ * Property name → UI PropertyUIType. Derived from the schema (single source
  * of truth in `compiler/schema/properties.ts`). Each schema property
  * registers under its canonical name and every alias.
  */
-const PROPERTY_TYPES: Record<string, PropertyType> = (() => {
-  const map: Record<string, PropertyType> = {}
+const PROPERTY_TYPES: Record<string, PropertyUIType> = (() => {
+  const map: Record<string, PropertyUIType> = {}
   for (const def of allPropertyDefinitions) {
     const ui = schemaTypeToUIType(def.type)
     map[def.name] = ui
@@ -515,11 +515,11 @@ export class PropertyExtractor {
   }
 
   /**
-   * Convert schema PropertyType to UI PropertyType — delegates to the
+   * Convert schema PropertyUIType to UI PropertyUIType — delegates to the
    * module-level `schemaTypeToUIType` so PROPERTY_TYPES (derived map)
    * and per-call conversion stay in lockstep.
    */
-  private schemaTypeToPropertyType(type: string): PropertyType {
+  private schemaTypeToPropertyType(type: string): PropertyUIType {
     return schemaTypeToUIType(type)
   }
 
@@ -747,7 +747,7 @@ export class PropertyExtractor {
   /**
    * Get the type of a property
    */
-  private getPropertyType(name: string): PropertyType {
+  private getPropertyType(name: string): PropertyUIType {
     return PROPERTY_TYPES[name] || 'unknown'
   }
 
@@ -1042,9 +1042,9 @@ export class PropertyExtractor {
   }
 
   /**
-   * Convert Zag prop type to PropertyType
+   * Convert Zag prop type to PropertyUIType
    */
-  private zagTypeToPropertyType(type: ZagPropMeta['type']): PropertyType {
+  private zagTypeToPropertyType(type: ZagPropMeta['type']): PropertyUIType {
     switch (type) {
       case 'boolean':
         return 'boolean'

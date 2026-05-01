@@ -129,6 +129,8 @@ import {
   collectAllProjectSource,
   // Tokens-only source collector (tokens + data, with localStorage fallback)
   collectTokensSource,
+  // Auto-create-files factory (stubs for `import` / `route` references)
+  createAutoCreateFiles,
   // Draggable preview elements manager (binds drag handlers to [data-mirror-id])
   createDraggableElementsManager,
   // Code-modifier classes — were previously read off MirrorLang (compiler
@@ -137,7 +139,7 @@ import {
   CodeModifier,
   PropertyExtractor,
   createRobustModifier,
-} from './dist/index.js?v=158'
+} from './dist/index.js?v=159'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -844,24 +846,15 @@ function getDropGlobals() {
   }
 }
 
-// Auto-create missing files when referenced
-function autoCreateFile(path) {
-  // Normalize path
-  let filename = path
-  if (!filename.endsWith('.mirror')) {
-    filename = filename + '.mirror'
-  }
-
-  // Check if already exists
-  if (files[filename]) return false
-
-  // Create file with auto-generated comment
-  const content = `// ${filename} (auto-created)`
-  saveFile(filename, content)
-
-  console.log(`Auto-created: ${filename}`)
-  return true
-}
+// Auto-create files for `import` / `route` references — encapsulated
+// in studio/compile/auto-create-files.ts. The factory binds our `files`
+// map and saveFile() so every callsite (readFile callback, code scan,
+// runtime page navigation) hits the same project state.
+const autoCreateFiles = createAutoCreateFiles({
+  getFiles: () => files,
+  saveFile,
+})
+const { autoCreateFile, readFile, autoCreateReferencedFiles } = autoCreateFiles
 
 // Update file icon based on current content
 function updateFileIcon(filename) {
@@ -882,50 +875,8 @@ function updateFileIcon(filename) {
   }
 }
 
-// Read file callback for import resolution and page navigation
-// Auto-creates missing files
-function readFile(path) {
-  // Normalize path
-  let filename = path
-  if (!filename.endsWith('.mirror')) {
-    filename = filename + '.mirror'
-  }
-
-  // If file doesn't exist, auto-create it
-  if (!files[filename]) {
-    autoCreateFile(path)
-  }
-
-  return files[filename] || null
-}
-
 // Make readFile available globally for runtime page navigation
 window._mirrorReadFile = readFile
-
-// Scan code for file references (import and route) and auto-create missing files
-function autoCreateReferencedFiles(code) {
-  // Find import statements: import name or import name1, name2
-  const importRegex = /^\s*import\s+(.+)$/gm
-  let match
-  while ((match = importRegex.exec(code)) !== null) {
-    const names = match[1]
-      .split(',')
-      .map(s => s.trim())
-      .filter(s => s.length > 0)
-    for (const name of names) {
-      // Skip if it's a string (quoted)
-      if (name.startsWith('"') || name.startsWith("'")) continue
-      autoCreateFile(name)
-    }
-  }
-
-  // Find page routes (lowercase): route name or route path/name
-  const routeRegex = /\broute\s+([a-z][a-z0-9_\/]*)/g
-  while ((match = routeRegex.exec(code)) !== null) {
-    const routePath = match[1]
-    autoCreateFile(routePath)
-  }
-}
 
 // Get all token and component files as prelude code
 // This ensures tokens and components are available when compiling layouts

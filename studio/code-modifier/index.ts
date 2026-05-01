@@ -25,7 +25,7 @@ export {
   type ExtractedProperty,
   type ExtractedElement,
   type PropertyCategory,
-  type PropertyType,
+  type PropertyUIType,
 } from './property-extractor'
 
 export {

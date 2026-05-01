@@ -33,6 +33,11 @@ export { PreludeBuilder, type PreludeResult, type PreludeDeps } from './prelude-
 export { collectPrelude, type CollectPreludeDeps, type PreludeFileType } from './collect-prelude'
 export { collectAllProjectSource, type CollectAllProjectSourceDeps } from './all-project-source'
 export { collectTokensSource, type CollectTokensSourceDeps } from './tokens-source'
+export {
+  createAutoCreateFiles,
+  type AutoCreateFilesDeps,
+  type AutoCreateFilesAPI,
+} from './auto-create-files'
 export { CodeGenerator, type GeneratorDeps } from './code-generator'
 export { PreviewRenderer, type RendererDeps, type RenderResult } from './preview-renderer'
 export { StudioUpdater, type UpdaterDeps } from './studio-updater'

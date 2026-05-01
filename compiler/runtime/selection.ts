@@ -383,6 +383,33 @@ export function typeahead(container: MirrorElement | null): void {
   setupTypeahead(container)
 }
 
+/**
+ * Setup hover-to-highlight on a container's items.
+ *
+ * Mouse-driven UX expectation: when the user moves the mouse over an
+ * Item in a Select/Menu/Combobox, that item becomes the "current"
+ * highlighted item. This lets keyboard arrow keys pick up where the
+ * mouse left off, and gives a clear visual cue under the cursor.
+ *
+ * The container hosts the listener (a single delegated handler is
+ * cheaper than one-per-item and survives DOM swaps inside the
+ * container). We only treat elements as items when
+ * `getHighlightableItems` recognises them (explicit `highlighted:`
+ * state, or `cursor: pointer` fallback).
+ */
+export function setupHoverHighlight(container: MirrorElement): void {
+  if (container._hoverHighlightEnabled) return
+  container._hoverHighlightEnabled = true
+
+  container.addEventListener('mouseover', (e: MouseEvent) => {
+    const target = e.target as HTMLElement | null
+    if (!target) return
+    const items = getHighlightableItems(container)
+    const item = items.find(it => it === target || it.contains(target))
+    if (item) highlight(item as MirrorElement)
+  })
+}
+
 // ============================================
 // ACTIVATION
 // ============================================

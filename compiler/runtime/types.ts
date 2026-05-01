@@ -62,6 +62,7 @@ export interface MirrorElement extends HTMLElement {
   _loopItem?: unknown
   _loopFocus?: boolean
   _typeaheadEnabled?: boolean
+  _hoverHighlightEnabled?: boolean
   _triggerBinding?: string // Trigger element shows selected text
   _stateMachine?: {
     initial: string

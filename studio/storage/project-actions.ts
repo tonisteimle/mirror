@@ -100,6 +100,38 @@ Frame bg $surface, col white, pad 24, gap $space, h full
         Text card.title, fs 16, weight 500
       Text card.text, col $muted, fs 14
       Btn "Mehr"`,
+
+  // Chart demo data - kept alongside data.yaml so the chart-data tests
+  // and any built-in chart examples have something to bind to.
+  'data.data': `// Demo Daten für Charts
+
+sales:
+  Jan: 120
+  Feb: 180
+  Mar: 240
+  Apr: 200
+  May: 280
+  Jun: 320
+
+products:
+  Widget A: 450
+  Widget B: 320
+  Widget C: 180
+  Service X: 520
+
+categories:
+  Design: 35
+  Development: 45
+  Marketing: 20
+
+traffic:
+  Mon: 1200
+  Tue: 1450
+  Wed: 1380
+  Thu: 1520
+  Fri: 1100
+  Sat: 650
+  Sun: 480`,
 }
 
 // =============================================================================
