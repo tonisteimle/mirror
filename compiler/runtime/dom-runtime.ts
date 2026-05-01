@@ -34,18 +34,11 @@ import { playStateAnimation, setupEnterExitObserver } from './animations'
 // ============================================
 
 // Window.Chart is augmented by charts.ts (single source of truth)
+// __MIRROR_DEBUG__ flag is augmented by debug.ts (single source of truth)
+import { isDebug } from './debug'
 
-/**
- * Extend Window interface for Mirror debug flag
- */
-declare global {
-  interface Window {
-    __MIRROR_DEBUG__?: boolean
-  }
-}
-
-/** Check if debug mode is enabled */
-const isDebug = (): boolean => typeof window !== 'undefined' && window.__MIRROR_DEBUG__ === true
+// Re-export so legacy callers that imported isDebug from this module still work.
+export { isDebug }
 
 /**
  * Element with Mirror runtime metadata

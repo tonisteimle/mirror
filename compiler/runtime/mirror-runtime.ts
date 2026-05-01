@@ -1199,8 +1199,16 @@ const runtime = {
     }
   },
 
-  navigateToPage(_pageName: string) {
-    console.warn('Page navigation requires Mirror compiler')
+  navigateToPage(pageName: string) {
+    // The framework runtime (M-API) doesn't produce a multi-page app
+    // structure — that's a DOM-backend feature. If user code calls
+    // `runtime.navigateToPage(...)`, they're mixing backends. Fail loud
+    // so the integration mistake surfaces in dev, instead of silently
+    // continuing as if navigation happened.
+    throw new Error(
+      `navigateToPage("${pageName}") is not supported in the framework runtime — ` +
+        `use your framework's router (e.g. React Router) or compile with the DOM backend.`
+    )
   },
 }
 

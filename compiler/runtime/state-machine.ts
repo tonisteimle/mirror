@@ -8,6 +8,7 @@ import type { MirrorElement, StateAnimation } from './types'
 import { batchInFrame } from './batching'
 import { playStateAnimation } from './animations'
 import { notifyDataChange } from './data-binding'
+import { isDebug } from './debug'
 
 // ============================================
 // BASE STYLE MANAGEMENT
@@ -209,14 +210,19 @@ function applyTransition(
   newStyles: Record<string, string>,
   shouldHideAfter: boolean
 ): void {
-  console.log('[applyTransition] styles to apply:', JSON.stringify(newStyles))
+  if (isDebug()) console.log('[applyTransition] styles to apply:', JSON.stringify(newStyles))
   if (!anim) {
     Object.assign(el.style, newStyles as Partial<CSSStyleDeclaration>)
-    console.log('[applyTransition] applied. el.style.background now:', (el as any).style.background)
-    console.log(
-      '[applyTransition] computedStyle.backgroundColor:',
-      getComputedStyle(el).backgroundColor
-    )
+    if (isDebug()) {
+      console.log(
+        '[applyTransition] applied. el.style.background now:',
+        (el as any).style.background
+      )
+      console.log(
+        '[applyTransition] computedStyle.backgroundColor:',
+        getComputedStyle(el).backgroundColor
+      )
+    }
     el._isTransitioning = false
     return
   }
@@ -268,16 +274,17 @@ export function transitionTo(
   stateName: string,
   animation?: StateAnimation
 ): void {
-  // DEBUG: Log transition attempts
-  console.log(
-    '[transitionTo] called:',
-    stateName,
-    'on',
-    (el as any)?.dataset?.mirrorId || 'unknown'
-  )
+  if (isDebug()) {
+    console.log(
+      '[transitionTo] called:',
+      stateName,
+      'on',
+      (el as any)?.dataset?.mirrorId || 'unknown'
+    )
+  }
 
   if (!el?._stateMachine) {
-    console.log('[transitionTo] no state machine, returning')
+    if (isDebug()) console.log('[transitionTo] no state machine, returning')
     return
   }
 
@@ -286,21 +293,23 @@ export function transitionTo(
   const prevState = sm.states[prevStateName]
   const newState = sm.states[stateName]
 
-  console.log(
-    '[transitionTo] prev:',
-    prevStateName,
-    'new:',
-    stateName,
-    'newState exists:',
-    !!newState
-  )
+  if (isDebug()) {
+    console.log(
+      '[transitionTo] prev:',
+      prevStateName,
+      'new:',
+      stateName,
+      'newState exists:',
+      !!newState
+    )
+  }
 
   if (!newState || prevStateName === stateName) {
-    console.log('[transitionTo] skipping - no change needed')
+    if (isDebug()) console.log('[transitionTo] skipping - no change needed')
     return
   }
   if (el._isTransitioning) {
-    console.log('[transitionTo] skipping - already transitioning')
+    if (isDebug()) console.log('[transitionTo] skipping - already transitioning')
     return
   }
 

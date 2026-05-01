@@ -5,12 +5,7 @@
  */
 
 import type { MirrorElement } from './types'
-
-// ============================================
-// DEBUG MODE
-// ============================================
-
-const isDebug = (): boolean => typeof window !== 'undefined' && window.__MIRROR_DEBUG__ === true
+import { isDebug } from './debug'
 
 // ============================================
 // GLOBAL DATA STORES
@@ -20,7 +15,6 @@ declare global {
   interface Window {
     __mirrorData?: Record<string, unknown>
     _mirrorState?: Record<string, unknown>
-    __MIRROR_DEBUG__?: boolean
   }
 }
 
