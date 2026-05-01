@@ -3022,37 +3022,18 @@ initPanelDividers({
 })
 
 // ==========================================
-// Settings (Desktop: removed UI, using Claude CLI instead of API keys)
-// ==========================================
-
-// Settings are no longer needed in desktop app
-// - No API keys required (Claude CLI handles auth)
-// - No imgbb upload (images stored locally)
-
-function loadSettings() {
-  return {} // No settings needed for desktop
-}
-
-function saveSettings(settings) {
-  // No-op for desktop
-}
-
-function getImgbbKey() {
-  return '' // Disabled in desktop
-}
-
-// ==========================================
 // Image Upload Feature
 // ==========================================
-// Implementation lives in studio/editor/image-drop-handler.ts. We just
-// wire the DOM nodes and the imgbb-key getter here.
+// Implementation lives in studio/editor/image-drop-handler.ts. The
+// desktop app doesn't upload to imgbb (Claude CLI handles auth, no
+// API key needed) — pass an empty key so the handler short-circuits.
 
 initImageDropHandler({
   editor: window.editor,
   editorPanel: document.querySelector('.editor-panel'),
   uploadIndicator: document.getElementById('upload-indicator'),
   dropOverlay: document.getElementById('drop-overlay'),
-  getImgbbKey,
+  getImgbbKey: () => '',
 })
 
 // ==========================================================================
