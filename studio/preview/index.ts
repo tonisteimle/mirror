@@ -104,6 +104,9 @@ export {
 // Re-export breadcrumb
 export { PreviewBreadcrumb, createPreviewBreadcrumb, type BreadcrumbConfig } from './breadcrumb'
 
+// Play Mode (component testing toolbar / device selector)
+export { initPlayMode, type PlayModeDeps } from './play-mode'
+
 export interface PreviewConfig {
   container: HTMLElement
   selectedClass?: string

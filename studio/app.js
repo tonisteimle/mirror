@@ -134,6 +134,8 @@ import {
   initImageDropHandler,
   // Panel dividers (resizable sidebar/components/editor/preview)
   initPanelDividers,
+  // Play Mode (toolbar button, reset, device selector)
+  initPlayMode,
 } from './dist/index.js?v=150'
 
 // Annotation to mark changes from property panel (for skipping debounce)
@@ -2940,109 +2942,11 @@ function initStudio() {
   // Initialize preview zoom controls
   initPreviewZoom()
 
-  // Initialize play mode button
-  initPlayMode()
-}
-
-// ============================================
-// Play Mode (Component Testing)
-// ============================================
-
-// Device presets for simulation
-// mode: 'fixed' = exact size (centered), 'max' = only max-width/height (panel controls size)
-const DEVICE_PRESETS = {
-  'iPhone SE': { width: 375, height: 667, mode: 'fixed' },
-  'iPhone 14': { width: 390, height: 844, mode: 'fixed' },
-  'iPhone 14 Pro Max': { width: 430, height: 932, mode: 'fixed' },
-  'iPad Mini': { width: 768, height: 1024, mode: 'fixed' },
-  'iPad Pro': { width: 1024, height: 1366, mode: 'max' },
-  Desktop: { width: 1440, height: 900, mode: 'max' },
-}
-
-function initPlayMode() {
-  const playBtn = document.getElementById('play-btn')
-  const previewPanel = document.querySelector('.preview-panel')
-  const resetBtn = document.getElementById('play-reset-btn')
-  const deviceSelect = document.getElementById('device-select')
-  const preview = document.getElementById('preview')
-
-  if (!playBtn || !previewPanel) {
-    console.warn('Play mode: Missing elements')
-    return
-  }
-
-  // Handle play button click
-  playBtn.addEventListener('click', () => {
-    studioActions.togglePlayMode()
+  // Initialize play mode button (delegated to studio/preview/play-mode.ts)
+  initPlayMode({
+    recompile: code => compile(code),
+    getEditorSource: () => window.editor?.state.doc.toString() ?? '',
   })
-
-  // Handle reset button click - recompile to reset states
-  if (resetBtn) {
-    resetBtn.addEventListener('click', () => {
-      console.log('Play mode: Resetting states via recompile')
-      // Get current code from editor and recompile
-      const editor = window.editor
-      if (editor) {
-        const code = editor.state.doc.toString()
-        compile(code)
-      }
-    })
-  }
-
-  // Handle device selector change
-  if (deviceSelect && preview) {
-    deviceSelect.addEventListener('change', e => {
-      const preset = DEVICE_PRESETS[e.target.value]
-      if (preset) {
-        preview.style.setProperty('--device-width', preset.width + 'px')
-        preview.style.setProperty('--device-height', preset.height + 'px')
-        // Use 'device-mode' for fixed size, 'device-mode-max' for max-only
-        preview.classList.remove('device-mode', 'device-mode-max')
-        preview.classList.add(preset.mode === 'max' ? 'device-mode-max' : 'device-mode')
-        console.log(
-          `Play mode: Device set to ${e.target.value} (${preset.width}×${preset.height}, ${preset.mode})`
-        )
-      } else {
-        preview.classList.remove('device-mode', 'device-mode-max')
-        preview.style.removeProperty('--device-width')
-        preview.style.removeProperty('--device-height')
-        console.log('Play mode: Device set to Responsive')
-      }
-    })
-  }
-
-  // Listen for play mode changes
-  if (studio?.events) {
-    studio.events.on('preview:playmode', ({ active }) => {
-      // Update button state
-      playBtn.classList.toggle('active', active)
-
-      // Update preview panel styling
-      previewPanel.classList.toggle('play-mode', active)
-
-      // Clear selection when entering play mode
-      if (active) {
-        studioActions.setSelection(null, 'preview')
-      }
-
-      // Reset device selector when exiting play mode
-      if (!active && deviceSelect && preview) {
-        deviceSelect.value = ''
-        preview.classList.remove('device-mode', 'device-mode-max')
-        preview.style.removeProperty('--device-width')
-        preview.style.removeProperty('--device-height')
-      }
-    })
-  }
-
-  // Keyboard shortcut: Escape to exit play mode
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && studioState.get().playMode) {
-      studioActions.setPlayMode(false)
-    }
-  })
-
-  console.log('Play mode: Initialized')
 }
 
 // ============================================
