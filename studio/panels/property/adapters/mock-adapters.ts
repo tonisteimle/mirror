@@ -10,7 +10,7 @@ import type {
   ExtractedProperty,
   PropertyCategory,
   ModificationResult,
-} from '../../../shared/compiler-types'
+} from '../../../core/compiler-types'
 import type {
   SelectionPort,
   PropertyExtractionPort,

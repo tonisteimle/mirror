@@ -10,8 +10,8 @@ import type {
   ExtractedElement,
   CodeModifier,
   ModificationResult,
-} from '../../../shared/compiler-types'
-import { isAbsoluteLayoutContainer, createLogger } from '../../../shared/compiler-types'
+} from '../../../core/compiler-types'
+import { isAbsoluteLayoutContainer, createLogger } from '../../../core/compiler-types'
 import { events, state } from '../../../core'
 import { TokenCache } from '../utils/tokens'
 import type {

@@ -5,7 +5,7 @@
  * to avoid deep relative imports (../../../../compiler).
  *
  * Usage:
- *   import { SourceMap, createLogger } from '../../shared/compiler-types'
+ *   import { SourceMap, createLogger } from '../../core/compiler-types'
  *   instead of:
  *   import { SourceMap, createLogger } from '../../../../compiler'
  */
@@ -25,7 +25,4 @@ export type {
 } from '../../compiler'
 
 // Functions
-export {
-  createLogger,
-  isAbsoluteLayoutContainer,
-} from '../../compiler'
+export { createLogger, isAbsoluteLayoutContainer } from '../../compiler'
