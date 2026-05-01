@@ -330,3 +330,6 @@ export function getFileTemplate(type: FileTypeName, name: string): string {
 export function getFileExtension(type: FileTypeName): string {
   return FILE_TYPES[type]?.extension || '.mir'
 }
+
+// File-extension predicates (Mirror DSL source classification)
+export { MIRROR_EXTENSIONS, isMirrorFile, isComponentsFile, isLayoutFile } from './extensions'

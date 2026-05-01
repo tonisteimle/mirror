@@ -86,6 +86,10 @@ import {
   // File Types (Clean Code module)
   detectFileType,
   getFileIcon as getFileIconModule,
+  // Mirror file-extension predicates
+  isMirrorFile,
+  isComponentsFile,
+  isLayoutFile,
   // YAML Parser (Clean Code module)
   generateYAMLDataInjection,
   // Full Color Picker — studio setup (window globals, keyboard, token grid)
@@ -131,58 +135,13 @@ import {
   CodeModifier,
   PropertyExtractor,
   createRobustModifier,
-} from './dist/index.js?v=156'
+} from './dist/index.js?v=157'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
 
 // Annotation to mark file switch transactions (bypass App lock filter)
 const fileSwitchAnnotation = Annotation.define()
-
-// ============================================
-// File Extension Utilities
-// ============================================
-
-const MIRROR_EXTENSIONS = {
-  layout: ['.mir', '.mirror'],
-  components: ['.com', '.components'],
-  tokens: ['.tok', '.tokens'],
-}
-
-/**
- * Check if a filename is a Mirror file (any type)
- * @param {string} filename
- * @returns {boolean}
- */
-function isMirrorFile(filename) {
-  if (!filename) return false
-  const allExtensions = [
-    ...MIRROR_EXTENSIONS.layout,
-    ...MIRROR_EXTENSIONS.components,
-    ...MIRROR_EXTENSIONS.tokens,
-  ]
-  return allExtensions.some(ext => filename.endsWith(ext))
-}
-
-/**
- * Check if a filename is a components file (.com, .components)
- * @param {string} filename
- * @returns {boolean}
- */
-function isComponentsFile(filename) {
-  if (!filename) return false
-  return MIRROR_EXTENSIONS.components.some(ext => filename.endsWith(ext))
-}
-
-/**
- * Check if a filename is a layout file (.mir, .mirror)
- * @param {string} filename
- * @returns {boolean}
- */
-function isLayoutFile(filename) {
-  if (!filename) return false
-  return MIRROR_EXTENSIONS.layout.some(ext => filename.endsWith(ext))
-}
 
 // ============================================
 // App State
