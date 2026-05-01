@@ -153,7 +153,7 @@ export class TestRunner {
   /**
    * Wait for test API to be available
    */
-  async waitForTestAPI(timeout = 10000): Promise<boolean> {
+  async waitForTestAPI(timeout = 30000): Promise<boolean> {
     const start = Date.now()
     while (Date.now() - start < timeout) {
       const hasAPI = await this.evaluate<boolean>(`typeof window.__dragTest !== 'undefined'`)
