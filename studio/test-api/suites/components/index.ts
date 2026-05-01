@@ -63,17 +63,29 @@ export {
 // Component Preview Styling Tests
 export { componentPreviewStylingTests } from './component-preview-styling.test'
 
-// Imports for aggregation
-import { datePickerTests } from './date-picker.test'
-import { allAccordionTests } from './accordion.test'
-import { allAccordionDropTests } from './accordion-drop.test'
-import { pureCheckboxTests } from './pure-checkbox.test'
-import { pureRadioGroupTests } from './pure-radio-group.test'
-import { allPanelDragTests } from './panel-drag-all.test'
-import { allSelectDragAndVerifyTests } from './select-drag-and-verify.test'
-import { componentPreviewStylingTests } from './component-preview-styling.test'
+// Mirror DSL Component System Tests (definition, inheritance, slots, variants, states)
+export { basicComponentTests } from './basic.test'
+export { propertyOverrideTests } from './property-overrides.test'
+export { inheritanceTests } from './inheritance.test'
+export { variantTests } from './variants.test'
+export { nestedSlotTests } from './nested-slots.test'
+export { layoutComponentTests } from './layout-components.test'
+export { multiLevelInheritanceTests } from './multi-level-inheritance.test'
+export { componentStateTests } from './component-states.test'
+export { complexComponentTests } from './complex-patterns.test'
 
-// Legacy exports for backwards compatibility (empty arrays or filled)
+import { basicComponentTests } from './basic.test'
+import { propertyOverrideTests } from './property-overrides.test'
+import { inheritanceTests } from './inheritance.test'
+import { variantTests } from './variants.test'
+import { nestedSlotTests } from './nested-slots.test'
+import { layoutComponentTests } from './layout-components.test'
+import { multiLevelInheritanceTests } from './multi-level-inheritance.test'
+import { componentStateTests } from './component-states.test'
+import { complexComponentTests } from './complex-patterns.test'
+import { allSelectDragAndVerifyTests } from './select-drag-and-verify.test'
+
+// Legacy exports for backwards compatibility (empty arrays — Pure-Mirror migration)
 export const checkboxTests: TestCase[] = []
 export const switchTests: TestCase[] = []
 export const sliderTests: TestCase[] = []
@@ -90,14 +102,20 @@ export const allTabsDropTests: TestCase[] = []
 export const allZagKeyboardTests: TestCase[] = []
 export const allZagTests: TestCase[] = []
 
-// All component tests
+/**
+ * DSL component-system tests aggregate (definition / inheritance / slots / variants /
+ * states / complex patterns). Migrated from the former monolithic component-tests.ts.
+ * Component-library tests (DatePicker, Accordion, Pure-Checkbox, etc.) are exported
+ * individually above and aggregated by callers as needed.
+ */
 export const allComponentTests: TestCase[] = [
-  ...datePickerTests,
-  ...allAccordionTests,
-  ...allAccordionDropTests,
-  ...pureCheckboxTests,
-  ...pureRadioGroupTests,
-  ...allPanelDragTests,
-  ...allSelectDragAndVerifyTests,
-  ...componentPreviewStylingTests,
+  ...basicComponentTests,
+  ...propertyOverrideTests,
+  ...inheritanceTests,
+  ...variantTests,
+  ...nestedSlotTests,
+  ...layoutComponentTests,
+  ...multiLevelInheritanceTests,
+  ...componentStateTests,
+  ...complexComponentTests,
 ]

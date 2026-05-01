@@ -1,17 +1,29 @@
 /**
  * Property Panel Test Suite Index
- *
- * Re-exports from the existing property-panel-tests.ts file.
  */
 
+import type { TestCase } from '../../test-runner'
+import { tokenDisplayTests } from './tokens-display.test'
+import { tokenValueTests } from './tokens-values.test'
+import { tokenInteractionTests } from './tokens-interaction.test'
+import { projectTokenTests } from './tokens-project.test'
+import { radiusChangeTests } from './radius-changes.test'
+
 export {
-  allPropertyPanelTests,
   tokenDisplayTests,
   tokenValueTests,
   tokenInteractionTests,
   projectTokenTests,
   radiusChangeTests,
-} from '../property-panel-tests'
+}
+
+export const allPropertyPanelTests: TestCase[] = [
+  ...tokenDisplayTests,
+  ...tokenValueTests,
+  ...tokenInteractionTests,
+  ...projectTokenTests,
+  ...radiusChangeTests,
+]
 
 export {
   allComprehensivePropertyTests,

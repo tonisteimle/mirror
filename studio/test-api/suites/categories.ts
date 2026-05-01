@@ -58,8 +58,9 @@ import {
   allZagKeyboardTests,
   // Component preview styling tests
   componentPreviewStylingTests,
+  // DSL component-system tests (definition, inheritance, slots, variants, states)
+  allComponentTests,
 } from './components'
-import { allComponentTests } from './component-tests'
 
 // Drag & Drop
 import {

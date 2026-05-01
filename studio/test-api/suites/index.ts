@@ -560,7 +560,9 @@ import {
   combinedActionTests,
 } from './action-tests'
 
-// Components
+// Components — DSL system tests (formerly component-tests.ts), now split into
+// ./components/{basic,property-overrides,inheritance,variants,nested-slots,
+// layout-components,multi-level-inheritance,component-states,complex-patterns}.test.ts
 import {
   allComponentTests,
   basicComponentTests,
@@ -572,7 +574,7 @@ import {
   multiLevelInheritanceTests,
   componentStateTests,
   complexComponentTests,
-} from './component-tests'
+} from './components'
 
 // Events
 import {

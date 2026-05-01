@@ -1,12 +1,19 @@
 /**
  * Interactions Test Suite Index
- *
- * Re-exports from the existing interactions-tests.ts file.
- * TODO: Split into separate files when needed.
  */
 
+import type { TestCase } from '../../test-runner'
+import { clickTests } from './click.test'
+import { hoverTests } from './hover.test'
+import { toggleTests } from './toggle-states.test'
+import { focusTests } from './focus.test'
+import { inputTests } from './input.test'
+import { keyboardTests } from './keyboard-events.test'
+import { selectionTests } from './selection.test'
+import { dragDropTests } from './drag-drop.test'
+import { combinedTests } from './combined-flows.test'
+
 export {
-  allInteractionTests,
   clickTests,
   hoverTests,
   toggleTests,
@@ -16,7 +23,19 @@ export {
   selectionTests,
   dragDropTests,
   combinedTests,
-} from '../interaction-tests'
+}
+
+export const allInteractionTests: TestCase[] = [
+  ...clickTests,
+  ...hoverTests,
+  ...toggleTests,
+  ...focusTests,
+  ...inputTests,
+  ...keyboardTests,
+  ...selectionTests,
+  // ...dragDropTests, // Enable when drag system is stable
+  ...combinedTests,
+]
 
 export {
   allLayoutShortcutTests,
