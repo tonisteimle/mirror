@@ -22,12 +22,7 @@
  */
 
 export { M, default } from './mirror-runtime'
-export type {
-  MirrorProps,
-  MirrorNode,
-  ComponentDef,
-  Action
-} from './mirror-runtime'
+export type { MirrorProps, MirrorNode, Action } from './mirror-runtime'
 
 // Markdown utilities for .data files
 export { markdownToHTML, markdownToPlainText, hasMarkdownFormatting } from './markdown'

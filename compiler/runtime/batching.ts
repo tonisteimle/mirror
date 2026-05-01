@@ -4,7 +4,11 @@
  * Batches DOM updates into single animation frames for performance.
  */
 
-/** Track if we're inside a requestAnimationFrame callback */
+/**
+ * Track whether we're currently inside a requestAnimationFrame callback.
+ * When true, state transitions execute immediately to avoid one-frame
+ * delay for watched/dependent elements.
+ */
 let _insideFrameCallback = false
 
 /**

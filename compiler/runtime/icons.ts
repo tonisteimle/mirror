@@ -42,20 +42,6 @@ export function registerIcon(name: string, pathData: string, viewBox: string = '
   customIconRegistry.set(name, { path: pathData, viewBox })
 }
 
-/**
- * Check if an icon is registered as a custom icon
- */
-export function hasCustomIcon(name: string): boolean {
-  return customIconRegistry.has(name)
-}
-
-/**
- * Clear all custom icons (useful for testing)
- */
-export function clearCustomIcons(): void {
-  customIconRegistry.clear()
-}
-
 export async function loadIcon(el: MirrorElement, iconName: string): Promise<void> {
   if (!el || !iconName) return
 
@@ -159,7 +145,7 @@ function applyIconToElement(el: MirrorElement, svgText: string): void {
   if (!svg) return
 
   applySvgStyles(svg, el)
-  applyFillMode(svg, el.dataset.iconFill === 'true')
+  applyFillMode(svg, el.dataset.iconFill === 'true', el.dataset.iconWeight || '2')
 }
 
 function applySvgStyles(svg: SVGElement, el: MirrorElement): void {
@@ -172,12 +158,12 @@ function applySvgStyles(svg: SVGElement, el: MirrorElement): void {
   svg.style.display = 'block'
 }
 
-function applyFillMode(svg: SVGElement, isFilled: boolean): void {
+function applyFillMode(svg: SVGElement, isFilled: boolean, strokeWidth: string): void {
   if (isFilled) {
     svg.setAttribute('fill', 'currentColor')
     svg.setAttribute('stroke', 'none')
   } else {
-    svg.setAttribute('stroke-width', '2')
+    svg.setAttribute('stroke-width', strokeWidth)
   }
 }
 

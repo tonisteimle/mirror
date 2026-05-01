@@ -112,11 +112,40 @@ function collectPathsToUpdate(path: string): string[] {
 // ============================================
 
 /**
- * Evaluate a visibility condition using $get for data lookup
+ * Evaluate a visibility condition using $get for data lookup.
+ * Supports both $-prefixed and bare identifier formats:
+ *   - "loggedIn"   → $get("loggedIn")
+ *   - "$loggedIn"  → $get("loggedIn")
+ *   - "!loggedIn"  → !$get("loggedIn")
+ *   - "count > 0"  → $get("count") > 0
  */
 function evaluateVisibilityCondition(condition: string): boolean {
   try {
-    const evalCondition = condition.replace(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g, '$get("$1")')
+    const reserved = new Set([
+      'true',
+      'false',
+      'null',
+      'undefined',
+      'NaN',
+      'Infinity',
+      'typeof',
+      'instanceof',
+      'new',
+      'delete',
+      'void',
+    ])
+
+    let evalCondition = condition.replace(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g, '$get("$1")')
+
+    evalCondition = evalCondition.replace(
+      /(?<!["\w$.])\b([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\b(?!["\w(])/g,
+      (match, identifier) => {
+        const firstPart = identifier.split('.')[0]
+        if (reserved.has(firstPart)) return match
+        return `$get("${identifier}")`
+      }
+    )
+
     const $getFunc = (window as unknown as { $get: (path: string) => unknown }).$get
     const result = new Function('$get', 'return ' + evalCondition)($getFunc)
     return !!result
@@ -196,29 +225,4 @@ export function notifyDataChange(path: string, value: unknown): void {
 
   // Refresh each loops as filters may depend on changed data
   refreshAllEachLoops()
-}
-
-// ============================================
-// REGISTRY ACCESS (for testing/debugging)
-// ============================================
-
-/**
- * Get all text bindings (for debugging)
- */
-export function getTextBindings(): Map<string, Set<MirrorElement>> {
-  return _textBindings
-}
-
-/**
- * Get all value bindings (for debugging)
- */
-export function getValueBindings(): Map<string, Set<MirrorElement>> {
-  return _valueBindings
-}
-
-/**
- * Get all visibility bindings (for debugging)
- */
-export function getVisibilityBindings(): Map<string, Set<MirrorElement>> {
-  return _visibilityBindings
 }

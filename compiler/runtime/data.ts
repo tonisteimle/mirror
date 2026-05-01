@@ -277,41 +277,35 @@ export function set(tokenName: string, value: unknown): void {
 }
 
 /**
- * Increment a numeric token
+ * Adjust a numeric token by delta * step, enforcing both min and max bounds.
  */
-export function increment(tokenName: string, options?: CounterOptions): void {
+function adjustCounter(tokenName: string, delta: number, options?: CounterOptions): void {
   const name = tokenName.startsWith('$') ? tokenName.slice(1) : tokenName
   const state = getMirrorState()
-  const { max, step = 1 } = options || {}
+  const { min, max, step = 1 } = options || {}
 
   const current = typeof state[name] === 'number' ? (state[name] as number) : 0
-  let newValue = current + step
+  let newValue = current + delta * step
 
-  if (max !== undefined && newValue > max) {
-    newValue = max
-  }
+  if (max !== undefined && newValue > max) newValue = max
+  if (min !== undefined && newValue < min) newValue = min
 
   state[name] = newValue
   updateBoundTokenElements(name, newValue)
 }
 
 /**
- * Decrement a numeric token
+ * Increment a numeric token (enforces both min and max bounds if provided)
+ */
+export function increment(tokenName: string, options?: CounterOptions): void {
+  adjustCounter(tokenName, 1, options)
+}
+
+/**
+ * Decrement a numeric token (enforces both min and max bounds if provided)
  */
 export function decrement(tokenName: string, options?: CounterOptions): void {
-  const name = tokenName.startsWith('$') ? tokenName.slice(1) : tokenName
-  const state = getMirrorState()
-  const { min, step = 1 } = options || {}
-
-  const current = typeof state[name] === 'number' ? (state[name] as number) : 0
-  let newValue = current - step
-
-  if (min !== undefined && newValue < min) {
-    newValue = min
-  }
-
-  state[name] = newValue
-  updateBoundTokenElements(name, newValue)
+  adjustCounter(tokenName, -1, options)
 }
 
 /**

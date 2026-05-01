@@ -22,20 +22,6 @@ export function registerForCleanup(el: MirrorElement): void {
 }
 
 /**
- * Check if an element is registered for cleanup
- */
-export function isRegisteredForCleanup(el: MirrorElement): boolean {
-  return _elementsWithDocListeners.has(el)
-}
-
-/**
- * Remove an element from cleanup registry
- */
-export function unregisterFromCleanup(el: MirrorElement): void {
-  _elementsWithDocListeners.delete(el)
-}
-
-/**
  * Clean up click-outside handler
  */
 function cleanupClickOutside(el: MirrorElement): void {

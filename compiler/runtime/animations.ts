@@ -187,8 +187,10 @@ export function playStateAnimation(
     const duration = (anim.duration || 0.3) * 1000,
       delay = (anim.delay || 0) * 1000,
       easing = anim.easing || 'ease-out'
-    if (anim.preset) {
-      playPresetAnimation(el, anim.preset, duration, delay, easing, styles, resolve)
+    if (
+      anim.preset &&
+      tryPlayPresetAnimation(el, anim.preset, duration, delay, easing, styles, resolve)
+    ) {
       return
     }
     if (styles && duration > 0) {
@@ -271,7 +273,11 @@ export function getMotionPreset(name: string): (typeof MOTION_PRESETS)[string] |
 // INTERNAL HELPERS
 // ============================================
 
-function playPresetAnimation(
+/**
+ * Try to play a preset animation. Returns true if preset was found and animation
+ * started; false if preset name is unknown (caller should fall through to other paths).
+ */
+function tryPlayPresetAnimation(
   el: MirrorElement,
   presetName: string,
   duration: number,
@@ -279,13 +285,9 @@ function playPresetAnimation(
   easing: string,
   styles: Record<string, string> | undefined,
   resolve: () => void
-): void {
+): boolean {
   const preset = ANIMATION_PRESETS[presetName]
-  if (!preset) {
-    applyStylesImmediate(el, styles)
-    resolve()
-    return
-  }
+  if (!preset) return false
 
   prepareElementForEnterAnimation(el, styles)
 
@@ -298,6 +300,7 @@ function playPresetAnimation(
 
   animation.onfinish = () => finalizeAnimation(el, styles, resolve)
   animation.oncancel = () => finalizeAnimation(el, styles, resolve)
+  return true
 }
 
 function prepareElementForEnterAnimation(el: MirrorElement, styles?: Record<string, string>): void {

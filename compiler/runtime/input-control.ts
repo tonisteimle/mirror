@@ -5,6 +5,7 @@
  */
 
 import type { MirrorElement } from './types'
+import { applyState, removeState } from './state-machine'
 
 // ============================================
 // TYPE GUARDS
@@ -88,9 +89,7 @@ export function selectText(el: MirrorElement | null): void {
  */
 function applyErrorState(el: MirrorElement): void {
   el.dataset.invalid = 'true'
-  if (el._stateStyles?.invalid) {
-    Object.assign(el.style, el._stateStyles.invalid)
-  }
+  applyState(el, 'invalid')
 }
 
 /**
@@ -159,9 +158,7 @@ export function setError(el: MirrorElement | null, message?: string): void {
  */
 function removeErrorState(el: MirrorElement): void {
   delete el.dataset.invalid
-  if (el._baseStyles) {
-    Object.assign(el.style, el._baseStyles)
-  }
+  removeState(el, 'invalid')
 }
 
 /**
