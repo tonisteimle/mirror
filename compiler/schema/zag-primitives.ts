@@ -137,58 +137,6 @@ export const SLOT_MAPPINGS: Record<string, Record<string, ZagSlotDef>> = {
 }
 
 /**
- * State mappings from Mirror state syntax to Zag data attributes
- */
-export const STATE_MAPPINGS: Record<string, string> = {
-  // Selection states
-  'hover:': '[data-highlighted]',
-  'selected:': '[data-state="checked"]',
-  'highlighted:': '[data-highlighted]',
-  'checked:': '[data-state="checked"]',
-  'unchecked:': '[data-state="unchecked"]',
-
-  // Interactive states
-  'disabled:': '[data-disabled]',
-  'focus:': '[data-focus]',
-  'focus-visible:': '[data-focus-visible]',
-  'active:': '[data-active]',
-  'pressed:': '[data-pressed]',
-  'readonly:': '[data-readonly]',
-
-  // Open/close states
-  'open:': '[data-state="open"]',
-  'closed:': '[data-state="closed"]',
-
-  // Validity states
-  'valid:': '[data-valid]',
-  'invalid:': '[data-invalid]',
-
-  // Placement states (for positioned elements)
-  'top:': '[data-placement^="top"]',
-  'bottom:': '[data-placement^="bottom"]',
-  'left:': '[data-placement^="left"]',
-  'right:': '[data-placement^="right"]',
-}
-
-/**
- * Slot aliases for designer-friendly naming
- */
-export const SLOT_ALIASES: Record<string, Record<string, string>> = {
-  // DatePicker has no aliases
-}
-
-/**
- * Resolve a slot alias to its canonical Zag slot name
- */
-export function resolveSlotAlias(primitiveName: string, slotName: string): string {
-  const aliases = SLOT_ALIASES[primitiveName]
-  if (aliases && aliases[slotName]) {
-    return aliases[slotName]
-  }
-  return slotName
-}
-
-/**
  * Check if a component name is a Zag primitive
  */
 export function isZagPrimitive(name: string): boolean {
@@ -222,55 +170,4 @@ export function getSlotDef(primitiveName: string, slotName: string): ZagSlotDef 
 export function isZagSlot(primitiveName: string, slotName: string): boolean {
   const primitive = ZAG_PRIMITIVES[primitiveName]
   return primitive?.slots.includes(slotName) ?? false
-}
-
-/**
- * Get CSS selector for a Mirror state
- */
-export function getStateSelector(mirrorState: string): string | undefined {
-  return STATE_MAPPINGS[mirrorState]
-}
-
-/**
- * Get all Zag primitive names
- */
-export function getAllZagPrimitives(): string[] {
-  return Object.keys(ZAG_PRIMITIVES)
-}
-
-/**
- * Get Zag primitives by pattern type
- */
-export function getZagPrimitivesByPattern(pattern: ZagPrimitiveDef['pattern']): string[] {
-  return Object.entries(ZAG_PRIMITIVES)
-    .filter(([_, def]) => def.pattern === pattern)
-    .map(([name]) => name)
-}
-
-/**
- * Get valid item keywords for a Zag component
- */
-export function getItemKeywords(primitiveName: string): string[] {
-  const primitive = ZAG_PRIMITIVES[primitiveName]
-  return primitive?.itemKeywords ?? ['Item']
-}
-
-/**
- * Check if a keyword is a valid item keyword for a Zag component
- */
-export function isZagItemKeyword(primitiveName: string, keyword: string): boolean {
-  const keywords = getItemKeywords(primitiveName)
-  return keywords.includes(keyword)
-}
-
-/**
- * Check if a keyword is a valid group keyword for a Zag component
- */
-export function isZagGroupKeyword(primitiveName: string, keyword: string): boolean {
-  const primitivesDef = ZAG_PRIMITIVES[primitiveName]
-  if (!primitivesDef) return false
-  if (primitivesDef.groupKeywords && primitivesDef.groupKeywords.includes(keyword)) {
-    return true
-  }
-  return primitivesDef.slots.includes('Group') && keyword === 'Group'
 }

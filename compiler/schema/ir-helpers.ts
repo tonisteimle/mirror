@@ -5,7 +5,7 @@
  * Used by the IR transformer for property-to-CSS conversion.
  */
 
-import { SCHEMA, findProperty, PropertyDef, CSSOutput, DSL } from './dsl'
+import { SCHEMA, findProperty, CSSOutput, DSL } from './dsl'
 
 /**
  * Result of converting a property to CSS
@@ -541,24 +541,12 @@ export const CORNER_MAP: Record<string, string[]> = {
 
 /**
  * Border direction mapping.
+ *
+ * Currently identical to DIRECTION_MAP — kept as a separate export so that
+ * call sites (border vs spacing) remain semantically distinguishable. If
+ * border ever needs different direction semantics, this is the place to split.
  */
-export const BORDER_DIRECTION_MAP: Record<string, string[]> = {
-  t: ['top'],
-  top: ['top'],
-  b: ['bottom'],
-  bottom: ['bottom'],
-  down: ['bottom'],
-  l: ['left'],
-  left: ['left'],
-  r: ['right'],
-  right: ['right'],
-  x: ['left', 'right'],
-  y: ['top', 'bottom'],
-  horizontal: ['left', 'right'],
-  hor: ['left', 'right'],
-  vertical: ['top', 'bottom'],
-  ver: ['top', 'bottom'],
-}
+export const BORDER_DIRECTION_MAP: Record<string, string[]> = DIRECTION_MAP
 
 /**
  * Check if a value is a direction keyword.
@@ -592,32 +580,43 @@ export function getCorners(keyword: string): string[] {
 // Property Categories
 // ============================================================================
 
+// Memoized property-category lookups. SCHEMA is module-frozen at load time;
+// these can be built once on first access.
+let _tokenAcceptingProperties: string[] | null = null
+let _colorAcceptingProperties: string[] | null = null
+
 /**
  * Get all properties that accept tokens.
  */
 export function getTokenAcceptingProperties(): string[] {
-  const result: string[] = []
-  for (const prop of Object.values(SCHEMA)) {
-    if (prop.token) {
-      result.push(prop.name)
-      result.push(...prop.aliases)
+  if (!_tokenAcceptingProperties) {
+    const result: string[] = []
+    for (const prop of Object.values(SCHEMA)) {
+      if (prop.token) {
+        result.push(prop.name)
+        result.push(...prop.aliases)
+      }
     }
+    _tokenAcceptingProperties = result
   }
-  return result
+  return _tokenAcceptingProperties
 }
 
 /**
  * Get all properties that accept colors.
  */
 export function getColorAcceptingProperties(): string[] {
-  const result: string[] = []
-  for (const prop of Object.values(SCHEMA)) {
-    if (prop.color) {
-      result.push(prop.name)
-      result.push(...prop.aliases)
+  if (!_colorAcceptingProperties) {
+    const result: string[] = []
+    for (const prop of Object.values(SCHEMA)) {
+      if (prop.color) {
+        result.push(prop.name)
+        result.push(...prop.aliases)
+      }
     }
+    _colorAcceptingProperties = result
   }
-  return result
+  return _colorAcceptingProperties
 }
 
 // ============================================================================
@@ -690,30 +689,28 @@ export function mapEventToDom(eventName: string): string {
 // Primitive/Tag Mapping
 // ============================================================================
 
+// Memoized HTML-tag lookup. Built lazily once from DSL.primitives.
+let _htmlTagByName: Map<string, string> | null = null
+
+function buildHtmlTagIndex(): Map<string, string> {
+  const map = new Map<string, string>()
+  for (const [name, def] of Object.entries(DSL.primitives)) {
+    map.set(name.toLowerCase(), def.html)
+    if (def.aliases) {
+      for (const alias of def.aliases) {
+        map.set(alias.toLowerCase(), def.html)
+      }
+    }
+  }
+  return map
+}
+
 /**
  * Get HTML tag for a primitive name using schema.
  * Handles case-insensitive lookup and aliases.
  * Falls back to 'div' for unknown primitives.
  */
 export function getHtmlTag(primitiveName: string): string {
-  const normalizedName = primitiveName.toLowerCase()
-
-  // Check all primitives
-  for (const [name, def] of Object.entries(DSL.primitives)) {
-    // Check main name
-    if (name.toLowerCase() === normalizedName) {
-      return def.html
-    }
-    // Check aliases
-    if (def.aliases) {
-      for (const alias of def.aliases) {
-        if (alias.toLowerCase() === normalizedName) {
-          return def.html
-        }
-      }
-    }
-  }
-
-  // Fallback to div
-  return 'div'
+  if (!_htmlTagByName) _htmlTagByName = buildHtmlTagIndex()
+  return _htmlTagByName.get(primitiveName.toLowerCase()) ?? 'div'
 }

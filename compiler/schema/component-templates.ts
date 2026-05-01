@@ -15,13 +15,7 @@
  */
 
 /** Valid template categories */
-export type TemplateCategory =
-  | 'navigation'
-  | 'form'
-  | 'overlay'
-  | 'media'
-  | 'feedback'
-  | 'layout'
+type TemplateCategory = 'navigation' | 'form' | 'overlay' | 'media' | 'feedback' | 'layout'
 
 export interface ComponentTemplate {
   /** Human-readable description */
@@ -475,40 +469,6 @@ export const COMPONENT_TEMPLATES: Record<string, ComponentTemplate> = {
  */
 export function getComponentTemplate(componentName: string): ComponentTemplate | undefined {
   return COMPONENT_TEMPLATES[componentName]
-}
-
-/**
- * Check if a component has a template
- */
-export function hasComponentTemplate(componentName: string): boolean {
-  return componentName in COMPONENT_TEMPLATES
-}
-
-/**
- * Get all template names
- */
-export function getTemplateNames(): string[] {
-  return Object.keys(COMPONENT_TEMPLATES)
-}
-
-/**
- * Get templates by category
- */
-export function getTemplatesByCategory(category: TemplateCategory): Array<{ name: string; template: ComponentTemplate }> {
-  return Object.entries(COMPONENT_TEMPLATES)
-    .filter(([_, template]) => template.category === category)
-    .map(([name, template]) => ({ name, template }))
-}
-
-/**
- * Get all categories
- */
-export function getTemplateCategories(): TemplateCategory[] {
-  const categories = new Set<TemplateCategory>()
-  for (const template of Object.values(COMPONENT_TEMPLATES)) {
-    categories.add(template.category)
-  }
-  return Array.from(categories)
 }
 
 /**

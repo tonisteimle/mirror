@@ -8,7 +8,7 @@
  * DO NOT add hardcoded values - add them to dsl.ts instead.
  */
 
-import { SCHEMA, DSL, PropertyDef } from './dsl'
+import { SCHEMA, DSL } from './dsl'
 
 /**
  * Properties that START a new property - used for automatic separation.
@@ -122,18 +122,38 @@ export const ALL_BOOLEAN_PROPERTIES = new Set<string>([
   ...POSITION_BOOLEANS,
 ])
 
+// Memoized schema-derived lookups. SCHEMA is module-frozen at load time, so
+// these can be built once on first access. Hot paths in parser/IR call these
+// once per property — recomputing on every call was wasteful (~127 entries × N).
+
+let _allPropertyNames: Set<string> | null = null
+let _canonicalNameByAlias: Map<string, string> | null = null
+
+function buildCanonicalIndex(): Map<string, string> {
+  const map = new Map<string, string>()
+  for (const prop of Object.values(SCHEMA)) {
+    map.set(prop.name, prop.name)
+    for (const alias of prop.aliases) {
+      map.set(alias, prop.name)
+    }
+  }
+  return map
+}
+
 /**
  * Get all property names and aliases from the schema.
  */
 export function getAllSchemaPropertyNames(): Set<string> {
-  const names = new Set<string>()
-  for (const prop of Object.values(SCHEMA)) {
-    names.add(prop.name)
-    for (const alias of prop.aliases) {
-      names.add(alias)
+  if (!_allPropertyNames) {
+    _allPropertyNames = new Set<string>()
+    for (const prop of Object.values(SCHEMA)) {
+      _allPropertyNames.add(prop.name)
+      for (const alias of prop.aliases) {
+        _allPropertyNames.add(alias)
+      }
     }
   }
-  return names
+  return _allPropertyNames
 }
 
 /**
@@ -152,11 +172,8 @@ export function isValidProperty(name: string): boolean {
  * Returns the input if it's already canonical or not found.
  */
 export function getCanonicalPropertyName(nameOrAlias: string): string {
-  for (const prop of Object.values(SCHEMA)) {
-    if (prop.name === nameOrAlias) return prop.name
-    if (prop.aliases.includes(nameOrAlias)) return prop.name
-  }
-  return nameOrAlias
+  if (!_canonicalNameByAlias) _canonicalNameByAlias = buildCanonicalIndex()
+  return _canonicalNameByAlias.get(nameOrAlias) ?? nameOrAlias
 }
 
 // ============================================================================
@@ -263,17 +280,24 @@ export const DIRECTION_KEYWORDS = new Set<string>(
     .flatMap(prop => prop.directional!.directions)
 )
 
+// Memoized directions index. Built lazily on first call.
+let _directionsByProperty: Map<string, string[]> | null = null
+
 /**
  * Get valid directions for a specific property.
  */
 export function getDirectionsForProperty(nameOrAlias: string): string[] {
-  // Find property by name or alias
-  for (const prop of Object.values(SCHEMA)) {
-    if (prop.name === nameOrAlias || prop.aliases.includes(nameOrAlias)) {
-      return prop.directional?.directions ?? []
+  if (!_directionsByProperty) {
+    _directionsByProperty = new Map<string, string[]>()
+    for (const prop of Object.values(SCHEMA)) {
+      const dirs = prop.directional?.directions ?? []
+      _directionsByProperty.set(prop.name, dirs)
+      for (const alias of prop.aliases) {
+        _directionsByProperty.set(alias, dirs)
+      }
     }
   }
-  return []
+  return _directionsByProperty.get(nameOrAlias) ?? []
 }
 
 /**

@@ -9,23 +9,13 @@
 export {
   DSL,
   SCHEMA,
-  isReservedKeyword,
-  getReservedKeywords,
   isPrimitive,
-  getPrimitiveDef,
   findProperty,
-  getPropertiesByCategory,
-  getKeywordsForProperty,
-  getAllPropertyNames,
   getEvent,
   getAction,
   getState,
-  isValidKey,
-  getAllEvents,
-  getAllActions,
-  getAllStates,
-  getSystemStates,
-  getCustomStates,
+  getDevicePreset,
+  isDevicePreset,
   type PropertyDef,
   type PrimitiveDef,
   type EventDef,
@@ -36,21 +26,27 @@ export {
   type NumericValue,
 } from './dsl'
 
-// Primitives - Note: PRIMITIVES was removed, use isPrimitive() instead
-export { ZAG_PRIMITIVES, CHART_PRIMITIVES } from './dsl'
-
-// Properties
-export * from './properties'
+// Property-Panel metadata (separate model from compile-time SCHEMA in dsl.ts —
+// the panel needs UI hints like `type`, `min`/`max`, `options`).
+// Consumers import directly from './properties' to avoid name collisions
+// with dsl.ts's findProperty / getPropertiesByCategory.
 
 // Zag-specific
 export {
+  ZAG_PRIMITIVES,
   isZagPrimitive,
   getSlotDef,
   getSlotMappings,
   type ZagSlotDef,
   type ZagPrimitiveDef,
 } from './zag-primitives'
+
+// Chart-specific
+export { CHART_PRIMITIVES } from './chart-primitives'
 export { getZagPropMetadata, type ZagPropMeta } from './zag-prop-metadata'
+
+// Primitive roles (positional-args resolution)
+export { PRIMITIVE_ROLES, getPrimitiveRole, type PrimitiveRole } from './primitive-roles'
 
 // Component templates
 export { COMPONENT_TEMPLATES, adjustTemplateIndentation } from './component-templates'

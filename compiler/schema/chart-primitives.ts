@@ -38,19 +38,6 @@ export interface ChartPrimitiveDef {
   defaults?: Record<string, unknown>
 }
 
-export interface ChartPropertyDef {
-  /** Property name */
-  name: string
-  /** Aliases */
-  aliases?: string[]
-  /** Description */
-  description: string
-  /** Value type */
-  type: 'number' | 'string' | 'color' | 'colors' | 'boolean' | 'field'
-  /** Default value */
-  default?: unknown
-}
-
 // ============================================================================
 // Chart Slot Types
 // ============================================================================
@@ -141,93 +128,6 @@ export const CHART_PRIMITIVES: Record<string, ChartPrimitiveDef> = {
     defaults: {},
   },
 }
-
-// ============================================================================
-// Chart Properties
-// ============================================================================
-
-export const CHART_PROPERTIES: ChartPropertyDef[] = [
-  // Chart type (for unified Chart primitive)
-  {
-    name: 'type',
-    description: 'Chart type: line, bar, pie, donut, area, scatter, radar',
-    type: 'string',
-    default: 'line',
-  },
-
-  // Data binding
-  {
-    name: 'x',
-    description: 'Field name for x-axis labels',
-    type: 'field',
-  },
-  {
-    name: 'y',
-    description: 'Field name for y-axis values',
-    type: 'field',
-  },
-
-  // Appearance
-  {
-    name: 'colors',
-    description: 'Color palette for data series',
-    type: 'colors',
-    default: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'],
-  },
-  {
-    name: 'color',
-    description: 'Single color for all data',
-    type: 'color',
-    default: '#2563eb',
-  },
-
-  // Labels
-  {
-    name: 'title',
-    description: 'Chart title',
-    type: 'string',
-  },
-  {
-    name: 'legend',
-    description: 'Show legend',
-    type: 'boolean',
-    default: false,
-  },
-
-  // Chart-specific
-  {
-    name: 'stacked',
-    description: 'Stack bars/areas',
-    type: 'boolean',
-    default: false,
-  },
-  {
-    name: 'fill',
-    description: 'Fill area under line',
-    type: 'boolean',
-    default: false,
-  },
-  {
-    name: 'tension',
-    description: 'Line smoothness (0-1)',
-    type: 'number',
-    default: 0.3,
-  },
-
-  // Grid
-  {
-    name: 'grid',
-    description: 'Show grid lines',
-    type: 'boolean',
-    default: true,
-  },
-  {
-    name: 'axes',
-    description: 'Show axes',
-    type: 'boolean',
-    default: true,
-  },
-]
 
 // ============================================================================
 // Chart Slots
@@ -576,20 +476,6 @@ export function getChartPrimitive(name: string): ChartPrimitiveDef | undefined {
 }
 
 /**
- * Get chart property definition.
- */
-export function getChartProperty(name: string): ChartPropertyDef | undefined {
-  return CHART_PROPERTIES.find(p => p.name === name || p.aliases?.includes(name))
-}
-
-/**
- * Get all chart primitive names.
- */
-export function getAllChartPrimitives(): string[] {
-  return Object.keys(CHART_PRIMITIVES)
-}
-
-/**
  * Check if a name is a chart slot (XAxis, YAxis, Legend, etc.)
  */
 export function isChartSlot(name: string): boolean {
@@ -604,17 +490,6 @@ export function getChartSlot(name: string): ChartSlotDef | undefined {
 }
 
 /**
- * Check if a slot is supported for a specific chart type.
- */
-export function isSlotSupportedForChart(slotName: string, chartType: string): boolean {
-  const slot = CHART_SLOTS[slotName]
-  if (!slot) return false
-  // If supportedCharts is undefined, the slot works with all chart types
-  if (!slot.supportedCharts) return true
-  return slot.supportedCharts.includes(chartType)
-}
-
-/**
  * Get slot property definition by name or alias.
  */
 export function getChartSlotProperty(
@@ -624,13 +499,6 @@ export function getChartSlotProperty(
   const slot = CHART_SLOTS[slotName]
   if (!slot) return undefined
   return slot.properties.find(p => p.name === propertyName || p.aliases?.includes(propertyName))
-}
-
-/**
- * Get all chart slot names.
- */
-export function getAllChartSlots(): string[] {
-  return Object.keys(CHART_SLOTS)
 }
 
 /**

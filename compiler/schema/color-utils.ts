@@ -62,7 +62,7 @@ export function rgbToHex(rgb: RGB): string {
 /**
  * RGB to HSL
  */
-export function rgbToHsl(rgb: RGB): HSL {
+function rgbToHsl(rgb: RGB): HSL {
   const r = rgb.r / 255
   const g = rgb.g / 255
   const b = rgb.b / 255
@@ -97,7 +97,7 @@ export function rgbToHsl(rgb: RGB): HSL {
 /**
  * HSL to RGB
  */
-export function hslToRgb(hsl: HSL): RGB {
+function hslToRgb(hsl: HSL): RGB {
   const { h, s, l } = hsl
 
   if (s === 0) {
@@ -155,19 +155,6 @@ export function darken(color: string, amount: number): string {
 }
 
 /**
- * Adjust color saturation
- */
-export function saturate(color: string, amount: number): string {
-  const rgb = hexToRgb(color)
-  if (!rgb) return color
-
-  const hsl = rgbToHsl(rgb)
-  hsl.s = Math.min(1, Math.max(0, hsl.s + amount / 100))
-
-  return rgbToHex(hslToRgb(hsl))
-}
-
-/**
  * Mix two colors
  */
 export function mix(color1: string, color2: string, weight = 50): string {
@@ -183,30 +170,11 @@ export function mix(color1: string, color2: string, weight = 50): string {
   })
 }
 
-/**
- * Check if color is dark (for contrast decisions)
- */
-export function isDark(color: string): boolean {
-  const rgb = hexToRgb(color)
-  if (!rgb) return false
-
-  // Using relative luminance formula
-  const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255
-  return luminance < 0.5
-}
-
-/**
- * Get a contrasting text color (black or white)
- */
-export function getContrastColor(background: string): string {
-  return isDark(background) ? '#ffffff' : '#000000'
-}
-
 // ============================================================================
 // Transform Dispatcher
 // ============================================================================
 
-export type ColorTransform = 'lighten' | 'darken' | 'multiply' | 'none'
+type ColorTransform = 'lighten' | 'darken' | 'multiply' | 'none'
 
 /**
  * Apply a named transform to a value

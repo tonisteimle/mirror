@@ -25,13 +25,11 @@
 import {
   ZAG_PRIMITIVES,
   SLOT_MAPPINGS,
-  STATE_MAPPINGS,
   isZagPrimitive,
   getZagPrimitive,
   getSlotMappings,
   getSlotDef,
   isZagSlot,
-  getStateSelector,
   type ZagPrimitiveDef,
   type ZagSlotDef,
 } from './zag-primitives'
@@ -39,27 +37,21 @@ import {
 // Import Chart primitives
 import {
   CHART_PRIMITIVES,
-  CHART_PROPERTIES,
   isChartPrimitive,
   getChartPrimitive,
-  getChartProperty,
-  getAllChartPrimitives,
   DEFAULT_CHART_COLORS,
   type ChartPrimitiveDef,
-  type ChartPropertyDef,
 } from './chart-primitives'
 
 // Re-export Zag primitives
 export {
   ZAG_PRIMITIVES,
   SLOT_MAPPINGS,
-  STATE_MAPPINGS,
   isZagPrimitive,
   getZagPrimitive,
   getSlotMappings,
   getSlotDef,
   isZagSlot,
-  getStateSelector,
   type ZagPrimitiveDef,
   type ZagSlotDef,
 }
@@ -67,14 +59,10 @@ export {
 // Re-export Chart primitives
 export {
   CHART_PRIMITIVES,
-  CHART_PROPERTIES,
   isChartPrimitive,
   getChartPrimitive,
-  getChartProperty,
-  getAllChartPrimitives,
   DEFAULT_CHART_COLORS,
   type ChartPrimitiveDef,
-  type ChartPropertyDef,
 }
 
 // ============================================================================
@@ -2778,6 +2766,47 @@ export function getAllPropertyNames(): string[] {
   }
 
   return Array.from(names)
+}
+
+/**
+ * Check whether `name` is a known device-size preset
+ * (mobile / tablet / desktop). Sourced from the `device` property's
+ * keywords map so that adding a preset there is sufficient — no
+ * separate registration here.
+ */
+export function isDevicePreset(name: string): boolean {
+  const dev = SCHEMA.device
+  if (!dev?.keywords) return false
+  return Object.prototype.hasOwnProperty.call(dev.keywords, name.toLowerCase())
+}
+
+/**
+ * Resolve a device-preset name to its width/height (in pixels).
+ * Reads the dimensions out of the keyword's `css` array — the existing
+ * structure already encodes the values, so no duplication.
+ *
+ * Returns undefined if `name` isn't a known preset, or if its css array
+ * doesn't contain both width and height entries.
+ */
+export function getDevicePreset(name: string): { width: number; height: number } | undefined {
+  const dev = SCHEMA.device
+  if (!dev?.keywords) return undefined
+  const kw = dev.keywords[name.toLowerCase()]
+  if (!kw?.css) return undefined
+  let width: number | undefined
+  let height: number | undefined
+  for (const entry of kw.css) {
+    if (entry.property === 'width') width = parsePixelValue(entry.value)
+    if (entry.property === 'height') height = parsePixelValue(entry.value)
+  }
+  if (width === undefined || height === undefined) return undefined
+  return { width, height }
+}
+
+function parsePixelValue(v: string): number | undefined {
+  const m = /^(\d+)px$/.exec(v.trim())
+  if (!m) return undefined
+  return Number(m[1])
 }
 
 /**

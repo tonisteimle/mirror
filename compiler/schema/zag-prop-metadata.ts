@@ -9,10 +9,8 @@
  * are Pure-Mirror templates (studio/panels/components/component-templates.ts).
  */
 
-export type ZagPropType = 'boolean' | 'string' | 'number' | 'enum'
-
 export interface ZagPropMeta {
-  type: ZagPropType
+  type: 'boolean' | 'string' | 'number' | 'enum'
   label: string
   description: string
   options?: string[] // for enum

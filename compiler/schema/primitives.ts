@@ -8,8 +8,6 @@
  *   Primitive Defaults < Component Definition < Instance Properties
  */
 
-import { DSL, isPrimitive as schemaIsPrimitive, getPrimitiveDef } from './dsl'
-
 /**
  * A default property value for a primitive.
  * Simplified structure without source position (defaults have no source).
@@ -49,29 +47,20 @@ const SIZES = {
  * Keys are lowercase primitive names.
  */
 export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
-  // App container (root element)
-  app: {
-    tag: 'div',
-    defaults: [
-      { name: 'w', values: ['full'] },
-      { name: 'h', values: ['full'] },
-      { name: 'font', values: ['roboto'] },
-      { name: 'fs', values: [14] },
-    ],
-    description: 'Root application container, full width and height by default',
-  },
-
   // Container primitives
-  box: {
+  // (Frame is canonical in dsl.ts; Box is its alias. Both share the same
+  //  empty defaults — listed twice because primitive lookup happens by
+  //  lowercased instance name without alias resolution.)
+  frame: {
     tag: 'div',
     defaults: [],
     description: 'Generic container, no default styling',
   },
 
-  frame: {
+  box: {
     tag: 'div',
     defaults: [],
-    description: 'Alias for box',
+    description: 'Alias for frame',
   },
 
   // Interactive primitives
@@ -241,38 +230,9 @@ export const PRIMITIVES: Record<string, PrimitiveDefinition> = {
 }
 
 /**
- * Get primitive definition by name (case-insensitive).
- */
-export function getPrimitive(name: string): PrimitiveDefinition | undefined {
-  return PRIMITIVES[name.toLowerCase()]
-}
-
-/**
- * Check if a component name is a primitive.
- * Delegates to the schema for the source of truth.
- */
-export function isPrimitive(name: string): boolean {
-  // Use schema as source of truth, but also check local PRIMITIVES for defaults
-  return schemaIsPrimitive(name) || name.toLowerCase() in PRIMITIVES
-}
-
-/**
  * Get default properties for a primitive.
  * Returns empty array if not a primitive or no defaults.
  */
 export function getPrimitiveDefaults(name: string): DefaultProperty[] {
   return PRIMITIVES[name.toLowerCase()]?.defaults || []
-}
-
-/**
- * Get HTML tag for a primitive.
- * Uses schema as source of truth, falls back to local definition or 'div'.
- */
-export function getPrimitiveTag(name: string): string {
-  // First check schema
-  const schemaDef = getPrimitiveDef(name)
-  if (schemaDef) return schemaDef.html
-
-  // Then check local definition
-  return PRIMITIVES[name.toLowerCase()]?.tag || 'div'
 }

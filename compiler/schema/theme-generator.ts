@@ -6,18 +6,14 @@
  */
 
 import type { TokenDefinition } from '../parser/ast'
-import {
-  THEME_TOKENS,
-  USER_TOKEN_MAPPINGS,
-  type ThemeTokenDefinition,
-} from './component-tokens'
+import { THEME_TOKENS, USER_TOKEN_MAPPINGS } from './component-tokens'
 import { applyTransform } from './color-utils'
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export interface GeneratedTheme {
+interface GeneratedTheme {
   /** CSS custom property declarations */
   css: string
   /** Token values as JS object */
@@ -54,7 +50,8 @@ export function generateTheme(userTokens: TokenDefinition[]): GeneratedTheme {
     // Check if this token is derived from another
     if (definition.derivedFrom) {
       const baseToken = definition.derivedFrom.token
-      const baseValue = themeTokens[baseToken] ?? userValues.get(baseToken) ?? THEME_TOKENS[baseToken]?.defaultValue
+      const baseValue =
+        themeTokens[baseToken] ?? userValues.get(baseToken) ?? THEME_TOKENS[baseToken]?.defaultValue
 
       if (baseValue !== undefined) {
         themeTokens[tokenKey] = applyTransform(
@@ -99,17 +96,18 @@ function generateCSS(tokens: Record<string, string | number>): string {
     let cssValue: string
 
     // Check if value is numeric (either number type or numeric string)
-    const isNumeric = typeof value === 'number' || (typeof value === 'string' && /^\d+(\.\d+)?$/.test(value))
+    const isNumeric =
+      typeof value === 'number' || (typeof value === 'string' && /^\d+(\.\d+)?$/.test(value))
     const numericValue = isNumeric ? Number(value) : null
 
     if (isNumeric && numericValue !== null) {
       // Add px unit for sizing/spacing/border/typography (but not line-height)
-      const needsPx = (
-        definition.category === 'sizing' ||
-        definition.category === 'spacing' ||
-        definition.category === 'border' ||
-        definition.category === 'typography'
-      ) && tokenKey !== 'line-height'
+      const needsPx =
+        (definition.category === 'sizing' ||
+          definition.category === 'spacing' ||
+          definition.category === 'border' ||
+          definition.category === 'typography') &&
+        tokenKey !== 'line-height'
 
       if (needsPx) {
         cssValue = `${numericValue}px`
@@ -137,55 +135,6 @@ function generateCSS(tokens: Record<string, string | number>): string {
 }
 
 /**
- * Get only the user-overridden tokens and their generated variants
- */
-export function generateUserOverrides(userTokens: TokenDefinition[]): GeneratedTheme {
-  const userValues = new Map<string, string | number>()
-  for (const token of userTokens) {
-    if (token.value === undefined || typeof token.value === 'boolean') continue
-    const name = token.name.startsWith('$') ? token.name.slice(1) : token.name
-    userValues.set(name, token.value)
-  }
-
-  const themeTokens: Record<string, string | number> = {}
-
-  // Only process tokens that map to theme tokens
-  for (const mapping of USER_TOKEN_MAPPINGS) {
-    if (userValues.has(mapping.userToken)) {
-      const baseValue = userValues.get(mapping.userToken)!
-
-      // Generate all variants
-      for (const generatedKey of mapping.generates) {
-        const definition = THEME_TOKENS[generatedKey]
-        if (!definition) continue
-
-        if (generatedKey === mapping.userToken) {
-          // Base token
-          themeTokens[generatedKey] = baseValue
-        } else if (definition.derivedFrom) {
-          // Derived token
-          themeTokens[generatedKey] = applyTransform(
-            baseValue,
-            definition.derivedFrom.transform,
-            definition.derivedFrom.amount
-          )
-        }
-      }
-    }
-  }
-
-  // Also include directly-named tokens (e.g., "gap", "pad")
-  for (const [name, value] of userValues) {
-    if (THEME_TOKENS[name] && !themeTokens[name]) {
-      themeTokens[name] = value
-    }
-  }
-
-  const css = generateCSS(themeTokens)
-  return { css, tokens: themeTokens }
-}
-
-/**
  * Check if a user token name maps to a theme token
  */
 export function isThemeToken(tokenName: string): boolean {
@@ -196,15 +145,4 @@ export function isThemeToken(tokenName: string): boolean {
 
   // Mapping match
   return USER_TOKEN_MAPPINGS.some(m => m.userToken === name)
-}
-
-/**
- * Get default theme CSS (no user overrides)
- */
-export function getDefaultThemeCSS(): string {
-  const tokens: Record<string, string | number> = {}
-  for (const [key, def] of Object.entries(THEME_TOKENS)) {
-    tokens[key] = def.defaultValue
-  }
-  return generateCSS(tokens)
 }

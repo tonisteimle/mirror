@@ -9,7 +9,7 @@
 // Types
 // ============================================================================
 
-export interface ThemeTokenDefinition {
+interface ThemeTokenDefinition {
   /** CSS custom property name (without --) */
   cssVar: string
   /** Description for documentation */
@@ -26,7 +26,7 @@ export interface ThemeTokenDefinition {
   }
 }
 
-export interface UserTokenMapping {
+interface UserTokenMapping {
   /** User token name (e.g., "primary", "surface") */
   userToken: string
   /** Which theme tokens it generates */
@@ -307,7 +307,7 @@ export const THEME_TOKENS: Record<string, ThemeTokenDefinition> = {
   // ---------------------------------------------------------------------------
   // Typography
   // ---------------------------------------------------------------------------
-  'font': {
+  font: {
     cssVar: 'font',
     description: 'Font family',
     defaultValue: 'Inter, system-ui, -apple-system, sans-serif',
@@ -402,44 +402,5 @@ export const USER_TOKEN_MAPPINGS: UserTokenMapping[] = [
   },
 ]
 
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Get all theme tokens with their default values
- */
-export function getDefaultThemeTokens(): Record<string, string | number> {
-  const result: Record<string, string | number> = {}
-  for (const [key, def] of Object.entries(THEME_TOKENS)) {
-    result[key] = def.defaultValue
-  }
-  return result
-}
-
-/**
- * Get CSS variable declarations for all theme tokens
- */
-export function getThemeTokenCSS(tokens: Record<string, string | number> = {}): string {
-  const merged = { ...getDefaultThemeTokens(), ...tokens }
-  const lines: string[] = [':root {']
-
-  for (const [key, def] of Object.entries(THEME_TOKENS)) {
-    const value = merged[key] ?? def.defaultValue
-    const cssValue = typeof value === 'number' && def.category !== 'typography'
-      ? `${value}px`
-      : value
-    lines.push(`  --${def.cssVar}: ${cssValue};`)
-  }
-
-  lines.push('}')
-  return lines.join('\n')
-}
-
-/**
- * Find which theme tokens a user token generates
- */
-export function getGeneratedTokens(userToken: string): string[] {
-  const mapping = USER_TOKEN_MAPPINGS.find(m => m.userToken === userToken)
-  return mapping?.generates ?? [userToken]
-}
+// (helper functions getDefaultThemeTokens / getThemeTokenCSS / getGeneratedTokens
+//  removed — unused; theme generation lives in theme-generator.ts)

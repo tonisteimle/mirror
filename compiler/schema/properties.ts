@@ -706,35 +706,6 @@ export const properties: PropertyDefinition[] = [
 ]
 
 /**
- * Get properties by category
- */
-export function getPropertiesByCategory(category: PropertyCategory): PropertyDefinition[] {
-  return properties.filter(p => p.category === category)
-}
-
-/**
- * Get all categories with their properties
- */
-export function getGroupedProperties(): Map<PropertyCategory, PropertyDefinition[]> {
-  const grouped = new Map<PropertyCategory, PropertyDefinition[]>()
-
-  for (const prop of properties) {
-    const existing = grouped.get(prop.category) || []
-    existing.push(prop)
-    grouped.set(prop.category, existing)
-  }
-
-  return grouped
-}
-
-/**
- * Find property by name or alias
- */
-export function findProperty(nameOrAlias: string): PropertyDefinition | undefined {
-  return properties.find(p => p.name === nameOrAlias || p.aliases.includes(nameOrAlias))
-}
-
-/**
  * Category display names (for UI)
  */
 export const categoryLabels: Record<PropertyCategory, string> = {
