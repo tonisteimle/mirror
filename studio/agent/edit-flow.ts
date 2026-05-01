@@ -1,0 +1,168 @@
+/**
+ * Orchestrator für den LLM-Edit-Flow.
+ *
+ * Reine async-Funktion ohne Editor-Abhängigkeit: bekommt einen
+ * `EditCaptureCtx`, baut den Prompt, ruft die Bridge, parst die Antwort,
+ * appliziert Patches, und macht ggf. Retries mit Hint-Prompts.
+ *
+ * Nicht-Ziele:
+ *  - Kein State (Editor-Mutation, Ghost-Diff, Decorations) — das ist Sache
+ *    von `studio/editor/edit-handler.ts` (Phase 3).
+ *  - Kein User-Feedback (Toast, Banner) — der Caller sieht den `EditResult`.
+ *
+ * Siehe: docs/concepts/llm-edit-flow.md (Anforderungen),
+ *        docs/concepts/llm-edit-flow-plan.md (T2.4)
+ */
+
+import { buildEditPrompt, type EditCaptureCtx } from './edit-prompts'
+import { runEdit } from './fixer'
+import { parsePatchResponse } from './patch-format'
+import { applyPatches, type RetryHint } from './patch-applier'
+
+export interface RunEditFlowOptions {
+  /** Cancel laufenden Call (z.B. wenn der User Esc drückt). */
+  signal?: AbortSignal
+  /**
+   * Maximale Retry-Versuche bei Anker-Mismatch.
+   * 0 = nie retry. Default: 2.
+   */
+  maxRetries?: number
+}
+
+export type EditResultStatus = 'ready' | 'no-change' | 'error'
+
+export interface EditResult {
+  status: EditResultStatus
+  /** Vorgeschlagener Source nach Patch-Applikation (nur bei `ready`). */
+  proposedSource?: string
+  /** Menschenlesbare Fehler-Beschreibung (nur bei `error`). */
+  error?: string
+  /** Anzahl tatsächlich durchgeführter Retries (0 = direkt geklappt). */
+  retries?: number
+}
+
+const DEFAULT_MAX_RETRIES = 2
+
+export async function runEditFlow(
+  ctx: EditCaptureCtx,
+  options: RunEditFlowOptions = {}
+): Promise<EditResult> {
+  const { signal, maxRetries = DEFAULT_MAX_RETRIES } = options
+
+  const basePrompt = buildEditPrompt(ctx)
+  let prompt = basePrompt
+  let retries = 0
+
+  while (true) {
+    let raw: string
+    try {
+      raw = await runEdit(prompt, signal)
+    } catch (err) {
+      if (isAbortError(err)) throw err
+      return {
+        status: 'error',
+        error: errorMessage(err),
+        retries,
+      }
+    }
+
+    const parsed = parsePatchResponse(raw)
+
+    if (parsed.patches.length === 0 && parsed.parseErrors.length === 0) {
+      // Stille ist heilig: keine Änderung gewünscht.
+      return { status: 'no-change', retries }
+    }
+
+    if (parsed.patches.length === 0 && parsed.parseErrors.length > 0) {
+      return {
+        status: 'error',
+        error: `Antwort konnte nicht geparsed werden:\n${parsed.parseErrors.join('\n')}`,
+        retries,
+      }
+    }
+
+    const applyResult = applyPatches(ctx.source, parsed.patches)
+
+    if (applyResult.success) {
+      return {
+        status: 'ready',
+        proposedSource: applyResult.newSource,
+        retries,
+      }
+    }
+
+    // Failed → retry mit Hints, falls erlaubt.
+    // applyPatches garantiert retryHints bei success=false.
+    const hints = applyResult.retryHints ?? []
+    if (retries >= maxRetries) {
+      return {
+        status: 'error',
+        error: formatRetryHints(hints),
+        retries,
+      }
+    }
+
+    prompt = basePrompt + '\n\n' + buildHintMessage(hints)
+    retries++
+  }
+}
+
+function buildHintMessage(hints: RetryHint[]): string {
+  const lines = ['## Retry — Anker-Probleme im vorherigen Patch']
+  lines.push('')
+  lines.push(
+    'Dein vorheriger Patch konnte nicht angewendet werden. Bitte gib NEUE Patches zurück, die diese Probleme beheben:'
+  )
+  lines.push('')
+
+  for (const hint of hints) {
+    if (hint.reason === 'no-match') {
+      lines.push(
+        `- Der \`@@FIND\`-Anker wurde **0×** im Source gefunden. Lies den Source nochmal byte-genau und nimm einen Anker, der EXAKT so vorkommt:`
+      )
+    } else {
+      lines.push(
+        `- Der \`@@FIND\`-Anker kam **${hint.matchCount}×** im Source vor — er muss aber EINDEUTIG sein. Nimm mehr Kontext-Zeilen drumherum, bis er nur noch 1× passt:`
+      )
+    }
+    lines.push('  ```')
+    for (const line of hint.patch.find.split('\n')) {
+      lines.push('  ' + line)
+    }
+    lines.push('  ```')
+  }
+
+  return lines.join('\n')
+}
+
+function formatRetryHints(hints: RetryHint[]): string {
+  if (hints.length === 0) return 'Patches konnten nicht angewendet werden.'
+  const parts: string[] = []
+  for (const hint of hints) {
+    if (hint.reason === 'no-match') {
+      parts.push(`Anker nicht gefunden (no-match): "${preview(hint.patch.find)}"`)
+    } else {
+      parts.push(`Anker mehrdeutig (${hint.matchCount}× gefunden): "${preview(hint.patch.find)}"`)
+    }
+  }
+  return parts.join('; ')
+}
+
+function preview(s: string, max = 60): string {
+  const oneline = s.replace(/\n/g, '⏎')
+  return oneline.length <= max ? oneline : oneline.slice(0, max - 1) + '…'
+}
+
+function isAbortError(err: unknown): boolean {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'name' in err &&
+    (err as { name?: string }).name === 'AbortError'
+  )
+}
+
+function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message
+  return String(err)
+}
