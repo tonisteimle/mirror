@@ -104,6 +104,23 @@ import {
   parseObjectLiteral as parseObjectLiteralExtracted,
   type EachParserCallbacks,
 } from './each-parser'
+import {
+  parseEvent as parseEventExtracted,
+  parseAction as parseActionExtracted,
+  parseImplicitOnclick as parseImplicitOnclickExtracted,
+  parseKeysBlock as parseKeysBlockExtracted,
+  isImplicitOnclickCandidate as isImplicitOnclickCandidateExtracted,
+} from './event-parser'
+import {
+  parseStateChildOverride as parseStateChildOverrideExtracted,
+  parseStateChildInstance as parseStateChildInstanceExtracted,
+  type StateChildParserCallbacks,
+} from './state-child-parser'
+import {
+  parseSchema as parseSchemaExtracted,
+  parseSchemaField as parseSchemaFieldExtracted,
+  parseIconDefinitions as parseIconDefinitionsExtracted,
+} from './declaration-parser'
 import { KEYWORD_TOKEN_TYPES } from './parser-context'
 
 /** Property value type - union of all possible values in Property.values (includes number[] for array props like slider defaultValue) */
@@ -560,6 +577,26 @@ export class Parser {
   }
 
   /**
+   * Build the callback record passed to state-child-parser.
+   */
+  private stateChildParserCallbacks(ctx: ParserContext): StateChildParserCallbacks {
+    return {
+      parseProperty: () => {
+        this.pos = ctx.pos
+        const result = this.parseProperty()
+        ctx.pos = this.pos
+        return result
+      },
+      parseInlineProperties: properties => {
+        this.pos = ctx.pos
+        this.parseInlineProperties(properties)
+        ctx.pos = this.pos
+      },
+      createTextChild: token => this.createTextChild(token),
+    }
+  }
+
+  /**
    * Build the callback record passed to each-parser. Each callback syncs
    * `this.pos` ↔ `ctx.pos` so the main parser sees the right position when
    * a sub-parser delegates back into it.
@@ -622,59 +659,7 @@ export class Parser {
    *     project: $projects, onDelete cascade
    */
   private parseSchema(): SchemaDefinition | null {
-    const startToken = this.advance() // $schema
-    this.advance() // :
-
-    // Skip newlines if any, then expect INDENT
-    while (this.check('NEWLINE')) {
-      this.advance()
-    }
-    if (!this.check('INDENT')) {
-      return {
-        fields: [],
-        line: startToken.line,
-        column: startToken.column,
-      }
-    }
-    this.advance() // consume INDENT
-
-    // Skip the NEWLINE that often follows INDENT
-    if (this.check('NEWLINE')) {
-      this.advance()
-    }
-
-    const fields: SchemaField[] = []
-
-    // Parse fields until DEDENT
-    for (
-      let iter = 0;
-      !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS;
-      iter++
-    ) {
-      this.skipNewlines()
-      if (this.check('DEDENT') || this.isAtEnd()) break
-
-      // Check for field definition: fieldName: type [, constraints...]
-      if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
-        const field = this.parseSchemaField()
-        if (field) fields.push(field)
-        continue
-      }
-
-      // Unknown content - skip
-      this.advance()
-    }
-
-    // Consume DEDENT
-    if (this.check('DEDENT')) {
-      this.advance()
-    }
-
-    return {
-      fields,
-      line: startToken.line,
-      column: startToken.column,
-    }
+    return this.withSubParserContext(ctx => parseSchemaExtracted(ctx))
   }
 
   /**
@@ -694,73 +679,7 @@ export class Parser {
    *   - onDelete cascade|nullify|restrict
    */
   private parseSchemaField(): SchemaField | null {
-    const nameToken = this.advance() // fieldName
-    const line = nameToken.line
-    this.advance() // :
-
-    // Parse type
-    let fieldType: SchemaType
-
-    if (this.check('IDENTIFIER')) {
-      const typeToken = this.advance()
-      const typeValue = typeToken.value
-
-      // Check for relation type ($users, $projects, etc.)
-      if (typeValue.startsWith('$')) {
-        // Check for array notation: $users[]
-        let isArray = false
-        if (this.check('LBRACKET') && this.checkNext('RBRACKET')) {
-          this.advance() // [
-          this.advance() // ]
-          isArray = true
-        }
-        fieldType = { kind: 'relation', target: typeValue, isArray }
-      } else {
-        // Primitive type: string, number, boolean
-        const primitiveType = typeValue as 'string' | 'number' | 'boolean'
-        if (!['string', 'number', 'boolean'].includes(primitiveType)) {
-          // Unknown type, default to string
-          fieldType = { kind: 'primitive', type: 'string' }
-        } else {
-          fieldType = { kind: 'primitive', type: primitiveType }
-        }
-      }
-    } else {
-      // No type specified, default to string
-      fieldType = { kind: 'primitive', type: 'string' }
-    }
-
-    // Parse constraints
-    const constraints: SchemaConstraint[] = []
-
-    while (this.check('COMMA')) {
-      this.advance() // consume ,
-
-      if (this.check('IDENTIFIER')) {
-        const constraintToken = this.advance()
-        const constraintName = constraintToken.value
-
-        if (constraintName === 'required') {
-          constraints.push({ kind: 'required' })
-        } else if (constraintName === 'max' && this.check('NUMBER')) {
-          const maxValue = parseInt(this.advance().value, 10)
-          constraints.push({ kind: 'max', value: maxValue })
-        } else if (constraintName === 'onDelete' && this.check('IDENTIFIER')) {
-          const actionToken = this.advance()
-          const action = actionToken.value as 'cascade' | 'nullify' | 'restrict'
-          if (['cascade', 'nullify', 'restrict'].includes(action)) {
-            constraints.push({ kind: 'onDelete', action })
-          }
-        }
-      }
-    }
-
-    return {
-      name: nameToken.value,
-      type: fieldType,
-      constraints,
-      line,
-    }
+    return this.withSubParserContext(ctx => parseSchemaFieldExtracted(ctx))
   }
 
   /**
@@ -773,64 +692,7 @@ export class Parser {
    *     grid: "M3 3h8v8H3z M13 3h8v8h-8z"
    */
   private parseIconDefinitions(): IconDefinition[] {
-    const startToken = this.advance() // $icons
-    this.advance() // :
-
-    // Skip newlines if any, then expect INDENT
-    while (this.check('NEWLINE')) {
-      this.advance()
-    }
-    if (!this.check('INDENT')) {
-      return []
-    }
-    this.advance() // consume INDENT
-
-    // Skip the NEWLINE that often follows INDENT
-    if (this.check('NEWLINE')) {
-      this.advance()
-    }
-
-    const icons: IconDefinition[] = []
-
-    // Parse icon definitions until DEDENT
-    for (
-      let iter = 0;
-      !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS;
-      iter++
-    ) {
-      this.skipNewlines()
-      if (this.check('DEDENT') || this.isAtEnd()) break
-
-      // Check for icon definition: iconName: "path data"
-      if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
-        const nameToken = this.advance() // iconName
-        const line = nameToken.line
-        const column = nameToken.column
-        this.advance() // :
-
-        // Expect STRING with path data
-        if (this.check('STRING')) {
-          const pathToken = this.advance()
-          icons.push({
-            name: nameToken.value,
-            path: pathToken.value,
-            line,
-            column,
-          })
-        }
-        continue
-      }
-
-      // Unknown content - skip
-      this.advance()
-    }
-
-    // Consume DEDENT
-    if (this.check('DEDENT')) {
-      this.advance()
-    }
-
-    return icons
+    return this.withSubParserContext(ctx => parseIconDefinitionsExtracted(ctx))
   }
 
   /**
@@ -2040,15 +1902,7 @@ export class Parser {
    * Returns false for property starters, boolean properties, states, keys, and events.
    */
   private isImplicitOnclickCandidate(name: string): boolean {
-    if (ACTION_NAMES.has(name)) return true
-    const excludeSets = [
-      PROPERTY_STARTERS,
-      ALL_BOOLEAN_PROPERTIES,
-      STATE_NAMES,
-      KEYBOARD_KEYS,
-      EVENT_NAMES,
-    ]
-    return !excludeSets.some(set => set.has(name))
+    return isImplicitOnclickCandidateExtracted(name)
   }
 
   /**
@@ -2056,307 +1910,19 @@ export class Parser {
    * Multiple actions can be chained: toggle(), show(Panel)
    */
   private parseImplicitOnclick(): Event | null {
-    const startToken = this.current()
-    const actions: Action[] = []
-
-    // Parse first action
-    const firstAction = this.parseAction()
-    if (!firstAction) return null
-    actions.push(firstAction)
-
-    // Parse additional actions separated by commas: toggle(), show(Panel)
-    while (this.check('COMMA')) {
-      // Look ahead to see if next is a function call
-      const nextToken = this.peekAt(1)
-      const afterThat = this.peekAt(2)
-
-      if (!nextToken || nextToken.type !== 'IDENTIFIER') break
-      if (!afterThat || afterThat.type !== 'LPAREN') break
-
-      const nextIdent = nextToken.value
-      if (!this.isImplicitOnclickCandidate(nextIdent)) break
-
-      this.advance() // consume comma
-      const nextAction = this.parseAction()
-      if (nextAction) {
-        actions.push(nextAction)
-      } else {
-        break
-      }
-    }
-
-    return {
-      type: 'Event',
-      name: 'onclick',
-      actions,
-      line: startToken.line,
-      column: startToken.column,
-    }
+    return this.withSubParserContext(ctx => parseImplicitOnclickExtracted(ctx))
   }
 
   private parseEvent(): Event | null {
-    const eventToken = this.advance()
-    let eventName = eventToken.value
-    let eventKey: string | undefined = undefined
-
-    // Expand keyboard shorthands: onkeyenter → onkeydown + key: 'enter'
-    const eventDef = getEvent(eventName)
-    if (eventDef?.key) {
-      eventKey = eventDef.key
-      eventName = 'on' + eventDef.dom // e.g., 'onkeydown'
-    }
-
-    const event: Event = {
-      type: 'Event',
-      name: eventName,
-      key: eventKey,
-      actions: [],
-      line: eventToken.line,
-      column: eventToken.column,
-    }
-
-    // Track if we're in block mode (colon was consumed)
-    let isBlockMode = false
-
-    // Handle onclick: syntax (colon directly after event name)
-    if (this.check('COLON')) {
-      this.advance() // consume the colon
-      isBlockMode = true
-    }
-
-    // Check for key modifier with parentheses: onkeydown(arrow-down)
-    if (this.check('LPAREN')) {
-      this.advance() // consume (
-      if (this.check('IDENTIFIER')) {
-        event.key = this.advance().value
-      }
-      if (this.check('RPAREN')) {
-        this.advance() // consume )
-      }
-    }
-
-    // Check for key modifier: onkeydown escape:
-    if (this.check('IDENTIFIER')) {
-      const next = this.current()
-      if (this.checkNext('COLON')) {
-        event.key = next.value
-        this.advance() // key
-        this.advance() // :
-        isBlockMode = true
-      }
-    }
-
-    // Check for timing modifiers
-    if (this.check('IDENTIFIER')) {
-      const mod = this.current().value
-      if (mod === 'debounce' || mod === 'delay') {
-        this.advance()
-        const time = this.advance()
-        event.modifiers = [{ type: mod, value: parseInt(time.value) }]
-
-        if (this.check('COLON')) {
-          this.advance()
-          isBlockMode = true
-        }
-      }
-    }
-
-    // Parse inline actions
-    while (
-      !this.check('NEWLINE') &&
-      !this.check('COMMA') &&
-      !this.check('SEMICOLON') &&
-      !this.isAtEnd()
-    ) {
-      if (this.check('IDENTIFIER')) {
-        const action = this.parseAction()
-        if (action) event.actions.push(action)
-      } else {
-        break
-      }
-    }
-
-    // Parse block actions (multi-line) - ONLY if we're in block mode (colon was used)
-    // onclick:
-    //   Menu open
-    //   Backdrop visible
-    //
-    // IMPORTANT: Only enter block mode if a colon was consumed (isBlockMode = true).
-    // Without a colon, any NEWLINE+INDENT is for children of the parent, not event actions.
-    //
-    // Example that should NOT consume NEWLINE+INDENT:
-    //   Frame onclick action
-    //     Text "child"     ← This is a child of Frame, not an action of onclick
-    if (isBlockMode && this.check('NEWLINE') && this.peekAt(1)?.type === 'INDENT') {
-      this.skipNewlines()
-    }
-    if (isBlockMode && this.check('INDENT')) {
-      // Don't consume INDENT if it's followed by a state block pattern (e.g., "on:", "hover:")
-      // This happens when an inline event like "onenter toggle()" is followed by a state block
-      // Example:
-      //   Button "A", onenter toggle()
-      //     on:          ← This is a state block, not event actions
-      //       bg red
-      // Token sequence: INDENT NEWLINE IDENTIFIER COLON
-      // We need to skip NEWLINE when checking
-      let offset = 1
-      while (this.peekAt(offset)?.type === 'NEWLINE') {
-        offset++
-      }
-      const afterIndent = this.peekAt(offset) // first non-NEWLINE after INDENT
-      const afterIndent2 = this.peekAt(offset + 1) // token after that
-      if (afterIndent?.type === 'IDENTIFIER' && afterIndent2?.type === 'COLON') {
-        const name = afterIndent.value
-        // State names are lowercase and not event names
-        if (name[0] === name[0].toLowerCase() && !EVENT_NAMES.has(name)) {
-          // This is a state block - don't consume the INDENT, let parseInstanceBody handle it
-          return event
-        }
-      }
-
-      this.advance() // consume INDENT
-      while (!this.check('DEDENT') && !this.isAtEnd()) {
-        this.skipNewlines()
-        if (this.check('DEDENT')) break
-
-        // Parse Element state on each line
-        if (this.check('IDENTIFIER')) {
-          const action = this.parseAction()
-          if (action) event.actions.push(action)
-        } else {
-          // Skip any other tokens to prevent infinite loops
-          this.advance()
-        }
-
-        this.skipNewlines()
-      }
-      if (this.check('DEDENT')) {
-        this.advance() // consume DEDENT
-      }
-    }
-
-    return event
+    return this.withSubParserContext(ctx => parseEventExtracted(ctx))
   }
 
   private parseAction(): Action | null {
-    const actionToken = this.advance()
-
-    const action: Action = {
-      type: 'Action',
-      name: actionToken.value,
-      line: actionToken.line,
-      column: actionToken.column,
-    }
-
-    // Function call syntax required: actionName(arg1, arg2, ...)
-    // Examples: toggle(), cycle(a, b, c), show(Menu), animate(FadeIn)
-    if (this.check('LPAREN')) {
-      this.advance() // consume '('
-      action.args = []
-      action.isFunctionCall = true
-
-      while (!this.check('RPAREN') && !this.isAtEnd()) {
-        // Parse argument (identifier, string, or number)
-        // Also handle named parameters: key: value or key: $token
-        if (this.check('IDENTIFIER')) {
-          const name = this.advance().value
-          // Check for named parameter (key: value)
-          if (this.check('COLON')) {
-            this.advance() // consume ':'
-            // Get the value (identifier, $token, string, number, or boolean)
-            if (this.check('IDENTIFIER')) {
-              const val = this.advance().value
-              action.args.push(`${name}: ${val}`)
-            } else if (this.check('STRING')) {
-              const val = this.advance().value
-              action.args.push(`${name}: ${val}`)
-            } else if (this.check('NUMBER')) {
-              const val = this.advance().value
-              action.args.push(`${name}: ${val}`)
-            }
-          } else {
-            // Simple identifier argument
-            action.args.push(name)
-          }
-        } else if (this.check('STRING')) {
-          action.args.push(this.advance().value)
-        } else if (this.check('NUMBER')) {
-          action.args.push(this.advance().value)
-        }
-
-        // Comma between args
-        if (this.check('COMMA')) {
-          this.advance()
-        } else if (!this.check('RPAREN')) {
-          break
-        }
-      }
-
-      if (this.check('RPAREN')) {
-        this.advance() // consume ')'
-      }
-
-      return action
-    }
-
-    // Multi-element trigger: ElementName state (e.g., Menu open, Backdrop visible)
-    // This is NOT a function call - it sets state on another element
-    if (this.check('IDENTIFIER') && !this.checkNext('COLON')) {
-      action.target = this.advance().value
-    }
-
-    return action
+    return this.withSubParserContext(ctx => parseActionExtracted(ctx))
   }
 
   private parseKeysBlock(events: Event[]): void {
-    this.advance() // keys
-
-    // Skip to next line if no immediate INDENT
-    this.skipNewlines()
-
-    if (!this.check('INDENT')) return
-    this.advance()
-
-    while (!this.check('DEDENT') && !this.isAtEnd()) {
-      this.skipNewlines()
-
-      if (this.check('DEDENT')) break
-
-      // key action
-      if (this.check('IDENTIFIER')) {
-        const key = this.advance()
-        const actions: Action[] = []
-
-        // Skip optional colon after key
-        if (this.check('COLON')) {
-          this.advance()
-        }
-
-        while (!this.check('NEWLINE') && !this.check('DEDENT') && !this.isAtEnd()) {
-          if (this.check('IDENTIFIER')) {
-            const action = this.parseAction()
-            if (action) actions.push(action)
-          } else if (this.check('COMMA')) {
-            this.advance()
-          } else {
-            break
-          }
-        }
-
-        events.push({
-          type: 'Event',
-          name: 'onkeydown',
-          key: key.value,
-          actions,
-          line: key.line,
-          column: key.column,
-        })
-      } else {
-        this.advance()
-      }
-    }
-
-    if (this.check('DEDENT')) this.advance()
+    this.withSubParserContext(ctx => parseKeysBlockExtracted(ctx, events))
   }
 
   // ============================================================================
@@ -2735,24 +2301,9 @@ export class Parser {
    * Syntax: ChildName: property value (note the colon)
    */
   private parseStateChildOverride(): import('./ast').ChildOverride | null {
-    if (!this.check('IDENTIFIER')) return null
-
-    const childName = this.advance()
-
-    // Consume the colon if present (new syntax: "Icon: ic white")
-    if (this.check('COLON')) {
-      this.advance()
-    }
-
-    const properties: Property[] = []
-
-    // Parse properties for this child override (on the same line)
-    this.parseInlineProperties(properties)
-
-    return {
-      childName: childName.value,
-      properties,
-    }
+    return this.withSubParserContext(ctx =>
+      parseStateChildOverrideExtracted(ctx, this.stateChildParserCallbacks(ctx))
+    )
   }
 
   /**
@@ -2761,93 +2312,9 @@ export class Parser {
    * Syntax: ComponentName "content", property value
    */
   private parseStateChildInstance(): Instance | null {
-    if (!this.check('IDENTIFIER')) return null
-
-    const componentToken = this.advance()
-
-    const instance: Instance = {
-      type: 'Instance',
-      component: componentToken.value,
-      name: null,
-      properties: [],
-      children: [],
-      states: [],
-      events: [],
-      line: componentToken.line,
-      column: componentToken.column,
-    }
-
-    // Parse inline content and properties
-    while (!this.check('NEWLINE') && !this.check('DEDENT') && !this.isAtEnd()) {
-      // Skip commas
-      if (this.check('COMMA')) {
-        this.advance()
-        continue
-      }
-
-      // String content
-      if (this.check('STRING')) {
-        const str = this.advance()
-        instance.properties.push({
-          type: 'Property',
-          name: 'content',
-          values: [str.value],
-          line: str.line,
-          column: str.column,
-        })
-        continue
-      }
-
-      // Properties
-      if (this.check('IDENTIFIER')) {
-        const prop = this.parseProperty()
-        if (prop) instance.properties.push(prop)
-        continue
-      }
-
-      // Numbers (standalone values)
-      if (this.check('NUMBER')) {
-        this.advance()
-        continue
-      }
-
-      break
-    }
-
-    // Check for nested children (indented block)
-    this.skipNewlines()
-    if (this.check('INDENT')) {
-      this.advance()
-      while (!this.check('DEDENT') && !this.isAtEnd()) {
-        this.skipNewlines()
-        if (this.check('DEDENT')) break
-
-        // String as Text child
-        if (this.check('STRING')) {
-          instance.children.push(this.createTextChild(this.advance()))
-          continue
-        }
-
-        // Nested component
-        if (this.check('IDENTIFIER') && this.isUppercase(this.current().value)) {
-          const child = this.parseStateChildInstance()
-          if (child) instance.children.push(child)
-          continue
-        }
-
-        // Properties (lowercase)
-        if (this.check('IDENTIFIER')) {
-          const prop = this.parseProperty()
-          if (prop) instance.properties.push(prop)
-          continue
-        }
-
-        this.advance()
-      }
-      if (this.check('DEDENT')) this.advance()
-    }
-
-    return instance
+    return this.withSubParserContext(ctx =>
+      parseStateChildInstanceExtracted(ctx, this.stateChildParserCallbacks(ctx))
+    )
   }
 }
 
