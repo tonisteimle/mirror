@@ -8,7 +8,7 @@
  * - Wait helpers
  */
 
-import type { TestCase } from '../types'
+import type { TestCase, TestAPI } from '../types'
 
 // =============================================================================
 // Fixtures API Tests
@@ -18,7 +18,7 @@ export const fixturesTests: TestCase[] = [
   {
     name: 'Fixtures: list returns available fixtures',
     category: 'testSystem',
-    run: async api => {
+    run: async (api: TestAPI) => {
       const fixtures = api.fixtures.list()
 
       api.assert.ok(Array.isArray(fixtures), 'list() should return array')
@@ -34,7 +34,7 @@ export const fixturesTests: TestCase[] = [
   {
     name: 'Fixtures: get returns fixture by name',
     category: 'testSystem',
-    run: async api => {
+    run: async (api: TestAPI) => {
       const fixture = api.fixtures.get('horizontal-layout')
 
       api.assert.ok(fixture !== undefined, 'Should find horizontal-layout fixture')
@@ -47,7 +47,7 @@ export const fixturesTests: TestCase[] = [
   {
     name: 'Fixtures: getByCategory returns category fixtures',
     category: 'testSystem',
-    run: async api => {
+    run: async (api: TestAPI) => {
       const layoutFixtures = api.fixtures.getByCategory('layout')
       const zagFixtures = api.fixtures.getByCategory('zag')
 
@@ -64,7 +64,7 @@ export const fixturesTests: TestCase[] = [
   {
     name: 'Fixtures: load renders fixture correctly',
     category: 'testSystem',
-    run: async api => {
+    run: async (api: TestAPI) => {
       await api.fixtures.load('horizontal-layout')
       await api.utils.delay(200)
 
@@ -84,7 +84,7 @@ export const fixturesTests: TestCase[] = [
   {
     name: 'Fixtures: loadCode renders custom code',
     category: 'testSystem',
-    run: async api => {
+    run: async (api: TestAPI) => {
       await api.fixtures.loadCode(`Frame bg #2271C1, pad 20
   Text "Custom Fixture"`)
       await api.utils.delay(200)
@@ -100,7 +100,7 @@ export const fixturesTests: TestCase[] = [
   {
     name: 'Fixtures: register adds custom fixture',
     category: 'testSystem',
-    run: async api => {
+    run: async (api: TestAPI) => {
       api.fixtures.register({
         name: 'test-custom-fixture',
         category: 'test',
@@ -130,7 +130,7 @@ export const isolationTests: TestCase[] = [
   {
     name: 'Isolation: reset clears editor',
     category: 'testSystem',
-    run: async api => {
+    run: async (api: TestAPI) => {
       // Set some code first
       await api.editor.setCode('Frame\n  Text "Before Reset"')
       await api.utils.delay(100)
@@ -149,7 +149,7 @@ export const isolationTests: TestCase[] = [
   {
     name: 'Isolation: reset clears history',
     category: 'testSystem',
-    run: async api => {
+    run: async (api: TestAPI) => {
       // Make some changes
       await api.editor.setCode('Frame\n  Text "Change 1"')
       await api.utils.delay(100)
@@ -167,7 +167,7 @@ export const isolationTests: TestCase[] = [
   {
     name: 'Isolation: reset clears selection',
     category: 'testSystem',
-    run: async api => {
+    run: async (api: TestAPI) => {
       // Set code and select
       await api.editor.setCode('Frame\n  Text "Select Me"')
       await api.utils.delay(200)
@@ -196,7 +196,7 @@ export const isolationTests: TestCase[] = [
   {
     name: 'Isolation: getStateSnapshot captures state',
     category: 'testSystem',
-    run: async api => {
+    run: async (api: TestAPI) => {
       await api.editor.setCode('Frame\n  Text "Snapshot Test"')
       await api.utils.delay(200)
 
@@ -220,7 +220,7 @@ export const keyboardTests: TestCase[] = [
     category: 'testSystem',
     setup: `Frame
   Input placeholder "Type here..."`,
-    run: async api => {
+    run: async (api: TestAPI) => {
       await api.utils.delay(100)
       const nodeIds = api.preview.getNodeIds()
       const inputId = nodeIds.find(id => {
@@ -256,7 +256,7 @@ export const keyboardTests: TestCase[] = [
     category: 'testSystem',
     setup: `Frame
   Input placeholder "Navigate..."`,
-    run: async api => {
+    run: async (api: TestAPI) => {
       await api.utils.delay(100)
 
       // Verify setup worked
@@ -287,7 +287,7 @@ export const keyboardTests: TestCase[] = [
     category: 'testSystem',
     setup: `Frame
   Input placeholder "Shortcuts..."`,
-    run: async api => {
+    run: async (api: TestAPI) => {
       await api.utils.delay(100)
 
       const nodeIds = api.preview.getNodeIds()
@@ -318,7 +318,7 @@ export const keyboardTests: TestCase[] = [
     category: 'testSystem',
     setup: `Frame
   Input placeholder "Type here..."`,
-    run: async api => {
+    run: async (api: TestAPI) => {
       await api.utils.delay(100)
       const nodeIds = api.preview.getNodeIds()
       const inputId = nodeIds.find(id => {
@@ -355,7 +355,7 @@ export const waitHelperTests: TestCase[] = [
     category: 'testSystem',
     setup: `Frame
   Text "Wait For Me"`,
-    run: async api => {
+    run: async (api: TestAPI) => {
       const nodeIds = api.preview.getNodeIds()
       api.assert.ok(nodeIds.length > 0, 'Should have nodes')
 
@@ -368,7 +368,7 @@ export const waitHelperTests: TestCase[] = [
   {
     name: 'WaitHelpers: waitForElement throws on timeout',
     category: 'testSystem',
-    run: async api => {
+    run: async (api: TestAPI) => {
       try {
         await api.utils.waitForElement('non-existent-node', 100)
         api.assert.ok(false, 'Should have thrown')
@@ -385,7 +385,7 @@ export const waitHelperTests: TestCase[] = [
   Text "A"
   Text "B"
   Text "C"`,
-    run: async api => {
+    run: async (api: TestAPI) => {
       // Should find 4 elements (1 Frame + 3 Text)
       await api.utils.waitForCount('[data-mirror-id]', 4)
 
@@ -403,7 +403,7 @@ export const waitHelperTests: TestCase[] = [
     category: 'testSystem',
     setup: `Frame
   Text "Idle Test"`,
-    run: async api => {
+    run: async (api: TestAPI) => {
       // Make a change to trigger activity
       await api.editor.setCode('Frame\n  Text "Updated"')
 
@@ -423,7 +423,7 @@ export const waitHelperTests: TestCase[] = [
     category: 'testSystem',
     setup: `Frame
   Text "Animated"`,
-    run: async api => {
+    run: async (api: TestAPI) => {
       await api.utils.waitForAnimation()
 
       // Verify DOM is accessible after animation completes
@@ -439,7 +439,7 @@ export const waitHelperTests: TestCase[] = [
   {
     name: 'WaitHelpers: waitUntil waits for condition',
     category: 'testSystem',
-    run: async api => {
+    run: async (api: TestAPI) => {
       let counter = 0
       const interval = setInterval(() => counter++, 50)
 

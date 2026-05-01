@@ -85,11 +85,12 @@ export class Assertions implements AssertionAPI {
   }
 
   /**
-   * Assert condition is true
+   * Assert condition is true.
+   * THROWS on failure (AssertionCollector default), enabling TS narrowing.
    */
-  ok(condition: boolean, message = 'Expected condition to be true'): void {
+  ok(condition: unknown, message = 'Expected condition to be true'): asserts condition {
     this.collector.add({
-      passed: condition,
+      passed: !!condition,
       message: condition ? 'Condition is true' : message,
       expected: true,
       actual: condition,

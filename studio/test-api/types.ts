@@ -623,8 +623,12 @@ export interface MarginDragResult {
 }
 
 export interface AssertionAPI {
-  /** Assert condition is true */
-  ok(condition: boolean, message?: string): void
+  /**
+   * Assert condition is true.
+   * THROWS on failure (AssertionCollector default), so subsequent code
+   * may rely on the narrowed type.
+   */
+  ok(condition: unknown, message?: string): asserts condition
   /** Assert values are equal */
   equals<T>(actual: T, expected: T, message?: string): void
   /** Alias for equals (for compatibility) */
@@ -757,6 +761,8 @@ export interface UtilsAPI {
   log(message: string): void
   /** Take snapshot of current state */
   snapshot(): { code: string; nodeIds: string[]; selection: string | null }
+  /** Read an attribute (e.g. data-state) from a Mirror node by ID. */
+  getDataAttribute(nodeId: string, attribute: string): Promise<string | null>
 }
 
 // =============================================================================

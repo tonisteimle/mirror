@@ -6,7 +6,7 @@
  */
 
 import { testWithSetup, testWithSetupSkip, describe } from '../test-runner'
-import type { TestCase } from '../types'
+import type { TestCase, TestAPI } from '../types'
 
 // =============================================================================
 // Helper: Verify x/y position in code
@@ -38,7 +38,7 @@ export const basicStackedTests: TestCase[] = describe('Basic Stacked Drop', [
   testWithSetup(
     'Drop Button into empty stacked Frame',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       // Drop Button at position (100, 50)
       await api.interact.dragToPosition('Button', 'node-1', 100, 50)
 
@@ -57,7 +57,7 @@ export const basicStackedTests: TestCase[] = describe('Basic Stacked Drop', [
   testWithSetup(
     'Drop Icon into stacked with existing elements',
     'Frame stacked, w 400, h 300, bg #1a1a1a\n  Button "A", x 10, y 10',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Icon', 'node-1', 200, 150)
 
       const code = api.editor.getCode()
@@ -72,7 +72,7 @@ export const basicStackedTests: TestCase[] = describe('Basic Stacked Drop', [
   testWithSetup(
     'Drop Text at top-left of stacked',
     'Frame stacked, w 300, h 200, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Text', 'node-1', 20, 20)
 
       const code = api.editor.getCode()
@@ -97,7 +97,7 @@ export const basicStackedTests: TestCase[] = describe('Basic Stacked Drop', [
   testWithSetup(
     'Drop Input into stacked center',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Input', 'node-1', 200, 150)
 
       const code = api.editor.getCode()
@@ -116,7 +116,7 @@ export const edgeCaseTests: TestCase[] = describe('Stacked Edge Cases', [
   testWithSetup(
     'Drop near edge clamps to bounds',
     'Frame stacked, w 200, h 200, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       // Try to drop at negative position (should clamp to 0)
       await api.interact.dragToPosition('Button', 'node-1', 5, 5)
 
@@ -139,7 +139,7 @@ export const edgeCaseTests: TestCase[] = describe('Stacked Edge Cases', [
   testWithSetup(
     'Multiple drops create multiple positioned elements',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       // Drop first element
       await api.interact.dragToPosition('Button', 'node-1', 50, 50)
       await api.utils.waitForIdle()
@@ -169,7 +169,7 @@ export const layoutDetectionTests: TestCase[] = describe('Layout Detection', [
   testWithSetup(
     'Detects stacked layout by keyword',
     'Frame stacked, w 300, h 200, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Button', 'node-1', 100, 100)
 
       const code = api.editor.getCode()
@@ -182,7 +182,7 @@ export const layoutDetectionTests: TestCase[] = describe('Layout Detection', [
   testWithSetup(
     'Detects absolute children layout',
     'Frame w 300, h 200, bg #1a1a1a, relative\n  Button "Existing", x 10, y 10',
-    async api => {
+    async (api: TestAPI) => {
       // Container has an absolute child, should detect as absolute layout
       await api.interact.dragToPosition('Icon', 'node-1', 150, 100)
 
@@ -200,7 +200,7 @@ export const precisePositionTests: TestCase[] = describe('Precise Position Verif
   testWithSetup(
     'Drop at exact center position',
     'Frame stacked, w 400, h 400, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       // Drop at exact center (200, 200) - accounting for component size ~50x20
       await api.interact.dragToPosition('Button', 'node-1', 200, 200)
 
@@ -213,7 +213,7 @@ export const precisePositionTests: TestCase[] = describe('Precise Position Verif
   testWithSetup(
     'Drop at bottom-right corner',
     'Frame stacked, w 300, h 200, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       // Drop near bottom-right, but within bounds
       await api.interact.dragToPosition('Text', 'node-1', 250, 160)
 
@@ -233,7 +233,7 @@ export const precisePositionTests: TestCase[] = describe('Precise Position Verif
   testWithSetup(
     'Sequential drops maintain separate positions',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       // Drop three elements at different positions
       await api.interact.dragToPosition('Button', 'node-1', 50, 50)
       await api.utils.waitForIdle()
@@ -268,7 +268,7 @@ export const stackedWithStatesTests: TestCase[] = describe('Stacked with States'
     `Frame stacked, w 300, h 200, bg #1a1a1a
   hover:
     bg #333`,
-    async api => {
+    async (api: TestAPI) => {
       // This tests the bug fix - container has state blocks but no children
       await api.interact.dragToPosition('Button', 'node-1', 100, 80)
 
@@ -288,7 +288,7 @@ export const stackedWithStatesTests: TestCase[] = describe('Stacked with States'
     bg #333
   active:
     scale 0.95`,
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Text', 'node-1', 150, 100)
 
       const code = api.editor.getCode()
@@ -305,7 +305,7 @@ export const stackedWithStatesTests: TestCase[] = describe('Stacked with States'
 // =============================================================================
 
 export const appStackedTests: TestCase[] = describe('App Stacked', [
-  testWithSetup('Drop Button into App stacked (minimal)', 'App stacked', async api => {
+  testWithSetup('Drop Button into App stacked (minimal)', 'App stacked', async (api: TestAPI) => {
     // Drop Button at position (100, 100)
     await api.interact.dragToPosition('Button', 'node-1', 100, 100)
 
@@ -343,7 +343,7 @@ export const appStackedTests: TestCase[] = describe('App Stacked', [
   testWithSetup(
     'Drop Icon into App stacked',
     'App stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       // Drop Icon at position (100, 100) - Icon has visible content
       await api.interact.dragToPosition('Icon', 'node-1', 100, 100)
 
@@ -369,7 +369,7 @@ export const appStackedTests: TestCase[] = describe('App Stacked', [
   testWithSetup(
     'Drop Button into App stacked',
     'App stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Button', 'node-1', 150, 80)
 
       const code = api.editor.getCode()
@@ -385,7 +385,7 @@ export const appStackedTests: TestCase[] = describe('App Stacked', [
   testWithSetup(
     'Drop multiple elements into App stacked',
     'App stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       // Drop first element
       await api.interact.dragToPosition('Button', 'node-1', 50, 50)
       await api.utils.waitForIdle()
@@ -418,7 +418,7 @@ export const appStackedTests: TestCase[] = describe('App Stacked', [
   testWithSetup(
     'App stacked preserves existing children on drop',
     'App stacked, w 400, h 300, bg #1a1a1a\n  Button "Existing", x 10, y 10',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Text', 'node-1', 200, 100)
 
       const code = api.editor.getCode()
@@ -441,38 +441,46 @@ export const appStackedTests: TestCase[] = describe('App Stacked', [
 // =============================================================================
 
 export const inputTextareaButtonTests: TestCase[] = describe('Input + Textarea + Button Stacked', [
-  testWithSetup('Drop Input at top-left', 'Frame stacked, w 400, h 300, bg #1a1a1a', async api => {
-    await api.interact.dragToPosition('Input', 'node-1', 30, 30)
+  testWithSetup(
+    'Drop Input at top-left',
+    'Frame stacked, w 400, h 300, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragToPosition('Input', 'node-1', 30, 30)
 
-    const code = api.editor.getCode()
-    api.assert.codeContains(/Input/)
-    api.assert.codeContains(/\bx\s+\d+/)
-    api.assert.codeContains(/\by\s+\d+/)
+      const code = api.editor.getCode()
+      api.assert.codeContains(/Input/)
+      api.assert.codeContains(/\bx\s+\d+/)
+      api.assert.codeContains(/\by\s+\d+/)
 
-    const pos = verifyPosition(code, 30, 30, 40)
-    api.assert.ok(
-      pos.actualX !== null && pos.actualX <= 70,
-      `Input x should be near 30, got ${pos.actualX}`
-    )
-  }),
+      const pos = verifyPosition(code, 30, 30, 40)
+      api.assert.ok(
+        pos.actualX !== null && pos.actualX <= 70,
+        `Input x should be near 30, got ${pos.actualX}`
+      )
+    }
+  ),
 
-  testWithSetup('Drop Textarea at center', 'Frame stacked, w 400, h 300, bg #1a1a1a', async api => {
-    await api.interact.dragToPosition('Textarea', 'node-1', 150, 100)
+  testWithSetup(
+    'Drop Textarea at center',
+    'Frame stacked, w 400, h 300, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragToPosition('Textarea', 'node-1', 150, 100)
 
-    const code = api.editor.getCode()
-    api.assert.codeContains(/Textarea/)
+      const code = api.editor.getCode()
+      api.assert.codeContains(/Textarea/)
 
-    const pos = verifyPosition(code, 150, 100, 60)
-    api.assert.ok(
-      pos.ok,
-      `Textarea should be near (150, 100), got (${pos.actualX}, ${pos.actualY})`
-    )
-  }),
+      const pos = verifyPosition(code, 150, 100, 60)
+      api.assert.ok(
+        pos.ok,
+        `Textarea should be near (150, 100), got (${pos.actualX}, ${pos.actualY})`
+      )
+    }
+  ),
 
   testWithSetup(
     'Drop Input and Textarea at different positions',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Input', 'node-1', 50, 30)
       await api.utils.waitForIdle()
       await api.interact.dragToPosition('Textarea', 'node-1', 50, 100)
@@ -489,7 +497,7 @@ export const inputTextareaButtonTests: TestCase[] = describe('Input + Textarea +
   testWithSetup(
     'Form layout: Input + Textarea + Button',
     'Frame stacked, w 400, h 350, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Input', 'node-1', 50, 30)
       await api.utils.waitForIdle()
       await api.interact.dragToPosition('Textarea', 'node-1', 50, 80)
@@ -514,28 +522,36 @@ export const inputTextareaButtonTests: TestCase[] = describe('Input + Textarea +
 // =============================================================================
 
 export const linkImageIconTests: TestCase[] = describe('Link + Image + Icon Stacked', [
-  testWithSetup('Drop Link at position', 'Frame stacked, w 400, h 300, bg #1a1a1a', async api => {
-    await api.interact.dragToPosition('Link', 'node-1', 100, 50)
+  testWithSetup(
+    'Drop Link at position',
+    'Frame stacked, w 400, h 300, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragToPosition('Link', 'node-1', 100, 50)
 
-    const code = api.editor.getCode()
-    api.assert.codeContains(/Link/)
-    api.assert.codeContains(/\bx\s+\d+/)
-    api.assert.codeContains(/\by\s+\d+/)
-  }),
+      const code = api.editor.getCode()
+      api.assert.codeContains(/Link/)
+      api.assert.codeContains(/\bx\s+\d+/)
+      api.assert.codeContains(/\by\s+\d+/)
+    }
+  ),
 
-  testWithSetup('Drop Image at center', 'Frame stacked, w 400, h 300, bg #1a1a1a', async api => {
-    await api.interact.dragToPosition('Image', 'node-1', 150, 100)
+  testWithSetup(
+    'Drop Image at center',
+    'Frame stacked, w 400, h 300, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragToPosition('Image', 'node-1', 150, 100)
 
-    const code = api.editor.getCode()
-    api.assert.codeContains(/Image/)
-    api.assert.codeContains(/\bx\s+\d+/)
-    api.assert.codeContains(/\by\s+\d+/)
-  }),
+      const code = api.editor.getCode()
+      api.assert.codeContains(/Image/)
+      api.assert.codeContains(/\bx\s+\d+/)
+      api.assert.codeContains(/\by\s+\d+/)
+    }
+  ),
 
   testWithSetup(
     'Card layout: Image + Icon overlay',
     'Frame stacked, w 300, h 250, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Image', 'node-1', 50, 30)
       await api.utils.waitForIdle()
       await api.interact.dragToPosition('Icon', 'node-1', 220, 40)
@@ -552,7 +568,7 @@ export const linkImageIconTests: TestCase[] = describe('Link + Image + Icon Stac
   testWithSetup(
     'Gallery: Multiple images at grid positions',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Image', 'node-1', 30, 30)
       await api.utils.waitForIdle()
       await api.interact.dragToPosition('Image', 'node-1', 200, 30)
@@ -575,7 +591,7 @@ export const dividerSpacerStackedTests: TestCase[] = describe('Divider + Spacer 
   testWithSetup(
     'Drop Divider with position',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Divider', 'node-1', 50, 150)
 
       const code = api.editor.getCode()
@@ -589,7 +605,7 @@ export const dividerSpacerStackedTests: TestCase[] = describe('Divider + Spacer 
   testWithSetup(
     'Drop Spacer with position',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Spacer', 'node-1', 100, 100)
 
       const code = api.editor.getCode()
@@ -602,7 +618,7 @@ export const dividerSpacerStackedTests: TestCase[] = describe('Divider + Spacer 
   testWithSetup(
     'Section layout: Text + Divider + Text',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Text', 'node-1', 50, 30)
       await api.utils.waitForIdle()
       await api.interact.dragToPosition('Divider', 'node-1', 50, 80)
@@ -628,7 +644,7 @@ export const zagStackedTests: TestCase[] = describe('Zag Components Stacked', [
   testWithSetupSkip(
     'Drop Checkbox at position',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Checkbox', 'node-1', 50, 50)
 
       const code = api.editor.getCode()
@@ -641,7 +657,7 @@ export const zagStackedTests: TestCase[] = describe('Zag Components Stacked', [
   testWithSetupSkip(
     'Drop Switch at position',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Switch', 'node-1', 100, 80)
 
       const code = api.editor.getCode()
@@ -654,7 +670,7 @@ export const zagStackedTests: TestCase[] = describe('Zag Components Stacked', [
   testWithSetupSkip(
     'Drop Slider at position',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Slider', 'node-1', 50, 150)
 
       const code = api.editor.getCode()
@@ -667,7 +683,7 @@ export const zagStackedTests: TestCase[] = describe('Zag Components Stacked', [
   testWithSetupSkip(
     'Settings panel: multiple Switches',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Switch', 'node-1', 50, 30)
       await api.utils.waitForIdle()
       await api.interact.dragToPosition('Switch', 'node-1', 50, 80)
@@ -689,7 +705,7 @@ export const zagStackedTests: TestCase[] = describe('Zag Components Stacked', [
   testWithSetupSkip(
     'Form: Checkbox + Slider + Button',
     'Frame stacked, w 400, h 350, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Checkbox', 'node-1', 50, 30)
       await api.utils.waitForIdle()
       await api.interact.dragToPosition('Slider', 'node-1', 50, 100)
@@ -717,7 +733,7 @@ export const complexStackedMixedTests: TestCase[] = describe(
     testWithSetup(
       'Dashboard: Icon + Text + Button + Input',
       'Frame stacked, w 500, h 400, bg #1a1a1a',
-      async api => {
+      async (api: TestAPI) => {
         await api.interact.dragToPosition('Icon', 'node-1', 30, 30)
         await api.utils.waitForIdle()
         await api.interact.dragToPosition('Text', 'node-1', 70, 35)
@@ -740,7 +756,7 @@ export const complexStackedMixedTests: TestCase[] = describe(
     testWithSetup(
       'Card overlay: Image + Icon badge + Text + Link',
       'Frame stacked, w 400, h 350, bg #1a1a1a',
-      async api => {
+      async (api: TestAPI) => {
         await api.interact.dragToPosition('Image', 'node-1', 30, 30)
         await api.utils.waitForIdle()
         await api.interact.dragToPosition('Icon', 'node-1', 300, 40)
@@ -761,7 +777,7 @@ export const complexStackedMixedTests: TestCase[] = describe(
     testWithSetupSkip(
       'Settings: Text + Switch + Checkbox + Slider + Button',
       'Frame stacked, w 400, h 400, bg #1a1a1a',
-      async api => {
+      async (api: TestAPI) => {
         await api.interact.dragToPosition('Text', 'node-1', 30, 30)
         await api.utils.waitForIdle()
         await api.interact.dragToPosition('Switch', 'node-1', 30, 70)
@@ -787,7 +803,7 @@ export const complexStackedMixedTests: TestCase[] = describe(
     testWithSetup(
       'Contact form: Input + Input + Textarea + Button + Icon',
       'Frame stacked, w 400, h 400, bg #1a1a1a',
-      async api => {
+      async (api: TestAPI) => {
         await api.interact.dragToPosition('Input', 'node-1', 50, 30)
         await api.utils.waitForIdle()
         await api.interact.dragToPosition('Input', 'node-1', 50, 80)
@@ -820,7 +836,7 @@ export const positionPrecisionMixedTests: TestCase[] = describe('Position Precis
   testWithSetup(
     'Grid positions: 3x3 Icons',
     'Frame stacked, w 400, h 400, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       // Row 1
       await api.interact.dragToPosition('Icon', 'node-1', 50, 50)
       await api.utils.waitForIdle()
@@ -841,30 +857,37 @@ export const positionPrecisionMixedTests: TestCase[] = describe('Position Precis
     }
   ),
 
-  testWithSetup('Diagonal: Button trail', 'Frame stacked, w 400, h 400, bg #1a1a1a', async api => {
-    await api.interact.dragToPosition('Button', 'node-1', 50, 50)
-    await api.utils.waitForIdle()
-    await api.interact.dragToPosition('Button', 'node-1', 150, 150)
-    await api.utils.waitForIdle()
-    await api.interact.dragToPosition('Button', 'node-1', 250, 250)
-    await api.utils.waitForIdle()
-    await api.interact.dragToPosition('Button', 'node-1', 350, 350)
+  testWithSetup(
+    'Diagonal: Button trail',
+    'Frame stacked, w 400, h 400, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragToPosition('Button', 'node-1', 50, 50)
+      await api.utils.waitForIdle()
+      await api.interact.dragToPosition('Button', 'node-1', 150, 150)
+      await api.utils.waitForIdle()
+      await api.interact.dragToPosition('Button', 'node-1', 250, 250)
+      await api.utils.waitForIdle()
+      await api.interact.dragToPosition('Button', 'node-1', 350, 350)
 
-    const code = api.editor.getCode()
-    const buttonMatches = code.match(/\bButton\b/g) || []
-    api.assert.ok(buttonMatches.length >= 4, `Should have 4 Buttons, found ${buttonMatches.length}`)
+      const code = api.editor.getCode()
+      const buttonMatches = code.match(/\bButton\b/g) || []
+      api.assert.ok(
+        buttonMatches.length >= 4,
+        `Should have 4 Buttons, found ${buttonMatches.length}`
+      )
 
-    // Check positions increase diagonally
-    const xMatches = code.match(/\bx\s+(\d+)/g) || []
-    const yMatches = code.match(/\by\s+(\d+)/g) || []
-    api.assert.ok(xMatches.length >= 4, `Should have 4 x positions`)
-    api.assert.ok(yMatches.length >= 4, `Should have 4 y positions`)
-  }),
+      // Check positions increase diagonally
+      const xMatches = code.match(/\bx\s+(\d+)/g) || []
+      const yMatches = code.match(/\by\s+(\d+)/g) || []
+      api.assert.ok(xMatches.length >= 4, `Should have 4 x positions`)
+      api.assert.ok(yMatches.length >= 4, `Should have 4 y positions`)
+    }
+  ),
 
   testWithSetup(
     'Corner positions: different components',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       // Top-left
       await api.interact.dragToPosition('Icon', 'node-1', 20, 20)
       await api.utils.waitForIdle()
@@ -895,7 +918,7 @@ export const nestedStackedTests: TestCase[] = describe('Nested Stacked Container
     'Drop into nested stacked Frame',
     `Frame stacked, w 400, h 300, bg #1a1a1a
   Frame stacked, w 200, h 150, bg #333, x 100, y 75`,
-    async api => {
+    async (api: TestAPI) => {
       // Drop into inner stacked Frame (node-2)
       await api.interact.dragToPosition('Button', 'node-2', 50, 50)
 
@@ -908,7 +931,7 @@ export const nestedStackedTests: TestCase[] = describe('Nested Stacked Container
     'Drop Icon into nested stacked',
     `Frame stacked, w 400, h 300, bg #1a1a1a
   Frame stacked, w 180, h 120, bg #333, x 110, y 90`,
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Icon', 'node-2', 80, 50)
 
       const code = api.editor.getCode()
@@ -926,7 +949,7 @@ export const stackedPreservePositionsTests: TestCase[] = describe('Stacked Prese
     'Add Button preserves existing Icon position',
     `Frame stacked, w 400, h 300, bg #1a1a1a
   Icon "star", x 50, y 50`,
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Button', 'node-1', 200, 150)
 
       const code = api.editor.getCode()
@@ -941,7 +964,7 @@ export const stackedPreservePositionsTests: TestCase[] = describe('Stacked Prese
     `Frame stacked, w 400, h 300, bg #1a1a1a
   Text "Title", x 30, y 20
   Button "Action", x 30, y 60`,
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Icon', 'node-1', 300, 40)
 
       const code = api.editor.getCode()
@@ -956,7 +979,7 @@ export const stackedPreservePositionsTests: TestCase[] = describe('Stacked Prese
     'Add Switch preserves Checkbox position',
     `Frame stacked, w 400, h 300, bg #1a1a1a
   Checkbox "Option A", x 40, y 40`,
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Switch', 'node-1', 40, 100)
 
       const code = api.editor.getCode()
@@ -974,7 +997,7 @@ export const appStackedMixedTests: TestCase[] = describe('App Stacked Mixed Comp
   testWithSetup(
     'App stacked: Icon + Text header',
     'App stacked, w 500, h 400, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Icon', 'node-1', 30, 30)
       await api.utils.waitForIdle()
       await api.interact.dragToPosition('Text', 'node-1', 70, 35)
@@ -991,7 +1014,7 @@ export const appStackedMixedTests: TestCase[] = describe('App Stacked Mixed Comp
   testWithSetup(
     'App stacked: Form layout with Input + Textarea + Button',
     'App stacked, w 500, h 400, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Input', 'node-1', 50, 50)
       await api.utils.waitForIdle()
       await api.interact.dragToPosition('Textarea', 'node-1', 50, 100)
@@ -1005,18 +1028,22 @@ export const appStackedMixedTests: TestCase[] = describe('App Stacked Mixed Comp
     }
   ),
 
-  testWithSetup('App stacked: Zag controls', 'App stacked, w 400, h 350, bg #1a1a1a', async api => {
-    await api.interact.dragToPosition('Checkbox', 'node-1', 50, 50)
-    await api.utils.waitForIdle()
-    await api.interact.dragToPosition('Switch', 'node-1', 50, 100)
-    await api.utils.waitForIdle()
-    await api.interact.dragToPosition('Slider', 'node-1', 50, 160)
+  testWithSetup(
+    'App stacked: Zag controls',
+    'App stacked, w 400, h 350, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragToPosition('Checkbox', 'node-1', 50, 50)
+      await api.utils.waitForIdle()
+      await api.interact.dragToPosition('Switch', 'node-1', 50, 100)
+      await api.utils.waitForIdle()
+      await api.interact.dragToPosition('Slider', 'node-1', 50, 160)
 
-    const code = api.editor.getCode()
-    api.assert.codeContains(/Checkbox/)
-    api.assert.codeContains(/Switch/)
-    api.assert.codeContains(/Slider/)
-  }),
+      const code = api.editor.getCode()
+      api.assert.codeContains(/Checkbox/)
+      api.assert.codeContains(/Switch/)
+      api.assert.codeContains(/Slider/)
+    }
+  ),
 ])
 
 // =============================================================================

@@ -9,7 +9,7 @@
  */
 
 import { test, testWithSetup, describe } from '../../test-runner'
-import type { TestCase } from '../../types'
+import type { TestCase, TestAPI } from '../../types'
 
 // =============================================================================
 // Helper Functions
@@ -100,7 +100,7 @@ function getChildCount(nodeId: string): number {
 
 export const paletteDropBasicTests: TestCase[] = describe('Palette Drop - Basic Primitives', [
   // CRITICAL: Test dropping onto completely empty canvas (no code at all)
-  test('Drop Frame onto empty canvas (no code)', async api => {
+  test('Drop Frame onto empty canvas (no code)', async (api: TestAPI) => {
     // Start with empty code
     await api.editor.setCode('')
     await api.utils.waitForCompile()
@@ -126,101 +126,125 @@ export const paletteDropBasicTests: TestCase[] = describe('Palette Drop - Basic 
     api.assert.ok(frameExists, 'Frame element should exist in DOM')
   }),
 
-  testWithSetup('Drop Button into empty Frame', 'Frame gap 12, pad 16, bg #1a1a1a', async api => {
-    // Count buttons before drop
-    const buttonsBefore = countElementsInPreview('Button')
+  testWithSetup(
+    'Drop Button into empty Frame',
+    'Frame gap 12, pad 16, bg #1a1a1a',
+    async (api: TestAPI) => {
+      // Count buttons before drop
+      const buttonsBefore = countElementsInPreview('Button')
 
-    await api.interact.dragFromPalette('Button', 'node-1', 0)
+      await api.interact.dragFromPalette('Button', 'node-1', 0)
 
-    // Verify code change
-    const code = api.editor.getCode()
-    api.assert.ok(verifyPattern(code, 'Button'), 'Button should be added as child of Frame')
+      // Verify code change
+      const code = api.editor.getCode()
+      api.assert.ok(verifyPattern(code, 'Button'), 'Button should be added as child of Frame')
 
-    // Verify DOM element was created
-    await api.utils.waitForCompile()
-    const buttonsAfter = countElementsInPreview('Button')
-    api.assert.ok(
-      buttonsAfter > buttonsBefore,
-      `DOM should have new button: ${buttonsBefore} -> ${buttonsAfter}`
-    )
+      // Verify DOM element was created
+      await api.utils.waitForCompile()
+      const buttonsAfter = countElementsInPreview('Button')
+      api.assert.ok(
+        buttonsAfter > buttonsBefore,
+        `DOM should have new button: ${buttonsBefore} -> ${buttonsAfter}`
+      )
 
-    // Verify parent container has the child
-    const childCount = getChildCount('node-1')
-    api.assert.ok(childCount >= 1, `Frame should have at least 1 child, got ${childCount}`)
-  }),
+      // Verify parent container has the child
+      const childCount = getChildCount('node-1')
+      api.assert.ok(childCount >= 1, `Frame should have at least 1 child, got ${childCount}`)
+    }
+  ),
 
-  testWithSetup('Drop Text into empty Frame', 'Frame gap 12, pad 16, bg #1a1a1a', async api => {
-    const textsBefore = countElementsInPreview('Text')
+  testWithSetup(
+    'Drop Text into empty Frame',
+    'Frame gap 12, pad 16, bg #1a1a1a',
+    async (api: TestAPI) => {
+      const textsBefore = countElementsInPreview('Text')
 
-    await api.interact.dragFromPalette('Text', 'node-1', 0)
+      await api.interact.dragFromPalette('Text', 'node-1', 0)
 
-    // Verify code change
-    const code = api.editor.getCode()
-    api.assert.ok(verifyPattern(code, 'Text'), 'Text should be added as child of Frame')
+      // Verify code change
+      const code = api.editor.getCode()
+      api.assert.ok(verifyPattern(code, 'Text'), 'Text should be added as child of Frame')
 
-    // Verify DOM element was created
-    await api.utils.waitForCompile()
-    const textsAfter = countElementsInPreview('Text')
-    api.assert.ok(
-      textsAfter > textsBefore,
-      `DOM should have new text element: ${textsBefore} -> ${textsAfter}`
-    )
-  }),
+      // Verify DOM element was created
+      await api.utils.waitForCompile()
+      const textsAfter = countElementsInPreview('Text')
+      api.assert.ok(
+        textsAfter > textsBefore,
+        `DOM should have new text element: ${textsBefore} -> ${textsAfter}`
+      )
+    }
+  ),
 
-  testWithSetup('Drop Input into empty Frame', 'Frame gap 12, pad 16, bg #1a1a1a', async api => {
-    await api.interact.dragFromPalette('Input', 'node-1', 0)
+  testWithSetup(
+    'Drop Input into empty Frame',
+    'Frame gap 12, pad 16, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragFromPalette('Input', 'node-1', 0)
 
-    // Verify code change
-    const code = api.editor.getCode()
-    api.assert.ok(verifyPattern(code, 'Input'), 'Input should be added as child of Frame')
+      // Verify code change
+      const code = api.editor.getCode()
+      api.assert.ok(verifyPattern(code, 'Input'), 'Input should be added as child of Frame')
 
-    // Verify DOM element was created
-    await api.utils.waitForCompile()
-    const inputExists = document.querySelector('input[data-mirror-id]') !== null
-    api.assert.ok(inputExists, 'Input element should exist in DOM')
-  }),
+      // Verify DOM element was created
+      await api.utils.waitForCompile()
+      const inputExists = document.querySelector('input[data-mirror-id]') !== null
+      api.assert.ok(inputExists, 'Input element should exist in DOM')
+    }
+  ),
 
-  testWithSetup('Drop Icon into empty Frame', 'Frame gap 12, pad 16, bg #1a1a1a', async api => {
-    await api.interact.dragFromPalette('Icon', 'node-1', 0)
+  testWithSetup(
+    'Drop Icon into empty Frame',
+    'Frame gap 12, pad 16, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragFromPalette('Icon', 'node-1', 0)
 
-    // Verify code change
-    const code = api.editor.getCode()
-    api.assert.ok(verifyPattern(code, 'Icon'), 'Icon should be added as child of Frame')
+      // Verify code change
+      const code = api.editor.getCode()
+      api.assert.ok(verifyPattern(code, 'Icon'), 'Icon should be added as child of Frame')
 
-    // Verify DOM element was created (Icon may be span with SVG or just span)
-    await api.utils.waitForCompile()
-    const childCount = getChildCount('node-1')
-    api.assert.ok(
-      childCount >= 1,
-      `Frame should have at least 1 child (the icon), got ${childCount}`
-    )
-  }),
+      // Verify DOM element was created (Icon may be span with SVG or just span)
+      await api.utils.waitForCompile()
+      const childCount = getChildCount('node-1')
+      api.assert.ok(
+        childCount >= 1,
+        `Frame should have at least 1 child (the icon), got ${childCount}`
+      )
+    }
+  ),
 
-  testWithSetup('Drop Image into empty Frame', 'Frame gap 12, pad 16, bg #1a1a1a', async api => {
-    await api.interact.dragFromPalette('Image', 'node-1', 0)
+  testWithSetup(
+    'Drop Image into empty Frame',
+    'Frame gap 12, pad 16, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragFromPalette('Image', 'node-1', 0)
 
-    // Verify code change
-    const code = api.editor.getCode()
-    api.assert.ok(verifyPattern(code, 'Image'), 'Image should be added as child of Frame')
+      // Verify code change
+      const code = api.editor.getCode()
+      api.assert.ok(verifyPattern(code, 'Image'), 'Image should be added as child of Frame')
 
-    // Verify DOM element was created
-    await api.utils.waitForCompile()
-    const imgExists = document.querySelector('img[data-mirror-id]') !== null
-    api.assert.ok(imgExists, 'Image element should exist in DOM')
-  }),
+      // Verify DOM element was created
+      await api.utils.waitForCompile()
+      const imgExists = document.querySelector('img[data-mirror-id]') !== null
+      api.assert.ok(imgExists, 'Image element should exist in DOM')
+    }
+  ),
 
-  testWithSetup('Drop Divider into empty Frame', 'Frame gap 12, pad 16, bg #1a1a1a', async api => {
-    await api.interact.dragFromPalette('Divider', 'node-1', 0)
+  testWithSetup(
+    'Drop Divider into empty Frame',
+    'Frame gap 12, pad 16, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragFromPalette('Divider', 'node-1', 0)
 
-    // Verify code change
-    const code = api.editor.getCode()
-    api.assert.ok(verifyPattern(code, 'Divider'), 'Divider should be added as child of Frame')
+      // Verify code change
+      const code = api.editor.getCode()
+      api.assert.ok(verifyPattern(code, 'Divider'), 'Divider should be added as child of Frame')
 
-    // Verify DOM element was created (Divider is <hr>)
-    await api.utils.waitForCompile()
-    const hrExists = document.querySelector('hr[data-mirror-id]') !== null
-    api.assert.ok(hrExists, 'Divider (hr) element should exist in DOM')
-  }),
+      // Verify DOM element was created (Divider is <hr>)
+      await api.utils.waitForCompile()
+      const hrExists = document.querySelector('hr[data-mirror-id]') !== null
+      api.assert.ok(hrExists, 'Divider (hr) element should exist in DOM')
+    }
+  ),
 ])
 
 // =============================================================================
@@ -231,7 +255,7 @@ export const paletteDropPositionTests: TestCase[] = describe('Palette Drop - Pos
   testWithSetup(
     'Drop as first child (before existing)',
     'Frame gap 12, pad 16, bg #1a1a1a\n  Button "Existing"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Icon', 'node-1', 0)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Icon'), 'Icon should be added before Button')
@@ -244,7 +268,7 @@ export const paletteDropPositionTests: TestCase[] = describe('Palette Drop - Pos
   testWithSetup(
     'Drop as last child (after existing)',
     'Frame gap 12, pad 16, bg #1a1a1a\n  Button "First"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Text', 'node-1', 1)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Text'), 'Text should be added after Button')
@@ -257,7 +281,7 @@ export const paletteDropPositionTests: TestCase[] = describe('Palette Drop - Pos
   testWithSetup(
     'Drop between two children (middle)',
     'Frame gap 12, pad 16, bg #1a1a1a\n  Button "First"\n  Button "Last"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Divider', 'node-1', 1)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Divider'), 'Divider should be inserted between buttons')
@@ -267,7 +291,7 @@ export const paletteDropPositionTests: TestCase[] = describe('Palette Drop - Pos
   testWithSetup(
     'Drop at index 2 with 3 children',
     'Frame gap 12, pad 16, bg #1a1a1a\n  Text "One"\n  Text "Two"\n  Text "Three"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Icon', 'node-1', 2)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Icon'), 'Icon should be inserted at position 2')
@@ -283,7 +307,7 @@ export const paletteDropNestedTests: TestCase[] = describe('Palette Drop - Neste
   testWithSetup(
     'Drop into nested Frame (2 levels)',
     'Frame gap 16, pad 16\n  Frame gap 8, bg #2a2a3a, pad 12\n    Text "Inner"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Button', 'node-2', 1)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Button'), 'Button should be added to nested Frame')
@@ -293,7 +317,7 @@ export const paletteDropNestedTests: TestCase[] = describe('Palette Drop - Neste
   testWithSetup(
     'Drop into deeply nested Frame (3 levels)',
     'Frame gap 16, pad 16\n  Frame gap 12\n    Frame gap 8, bg #3a3a4a, pad 8\n      Text "Deep"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Icon', 'node-3', 1)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Icon'), 'Icon should be added to deeply nested Frame')
@@ -303,7 +327,7 @@ export const paletteDropNestedTests: TestCase[] = describe('Palette Drop - Neste
   testWithSetup(
     'Drop into first nested container',
     'Frame gap 16, pad 16\n  Frame gap 8, bg #2a2a3a, pad 12\n  Frame gap 8, bg #3a3a4a, pad 12',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Button', 'node-2', 0)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Button'), 'Button should be added to first nested Frame')
@@ -313,7 +337,7 @@ export const paletteDropNestedTests: TestCase[] = describe('Palette Drop - Neste
   testWithSetup(
     'Drop into second nested container',
     'Frame gap 16, pad 16\n  Frame gap 8, bg #2a2a3a, pad 12\n  Frame gap 8, bg #3a3a4a, pad 12',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Text', 'node-3', 0)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Text'), 'Text should be added to second nested Frame')
@@ -326,7 +350,7 @@ export const paletteDropNestedTests: TestCase[] = describe('Palette Drop - Neste
 // =============================================================================
 
 export const paletteDropHorizontalTests: TestCase[] = describe('Palette Drop - Horizontal', [
-  testWithSetup('Drop into horizontal Frame', 'Frame hor, gap 12, pad 16', async api => {
+  testWithSetup('Drop into horizontal Frame', 'Frame hor, gap 12, pad 16', async (api: TestAPI) => {
     await api.interact.dragFromPalette('Button', 'node-1', 0)
     const code = api.editor.getCode()
     api.assert.ok(verifyPattern(code, 'Button'), 'Button should be added to horizontal Frame')
@@ -335,7 +359,7 @@ export const paletteDropHorizontalTests: TestCase[] = describe('Palette Drop - H
   testWithSetup(
     'Drop first into horizontal with children',
     'Frame hor, gap 12, pad 16\n  Text "A"\n  Text "B"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Icon', 'node-1', 0)
       const code = api.editor.getCode()
       const iconPos = findComponentPos(code, 'Icon')
@@ -347,7 +371,7 @@ export const paletteDropHorizontalTests: TestCase[] = describe('Palette Drop - H
   testWithSetup(
     'Drop last into horizontal with children',
     'Frame hor, gap 12, pad 16\n  Text "A"\n  Text "B"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Icon', 'node-1', 2)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Icon'), 'Icon should be added last')
@@ -357,7 +381,7 @@ export const paletteDropHorizontalTests: TestCase[] = describe('Palette Drop - H
   testWithSetup(
     'Drop between horizontal children',
     'Frame hor, gap 12, pad 16\n  Button "Left"\n  Button "Right"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Divider', 'node-1', 1)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Divider'), 'Divider should be between buttons')
@@ -367,7 +391,7 @@ export const paletteDropHorizontalTests: TestCase[] = describe('Palette Drop - H
   testWithSetup(
     'Drop into vertical inside horizontal',
     'Frame hor, gap 16, pad 16\n  Frame gap 8\n    Text "Inner"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Button', 'node-2', 1)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Button'), 'Button should be in nested vertical Frame')
@@ -380,13 +404,13 @@ export const paletteDropHorizontalTests: TestCase[] = describe('Palette Drop - H
 // =============================================================================
 
 export const paletteDropLayoutTests: TestCase[] = describe('Palette Drop - Layouts', [
-  testWithSetup('Drop into spread layout', 'Frame spread, gap 12, pad 16', async api => {
+  testWithSetup('Drop into spread layout', 'Frame spread, gap 12, pad 16', async (api: TestAPI) => {
     await api.interact.dragFromPalette('Button', 'node-1', 0)
     const code = api.editor.getCode()
     api.assert.ok(verifyPattern(code, 'Button'), 'Button should be added to spread Frame')
   }),
 
-  testWithSetup('Drop into centered Frame', 'Frame center, w 200, h 100', async api => {
+  testWithSetup('Drop into centered Frame', 'Frame center, w 200, h 100', async (api: TestAPI) => {
     await api.interact.dragFromPalette('Text', 'node-1', 0)
     const code = api.editor.getCode()
     api.assert.ok(verifyPattern(code, 'Text'), 'Text should be added to centered Frame')
@@ -398,19 +422,19 @@ export const paletteDropLayoutTests: TestCase[] = describe('Palette Drop - Layou
 // =============================================================================
 
 export const paletteDropZagTests: TestCase[] = describe('Palette Drop - Zag Components', [
-  testWithSetup('Drop Checkbox into Frame', 'Frame gap 12, pad 16', async api => {
+  testWithSetup('Drop Checkbox into Frame', 'Frame gap 12, pad 16', async (api: TestAPI) => {
     await api.interact.dragFromPalette('Checkbox', 'node-1', 0)
     const code = api.editor.getCode()
     api.assert.ok(verifyPattern(code, 'Checkbox'), 'Checkbox should be added')
   }),
 
-  testWithSetup('Drop Switch into Frame', 'Frame gap 12, pad 16', async api => {
+  testWithSetup('Drop Switch into Frame', 'Frame gap 12, pad 16', async (api: TestAPI) => {
     await api.interact.dragFromPalette('Switch', 'node-1', 0)
     const code = api.editor.getCode()
     api.assert.ok(verifyPattern(code, 'Switch'), 'Switch should be added')
   }),
 
-  testWithSetup('Drop Slider into Frame', 'Frame gap 12, pad 16', async api => {
+  testWithSetup('Drop Slider into Frame', 'Frame gap 12, pad 16', async (api: TestAPI) => {
     await api.interact.dragFromPalette('Slider', 'node-1', 0)
     const code = api.editor.getCode()
     api.assert.ok(verifyPattern(code, 'Slider'), 'Slider should be added')
@@ -425,7 +449,7 @@ export const paletteDropComplexTests: TestCase[] = describe('Palette Drop - Comp
   testWithSetup(
     'Drop Zag after existing elements',
     'Frame gap 12, pad 16\n  Text "Label"\n  Input placeholder "Enter..."',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Slider', 'node-1', 2)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Slider'), 'Slider should be added after Input')
@@ -435,7 +459,7 @@ export const paletteDropComplexTests: TestCase[] = describe('Palette Drop - Comp
   testWithSetup(
     'Drop into form-like structure',
     'Frame gap 16, pad 24\n  Text "Name"\n  Input placeholder "Enter name..."\n  Text "Email"\n  Input placeholder "Enter email..."',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Button', 'node-1', 4)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Button'), 'Button should be added at end')
@@ -445,7 +469,7 @@ export const paletteDropComplexTests: TestCase[] = describe('Palette Drop - Comp
   testWithSetup(
     'Drop new field group',
     'Frame gap 16, pad 24\n  Frame gap 8\n    Text "Field 1"\n    Input',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Text', 'node-2', 2)
       const code = api.editor.getCode()
       // Count Text occurrences
@@ -457,23 +481,27 @@ export const paletteDropComplexTests: TestCase[] = describe('Palette Drop - Comp
   testWithSetup(
     'Drop Spacer for layout adjustment',
     'Frame gap 12, pad 16\n  Button "Top"\n  Button "Bottom"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Spacer', 'node-1', 1)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Spacer'), 'Spacer should be between buttons')
     }
   ),
 
-  testWithSetup('Drop Link component', 'Frame gap 12, pad 16\n  Text "Description"', async api => {
-    await api.interact.dragFromPalette('Link', 'node-1', 1)
-    const code = api.editor.getCode()
-    api.assert.ok(verifyPattern(code, 'Link'), 'Link should be added after Text')
-  }),
+  testWithSetup(
+    'Drop Link component',
+    'Frame gap 12, pad 16\n  Text "Description"',
+    async (api: TestAPI) => {
+      await api.interact.dragFromPalette('Link', 'node-1', 1)
+      const code = api.editor.getCode()
+      api.assert.ok(verifyPattern(code, 'Link'), 'Link should be added after Text')
+    }
+  ),
 
   testWithSetup(
     'Drop Textarea into form',
     'Frame gap 12, pad 16\n  Text "Comments"\n  Button "Submit"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Textarea', 'node-1', 1)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Textarea'), 'Textarea should be between Text and Button')
@@ -489,7 +517,7 @@ export const canvasMoveReorderTests: TestCase[] = describe('Canvas Move - Reorde
   testWithSetup(
     'Move element to first position',
     'Frame gap 12, pad 16, bg #1a1a1a\n  Text "First"\n  Button "Move Me"\n  Text "Last"',
-    async api => {
+    async (api: TestAPI) => {
       // Verify initial state - button exists before move
       const buttonBefore = document.querySelector('button[data-mirror-id="node-3"]')
       api.assert.ok(buttonBefore !== null, 'Button should exist before move')
@@ -517,7 +545,7 @@ export const canvasMoveReorderTests: TestCase[] = describe('Canvas Move - Reorde
   testWithSetup(
     'Move element to last position',
     'Frame gap 12, pad 16, bg #1a1a1a\n  Button "Move Me"\n  Text "Middle"\n  Text "Last"',
-    async api => {
+    async (api: TestAPI) => {
       // Count children before
       const childCountBefore = getChildCount('node-1')
 
@@ -543,7 +571,7 @@ export const canvasMoveReorderTests: TestCase[] = describe('Canvas Move - Reorde
   testWithSetup(
     'Move element to middle position',
     'Frame gap 12, pad 16, bg #1a1a1a\n  Text "First"\n  Text "Second"\n  Button "Move Me"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.moveElement('node-4', 'node-1', 1)
 
       // Verify code change
@@ -574,7 +602,7 @@ export const canvasMoveCrossContainerTests: TestCase[] = describe('Canvas Move -
   testWithSetup(
     'Move element to different container',
     'Frame gap 16, pad 16\n  Frame gap 8, bg #2a2a3a, pad 12\n    Button "Source"\n  Frame gap 8, bg #3a3a4a, pad 12\n    Text "Target"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.moveElement('node-3', 'node-4', 1)
       const code = api.editor.getCode()
       api.assert.ok(
@@ -587,7 +615,7 @@ export const canvasMoveCrossContainerTests: TestCase[] = describe('Canvas Move -
   testWithSetup(
     'Move element from nested to parent',
     'Frame gap 16, pad 16\n  Text "Parent Text"\n  Frame gap 8, pad 12\n    Button "Nested"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.moveElement('node-4', 'node-1', 0)
       const code = api.editor.getCode()
       api.assert.ok(
@@ -600,7 +628,7 @@ export const canvasMoveCrossContainerTests: TestCase[] = describe('Canvas Move -
   testWithSetup(
     'Move element into nested container',
     'Frame gap 16, pad 16\n  Button "Move Me"\n  Frame gap 8, pad 12\n    Text "Inner"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.moveElement('node-2', 'node-3', 0)
       const code = api.editor.getCode()
       api.assert.ok(
@@ -619,7 +647,7 @@ export const canvasMoveHorizontalTests: TestCase[] = describe('Canvas Move - Hor
   testWithSetup(
     'Reorder in horizontal container',
     'Frame hor, gap 12, pad 16\n  Button "A"\n  Button "B"\n  Button "C"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.moveElement('node-4', 'node-1', 0)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Button "C"'), 'Button C should be moved to first position')
@@ -629,7 +657,7 @@ export const canvasMoveHorizontalTests: TestCase[] = describe('Canvas Move - Hor
   testWithSetup(
     'Move from vertical to horizontal',
     'Frame gap 16, pad 16\n  Frame gap 8\n    Button "Vertical"\n  Frame hor, gap 8\n    Text "H1"\n    Text "H2"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.moveElement('node-3', 'node-4', 1)
       const code = api.editor.getCode()
       api.assert.ok(
@@ -648,7 +676,7 @@ export const canvasMoveComplexTests: TestCase[] = describe('Canvas Move - Comple
   testWithSetup(
     'Move in 3-level nested structure',
     'Frame gap 16, pad 16\n  Frame gap 12\n    Frame gap 8\n      Text "Deep"\n      Button "Move"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.moveElement('node-5', 'node-2', 0)
       const code = api.editor.getCode()
       api.assert.ok(verifyPattern(code, 'Button "Move"'), 'Button should be moved up one level')
@@ -658,7 +686,7 @@ export const canvasMoveComplexTests: TestCase[] = describe('Canvas Move - Comple
   testWithSetup(
     'Move between sibling containers',
     'Frame hor, gap 16, pad 16\n  Frame gap 8, w 100\n    Button "In A"\n  Frame gap 8, w 100\n    Text "In B"',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.moveElement('node-3', 'node-4', 0)
       const code = api.editor.getCode()
       api.assert.ok(
@@ -677,7 +705,7 @@ export const stackedDropTests: TestCase[] = describe('Stacked Drop - Absolute Po
   testWithSetup(
     'Drop Button into empty stacked Frame',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Button', 'node-1', 100, 50)
 
       // Verify code change
@@ -702,7 +730,7 @@ export const stackedDropTests: TestCase[] = describe('Stacked Drop - Absolute Po
   testWithSetup(
     'Drop Icon into stacked with existing elements',
     'Frame stacked, w 400, h 300, bg #1a1a1a\n  Button "A", x 10, y 10',
-    async api => {
+    async (api: TestAPI) => {
       // Count children before
       const childCountBefore = getChildCount('node-1')
 
@@ -725,7 +753,7 @@ export const stackedDropTests: TestCase[] = describe('Stacked Drop - Absolute Po
   testWithSetup(
     'Drop Text at top-left of stacked',
     'Frame stacked, w 300, h 200, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Text', 'node-1', 20, 20)
 
       // Verify code change
@@ -742,7 +770,7 @@ export const stackedDropTests: TestCase[] = describe('Stacked Drop - Absolute Po
   testWithSetup(
     'Drop Input into stacked center',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToPosition('Input', 'node-1', 200, 150)
 
       // Verify code change

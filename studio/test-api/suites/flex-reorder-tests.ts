@@ -7,7 +7,7 @@
  */
 
 import { testWithSetup, describe } from '../test-runner'
-import type { TestCase } from '../types'
+import type { TestCase, TestAPI } from '../types'
 
 // =============================================================================
 // Helper: Simple order verification using code positions
@@ -59,7 +59,7 @@ export const buttonTextIconTests: TestCase[] = describe('Button + Text + Icon Re
   Text "Label"
   Icon "star"
   Button "Click"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Button (node-4) to first position
       await api.interact.moveElement('node-4', 'node-1', 0)
 
@@ -76,7 +76,7 @@ export const buttonTextIconTests: TestCase[] = describe('Button + Text + Icon Re
   Button "Action"
   Text "Message"
   Icon "check"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Icon (node-4) to middle (index 1)
       await api.interact.moveElement('node-4', 'node-1', 1)
 
@@ -97,7 +97,7 @@ export const buttonTextIconTests: TestCase[] = describe('Button + Text + Icon Re
   Text "Status"
   Button "Submit"
   Icon "alert"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Text (node-2) to last position (index 2)
       await api.interact.moveElement('node-2', 'node-1', 2)
 
@@ -114,7 +114,7 @@ export const buttonTextIconTests: TestCase[] = describe('Button + Text + Icon Re
   Icon "home"
   Text "Welcome"
   Button "Enter"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Button to first
       await api.interact.moveElement('node-4', 'node-1', 0)
 
@@ -137,7 +137,7 @@ export const inputButtonTextTests: TestCase[] = describe('Input + Button + Text 
   Input placeholder "Enter name"
   Button "Submit"
   Text "Required"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Button to first
       await api.interact.moveElement('node-3', 'node-1', 0)
 
@@ -153,7 +153,7 @@ export const inputButtonTextTests: TestCase[] = describe('Input + Button + Text 
   Input placeholder "Email"
   Button "Send"
   Text "We will contact you"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Text to middle
       await api.interact.moveElement('node-4', 'node-1', 1)
 
@@ -168,7 +168,7 @@ export const inputButtonTextTests: TestCase[] = describe('Input + Button + Text 
     `Frame gap 12, bg #1a1a1a, pad 16
   Input placeholder "Search"
   Button "Go"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Button to first
       await api.interact.moveElement('node-3', 'node-1', 0)
 
@@ -190,7 +190,7 @@ export const imageTextButtonTests: TestCase[] = describe('Image + Text + Button 
   Image src "photo.jpg", w 200
   Text "Caption"
   Button "View"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Button to first
       await api.interact.moveElement('node-4', 'node-1', 0)
 
@@ -210,7 +210,7 @@ export const imageTextButtonTests: TestCase[] = describe('Image + Text + Button 
   Image src "avatar.png", w 100
   Text "Username"
   Button "Follow"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Image to middle (index 1)
       await api.interact.moveElement('node-2', 'node-1', 1)
 
@@ -231,7 +231,7 @@ export const imageTextButtonTests: TestCase[] = describe('Image + Text + Button 
   Icon "camera"
   Image src "thumb.jpg", w 50
   Text "Captured"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Text to first
       await api.interact.moveElement('node-4', 'node-1', 0)
       await api.utils.waitForIdle()
@@ -255,7 +255,7 @@ export const linkIconTextTests: TestCase[] = describe('Link + Icon + Text Reorde
   Link "Read more", href "/article"
   Icon "arrow-right"
   Text "Continue"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Link to middle (index 1)
       await api.interact.moveElement('node-2', 'node-1', 1)
 
@@ -273,7 +273,7 @@ export const linkIconTextTests: TestCase[] = describe('Link + Icon + Text Reorde
   Link "Home"
   Link "About"
   Icon "search"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move search Icon to first
       await api.interact.moveElement('node-4', 'node-1', 0)
 
@@ -297,7 +297,7 @@ export const dividerSpacerMixedTests: TestCase[] = describe('Divider + Spacer Mi
   Divider
   Text "Section 2"
   Button "Submit"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Divider to after Button (last)
       await api.interact.moveElement('node-3', 'node-1', 3)
 
@@ -314,7 +314,7 @@ export const dividerSpacerMixedTests: TestCase[] = describe('Divider + Spacer Mi
   Text "Left"
   Spacer
   Button "Right"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Spacer to end
       await api.interact.moveElement('node-3', 'node-1', 2)
 
@@ -331,7 +331,7 @@ export const dividerSpacerMixedTests: TestCase[] = describe('Divider + Spacer Mi
   Icon "info"
   Divider
   Text "Details"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Icon to last
       await api.interact.moveElement('node-2', 'node-1', 2)
 
@@ -353,7 +353,7 @@ export const textareaInputButtonTests: TestCase[] = describe('Textarea + Input +
   Input placeholder "Subject"
   Textarea placeholder "Message"
   Button "Send"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Textarea to first
       await api.interact.moveElement('node-3', 'node-1', 0)
 
@@ -373,7 +373,7 @@ export const textareaInputButtonTests: TestCase[] = describe('Textarea + Input +
   Input placeholder "Email"
   Textarea placeholder "Your message"
   Button "Submit"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Button to position 1 (after title)
       await api.interact.moveElement('node-5', 'node-1', 1)
 
@@ -396,7 +396,7 @@ export const zagMixedTests: TestCase[] = describe('Zag + Basic Components Reorde
   Text "Terms"
   Button "Accept"
   Checkbox "I agree"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Checkbox (node-4) to middle
       await api.interact.moveElement('node-4', 'node-1', 1)
 
@@ -417,7 +417,7 @@ export const zagMixedTests: TestCase[] = describe('Zag + Basic Components Reorde
   Switch "Dark Mode"
   Text "Theme"
   Icon "moon"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Icon to first
       await api.interact.moveElement('node-4', 'node-1', 0)
 
@@ -434,7 +434,7 @@ export const zagMixedTests: TestCase[] = describe('Zag + Basic Components Reorde
   Text "Volume"
   Slider value 50
   Button "Apply"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Slider to first
       await api.interact.moveElement('node-3', 'node-1', 0)
 
@@ -458,7 +458,7 @@ export const complexMixedTests: TestCase[] = describe('Complex Mixed (4+ compone
   Text "App"
   Spacer
   Button "Login"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Button to first
       await api.interact.moveElement('node-5', 'node-1', 0)
 
@@ -476,7 +476,7 @@ export const complexMixedTests: TestCase[] = describe('Complex Mixed (4+ compone
   Input placeholder "Title"
   Textarea placeholder "Details"
   Button "Send"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Textarea to first
       await api.interact.moveElement('node-4', 'node-1', 0)
 
@@ -497,7 +497,7 @@ export const complexMixedTests: TestCase[] = describe('Complex Mixed (4+ compone
   Text "Title"
   Icon "heart"
   Button "Like"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Icon to first
       await api.interact.moveElement('node-4', 'node-1', 0)
 
@@ -516,7 +516,7 @@ export const complexMixedTests: TestCase[] = describe('Complex Mixed (4+ compone
   Divider
   Button "Save"
   Button "Export"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Export to position 2 (after redo, before Divider)
       await api.interact.moveElement('node-6', 'node-1', 2)
 
@@ -537,7 +537,7 @@ export const complexMixedTests: TestCase[] = describe('Complex Mixed (4+ compone
   Switch "Sound"
   Divider
   Button "Save"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Divider to first
       await api.interact.moveElement('node-4', 'node-1', 0)
 
@@ -562,7 +562,7 @@ export const edgeCaseMixedTests: TestCase[] = describe('Edge Cases (Mixed)', [
     `Frame gap 8, bg #1a1a1a, pad 16
   Button "Click"
   Icon "star"`,
-    async api => {
+    async (api: TestAPI) => {
       // Swap by moving Icon to first
       await api.interact.moveElement('node-3', 'node-1', 0)
 
@@ -579,7 +579,7 @@ export const edgeCaseMixedTests: TestCase[] = describe('Edge Cases (Mixed)', [
   Text "First"
   Button "Second"
   Icon "star"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Text to position 0 (already there) - should be no change
       await api.interact.moveElement('node-2', 'node-1', 0)
 
@@ -599,7 +599,7 @@ export const edgeCaseMixedTests: TestCase[] = describe('Edge Cases (Mixed)', [
   Icon "check"
   Text "Success"
   Button "Continue"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Button to first
       await api.interact.moveElement('node-4', 'node-1', 0)
 
@@ -616,7 +616,7 @@ export const edgeCaseMixedTests: TestCase[] = describe('Edge Cases (Mixed)', [
   Text "Left"
   Icon "arrow"
   Button "Right"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Icon to last (index 2)
       await api.interact.moveElement('node-3', 'node-1', 2)
 
@@ -634,7 +634,7 @@ export const edgeCaseMixedTests: TestCase[] = describe('Edge Cases (Mixed)', [
   Icon "star"
   Text "Label"
   Button "B"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move last Button (B) to first
       await api.interact.moveElement('node-5', 'node-1', 0)
 
@@ -657,7 +657,7 @@ export const sequentialMixedTests: TestCase[] = describe('Sequential Mixed Reord
   Button "B"
   Icon "star"
   Text "T"`,
-    async api => {
+    async (api: TestAPI) => {
       // First move: Icon to first
       await api.interact.moveElement('node-3', 'node-1', 0)
       await api.utils.waitForIdle()
@@ -680,7 +680,7 @@ export const sequentialMixedTests: TestCase[] = describe('Sequential Mixed Reord
   Text "T"
   Button "B"
   Icon "star"`,
-    async api => {
+    async (api: TestAPI) => {
       // Move Button to last position
       await api.interact.moveElement('node-3', 'node-1', 2)
       await api.utils.waitForIdle()

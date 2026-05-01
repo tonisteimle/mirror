@@ -653,6 +653,14 @@ class UtilsAPIImpl implements UtilsAPI {
       selection: studio?.state?.get()?.selection?.nodeId ?? null,
     }
   }
+
+  async getDataAttribute(nodeId: string, attribute: string): Promise<string | null> {
+    const element = this.previewContainer?.querySelector(
+      `[data-mirror-id="${nodeId}"]`
+    ) as HTMLElement | null
+    if (!element) return null
+    return element.getAttribute(attribute)
+  }
 }
 
 // =============================================================================

@@ -6,7 +6,7 @@
  */
 
 import { testWithSetup, describe } from '../../test-runner'
-import type { TestCase } from '../../types'
+import type { TestCase, TestAPI } from '../../types'
 
 // =============================================================================
 // Helper: Verify alignment property in code
@@ -32,50 +32,70 @@ function verifyAlignmentProperty(
 // =============================================================================
 
 export const basicAlignmentZoneTests: TestCase[] = describe('Basic Alignment Zone Drops', [
-  testWithSetup('Drop Button at center zone', 'Frame w 200, h 200, bg #1a1a1a', async api => {
-    await api.interact.dragToAlignmentZone('Button', 'node-1', 'center')
+  testWithSetup(
+    'Drop Button at center zone',
+    'Frame w 200, h 200, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragToAlignmentZone('Button', 'node-1', 'center')
 
-    const code = api.editor.getCode()
-    api.assert.codeContains(/Button/)
-    const result = verifyAlignmentProperty(code, 'center')
-    api.assert.ok(result.ok, `Expected 'center' property, found '${result.found}'`)
-  }),
+      const code = api.editor.getCode()
+      api.assert.codeContains(/Button/)
+      const result = verifyAlignmentProperty(code, 'center')
+      api.assert.ok(result.ok, `Expected 'center' property, found '${result.found}'`)
+    }
+  ),
 
-  testWithSetup('Drop Text at top-left zone', 'Frame w 200, h 200, bg #1a1a1a', async api => {
-    await api.interact.dragToAlignmentZone('Text', 'node-1', 'top-left')
+  testWithSetup(
+    'Drop Text at top-left zone',
+    'Frame w 200, h 200, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragToAlignmentZone('Text', 'node-1', 'top-left')
 
-    const code = api.editor.getCode()
-    api.assert.codeContains(/Text/)
-    const result = verifyAlignmentProperty(code, 'tl')
-    api.assert.ok(result.ok, `Expected 'tl' property, found '${result.found}'`)
-  }),
+      const code = api.editor.getCode()
+      api.assert.codeContains(/Text/)
+      const result = verifyAlignmentProperty(code, 'tl')
+      api.assert.ok(result.ok, `Expected 'tl' property, found '${result.found}'`)
+    }
+  ),
 
-  testWithSetup('Drop Icon at bottom-right zone', 'Frame w 200, h 200, bg #1a1a1a', async api => {
-    await api.interact.dragToAlignmentZone('Icon', 'node-1', 'bottom-right')
+  testWithSetup(
+    'Drop Icon at bottom-right zone',
+    'Frame w 200, h 200, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragToAlignmentZone('Icon', 'node-1', 'bottom-right')
 
-    const code = api.editor.getCode()
-    api.assert.codeContains(/Icon/)
-    const result = verifyAlignmentProperty(code, 'br')
-    api.assert.ok(result.ok, `Expected 'br' property, found '${result.found}'`)
-  }),
+      const code = api.editor.getCode()
+      api.assert.codeContains(/Icon/)
+      const result = verifyAlignmentProperty(code, 'br')
+      api.assert.ok(result.ok, `Expected 'br' property, found '${result.found}'`)
+    }
+  ),
 
-  testWithSetup('Drop Button at top-center zone', 'Frame w 200, h 200, bg #1a1a1a', async api => {
-    await api.interact.dragToAlignmentZone('Button', 'node-1', 'top-center')
+  testWithSetup(
+    'Drop Button at top-center zone',
+    'Frame w 200, h 200, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragToAlignmentZone('Button', 'node-1', 'top-center')
 
-    const code = api.editor.getCode()
-    api.assert.codeContains(/Button/)
-    const result = verifyAlignmentProperty(code, 'tc')
-    api.assert.ok(result.ok, `Expected 'tc' property, found '${result.found}'`)
-  }),
+      const code = api.editor.getCode()
+      api.assert.codeContains(/Button/)
+      const result = verifyAlignmentProperty(code, 'tc')
+      api.assert.ok(result.ok, `Expected 'tc' property, found '${result.found}'`)
+    }
+  ),
 
-  testWithSetup('Drop Text at center-left zone', 'Frame w 200, h 200, bg #1a1a1a', async api => {
-    await api.interact.dragToAlignmentZone('Text', 'node-1', 'center-left')
+  testWithSetup(
+    'Drop Text at center-left zone',
+    'Frame w 200, h 200, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragToAlignmentZone('Text', 'node-1', 'center-left')
 
-    const code = api.editor.getCode()
-    api.assert.codeContains(/Text/)
-    const result = verifyAlignmentProperty(code, 'cl')
-    api.assert.ok(result.ok, `Expected 'cl' property, found '${result.found}'`)
-  }),
+      const code = api.editor.getCode()
+      api.assert.codeContains(/Text/)
+      const result = verifyAlignmentProperty(code, 'cl')
+      api.assert.ok(result.ok, `Expected 'cl' property, found '${result.found}'`)
+    }
+  ),
 ])
 
 // =============================================================================
@@ -83,37 +103,53 @@ export const basicAlignmentZoneTests: TestCase[] = describe('Basic Alignment Zon
 // =============================================================================
 
 export const allZonesTests: TestCase[] = describe('All 9 Alignment Zones', [
-  testWithSetup('Drop at top-right zone', 'Frame w 200, h 200, bg #1a1a1a', async api => {
-    await api.interact.dragToAlignmentZone('Button', 'node-1', 'top-right')
+  testWithSetup(
+    'Drop at top-right zone',
+    'Frame w 200, h 200, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragToAlignmentZone('Button', 'node-1', 'top-right')
 
-    const code = api.editor.getCode()
-    const result = verifyAlignmentProperty(code, 'tr')
-    api.assert.ok(result.ok, `Expected 'tr' property, found '${result.found}'`)
-  }),
+      const code = api.editor.getCode()
+      const result = verifyAlignmentProperty(code, 'tr')
+      api.assert.ok(result.ok, `Expected 'tr' property, found '${result.found}'`)
+    }
+  ),
 
-  testWithSetup('Drop at center-right zone', 'Frame w 200, h 200, bg #1a1a1a', async api => {
-    await api.interact.dragToAlignmentZone('Button', 'node-1', 'center-right')
+  testWithSetup(
+    'Drop at center-right zone',
+    'Frame w 200, h 200, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragToAlignmentZone('Button', 'node-1', 'center-right')
 
-    const code = api.editor.getCode()
-    const result = verifyAlignmentProperty(code, 'cr')
-    api.assert.ok(result.ok, `Expected 'cr' property, found '${result.found}'`)
-  }),
+      const code = api.editor.getCode()
+      const result = verifyAlignmentProperty(code, 'cr')
+      api.assert.ok(result.ok, `Expected 'cr' property, found '${result.found}'`)
+    }
+  ),
 
-  testWithSetup('Drop at bottom-left zone', 'Frame w 200, h 200, bg #1a1a1a', async api => {
-    await api.interact.dragToAlignmentZone('Button', 'node-1', 'bottom-left')
+  testWithSetup(
+    'Drop at bottom-left zone',
+    'Frame w 200, h 200, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragToAlignmentZone('Button', 'node-1', 'bottom-left')
 
-    const code = api.editor.getCode()
-    const result = verifyAlignmentProperty(code, 'bl')
-    api.assert.ok(result.ok, `Expected 'bl' property, found '${result.found}'`)
-  }),
+      const code = api.editor.getCode()
+      const result = verifyAlignmentProperty(code, 'bl')
+      api.assert.ok(result.ok, `Expected 'bl' property, found '${result.found}'`)
+    }
+  ),
 
-  testWithSetup('Drop at bottom-center zone', 'Frame w 200, h 200, bg #1a1a1a', async api => {
-    await api.interact.dragToAlignmentZone('Button', 'node-1', 'bottom-center')
+  testWithSetup(
+    'Drop at bottom-center zone',
+    'Frame w 200, h 200, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragToAlignmentZone('Button', 'node-1', 'bottom-center')
 
-    const code = api.editor.getCode()
-    const result = verifyAlignmentProperty(code, 'bc')
-    api.assert.ok(result.ok, `Expected 'bc' property, found '${result.found}'`)
-  }),
+      const code = api.editor.getCode()
+      const result = verifyAlignmentProperty(code, 'bc')
+      api.assert.ok(result.ok, `Expected 'bc' property, found '${result.found}'`)
+    }
+  ),
 ])
 
 // =============================================================================
@@ -124,7 +160,7 @@ export const alignmentEdgeCaseTests: TestCase[] = describe('Alignment Zone Edge 
   testWithSetup(
     'Alignment zone works at minimum size (80x80)',
     'Frame w 80, h 80, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToAlignmentZone('Button', 'node-1', 'center')
 
       const code = api.editor.getCode()
@@ -137,7 +173,7 @@ export const alignmentEdgeCaseTests: TestCase[] = describe('Alignment Zone Edge 
   testWithSetup(
     'Alignment zone works with large container',
     'Frame w 500, h 400, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragToAlignmentZone('Text', 'node-1', 'bottom-right')
 
       const code = api.editor.getCode()
@@ -150,7 +186,7 @@ export const alignmentEdgeCaseTests: TestCase[] = describe('Alignment Zone Edge 
   testWithSetup(
     'Nested empty container gets alignment zone',
     'Frame w 300, h 300, bg #1a1a1a, pad 20\n  Frame w 200, h 200, bg #333',
-    async api => {
+    async (api: TestAPI) => {
       // Drop into the nested Frame (node-2)
       await api.interact.dragToAlignmentZone('Button', 'node-2', 'center')
 
@@ -169,32 +205,44 @@ export const alignmentEdgeCaseTests: TestCase[] = describe('Alignment Zone Edge 
 export const componentVarietyTests: TestCase[] = describe(
   'Different Components in Alignment Zones',
   [
-    testWithSetup('Drop Input at center', 'Frame w 200, h 200, bg #1a1a1a', async api => {
-      await api.interact.dragToAlignmentZone('Input', 'node-1', 'center')
+    testWithSetup(
+      'Drop Input at center',
+      'Frame w 200, h 200, bg #1a1a1a',
+      async (api: TestAPI) => {
+        await api.interact.dragToAlignmentZone('Input', 'node-1', 'center')
 
-      const code = api.editor.getCode()
-      api.assert.codeContains(/Input/)
-      const result = verifyAlignmentProperty(code, 'center')
-      api.assert.ok(result.ok, `Expected 'center' property, found '${result.found}'`)
-    }),
+        const code = api.editor.getCode()
+        api.assert.codeContains(/Input/)
+        const result = verifyAlignmentProperty(code, 'center')
+        api.assert.ok(result.ok, `Expected 'center' property, found '${result.found}'`)
+      }
+    ),
 
-    testWithSetup('Drop Image at top-left', 'Frame w 200, h 200, bg #1a1a1a', async api => {
-      await api.interact.dragToAlignmentZone('Image', 'node-1', 'top-left')
+    testWithSetup(
+      'Drop Image at top-left',
+      'Frame w 200, h 200, bg #1a1a1a',
+      async (api: TestAPI) => {
+        await api.interact.dragToAlignmentZone('Image', 'node-1', 'top-left')
 
-      const code = api.editor.getCode()
-      api.assert.codeContains(/Image/)
-      const result = verifyAlignmentProperty(code, 'tl')
-      api.assert.ok(result.ok, `Expected 'tl' property, found '${result.found}'`)
-    }),
+        const code = api.editor.getCode()
+        api.assert.codeContains(/Image/)
+        const result = verifyAlignmentProperty(code, 'tl')
+        api.assert.ok(result.ok, `Expected 'tl' property, found '${result.found}'`)
+      }
+    ),
 
-    testWithSetup('Drop Divider at center', 'Frame w 200, h 200, bg #1a1a1a', async api => {
-      await api.interact.dragToAlignmentZone('Divider', 'node-1', 'center')
+    testWithSetup(
+      'Drop Divider at center',
+      'Frame w 200, h 200, bg #1a1a1a',
+      async (api: TestAPI) => {
+        await api.interact.dragToAlignmentZone('Divider', 'node-1', 'center')
 
-      const code = api.editor.getCode()
-      api.assert.codeContains(/Divider/)
-      const result = verifyAlignmentProperty(code, 'center')
-      api.assert.ok(result.ok, `Expected 'center' property, found '${result.found}'`)
-    }),
+        const code = api.editor.getCode()
+        api.assert.codeContains(/Divider/)
+        const result = verifyAlignmentProperty(code, 'center')
+        api.assert.ok(result.ok, `Expected 'center' property, found '${result.found}'`)
+      }
+    ),
   ]
 )
 

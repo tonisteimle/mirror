@@ -265,6 +265,7 @@ export const layoutVerificationTests: TestCase[] = describe('Layout Verification
 
       // Verify button widths
       const btnA = api.preview.inspect('node-2')
+      api.assert.ok(btnA, 'btnA should exist')
       api.assert.ok(
         btnA?.styles.width === '50px',
         `Button A width should be 50px, got ${btnA?.styles.width}`
@@ -416,6 +417,7 @@ export const nestedStructureTests: TestCase[] = describe('Nested Structures', [
 
       // Verify parent-child relationships
       const level5 = api.preview.inspect('node-5')
+      api.assert.ok(level5, 'level5 should exist')
       api.assert.ok(
         level5?.parent === 'node-4',
         `Level 5 parent should be node-4, got ${level5?.parent}`
@@ -520,12 +522,14 @@ Frame gap 8, pad 16, bg #1a1a1a
   Button "Secondary", bg $secondary, col $text, pad 12 24, rad 6`,
     async (api: TestAPI) => {
       const btn1 = api.preview.inspect('node-2')
+      api.assert.ok(btn1, 'btn1 should exist')
       api.assert.ok(
         colorsMatch(btn1?.styles.backgroundColor || '', '#2271C1'),
         `Primary bg should be #2271C1, got ${btn1?.styles.backgroundColor}`
       )
 
       const btn2 = api.preview.inspect('node-3')
+      api.assert.ok(btn2, 'btn2 should exist')
       api.assert.ok(
         colorsMatch(btn2?.styles.backgroundColor || '', '#10b981'),
         `Secondary bg should be #10b981, got ${btn2?.styles.backgroundColor}`
@@ -547,6 +551,7 @@ Frame gap $lg, pad $md, bg #1a1a1a
     Text "Small padding"`,
     async (api: TestAPI) => {
       const outer = api.preview.inspect('node-1')
+      api.assert.ok(outer, 'outer should exist')
       api.assert.ok(
         outer?.styles.gap === '16px',
         `Outer gap should be 16px (lg), got ${outer?.styles.gap}`
@@ -557,6 +562,7 @@ Frame gap $lg, pad $md, bg #1a1a1a
       )
 
       const inner = api.preview.inspect('node-2')
+      api.assert.ok(inner, 'inner should exist')
       api.assert.ok(
         inner?.styles.padding === '8px',
         `Inner padding should be 8px (sm), got ${inner?.styles.padding}`
@@ -573,6 +579,7 @@ Frame $cardstyle
   Button "Styled", $btnstyle, bg #2271C1, col white`,
     async (api: TestAPI) => {
       const frame = api.preview.inspect('node-1')
+      api.assert.ok(frame, 'frame should exist')
       api.assert.ok(
         colorsMatch(frame?.styles.backgroundColor || '', '#1a1a1a'),
         `Frame bg should be #1a1a1a, got ${frame?.styles.backgroundColor}`
@@ -587,6 +594,7 @@ Frame $cardstyle
       )
 
       const btn = api.preview.inspect('node-2')
+      api.assert.ok(btn, 'btn should exist')
       api.assert.ok(
         btn?.styles.cursor === 'pointer',
         `Button cursor should be pointer, got ${btn?.styles.cursor}`
@@ -623,12 +631,14 @@ Frame gap 4, pad 16, bg #1a1a1a
   Text "Posts: $user.stats.posts", col #666`,
     async (api: TestAPI) => {
       const nameEl = api.preview.inspect('node-2')
+      api.assert.ok(nameEl, 'nameEl should exist')
       api.assert.ok(
         nameEl?.fullText?.includes('Max') || nameEl?.textContent?.includes('Max'),
         `Name should contain "Max", got "${nameEl?.fullText}"`
       )
 
       const emailEl = api.preview.inspect('node-3')
+      api.assert.ok(emailEl, 'emailEl should exist')
       api.assert.ok(
         emailEl?.fullText?.includes('max@example.com') || emailEl?.textContent?.includes('max@'),
         `Email should contain email, got "${emailEl?.fullText}"`
@@ -725,6 +735,7 @@ Frame pad 16, bg #1a1a1a
 Frame w 100, h 100, bg active ? #2271C1 : #333, rad 8`,
     async (api: TestAPI) => {
       const frame = api.preview.inspect('node-1')
+      api.assert.ok(frame, 'frame should exist')
       // active is true, so should be blue
       api.assert.ok(
         colorsMatch(frame?.styles.backgroundColor || '', '#2271C1'),
@@ -851,12 +862,14 @@ Frame hor, gap 8
       api.assert.ok(primary!.styles.cursor === 'pointer', 'Primary should have pointer cursor')
 
       const danger = api.preview.inspect('node-3')
+      api.assert.ok(danger, 'danger should exist')
       api.assert.ok(
         colorsMatch(danger?.styles.backgroundColor || '', '#ef4444'),
         `Danger should be red, got ${danger?.styles.backgroundColor}`
       )
 
       const ghost = api.preview.inspect('node-4')
+      api.assert.ok(ghost, 'ghost should exist')
       api.assert.ok(
         ghost?.styles.backgroundColor === 'rgba(0, 0, 0, 0)' ||
           ghost?.styles.backgroundColor === 'transparent',
@@ -879,6 +892,7 @@ Card
       api.assert.ok(card !== null, 'Card should exist')
 
       const title = api.preview.inspect('node-2')
+      api.assert.ok(title, 'title should exist')
       api.assert.ok(
         title?.styles.fontSize === '18px',
         `Title fontSize should be 18px, got ${title?.styles.fontSize}`
@@ -889,6 +903,7 @@ Card
       )
 
       const desc = api.preview.inspect('node-3')
+      api.assert.ok(desc, 'desc should exist')
       api.assert.ok(
         desc?.styles.fontSize === '14px',
         `Desc fontSize should be 14px, got ${desc?.styles.fontSize}`
@@ -912,6 +927,7 @@ export const inlineSyntaxTests: TestCase[] = describe('Inline Syntax', [
       api.assert.exists('node-4') // Button C
 
       const frame = api.preview.inspect('node-1')
+      api.assert.ok(frame, 'frame should exist')
       api.assert.ok(
         frame?.children.length === 3,
         `Should have 3 children, got ${frame?.children.length}`
@@ -964,6 +980,7 @@ export const primitivesTests: TestCase[] = describe('Primitives', [
 
       // Textarea
       const textarea = api.preview.inspect('node-5')
+      api.assert.ok(textarea, 'textarea should exist')
       api.assert.ok(
         textarea?.tagName === 'textarea',
         `Textarea should be textarea, got ${textarea?.tagName}`
@@ -1012,6 +1029,7 @@ Footer pad 16, bg #1a1a1a, center
       api.assert.ok(main?.tagName === 'main', `Main should be main, got ${main?.tagName}`)
 
       const section = api.preview.inspect('node-7')
+      api.assert.ok(section, 'section should exist')
       api.assert.ok(
         section?.tagName === 'section',
         `Section should be section, got ${section?.tagName}`
@@ -1055,6 +1073,7 @@ export const edgeCaseTests: TestCase[] = describe('Edge Cases', [
     `Text "Hello <World> & 'Friends' \"Everyone\"", col white`,
     async (api: TestAPI) => {
       const text = api.preview.inspect('node-1')
+      api.assert.ok(text, 'text should exist')
       api.assert.ok(
         text?.fullText?.includes('<World>') || text?.fullText?.includes('&lt;World&gt;'),
         'Special characters should be handled'
@@ -1067,6 +1086,7 @@ export const edgeCaseTests: TestCase[] = describe('Edge Cases', [
     `Text "Hello 世界 🌍 مرحبا", col white, fs 18`,
     async (api: TestAPI) => {
       const text = api.preview.inspect('node-1')
+      api.assert.ok(text, 'text should exist')
       api.assert.ok(
         text?.fullText?.includes('🌍') || text?.fullText?.includes('世界'),
         'Unicode should render correctly'
@@ -1426,7 +1446,9 @@ export const transformTests: TestCase[] = describe('Transforms', [
   Frame x 100, y 100, w 100, h 100, bg #10b981, z 3`,
     async (api: TestAPI) => {
       const z1 = api.preview.inspect('node-2')
+      api.assert.ok(z1, 'z1 should exist')
       const z2 = api.preview.inspect('node-3')
+      api.assert.ok(z2, 'z2 should exist')
       const z3 = api.preview.inspect('node-4')
 
       api.assert.ok(z1 !== null && z2 !== null && z3 !== null, 'All layers should exist')
@@ -1644,8 +1666,11 @@ export const effectsTests: TestCase[] = describe('Effects & Filters', [
   Frame w 50, h 50, bg #2271C1, opacity 0.25`,
     async (api: TestAPI) => {
       const full = api.preview.inspect('node-2')
+      api.assert.ok(full, 'full should exist')
       const mid = api.preview.inspect('node-4')
+      api.assert.ok(mid, 'mid should exist')
       const quarter = api.preview.inspect('node-5')
+      api.assert.ok(quarter, 'quarter should exist')
 
       api.assert.ok(
         full?.styles.opacity === '1',
@@ -1705,9 +1730,13 @@ export const formControlsTests: TestCase[] = describe('Form Controls', [
   Input type "number", placeholder "Number"`,
     async (api: TestAPI) => {
       const text = api.preview.inspect('node-2')
+      api.assert.ok(text, 'text should exist')
       const password = api.preview.inspect('node-3')
+      api.assert.ok(password, 'password should exist')
       const email = api.preview.inspect('node-4')
+      api.assert.ok(email, 'email should exist')
       const number = api.preview.inspect('node-5')
+      api.assert.ok(number, 'number should exist')
 
       // Text input: type defaults to 'text' in HTML if not specified
       api.assert.ok(text !== null, 'Text input element must exist')
@@ -1780,8 +1809,11 @@ export const advancedTypographyTests: TestCase[] = describe('Advanced Typography
   Text "Right aligned", col white, text-align right`,
     async (api: TestAPI) => {
       const left = api.preview.inspect('node-2')
+      api.assert.ok(left, 'left should exist')
       const center = api.preview.inspect('node-3')
+      api.assert.ok(center, 'center should exist')
       const right = api.preview.inspect('node-4')
+      api.assert.ok(right, 'right should exist')
 
       api.assert.ok(
         left?.styles.textAlign === 'left' || left?.styles.textAlign === 'start',
@@ -1809,7 +1841,9 @@ export const advancedTypographyTests: TestCase[] = describe('Advanced Typography
   Text "Black 900", col white, weight 900`,
     async (api: TestAPI) => {
       const thin = api.preview.inspect('node-2')
+      api.assert.ok(thin, 'thin should exist')
       const bold = api.preview.inspect('node-6')
+      api.assert.ok(bold, 'bold should exist')
 
       api.assert.ok(
         thin?.styles.fontWeight === '100',
@@ -3308,6 +3342,7 @@ export const interactionToggleTests: TestCase[] = describe('Interaction: Toggle 
     async (api: TestAPI) => {
       // Initial state: off (gray)
       let btn = api.preview.inspect('node-1')
+      api.assert.ok(btn, 'btn should exist')
       api.assert.ok(
         colorsMatch(btn.styles.backgroundColor, '#333'),
         `Initial state should be off (#333), got ${btn.styles.backgroundColor}`
@@ -3318,6 +3353,7 @@ export const interactionToggleTests: TestCase[] = describe('Interaction: Toggle 
       await api.utils.delay(200)
 
       btn = api.preview.inspect('node-1')
+      api.assert.ok(btn, 'btn should exist')
       api.assert.ok(
         colorsMatch(btn.styles.backgroundColor, '#2271C1'),
         `After click should be on (#2271C1), got ${btn.styles.backgroundColor}`
@@ -3328,6 +3364,7 @@ export const interactionToggleTests: TestCase[] = describe('Interaction: Toggle 
       await api.utils.delay(200)
 
       btn = api.preview.inspect('node-1')
+      api.assert.ok(btn, 'btn should exist')
       api.assert.ok(
         colorsMatch(btn.styles.backgroundColor, '#333'),
         `After second click should be off (#333), got ${btn.styles.backgroundColor}`
@@ -3373,6 +3410,7 @@ export const interactionToggleTests: TestCase[] = describe('Interaction: Toggle 
       await api.utils.delay(100)
 
       const btn = api.preview.inspect('node-1')
+      api.assert.ok(btn, 'btn should exist')
       api.assert.ok(
         colorsMatch(btn.styles.backgroundColor, '#333'),
         `After 4 clicks should be off, got ${btn.styles.backgroundColor}`
@@ -3390,6 +3428,7 @@ export const interactionToggleTests: TestCase[] = describe('Interaction: Toggle 
     async (api: TestAPI) => {
       // Initial state
       let btn = api.preview.inspect('node-1')
+      api.assert.ok(btn, 'btn should exist')
       api.assert.ok(colorsMatch(btn.styles.backgroundColor, '#333'), 'Initial bg should be #333')
 
       // Click to toggle
@@ -3397,6 +3436,7 @@ export const interactionToggleTests: TestCase[] = describe('Interaction: Toggle 
       await api.utils.delay(200)
 
       btn = api.preview.inspect('node-1')
+      api.assert.ok(btn, 'btn should exist')
       api.assert.ok(
         colorsMatch(btn.styles.backgroundColor, '#ef4444'),
         `After click bg should be #ef4444, got ${btn.styles.backgroundColor}`
@@ -3425,6 +3465,7 @@ export const interactionExclusiveTests: TestCase[] = describe('Interaction: Excl
     async (api: TestAPI) => {
       // Initial: A is selected
       let btnA = api.preview.inspect('node-2')
+      api.assert.ok(btnA, 'btnA should exist')
       api.assert.ok(
         colorsMatch(btnA.styles.backgroundColor, '#2271C1'),
         `A should be selected initially, got ${btnA.styles.backgroundColor}`
@@ -3436,7 +3477,9 @@ export const interactionExclusiveTests: TestCase[] = describe('Interaction: Excl
 
       // B should be selected, A should not
       btnA = api.preview.inspect('node-2')
+      api.assert.ok(btnA, 'btnA should exist')
       let btnB = api.preview.inspect('node-3')
+      api.assert.ok(btnB, 'btnB should exist')
 
       api.assert.ok(
         colorsMatch(btnB.styles.backgroundColor, '#2271C1'),
@@ -3453,7 +3496,9 @@ export const interactionExclusiveTests: TestCase[] = describe('Interaction: Excl
 
       // C should be selected, B should not
       btnB = api.preview.inspect('node-3')
+      api.assert.ok(btnB, 'btnB should exist')
       const btnC = api.preview.inspect('node-4')
+      api.assert.ok(btnC, 'btnC should exist')
 
       api.assert.ok(
         colorsMatch(btnC.styles.backgroundColor, '#2271C1'),
@@ -3487,6 +3532,7 @@ export const interactionExclusiveTests: TestCase[] = describe('Interaction: Excl
       await api.utils.delay(100)
 
       const tab2 = api.preview.inspect('node-3')
+      api.assert.ok(tab2, 'tab2 should exist')
       api.assert.ok(
         colorsMatch(tab2.styles.backgroundColor, '#333'),
         `Tab 2 should be selected, got ${tab2.styles.backgroundColor}`
@@ -3494,6 +3540,7 @@ export const interactionExclusiveTests: TestCase[] = describe('Interaction: Excl
 
       // Tab 1 should be deselected
       const tab1 = api.preview.inspect('node-2')
+      api.assert.ok(tab1, 'tab1 should exist')
       api.assert.ok(
         !colorsMatch(tab1.styles.backgroundColor, '#333') || tab1.styles.backgroundColor === '',
         `Tab 1 should be deselected`
@@ -3518,6 +3565,7 @@ Frame hor, gap 12, ver-center, pad 16, bg #1a1a1a, rad 8
     async (api: TestAPI) => {
       // Initial value should be 0
       let text = api.preview.inspect('node-3')
+      api.assert.ok(text, 'text should exist')
       api.assert.ok(
         text?.fullText === '0' || text?.textContent === '0',
         `Initial count should be 0, got "${text?.fullText}"`
@@ -3528,6 +3576,7 @@ Frame hor, gap 12, ver-center, pad 16, bg #1a1a1a, rad 8
       await api.utils.delay(100)
 
       text = api.preview.inspect('node-3')
+      api.assert.ok(text, 'text should exist')
       api.assert.ok(
         text?.fullText === '1' || text?.textContent === '1',
         `After increment should be 1, got "${text?.fullText}"`
@@ -3538,6 +3587,7 @@ Frame hor, gap 12, ver-center, pad 16, bg #1a1a1a, rad 8
       await api.utils.delay(100)
 
       text = api.preview.inspect('node-3')
+      api.assert.ok(text, 'text should exist')
       api.assert.ok(
         text?.fullText === '2' || text?.textContent === '2',
         `After second increment should be 2, got "${text?.fullText}"`
@@ -3556,6 +3606,7 @@ Frame hor, gap 12, ver-center, pad 16, bg #1a1a1a, rad 8
     async (api: TestAPI) => {
       // Initial value should be 5
       let text = api.preview.inspect('node-3')
+      api.assert.ok(text, 'text should exist')
       api.assert.ok(
         text?.fullText === '5' || text?.textContent === '5',
         `Initial count should be 5, got "${text?.fullText}"`
@@ -3566,6 +3617,7 @@ Frame hor, gap 12, ver-center, pad 16, bg #1a1a1a, rad 8
       await api.utils.delay(100)
 
       text = api.preview.inspect('node-3')
+      api.assert.ok(text, 'text should exist')
       api.assert.ok(
         text?.fullText === '4' || text?.textContent === '4',
         `After decrement should be 4, got "${text?.fullText}"`
@@ -3589,6 +3641,7 @@ Frame hor, gap 8, pad 16, bg #1a1a1a, rad 8, ver-center
       await api.utils.delay(100)
 
       let text = api.preview.inspect('node-3')
+      api.assert.ok(text, 'text should exist')
       api.assert.ok(
         text?.fullText?.includes('15') || text?.textContent?.includes('15'),
         `After +5 should show 15, got "${text?.fullText}"`
@@ -3601,6 +3654,7 @@ Frame hor, gap 8, pad 16, bg #1a1a1a, rad 8, ver-center
       await api.utils.delay(100)
 
       text = api.preview.inspect('node-3')
+      api.assert.ok(text, 'text should exist')
       api.assert.ok(
         text?.fullText?.includes('5') || text?.textContent?.includes('5'),
         `After -5 twice should show 5, got "${text?.fullText}"`
@@ -3622,6 +3676,7 @@ export const interactionHoverTests: TestCase[] = describe('Interaction: Hover St
     async (api: TestAPI) => {
       // Initial state
       let btn = api.preview.inspect('node-1')
+      api.assert.ok(btn, 'btn should exist')
       api.assert.ok(
         colorsMatch(btn.styles.backgroundColor, '#333'),
         `Initial bg should be #333, got ${btn.styles.backgroundColor}`
@@ -3632,6 +3687,7 @@ export const interactionHoverTests: TestCase[] = describe('Interaction: Hover St
       await api.utils.delay(100)
 
       btn = api.preview.inspect('node-1')
+      api.assert.ok(btn, 'btn should exist')
       // Check if hover state applied (might be #444 or close to it)
       const isHovered =
         colorsMatch(btn.styles.backgroundColor, '#444') ||
@@ -3654,6 +3710,7 @@ export const interactionHoverTests: TestCase[] = describe('Interaction: Hover St
       await api.utils.delay(100)
 
       const frame = api.preview.inspect('node-1')
+      api.assert.ok(frame, 'frame should exist')
       // Either bg or transform should change
       const hasHoverEffect =
         colorsMatch(frame.styles.backgroundColor, '#2271C1') ||
@@ -3702,6 +3759,7 @@ export const interactionFormTests: TestCase[] = describe('Interaction: Form Inpu
       await api.utils.delay(100)
 
       const input = api.preview.inspect('node-1')
+      api.assert.ok(input, 'input should exist')
       // Check if focus style applied
       const hasFocusStyle =
         colorsMatch(input.styles.borderColor, '#2271C1') || input.styles.borderWidth === '2px'
@@ -3728,6 +3786,7 @@ Input bind searchTerm, placeholder "Type here...", bg #333, col white, pad 12, r
       await api.utils.delay(100)
 
       const input = api.preview.inspect('node-1')
+      api.assert.ok(input, 'input should exist')
       // Value might be in attributes or we can check it exists
       api.assert.ok(input !== null, 'Input should exist after typing')
     }
@@ -3776,6 +3835,7 @@ export const interactionCheckboxTests: TestCase[] = describe('Interaction: Check
 
       // Both should be clickable
       const optionA = api.preview.inspect('node-2')
+      api.assert.ok(optionA, 'optionA should exist')
       const optionC = api.preview.inspect('node-4')
 
       api.assert.ok(optionA !== null && optionC !== null, 'Checkboxes should exist after clicks')
@@ -3806,18 +3866,21 @@ export const interactionMultiStateTests: TestCase[] = describe('Interaction: Mul
       await api.utils.delay(100)
 
       let btn = api.preview.inspect('node-1')
+      api.assert.ok(btn, 'btn should exist')
       const state1 = btn.styles.backgroundColor
 
       await api.interact.click('node-1')
       await api.utils.delay(100)
 
       btn = api.preview.inspect('node-1')
+      api.assert.ok(btn, 'btn should exist')
       const state2 = btn.styles.backgroundColor
 
       await api.interact.click('node-1')
       await api.utils.delay(100)
 
       btn = api.preview.inspect('node-1')
+      api.assert.ok(btn, 'btn should exist')
       const state3 = btn.styles.backgroundColor
 
       // States should be different (cycling through)
@@ -3888,6 +3951,7 @@ Frame hor, gap 8, pad 16, bg #1a1a1a, rad 8, ver-center
 
       // Button should be toggled (red background)
       const btn = api.preview.inspect('node-2')
+      api.assert.ok(btn, 'btn should exist')
       api.assert.ok(
         colorsMatch(btn.styles.backgroundColor, '#ef4444'),
         `Like button should be red, got ${btn.styles.backgroundColor}`
@@ -3914,6 +3978,7 @@ Frame hor, gap 8, pad 16, bg #1a1a1a, rad 8, ver-center
 
       // Submit button should change state
       const submitBtn = api.preview.inspect('node-3')
+      api.assert.ok(submitBtn, 'submitBtn should exist')
       api.assert.ok(
         colorsMatch(submitBtn.styles.backgroundColor, '#10b981'),
         `Submit button should be green, got ${submitBtn.styles.backgroundColor}`
@@ -3935,6 +4000,7 @@ Frame pad 16, bg #1a1a1a, rad 8, gap 12
     async (api: TestAPI) => {
       // Initial quantity is 1
       let qtyText = api.preview.inspect('node-5')
+      api.assert.ok(qtyText, 'qtyText should exist')
       api.assert.ok(
         qtyText?.fullText === '1' || qtyText?.textContent === '1',
         `Initial quantity should be 1, got "${qtyText?.fullText}"`
@@ -3949,6 +4015,7 @@ Frame pad 16, bg #1a1a1a, rad 8, gap 12
 
       // Quantity should be 4
       qtyText = api.preview.inspect('node-5')
+      api.assert.ok(qtyText, 'qtyText should exist')
       api.assert.ok(
         qtyText?.fullText === '4' || qtyText?.textContent === '4',
         `After 3 increments should be 4, got "${qtyText?.fullText}"`
@@ -3960,6 +4027,7 @@ Frame pad 16, bg #1a1a1a, rad 8, gap 12
 
       // Quantity should be 3
       qtyText = api.preview.inspect('node-5')
+      api.assert.ok(qtyText, 'qtyText should exist')
       api.assert.ok(
         qtyText?.fullText === '3' || qtyText?.textContent === '3',
         `After decrement should be 3, got "${qtyText?.fullText}"`
@@ -3988,6 +4056,7 @@ export const interactionRapidTests: TestCase[] = describe('Interaction: Rapid Op
 
       // After 10 clicks (even), should be off
       const btn = api.preview.inspect('node-1')
+      api.assert.ok(btn, 'btn should exist')
       api.assert.ok(
         colorsMatch(btn.styles.backgroundColor, '#333'),
         `After 10 clicks should be off, got ${btn.styles.backgroundColor}`
@@ -4012,6 +4081,7 @@ Frame hor, gap 8, ver-center
 
       // Count should be 5
       const text = api.preview.inspect('node-3')
+      api.assert.ok(text, 'text should exist')
       api.assert.ok(
         text?.fullText === '5' || text?.textContent === '5',
         `After 5 rapid increments should be 5, got "${text?.fullText}"`
@@ -4041,6 +4111,7 @@ Frame hor, gap 8, ver-center
 
       // Button 1 should be selected
       const btn1 = api.preview.inspect('node-2')
+      api.assert.ok(btn1, 'btn1 should exist')
       api.assert.ok(
         colorsMatch(btn1.styles.backgroundColor, '#2271C1'),
         `Button 1 should be selected, got ${btn1.styles.backgroundColor}`

@@ -16,7 +16,7 @@
  */
 
 import { testWithSetup, describe } from '../test-runner'
-import type { TestCase } from '../types'
+import type { TestCase, TestAPI } from '../types'
 
 // =============================================================================
 // 1. Project with Code - Token & Component Tests
@@ -30,7 +30,7 @@ export const projectWithCodeTests: TestCase[] = describe('Project with Code', [
 
 Frame bg $primary, pad 16
   Text "Token Test"`,
-    async api => {
+    async (api: TestAPI) => {
       // Validate Frame with token-resolved background
       api.dom.expect('node-1', {
         tag: 'div',
@@ -56,7 +56,7 @@ Frame pad $space, gap $space, bg #1a1a1a
   Button "A"
   Button "B"
   Button "C"`,
-    async api => {
+    async (api: TestAPI) => {
       // Validate Frame with token-resolved spacing
       api.dom.expect('node-1', {
         tag: 'div',
@@ -82,7 +82,7 @@ Frame pad $space, gap $space, bg #1a1a1a
 Frame gap 12, pad 16, bg #1a1a1a
   Btn "Save"
   Btn "Cancel", bg #333`,
-    async api => {
+    async (api: TestAPI) => {
       // Container
       api.dom.expect('node-1', {
         tag: 'div',
@@ -120,7 +120,7 @@ DangerBtn as Button: bg #ef4444, col white, pad 12 24, rad 6
 Frame gap 12, pad 16
   PrimaryBtn "Save"
   DangerBtn "Delete"`,
-    async api => {
+    async (api: TestAPI) => {
       // Both should be actual <button> elements
       api.dom.expect('node-2', {
         tag: 'button',
@@ -144,7 +144,7 @@ Frame gap 12, pad 16
     `Frame hor, gap 16, pad 24, bg #1a1a1a, spread
   Text "Left", col white
   Text "Right", col white`,
-    async api => {
+    async (api: TestAPI) => {
       api.dom.expect('node-1', {
         tag: 'div',
         hor: true,
@@ -165,7 +165,7 @@ Frame gap 12, pad 16
     `Frame w 300, h 200, bg #1a1a1a, center
   Text "Centered", col white, fs 18
   Button "Click Me"`,
-    async api => {
+    async (api: TestAPI) => {
       api.dom.expect('node-1', {
         tag: 'div',
         w: 300,
@@ -197,7 +197,7 @@ Frame gap 12, pad 16
   Frame gap 8, bg #1a1a1a, pad 12, rad 8
     Text "Description", col #888
     Button "Learn More"`,
-    async api => {
+    async (api: TestAPI) => {
       // Outer frame - vertical
       api.dom.expect('node-1', {
         tag: 'div',
@@ -239,7 +239,7 @@ Frame gap 12, pad 16
   Frame w 100, h 80, bg #2271C1, rad 8
   Frame w 100, h 80, bg #2271C1, rad 8
   Frame w 100, h 80, bg #2271C1, rad 8`,
-    async api => {
+    async (api: TestAPI) => {
       api.dom.expect('node-1', {
         tag: 'div',
         hor: true,
@@ -270,7 +270,7 @@ Frame gap 12, pad 16
   Text "Bold Title", weight bold, fs 24, col white
   Text "Italic Subtitle", italic, fs 14, col #888
   Text "UPPERCASE", uppercase, fs 12, col #666`,
-    async api => {
+    async (api: TestAPI) => {
       api.dom.expect('node-2', {
         text: 'Bold Title',
         weight: 'bold',
@@ -297,7 +297,7 @@ Frame gap 12, pad 16
     `Frame pad 16, bg #1a1a1a, gap 16
   Frame w 100, h 100, bg #2271C1, rad 8, shadow md
   Frame w 100, h 100, bg white, bor 2, boc #2271C1, rad 12`,
-    async api => {
+    async (api: TestAPI) => {
       // Shadow box - shadow md applies medium shadow
       api.dom.expect('node-2', {
         w: 100,
@@ -323,7 +323,7 @@ Frame gap 12, pad 16
     `Frame gap 12, pad 16, bg #1a1a1a, w 300
   Input placeholder "Enter your name..."
   Textarea placeholder "Write a message..."`,
-    async api => {
+    async (api: TestAPI) => {
       api.dom.expect('node-1', {
         tag: 'div',
         gap: 12,
@@ -351,7 +351,7 @@ Frame gap 12, pad 16
   Text "Above"
   Divider
   Text "Below"`,
-    async api => {
+    async (api: TestAPI) => {
       api.dom.expect('node-1', {
         children: 3,
       })
@@ -368,23 +368,27 @@ Frame gap 12, pad 16
 // =============================================================================
 
 export const projectWithDragDropTests: TestCase[] = describe('Project with Drag & Drop', [
-  testWithSetup('Drop Button into Frame', 'Frame gap 12, pad 16, bg #1a1a1a', async api => {
-    // Initial state
-    api.dom.expect('node-1', { children: 0 })
+  testWithSetup(
+    'Drop Button into Frame',
+    'Frame gap 12, pad 16, bg #1a1a1a',
+    async (api: TestAPI) => {
+      // Initial state
+      api.dom.expect('node-1', { children: 0 })
 
-    // Drop Button
-    await api.interact.dragFromPalette('Button', 'node-1', 0)
-    await api.utils.waitForIdle()
+      // Drop Button
+      await api.interact.dragFromPalette('Button', 'node-1', 0)
+      await api.utils.waitForIdle()
 
-    // Verify Button was added
-    api.dom.expect('node-1', { children: 1 })
-    api.dom.expect('node-2', { tag: 'button' })
-  }),
+      // Verify Button was added
+      api.dom.expect('node-1', { children: 1 })
+      api.dom.expect('node-2', { tag: 'button' })
+    }
+  ),
 
   testWithSetup(
     'Drop multiple elements in order',
     'Frame gap 12, pad 16, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       // Drop Text, Input, Button in sequence
       await api.interact.dragFromPalette('Text', 'node-1', 0)
       await api.utils.waitForIdle()
@@ -404,7 +408,7 @@ export const projectWithDragDropTests: TestCase[] = describe('Project with Drag 
   testWithSetup(
     'Drop Frame creates nested structure',
     'Frame gap 16, pad 24, bg #0a0a0a',
-    async api => {
+    async (api: TestAPI) => {
       // Drop nested Frame
       await api.interact.dragFromPalette('Frame', 'node-1', 0)
       await api.utils.waitForIdle()
@@ -426,7 +430,7 @@ export const projectWithDragDropTests: TestCase[] = describe('Project with Drag 
     `Frame gap 12, pad 16, bg #1a1a1a
   Text "First"
   Text "Third"`,
-    async api => {
+    async (api: TestAPI) => {
       // Initial: 2 children
       api.dom.expect('node-1', { children: 2 })
 
@@ -452,7 +456,7 @@ export const projectWithDragDropTests: TestCase[] = describe('Project with Drag 
   testWithSetup(
     'Style dropped element via editor',
     'Frame gap 12, pad 16, bg #1a1a1a',
-    async api => {
+    async (api: TestAPI) => {
       // Drop Button
       await api.interact.dragFromPalette('Button', 'node-1', 0)
       await api.utils.waitForIdle()
@@ -478,7 +482,7 @@ export const projectWithDragDropTests: TestCase[] = describe('Project with Drag 
   Button "A"
   Button "B"
   Button "C"`,
-    async api => {
+    async (api: TestAPI) => {
       // Verify initial order
       api.dom.expect('node-2', { text: 'A' })
       api.dom.expect('node-3', { text: 'B' })
@@ -496,27 +500,35 @@ export const projectWithDragDropTests: TestCase[] = describe('Project with Drag 
     }
   ),
 
-  testWithSetup('Drop Checkbox (Zag component)', 'Frame gap 12, pad 16, bg #1a1a1a', async api => {
-    await api.interact.dragFromPalette('Checkbox', 'node-1', 0)
-    await api.utils.waitForIdle()
+  testWithSetup(
+    'Drop Checkbox (Zag component)',
+    'Frame gap 12, pad 16, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragFromPalette('Checkbox', 'node-1', 0)
+      await api.utils.waitForIdle()
 
-    api.assert.codeContains(/Checkbox/)
-    api.dom.expect('node-1', { children: 1 })
-    api.dom.expect('node-2', { exists: true })
-  }),
+      api.assert.codeContains(/Checkbox/)
+      api.dom.expect('node-1', { children: 1 })
+      api.dom.expect('node-2', { exists: true })
+    }
+  ),
 
-  testWithSetup('Drop Switch (Zag component)', 'Frame gap 12, pad 16, bg #1a1a1a', async api => {
-    await api.interact.dragFromPalette('Switch', 'node-1', 0)
-    await api.utils.waitForIdle()
+  testWithSetup(
+    'Drop Switch (Zag component)',
+    'Frame gap 12, pad 16, bg #1a1a1a',
+    async (api: TestAPI) => {
+      await api.interact.dragFromPalette('Switch', 'node-1', 0)
+      await api.utils.waitForIdle()
 
-    api.assert.codeContains(/Switch/)
-    api.dom.expect('node-2', { exists: true })
-  }),
+      api.assert.codeContains(/Switch/)
+      api.dom.expect('node-2', { exists: true })
+    }
+  ),
 
   testWithSetup(
     'Drop Slider (Zag component)',
     'Frame gap 12, pad 16, bg #1a1a1a, w 300',
-    async api => {
+    async (api: TestAPI) => {
       await api.interact.dragFromPalette('Slider', 'node-1', 0)
       await api.utils.waitForIdle()
 
@@ -540,7 +552,7 @@ export const applicationTests: TestCase[] = describe('Application', [
   Tab "Profile"
     Frame pad 16, bg #1a1a1a
       Text "Profile Content", col white`,
-    async api => {
+    async (api: TestAPI) => {
       api.assert.codeContains(/Tabs defaultValue "home"/)
       api.assert.codeContains(/Tab "Home"/)
       api.assert.codeContains(/Tab "Profile"/)
@@ -556,7 +568,7 @@ userEmail: "john@example.com"
 Frame gap 8, pad 16, bg #1a1a1a
   Text "$userName", col white, fs 18, weight bold
   Text "$userEmail", col #888`,
-    async api => {
+    async (api: TestAPI) => {
       api.dom.expect('node-1', {
         tag: 'div',
         gap: 8,
@@ -592,7 +604,7 @@ Frame gap 8, pad 16, bg #1a1a1a
   each item in $items
     Frame pad 12, bg #222, rad 6
       Text item.name, col white`,
-    async api => {
+    async (api: TestAPI) => {
       api.assert.codeContains(/each item in \$items/)
 
       // Container should have 3+ children (one per item)
@@ -613,7 +625,7 @@ Frame hor, gap 12, pad 16, bg #1a1a1a, ver-center
   Button "-", decrement(count), bg #333, col white, w 40, h 40, rad 6
   Text "$count", fs 24, col white, w 60, center
   Button "+", increment(count), bg #333, col white, w 40, h 40, rad 6`,
-    async api => {
+    async (api: TestAPI) => {
       // Container is horizontal
       api.dom.expect('node-1', {
         hor: true,
@@ -659,7 +671,7 @@ Frame hor, gap 12, pad 16, bg #1a1a1a, ver-center
 Frame gap 12, pad 16, bg #1a1a1a
   Input bind searchTerm, placeholder "Search...", w full
   Text "Searching for: $searchTerm", col #888`,
-    async api => {
+    async (api: TestAPI) => {
       api.dom.expect('node-1', {
         gap: 12,
         pad: 16,
@@ -682,7 +694,7 @@ Frame gap 12, pad 16, bg #1a1a1a
   Content: Frame pad 24, bg #1a1a1a, rad 12, gap 16, w 400
     Text "Title", fs 18, weight bold, col white
     CloseTrigger: Button "Close", bg #333, col white`,
-    async api => {
+    async (api: TestAPI) => {
       api.assert.codeContains(/Dialog/)
       api.assert.codeContains(/Trigger:/)
       api.assert.codeContains(/Backdrop:/)
@@ -700,7 +712,7 @@ Frame gap 12, pad 16, bg #1a1a1a
     Option "Apple"
     Option "Banana"
     Option "Orange"`,
-    async api => {
+    async (api: TestAPI) => {
       api.dom.expect('node-1', {
         gap: 12,
         pad: 16,
@@ -731,7 +743,7 @@ Table bg #1a1a1a, rad 8
     TableRow hor, pad 12
       Text user.name, col white
       Text user.role, col #888`,
-    async api => {
+    async (api: TestAPI) => {
       api.assert.codeContains(/Table bg/)
       api.assert.codeContains(/TableHeader/)
       api.assert.codeContains(/user\.name/)
@@ -750,7 +762,7 @@ Table bg #1a1a1a, rad 8
     MenuBtn.open:
       visible
     Text "Item 1", col white`,
-    async api => {
+    async (api: TestAPI) => {
       api.assert.codeContains(/toggle\(\)/)
       api.assert.codeContains(/open:/)
       api.assert.codeContains(/MenuBtn\.open:/)
@@ -774,7 +786,7 @@ Table bg #1a1a1a, rad 8
     Frame hor, gap 16
       Frame bg #1a1a1a, pad 16, rad 8, grow
         Text "Users: 1,234", col white`,
-    async api => {
+    async (api: TestAPI) => {
       // Main container - horizontal
       api.dom.expect('node-1', {
         hor: true,
