@@ -19,18 +19,20 @@
  *        docs/concepts/llm-edit-flow-plan.md (T3.4)
  */
 
-export type EditStatus = 'idle' | 'thinking' | 'ready' | 'error'
+export type EditStatus = 'idle' | 'thinking' | 'ready' | 'error' | 'warning'
 
 const DEFAULT_MESSAGES: Record<Exclude<EditStatus, 'idle'>, string> = {
   thinking: 'AI denkt nach…',
   ready: 'Tab akzeptieren · Esc verwerfen',
   error: 'Fehler beim Edit-Flow',
+  warning: 'Quality-Issues — vom AI nicht behoben',
 }
 
 const STATE_CLASSES: Record<Exclude<EditStatus, 'idle'>, string> = {
   thinking: 'cm-llm-status-thinking',
   ready: 'cm-llm-status-ready',
   error: 'cm-llm-status-error',
+  warning: 'cm-llm-status-warning',
 }
 
 let element: HTMLElement | null = null

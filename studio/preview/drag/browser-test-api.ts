@@ -170,6 +170,7 @@ export class BrowserTestRunner {
       // 2. Set drag data (as ComponentPanel would)
       // Include children for complex components (Dialog, Tabs, etc.)
       const dragData: ComponentDragData = {
+        fromComponentPanel: true,
         componentName: params.componentName,
         properties: params.properties,
         textContent: params.textContent,
@@ -649,6 +650,7 @@ export class BrowserTestRunner {
       // 2. Set drag data (as ComponentPanel would)
       // Include children for complex components
       const dragData: ComponentDragData = {
+        fromComponentPanel: true,
         componentName: params.componentName,
         properties: params.properties,
         textContent: params.textContent,
@@ -735,6 +737,7 @@ export class BrowserTestRunner {
 
       // 4. Set drag data
       const dragData: ComponentDragData = {
+        fromComponentPanel: true,
         componentName: params.componentName,
         properties: params.properties,
         textContent: params.textContent,

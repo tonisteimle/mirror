@@ -11,7 +11,8 @@ export type PickerType = 'token' | 'color' | 'icon' | 'animation' | 'action' | '
 
 export abstract class BasePicker {
   protected config: Required<PickerConfig>
-  protected callbacks: PickerCallbacks
+  /** Picker callbacks. Public so external coordinators (e.g. trigger-manager) can override `onSelect`. */
+  callbacks: PickerCallbacks
   protected element: HTMLElement | null = null
   protected isOpen: boolean = false
   protected anchor: HTMLElement | null = null

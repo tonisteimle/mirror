@@ -57,9 +57,6 @@ export {
   executor,
   CommandExecutor,
   type CommandExecutorOptions,
-  execute,
-  undo,
-  redo,
   canUndo,
   canRedo,
 } from './command-executor'

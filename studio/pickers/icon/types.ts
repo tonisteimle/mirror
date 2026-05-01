@@ -4,14 +4,14 @@
 
 export interface IconDefinition {
   name: string
-  path: string           // SVG path data (legacy, empty for Lucide)
+  path: string // SVG path data (legacy, empty for Lucide)
   category: string
   tags: string[]
   viewBox?: string
   /** SVG inner content (paths, rects, circles, etc.) */
   svg?: string
-  /** Icon style: 'stroke' (Lucide default) */
-  style?: 'stroke'
+  /** Icon style: 'stroke' (Lucide default) or 'fill' */
+  style?: 'stroke' | 'fill'
 }
 
 export interface IconCategory {
@@ -39,4 +39,4 @@ export const ICON_CATEGORIES = [
   'toggle',
 ] as const
 
-export type IconCategoryName = typeof ICON_CATEGORIES[number]
+export type IconCategoryName = (typeof ICON_CATEGORIES)[number]

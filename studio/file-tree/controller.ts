@@ -15,7 +15,7 @@ import {
   buildSiblingPath,
   generateCopyName,
   generateDefaultContent,
-  isSupportedExtension
+  isSupportedExtension,
 } from './utils'
 import { createLogger } from '../../compiler/utils/logger'
 
@@ -53,14 +53,12 @@ export class FileTreeController {
   private state: FileTreeState = {
     currentFile: null,
     expandedFolders: new Set(),
-    filesCache: {}
+    filesCache: {},
   }
 
   private callbacks: FileTreeCallbacks = {}
 
-  constructor(
-    private storage: StorageService
-  ) {
+  constructor(private storage: StorageService) {
     this.setupEventListeners()
   }
 
@@ -112,6 +110,34 @@ export class FileTreeController {
       this.callbacks.onTreeChange?.()
     })
 
+    // Storage emits `folder:deleted` for the folder itself but no
+    // per-file `file:deleted` for files inside. Without this handler,
+    // filesCache keeps stale entries for files that no longer exist on
+    // disk — surfaces as a real bug when a later compile reads the
+    // stale content. Strip every cache entry whose path is under the
+    // deleted folder prefix.
+    this.storage.events.on('folder:deleted', ({ path }) => {
+      const prefix = path.endsWith('/') ? path : path + '/'
+      let currentRemoved = false
+      for (const cachedPath of Object.keys(this.state.filesCache)) {
+        if (cachedPath.startsWith(prefix)) {
+          delete this.state.filesCache[cachedPath]
+          if (this.state.currentFile === cachedPath) {
+            currentRemoved = true
+          }
+        }
+      }
+      if (currentRemoved) {
+        this.state.currentFile = null
+        const tree = this.storage.getTree()
+        const nextFile = findFirstFile(tree)
+        if (nextFile) {
+          this.selectFile(nextFile)
+        }
+      }
+      this.callbacks.onTreeChange?.()
+    })
+
     this.storage.events.on('file:renamed', ({ oldPath, newPath }) => {
       if (this.state.filesCache[oldPath] !== undefined) {
         this.state.filesCache[newPath] = this.state.filesCache[oldPath]
@@ -153,7 +179,7 @@ export class FileTreeController {
     this.state = {
       currentFile: null,
       expandedFolders: new Set(),
-      filesCache: {}
+      filesCache: {},
     }
   }
 
@@ -419,7 +445,7 @@ export class FileTreeController {
     for (let i = 0; i < filePaths.length; i += MAX_CONCURRENT) {
       const batch = filePaths.slice(i, i + MAX_CONCURRENT)
       const results = await Promise.allSettled(
-        batch.map(async (path) => {
+        batch.map(async path => {
           const content = await this.storage.readFile(path)
           return { path, content }
         })

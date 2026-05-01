@@ -454,6 +454,7 @@ export class ComponentPanel {
         children: item.children,
         mirTemplate: item.mirTemplate,
         dataBlock: item.dataBlock,
+        fromComponentPanel: true,
       },
       item
     )

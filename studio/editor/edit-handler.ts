@@ -25,7 +25,11 @@ import {
   type PromptFieldHandle,
   type PromptFieldOptions,
 } from './prompt-field'
-import { runEditFlow as defaultRunEditFlow, type EditResult } from '../agent/edit-flow'
+import {
+  runEditFlow as defaultRunEditFlow,
+  type EditResult,
+  type QualityViolations,
+} from '../agent/edit-flow'
 import type { EditCaptureCtx } from '../agent/edit-prompts'
 import { createChangeTracker, type ChangeTracker } from '../agent/change-tracker'
 
@@ -37,6 +41,14 @@ export interface EditHandlerConfig {
   }
   /** Returns the file name of the currently active file (used as tracker key). */
   getCurrentFileName: () => string
+  /**
+   * Wenn true, hängt der Handler an Edit-Flows mit Quality-Violations einen
+   * 2. LLM-Call dran (siehe `RunEditFlowOptions.qualityRetry`). Das verbessert
+   * Idiom-Compliance, kostet aber Latenz wenn der Erstpass Violations
+   * hinterlassen hat. Default: true. Auf false setzen, wenn der Caller
+   * Latenz absolut priorisiert.
+   */
+  qualityRetry?: boolean
   /** Test seam — defaults to the production runEditFlow. */
   runEditFlow?: typeof defaultRunEditFlow
   /** Test seam — defaults to the production openPromptField. */
@@ -62,6 +74,7 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
   const tracker = config.changeTracker ?? createChangeTracker()
   const runEditFlow = config.runEditFlow ?? defaultRunEditFlow
   const openPromptField = config.openPromptField ?? defaultOpenPromptField
+  const qualityRetry = config.qualityRetry ?? true
 
   let currentAbort: AbortController | null = null
 
@@ -98,7 +111,7 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
 
     let result: EditResult
     try {
-      result = await runEditFlow(ctx, { signal: ctrl.signal })
+      result = await runEditFlow(ctx, { signal: ctrl.signal, qualityRetry })
     } catch (err) {
       // currentAbort is always reset before the rejection arrives here:
       //   - supersede: a new call set currentAbort = ctrl_new.
@@ -121,9 +134,26 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
   const handleResult = (view: EditorView, baseSource: string, result: EditResult) => {
     if (result.status === 'ready' && result.proposedSource !== undefined) {
       setGhostDiff(view, baseSource, result.proposedSource)
-      setEditStatus('ready')
+      const issues = countQualityIssues(result.qualityViolations)
+      setEditStatus(
+        'ready',
+        issues > 0
+          ? `Tab akzeptieren · Esc verwerfen · ⚠ ${issues} Quality-${issues === 1 ? 'Issue' : 'Issues'}`
+          : undefined
+      )
     } else if (result.status === 'no-change') {
-      hideEditStatus()
+      const issues = countQualityIssues(result.qualityViolations)
+      if (issues > 0) {
+        // The LLM stayed silent but the source still has token/component/
+        // redundancy violations — surface them so the user knows the call
+        // wasn't a thumbs-up but a missed opportunity.
+        setEditStatus(
+          'warning',
+          `⚠ ${issues} Quality-${issues === 1 ? 'Issue' : 'Issues'} — vom AI nicht behoben`
+        )
+      } else {
+        hideEditStatus()
+      }
     } else {
       setEditStatus('error', result.error)
     }
@@ -198,4 +228,9 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
 function errorMessage(err: unknown): string {
   if (err instanceof Error) return err.message
   return String(err)
+}
+
+function countQualityIssues(v: QualityViolations | undefined): number {
+  if (!v) return 0
+  return v.token.length + v.component.length + v.redundancy.length
 }

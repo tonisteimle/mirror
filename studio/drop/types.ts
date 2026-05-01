@@ -95,6 +95,13 @@ export interface CodeModifier {
     template: string,
     options: AddChildOptions
   ): ModificationResult
+  getSourceLength(): number
+  addProperty(
+    nodeId: string,
+    propName: string,
+    value: string,
+    options?: { position?: 'first' | 'last'; afterProp?: string }
+  ): ModificationResult
 }
 
 export interface RobustModifier {
@@ -105,9 +112,8 @@ export interface AddChildOptions {
   position: number | 'last'
   properties?: string
   textContent?: string
+  parentProperty?: string
 }
 
-export interface ZagDefinitionResult {
-  exists: boolean
-  definitionName?: string
-}
+import type { ZagDefinitionResult } from '../zag'
+export type { ZagDefinitionResult }

@@ -8,11 +8,11 @@
 // Lazy import to avoid circular dependency with index.ts
 // storage singleton is created in index.ts which re-exports this module
 let _storage: typeof import('./index').storage | null = null
-function getStorage() {
+function getStorage(): typeof import('./index').storage {
   if (!_storage) {
     _storage = require('./index').storage
   }
-  return _storage
+  return _storage as typeof import('./index').storage
 }
 
 import { isTauri } from './providers'

@@ -10,7 +10,9 @@
 // ============================================
 
 export type YAMLValue = string | number | boolean | null | YAMLObject | YAMLArray
-export type YAMLObject = Record<string, YAMLValue>
+export interface YAMLObject {
+  [key: string]: YAMLValue
+}
 export type YAMLArray = YAMLValue[]
 
 export interface YAMLCollectorDeps {
@@ -156,6 +158,17 @@ export function parseYAML(text: string): YAMLValue {
     currentIndent: 0,
   }
 
+  // First pass: detect if any top-level key has a nested-object body (a
+  // bare `key:` at column 0 followed by indented `subkey:` lines, with no
+  // `- ` array marker). The legacy code-path below only handles flat
+  // key/value + arrays, which silently drops nested objects (common
+  // mistake: `tasks:\n  t1:\n    title: "..."` parses to `{tasks:{}}`).
+  // For sources that use nested objects, use an indent-stack parser
+  // instead — it's a strict superset of the legacy form.
+  if (hasNestedObjects(lines)) {
+    return parseNestedYAML(lines)
+  }
+
   for (const line of lines) {
     if (isEmptyOrComment(line)) continue
 
@@ -169,6 +182,82 @@ export function parseYAML(text: string): YAMLValue {
   }
 
   return finalizeResult(state)
+}
+
+/**
+ * True iff the source contains a `key:` line at column 0 that's followed
+ * (after blank/comment lines) by an indented `subkey:` line — and there's
+ * no `- ` array marker in between. That's the shape the flat parser
+ * mishandles. Plain key:value pairs and key + array remain on the legacy
+ * path so we don't change behaviour for sources that already worked.
+ */
+function hasNestedObjects(lines: readonly string[]): boolean {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (isEmptyOrComment(line)) continue
+    const trimmed = line.trim()
+    if (getIndent(line) !== 0 || !trimmed.endsWith(':')) continue
+    // Bare `key:` at column 0. Look ahead for an indented `subkey:` before
+    // the next column-0 line or an array marker.
+    for (let j = i + 1; j < lines.length; j++) {
+      const next = lines[j]
+      if (isEmptyOrComment(next)) continue
+      if (isArrayItem(next.trim())) break
+      const indent = getIndent(next)
+      if (indent === 0) break
+      if (next.trim().endsWith(':')) return true
+      if (next.trim().includes(': ')) {
+        // Nested key:value also qualifies — flat parser drops these too
+        // when the parent is `key:` (no value on parent line).
+        return true
+      }
+      break
+    }
+  }
+  return false
+}
+
+/**
+ * Indent-stack parser for nested objects. Each line's indent maps to a
+ * depth in the stack of "current parent objects". `key: value` becomes
+ * a leaf at the current depth; bare `key:` opens a new nested object at
+ * that depth + 1. Inline lists (`tags: [a, b, c]`) and arrays (`- ...`)
+ * are NOT handled here — sources that use those shapes go down the
+ * legacy path via hasNestedObjects() returning false.
+ */
+function parseNestedYAML(lines: readonly string[]): YAMLObject {
+  const root: YAMLObject = {}
+  // Stack entries: { obj: parent, indent: indentChars }. Top of stack is
+  // the current parent.
+  const stack: { obj: YAMLObject; indent: number }[] = [{ obj: root, indent: -1 }]
+
+  for (const line of lines) {
+    if (isEmptyOrComment(line)) continue
+    const indent = getIndent(line)
+    const trimmed = line.trim()
+
+    // Pop the stack until we find a parent whose indent < current.
+    while (stack.length > 1 && stack[stack.length - 1].indent >= indent) {
+      stack.pop()
+    }
+    const parent = stack[stack.length - 1].obj
+
+    const colonIdx = trimmed.indexOf(':')
+    if (colonIdx <= 0) continue
+    const key = trimmed.slice(0, colonIdx).trim()
+    const value = trimmed.slice(colonIdx + 1).trim()
+
+    if (value === '') {
+      // Bare `key:` — open a new nested object.
+      const child: YAMLObject = {}
+      parent[key] = child
+      stack.push({ obj: child, indent })
+    } else {
+      // Leaf `key: value`.
+      parent[key] = parseYAMLValue(value)
+    }
+  }
+  return root
 }
 
 function finalizeResult(state: ParserState): YAMLValue {

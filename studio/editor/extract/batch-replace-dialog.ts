@@ -90,7 +90,8 @@ export function showBatchReplaceDialog(config: DialogConfig): void {
         listContainer,
         `${match.filename}:${match.lineNumber}`,
         match.originalText.trim(),
-        true
+        true,
+        'exact'
       )
       exactCheckboxes.push(cb)
     }
@@ -105,7 +106,8 @@ export function showBatchReplaceDialog(config: DialogConfig): void {
         listContainer,
         `${match.filename}:${match.lineNumber}`,
         preview,
-        false // opt-in for near-matches
+        false, // opt-in for near-matches
+        'near'
       )
       nearCheckboxes.push(cb)
     }
@@ -196,9 +198,11 @@ function appendListItem(
   parent: HTMLElement,
   meta: string,
   preview: string,
-  defaultChecked: boolean
+  defaultChecked: boolean,
+  matchKind: 'exact' | 'near'
 ): HTMLInputElement {
   const item = document.createElement('label')
+  item.setAttribute('data-match-kind', matchKind)
   Object.assign(item.style, {
     display: 'flex',
     alignItems: 'center',

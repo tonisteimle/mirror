@@ -34,6 +34,10 @@ export interface SectionData {
   resolveTokenValue?: (tokenRef: string, propType?: string) => string | null
   /** Which color properties to show (bg, col, ic, boc) - for primitive-specific filtering */
   colorProps?: string[]
+  /** Whether the element sits inside a positioned (stacked/absolute) container */
+  isInPositionedContainer?: boolean
+  /** Events of the current element (passed to the events section) */
+  events?: unknown[]
 }
 
 /**

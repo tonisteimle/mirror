@@ -75,7 +75,10 @@ function findFolderElement(target: HTMLElement | null): HTMLElement | null {
 }
 
 function extractPath(target: HTMLElement | null): string | null {
-  return target?.dataset?.path ?? target?.closest('[data-path]')?.dataset?.path ?? null
+  if (!target) return null
+  if (target.dataset?.path) return target.dataset.path
+  const ancestor = target.closest('[data-path]') as HTMLElement | null
+  return ancestor?.dataset?.path ?? null
 }
 
 function createMenu(context: ContextInfo): HTMLElement {

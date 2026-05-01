@@ -26,16 +26,8 @@ const log = createLogger('DragPreview')
 // Browser security prevents reading drag data during dragenter/dragover.
 // We store the data globally when drag starts and read it here.
 
-export interface ComponentDragData {
-  componentId?: string
-  componentName: string
-  properties?: string
-  textContent?: string
-  fromComponentPanel?: boolean
-  children?: unknown[] // ComponentChild[] from component panel
-  mirTemplate?: string
-  dataBlock?: { name: string; content: string }
-}
+import type { ComponentDragData } from '../panels/components/types'
+export type { ComponentDragData }
 
 /** Full component item for rendering */
 let currentComponentItem: ComponentItem | null = null

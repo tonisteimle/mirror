@@ -8,6 +8,7 @@
  */
 
 import { DropService, getDropService, DropResultApplier } from './index'
+import type { ApplierDependencies } from './drop-result-applier'
 import type { DropResult, DropContext, ModificationResult, DropSource } from './types'
 import { CodeModifier } from '../../compiler/studio/code-modifier'
 import { parse } from '../../compiler/parser'
@@ -311,7 +312,7 @@ export class StudioTestHarness {
     const codeModifier = new CodeModifier(fullCode, sourceMap)
 
     return {
-      codeModifier,
+      codeModifier: codeModifier as unknown as DropContext['codeModifier'],
       robustModifier: null as unknown as DropContext['robustModifier'],
       previewContainer: null as unknown as HTMLElement,
       currentFile: this.currentFile,
@@ -336,24 +337,19 @@ export class StudioTestHarness {
    */
   private createApplier(): DropResultApplier {
     return new DropResultApplier({
-      editor: this.editor as unknown as Parameters<
-        typeof DropResultApplier.prototype.apply
-      >[0] extends void
-        ? never
-        : unknown as Parameters<ConstructorParameters<typeof DropResultApplier>[0]['editor']>,
+      editor: this.editor as unknown as ApplierDependencies['editor'],
       preludeOffset: this.preludeCode.length,
-      executor: this.executor as unknown as ConstructorParameters<
-        typeof DropResultApplier
-      >[0]['executor'],
-      events: this.events as unknown as ConstructorParameters<
-        typeof DropResultApplier
-      >[0]['events'],
+      preludeLineOffset: 0,
+      resolvedSource: '',
+      isWrappedWithApp: false,
+      executor: this.executor as unknown as ApplierDependencies['executor'],
+      events: this.events as unknown as ApplierDependencies['events'],
       compile: () => {},
       save: () => {},
       setPendingSelection: sel => {
         this.pendingSelection = sel
       },
-    } as ConstructorParameters<typeof DropResultApplier>[0])
+    })
   }
 
   private getComponentName(source: DropSource): string {

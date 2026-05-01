@@ -105,6 +105,7 @@ export interface Studio {
 export interface StudioState {
   resolvedSource: string
   preludeOffset: number
+  preludeLineOffset: number
 }
 
 // === Performance Timings ===

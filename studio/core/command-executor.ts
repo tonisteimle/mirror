@@ -4,7 +4,7 @@
 
 import type { Command, CommandResult, CommandContext } from './commands'
 import { BatchCommand, getCommandContext } from './commands'
-import { events } from './events'
+import { events, type StudioEvents } from './events'
 
 interface HistoryEntry {
   command: Command
@@ -75,7 +75,7 @@ export class CommandExecutor {
     from: HistoryEntry[],
     to: HistoryEntry[],
     action: (e: HistoryEntry, ctx: CommandContext) => CommandResult,
-    event: string,
+    event: keyof StudioEvents,
     emptyError: string
   ): CommandResult {
     const entry = from.pop()

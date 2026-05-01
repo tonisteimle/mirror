@@ -22,7 +22,17 @@ export {
   type RunEditFlowOptions,
   type EditResult,
   type EditResultStatus,
+  type QualityViolations,
 } from './edit-flow'
+
+export {
+  checkTokenCompliance,
+  checkComponentCompliance,
+  checkRedundancyCompliance,
+  type TokenViolation,
+  type ComponentViolation,
+  type RedundancyViolation,
+} from './quality-checks'
 
 export { buildEditPrompt, type EditCaptureCtx } from './edit-prompts'
 

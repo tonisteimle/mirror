@@ -154,7 +154,7 @@ export {
   initSnappingService,
   resetSnappingService,
   shouldBypassSnapping,
-  type SnapResult,
+  type SnapResult as SpacingSnapResult,
   type SpacingToken,
   type SpacingPropertyType,
 } from './snapping-service'

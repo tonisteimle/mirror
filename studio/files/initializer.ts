@@ -135,6 +135,7 @@ function subscribeToEvents(): void {
   events.on('file:changed', handleFileChanged)
   events.on('file:deleted', handleFileDeleted)
   events.on('file:renamed', handleFileRenamed)
+  events.on('folder:deleted', handleFolderDeleted)
   events.on('project:closed', handleProjectClosed)
   events.on('project:opened', handleProjectOpened)
   events.on('error', handleError)
@@ -169,6 +170,29 @@ function handleFileDeleted(data: unknown): void {
 
   if (uiState.currentFile === path) {
     selectNextFile()
+  }
+  renderFileTree()
+}
+
+/**
+ * Storage emits `folder:deleted` for the folder itself, but no per-file
+ * `file:deleted` for the files inside. Without this handler, the
+ * controller's filesCache (and the synced window.files) keep stale
+ * entries for those files (BUG: documented in tests/studio/file-delete.test.ts).
+ * Strip every cache entry whose path is under the deleted folder prefix.
+ */
+function handleFolderDeleted(data: unknown): void {
+  const { path } = data as { path: string }
+  const prefix = path.endsWith('/') ? path : path + '/'
+
+  for (const cachedPath of Object.keys(uiState.filesCache)) {
+    if (cachedPath.startsWith(prefix)) {
+      uiState.updateCache(cachedPath, undefined)
+      syncToWindow(cachedPath, undefined)
+      if (uiState.currentFile === cachedPath) {
+        selectNextFile()
+      }
+    }
   }
   renderFileTree()
 }

@@ -420,7 +420,8 @@ export class PreviewController {
     // Listen for padding:end events to execute commands
     this.unsubscribePaddingEnd = events.on(
       'padding:end',
-      (data: { nodeId: string; handle: PaddingHandle; mode: string; padding: number }) => {
+      (data: { nodeId: string; handle: string; mode: string; padding: number }) => {
+        const handle = data.handle as PaddingHandle
         // Determine property based on mode:
         // - single: pad-t, pad-r, pad-b, pad-l (individual side)
         // - all: pad (all sides uniform)
@@ -438,7 +439,7 @@ export class PreviewController {
             bottom: 'pad-b',
             left: 'pad-l',
           }
-          property = singlePropertyMap[data.handle]
+          property = singlePropertyMap[handle]
         }
 
         executor.execute(
@@ -465,7 +466,8 @@ export class PreviewController {
     // Listen for margin:end events to execute commands
     this.unsubscribeMarginEnd = events.on(
       'margin:end',
-      (data: { nodeId: string; handle: MarginHandle; mode: string; margin: number }) => {
+      (data: { nodeId: string; handle: string; mode: string; margin: number }) => {
+        const handle = data.handle as MarginHandle
         // Determine property based on mode:
         // - single: mar-t, mar-r, mar-b, mar-l (individual side)
         // - all: mar (all sides uniform)
@@ -483,7 +485,7 @@ export class PreviewController {
             bottom: 'mar-b',
             left: 'mar-l',
           }
-          property = singlePropertyMap[data.handle]
+          property = singlePropertyMap[handle]
         }
 
         executor.execute(

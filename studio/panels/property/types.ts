@@ -3,13 +3,13 @@
  */
 
 import type {
-  BreadcrumbItem,
   ExtractedElement,
   ExtractedProperty,
   PropertyCategory,
   ModificationResult,
   FilesAccess,
 } from '../../../compiler'
+import type { BreadcrumbItem } from '../../core/state-types'
 
 /**
  * Interface for selection providers
@@ -26,9 +26,9 @@ export interface SelectionProvider {
  * Token info extracted from source
  */
 export interface SpacingToken {
-  name: string      // e.g., "sm", "md", "lg"
-  fullName: string  // e.g., "sm.pad", "md.rad"
-  value: string     // e.g., "4", "8"
+  name: string // e.g., "sm", "md", "lg"
+  fullName: string // e.g., "sm.pad", "md.rad"
+  value: string // e.g., "4", "8"
 }
 
 /**
@@ -69,4 +69,10 @@ export interface ValidationRule {
 }
 
 // Re-export types from compiler
-export type { ExtractedElement, ExtractedProperty, PropertyCategory, ModificationResult, FilesAccess }
+export type {
+  ExtractedElement,
+  ExtractedProperty,
+  PropertyCategory,
+  ModificationResult,
+  FilesAccess,
+}

@@ -207,7 +207,7 @@ export class DragController implements Reportable<ControllerReport> {
     this.lastTarget = null
   }
 
-  /** Calculate insertion position for hit */
+  /** Calculate insertion position for hit (caller guarantees hit.layout !== 'absolute') */
   private calculateInsertion(cursor: Point, hit: import('./types').HitResult) {
     let children = this.cache.getChildren(hit.containerId)
 
@@ -218,7 +218,13 @@ export class DragController implements Reportable<ControllerReport> {
       children = children.filter(c => c.nodeId !== this.source!.nodeId)
     }
 
-    return this.calculator.calculate(cursor, children, hit.layout, hit.containerRect)
+    // Caller guards against absolute; treat as flex (assertion).
+    return this.calculator.calculate(
+      cursor,
+      children,
+      hit.layout as import('./types').FlexLayout,
+      hit.containerRect
+    )
   }
 
   /** Show indicator at insertion position */
@@ -467,7 +473,12 @@ export class DragController implements Reportable<ControllerReport> {
     containerId: string,
     position: Point
   ): Promise<void> {
-    return this.simulateDrop(source, { mode: 'absolute', containerId, position })
+    return this.simulateDrop(source, {
+      mode: 'absolute',
+      containerId,
+      position,
+      insertionIndex: this.cache.getChildren(containerId).length,
+    })
   }
 
   /**

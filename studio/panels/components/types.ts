@@ -82,6 +82,8 @@ export type ComponentIcon =
   // Data & Charts
   | 'table'
   | 'chart'
+  // Generic Lucide-style fallback icons
+  | 'chevron-down'
 
 /**
  * Child component definition for layout templates
