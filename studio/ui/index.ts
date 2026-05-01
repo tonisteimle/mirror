@@ -45,3 +45,6 @@ export {
 
 // Panel Dividers (legacy mousedown/mousemove resizers)
 export { initPanelDividers, type PanelDividerDeps } from './panel-dividers'
+
+// Desktop Menu Handler (Tauri native menu → studio actions)
+export { setupDesktopMenuHandler, type DesktopMenuDeps } from './desktop-menu'
