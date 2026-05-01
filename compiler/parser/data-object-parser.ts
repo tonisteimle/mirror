@@ -63,11 +63,6 @@ function advanceIdentifierOrKeyword(ctx: ParserContext): string {
   return token.type === 'IDENTIFIER' ? token.value : token.type.toLowerCase()
 }
 
-/** Skip NEWLINE tokens (helper used in many places below). */
-function skipNewlines(ctx: ParserContext): void {
-  while (U.check(ctx, 'NEWLINE')) U.advance(ctx)
-}
-
 /* ----------------------------------------------------- main entry: object */
 
 export function parseDataObject(ctx: ParserContext, section?: string): TokenDefinition | null {
@@ -76,7 +71,7 @@ export function parseDataObject(ctx: ParserContext, section?: string): TokenDefi
 
   const name = nameToken.value.startsWith('$') ? nameToken.value.slice(1) : nameToken.value
 
-  skipNewlines(ctx)
+  U.skipNewlines(ctx)
   if (!U.check(ctx, 'INDENT')) return null
   U.advance(ctx) // INDENT
 
@@ -87,7 +82,7 @@ export function parseDataObject(ctx: ParserContext, section?: string): TokenDefi
   const blocks: DataBlock[] = []
 
   for (let iter = 0; !U.isAtEnd(ctx) && !U.check(ctx, 'DEDENT') && iter < MAX_ITERATIONS; iter++) {
-    skipNewlines(ctx)
+    U.skipNewlines(ctx)
     if (U.check(ctx, 'DEDENT') || U.isAtEnd(ctx)) break
 
     // Markdown block: @blockname
@@ -144,7 +139,7 @@ export function parseDataAttribute(ctx: ParserContext): DataAttribute | null {
   while (U.checkAt(ctx, lookAhead, 'NEWLINE')) lookAhead++
 
   if (U.checkAt(ctx, lookAhead, 'INDENT')) {
-    skipNewlines(ctx)
+    U.skipNewlines(ctx)
     U.advance(ctx) // INDENT
 
     const children: DataAttribute[] = []
@@ -153,7 +148,7 @@ export function parseDataAttribute(ctx: ParserContext): DataAttribute | null {
       !U.isAtEnd(ctx) && !U.check(ctx, 'DEDENT') && iter < MAX_ITERATIONS;
       iter++
     ) {
-      skipNewlines(ctx)
+      U.skipNewlines(ctx)
       if (U.check(ctx, 'DEDENT') || U.isAtEnd(ctx)) break
 
       if (checkIsIdentifierOrKeyword(ctx) && U.checkNext(ctx, 'COLON')) {
@@ -306,7 +301,7 @@ export function parseDataBlock(ctx: ParserContext): DataBlock | null {
   const blockName = nameToken.value
   const line = nameToken.line
 
-  skipNewlines(ctx)
+  U.skipNewlines(ctx)
 
   if (!U.check(ctx, 'INDENT')) {
     return { name: blockName, content: '', line }

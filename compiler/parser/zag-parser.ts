@@ -13,6 +13,7 @@
 import type { Token } from './lexer'
 import type {
   ZagNode,
+  ZagSlotDef,
   Property,
   Event,
   Instance,

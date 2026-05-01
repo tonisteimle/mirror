@@ -27,6 +27,7 @@ import type {
   ComputedExpression,
   LoopVarReference,
   ParseError,
+  ParseErrorCode,
   JavaScriptBlock,
   AnimationDefinition,
   AnimationKeyframe,
@@ -38,28 +39,19 @@ import type {
   ChildOverride,
   StateDependency,
   StateAnimation,
-  DataAttribute,
-  DataBlock,
   SchemaDefinition,
   SchemaField,
   SchemaType,
   SchemaConstraint,
   IconDefinition,
-  DataReference,
-  DataReferenceArray,
 } from './ast'
 import {
   PROPERTY_STARTERS,
-  BOOLEAN_PROPERTIES,
-  LAYOUT_BOOLEANS,
   ALL_BOOLEAN_PROPERTIES,
   KEYBOARD_KEYS,
   STATE_NAMES,
   SYSTEM_STATES,
   STATE_MODIFIERS,
-  DIRECTIONAL_PROPERTIES,
-  DIRECTION_KEYWORDS,
-  isDirectionForProperty,
   ACTION_NAMES,
   EVENT_NAMES,
   ANIMATION_PRESETS,
@@ -67,14 +59,8 @@ import {
   parseDuration,
   isValidProperty,
 } from '../schema/parser-helpers'
-import { isPrimitive, getEvent } from '../schema/dsl'
-import {
-  isZagPrimitive,
-  getZagPrimitive,
-  isZagSlot,
-  isZagItemKeyword,
-  isZagGroupKeyword,
-} from '../schema/zag-primitives'
+import { isPrimitive, getEvent, isDevicePreset } from '../schema/dsl'
+import { isZagPrimitive } from '../schema/zag-primitives'
 import { logParser as log } from '../utils/logger'
 import {
   isChartPrimitive,
@@ -164,18 +150,6 @@ export class Parser {
   }
 
   /**
-   * Report an iteration limit error - indicates a likely bug in the parser.
-   */
-  private reportIterationLimit(context: string): void {
-    const token = this.peekAt(0)
-    this.errors.push({
-      message: `Parser iteration limit exceeded in ${context}. This is likely a bug.`,
-      line: token?.line ?? 0,
-      column: token?.column ?? 0,
-    })
-  }
-
-  /**
    * Create a Text instance from a string token.
    */
   private createTextChild(token: Token): Instance {
@@ -198,57 +172,6 @@ export class Parser {
       line: token.line,
       column: token.column,
     }
-  }
-
-  /**
-   * Parse the body of a state block (properties, children, child overrides).
-   * Handles: string → Text child, uppercase → child/override, lowercase → property.
-   */
-  private parseStateBlockBody(state: State): void {
-    while (!this.check('DEDENT') && !this.isAtEnd()) {
-      this.skipNewlines()
-      if (this.check('DEDENT')) break
-
-      // String content → Text child
-      if (this.check('STRING')) {
-        if (!state.children) state.children = []
-        state.children.push(this.createTextChild(this.advance()))
-        continue
-      }
-
-      if (this.check('IDENTIFIER')) {
-        const name = this.current().value
-        if (this.isUppercase(name)) {
-          // Uppercase: child override or new child
-          if (this.checkNext('COLON')) {
-            const override = this.parseStateChildOverride()
-            if (override) state.childOverrides.push(override)
-          } else if (isPrimitive(name)) {
-            const child = this.parseStateChildInstance()
-            if (child) {
-              if (!state.children) state.children = []
-              state.children.push(child)
-            }
-          } else if (this.checkNext('STRING')) {
-            const child = this.parseStateChildInstance()
-            if (child) {
-              if (!state.children) state.children = []
-              state.children.push(child)
-            }
-          } else {
-            const override = this.parseStateChildOverride()
-            if (override) state.childOverrides.push(override)
-          }
-        } else {
-          // Lowercase: property
-          const prop = this.parseProperty()
-          if (prop) state.properties.push(prop)
-        }
-      } else {
-        this.advance()
-      }
-    }
-    if (this.check('DEDENT')) this.advance()
   }
 
   parse(): AST {
@@ -546,7 +469,8 @@ export class Parser {
       if (skipped && skipped.type === 'IDENTIFIER' && this.checkNext('COLON')) {
         this.addError(
           `Unrecognized definition: '${skipped.value}:' has no value or body`,
-          `Provide a token value, component definition, or property set after ':'`
+          `Provide a token value, component definition, or property set after ':'`,
+          'unrecognized-definition'
         )
       }
       this.advance()
@@ -2937,11 +2861,11 @@ export class Parser {
       column: startToken.column,
     }
 
-    // Check for device preset (mobile, tablet, desktop)
+    // Check for device preset (mobile, tablet, desktop — sourced from schema)
     if (this.check('IDENTIFIER')) {
       const deviceValue = this.current().value.toLowerCase()
-      if (deviceValue === 'mobile' || deviceValue === 'tablet' || deviceValue === 'desktop') {
-        canvas.device = deviceValue as 'mobile' | 'tablet' | 'desktop'
+      if (isDevicePreset(deviceValue)) {
+        canvas.device = deviceValue
         this.advance() // consume device preset
       }
     }
@@ -3854,25 +3778,6 @@ export class Parser {
     return expr.trim()
   }
 
-  // ============================================================================
-  // DATA BINDING PARSING
-  // ============================================================================
-
-  private parseDataBinding(): { collection: string; filter?: Expression } | null {
-    this.advance() // data
-
-    if (!this.check('IDENTIFIER')) return null
-    const collection = this.advance().value
-
-    let filter: Expression | undefined
-    if (this.check('WHERE')) {
-      this.advance()
-      filter = this.parseExpression()
-    }
-
-    return { collection, filter }
-  }
-
   // Helpers
 
   private skipNewlines(): void {
@@ -3992,17 +3897,19 @@ export class Parser {
 
   private expect(type: TokenType): Token | null {
     if (this.check(type)) return this.advance()
-    this.addError(`Expected ${type} but got ${this.current()?.type}`)
+    const code: ParseErrorCode = type === 'COLON' ? 'missing-colon' : 'unexpected-token'
+    this.addError(`Expected ${type} but got ${this.current()?.type}`, undefined, code)
     return null
   }
 
-  private addError(message: string, hint?: string): void {
+  private addError(message: string, hint?: string, code?: ParseErrorCode): void {
     const token = this.current()
     this.errors.push({
       message,
       line: token?.line ?? 0,
       column: token?.column ?? 0,
       hint,
+      code,
     })
   }
 

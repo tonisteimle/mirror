@@ -33,15 +33,6 @@ export interface ParserContext {
 }
 
 /**
- * Result from a sub-parser containing the parsed node and new position.
- */
-export interface ParseResult<T> {
-  node: T | null
-  pos: number
-  errors?: ParseError[]
-}
-
-/**
  * Maximum iterations for while loops to prevent infinite loops.
  */
 export const MAX_ITERATIONS = 100000

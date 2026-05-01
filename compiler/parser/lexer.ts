@@ -57,7 +57,6 @@ export type TokenType =
   | 'BIND' // bind varName (track active exclusive() child content)
   | 'ROUTE'
   | 'WITH'
-  | 'ANIMATION' // animation keyword for animation definitions
   | 'CANVAS' // canvas keyword for canvas definitions
   | 'USE' // use filename (imports components from another file)
   | 'SLASH'
@@ -78,11 +77,27 @@ export interface Token {
   column: number
 }
 
+/**
+ * Stable category for a lexer error. Lets the validator (or any consumer)
+ * map errors to its own coding scheme without string-matching the message.
+ */
+export type LexerErrorCode =
+  | 'unclosed-string'
+  | 'invalid-hex'
+  | 'unknown-character'
+  | 'indent-too-deep'
+  | 'invalid-number'
+  | 'inconsistent-indent'
+  | 'invalid-indent'
+  | 'leading-decimal'
+  | 'trailing-decimal'
+
 export interface LexerError {
   message: string
   line: number
   column: number
   hint?: string
+  code?: LexerErrorCode
 }
 
 export interface LexerResult {
@@ -160,12 +175,13 @@ export class Lexer {
     }
   }
 
-  private addError(message: string, hint?: string): void {
+  private addError(message: string, hint?: string, code?: LexerErrorCode): void {
     this.errors.push({
       message,
       line: this.line,
       column: this.column,
       hint,
+      code,
     })
   }
 
@@ -302,7 +318,11 @@ export class Lexer {
           this.advance()
           this.addToken('AND_AND', '&&')
         } else {
-          this.addError(`Unexpected character '&' (use && for logical AND)`, `Did you mean '&&'?`)
+          this.addError(
+            `Unexpected character '&' (use && for logical AND)`,
+            `Did you mean '&&'?`,
+            'unknown-character'
+          )
         }
         break
       case '|':
@@ -311,7 +331,11 @@ export class Lexer {
           this.advance()
           this.addToken('OR_OR', '||')
         } else {
-          this.addError(`Unexpected character '|' (use || for logical OR)`, `Did you mean '||'?`)
+          this.addError(
+            `Unexpected character '|' (use || for logical OR)`,
+            `Did you mean '||'?`,
+            'unknown-character'
+          )
         }
         break
       case '>':
@@ -373,7 +397,8 @@ export class Lexer {
         const unknownChar = this.peek()
         this.addError(
           `Unexpected character '${unknownChar}'`,
-          `Remove this character or check for typos`
+          `Remove this character or check for typos`,
+          'unknown-character'
         )
         this.advance()
     }
@@ -446,7 +471,8 @@ export class Lexer {
         // Note: This is detected as a warning by the validator via isLexerWarning()
         this.addError(
           `Inconsistent indentation: expected ${this.indentUnit} spaces, got ${increment}`,
-          `Use consistent indentation of ${this.indentUnit} spaces`
+          `Use consistent indentation of ${this.indentUnit} spaces`,
+          'inconsistent-indent'
         )
       }
     }
@@ -456,7 +482,8 @@ export class Lexer {
       if (this.indentStack.length >= Lexer.MAX_INDENT_DEPTH) {
         this.addError(
           `Indentation too deep (maximum ${Lexer.MAX_INDENT_DEPTH} levels)`,
-          `Reduce nesting or refactor into separate components`
+          `Reduce nesting or refactor into separate components`,
+          'indent-too-deep'
         )
         // Don't push more indentation, treat as same level
       } else {
@@ -477,7 +504,8 @@ export class Lexer {
       if (indent !== newCurrentIndent) {
         this.addError(
           `Invalid indentation: ${indent} spaces doesn't match any indentation level`,
-          `Expected ${newCurrentIndent} spaces or a multiple of ${this.indentUnit || 2} spaces`
+          `Expected ${newCurrentIndent} spaces or a multiple of ${this.indentUnit || 2} spaces`,
+          'invalid-indent'
         )
       }
     }
@@ -510,6 +538,7 @@ export class Lexer {
         line: startLine,
         column: startColumn,
         hint: `Add a closing ${quote} to complete the string`,
+        code: 'unclosed-string',
       })
       // Still emit the token with what we have
       this.addToken('STRING', value)
@@ -536,12 +565,14 @@ export class Lexer {
       if (hexLength === 0) {
         this.addError(
           `Invalid color: '#' must be followed by hex digits`,
-          `Use format #RGB, #RRGGBB, or #RRGGBBAA`
+          `Use format #RGB, #RRGGBB, or #RRGGBBAA`,
+          'invalid-hex'
         )
       } else if (hexLength !== 3 && hexLength !== 4 && hexLength !== 6 && hexLength !== 8) {
         this.addError(
           `Invalid color "${value}": expected 3, 4, 6, or 8 hex digits, got ${hexLength}`,
-          `Use format #RGB, #RRGGBB, or #RRGGBBAA`
+          `Use format #RGB, #RRGGBB, or #RRGGBBAA`,
+          'invalid-hex'
         )
       }
 
@@ -567,14 +598,16 @@ export class Lexer {
         if (this.peek() === '.' && this.isDigit(this.peekNext())) {
           this.addError(
             `Invalid number "${value}.${this.peekNext()}...": multiple decimal points`,
-            `Remove the extra decimal point`
+            `Remove the extra decimal point`,
+            'invalid-number'
           )
         }
       } else {
         // Trailing decimal: 5. (warn but continue)
         this.addError(
           `Trailing decimal point in "${value}."`,
-          `Use "${value}.0" or remove the decimal point`
+          `Use "${value}.0" or remove the decimal point`,
+          'trailing-decimal'
         )
       }
     }
@@ -654,7 +687,8 @@ export class Lexer {
     while (this.isDigit(this.peek())) value += this.advance()
     this.addError(
       `Leading decimal ".${value.slice(2)}" - consider using "${value}"`,
-      `Add a leading zero for clarity`
+      `Add a leading zero for clarity`,
+      'leading-decimal'
     )
     this.addToken('NUMBER', value)
   }

@@ -21,8 +21,6 @@ export type NodeType =
   | 'ZagComponent'
   | 'Table'
   | 'TableColumn'
-  | 'TableStaticRow'
-  | 'TableStaticCell'
 
 export interface BaseNode {
   type: NodeType
@@ -31,11 +29,18 @@ export interface BaseNode {
   nodeId?: string // Unique identifier for studio selection
 }
 
+/**
+ * Stable category for a parser error. Lets the validator (or any consumer)
+ * map errors to its own coding scheme without string-matching the message.
+ */
+export type ParseErrorCode = 'missing-colon' | 'unexpected-token' | 'unrecognized-definition'
+
 export interface ParseError {
   message: string
   line: number
   column: number
   hint?: string
+  code?: ParseErrorCode
 }
 
 export interface Program extends BaseNode {
@@ -68,14 +73,13 @@ export interface Program extends BaseNode {
  * - font: Default font family (inherited)
  * - fs: Default font size (inherited)
  *
- * Device presets:
- * - mobile: 375×812
- * - tablet: 768×1024
- * - desktop: 1440×900
+ * Device presets are defined in `schema/dsl.ts:SCHEMA['device'].keywords`
+ * (mobile, tablet, desktop) — the field is a string so new presets only
+ * require a schema change, not an AST change.
  */
 export interface CanvasDefinition extends BaseNode {
   type: 'Canvas'
-  device?: 'mobile' | 'tablet' | 'desktop' // Device preset
+  device?: string // Device preset name (validated against schema)
   properties: Property[]
 }
 
@@ -216,6 +220,7 @@ export interface ComponentDefinition extends BaseNode {
   states: State[]
   events: Event[]
   children: (Instance | Slot)[]
+  slots?: Record<string, unknown> // Zag-component slots inherited via `as DatePicker` etc.
   initialState?: string // initial state: "closed" → initialState: "closed"
   selection?: string // selection binding: "selection $selected" → selection: "$selected"
   bind?: string // bind active exclusive() child: "bind value" → bind: "value"
@@ -644,8 +649,6 @@ export interface TableNode extends BaseNode {
   footerSlot?: TableSlotNode
   /** Group header slot customization */
   groupSlot?: TableSlotNode
-  /** Static rows for manual tables (when no dataSource) */
-  staticRows?: TableStaticRowNode[]
   /** Custom sort icon slot (for all sortable columns) */
   sortIconSlot?: TableSlotNode
   /** Custom ascending sort icon slot */
@@ -660,37 +663,6 @@ export interface TableNode extends BaseNode {
   paginatorNextSlot?: TableSlotNode
   /** Custom page info slot */
   paginatorPageInfoSlot?: TableSlotNode
-}
-
-/**
- * Static row for manual tables
- *
- * Syntax:
- *   Row "Cell1", "Cell2", "Cell3"
- *   Row
- *     Cell "Content"
- *     Cell
- *       Frame ...
- */
-export interface TableStaticRowNode extends BaseNode {
-  type: 'TableStaticRow'
-  /** Cell contents - can be strings or complex content */
-  cells: TableStaticCellNode[]
-  /** Row-level properties (e.g., bg, pad) */
-  properties: Property[]
-}
-
-/**
- * Static cell for manual tables
- */
-export interface TableStaticCellNode extends BaseNode {
-  type: 'TableStaticCell'
-  /** Simple text content */
-  text?: string
-  /** Complex content (child elements) */
-  children?: (Instance | Slot)[]
-  /** Cell-level properties */
-  properties: Property[]
 }
 
 /**
@@ -752,8 +724,6 @@ export interface TableSlotNode {
   children: (Instance | Slot | Text)[]
   /** Source position */
   sourcePosition: SourcePosition
-  /** Static row for header slots (Row "A", "B", "C" syntax) */
-  staticRow?: TableStaticRowNode
   /** Paginator sub-slot: Previous button customization */
   prevSlot?: TableSlotNode
   /** Paginator sub-slot: Next button customization */

@@ -31,7 +31,7 @@ const SIZE_SUFFIXES = new Set(['pad', 'gap', 'margin', 'rad'])
  * - NUMBER tokens that fail parseFloat fall back to the raw string value
  * - The boolean identifiers `true` / `false` become real booleans
  */
-export function parseTokenValue(token: Token): string | number | boolean {
+function parseTokenValue(token: Token): string | number | boolean {
   if (token.type === 'NUMBER') {
     if (token.value.startsWith('#')) return token.value
     const num = parseFloat(token.value)
