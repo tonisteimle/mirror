@@ -163,15 +163,16 @@
         <div class="playground-code">
           <textarea>// Dialog-Muster
 Dialog
-  Trigger: [Element das öffnet]
-  Backdrop: [Hintergrund-Styling]
-  Content: [Dialog-Inhalt]
-    CloseTrigger: [Elemente die schließen]
+  Trigger: Button "Öffnen"
+  Backdrop: bg rgba(0,0,0,0.5)
+  Content: pad 24, bg #1a1a1a, rad 12
+    Text "Inhalt", col white
+    CloseTrigger: Button "OK"
 
 // Tooltip-Muster
-Tooltip positioning "position"
-  Trigger: [Element bei Hover]
-  Content: [Tooltip-Inhalt]</textarea>
+Tooltip positioning "bottom"
+  Trigger: Icon "info", ic #888, is 20
+  Content: Text "Hilfetext", fs 12</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>

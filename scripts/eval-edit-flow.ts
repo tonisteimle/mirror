@@ -25,6 +25,7 @@ import { tmpdir } from 'os'
 import { buildEditPrompt, type EditCaptureCtx } from '../studio/agent/edit-prompts'
 import { parsePatchResponse, type Patch } from '../studio/agent/patch-format'
 import { applyPatches, type ApplyResult } from '../studio/agent/patch-applier'
+import { checkTokenCompliance, type TokenViolation } from '../studio/agent/quality-checks'
 
 // =============================================================================
 // SCENARIO TYPES
@@ -1217,6 +1218,10 @@ interface ScenarioResult {
   compileOk: boolean
   compileErrors: string[]
   assertResults: { label: string; pass: boolean; detail?: string }[]
+  /** Token-compliance metric — independent of the per-scenario asserts. */
+  tokenViolations: TokenViolation[]
+  /** True iff the scenario had any tokens available to check against. */
+  tokenCheckApplicable: boolean
   claudeMs: number
   compileMs: number
   totalMs: number
@@ -1301,11 +1306,37 @@ async function runScenario(scenario: EditScenario): Promise<ScenarioResult> {
     console.log(`     ${icon} ${r.label}${detail}`)
   }
 
+  // Quality-Metric: Token-Compliance.
+  // We run this against finalSource (which equals source if no patches
+  // applied, since applyPatches returns success=true for an empty patch
+  // list). The check is "applicable" iff there are tokens to check
+  // against — either from project files or defined in finalSource itself.
+  const tokenSourceForCheck = finalSource ?? scenario.ctx.source
+  const tokenResult = checkTokenCompliance(tokenSourceForCheck, scenario.ctx.projectFiles.tokens)
+  // We consider it "applicable" if the summary doesn't report skip-no-tokens.
+  const tokenCheckApplicable = !tokenResult.summary.startsWith('no tokens available')
+  if (tokenCheckApplicable) {
+    if (tokenResult.violations.length === 0) {
+      console.log(ts(`🎟  token-compliance: clean (${tokenResult.summary})`))
+    } else {
+      const tag = parsed.patches.length === 0 ? 'no-change MISSED' : 'after-apply'
+      console.log(
+        ts(`🎟  token-compliance: ${tokenResult.violations.length} violation(s) [${tag}]`)
+      )
+      tokenResult.violations.forEach(v => {
+        console.log(
+          `     - L${v.line} ${v.elementName} ${v.propertyName}=${v.hardcodedValue} → ${v.suggestedToken}`
+        )
+      })
+    }
+  }
+
   const totalMs = Date.now() - totalStart
   const passed = assertResults.filter(r => r.pass).length
   console.log('')
   console.log(
     `▷  ${scenario.id}: ${passed}/${assertResults.length} asserts ` +
+      `| token ${tokenCheckApplicable ? `${tokenResult.violations.length}v` : 'n/a'} ` +
       `| claude ${claudeResult.elapsedMs}ms | compile ${compile.elapsedMs}ms | total ${totalMs}ms`
   )
 
@@ -1320,6 +1351,8 @@ async function runScenario(scenario: EditScenario): Promise<ScenarioResult> {
     compileOk: compile.ok,
     compileErrors: compile.errors,
     assertResults,
+    tokenViolations: tokenResult.violations,
+    tokenCheckApplicable,
     claudeMs: claudeResult.elapsedMs,
     compileMs: compile.elapsedMs,
     totalMs,
@@ -1347,6 +1380,8 @@ function errResult(
       pass: false,
       detail: 'pipeline failed before assert',
     })),
+    tokenViolations: [],
+    tokenCheckApplicable: false,
     claudeMs: 0,
     compileMs: 0,
     totalMs: Date.now() - start,
@@ -1412,16 +1447,38 @@ async function main() {
   console.log('═'.repeat(80))
   let totalAsserts = 0
   let totalPassed = 0
+  let totalTokenViol = 0
+  let scenariosTokenApplicable = 0
+  let scenariosTokenClean = 0
+  let scenariosTokenViol = 0
   for (const r of results) {
     const passed = r.assertResults.filter(a => a.pass).length
     const total = r.assertResults.length
     totalAsserts += total
     totalPassed += passed
-    const icon = passed === total ? '✓' : '✗'
-    console.log(`  ${icon} ${r.scenario.id} — ${passed}/${total} asserts`)
+    const assertIcon = passed === total ? '✓' : '✗'
+    let tokenCol: string
+    if (!r.tokenCheckApplicable) {
+      tokenCol = '   n/a'
+    } else if (r.tokenViolations.length === 0) {
+      tokenCol = ' ✓ tok'
+      scenariosTokenApplicable++
+      scenariosTokenClean++
+    } else {
+      tokenCol = `✗${String(r.tokenViolations.length).padStart(2)}tok`
+      scenariosTokenApplicable++
+      scenariosTokenViol++
+      totalTokenViol += r.tokenViolations.length
+    }
+    console.log(`  ${assertIcon} ${tokenCol}  ${r.scenario.id} — ${passed}/${total} asserts`)
   }
   console.log('')
-  console.log(`Total: ${totalPassed}/${totalAsserts} assertions passed`)
+  console.log(`Asserts: ${totalPassed}/${totalAsserts} passed`)
+  console.log(
+    `Token-Compliance: ${scenariosTokenClean}/${scenariosTokenApplicable} applicable scenarios clean ` +
+      `(${scenariosTokenViol} with violations, ${totalTokenViol} total violations)`
+  )
+  // Exit code reflects asserts only — token-compliance is reporting, not a gate.
   process.exit(totalPassed === totalAsserts ? 0 : 1)
 }
 

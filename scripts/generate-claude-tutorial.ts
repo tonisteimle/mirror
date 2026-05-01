@@ -13,7 +13,6 @@ const __dirname = dirname(__filename)
 
 const TUTORIAL_DIR = join(__dirname, '../docs/tutorial')
 const TUTORIAL_FULL_MD = join(__dirname, '../docs/MIRROR-TUTORIAL-FULL.md')
-const TUTORIAL_GENERATED_TS = join(__dirname, '../compiler/llm/mirror-tutorial.generated.ts')
 
 // Tutorial files in order
 const TUTORIAL_FILES = [
@@ -333,32 +332,8 @@ function main() {
   console.log(`\nWriting to ${TUTORIAL_FULL_MD}...`)
   writeFileSync(TUTORIAL_FULL_MD, tutorialContent)
 
-  // Write TS string-constant file (for LLM consumption)
-  console.log(`Writing to ${TUTORIAL_GENERATED_TS}...`)
-  writeFileSync(TUTORIAL_GENERATED_TS, buildGeneratedTs(tutorialContent))
-
   console.log(`\nDone!`)
   console.log(`  docs/MIRROR-TUTORIAL-FULL.md       (${tutorialContent.length} chars)`)
-  console.log(`  compiler/llm/mirror-tutorial.generated.ts`)
-}
-
-function buildGeneratedTs(markdown: string): string {
-  // Escape for TS template literal: backslash, backtick, and ${
-  const escaped = markdown.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${')
-
-  return [
-    '/**',
-    ' * Mirror DSL tutorial as a TypeScript string constant.',
-    ' *',
-    ' * AUTO-GENERATED — do not edit manually.',
-    ' * Source: docs/tutorial/*.html',
-    ' * Run `npm run generate:claude` to regenerate.',
-    ' */',
-    '',
-    '/* eslint-disable */',
-    'export const MIRROR_TUTORIAL_MARKDOWN = `' + escaped + '`',
-    '',
-  ].join('\n')
 }
 
 main()
