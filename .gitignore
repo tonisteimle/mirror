@@ -31,6 +31,9 @@ test-build*/
 test-output/
 test-report.html
 
+# Generated tutorial data (regenerate with `npm run tutorial:extract`)
+tools/tutorial-extracted.json
+
 # Local data
 local-data/
 

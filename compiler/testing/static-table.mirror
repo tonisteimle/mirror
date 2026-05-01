@@ -1,7 +1,0 @@
-// Test for static/manual tables (no data binding)
-
-// Simple static table with inline cells
-Table
-  Row "Name", "Alter", "Stadt"
-  Row "Max", "25", "Berlin"
-  Row "Anna", "30", "München"
