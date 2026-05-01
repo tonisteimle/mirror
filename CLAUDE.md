@@ -22,15 +22,15 @@ Das ist ein blauer Button. Du siehst es, du verstehst es, du kannst es ändern.
 
 ```
 compiler/               # Core Compiler (TypeScript)
-├── parser/            # Lexer & Parser → AST
+├── parser/            # Lexer & Parser → AST (incl. positional-resolver)
 ├── ir/                # AST → IR Transformation
-├── backends/          # IR → DOM/React Code
-├── runtime/           # DOM Runtime (Events, States)
+├── backends/          # IR → DOM/React Code (DOM emitter + runtime template)
+├── runtime/           # Runtime modules (TS, single source of truth)
 ├── validator/         # Schema-basierter Code Validator
-├── schema/            # DSL Schema (Single Source of Truth)
-└── studio/            # Property Panel, Code Modifier, SourceMap
+└── schema/            # DSL Schema (Single Source of Truth)
 
 studio/                # Studio Runtime (TypeScript) - Modulare Architektur
+├── code-modifier/     # Bidirectional editing (Code ops + Property extraction)
 ├── core/              # State, Events, Commands, Executor
 ├── modules/           # Feature-Module
 │   ├── file-manager/  # File Operations, Storage
@@ -72,23 +72,23 @@ dist/                  # Build Output
 
 ## Wichtige Dateien
 
-| Datei                              | Beschreibung                         |
-| ---------------------------------- | ------------------------------------ |
-| `studio/bootstrap.ts`              | Architektur Entry Point              |
-| `studio/core/state.ts`             | Single Source of Truth               |
-| `studio/modules/file-manager/`     | File Operations                      |
-| `studio/modules/compiler/`         | Compiler Wrapper                     |
-| `studio/pickers/`                  | Color, Token, Icon, Animation Picker |
-| `studio/panels/`                   | Property, Tree, Files Panel          |
-| `studio/test-api/`                 | Browser Test Framework               |
-| `compiler/ir/index.ts`             | IR-Transformation, SourceMap         |
-| `compiler/backends/dom.ts`         | DOM Code-Generator                   |
-| `compiler/studio/code-modifier.ts` | Code-Änderungen                      |
-| `compiler/schema/dsl.ts`           | DSL Schema (Single Source of Truth)  |
-| `compiler/validator/index.ts`      | Code Validator API                   |
-| `tools/test.ts`                    | Browser Test Runner CLI              |
-| `tools/test-runner/`               | Test Runner Implementation (CDP)     |
-| `docs/TEST-FRAMEWORK.md`           | **Test Framework Dokumentation**     |
+| Datei                          | Beschreibung                          |
+| ------------------------------ | ------------------------------------- |
+| `studio/bootstrap.ts`          | Architektur Entry Point               |
+| `studio/core/state.ts`         | Single Source of Truth                |
+| `studio/modules/file-manager/` | File Operations                       |
+| `studio/modules/compiler/`     | Compiler Wrapper                      |
+| `studio/pickers/`              | Color, Token, Icon, Animation Picker  |
+| `studio/panels/`               | Property, Tree, Files Panel           |
+| `studio/test-api/`             | Browser Test Framework                |
+| `compiler/ir/index.ts`         | IR-Transformation, SourceMap          |
+| `compiler/backends/dom.ts`     | DOM Code-Generator                    |
+| `studio/code-modifier/`        | Code-Änderungen + Property-Extraktion |
+| `compiler/schema/dsl.ts`       | DSL Schema (Single Source of Truth)   |
+| `compiler/validator/index.ts`  | Code Validator API                    |
+| `tools/test.ts`                | Browser Test Runner CLI               |
+| `tools/test-runner/`           | Test Runner Implementation (CDP)      |
+| `docs/TEST-FRAMEWORK.md`       | **Test Framework Dokumentation**      |
 
 ## Commands
 
@@ -1266,15 +1266,19 @@ npm run test:demos:headed   # Suite mit sichtbarem Browser
 
 ## Tests
 
-Tests in `tests/`:
+Tests in `tests/` — siehe `docs/test-layers.md` für die volle Layer-Map.
+Kurzversion:
 
-- `tests/compiler/` - IR, Backend, Layout, Zag-Komponenten (Vitest)
-- `tests/studio/` - Panels, Pickers, Editor, Sync (Vitest)
-- `studio/test-api/suites/` - Browser Tests (~225 Tests)
+- `tests/compiler/` (164 files) — Compiler Unit-Tests (Parser, IR, Backends)
+- `tests/behavior/` (16) — Schicht 2: observable Feature-Semantik in jsdom
+- `tests/contract/` (16) — App-Contract-Tests für `examples/*`
+- `tests/differential/` (16) — Cross-Backend-Equivalenz (DOM ≡ React ≡ Framework)
+- `tests/integration/` (19) — Multi-Feature-Interaktionen
+- `tests/runtime/` (3) — Runtime-Module (typed TS) Unit-Tests
+- `tests/studio/` (125) — Panels, Pickers, Editor, Sync
+- `studio/test-api/suites/` — Browser-Tests via CDP (~225, separater Stack)
 
 **Wichtig:** Kein Playwright. Browser-Tests laufen über eigenen CDP Test Runner.
-
-Dokumentation: `tests/compiler/regeln.md` (bewiesene Regeln), `tests/compiler/strategie.md` (Teststrategie)
 
 ### Unit Tests (Vitest)
 
