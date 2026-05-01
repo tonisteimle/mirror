@@ -47,8 +47,27 @@ export * from './ui'
 // Rename (IDE-style F2 rename symbol)
 export * from './rename'
 
-// Drop (drag-drop handling with Strategy Pattern)
-export * from './drop'
+// Drop (drag-drop handling with Strategy Pattern). Excluded names are
+// the drop-internal interface views that overlap with the canonical
+// code-modifier exports below — drop's CodeModifier / RobustModifier /
+// AddChildOptions / ModificationResult are subsets of the same names
+// shipped from `./code-modifier`, and re-exporting both would shadow.
+export {
+  DropService,
+  getDropService,
+  DropResultApplier,
+  type ApplierDependencies,
+  ElementDuplicateHandler,
+} from './drop'
+export type {
+  DropSource,
+  DropResult,
+  DropContext,
+  DropHandler,
+  AbsolutePosition,
+  Alignment,
+  ZagDefinitionResult,
+} from './drop'
 
 // Zag (Zag component helpers)
 export * from './zag'
