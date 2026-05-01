@@ -88,7 +88,7 @@ import {
   findOrCreateComponentsFile,
   addZagDefinitionToComponentsFile,
   // File Types (Clean Code module)
-  detectFileType as detectFileTypeModule,
+  detectFileType,
   getFileIcon as getFileIconModule,
   // YAML Parser (Clean Code module)
   generateYAMLDataInjection,
@@ -207,19 +207,6 @@ if (playgroundCode) {
 // Check if running in Tauri desktop app
 function isTauriDesktop() {
   return typeof window !== 'undefined' && window.__TAURI_INTERNALS__ !== undefined
-}
-
-// ===========================================
-// FILE TYPES - Single Source of Truth
-// ===========================================
-// File-type wrappers — bind getFileType so the module helpers can
-// honour explicit per-file type overrides (none today; see getFileType).
-function detectFileType(nameOrContent, content) {
-  return detectFileTypeModule(nameOrContent, content)
-}
-
-function getFileIcon(filename, withColor = true) {
-  return getFileIconModule(filename, getFileType, withColor)
 }
 
 // Save file - Desktop app uses desktop-files.js for actual disk writes
@@ -1022,7 +1009,7 @@ function updateFileIcon(filename) {
   const fileEl = document.querySelector(`[data-file="${filename}"]`)
   if (!fileEl) return
 
-  const iconSvg = getFileIcon(filename)
+  const iconSvg = getFileIconModule(filename, getFileType)
 
   // Only replace the icon SVG, preserve buttons
   const oldIcon = fileEl.querySelector('svg')
