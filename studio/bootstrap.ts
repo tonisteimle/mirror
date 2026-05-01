@@ -37,7 +37,7 @@ import {
   createPreviewBreadcrumb,
 } from './preview'
 import { RenderPipeline, createRenderPipeline } from './preview/render-pipeline'
-import { PropertyExtractor, CodeModifier } from '../compiler/studio'
+import { PropertyExtractor, CodeModifier } from './code-modifier'
 import { PropertyPanel, createPropertyPanel, SettingsPanel, createSettingsPanel } from './panels'
 import {
   ComponentPanel,
@@ -56,7 +56,8 @@ import { initDrawManager, initInlineEdit, initSync } from './bootstrap/index'
 import { initUserSettings } from './storage/user-settings'
 import { initStudioTestAPI } from './test-api'
 import { triggerRename, isRenameActive, closeRename } from './rename'
-import type { AST, IR, SourceMap, CodeChange } from '../compiler'
+import type { AST, IR, SourceMap } from '../compiler'
+import type { CodeChange } from './code-modifier'
 import type { EditorView } from '@codemirror/view'
 import { logBootstrap } from '../compiler/utils/logger'
 

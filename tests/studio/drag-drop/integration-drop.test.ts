@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { DragController, resetDragController } from '../../../studio/preview/drag/drag-controller'
-import { CodeModifier } from '../../../compiler/studio/code-modifier'
+import { CodeModifier } from '../../../studio/code-modifier/code-modifier'
 import { parse } from '../../../compiler/parser'
 import { toIR } from '../../../compiler/ir'
 import type { DragSource, DropTarget } from '../../../studio/preview/drag/types'

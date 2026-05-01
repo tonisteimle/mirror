@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { CodeModifier } from '../../compiler/studio/code-modifier'
+import { CodeModifier } from '../../studio/code-modifier/code-modifier'
 import { SourceMap, SourceMapBuilder } from '../../compiler/ir/source-map'
 import { parse } from '../../compiler/parser/parser'
 import { transform, buildSourceMapFromIR } from '../../compiler/ir'

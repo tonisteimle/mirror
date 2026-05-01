@@ -12,7 +12,7 @@ import {
   isAbsoluteLayoutContainer,
   clientToContainer,
   type LayoutInfo,
-} from '../../compiler/studio/utils/layout-detection'
+} from '../../studio/code-modifier/utils/layout-detection'
 
 // ===========================================
 // TEST HELPERS
@@ -266,7 +266,7 @@ describe('detectLayout', () => {
 
       // Need to mock getComputedStyle since jsdom doesn't compute transforms
       const originalGetComputedStyle = window.getComputedStyle
-      vi.spyOn(window, 'getComputedStyle').mockImplementation((el) => {
+      vi.spyOn(window, 'getComputedStyle').mockImplementation(el => {
         const style = originalGetComputedStyle(el)
         return {
           ...style,
@@ -289,7 +289,7 @@ describe('detectLayout', () => {
 
       // Mock getComputedStyle to return scale() shorthand
       const originalGetComputedStyle = window.getComputedStyle
-      vi.spyOn(window, 'getComputedStyle').mockImplementation((el) => {
+      vi.spyOn(window, 'getComputedStyle').mockImplementation(el => {
         const style = originalGetComputedStyle(el)
         return {
           ...style,
@@ -312,7 +312,7 @@ describe('detectLayout', () => {
 
       // Mock getComputedStyle to return scale(x, y) format
       const originalGetComputedStyle = window.getComputedStyle
-      vi.spyOn(window, 'getComputedStyle').mockImplementation((el) => {
+      vi.spyOn(window, 'getComputedStyle').mockImplementation(el => {
         const style = originalGetComputedStyle(el)
         return {
           ...style,
@@ -479,9 +479,7 @@ describe('clientToContainer', () => {
     })
 
     // Mock getBoundingClientRect
-    vi.spyOn(element, 'getBoundingClientRect').mockReturnValue(
-      new DOMRect(100, 50, 200, 200)
-    )
+    vi.spyOn(element, 'getBoundingClientRect').mockReturnValue(new DOMRect(100, 50, 200, 200))
 
     const result = clientToContainer(150, 100, element)
 
@@ -499,12 +497,10 @@ describe('clientToContainer', () => {
     })
 
     // Mock getBoundingClientRect and getComputedStyle
-    vi.spyOn(element, 'getBoundingClientRect').mockReturnValue(
-      new DOMRect(100, 100, 200, 200)
-    )
+    vi.spyOn(element, 'getBoundingClientRect').mockReturnValue(new DOMRect(100, 100, 200, 200))
 
     const originalGetComputedStyle = window.getComputedStyle
-    vi.spyOn(window, 'getComputedStyle').mockImplementation((el) => {
+    vi.spyOn(window, 'getComputedStyle').mockImplementation(el => {
       const style = originalGetComputedStyle(el)
       return {
         ...style,

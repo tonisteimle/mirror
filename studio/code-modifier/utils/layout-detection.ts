@@ -99,7 +99,10 @@ export function detectLayout(element: HTMLElement | Element | null): LayoutInfo 
       return { type: 'absolute', direction: 'vertical', isRTL, scale }
     }
     // Legacy data-mirror-abs attribute
-    if (htmlElement.dataset?.mirrorAbsolute === 'true' || htmlElement.dataset?.mirrorAbs === 'true') {
+    if (
+      htmlElement.dataset?.mirrorAbsolute === 'true' ||
+      htmlElement.dataset?.mirrorAbs === 'true'
+    ) {
       return { type: 'absolute', direction: 'vertical', isRTL, scale }
     }
     // Check for ZStack-like components
@@ -152,7 +155,9 @@ export function isHorizontalLayout(element: HTMLElement | Element | null): boole
 /**
  * Get the layout direction of an element
  */
-export function getLayoutDirection(element: HTMLElement | Element | null): 'horizontal' | 'vertical' {
+export function getLayoutDirection(
+  element: HTMLElement | Element | null
+): 'horizontal' | 'vertical' {
   return detectLayout(element).direction
 }
 

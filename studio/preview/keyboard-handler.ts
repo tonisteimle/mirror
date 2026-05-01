@@ -47,7 +47,7 @@ import {
   executeWrapWithLayout,
   executeToggleSpread,
 } from './shared-actions'
-import { isAbsoluteLayoutContainer } from '../../compiler/studio/utils/layout-detection'
+import { isAbsoluteLayoutContainer } from '../code-modifier/utils/layout-detection'
 import { createLogger } from '../../compiler/utils/logger'
 
 const log = createLogger('KeyboardHandler')

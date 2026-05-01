@@ -8,7 +8,7 @@ import type {
   PropertyCategory,
   ModificationResult,
   FilesAccess,
-} from '../../../compiler'
+} from '../../code-modifier'
 import type { BreadcrumbItem } from '../../core/state-types'
 
 /**

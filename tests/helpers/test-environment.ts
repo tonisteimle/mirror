@@ -10,7 +10,7 @@
 
 import { parse } from '../../compiler/parser'
 import { toIR, type IRResult } from '../../compiler/ir'
-import { createCodeModifier, type CodeModifier } from '../../compiler/studio/code-modifier'
+import { createCodeModifier, type CodeModifier } from '../../studio/code-modifier/code-modifier'
 import type { SourceMap, NodeMapping } from '../../compiler/ir/source-map'
 import type { Point, Rect } from '../../studio/visual/models/drag-state'
 
@@ -52,19 +52,21 @@ export interface PaletteDragSimulation {
 }
 
 export interface DragSimulationResult {
-  source: {
-    type: 'element'
-    nodeId: string
-    rect: Rect
-    grabOffset: Point
-  } | {
-    type: 'palette'
-    componentName: string
-    properties?: string
-    textContent?: string
-    defaultSize?: { width: number; height: number }
-    componentId?: string
-  }
+  source:
+    | {
+        type: 'element'
+        nodeId: string
+        rect: Rect
+        grabOffset: Point
+      }
+    | {
+        type: 'palette'
+        componentName: string
+        properties?: string
+        textContent?: string
+        defaultSize?: { width: number; height: number }
+        componentId?: string
+      }
   targetNodeId: string
   placement: 'absolute' | 'before' | 'after' | 'inside'
   insertionIndex?: number
@@ -303,10 +305,7 @@ export function createTestEnvironment(initialCode: string): TestEnvironment {
    */
   function getElement(nameOrId: string): ElementInfo | null {
     const elements = buildElements()
-    return elements.find(el =>
-      el.nodeId === nameOrId ||
-      el.componentName === nameOrId
-    ) || null
+    return elements.find(el => el.nodeId === nameOrId || el.componentName === nameOrId) || null
   }
 
   /**
@@ -342,7 +341,10 @@ export function createTestEnvironment(initialCode: string): TestEnvironment {
    * For palette drops, we prefer flex containers (ver/hor) over leaf elements.
    * This allows dropping BETWEEN children in a flex container.
    */
-  function findDropTarget(point: Point, excludeNodeId?: string): {
+  function findDropTarget(
+    point: Point,
+    excludeNodeId?: string
+  ): {
     container: ElementInfo
     placement: 'absolute' | 'before' | 'after' | 'inside'
     insertionIndex?: number
@@ -356,8 +358,12 @@ export function createTestEnvironment(initialCode: string): TestEnvironment {
       if (excludeNodeId && el.nodeId === excludeNodeId) continue
 
       const r = el.rect
-      if (point.x >= r.x && point.x <= r.x + r.width &&
-          point.y >= r.y && point.y <= r.y + r.height) {
+      if (
+        point.x >= r.x &&
+        point.x <= r.x + r.width &&
+        point.y >= r.y &&
+        point.y <= r.y + r.height
+      ) {
         containersAtPoint.push(el)
       }
     }
@@ -370,7 +376,7 @@ export function createTestEnvironment(initialCode: string): TestEnvironment {
     const sortedByDepth = containersAtPoint.sort((a, b) => {
       const depthA = countAncestors(a, elements)
       const depthB = countAncestors(b, elements)
-      return depthB - depthA  // Deepest first
+      return depthB - depthA // Deepest first
     })
 
     // Find the best target container:
@@ -380,9 +386,10 @@ export function createTestEnvironment(initialCode: string): TestEnvironment {
     let targetContainer = sortedByDepth[0]
 
     // Check if deepest is a leaf (no layout properties)
-    const isLeaf = !targetContainer.properties.pos &&
-                   !targetContainer.properties.ver &&
-                   !targetContainer.properties.hor
+    const isLeaf =
+      !targetContainer.properties.pos &&
+      !targetContainer.properties.ver &&
+      !targetContainer.properties.hor
 
     if (isLeaf && sortedByDepth.length > 1) {
       // Bubble up to find a flex or pos parent
@@ -408,7 +415,7 @@ export function createTestEnvironment(initialCode: string): TestEnvironment {
       const isVertical = targetContainer.properties.ver === true
 
       // Find insertion position based on cursor position relative to children
-      let insertionIndex = children.length  // Default: append at end
+      let insertionIndex = children.length // Default: append at end
 
       if (isVertical) {
         // Vertical: compare y positions
@@ -489,8 +496,7 @@ export function createTestEnvironment(initialCode: string): TestEnvironment {
       if (el.properties.pos) {
         // Check if drop point is inside this container
         const r = el.rect
-        if (to.x >= r.x && to.x <= r.x + r.width &&
-            to.y >= r.y && to.y <= r.y + r.height) {
+        if (to.x >= r.x && to.x <= r.x + r.width && to.y >= r.y && to.y <= r.y + r.height) {
           targetContainer = el
         }
       }

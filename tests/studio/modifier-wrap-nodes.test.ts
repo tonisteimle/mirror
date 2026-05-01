@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { CodeModifier } from '../../compiler/studio/code-modifier'
+import { CodeModifier } from '../../studio/code-modifier/code-modifier'
 import { SourceMapBuilder } from '../../compiler/ir/source-map'
 
 // Helper to create SourceMap from source

@@ -24,7 +24,7 @@ export {
 export type { SelectionProvider } from './property/types'
 
 // Re-export ExtractedElement from compiler
-export type { ExtractedElement } from '../../compiler/studio/property-extractor'
+export type { ExtractedElement } from '../code-modifier/property-extractor'
 
 // Tree Panel
 export {

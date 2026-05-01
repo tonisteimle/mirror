@@ -678,7 +678,7 @@ export const demoScript: DemoScript = {
     { action: 'wait', duration: 400 },
 
     // === Schritt 2.27: Button bg auf raised ===
-    // Mit dem parseLine-Fix in compiler/studio/line-property-parser.ts
+    // Mit dem parseLine-Fix in studio/code-modifier/line-property-parser.ts
     // werden Properties NACH dem textContent (z.B. `Button "Edit", bg …`)
     // jetzt korrekt erkannt — pickColor REPLACEd den existing bg statt
     // zu appendieren (vorher: `bg #5BA8F5, col …, bg #3f3f46`).

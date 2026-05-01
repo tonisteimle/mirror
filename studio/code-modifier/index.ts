@@ -17,7 +17,7 @@ export {
   calculateSourcePosition,
   calculatePropertyPosition,
   type NodeMapping,
-} from '../ir/source-map'
+} from '../../compiler/ir/source-map'
 
 export {
   PropertyExtractor,

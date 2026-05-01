@@ -6,10 +6,10 @@
  */
 
 import type { ComponentItem } from '../panels/components/types'
-import type { CodeModifier, ModificationResult } from '../../compiler/studio/code-modifier'
+import type { CodeModifier, ModificationResult } from '../code-modifier/code-modifier'
 import type { SourceMap } from '../../compiler/ir/source-map'
 import type { LayoutRect } from '../core/state'
-import { detectLayout } from '../../compiler/studio/utils/layout-detection'
+import { detectLayout } from '../code-modifier/utils/layout-detection'
 import { DrawRectRenderer } from './draw-rect-renderer'
 import { SnapIntegration, createSnapIntegration } from './snap-integration'
 import { GuideRenderer } from './smart-guides/guide-renderer'
@@ -543,9 +543,7 @@ export class DrawManager {
   /**
    * Get siblings of container for snapping
    */
-  private getSiblings(
-    containerElement: HTMLElement
-  ): Map<
+  private getSiblings(containerElement: HTMLElement): Map<
     string,
     | DOMRect
     | {

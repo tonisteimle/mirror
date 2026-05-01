@@ -6,7 +6,7 @@
  */
 
 import type { AlignmentGroup, LayoutConverterConfig } from './types'
-import { CodeModifier } from '../../../compiler'
+import { CodeModifier } from '../../code-modifier'
 
 export interface ConversionResult {
   success: boolean

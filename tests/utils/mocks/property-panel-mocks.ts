@@ -11,8 +11,8 @@ import type {
   ExtractedProperty,
   PropertyCategory,
   PropertyType,
-} from '../../../compiler/studio/property-extractor'
-import type { ModificationResult, CodeChange } from '../../../compiler/studio/code-modifier'
+} from '../../../studio/code-modifier/property-extractor'
+import type { ModificationResult, CodeChange } from '../../../studio/code-modifier/code-modifier'
 import type { BreadcrumbItem } from '../../../studio/core'
 
 // Use ReturnType to get correct Mock type

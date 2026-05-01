@@ -1,18 +1,18 @@
 /**
  * Compiler Types Re-export
  *
- * Re-exports commonly used compiler types and utilities
- * to avoid deep relative imports (../../../../compiler).
- *
- * Usage:
- *   import { SourceMap, createLogger } from '../../core/compiler-types'
- *   instead of:
- *   import { SourceMap, createLogger } from '../../../../compiler'
+ * Re-exports commonly used compiler types and utilities to avoid deep
+ * relative imports. Code-modifier types (the bidirectional source-edit
+ * surface) live in `studio/code-modifier`; other compiler types in
+ * `compiler/`.
  */
 
-// Types
+// Compiler-side types
+export type { SourceMap, AST, IR } from '../../compiler'
+export { createLogger } from '../../compiler'
+
+// Code-modifier types (Studio-side bidirectional editor)
 export type {
-  SourceMap,
   CodeModifier,
   ModificationResult,
   CodeChange,
@@ -20,9 +20,5 @@ export type {
   ExtractedElement,
   ExtractedProperty,
   PropertyCategory,
-  AST,
-  IR,
-} from '../../compiler'
-
-// Functions
-export { createLogger, isAbsoluteLayoutContainer } from '../../compiler'
+} from '../code-modifier'
+export { isAbsoluteLayoutContainer } from '../code-modifier'

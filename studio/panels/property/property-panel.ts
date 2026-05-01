@@ -10,7 +10,7 @@ import type {
   ExtractedElement,
   CodeModifier,
   ModificationResult,
-} from '../../../compiler'
+} from '../../code-modifier'
 import type { PropertyPanelPorts } from './ports'
 import {
   createProductionPorts,

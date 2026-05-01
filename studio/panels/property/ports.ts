@@ -16,7 +16,7 @@ import type {
   ExtractedProperty,
   PropertyCategory,
   ModificationResult,
-} from '../../../compiler'
+} from '../../code-modifier'
 
 // ============================================
 // Common Types

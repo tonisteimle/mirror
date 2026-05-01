@@ -18,7 +18,7 @@ import type {
   CodeExecutor,
 } from '../../../studio/drag-drop/types'
 import type { SourceMap } from '../../../compiler/ir/source-map'
-import type { CodeModifier, ModificationResult } from '../../../compiler/studio/code-modifier'
+import type { CodeModifier, ModificationResult } from '../../../studio/code-modifier/code-modifier'
 import type { CodeExecutorDependencies } from '../../../studio/drag-drop/executor/code-executor'
 
 // ============================================
@@ -110,10 +110,7 @@ export function createInternalRect(x: number, y: number, width: number, height: 
  * Creates a mock DropTarget for positioned (stacked) containers
  */
 export function createMockDropTarget(overrides: Partial<DropTarget> = {}): DropTarget {
-  const element = createMockElement(
-    createRect(100, 100, 400, 300),
-    { left: 0, top: 0 }
-  )
+  const element = createMockElement(createRect(100, 100, 400, 300), { left: 0, top: 0 })
 
   return {
     nodeId: '1',
@@ -130,10 +127,7 @@ export function createMockDropTarget(overrides: Partial<DropTarget> = {}): DropT
  * Creates a mock DropTarget for flex containers
  */
 export function createMockFlexTarget(overrides: Partial<DropTarget> = {}): DropTarget {
-  const element = createMockElement(
-    createRect(100, 100, 400, 300),
-    { left: 0, top: 0 }
-  )
+  const element = createMockElement(createRect(100, 100, 400, 300), { left: 0, top: 0 })
 
   return {
     nodeId: '1',
@@ -170,10 +164,7 @@ export function createMockPaletteSource(overrides: Partial<DragSource> = {}): Dr
  * Creates a mock DragSource for canvas elements
  */
 export function createMockCanvasSource(overrides: Partial<DragSource> = {}): DragSource {
-  const element = createMockElement(
-    createRect(150, 150, 100, 40),
-    { left: 0, top: 0 }
-  )
+  const element = createMockElement(createRect(150, 150, 100, 40), { left: 0, top: 0 })
 
   return {
     type: 'canvas',
@@ -297,7 +288,7 @@ export function createPositionedContainer(
     createRect(rect.x, rect.y, rect.width, rect.height),
     { left: 0, top: 0 },
     { 'data-mirror-id': id },
-    { layout: 'stacked' }  // Mark as positioned container
+    { layout: 'stacked' } // Mark as positioned container
   )
 
   // Override style for positioned container
@@ -307,7 +298,12 @@ export function createPositionedContainer(
   // Add children
   for (const childConfig of childConfigs) {
     const child = createMockElement(
-      createRect(childConfig.rect.x, childConfig.rect.y, childConfig.rect.width, childConfig.rect.height),
+      createRect(
+        childConfig.rect.x,
+        childConfig.rect.y,
+        childConfig.rect.width,
+        childConfig.rect.height
+      ),
       { left: 0, top: 0 },
       { 'data-mirror-id': childConfig.id }
     )
@@ -326,7 +322,10 @@ export function createPositionedContainer(
  * Creates a mock SourceMap
  */
 export function createMockSourceMap(
-  entries: Map<string, { line: number; column: number; endLine: number; endColumn: number }> = new Map()
+  entries: Map<
+    string,
+    { line: number; column: number; endLine: number; endColumn: number }
+  > = new Map()
 ): MockSourceMap {
   // Default entries if none provided
   if (entries.size === 0) {
@@ -383,11 +382,16 @@ export function createMockCodeModifier(
       return createSuccessResult(newSource)
     }),
 
-    addChildRelativeTo: vi.fn((targetId: string, componentName: string, placement: string, options?: any) => {
-      calls.push({ method: 'addChildRelativeTo', args: [targetId, componentName, placement, options] })
-      const newSource = initialSource + `\n  ${componentName}`
-      return createSuccessResult(newSource)
-    }),
+    addChildRelativeTo: vi.fn(
+      (targetId: string, componentName: string, placement: string, options?: any) => {
+        calls.push({
+          method: 'addChildRelativeTo',
+          args: [targetId, componentName, placement, options],
+        })
+        const newSource = initialSource + `\n  ${componentName}`
+        return createSuccessResult(newSource)
+      }
+    ),
 
     addChildWithTemplate: vi.fn((parentId: string, template: string, options?: any) => {
       calls.push({ method: 'addChildWithTemplate', args: [parentId, template, options] })
@@ -395,22 +399,35 @@ export function createMockCodeModifier(
       return createSuccessResult(newSource)
     }),
 
-    addChildWithTemplateRelativeTo: vi.fn((targetId: string, template: string, placement: string) => {
-      calls.push({ method: 'addChildWithTemplateRelativeTo', args: [targetId, template, placement] })
-      const newSource = initialSource + '\n' + template
-      return createSuccessResult(newSource)
-    }),
-
-    moveNode: vi.fn((sourceId: string, targetId: string, placement: string, index?: number, options?: { properties?: string }) => {
-      calls.push({ method: 'moveNode', args: [sourceId, targetId, placement, index, options] })
-      // Simulate moving node with optional properties
-      let newSource = initialSource
-      if (options?.properties) {
-        // Add properties to the first line of the moved element
-        newSource = initialSource.replace(/^(\s*\w+)/, `$1, ${options.properties}`)
+    addChildWithTemplateRelativeTo: vi.fn(
+      (targetId: string, template: string, placement: string) => {
+        calls.push({
+          method: 'addChildWithTemplateRelativeTo',
+          args: [targetId, template, placement],
+        })
+        const newSource = initialSource + '\n' + template
+        return createSuccessResult(newSource)
       }
-      return createSuccessResult(newSource)
-    }),
+    ),
+
+    moveNode: vi.fn(
+      (
+        sourceId: string,
+        targetId: string,
+        placement: string,
+        index?: number,
+        options?: { properties?: string }
+      ) => {
+        calls.push({ method: 'moveNode', args: [sourceId, targetId, placement, index, options] })
+        // Simulate moving node with optional properties
+        let newSource = initialSource
+        if (options?.properties) {
+          // Add properties to the first line of the moved element
+          newSource = initialSource.replace(/^(\s*\w+)/, `$1, ${options.properties}`)
+        }
+        return createSuccessResult(newSource)
+      }
+    ),
 
     duplicateNode: vi.fn((sourceId: string, targetId: string, placement: string) => {
       calls.push({ method: 'duplicateNode', args: [sourceId, targetId, placement] })
@@ -528,14 +545,16 @@ export function createMockFlexDropResult(
 /**
  * Creates a mock visual state object
  */
-export function createMockVisualState(overrides: Partial<{
-  indicatorVisible: boolean
-  indicatorRect: Rect | null
-  parentOutlineVisible: boolean
-  parentOutlineRect: Rect | null
-  ghostVisible: boolean
-  ghostRect: Rect | null
-}> = {}) {
+export function createMockVisualState(
+  overrides: Partial<{
+    indicatorVisible: boolean
+    indicatorRect: Rect | null
+    parentOutlineVisible: boolean
+    parentOutlineRect: Rect | null
+    ghostVisible: boolean
+    ghostRect: Rect | null
+  }> = {}
+) {
   return {
     indicatorVisible: false,
     indicatorRect: null,

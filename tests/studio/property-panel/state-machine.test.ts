@@ -21,7 +21,7 @@ import {
   type ShowingState,
   type PendingUpdateState,
 } from '../../../studio/panels/property/state-machine'
-import type { ExtractedElement } from '../../../compiler/studio/property-extractor'
+import type { ExtractedElement } from '../../../studio/code-modifier/property-extractor'
 
 // ============================================
 // Test Fixtures
@@ -38,8 +38,18 @@ const mockElement: ExtractedElement = {
     { name: 'pad', value: '16', hasValue: true, source: 'instance', category: 'spacing' },
   ],
   categories: [
-    { name: 'color', properties: [{ name: 'bg', value: '#1a1a1a', hasValue: true, source: 'instance', category: 'color' }] },
-    { name: 'spacing', properties: [{ name: 'pad', value: '16', hasValue: true, source: 'instance', category: 'spacing' }] },
+    {
+      name: 'color',
+      properties: [
+        { name: 'bg', value: '#1a1a1a', hasValue: true, source: 'instance', category: 'color' },
+      ],
+    },
+    {
+      name: 'spacing',
+      properties: [
+        { name: 'pad', value: '16', hasValue: true, source: 'instance', category: 'spacing' },
+      ],
+    },
   ],
 }
 
@@ -531,7 +541,7 @@ describe('Full Selection Sequence', () => {
     let state: PanelState = createInitialState()
     let effects: any[]
 
-    // 1. Select an element
+      // 1. Select an element
     ;({ state, effects } = transition(state, { type: 'SELECT', nodeId: 'node-1' }))
     expect(state.type).toBe('loading')
     expect(effects).toContainEqual({ type: 'LOAD_ELEMENT', nodeId: 'node-1' })
@@ -640,7 +650,6 @@ describe('Definition Selection', () => {
   it('loads definition on DEFINITION_SELECTED', () => {
     let state: PanelState = createInitialState()
     let effects: any[]
-
     ;({ state, effects } = transition(state, {
       type: 'DEFINITION_SELECTED',
       componentName: 'MyButton',

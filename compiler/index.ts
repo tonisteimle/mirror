@@ -45,9 +45,6 @@ export type {
 } from './parser/ast'
 export type { IR, SourcePosition, PropertySourceMap, IRZagNode, IRSlot, IRItem } from './ir/types'
 
-// Studio module exports for bidirectional editing
-export * from './studio'
-
 // Zag integration exports
 export * from './schema/zag-primitives'
 

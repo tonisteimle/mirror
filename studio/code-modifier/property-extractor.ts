@@ -16,22 +16,22 @@ import type {
   ZagNode,
   Event,
   Action,
-} from '../parser/ast'
-import type { SourceMap, NodeMapping } from '../ir/source-map'
+} from '../../compiler/parser/ast'
+import type { SourceMap, NodeMapping } from '../../compiler/ir/source-map'
 import {
   properties as allPropertyDefinitions,
   type PropertyDefinition,
   type PropertyCategory as SchemaCategory,
   categoryOrder,
   categoryLabels,
-} from '../schema/properties'
-import { isZagPrimitive } from '../schema/zag-primitives'
-import { logPropertyExtractor as log } from '../utils/logger'
+} from '../../compiler/schema/properties'
+import { isZagPrimitive } from '../../compiler/schema/zag-primitives'
+import { logPropertyExtractor as log } from '../../compiler/utils/logger'
 import {
   getZagPropMetadata,
   hasZagPropMetadata,
   type ZagPropMeta,
-} from '../schema/zag-prop-metadata'
+} from '../../compiler/schema/zag-prop-metadata'
 
 /**
  * Property types for UI rendering

@@ -7,7 +7,7 @@
 
 import { state, events } from '../core'
 import { DrawManager, createDrawManager } from '../visual/draw-manager'
-import { CodeModifier } from '../../compiler/studio'
+import { CodeModifier } from '../code-modifier'
 import type { EditorController } from '../editor'
 import type { EditorView } from '@codemirror/view'
 import { createLogger } from '../../compiler/utils/logger'
@@ -47,14 +47,14 @@ export function initDrawManager(config: DrawManagerInitConfig): DrawManagerInitR
       return new CodeModifier(source, sourceMap)
     },
     sourceMap: () => state.get().sourceMap,
-    gridSize: 8,  // 8px grid snapping
-    enableSmartGuides: true,  // Enable alignment guides
-    snapTolerance: 4,  // 4px snap threshold
+    gridSize: 8, // 8px grid snapping
+    enableSmartGuides: true, // Enable alignment guides
+    snapTolerance: 4, // 4px snap threshold
     // Phase 5: Use cached layoutInfo instead of DOM reads
     getLayoutInfo: () => state.get().layoutInfo,
   })
 
-  drawManager.onDrawComplete = (result) => {
+  drawManager.onDrawComplete = result => {
     if (result.success && result.modificationResult) {
       log.info(' Component created:', result.nodeId)
 
@@ -65,15 +65,19 @@ export function initDrawManager(config: DrawManagerInitConfig): DrawManagerInitR
       const adjustedChange = {
         from: change.from - preludeOffset,
         to: change.to - preludeOffset,
-        insert: change.insert
+        insert: change.insert,
       }
 
       // Validate adjusted change range
       const docLength = editorController.getContent().length
-      if (adjustedChange.from >= 0 && adjustedChange.to <= docLength && adjustedChange.from <= adjustedChange.to) {
+      if (
+        adjustedChange.from >= 0 &&
+        adjustedChange.to <= docLength &&
+        adjustedChange.from <= adjustedChange.to
+      ) {
         // Apply change to editor
         editor.dispatch({
-          changes: adjustedChange
+          changes: adjustedChange,
         })
 
         // Compile will be triggered automatically by editor change
@@ -83,7 +87,7 @@ export function initDrawManager(config: DrawManagerInitConfig): DrawManagerInitR
           original: change,
           adjusted: adjustedChange,
           preludeOffset,
-          docLength
+          docLength,
         })
         // Force recompile
         events.emit('compile:requested', {})
@@ -95,7 +99,7 @@ export function initDrawManager(config: DrawManagerInitConfig): DrawManagerInitR
     log.info(' Drawing cancelled')
   }
 
-  drawManager.onError = (error) => {
+  drawManager.onError = error => {
     log.error(' Error:', error)
   }
 

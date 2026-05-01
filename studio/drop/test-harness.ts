@@ -10,7 +10,7 @@
 import { DropService, getDropService, DropResultApplier } from './index'
 import type { ApplierDependencies } from './drop-result-applier'
 import type { DropResult, DropContext, ModificationResult, DropSource } from './types'
-import { CodeModifier } from '../../compiler/studio/code-modifier'
+import { CodeModifier } from '../code-modifier/code-modifier'
 import { parse } from '../../compiler/parser'
 import { toIR } from '../../compiler/ir'
 import type { SourceMap } from '../../compiler/ir'

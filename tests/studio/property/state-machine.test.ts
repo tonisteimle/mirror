@@ -22,16 +22,13 @@ import {
   type LoadingState,
   type PendingUpdateState,
 } from '../../../studio/panels/property/state-machine'
-import type { ExtractedElement } from '../../../compiler/studio/property-extractor'
+import type { ExtractedElement } from '../../../studio/code-modifier/property-extractor'
 
 // ============================================
 // Test Helpers
 // ============================================
 
-function createMockElement(
-  nodeId: string,
-  componentName: string = 'Frame'
-): ExtractedElement {
+function createMockElement(nodeId: string, componentName: string = 'Frame'): ExtractedElement {
   return {
     nodeId,
     componentName,
@@ -49,7 +46,15 @@ function createShowingState(
   return {
     type: 'showing',
     element,
-    expandedSections: new Set(['layout', 'sizing', 'spacing', 'border', 'color', 'typography', 'behavior']),
+    expandedSections: new Set([
+      'layout',
+      'sizing',
+      'spacing',
+      'border',
+      'color',
+      'typography',
+      'behavior',
+    ]),
     isInPositionedContainer,
   }
 }

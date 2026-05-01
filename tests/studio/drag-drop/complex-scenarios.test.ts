@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { CodeModifier } from '../../../compiler/studio/code-modifier'
+import { CodeModifier } from '../../../studio/code-modifier/code-modifier'
 import { parse } from '../../../compiler/parser'
 import { toIR } from '../../../compiler/ir'
 

@@ -11,7 +11,7 @@
  * - Ist vollständig testbar ohne DOM
  */
 
-import type { ExtractedElement } from '../../../compiler'
+import type { ExtractedElement } from '../../code-modifier'
 import type { PropertyPanelPorts, PropertyChange, CleanupFn } from './ports'
 import {
   type PanelState,

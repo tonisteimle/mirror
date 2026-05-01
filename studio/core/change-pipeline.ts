@@ -11,10 +11,14 @@
 
 import { state, actions } from './state'
 import { events } from './events'
-import { CodeModifier, createCodeModifier } from '../../compiler/studio/code-modifier'
+import { CodeModifier, createCodeModifier } from '../code-modifier/code-modifier'
 import type { SourceMap } from '../../compiler/ir/source-map'
 import type { ChangeIntent } from './change-types'
-import { calculateDistribution, detectDistributionDirection, type Rect } from '../../studio/preview/distribution'
+import {
+  calculateDistribution,
+  detectDistributionDirection,
+  type Rect,
+} from '../../studio/preview/distribution'
 
 // ============================================================================
 // CONTEXT - Fließt durch die Pipeline
@@ -55,7 +59,7 @@ export interface PipelineContext {
 
 export interface PipelineStep {
   name: string
-  execute(ctx: PipelineContext): PipelineContext | null  // null = abort
+  execute(ctx: PipelineContext): PipelineContext | null // null = abort
 }
 
 // ============================================================================
@@ -108,13 +112,15 @@ export const validateNodeStep: PipelineStep = {
   name: 'validateNode',
   execute(ctx) {
     // Skip for intents that don't have a single nodeId
-    if (ctx.intent.type === 'addChild' ||
-        ctx.intent.type === 'moveNode' ||
-        ctx.intent.type === 'groupNodes' ||
-        ctx.intent.type === 'duplicateNode' ||
-        ctx.intent.type === 'distribute' ||
-        ctx.intent.type === 'multiMove' ||
-        ctx.intent.type === 'multiResize') {
+    if (
+      ctx.intent.type === 'addChild' ||
+      ctx.intent.type === 'moveNode' ||
+      ctx.intent.type === 'groupNodes' ||
+      ctx.intent.type === 'duplicateNode' ||
+      ctx.intent.type === 'distribute' ||
+      ctx.intent.type === 'multiMove' ||
+      ctx.intent.type === 'multiResize'
+    ) {
       return ctx
     }
 
@@ -177,9 +183,7 @@ export const extractEditorContentStep: PipelineStep = {
     const newSource = ctx.modificationResult!.newSource
     const preludeOffset = ctx.preludeOffset ?? 0
 
-    ctx.newEditorContent = preludeOffset > 0
-      ? newSource.substring(preludeOffset)
-      : newSource
+    ctx.newEditorContent = preludeOffset > 0 ? newSource.substring(preludeOffset) : newSource
 
     return ctx
   },
@@ -332,7 +336,11 @@ function executeIntent(
     case 'incrementProperty': {
       const node = sourceMap.getNodeById(intent.nodeId)
       if (!node) {
-        return { success: false, newSource: modifier.getSource(), error: `Node not found: ${intent.nodeId}` }
+        return {
+          success: false,
+          newSource: modifier.getSource(),
+          error: `Node not found: ${intent.nodeId}`,
+        }
       }
 
       let propertyName = intent.property
@@ -366,7 +374,11 @@ function executeIntent(
     case 'toggleDirection': {
       const node = sourceMap.getNodeById(intent.nodeId)
       if (!node) {
-        return { success: false, newSource: modifier.getSource(), error: `Node not found: ${intent.nodeId}` }
+        return {
+          success: false,
+          newSource: modifier.getSource(),
+          error: `Node not found: ${intent.nodeId}`,
+        }
       }
 
       const isHorizontal = hasProperty(node, 'hor') || hasProperty(node, 'horizontal')
@@ -446,7 +458,11 @@ function executeIntent(
     case 'distribute': {
       // Need at least 2 nodes to distribute
       if (intent.nodeIds.length < 2) {
-        return { success: false, newSource: modifier.getSource(), error: 'Need at least 2 nodes to distribute' }
+        return {
+          success: false,
+          newSource: modifier.getSource(),
+          error: 'Need at least 2 nodes to distribute',
+        }
       }
 
       // Get layout info for all nodes from the DOM
@@ -467,7 +483,11 @@ function executeIntent(
       }
 
       if (layoutInfo.size < 2) {
-        return { success: false, newSource: modifier.getSource(), error: 'Could not find enough elements in DOM' }
+        return {
+          success: false,
+          newSource: modifier.getSource(),
+          error: 'Could not find enough elements in DOM',
+        }
       }
 
       // Determine distribution direction
@@ -482,7 +502,11 @@ function executeIntent(
       const newPositions = calculateDistribution(intent.nodeIds, distributionType, layoutInfo)
 
       if (newPositions.length === 0) {
-        return { success: false, newSource: modifier.getSource(), error: 'Failed to calculate distribution' }
+        return {
+          success: false,
+          newSource: modifier.getSource(),
+          error: 'Failed to calculate distribution',
+        }
       }
 
       // Apply new positions to each node
@@ -510,7 +534,11 @@ function executeIntent(
       // Get bounding box from DOM
       const boundingBox = calculateBoundingBoxFromDOM(intent.nodeIds)
       if (!boundingBox) {
-        return { success: false, newSource: modifier.getSource(), error: 'Could not calculate bounding box' }
+        return {
+          success: false,
+          newSource: modifier.getSource(),
+          error: 'Could not calculate bounding box',
+        }
       }
 
       // Calculate new positions
@@ -541,7 +569,11 @@ function executeIntent(
       // Get bounding box from DOM
       const boundingBox = calculateBoundingBoxFromDOM(intent.nodeIds)
       if (!boundingBox) {
-        return { success: false, newSource: modifier.getSource(), error: 'Could not calculate bounding box' }
+        return {
+          success: false,
+          newSource: modifier.getSource(),
+          error: 'Could not calculate bounding box',
+        }
       }
 
       // Calculate new dimensions
@@ -593,7 +625,7 @@ function executeIntent(
         top: { property: 'y', isBoolean: false },
         left: { property: 'x', isBoolean: false },
         bottom: { property: 'bottom', isBoolean: false }, // bottom edge distance (may need CSS calc)
-        right: { property: 'right', isBoolean: false },   // right edge distance (may need CSS calc)
+        right: { property: 'right', isBoolean: false }, // right edge distance (may need CSS calc)
         centerX: { property: 'hor-center', isBoolean: true },
         centerY: { property: 'ver-center', isBoolean: true },
       }

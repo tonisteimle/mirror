@@ -17,8 +17,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { PropertyExtractor } from '../../compiler/studio/property-extractor'
-import { CodeModifier } from '../../compiler/studio/code-modifier'
+import { PropertyExtractor } from '../../studio/code-modifier/property-extractor'
+import { CodeModifier } from '../../studio/code-modifier/code-modifier'
 import { parse } from '../../compiler/parser'
 import { toIR } from '../../compiler/ir'
 import type { AST } from '../../parser/ast'
@@ -51,18 +51,22 @@ function getFirstNodeId(ctx: TestContext): string | null {
 
 function getNodeByName(ctx: TestContext, componentName: string): string | null {
   const ids = ctx.sourceMap.getAllNodeIds()
-  return ids.find(id => {
-    const node = ctx.sourceMap.getNodeById(id)
-    return node?.componentName === componentName && !node?.isDefinition
-  }) || null
+  return (
+    ids.find(id => {
+      const node = ctx.sourceMap.getNodeById(id)
+      return node?.componentName === componentName && !node?.isDefinition
+    }) || null
+  )
 }
 
 function getDefinitionByName(ctx: TestContext, componentName: string): string | null {
   const ids = ctx.sourceMap.getAllNodeIds()
-  return ids.find(id => {
-    const node = ctx.sourceMap.getNodeById(id)
-    return node?.componentName === componentName && node?.isDefinition
-  }) || null
+  return (
+    ids.find(id => {
+      const node = ctx.sourceMap.getNodeById(id)
+      return node?.componentName === componentName && node?.isDefinition
+    }) || null
+  )
 }
 
 function findProp(props: any[], name: string): any {
@@ -743,9 +747,15 @@ describe('Edge Cases', () => {
     const longId = getFirstNodeId(long)!
     const alphaId = getFirstNodeId(withAlpha)!
 
-    expect(findProp(short.extractor.getProperties(shortId)!.allProperties, 'bg')?.value).toBe('#333')
-    expect(findProp(long.extractor.getProperties(longId)!.allProperties, 'bg')?.value).toBe('#333333')
-    expect(findProp(withAlpha.extractor.getProperties(alphaId)!.allProperties, 'bg')?.value).toBe('#33333380')
+    expect(findProp(short.extractor.getProperties(shortId)!.allProperties, 'bg')?.value).toBe(
+      '#333'
+    )
+    expect(findProp(long.extractor.getProperties(longId)!.allProperties, 'bg')?.value).toBe(
+      '#333333'
+    )
+    expect(findProp(withAlpha.extractor.getProperties(alphaId)!.allProperties, 'bg')?.value).toBe(
+      '#33333380'
+    )
   })
 
   it('handles special size values: hug and full', () => {

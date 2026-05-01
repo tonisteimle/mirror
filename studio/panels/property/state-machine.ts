@@ -10,7 +10,7 @@
  * - Keine async Operationen
  */
 
-import type { ExtractedElement } from '../../../compiler'
+import type { ExtractedElement } from '../../code-modifier'
 import type { PropertyChange } from './ports'
 
 // ============================================

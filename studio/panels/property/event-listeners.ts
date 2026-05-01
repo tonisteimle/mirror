@@ -10,7 +10,7 @@
  */
 
 import { getGlobalIconPicker, setGlobalIconPickerCallback } from '../../pickers/icon'
-import type { CodeModifier, ModificationResult } from '../../../compiler/studio/code-modifier'
+import type { CodeModifier, ModificationResult } from '../../code-modifier/code-modifier'
 
 // =============================================================================
 // Icon picker (property-panel:open-icon-picker)

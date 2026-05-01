@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { CodeModifier, type FilesAccess } from '../../compiler/studio/code-modifier'
+import { CodeModifier, type FilesAccess } from '../../studio/code-modifier/code-modifier'
 import { SourceMapBuilder, type SourceMap } from '../../compiler/ir/source-map'
 
 /**
@@ -21,14 +21,19 @@ function createTestSourceMap(config: {
   const builder = new SourceMapBuilder()
 
   for (const node of config.nodes) {
-    builder.addNode(node.id, node.componentName, {
-      line: node.line,
-      column: 1,
-      endLine: node.endLine,
-      endColumn: 100,
-    }, {
-      parentId: node.parentId,
-    })
+    builder.addNode(
+      node.id,
+      node.componentName,
+      {
+        line: node.line,
+        column: 1,
+        endLine: node.endLine,
+        endColumn: 100,
+      },
+      {
+        parentId: node.parentId,
+      }
+    )
   }
 
   return builder.build()
@@ -37,7 +42,9 @@ function createTestSourceMap(config: {
 function createMockFilesAccess(files: Record<string, string>, currentFile: string): FilesAccess {
   return {
     getFile: (path: string) => files[path],
-    setFile: (path: string, content: string) => { files[path] = content },
+    setFile: (path: string, content: string) => {
+      files[path] = content
+    },
     getCurrentFile: () => currentFile,
   }
 }
@@ -46,9 +53,7 @@ describe('CodeModifier.extractToComponentFile', () => {
   it('extracts inline properties to component definition', () => {
     const source = 'Button pad 12, bg #5BA8F5, "Click me"'
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Button', line: 1, endLine: 1 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Button', line: 1, endLine: 1 }],
     })
     const codeModifier = new CodeModifier(source, sourceMap)
 
@@ -70,9 +75,7 @@ describe('CodeModifier.extractToComponentFile', () => {
   it('preserves named instances', () => {
     const source = 'Button named SaveBtn pad 12, bg #5BA8F5, "Save"'
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Button', line: 1, endLine: 1 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Button', line: 1, endLine: 1 }],
     })
     const codeModifier = new CodeModifier(source, sourceMap)
 
@@ -88,9 +91,7 @@ describe('CodeModifier.extractToComponentFile', () => {
   it('does not add import if already present', () => {
     const source = 'import components\nButton pad 12, "Click"'
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Button', line: 2, endLine: 2 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Button', line: 2, endLine: 2 }],
     })
     const codeModifier = new CodeModifier(source, sourceMap)
 
@@ -108,14 +109,12 @@ describe('CodeModifier.extractToComponentFile', () => {
   it('appends to existing components.mirror', () => {
     const source = 'Card pad 16, bg #333'
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Card', line: 1, endLine: 1 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Card', line: 1, endLine: 1 }],
     })
     const codeModifier = new CodeModifier(source, sourceMap)
 
     const files: Record<string, string> = {
-      'components.mirror': 'Button: pad 12, bg #5BA8F5\n'
+      'components.mirror': 'Button: pad 12, bg #5BA8F5\n',
     }
     const filesAccess = createMockFilesAccess(files, 'index.mirror')
 
@@ -129,9 +128,7 @@ describe('CodeModifier.extractToComponentFile', () => {
   it('fails for elements without inline properties', () => {
     const source = 'Button "Click"'
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Button', line: 1, endLine: 1 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Button', line: 1, endLine: 1 }],
     })
     const codeModifier = new CodeModifier(source, sourceMap)
 
@@ -147,9 +144,7 @@ describe('CodeModifier.extractToComponentFile', () => {
   it('handles element with only text content after extraction', () => {
     const source = 'Text col #fff, "Hello World"'
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Text', line: 1, endLine: 1 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Text', line: 1, endLine: 1 }],
     })
     const codeModifier = new CodeModifier(source, sourceMap)
 
@@ -166,9 +161,7 @@ describe('CodeModifier.extractToComponentFile', () => {
   it('handles element without text content', () => {
     const source = 'Box pad 16, bg #333'
     const sourceMap = createTestSourceMap({
-      nodes: [
-        { id: 'node-1', componentName: 'Box', line: 1, endLine: 1 },
-      ],
+      nodes: [{ id: 'node-1', componentName: 'Box', line: 1, endLine: 1 }],
     })
     const codeModifier = new CodeModifier(source, sourceMap)
 

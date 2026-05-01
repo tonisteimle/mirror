@@ -11,8 +11,8 @@ import type {
   ExtractedElement,
   ExtractedProperty,
   PropertyCategory,
-} from '../../compiler/studio/property-extractor'
-import type { CodeModifier, ModificationResult } from '../../compiler/studio/code-modifier'
+} from '../../studio/code-modifier/property-extractor'
+import type { CodeModifier, ModificationResult } from '../../studio/code-modifier/code-modifier'
 import type { BreadcrumbItem } from '../../studio/core'
 
 // Mock SelectionProvider

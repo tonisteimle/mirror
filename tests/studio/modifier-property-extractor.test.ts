@@ -3,7 +3,11 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'
-import { PropertyExtractor, createPropertyExtractor, type ExtractedProperty } from '../../compiler/studio/property-extractor'
+import {
+  PropertyExtractor,
+  createPropertyExtractor,
+  type ExtractedProperty,
+} from '../../studio/code-modifier/property-extractor'
 import { SourceMap, SourceMapBuilder } from '../../compiler/ir/source-map'
 import { parse } from '../../compiler/parser'
 import { toIR } from '../../compiler/ir'

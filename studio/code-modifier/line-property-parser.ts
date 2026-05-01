@@ -11,7 +11,7 @@
  * This parser analyzes the ENTIRE line to ensure correct modifications.
  */
 
-import { properties as schemaProperties } from '../schema/properties'
+import { properties as schemaProperties } from '../../compiler/schema/properties'
 
 /**
  * Parsed property from a line

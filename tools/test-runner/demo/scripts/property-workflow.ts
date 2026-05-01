@@ -173,7 +173,7 @@ export const demoScript: DemoScript = {
       comment: 'col → weiß',
     },
     { action: 'wait', duration: 400 },
-    // Mit dem parseLine-Fix in compiler/studio/line-property-parser.ts
+    // Mit dem parseLine-Fix in studio/code-modifier/line-property-parser.ts
     // wird der existing `col #e4e4e7` jetzt korrekt erkannt und replaced
     // statt zu duplizieren (vorher: `col #e4e4e7, col #FFFFFF`).
     {

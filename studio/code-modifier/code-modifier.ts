@@ -14,9 +14,9 @@
  * - Correct property boundary detection
  */
 
-import type { SourceMap, NodeMapping } from '../ir/source-map'
-import type { SourcePosition } from '../ir/types'
-import { logCodeModifier as log } from '../utils/logger'
+import type { SourceMap, NodeMapping } from '../../compiler/ir/source-map'
+import type { SourcePosition } from '../../compiler/ir/types'
+import { logCodeModifier as log } from '../../compiler/utils/logger'
 // SemanticZone type for insertWithWrapper
 type SemanticZone =
   | 'top-left'
@@ -38,7 +38,7 @@ import {
   isSameProperty,
   type ParsedLine,
 } from './line-property-parser'
-import { adjustTemplateIndentation } from '../schema/component-templates'
+import { adjustTemplateIndentation } from '../../compiler/schema/component-templates'
 
 /**
  * Result of a code modification

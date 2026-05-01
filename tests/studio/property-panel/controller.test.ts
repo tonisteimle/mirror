@@ -16,7 +16,7 @@ import {
   createMockProperty,
   type MockPropertyPanelPorts,
 } from '../../../studio/panels/property/adapters/mock-adapters'
-import type { ExtractedElement } from '../../../compiler/studio/property-extractor'
+import type { ExtractedElement } from '../../../studio/code-modifier/property-extractor'
 
 // ============================================
 // Test Data
@@ -323,9 +323,12 @@ describe('PropertyPanelController', () => {
     })
 
     it('loads definition on definition selected event', () => {
-      const defElement = createMockElement('def:MyButton', 'MyButton', [
-        createMockProperty('bg', '#2271C1', { source: 'definition' }),
-      ], { isDefinition: true })
+      const defElement = createMockElement(
+        'def:MyButton',
+        'MyButton',
+        [createMockProperty('bg', '#2271C1', { source: 'definition' })],
+        { isDefinition: true }
+      )
       ports.extraction._addDefinition('MyButton', defElement)
 
       ports.events._triggerDefinitionSelected('MyButton')

@@ -4,11 +4,7 @@
 
 import { state, actions } from './state'
 import type { SourceMap } from '../../compiler/ir/source-map'
-import {
-  CodeModifier,
-  type CodeChange,
-  type AddChildOptions,
-} from '../../compiler/studio/code-modifier'
+import { CodeModifier, type CodeChange, type AddChildOptions } from '../code-modifier/code-modifier'
 import { createLogger } from '../../compiler/utils/logger'
 
 const log = createLogger('Commands')
