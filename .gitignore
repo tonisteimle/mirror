@@ -26,8 +26,10 @@ dist-ssr
 # Test artifacts
 playwright-report
 test-results
+test-results */
 test-build*/
 test-output/
+test-report.html
 
 # Local data
 local-data/
