@@ -201,20 +201,6 @@ function isTauriDesktop() {
   return typeof window !== 'undefined' && window.__TAURI_INTERNALS__ !== undefined
 }
 
-// Project Functions
-async function loadProjects() {
-  // Server mode: desktop-files.js handles loading from server
-  // Don't load defaults here - wait for server content
-  console.log('[App] Waiting for server content (via desktop-files.js)')
-  // Don't override currentFile in playground mode
-  if (!isPlaygroundMode) {
-    currentFile = 'index.mir'
-  }
-}
-
-// Mode tabs (MIRROR / REACT) — feature removed: .mode-tab UI no longer
-// exists in index.html and the conversion entry points have no callers.
-
 // ===========================================
 // FILE TYPES - Single Source of Truth
 // ===========================================
@@ -326,15 +312,6 @@ function switchFile(filename) {
   // resolution survives a switchFile during a test run.
   compile(files[filename])
 }
-
-// Initialize: Load projects
-async function initApp() {
-  await loadProjects()
-}
-
-// Start initialization (will complete after editor is set up)
-let editorReady = false
-const initPromise = initApp()
 
 const initialCode = files[currentFile] || ''
 
@@ -2690,10 +2667,6 @@ window.switchFile = switchFile // For test API (panel.files.open) and external s
 window.getCurrentFile = () => currentFile // For test API (panel.files.getCurrentFile)
 window.studio = studio // New architecture
 window.generateComponentCodeFromDragData = generateComponentCodeFromDragData // For editor drop tests
-window.resetCode = async () => {
-  // No longer supported - all content comes from server
-  console.log('[App] resetCode is deprecated - content managed by server')
-}
 
 // ==========================================
 // Resizable Panel Dividers with localStorage persistence
