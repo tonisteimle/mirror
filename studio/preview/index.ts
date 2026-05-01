@@ -171,7 +171,6 @@ export class PreviewController {
   private unsubscribeMarginEnd: (() => void) | null = null
   private unsubscribeGapToggle: (() => void) | null = null
   private unsubscribeGapEnd: (() => void) | null = null
-  private unsubscribeZoom: (() => void) | null = null
   private unsubscribePreviewRendered: (() => void) | null = null
 
   // Layout invalidation handlers
@@ -263,19 +262,6 @@ export class PreviewController {
     // This ensures multi-selection UI stays in sync when changed via commands/undo
     this.unsubscribeMultiSelection = events.on('multiselection:changed', () => {
       this.updateMultiSelectionHighlight()
-    })
-
-    // Subscribe to preview:zoom for layout cache invalidation and handle refresh
-    this.unsubscribeZoom = events.on('preview:zoom', () => {
-      actions.invalidateLayoutInfo('zoom')
-      // Refresh resize handles to update their positions after zoom
-      // Use requestAnimationFrame to ensure DOM has been updated
-      requestAnimationFrame(() => {
-        this.resizeManager?.refresh()
-        this.paddingManager?.refresh()
-        this.marginManager?.refresh()
-        this.gapManager?.refresh()
-      })
     })
 
     // Subscribe to preview:rendered to ensure handles are in sync after DOM updates
@@ -667,8 +653,6 @@ export class PreviewController {
     this.unsubscribeGapToggle = null
     this.unsubscribeGapEnd?.()
     this.unsubscribeGapEnd = null
-    this.unsubscribeZoom?.()
-    this.unsubscribeZoom = null
     this.unsubscribePreviewRendered?.()
     this.unsubscribePreviewRendered = null
 

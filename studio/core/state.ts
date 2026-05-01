@@ -137,7 +137,6 @@ const initialState: StudioState = {
   deferredSelection: null,
   inlineEditActive: false,
   inlineEditNodeId: null,
-  previewZoom: 100,
   playMode: false,
   layoutInfo: new Map(),
   layoutVersion: 0,
@@ -771,22 +770,6 @@ export const actions = {
   },
 
   /**
-   * Set preview zoom level
-   * @param zoom - Zoom percentage (e.g., 100 = 100%)
-   */
-  setPreviewZoom(zoom: number): void {
-    state.set({ previewZoom: zoom })
-    events.emit('preview:zoom', { zoom, scale: zoom / 100 })
-  },
-
-  /**
-   * Get current preview zoom scale (0-1 range)
-   */
-  getPreviewScale(): number {
-    return state.get().previewZoom / 100
-  },
-
-  /**
    * Set play mode - when active, editor interactions are disabled
    * and components can be tested/interacted with normally
    */
@@ -880,7 +863,6 @@ export const selectors = {
   isCompiling: () => state.get().compiling,
   getSourceMap: () => state.get().sourceMap,
   getAST: () => state.get().ast,
-  getPreviewZoom: () => state.get().previewZoom,
   getLayoutInfo: () => state.get().layoutInfo,
   getLayoutVersion: () => state.get().layoutVersion,
 }

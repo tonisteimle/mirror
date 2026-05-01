@@ -1780,12 +1780,6 @@ function getComponentRenderer() {
   return componentRenderer
 }
 
-// Drop globals builder for Clean Code drop service
-function getZoomScale() {
-  const zoomLevel = ZOOM_LEVELS[currentZoomIndex] ?? 100
-  return zoomLevel / 100
-}
-
 // Zag dependencies builder for Clean Code module
 function getZagDeps() {
   return {
@@ -1852,7 +1846,6 @@ function getDropGlobals() {
     studioActions,
     compile,
     debouncedSave,
-    getZoomScale,
     isComponentsFile,
     findExistingZagDefinition,
     generateZagComponentName,
@@ -2939,87 +2932,11 @@ function initStudio() {
   // Set up event listeners for property panel (add/delete/edit events)
   setupPropertyPanelEventListeners()
 
-  // Initialize preview zoom controls
-  initPreviewZoom()
-
   // Initialize play mode button (delegated to studio/preview/play-mode.ts)
   initPlayMode({
     recompile: code => compile(code),
     getEditorSource: () => window.editor?.state.doc.toString() ?? '',
   })
-}
-
-// ============================================
-// Preview Zoom Controls
-// ============================================
-
-const ZOOM_LEVELS = [25, 50, 75, 100, 125, 150, 200]
-let currentZoomIndex = 3 // 100%
-
-function initPreviewZoom() {
-  const preview = document.getElementById('preview')
-  const zoomIn = document.getElementById('zoom-in')
-  const zoomOut = document.getElementById('zoom-out')
-  const zoomReset = document.getElementById('zoom-reset')
-  const zoomLevel = document.getElementById('zoom-level')
-
-  if (!preview || !zoomIn || !zoomOut || !zoomReset || !zoomLevel) {
-    console.warn('Preview zoom: Missing elements')
-    return
-  }
-
-  function applyZoom(level) {
-    const scale = level / 100
-    const mirrorRoot = preview.querySelector('.mirror-root')
-    if (mirrorRoot) {
-      mirrorRoot.style.transform = `scale(${scale})`
-      // Update state for coordinate calculations
-      studioActions.setPreviewZoom(level)
-      mirrorRoot.style.transformOrigin = 'top left'
-      // Adjust container to show scaled content properly
-      if (scale !== 1) {
-        mirrorRoot.style.width = `${100 / scale}%`
-        mirrorRoot.style.height = `${100 / scale}%`
-      } else {
-        mirrorRoot.style.width = ''
-        mirrorRoot.style.height = ''
-      }
-    }
-    zoomLevel.textContent = `${level}%`
-  }
-
-  zoomIn.addEventListener('click', () => {
-    if (currentZoomIndex < ZOOM_LEVELS.length - 1) {
-      currentZoomIndex++
-      applyZoom(ZOOM_LEVELS[currentZoomIndex])
-    }
-  })
-
-  zoomOut.addEventListener('click', () => {
-    if (currentZoomIndex > 0) {
-      currentZoomIndex--
-      applyZoom(ZOOM_LEVELS[currentZoomIndex])
-    }
-  })
-
-  zoomReset.addEventListener('click', () => {
-    currentZoomIndex = 3 // 100%
-    applyZoom(100)
-  })
-
-  // Re-apply zoom after recompile (when .mirror-root is recreated)
-  if (studio?.events) {
-    studio.events.on('compile:completed', () => {
-      // Use setTimeout to let DOM update first
-      setTimeout(() => {
-        applyZoom(ZOOM_LEVELS[currentZoomIndex])
-      }, 0)
-    })
-    // Note: pendingSelection is now handled automatically by SyncCoordinator
-    // which subscribes to selection:changed events
-  }
-
-  console.log('Preview zoom: Initialized')
 }
 
 /**
@@ -3750,17 +3667,6 @@ async function setupDesktopMenuHandler() {
         case 'toggle_property':
           const panelKey = menuId.replace('toggle_', '')
           studioActions.setPanelVisibility(panelKey, !studioActions.getPanelVisibility?.(panelKey))
-          break
-
-        // Zoom controls
-        case 'zoom_in':
-          document.getElementById('zoom-in')?.click()
-          break
-        case 'zoom_out':
-          document.getElementById('zoom-out')?.click()
-          break
-        case 'zoom_reset':
-          document.getElementById('zoom-reset')?.click()
           break
 
         default:

@@ -105,7 +105,7 @@ export class ZagComponentHandler extends BaseDropHandler {
     componentName: string,
     context: DropContext
   ): ModificationResult {
-    const properties = this.buildProperties(result, context)
+    const properties = this.buildProperties(result)
     const instanceCode = context.generateZagInstanceCode(
       componentName,
       properties,
@@ -131,10 +131,10 @@ export class ZagComponentHandler extends BaseDropHandler {
     return { name, code }
   }
 
-  private buildProperties(result: DropResult, context: DropContext): string {
+  private buildProperties(result: DropResult): string {
     let properties = result.source.properties || ''
     if (this.needsPositionProperties(result)) {
-      properties = this.addPositionProperties(properties, result, context)
+      properties = this.addPositionProperties(properties, result)
     }
     // Note: Alignment is set on the PARENT in createInstance(), not on the child here
     return properties
@@ -144,19 +144,9 @@ export class ZagComponentHandler extends BaseDropHandler {
     return result.placement === 'absolute' && !!result.absolutePosition
   }
 
-  private addPositionProperties(
-    properties: string,
-    result: DropResult,
-    context: DropContext
-  ): string {
+  private addPositionProperties(properties: string, result: DropResult): string {
     const pos = result.absolutePosition!
-    const adjusted = this.adjustForZoom(pos.x, pos.y, context.zoomScale)
-    const posProps = `x ${Math.round(adjusted.x)}, y ${Math.round(adjusted.y)}`
+    const posProps = `x ${Math.round(pos.x)}, y ${Math.round(pos.y)}`
     return properties ? `${properties}, ${posProps}` : posProps
-  }
-
-  private adjustForZoom(x: number, y: number, zoomScale: number): { x: number; y: number } {
-    if (!zoomScale || zoomScale === 1) return { x, y }
-    return { x: x / zoomScale, y: y / zoomScale }
   }
 }

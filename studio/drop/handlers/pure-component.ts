@@ -139,8 +139,7 @@ export class PureComponentHandler extends BaseDropHandler {
     // Add position properties for absolute placement
     if (result.placement === 'absolute' && result.absolutePosition) {
       const pos = result.absolutePosition
-      const adjusted = this.adjustForZoom(pos.x, pos.y, context.zoomScale)
-      const posProps = `x ${Math.round(adjusted.x)}, y ${Math.round(adjusted.y)}`
+      const posProps = `x ${Math.round(pos.x)}, y ${Math.round(pos.y)}`
       properties = properties ? `${properties}, ${posProps}` : posProps
     }
 
@@ -158,10 +157,5 @@ export class PureComponentHandler extends BaseDropHandler {
       position: result.insertionIndex ?? 'last',
       parentProperty: result.alignment?.zone,
     })
-  }
-
-  private adjustForZoom(x: number, y: number, zoomScale: number): { x: number; y: number } {
-    if (!zoomScale || zoomScale === 1) return { x, y }
-    return { x: x / zoomScale, y: y / zoomScale }
   }
 }

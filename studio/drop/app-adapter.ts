@@ -17,7 +17,6 @@ export function createDropContext(globals: AppGlobals): DropContext {
     robustModifier: globals.studioRobustModifier as DropContext['robustModifier'],
     previewContainer: document.getElementById('preview')!,
     currentFile: globals.currentFile,
-    zoomScale: globals.getZoomScale(),
     isComponentsFile: globals.isComponentsFile,
     findExistingZagDefinition: globals.findExistingZagDefinition,
     generateZagComponentName: globals.generateZagComponentName,
@@ -112,7 +111,6 @@ export interface AppGlobals {
   studioActions: { setPendingSelection: (sel: unknown) => void }
   compile: (code: string) => void
   debouncedSave: (code: string) => void
-  getZoomScale: () => number
   isComponentsFile: (file: string) => boolean
   findExistingZagDefinition: (name: string) => { exists: boolean; definitionName?: string }
   generateZagComponentName: (name: string) => string

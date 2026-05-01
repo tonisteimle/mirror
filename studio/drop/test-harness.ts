@@ -316,7 +316,6 @@ export class StudioTestHarness {
       robustModifier: null as unknown as DropContext['robustModifier'],
       previewContainer: null as unknown as HTMLElement,
       currentFile: this.currentFile,
-      zoomScale: 1,
       isComponentsFile: () => false,
       findExistingZagDefinition: () => ({ exists: false }),
       generateZagComponentName: (name: string) => name,

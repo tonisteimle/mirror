@@ -65,7 +65,6 @@ export interface DropContext {
   robustModifier?: RobustModifier
   previewContainer: HTMLElement
   currentFile: string
-  zoomScale: number
   isComponentsFile: (file: string) => boolean
   findExistingZagDefinition: (name: string) => ZagDefinitionResult
   generateZagComponentName: (name: string) => string

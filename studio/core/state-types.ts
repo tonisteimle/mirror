@@ -199,8 +199,6 @@ export interface StudioState {
   inlineEditActive: boolean
   /** Node ID currently being inline edited */
   inlineEditNodeId: string | null
-  /** Preview zoom level (100 = 100%) */
-  previewZoom: number
   /** Play mode - disables editor interactions, allows component testing */
   playMode: boolean
   /** Layout information for all elements, extracted after render */
