@@ -99,56 +99,37 @@ export {
   type ComponentDropConfig,
 } from './editor-drop-handler'
 
-// Re-export draft lines extension (AI-assist visual feedback)
+// Re-export LLM-Edit-Flow modules (replaces the legacy ?? draft-mode flow)
 export {
-  draftLinesExtension,
-  setDraftLines,
-  clearDraftLines,
-  detectDraftLines,
-  setDraftLinesEffect,
-  clearDraftLinesEffect,
-} from './draft-lines'
+  ghostDiffField,
+  ghostDiffExtension,
+  setGhostDiff,
+  clearGhostDiff,
+  isGhostActive,
+  setGhostDiffEffect,
+  clearGhostDiffEffect,
+  buildGhostDecorations,
+  type GhostDiffState,
+} from './ghost-diff'
 
-// Re-export draft lines manager (integration with editor and compilation)
-export {
-  DraftLinesManager,
-  initDraftLinesManager,
-  getDraftLinesManager,
-  disposeDraftLinesManager,
-  type DraftLinesManagerConfig,
-} from './draft-lines-manager'
+export { llmEditKeymap, isGhostActiveSelector, type LlmEditKeymapConfig } from './llm-keymap'
 
-// Re-export draft mode extension (?? marker for AI-assisted editing)
 export {
-  draftModeExtension,
-  draftModeField,
-  isDraftModeActive,
-  getDraftState,
-  isLineInDraftBlock,
-  setDraftProcessing,
-  clearDraftBlock,
-  replaceDraftBlock,
-  prepareDraftSubmit,
-  cancelDraftProcessing,
-  parseDraftMarker,
-  parseDraftBlock,
-  getDraftLineNumbers,
-  extractDraftContent,
-  type DraftBlockState,
-  type DraftSubmitEvent,
-} from './draft-mode'
+  openPromptField,
+  closePromptField,
+  isPromptFieldOpen,
+  type PromptFieldOptions,
+  type PromptFieldHandle,
+} from './prompt-field'
 
-// Re-export draft mode manager (AI integration)
 export {
-  DraftModeManager,
-  initDraftModeManager,
-  getDraftModeManager,
-  disposeDraftModeManager,
-  createDraftModeKeymap,
-  createDraftModeAutoSubmit,
-  type DraftModeManagerConfig,
-  type DraftModeResult,
-} from './draft-mode-manager'
+  setEditStatus,
+  hideEditStatus,
+  getEditStatusElement,
+  type EditStatus,
+} from './edit-status-indicator'
+
+export { createEditHandler, type EditHandlerConfig, type EditHandlerHandlers } from './edit-handler'
 
 // Re-export component templates
 export {

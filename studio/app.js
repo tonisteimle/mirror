@@ -119,13 +119,10 @@ import {
   // Icon Picker (for property panel integration)
   getGlobalIconPicker,
   setGlobalIconPickerCallback,
-  // Draft Lines Extension (AI-assist visual feedback)
-  draftLinesExtension,
-  // Draft Mode Extension (-- marker for AI-assisted editing)
-  draftModeExtension,
-  initDraftModeManager,
-  createDraftModeKeymap,
-  createDraftModeAutoSubmit,
+  // LLM-Edit-Flow (Cmd+Enter / Cmd+Shift+Enter)
+  ghostDiffExtension,
+  llmEditKeymap,
+  createEditHandler,
   // Indent Guides Extension (visual indentation guides)
   indentGuidesExtension,
   // Smart Paste Extension (auto-adjust indentation on paste)
@@ -484,7 +481,7 @@ async function saveFile(filePath, content) {
   // Update local cache
   files[filePath] = content
 
-  // Desktop: use desktop-files.js for actual disk save
+  // Desktop: use desktop-files.js for actual disk save (Tauri mode).
   if (window.desktopFiles?.saveFile && window.desktopFiles.getCurrentFolder()) {
     try {
       await window.desktopFiles.saveFile(filePath, content)
@@ -492,6 +489,13 @@ async function saveFile(filePath, content) {
     } catch (e) {
       console.error('[Save] Failed to save:', e)
     }
+  } else {
+    // Browser / test mode: no folder bound, but the desktopFiles cache
+    // is still consulted by getPreludeCode() and YAML injection. Keep
+    // it in sync so an edit-followed-by-recompile sees the new content
+    // (without this, YAML data files only update at panel.create time
+    // and stay stale through editor edits).
+    window.desktopFiles?.updateFileCache?.(filePath, content)
   }
 }
 
@@ -1505,16 +1509,33 @@ const mirrorLinter = linter(view => {
   return currentDiagnostics
 })
 
-// Initialize Draft Mode Manager (AI-assisted editing with ?? marker)
-// Note: We pass a getter function since editor isn't created yet
-let editor // Forward declaration for draft mode manager
-const draftModeManager = initDraftModeManager({
-  getEditorView: () => editor,
+// LLM-Edit-Flow handler (replaces the legacy ?? draft-mode manager).
+// Cmd+Enter      → handleEditFlow (capture context + LLM call + ghost-diff)
+// Cmd+Shift+Enter → openPromptField (Mode 3 with user instruction)
+// Tab            → acceptGhost (when ghost active)
+// Esc            → dismissGhost (when ghost active)
+const editHandler = createEditHandler({
+  getProjectFiles: () => {
+    // Snapshot tokens + components from all OTHER files (current file is in
+    // the editor view, not in projectFiles).
+    const allFiles = window.desktopFiles?.getFiles?.() || files
+    const tokens = {}
+    const components = {}
+    for (const [name, content] of Object.entries(allFiles)) {
+      if (name === currentFile) continue
+      if (typeof content !== 'string') continue
+      if (name.endsWith('.tok') || name.endsWith('.tokens')) {
+        tokens[name] = content
+      } else if (name.endsWith('.com') || name.endsWith('.components')) {
+        components[name] = content
+      }
+    }
+    return { tokens, components }
+  },
+  getCurrentFileName: () => currentFile,
 })
-const draftModeKeymap = createDraftModeKeymap(draftModeManager)
-const draftModeAutoSubmit = createDraftModeAutoSubmit(draftModeManager)
 
-// Initialize modular color picker API for property panel
+let editor
 
 editor = new EditorView({
   state: EditorState.create({
@@ -1530,10 +1551,8 @@ editor = new EditorView({
       mirrorLinter, // Dynamic diagnostics (updated on compile)
       indentGuidesExtension(), // Visual indent guides (vertical lines)
       smartPasteExtension(), // Auto-adjust indentation on paste
-      draftLinesExtension(),
-      draftModeExtension(), // AI-assisted editing: ?? marker detection
-      draftModeAutoSubmit, // AI-assisted editing: auto-submit on closing ??
-      draftModeKeymap, // AI-assisted editing: Cmd+Enter (fallback), Escape to cancel
+      ghostDiffExtension(), // LLM-Edit-Flow: red/green diff overlay
+      keymap.of(llmEditKeymap(editHandler)), // Cmd+Enter / Cmd+Shift+Enter / Tab / Esc
       mirrorHighlight,
       autocompletion({
         override: [mirrorCompletions],
@@ -1969,26 +1988,55 @@ function autoCreateReferencedFiles(code) {
 function getPreludeCode(excludeFile) {
   const sections = []
 
-  // Use desktop files if available (Tauri mode), fallback to local files
-  const allFiles = window.desktopFiles?.getFiles?.() || files
+  // Two file caches can hold project content: window.desktopFiles
+  // (synced to disk in Tauri mode) and the in-memory `files` global
+  // (used by the test API and browser-only flows). Merge both so the
+  // prelude always reflects the union — without this, files added
+  // via panel.files.create that didn't make it into the desktop cache
+  // would be invisible to compilation.
+  const desktopFiles = window.desktopFiles?.getFiles?.() || {}
+  const allFiles = { ...files, ...desktopFiles }
 
-  // Collect files by type in the correct order: tokens first, then components
+  // Collect files by type. Order matches the CLI's project-mode pass
+  // (compiler/cli.ts): data → tokens → components → layout. Data files
+  // are inlined as Mirror DSL into the prelude — Mirror's grammar
+  // accepts the same `key: value` indentation form as YAML for top-level
+  // data declarations, and inlining lets the compiler register the
+  // collection in __mirrorData via the same path as inline `tasks: ...`
+  // declarations would. (The separate generateYAMLDataInjection() pass
+  // also runs but writes to a wrong key when the YAML has an outer
+  // wrapper — keeping the inline path makes both single-file scenarios
+  // and YAML-file scenarios produce identical runtime data shapes.)
+  const dataFiles = []
   const tokenFiles = []
   const componentFiles = []
 
   for (const filename of Object.keys(allFiles)) {
-    // Skip the current file being compiled
     if (filename === excludeFile) continue
 
     const fileType = getFileType(filename)
-    if (fileType === 'tokens') {
+    if (fileType === 'data') {
+      dataFiles.push(filename)
+    } else if (fileType === 'tokens') {
       tokenFiles.push(filename)
     } else if (fileType === 'component') {
       componentFiles.push(filename)
     }
   }
 
-  // Add tokens first (sorted alphabetically for consistency)
+  // Data first. Inline the data file content WITHOUT a `// === ${filename} ===`
+  // header — the header would break Mirror's data-block parser when an
+  // indented data declaration follows directly. Tokens and components
+  // get the header (their parsers handle it).
+  dataFiles.sort()
+  for (const filename of dataFiles) {
+    const content = allFiles[filename]
+    if (content && content.trim()) {
+      sections.push(content)
+    }
+  }
+
+  // Tokens
   tokenFiles.sort()
   for (const filename of tokenFiles) {
     const content = allFiles[filename]
@@ -1997,7 +2045,7 @@ function getPreludeCode(excludeFile) {
     }
   }
 
-  // Then components
+  // Components
   componentFiles.sort()
   for (const filename of componentFiles) {
     const content = allFiles[filename]
@@ -2537,10 +2585,16 @@ if (typeof window !== 'undefined') {
     resolvedSource = resolvedCode
     isWrappedWithApp = false
     if (studio?.state?.set) {
+      // isWrappedWithApp is intentionally reset here. __compileTestCode never
+      // wraps with App; if a prior production compile left state.isWrappedWithApp
+      // = true, adjustChangeForEditor would later strip non-existent wrap
+      // indents from change positions and inserts (off-by-2 corruption,
+      // observed when modifying a node on line 3+ of a multi-line scenario).
       studio.state.set({
         preludeOffset,
         preludeLineOffset,
         resolvedSource: resolvedCode,
+        isWrappedWithApp: false,
       })
     }
     // CRITICAL: Update SyncCoordinator's lineOffset so editor → sourceMap

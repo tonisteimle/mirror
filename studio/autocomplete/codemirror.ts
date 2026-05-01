@@ -15,7 +15,6 @@ import {
   COMPONENT_TEMPLATES,
   adjustTemplateIndentation,
 } from '../../compiler/schema/component-templates'
-import { draftModeField, isLineInDraftBlock } from '../editor/draft-mode'
 
 /**
  * Map our completion types to CodeMirror completion types
@@ -64,21 +63,6 @@ function isAtLineStart(lineText: string, cursorColumn: number): boolean {
  */
 export function mirrorCompletions(context: CompletionContext): CompletionResult | null {
   const engine = getAutocompleteEngine()
-
-  // Check if we're in a draft block (after -- marker)
-  // Suppress autocomplete completions in draft blocks, but pickers still work
-  try {
-    const draftState = context.state.field(draftModeField, false)
-    if (draftState?.active && draftState.startLine !== null) {
-      const currentLine = context.state.doc.lineAt(context.pos).number
-      // Suppress completions for all lines after the -- marker line
-      if (currentLine > draftState.startLine) {
-        return null
-      }
-    }
-  } catch {
-    // draftModeField not registered, continue normally
-  }
 
   // Get the current line text
   const line = context.state.doc.lineAt(context.pos)

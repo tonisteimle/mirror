@@ -28,17 +28,7 @@ import {
   type AutocompleteRequest,
   type AutocompleteResult,
 } from './autocomplete'
-import {
-  EditorController,
-  createEditorController,
-  setEditorController,
-  initDraftLinesManager,
-  disposeDraftLinesManager,
-  initDraftModeManager,
-  disposeDraftModeManager,
-  type DraftLinesManager,
-  type DraftModeManager,
-} from './editor'
+import { EditorController, createEditorController, setEditorController } from './editor'
 import {
   PreviewController,
   createPreviewController,
@@ -115,10 +105,6 @@ export interface StudioInstance {
   fixer: FixerService | null
   drawManager: DrawManager | null
   inlineEdit: InlineEditController | null
-  /** Draft lines manager for AI-assisted editing visual feedback */
-  draftLinesManager: DraftLinesManager | null
-  /** Draft mode manager for -- marker AI-assisted code generation */
-  draftModeManager: DraftModeManager | null
   /** Settings panel for studio configuration */
   settingsPanel: SettingsPanel | null
   /** Cleanup all event subscriptions and resources */
@@ -152,8 +138,6 @@ export const studio: StudioInstance = {
   fixer: null,
   drawManager: null,
   inlineEdit: null,
-  draftLinesManager: null,
-  draftModeManager: null,
   settingsPanel: null,
   dispose: () => {
     // Unsubscribe all event listeners
@@ -172,8 +156,6 @@ export const studio: StudioInstance = {
     studio.inlineEdit?.dispose()
     studio.preview?.dispose()
     studio.settingsPanel?.dispose()
-    disposeDraftLinesManager()
-    disposeDraftModeManager()
 
     // Clear references
     studio.editor = null
@@ -186,8 +168,6 @@ export const studio: StudioInstance = {
     studio.breadcrumb = null
     studio.drawManager = null
     studio.inlineEdit = null
-    studio.draftLinesManager = null
-    studio.draftModeManager = null
     studio.settingsPanel = null
     studio.fixer = null
   },
@@ -439,42 +419,9 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   studioContext.editor = editorController
   studio.editor = editorController
 
-  // Draft Lines Manager - visual feedback for AI-assisted editing
-  // New/changed lines appear muted (draft), validated lines appear bright
-  const draftLinesManager = initDraftLinesManager({
-    getEditorView: () => config.editor,
-  })
-  studio.draftLinesManager = draftLinesManager
-
-  // Draft Mode Manager - handles ?? marker for AI code generation
-  // User types ?? prompt ??, second marker auto-submits to Claude CLI
-  const draftModeManager = initDraftModeManager({
-    getEditorView: () => config.editor,
-  })
-  studio.draftModeManager = draftModeManager
-
-  // Wire draft:submit → Fixer (Claude CLI via Tauri)
-  // The default processWithAI in DraftModeManager emits draft:submit and waits
-  // for draft:ai-response — this listener is the production AI bridge.
-  if (config.getFiles && config.getCurrentFile) {
-    const fixer = createFixer({
-      getFiles: config.getFiles,
-      getCurrentFile: config.getCurrentFile,
-    })
-    studio.fixer = fixer
-
-    eventUnsubscribes.push(
-      events.on('draft:submit', async event => {
-        try {
-          const code = await fixer.generateDraftCode(event.prompt, event.content, event.fullSource)
-          events.emit('draft:ai-response', { code })
-        } catch (err) {
-          const message = err instanceof Error ? err.message : 'Unbekannter AI-Fehler'
-          events.emit('draft:ai-response', { code: '', error: message })
-        }
-      })
-    )
-  }
+  // LLM-Edit-Flow: keymap + ghost-diff + edit-handler are wired up in
+  // app.js where the EditorView is constructed. Bootstrap no longer owns
+  // any AI-edit state — runEdit talks to the Tauri bridge directly.
 
   // Editor Drop Handler is now handled by createComponentDropExtension in app.js
   // Uses CodeMirror's native extension system for proper drop handling
