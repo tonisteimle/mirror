@@ -17,8 +17,9 @@
  *   3. `claude` CLI installiert (~/.local/bin/claude oder PATH)
  *
  * Run:
- *   npm run test:browser:edit-flow-real
- *   npx tsx tools/test.ts --filter="real-LLM" --headed --timeout=60000
+ *   npm run test:browser:edit-flow-real            # alle 8 scenarios
+ *   npm run test:browser:edit-flow-real -- --headed
+ *   npx tsx tools/test.ts --category=ai.realLlm --timeout=60000
  *
  * **Nicht in `allAITests` enthalten** — diese Tests sind langsam (5-15s
  * pro Scenario LLM-Latenz) und erfordern externe Infra (`claude` CLI).

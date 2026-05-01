@@ -34,6 +34,7 @@
     "test:browser:drag": "npx tsx tools/test.ts --drag",
     "test:browser:mirror": "npx tsx tools/test.ts --mirror",
     "test:browser:headed": "npx tsx tools/test.ts --headed",
+    "test:browser:edit-flow-real": "npx tsx tools/test.ts --category=ai.realLlm --timeout=60000",
     "test:demos": "npx tsx tools/test.ts --demo-suite=tools/test-runner/demo/scripts --pacing=instant",
     "test:demos:headed": "npx tsx tools/test.ts --demo-suite=tools/test-runner/demo/scripts --headed --pacing=video",
     "test:image": "npx tsx tools/image-to-mirror-test/cli.ts",
