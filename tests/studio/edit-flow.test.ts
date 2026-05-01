@@ -10,7 +10,7 @@
 
 import { describe, test, expect, beforeEach, afterEach } from 'vitest'
 import { createMockTauriBridge, type MockTauriBridge } from '../helpers/mock-tauri-bridge'
-import { runEditFlow } from '../../studio/agent/edit-flow'
+import { runEditFlow, type EditFlowAttemptEvent } from '../../studio/agent/edit-flow'
 import type { EditCaptureCtx } from '../../studio/agent/edit-prompts'
 
 let bridge: MockTauriBridge
@@ -158,6 +158,23 @@ describe('EditFlow — runEditFlow', () => {
       expect(result.retries).toBe(2)
     })
 
+    test('truncates long anchors in the final error message preview', async () => {
+      const longLine = 'X'.repeat(200)
+      const ctx = baseCtx({ source: 'A\nB\nC' })
+      bridge.runAgent = async (_p, _t, _path, sessionId) => ({
+        session_id: sessionId || 'mock',
+        success: true,
+        output: `@@FIND\n${longLine}\n@@REPLACE\nY\n@@END`,
+        error: null,
+      })
+
+      const result = await runEditFlow(ctx, { maxRetries: 0 })
+      expect(result.status).toBe('error')
+      // Preview is capped at 60 chars + ellipsis suffix.
+      expect(result.error).toMatch(/…/)
+      expect(result.error!.length).toBeLessThan(longLine.length)
+    })
+
     test('respects custom maxRetries=0 (no retry, immediate error)', async () => {
       const ctx = baseCtx({ source: 'A' })
       let callCount = 0
@@ -201,6 +218,86 @@ describe('EditFlow — runEditFlow', () => {
       const result = await runEditFlow(baseCtx())
       expect(result.status).toBe('error')
       expect(result.error).toMatch(/Desktop/i)
+    })
+  })
+
+  describe('Telemetry — onAttempt', () => {
+    test('fires once with kind=success on a clean first attempt', async () => {
+      bridge.setMockRawOutput('@@FIND\n  Text "Hello"\n@@REPLACE\n  Text "Hi"\n@@END')
+      const events: EditFlowAttemptEvent[] = []
+      const result = await runEditFlow(baseCtx(), { onAttempt: e => events.push(e) })
+      expect(result.status).toBe('ready')
+      expect(events).toEqual([{ attempt: 0, kind: 'success' }])
+    })
+
+    test('fires once with kind=no-change when LLM is silent', async () => {
+      bridge.setMockRawOutput('')
+      const events: EditFlowAttemptEvent[] = []
+      await runEditFlow(baseCtx(), { onAttempt: e => events.push(e) })
+      expect(events).toEqual([{ attempt: 0, kind: 'no-change' }])
+    })
+
+    test('fires apply-failed with willRetry=true then success on a recovered retry', async () => {
+      const ctx = baseCtx({ source: 'Text "Hello"\nText "Hello"' })
+      const responses = [
+        '@@FIND\nText "Hello"\n@@REPLACE\nText "Hi"\n@@END', // ambiguous
+        '@@FIND\nText "Hello"\nText "Hello"\n@@REPLACE\nText "Hi"\nText "Hi"\n@@END',
+      ]
+      let call = 0
+      bridge.runAgent = async (_p, _t, _path, sessionId) => ({
+        session_id: sessionId || 'mock',
+        success: true,
+        output: responses[call++] ?? '',
+        error: null,
+      })
+
+      const events: EditFlowAttemptEvent[] = []
+      const result = await runEditFlow(ctx, { onAttempt: e => events.push(e) })
+      expect(result.status).toBe('ready')
+      expect(events).toHaveLength(2)
+      expect(events[0]).toMatchObject({
+        attempt: 0,
+        kind: 'apply-failed',
+        willRetry: true,
+      })
+      expect(events[1]).toEqual({ attempt: 1, kind: 'success' })
+    })
+
+    test('marks final apply-failed with willRetry=false when retries are exhausted', async () => {
+      const ctx = baseCtx({ source: 'A\nB\nC' })
+      bridge.runAgent = async (_p, _t, _path, sessionId) => ({
+        session_id: sessionId || 'mock',
+        success: true,
+        output: '@@FIND\nNOPE\n@@REPLACE\nX\n@@END',
+        error: null,
+      })
+
+      const events: EditFlowAttemptEvent[] = []
+      await runEditFlow(ctx, { maxRetries: 2, onAttempt: e => events.push(e) })
+
+      expect(events).toHaveLength(3)
+      expect(events.map(e => (e as { willRetry?: boolean }).willRetry)).toEqual([true, true, false])
+      expect(events[2]).toMatchObject({ attempt: 2, kind: 'apply-failed', willRetry: false })
+    })
+
+    test('fires kind=parse-error when the response is structurally broken', async () => {
+      bridge.setMockRawOutput('@@FIND\nX\n@@REPLACE\nY\n')
+      const events: EditFlowAttemptEvent[] = []
+      await runEditFlow(baseCtx({ source: 'X' }), { onAttempt: e => events.push(e) })
+      expect(events).toHaveLength(1)
+      expect(events[0]).toMatchObject({ attempt: 0, kind: 'parse-error', willRetry: false })
+    })
+
+    test('fires kind=bridge-error when the bridge throws', async () => {
+      bridge.setMockError('rate limit exceeded')
+      const events: EditFlowAttemptEvent[] = []
+      await runEditFlow(baseCtx(), { onAttempt: e => events.push(e) })
+      expect(events).toHaveLength(1)
+      expect(events[0]).toMatchObject({
+        attempt: 0,
+        kind: 'bridge-error',
+        willRetry: false,
+      })
     })
   })
 

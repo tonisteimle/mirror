@@ -27,7 +27,30 @@ export interface RunEditFlowOptions {
    * 0 = nie retry. Default: 2.
    */
   maxRetries?: number
+  /**
+   * Telemetrie-Hook: wird nach jedem LLM-Call (Erstaufruf + jeder Retry)
+   * mit dem Outcome aufgerufen. Erlaubt Eval/Studio per-Attempt-Tracking
+   * ohne globalen State.
+   */
+  onAttempt?: (event: EditFlowAttemptEvent) => void
 }
+
+/**
+ * Per-Attempt-Outcome — eines pro LLM-Call. `attempt` ist 0-indexed:
+ * 0 = Erstaufruf, 1 = erster Retry, etc. `willRetry` zeigt an, ob der
+ * Orchestrator nach diesem Attempt einen weiteren Versuch unternimmt.
+ */
+export type EditFlowAttemptEvent =
+  | { attempt: number; kind: 'success' }
+  | { attempt: number; kind: 'no-change' }
+  | { attempt: number; kind: 'parse-error'; parseErrors: string[]; willRetry: false }
+  | {
+      attempt: number
+      kind: 'apply-failed'
+      hints: RetryHint[]
+      willRetry: boolean
+    }
+  | { attempt: number; kind: 'bridge-error'; error: string; willRetry: false }
 
 export type EditResultStatus = 'ready' | 'no-change' | 'error'
 
@@ -47,21 +70,24 @@ export async function runEditFlow(
   ctx: EditCaptureCtx,
   options: RunEditFlowOptions = {}
 ): Promise<EditResult> {
-  const { signal, maxRetries = DEFAULT_MAX_RETRIES } = options
+  const { signal, maxRetries = DEFAULT_MAX_RETRIES, onAttempt } = options
 
   const basePrompt = buildEditPrompt(ctx)
   let prompt = basePrompt
   let retries = 0
 
   while (true) {
+    const attempt = retries
     let raw: string
     try {
       raw = await runEdit(prompt, signal)
     } catch (err) {
       if (isAbortError(err)) throw err
+      const message = errorMessage(err)
+      onAttempt?.({ attempt, kind: 'bridge-error', error: message, willRetry: false })
       return {
         status: 'error',
-        error: errorMessage(err),
+        error: message,
         retries,
       }
     }
@@ -70,10 +96,17 @@ export async function runEditFlow(
 
     if (parsed.patches.length === 0 && parsed.parseErrors.length === 0) {
       // Stille ist heilig: keine Änderung gewünscht.
+      onAttempt?.({ attempt, kind: 'no-change' })
       return { status: 'no-change', retries }
     }
 
     if (parsed.patches.length === 0 && parsed.parseErrors.length > 0) {
+      onAttempt?.({
+        attempt,
+        kind: 'parse-error',
+        parseErrors: parsed.parseErrors,
+        willRetry: false,
+      })
       return {
         status: 'error',
         error: `Antwort konnte nicht geparsed werden:\n${parsed.parseErrors.join('\n')}`,
@@ -84,6 +117,7 @@ export async function runEditFlow(
     const applyResult = applyPatches(ctx.source, parsed.patches)
 
     if (applyResult.success) {
+      onAttempt?.({ attempt, kind: 'success' })
       return {
         status: 'ready',
         proposedSource: applyResult.newSource,
@@ -91,10 +125,12 @@ export async function runEditFlow(
       }
     }
 
-    // Failed → retry mit Hints, falls erlaubt.
     // applyPatches garantiert retryHints bei success=false.
-    const hints = applyResult.retryHints ?? []
-    if (retries >= maxRetries) {
+    const hints = applyResult.retryHints as RetryHint[]
+    const willRetry = retries < maxRetries
+    onAttempt?.({ attempt, kind: 'apply-failed', hints, willRetry })
+
+    if (!willRetry) {
       return {
         status: 'error',
         error: formatRetryHints(hints),
@@ -136,7 +172,7 @@ function buildHintMessage(hints: RetryHint[]): string {
 }
 
 function formatRetryHints(hints: RetryHint[]): string {
-  if (hints.length === 0) return 'Patches konnten nicht angewendet werden.'
+  // applyPatches liefert immer mindestens einen Hint bei success=false.
   const parts: string[] = []
   for (const hint of hints) {
     if (hint.reason === 'no-match') {
