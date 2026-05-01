@@ -120,6 +120,9 @@ import {
   mirrorHighlight,
   // Prelude collector (data + tokens + components → joined string)
   collectPrelude,
+  // Full project source (data + tokens + components + layouts) for
+  // cross-file token/component lookup
+  collectAllProjectSource,
   // Draggable preview elements manager (binds drag handlers to [data-mirror-id])
   createDraggableElementsManager,
   // Code-modifier classes — were previously read off MirrorLang (compiler
@@ -128,7 +131,7 @@ import {
   CodeModifier,
   PropertyExtractor,
   createRobustModifier,
-} from './dist/index.js?v=155'
+} from './dist/index.js?v=156'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -1711,39 +1714,17 @@ function ensureCodeModifierInSync() {
 // Expose sync function globally for property panel to use
 window.ensureCodeModifierInSync = ensureCodeModifierInSync
 
-// File type processing order: data -> tokens -> components -> layouts
-const FILE_TYPE_ORDER = ['data', 'tokens', 'component', 'layout']
-
 /**
  * Get all project source in processing order (data -> tokens -> components -> layouts)
- * This allows the PropertyPanel to access tokens from all files
+ * Allows the PropertyPanel to access tokens/components from all files.
+ * Uses desktop files cache if available, falling back to in-memory files
+ * for playground/legacy mode.
  */
 function getAllProjectSource() {
-  const filesByType = {}
-
-  // Use desktop files cache if available (includes all preloaded files)
-  // Falls back to local files object for playground/legacy mode
-  const allFiles = window.desktopFiles?.getFiles?.() || files
-
-  // Group files by type
-  for (const filename of Object.keys(allFiles)) {
-    const type = getFileType(filename)
-    if (!filesByType[type]) {
-      filesByType[type] = []
-    }
-    filesByType[type].push({ filename, content: allFiles[filename] })
-  }
-
-  // Concatenate in order: data -> tokens -> components -> layouts
-  let allSource = ''
-  for (const type of FILE_TYPE_ORDER) {
-    const typeFiles = filesByType[type] || []
-    for (const file of typeFiles) {
-      allSource += file.content + '\n'
-    }
-  }
-
-  return allSource
+  return collectAllProjectSource({
+    getFiles: () => window.desktopFiles?.getFiles?.() || files,
+    getFileType,
+  })
 }
 
 /**
