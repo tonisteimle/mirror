@@ -29,11 +29,7 @@ export {
 } from './context-menu'
 
 // Project Toolbar
-export {
-  ProjectToolbar,
-  createProjectToolbar,
-  type ProjectToolbarConfig,
-} from './project-toolbar'
+export { ProjectToolbar, createProjectToolbar, type ProjectToolbarConfig } from './project-toolbar'
 
 // Splitter (resizable panels)
 export {
@@ -46,3 +42,6 @@ export {
   type StudioLayoutConfig,
   type StudioLayoutCallbacks,
 } from './splitter'
+
+// Panel Dividers (legacy mousedown/mousemove resizers)
+export { initPanelDividers, type PanelDividerDeps } from './panel-dividers'
