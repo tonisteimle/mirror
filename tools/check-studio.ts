@@ -8,7 +8,7 @@ import { connectCDP, getPageTarget } from './test-runner/cdp'
 import { ConsoleCollector } from './test-runner/console-collector'
 
 const TARGET_URL = process.argv[2] || 'http://localhost:5173/studio/'
-const WAIT_MS = 7000
+const WAIT_MS = 12000
 
 async function main() {
   const chrome = await launchChrome({ headless: true })
@@ -38,6 +38,8 @@ async function main() {
       mirrorTest: typeof window.__mirrorTest,
       suites: typeof window.__mirrorTestSuites,
       studio: typeof window.__mirrorStudio__,
+      dragTest: typeof window.__dragTest,
+      STUDIO_TEST: typeof window.__STUDIO_TEST__,
       suitesLoadError: window.__suitesLoadError ? String(window.__suitesLoadError) : null
     })`,
   })
