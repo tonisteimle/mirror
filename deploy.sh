@@ -138,7 +138,6 @@ put logo.png
 put tauri-bridge.js
 put desktop-files.js
 put dialog.js
-put cleanup.js
 
 # Upload studio/dist (new architecture modules + chunks)
 mkdir -f dist
