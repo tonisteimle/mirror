@@ -19,14 +19,19 @@ import type { TestAPI } from '../../types'
 /**
  * Get the EditorView instance from window
  */
-function getEditorView(): any {
-  return (window as any).editor
+function getEditorView(): import('@codemirror/view').EditorView {
+  const view = (window as { editor?: import('@codemirror/view').EditorView }).editor
+  if (!view) throw new Error('Editor not initialized')
+  return view
 }
 
 /**
  * Simulate a paste event with text content
  */
-async function simulatePaste(view: any, text: string): Promise<void> {
+async function simulatePaste(
+  view: import('@codemirror/view').EditorView,
+  text: string
+): Promise<void> {
   // Create a ClipboardEvent with the text
   const clipboardData = new DataTransfer()
   clipboardData.setData('text/plain', text)

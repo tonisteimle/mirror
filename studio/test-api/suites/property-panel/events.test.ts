@@ -403,11 +403,16 @@ export const eventIntegrationTests: TestCase[] = describe('Event Integration', [
 
       // Set up listener for custom event
       let eventReceived = false
-      let eventDetail: { nodeId: string; eventName: string } | null = null
+      // The closure assignment confuses TS control-flow analysis (it
+      // doesn't track the listener firing back into this scope), so we
+      // force the type via the intermediate accessor.
+      const eventState: { detail: { nodeId?: string; eventName?: string } | null } = {
+        detail: null,
+      }
 
       const listener = (e: CustomEvent) => {
         eventReceived = true
-        eventDetail = e.detail
+        eventState.detail = e.detail
       }
 
       document.addEventListener('property-panel:add-event', listener as EventListener)
@@ -425,12 +430,12 @@ export const eventIntegrationTests: TestCase[] = describe('Event Integration', [
         // Verify custom event was dispatched
         api.assert.ok(eventReceived, 'Custom event property-panel:add-event should be dispatched')
         api.assert.ok(
-          eventDetail?.nodeId === 'node-1',
-          `Event detail should have nodeId node-1, got: ${eventDetail?.nodeId}`
+          eventState.detail?.nodeId === 'node-1',
+          `Event detail should have nodeId node-1, got: ${eventState.detail?.nodeId}`
         )
         api.assert.ok(
-          eventDetail?.eventName === 'onclick',
-          `Event detail should have eventName onclick, got: ${eventDetail?.eventName}`
+          eventState.detail?.eventName === 'onclick',
+          `Event detail should have eventName onclick, got: ${eventState.detail?.eventName}`
         )
       } finally {
         document.removeEventListener('property-panel:add-event', listener as EventListener)

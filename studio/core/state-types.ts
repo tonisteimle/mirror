@@ -51,6 +51,15 @@ export type DeferredSelection =
       /** Origin of the selection request */
       origin: SelectionOrigin
     }
+  | {
+      type: 'lastChildOf'
+      /** Parent nodeId whose child should be selected. */
+      parentNodeId: string
+      /** If set, select the child at this index; otherwise select the last. */
+      insertionIndex?: number
+      /** Origin of the selection request */
+      origin: SelectionOrigin
+    }
 
 /**
  * @deprecated Use DeferredSelection with type: 'line' instead

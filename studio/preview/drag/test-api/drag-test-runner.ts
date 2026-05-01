@@ -121,8 +121,9 @@ export class DragTestRunner {
       template: fixture.template,
     }
 
-    // Build drop target
+    // Build drop target (flex/index-based — palette drops use FlexDropTarget)
     const target: DropTarget = {
+      mode: 'flex',
       containerId: params.targetNodeId,
       insertionIndex: params.insertionIndex,
     }
@@ -192,8 +193,9 @@ export class DragTestRunner {
       nodeId: params.sourceNodeId,
     }
 
-    // Build drop target
+    // Build drop target (flex/index-based — palette drops use FlexDropTarget)
     const target: DropTarget = {
+      mode: 'flex',
       containerId: params.targetNodeId,
       insertionIndex: params.insertionIndex,
     }
@@ -456,7 +458,7 @@ export class DragTestRunner {
     return {
       success: false,
       source: { type: 'palette' },
-      target: { containerId: '', insertionIndex: -1 },
+      target: { mode: 'flex', containerId: '', insertionIndex: -1 },
       codeChange: {
         before: codeBefore,
         after: this.context.getCode(),

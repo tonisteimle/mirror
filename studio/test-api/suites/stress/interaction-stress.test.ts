@@ -33,6 +33,7 @@ export const rapidClickTests: TestSuite = [
 
       // Should be on (odd total clicks)
       const styles = api.preview.inspect('node-1')?.styles
+      api.assert.ok(styles, 'styles should exist')
       api.assert.ok(
         styles.backgroundColor === 'rgb(34, 113, 193)',
         `Should be on after 3 clicks, got ${styles.backgroundColor}`
@@ -58,6 +59,7 @@ export const rapidClickTests: TestSuite = [
 
       // Should be in consistent state (off after 2 clicks)
       const styles = api.preview.inspect('node-1')?.styles
+      api.assert.ok(styles, 'styles should exist')
       api.assert.ok(styles.backgroundColor === 'rgb(51, 51, 51)', 'Should be off after 2 clicks')
     }
   ),
@@ -112,6 +114,7 @@ export const hoverStressTests: TestSuite = [
 
       // Check hover state is applied
       const hoveredStyles = api.preview.inspect('node-1')?.styles
+      api.assert.ok(hoveredStyles, 'hoveredStyles should exist')
       const hasHoverAttr = api.preview.getElement('node-1')?.hasAttribute('data-hover')
       api.assert.ok(
         hasHoverAttr || hoveredStyles?.backgroundColor !== 'rgb(51, 51, 51)',
@@ -123,6 +126,7 @@ export const hoverStressTests: TestSuite = [
 
       // Should be in consistent state (not hovered)
       const styles = api.preview.inspect('node-1')?.styles
+      api.assert.ok(styles, 'styles should exist')
       const stillHasHover = api.preview.getElement('node-1')?.hasAttribute('data-hover')
       api.assert.ok(!stillHasHover, 'Should not have data-hover attribute after unhover')
       // Color check with tolerance - might be #333 or slightly different
@@ -335,6 +339,7 @@ export const previewTimingTests: TestSuite = [
 
       // Should be toggled
       const styles = api.preview.inspect('node-1')?.styles
+      api.assert.ok(styles, 'styles should exist')
       api.assert.ok(styles.backgroundColor === 'rgb(34, 113, 193)', 'Should be on after click')
     }
   ),
@@ -356,7 +361,9 @@ export const previewTimingTests: TestSuite = [
 
       // Both should be toggled
       const stylesA = api.preview.inspect('node-2')?.styles
+      api.assert.ok(stylesA, 'stylesA should exist')
       const stylesB = api.preview.inspect('node-3')?.styles
+      api.assert.ok(stylesB, 'stylesB should exist')
 
       api.assert.ok(stylesA.backgroundColor === 'rgb(34, 113, 193)', 'A should be on')
       api.assert.ok(stylesB.backgroundColor === 'rgb(239, 68, 68)', 'B should be on')

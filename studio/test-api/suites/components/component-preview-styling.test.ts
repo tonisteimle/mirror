@@ -25,15 +25,15 @@ export const componentPreviewStylingTests: TestCase[] = describe('Component Prev
 card.bg: #1a1a1a
 card.pad: 16
 card.rad: 8`
-      await api.panels.files.create('tokens.tok', tokenContent)
+      await api.panel.files.create('tokens.tok', tokenContent)
 
       // Step 2: Create components file
       const componentContent = `// Card component using tokens
 Card: bg $card, pad $card, rad $card`
-      await api.panels.files.create('components.com', componentContent)
+      await api.panel.files.create('components.com', componentContent)
 
       // Step 3: Switch to the .com file
-      await api.panels.files.open('components.com')
+      await api.panel.files.open('components.com')
 
       // Step 4: Wait for component preview to render
       await new Promise(resolve => setTimeout(resolve, 500))
@@ -98,8 +98,8 @@ Card: bg $card, pad $card, rad $card`
     const componentContent = `// Simple button with inline styles
 Btn: bg #2271C1, pad 12, rad 6, col white`
 
-    await api.panels.files.create('simple.com', componentContent)
-    await api.panels.files.open('simple.com')
+    await api.panel.files.create('simple.com', componentContent)
+    await api.panel.files.open('simple.com')
 
     await new Promise(resolve => setTimeout(resolve, 500))
 

@@ -691,7 +691,7 @@ function createMirrorTestAPI(): MirrorTestAPI {
       const suites = (window as any).__mirrorTestSuites
       if (!suites?.tests?.all) {
         console.error('Test suites not loaded. Ensure setupTestSuites() has completed.')
-        return { passed: 0, failed: 0, skipped: 0, duration: 0, results: [] }
+        return { name: 'Tests', passed: 0, failed: 0, skipped: 0, duration: 0, results: [] }
       }
       const regex = new RegExp(pattern, 'i')
       const filtered = suites.tests.all.filter((t: TestCase) => regex.test(t.name))
@@ -703,13 +703,13 @@ function createMirrorTestAPI(): MirrorTestAPI {
       const suites = (window as any).__mirrorTestSuites
       if (!suites?.tests) {
         console.error('Test suites not loaded. Ensure setupTestSuites() has completed.')
-        return { passed: 0, failed: 0, skipped: 0, duration: 0, results: [] }
+        return { name: 'Tests', passed: 0, failed: 0, skipped: 0, duration: 0, results: [] }
       }
       const tests = suites.tests[categoryName]
       if (!tests) {
         const available = Object.keys(suites.tests).filter(k => k !== 'all')
         console.error(`Unknown category: "${categoryName}". Available: ${available.join(', ')}`)
-        return { passed: 0, failed: 0, skipped: 0, duration: 0, results: [] }
+        return { name: 'Tests', passed: 0, failed: 0, skipped: 0, duration: 0, results: [] }
       }
       console.log(`Running ${tests.length} tests in category "${categoryName}"`)
       return runner.runSuite(`${categoryName} Tests`, tests)
@@ -719,7 +719,7 @@ function createMirrorTestAPI(): MirrorTestAPI {
       const suites = (window as any).__mirrorTestSuites
       if (!suites?.tests?.all) {
         console.error('Test suites not loaded.')
-        return { passed: 0, failed: 0, skipped: 0, duration: 0, results: [] }
+        return { name: 'Tests', passed: 0, failed: 0, skipped: 0, duration: 0, results: [] }
       }
       const test = suites.tests.all.find(
         (t: TestCase) =>
