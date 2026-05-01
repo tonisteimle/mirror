@@ -735,7 +735,7 @@ function createMirrorTestAPI(): MirrorTestAPI {
           console.log('Did you mean:')
           matches.forEach((t: TestCase) => console.log(`  - ${t.name}`))
         }
-        return { passed: 0, failed: 1, skipped: 0, duration: 0, results: [] }
+        return { name: 'Tests', passed: 0, failed: 1, skipped: 0, duration: 0, results: [] }
       }
       return runner.runSuite(`Single Test: ${test.name}`, [test])
     },
@@ -1002,7 +1002,6 @@ async function setupTestSuites(): Promise<void> {
         primitives: suites.allPrimitivesTests,
         layoutShortcuts: suites.allLayoutShortcutTests,
         layoutVerification: suites.allLayoutVerificationTests,
-        zag: suites.allZagTests,
         interactions: suites.allInteractionTests,
         bidirectional: suites.allBidirectionalTests,
         undoRedo: suites.allUndoRedoTests,

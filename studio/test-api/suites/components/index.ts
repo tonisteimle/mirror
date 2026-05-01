@@ -85,22 +85,8 @@ import { componentStateTests } from './component-states.test'
 import { complexComponentTests } from './complex-patterns.test'
 import { allSelectDragAndVerifyTests } from './select-drag-and-verify.test'
 
-// Legacy exports for backwards compatibility (empty arrays — Pure-Mirror migration)
-export const checkboxTests: TestCase[] = []
-export const switchTests: TestCase[] = []
-export const sliderTests: TestCase[] = []
+// Select component (still has real tests via select-drag-and-verify)
 export const selectTests: TestCase[] = [...allSelectDragAndVerifyTests]
-export const radioGroupTests: TestCase[] = []
-export const dialogTests: TestCase[] = []
-export const tooltipTests: TestCase[] = []
-export const tabsTests: TestCase[] = []
-export const sidenavTests: TestCase[] = []
-export const zagInLayoutTests: TestCase[] = []
-export const allZagDragTests: TestCase[] = []
-export const allZagResizeHandleTests: TestCase[] = []
-export const allTabsDropTests: TestCase[] = []
-export const allZagKeyboardTests: TestCase[] = []
-export const allZagTests: TestCase[] = []
 
 /**
  * DSL component-system tests aggregate (definition / inheritance / slots / variants /

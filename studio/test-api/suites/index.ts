@@ -104,21 +104,10 @@ import {
   shadowValidationTests,
 } from './styling'
 
-// Zag (fully migrated)
-import {
-  allZagTests,
-  checkboxTests,
-  switchTests,
-  sliderTests,
-  selectTests,
-  radioGroupTests,
-  dialogTests,
-  tooltipTests,
-  tabsTests,
-  datePickerTests,
-  sidenavTests,
-  zagInLayoutTests,
-} from './components'
+// Components — only DatePicker is still Zag; all former Zag components
+// (Checkbox/Switch/Slider/Dialog/Tooltip/Tabs/RadioGroup/SideNav/Select) are
+// now Pure Mirror templates and covered by the DSL component-system tests.
+import { selectTests, datePickerTests } from './components'
 
 // Pure Mirror Select (new)
 import { pureSelectTests } from './pure-select.test'
@@ -760,22 +749,8 @@ export {
 // Compiler (original)
 export { allCompilerTests, primitiveTests, layoutTests, stylingTests }
 
-// Zag Components
-export {
-  allZagTests,
-  checkboxTests,
-  switchTests,
-  sliderTests,
-  selectTests,
-  pureSelectTests,
-  radioGroupTests,
-  dialogTests,
-  tooltipTests,
-  tabsTests,
-  datePickerTests,
-  sidenavTests,
-  zagInLayoutTests,
-}
+// Components (DatePicker is still Zag; Select uses Pure Mirror + drag-and-verify suite)
+export { selectTests, pureSelectTests, datePickerTests }
 
 // Interactions
 export {
@@ -1258,7 +1233,8 @@ export const allTests: TestCase[] = [
   ...allPrimitivesTests,
   ...allLayoutTests,
   ...allStylingTests,
-  ...allZagTests,
+  ...selectTests,
+  ...datePickerTests,
   ...pureSelectTests,
   ...allInteractionTests,
   ...allLayoutShortcutTests,
@@ -1393,20 +1369,10 @@ export const testCounts: Record<string, number> = {
   'styling.extended.perSideBorder': perSideBorderTests.length,
   'styling.extended.shadowValidation': shadowValidationTests.length,
 
-  // === Zag Components ===
-  zag: allZagTests.length,
-  'zag.checkbox': checkboxTests.length,
-  'zag.switch': switchTests.length,
-  'zag.slider': sliderTests.length,
-  'zag.select': selectTests.length,
-  'zag.radioGroup': radioGroupTests.length,
-  'zag.dialog': dialogTests.length,
-  'zag.tooltip': tooltipTests.length,
-  'zag.tabs': tabsTests.length,
-  'zag.datePicker': datePickerTests.length,
-  'zag.sidenav': sidenavTests.length,
-  'zag.inLayout': zagInLayoutTests.length,
-  'zag.pureSelect': pureSelectTests.length,
+  // === Components ===
+  'components.select': selectTests.length,
+  'components.pureSelect': pureSelectTests.length,
+  'components.datePicker': datePickerTests.length,
 
   // === Interactions ===
   interactions: allInteractionTests.length,
@@ -2465,20 +2431,10 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'styling.extended.perSideBorder': perSideBorderTests,
     'styling.extended.shadowValidation': shadowValidationTests,
 
-    // === Zag Components ===
-    zag: allZagTests,
-    'zag.checkbox': checkboxTests,
-    'zag.switch': switchTests,
-    'zag.slider': sliderTests,
-    'zag.select': selectTests,
-    'zag.radioGroup': radioGroupTests,
-    'zag.dialog': dialogTests,
-    'zag.tooltip': tooltipTests,
-    'zag.tabs': tabsTests,
-    'zag.datePicker': datePickerTests,
-    'zag.sidenav': sidenavTests,
-    'zag.inLayout': zagInLayoutTests,
-    'zag.pureSelect': pureSelectTests,
+    // === Components ===
+    'components.select': selectTests,
+    'components.pureSelect': pureSelectTests,
+    'components.datePicker': datePickerTests,
 
     // === Interactions ===
     interactions: allInteractionTests,
@@ -3501,8 +3457,11 @@ export async function runSingleTest(testName: string): Promise<TestSuiteResult> 
       console.log('   (no matches)')
     }
     return {
+      name: testName,
       passed: 0,
       failed: 1,
+      skipped: 0,
+      duration: 0,
       results: [{ name: testName, passed: false, duration: 0, assertions: [] }],
     }
   }

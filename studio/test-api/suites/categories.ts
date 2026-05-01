@@ -34,29 +34,13 @@ import { allTransformTests } from './transforms'
 // States
 import { allStateTests } from './states'
 
-// Components (Pure Mirror UI Patterns)
+// Components (Pure Mirror UI Patterns + DatePicker)
 import {
-  checkboxTests,
-  switchTests,
-  sliderTests,
   selectTests,
-  radioGroupTests,
-  dialogTests,
-  tooltipTests,
-  tabsTests,
   datePickerTests,
-  sidenavTests,
-  zagInLayoutTests,
-  allZagDragTests,
-  allZagResizeHandleTests,
-  allTabsDropTests,
   allAccordionTests,
   allAccordionDropTests,
-  // Panel drag tests for all components
   allPanelDragTests,
-  // Keyboard tests require headed browser (real window focus)
-  allZagKeyboardTests,
-  // Component preview styling tests
   componentPreviewStylingTests,
   // DSL component-system tests (definition, inheritance, slots, variants, states)
   allComponentTests,
@@ -183,23 +167,13 @@ export const visualsTests: TestCase[] = [...allAnimationTests, ...allTransformTe
 export const statesTests: TestCase[] = [...allStateTests]
 
 /**
- * 6. COMPONENTS - Pure Mirror UI patterns (checkbox, switch, dialog, tabs, etc.)
+ * 6. COMPONENTS - Pure Mirror UI patterns + DatePicker (the only remaining
+ * Zag component). Former Zag components (checkbox/switch/slider/dialog/etc.)
+ * are now Pure Mirror templates and tested via the DSL component-system tests.
  */
 export const componentsTests: TestCase[] = [
-  ...checkboxTests,
-  ...switchTests,
-  ...sliderTests,
   ...selectTests,
-  ...radioGroupTests,
-  ...dialogTests,
-  ...tooltipTests,
-  ...tabsTests,
   ...datePickerTests,
-  ...sidenavTests,
-  ...zagInLayoutTests,
-  ...allZagDragTests,
-  ...allZagResizeHandleTests,
-  ...allTabsDropTests,
   ...allAccordionTests,
   ...allAccordionDropTests,
   ...allPanelDragTests,
@@ -345,7 +319,7 @@ export const stressAndIntegrationTests: TestCase[] = [
  *
  * Run with: npm run test:browser -- --headed --category=headed
  */
-export const headedOnlyTests: TestCase[] = [...allZagKeyboardTests]
+export const headedOnlyTests: TestCase[] = []
 
 // =============================================================================
 // Category Registry
