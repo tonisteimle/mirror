@@ -16,7 +16,8 @@
  *        docs/concepts/llm-edit-flow-plan.md (T3.5)
  */
 
-import type { EditorView } from '@codemirror/view'
+import { EditorView } from '@codemirror/view'
+import type { Extension } from '@codemirror/state'
 import { ghostDiffField, setGhostDiff, clearGhostDiffEffect } from './ghost-diff'
 import { setEditStatus, hideEditStatus } from './edit-status-indicator'
 import {
@@ -49,6 +50,12 @@ export interface EditHandlerHandlers {
   openPromptField: (view: EditorView) => boolean
   acceptGhost: (view: EditorView) => boolean
   dismissGhost: (view: EditorView) => boolean
+  /**
+   * Editor extension that hides the status indicator when the ghost
+   * auto-discards due to a direct edit (docChanged → ghostDiffField
+   * cleared). Wire alongside `ghostDiffExtension()` and `llmEditKeymap`.
+   */
+  ghostDiscardOnEditExtension: Extension
 }
 
 export function createEditHandler(config: EditHandlerConfig): EditHandlerHandlers {
@@ -167,6 +174,24 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
       hideEditStatus()
       return true
     },
+
+    ghostDiscardOnEditExtension: EditorView.updateListener.of(update => {
+      if (!update.docChanged) return
+      // Distinguish auto-discard (typing while ghost active) from
+      // explicit accept/dismiss (which dispatch clearGhostDiffEffect
+      // alongside the change). When the user typed, no clear effect
+      // is in the transaction — the StateField cleared the ghost on
+      // its own.
+      const hadClearEffect = update.transactions.some(t =>
+        t.effects.some(e => e.is(clearGhostDiffEffect))
+      )
+      if (hadClearEffect) return
+      const wasActive = update.startState.field(ghostDiffField).active
+      const isActive = update.state.field(ghostDiffField).active
+      if (wasActive && !isActive) {
+        hideEditStatus()
+      }
+    }),
   }
 }
 

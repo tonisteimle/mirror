@@ -66,6 +66,11 @@ export const ghostDiffField = StateField.define<GhostDiffState>({
         return INITIAL_STATE
       }
     }
+    // Auto-discard: any direct edit while ghost is active wipes the
+    // ghost. The user already moved on — keep the doc, drop the
+    // proposal. Side-effects (status cleanup, toast) are wired by
+    // `editHandler.ghostDiscardOnEditExtension`.
+    if (tr.docChanged && state.active) return INITIAL_STATE
     return state
   },
 })

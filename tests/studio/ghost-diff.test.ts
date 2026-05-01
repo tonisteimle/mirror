@@ -66,7 +66,7 @@ describe('GhostDiff — StateField', () => {
     expect(ghost.newSource).toBe('')
   })
 
-  it('preserves state across unrelated transactions', () => {
+  it('auto-discards on a direct doc edit while ghost is active (T4.4)', () => {
     let s = stateFor('Frame gap 12')
     s = s.update({
       effects: setGhostDiffEffect.of({
@@ -74,13 +74,49 @@ describe('GhostDiff — StateField', () => {
         newSource: 'Frame gap 16',
       }),
     }).state
-    // Plain doc-changing transaction — no ghost effect.
+    expect(s.field(ghostDiffField).active).toBe(true)
+    // Plain doc-changing transaction — no ghost effect. The user typed.
     s = s.update({
       changes: { from: 0, to: 0, insert: 'X' },
     }).state
     const ghost = s.field(ghostDiffField)
+    expect(ghost.active).toBe(false)
+    expect(ghost.baseSource).toBe('')
+    expect(ghost.newSource).toBe('')
+  })
+
+  it('preserves state across unrelated transactions that do NOT change the doc', () => {
+    let s = stateFor('Frame gap 12')
+    s = s.update({
+      effects: setGhostDiffEffect.of({
+        baseSource: 'Frame gap 12',
+        newSource: 'Frame gap 16',
+      }),
+    }).state
+    // Selection-only transaction — no docChanged. Ghost survives.
+    s = s.update({
+      selection: { anchor: 0 },
+    }).state
+    const ghost = s.field(ghostDiffField)
     expect(ghost.active).toBe(true)
     expect(ghost.newSource).toBe('Frame gap 16')
+  })
+
+  it('does not auto-discard when the doc change is the accept (carries clearGhostDiffEffect)', () => {
+    let s = stateFor('Frame gap 12')
+    s = s.update({
+      effects: setGhostDiffEffect.of({
+        baseSource: 'Frame gap 12',
+        newSource: 'Frame gap 16',
+      }),
+    }).state
+    // accept = doc replace + clearGhostDiffEffect in the same dispatch.
+    s = s.update({
+      changes: { from: 0, to: s.doc.length, insert: 'Frame gap 16' },
+      effects: clearGhostDiffEffect.of(undefined),
+    }).state
+    const ghost = s.field(ghostDiffField)
+    expect(ghost.active).toBe(false)
   })
 })
 

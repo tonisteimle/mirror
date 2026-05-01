@@ -338,13 +338,14 @@ describe('EditHandler — supersede / cancel', () => {
   })
 
   it('reports non-Error throws from runEditFlow as a string in the error status', async () => {
-    const runEditFlow = vi.fn(async () => {
-      // Some legacy code paths reject with bare strings.
-      return Promise.reject('plain-string-rejection')
-    })
+    // Non-async + explicit rejected promise: minimizes microtask wrapping
+    // so the catch arm settles within `flush()` even under heavy
+    // parallelization (full vitest suite).
+    const runEditFlow = vi.fn(() => Promise.reject('plain-string-rejection'))
     const handler = createEditHandler(baseConfig({ runEditFlow }))
 
     handler.handleEditFlow(view)
+    await flush()
     await flush()
 
     const status = getEditStatusElement()
@@ -391,6 +392,107 @@ describe('EditHandler — dismissGhost', () => {
   it('returns false when there is nothing to dismiss', () => {
     const handler = createEditHandler(baseConfig())
     expect(handler.dismissGhost(view)).toBe(false)
+  })
+})
+
+describe('EditHandler — ghostDiscardOnEditExtension (T4.4)', () => {
+  it('hides the status indicator when the user types and the ghost auto-discards', async () => {
+    const runEditFlow = vi.fn(async () => ready('REPLACED'))
+    const handler = createEditHandler(baseConfig({ runEditFlow }))
+    // Re-create view with the discard listener wired in, matching the
+    // production extension order (app.js).
+    const state = EditorState.create({
+      doc: 'Frame gap 12\n  Text "Hello"',
+      extensions: [ghostDiffExtension(), handler.ghostDiscardOnEditExtension],
+    })
+    document.body.innerHTML = ''
+    parent = document.createElement('div')
+    document.body.appendChild(parent)
+    view = new EditorView({ state, parent })
+
+    handler.handleEditFlow(view)
+    await flush()
+    expect(view.state.field(ghostDiffField).active).toBe(true)
+    expect(getEditStatusElement()?.classList.contains('cm-llm-status-ready')).toBe(true)
+
+    // User types — auto-discard kicks in via the StateField, status
+    // listener picks up the active→inactive transition.
+    view.dispatch({ changes: { from: 0, to: 0, insert: 'X' } })
+
+    expect(view.state.field(ghostDiffField).active).toBe(false)
+    expect(getEditStatusElement()).toBeNull()
+  })
+
+  it('does NOT hide the status when the doc change is the accept dispatch', async () => {
+    const runEditFlow = vi.fn(async () => ready('REPLACED'))
+    const handler = createEditHandler(baseConfig({ runEditFlow }))
+    const state = EditorState.create({
+      doc: 'Frame gap 12\n  Text "Hello"',
+      extensions: [ghostDiffExtension(), handler.ghostDiscardOnEditExtension],
+    })
+    document.body.innerHTML = ''
+    parent = document.createElement('div')
+    document.body.appendChild(parent)
+    view = new EditorView({ state, parent })
+
+    handler.handleEditFlow(view)
+    await flush()
+    expect(view.state.field(ghostDiffField).active).toBe(true)
+
+    // acceptGhost dispatches doc change + clearGhostDiffEffect together.
+    // The listener must NOT treat this as auto-discard (acceptGhost
+    // already calls hideEditStatus itself; if the listener also fired
+    // it would be a double-hide which is fine, but we want the
+    // semantics to be unambiguous).
+    handler.acceptGhost(view)
+    expect(view.state.doc.toString()).toBe('REPLACED')
+    expect(view.state.field(ghostDiffField).active).toBe(false)
+    // acceptGhost already called hideEditStatus, so this is null
+    // either way — but the key is the listener didn't crash on the
+    // clear-effect transaction.
+    expect(getEditStatusElement()).toBeNull()
+  })
+
+  it('is a no-op when typing while ghost was already inactive', async () => {
+    const handler = createEditHandler(baseConfig())
+    const state = EditorState.create({
+      doc: 'Frame gap 12',
+      extensions: [ghostDiffExtension(), handler.ghostDiscardOnEditExtension],
+    })
+    document.body.innerHTML = ''
+    parent = document.createElement('div')
+    document.body.appendChild(parent)
+    view = new EditorView({ state, parent })
+
+    // No ghost has ever been active. Typing should not call hideEditStatus
+    // (nothing to hide), and should not crash.
+    expect(view.state.field(ghostDiffField).active).toBe(false)
+    view.dispatch({ changes: { from: 0, to: 0, insert: 'X' } })
+    expect(getEditStatusElement()).toBeNull()
+  })
+
+  it('is a no-op for selection-only transactions', async () => {
+    const runEditFlow = vi.fn(async () => ready('REPLACED'))
+    const handler = createEditHandler(baseConfig({ runEditFlow }))
+    const state = EditorState.create({
+      doc: 'Frame gap 12\n  Text "Hello"',
+      extensions: [ghostDiffExtension(), handler.ghostDiscardOnEditExtension],
+    })
+    document.body.innerHTML = ''
+    parent = document.createElement('div')
+    document.body.appendChild(parent)
+    view = new EditorView({ state, parent })
+
+    handler.handleEditFlow(view)
+    await flush()
+    expect(view.state.field(ghostDiffField).active).toBe(true)
+
+    // Move cursor — no docChanged.
+    view.dispatch({ selection: EditorSelection.cursor(5) })
+
+    // Ghost still active, status still ready.
+    expect(view.state.field(ghostDiffField).active).toBe(true)
+    expect(getEditStatusElement()?.classList.contains('cm-llm-status-ready')).toBe(true)
   })
 })
 

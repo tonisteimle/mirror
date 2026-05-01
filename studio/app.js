@@ -1525,6 +1525,7 @@ editor = new EditorView({
       indentGuidesExtension(), // Visual indent guides (vertical lines)
       smartPasteExtension(), // Auto-adjust indentation on paste
       ghostDiffExtension(), // LLM-Edit-Flow: red/green diff overlay
+      editHandler.ghostDiscardOnEditExtension, // Auto-discard ghost on direct edit
       keymap.of(llmEditKeymap(editHandler)), // Cmd+Enter / Cmd+Shift+Enter / Tab / Esc
       mirrorHighlight,
       autocompletion({
