@@ -79,14 +79,14 @@ import {
   // Drop Service (Clean Code module)
   handleStudioDropNew,
   // Zag Helpers (Clean Code module)
-  isZagComponent as isZagComponentModule,
-  findExistingZagDefinition as findExistingZagDefinitionModule,
-  generateZagComponentName as generateZagComponentNameModule,
-  generateZagDefinitionCode as generateZagDefinitionCodeModule,
-  generateZagInstanceCode as generateZagInstanceCodeModule,
-  addZagDefinitionToCode as addZagDefinitionToCodeModule,
-  findOrCreateComponentsFile as findOrCreateComponentsFileModule,
-  addZagDefinitionToComponentsFile as addZagDefinitionToComponentsFileModule,
+  isZagComponent,
+  findExistingZagDefinition,
+  generateZagComponentName,
+  generateZagDefinitionCode,
+  generateZagInstanceCode,
+  addZagDefinitionToCode,
+  findOrCreateComponentsFile,
+  addZagDefinitionToComponentsFile,
   // File Types (Clean Code module)
   detectFileType as detectFileTypeModule,
   getFileIcon as getFileIconModule,
@@ -971,40 +971,8 @@ function getZagDeps() {
   }
 }
 
-// Zag wrapper functions (use Clean Code module with dependencies)
-function isZagComponent(children) {
-  return isZagComponentModule(children)
-}
-
-function findExistingZagDefinition(zagComponentName) {
-  return findExistingZagDefinitionModule(zagComponentName, getZagDeps())
-}
-
-function generateZagComponentName(zagComponentName) {
-  return generateZagComponentNameModule(zagComponentName, getZagDeps())
-}
-
-function generateZagDefinitionCode(definitionName, zagComponentName, children) {
-  return generateZagDefinitionCodeModule(definitionName, zagComponentName, children)
-}
-
-function generateZagInstanceCode(instanceName, properties, children, indent = '') {
-  return generateZagInstanceCodeModule(instanceName, properties, children, indent)
-}
-
-function addZagDefinitionToCode(definitionCode) {
-  return addZagDefinitionToCodeModule(definitionCode, getZagDeps())
-}
-
-async function findOrCreateComponentsFile() {
-  return findOrCreateComponentsFileModule(getZagDeps())
-}
-
-async function addZagDefinitionToComponentsFile(definitionCode, filePath) {
-  return addZagDefinitionToComponentsFileModule(definitionCode, filePath, getZagDeps())
-}
-
 function getDropGlobals() {
+  const zagDeps = getZagDeps()
   return {
     studioCodeModifier,
     studioRobustModifier,
@@ -1021,14 +989,15 @@ function getDropGlobals() {
     compile,
     debouncedSave,
     isComponentsFile,
-    findExistingZagDefinition,
-    generateZagComponentName,
+    isZagComponent,
+    findExistingZagDefinition: name => findExistingZagDefinition(name, zagDeps),
+    generateZagComponentName: name => generateZagComponentName(name, zagDeps),
     generateZagDefinitionCode,
     generateZagInstanceCode,
-    addZagDefinitionToCode,
-    findOrCreateComponentsFile,
-    addZagDefinitionToComponentsFile,
-    isZagComponent,
+    addZagDefinitionToCode: code => addZagDefinitionToCode(code, zagDeps),
+    findOrCreateComponentsFile: () => findOrCreateComponentsFile(zagDeps),
+    addZagDefinitionToComponentsFile: (code, file) =>
+      addZagDefinitionToComponentsFile(code, file, zagDeps),
   }
 }
 
