@@ -127,6 +127,8 @@ import {
   // Full project source (data + tokens + components + layouts) for
   // cross-file token/component lookup
   collectAllProjectSource,
+  // Tokens-only source collector (tokens + data, with localStorage fallback)
+  collectTokensSource,
   // Draggable preview elements manager (binds drag handlers to [data-mirror-id])
   createDraggableElementsManager,
   // Code-modifier classes — were previously read off MirrorLang (compiler
@@ -135,7 +137,7 @@ import {
   CodeModifier,
   PropertyExtractor,
   createRobustModifier,
-} from './dist/index.js?v=157'
+} from './dist/index.js?v=158'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -1316,38 +1318,10 @@ function compile(code) {
 // Access via getTokenRenderer() and getComponentRenderer()
 
 function getTokensSource() {
-  // Only get tokens and data files (not layouts or components)
-  // Read from both active files cache AND localStorage to ensure all project files are included
-  let tokensSource = ''
-  const processedFiles = new Set()
-
-  // First, check active files cache
-  for (const filename of Object.keys(files)) {
-    const type = getFileType(filename)
-    if (type === 'tokens' || type === 'data') {
-      tokensSource += files[filename] + '\n'
-      processedFiles.add(filename)
-    }
-  }
-
-  // Also check localStorage for files not yet loaded into active cache
-  try {
-    const storedFiles = localStorage.getItem('mirror-files')
-    if (storedFiles) {
-      const allFiles = JSON.parse(storedFiles)
-      for (const filename of Object.keys(allFiles)) {
-        if (processedFiles.has(filename)) continue
-        const type = getFileType(filename)
-        if (type === 'tokens' || type === 'data') {
-          tokensSource += allFiles[filename] + '\n'
-        }
-      }
-    }
-  } catch (e) {
-    console.warn('[getTokensSource] Failed to read from localStorage:', e)
-  }
-
-  return tokensSource
+  return collectTokensSource({
+    getInMemoryFiles: () => files,
+    getFileType,
+  })
 }
 
 // ============================================
