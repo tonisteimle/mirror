@@ -118,6 +118,8 @@ import {
   setupPropertyPanelEventListeners,
   // Mirror DSL syntax highlight ViewPlugin
   mirrorHighlight,
+  // Prelude collector (data + tokens + components → joined string)
+  collectPrelude,
   // Code-modifier classes — were previously read off MirrorLang (compiler
   // bundle), but moved to studio/code-modifier in commit ae4f6c41 and no
   // longer re-exported by the compiler. Use the studio-bundle versions.
@@ -962,75 +964,12 @@ function autoCreateReferencedFiles(code) {
 // Get all token and component files as prelude code
 // This ensures tokens and components are available when compiling layouts
 function getPreludeCode(excludeFile) {
-  const sections = []
-
-  // Two file caches can hold project content: window.desktopFiles
-  // (synced to disk in Tauri mode) and the in-memory `files` global
-  // (used by the test API and browser-only flows). Merge both so the
-  // prelude always reflects the union — without this, files added
-  // via panel.files.create that didn't make it into the desktop cache
-  // would be invisible to compilation.
-  const desktopFiles = window.desktopFiles?.getFiles?.() || {}
-  const allFiles = { ...files, ...desktopFiles }
-
-  // Collect files by type. Order matches the CLI's project-mode pass
-  // (compiler/cli.ts): data → tokens → components → layout. Data files
-  // are inlined as Mirror DSL into the prelude — Mirror's grammar
-  // accepts the same `key: value` indentation form as YAML for top-level
-  // data declarations, and inlining lets the compiler register the
-  // collection in __mirrorData via the same path as inline `tasks: ...`
-  // declarations would. (The separate generateYAMLDataInjection() pass
-  // also runs but writes to a wrong key when the YAML has an outer
-  // wrapper — keeping the inline path makes both single-file scenarios
-  // and YAML-file scenarios produce identical runtime data shapes.)
-  const dataFiles = []
-  const tokenFiles = []
-  const componentFiles = []
-
-  for (const filename of Object.keys(allFiles)) {
-    if (filename === excludeFile) continue
-
-    const fileType = getFileType(filename)
-    if (fileType === 'data') {
-      dataFiles.push(filename)
-    } else if (fileType === 'tokens') {
-      tokenFiles.push(filename)
-    } else if (fileType === 'component') {
-      componentFiles.push(filename)
-    }
-  }
-
-  // Data first. Inline the data file content WITHOUT a `// === ${filename} ===`
-  // header — the header would break Mirror's data-block parser when an
-  // indented data declaration follows directly. Tokens and components
-  // get the header (their parsers handle it).
-  dataFiles.sort()
-  for (const filename of dataFiles) {
-    const content = allFiles[filename]
-    if (content && content.trim()) {
-      sections.push(content)
-    }
-  }
-
-  // Tokens
-  tokenFiles.sort()
-  for (const filename of tokenFiles) {
-    const content = allFiles[filename]
-    if (content && content.trim()) {
-      sections.push(`// === ${filename} ===\n${content}`)
-    }
-  }
-
-  // Components
-  componentFiles.sort()
-  for (const filename of componentFiles) {
-    const content = allFiles[filename]
-    if (content && content.trim()) {
-      sections.push(`// === ${filename} ===\n${content}`)
-    }
-  }
-
-  return sections.join('\n\n')
+  return collectPrelude({
+    excludeFile,
+    getInMemoryFiles: () => files,
+    getDesktopFiles: () => window.desktopFiles?.getFiles?.(),
+    getFileType,
+  })
 }
 
 // Compile and render
