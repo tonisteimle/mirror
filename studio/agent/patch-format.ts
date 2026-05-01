@@ -18,7 +18,7 @@
  * kann erfolgreich geparste Patches anwenden _und_ die Errors als
  * Retry-Hint ans LLM zurückgeben.
  *
- * Siehe: docs/concepts/llm-edit-flow.md (Patch-Format)
+ * Siehe: docs/archive/concepts/llm-edit-flow.md (Patch-Format)
  */
 
 export interface Patch {

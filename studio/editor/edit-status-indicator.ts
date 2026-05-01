@@ -15,8 +15,8 @@
  * Position wird vom Caller über CSS gesteuert; das Modul rendert nur
  * den Inhalt und appended ans `document.body`.
  *
- * Siehe: docs/concepts/llm-edit-flow.md (Status-Feedback),
- *        docs/concepts/llm-edit-flow-plan.md (T3.4)
+ * Siehe: docs/archive/concepts/llm-edit-flow.md (Status-Feedback),
+ *        docs/archive/concepts/llm-edit-flow-plan.md (T3.4)
  */
 
 export type EditStatus = 'idle' | 'thinking' | 'ready' | 'error' | 'warning'

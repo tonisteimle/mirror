@@ -5,7 +5,7 @@
  * same styling pattern. Used by the `::` extract triggers to find
  * other instances in the project that should be replaced too.
  *
- * Rule (from docs/concepts/batch-replace-on-extract.md):
+ * Rule (from docs/archive/concepts/batch-replace-on-extract.md):
  *   Two lines match the same pattern when they are byte-identical
  *   *except* for quoted strings (which represent per-instance content
  *   and may legitimately differ between instances).

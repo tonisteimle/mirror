@@ -11,7 +11,7 @@
  * 4. Edge cases (EDGE_CASE_TESTS)
  * 5. Pairwise generated combinations
  *
- * Reference: docs/concepts/layout-css-matrix.md
+ * Reference: docs/archive/concepts/layout-css-matrix.md
  */
 
 import { describe, it, expect } from 'vitest'
@@ -35,10 +35,7 @@ import {
   lookupExpectedCSS,
 } from './layout-matrix-definition'
 
-import {
-  generateStrategicCombinations,
-  getCoverageStats,
-} from './pairwise-generator'
+import { generateStrategicCombinations, getCoverageStats } from './pairwise-generator'
 
 // =============================================================================
 // TEST HELPERS
@@ -119,7 +116,9 @@ describe('Layout Matrix: Direct CSS Mappings', () => {
       const styles = getRootStyles(mirrorCode)
 
       for (const [prop, expectedValue] of Object.entries(expectedProps)) {
-        expect(styles[prop], `${mirrorCode}: expected ${prop} to be "${expectedValue}"`).toBe(expectedValue)
+        expect(styles[prop], `${mirrorCode}: expected ${prop} to be "${expectedValue}"`).toBe(
+          expectedValue
+        )
       }
     })
   }
@@ -134,15 +133,16 @@ describe('Layout Matrix: Parent-Child Context', () => {
     const { parent, child, expectedCSS, description } = testCase
 
     // Skip tests that require IR-level checking (grid, stacked, directional positioning)
-    const needsIR = parent.includes('grid') ||
-                    parent.includes('stacked') ||
-                    child.includes('x ') ||
-                    child.includes('y ') ||
-                    child.includes('bottom') ||
-                    child.includes('top') ||
-                    child.includes('left') ||
-                    child.includes('right') ||
-                    (parent.includes('stacked') && child.includes('center'))
+    const needsIR =
+      parent.includes('grid') ||
+      parent.includes('stacked') ||
+      child.includes('x ') ||
+      child.includes('y ') ||
+      child.includes('bottom') ||
+      child.includes('top') ||
+      child.includes('left') ||
+      child.includes('right') ||
+      (parent.includes('stacked') && child.includes('center'))
 
     if (needsIR) {
       it(description || `${parent} > ${child}`, () => {
@@ -160,7 +160,10 @@ ${parent}
 
         for (const [prop, expectedValue] of Object.entries(expectedCSS)) {
           const actualValue = getIRStyle(childNode, prop)
-          expect(actualValue, `Child ${prop} should be "${expectedValue}" but got "${actualValue}"`).toBe(expectedValue)
+          expect(
+            actualValue,
+            `Child ${prop} should be "${expectedValue}" but got "${actualValue}"`
+          ).toBe(expectedValue)
         }
       })
     } else {
@@ -173,7 +176,9 @@ ${parent}
         const childStyles = getStyleAt(code, 1)
 
         for (const [prop, expectedValue] of Object.entries(expectedCSS)) {
-          expect(childStyles[prop], `Child ${prop} should be "${expectedValue}"`).toBe(expectedValue)
+          expect(childStyles[prop], `Child ${prop} should be "${expectedValue}"`).toBe(
+            expectedValue
+          )
         }
       })
     }
@@ -351,7 +356,9 @@ describe('Layout Matrix: Strategic Combinations', () => {
 
   // Log coverage stats
   const stats = getCoverageStats(combinations)
-  console.log(`Coverage: ${(stats.coverage * 100).toFixed(1)}% (${stats.coveredPairs}/${stats.totalPairs} pairs)`)
+  console.log(
+    `Coverage: ${(stats.coverage * 100).toFixed(1)}% (${stats.coveredPairs}/${stats.totalPairs} pairs)`
+  )
   console.log(`Test count: ${stats.testCount}`)
 
   for (const combo of combinations) {
@@ -517,9 +524,12 @@ describe('Layout Matrix: Sizing (Deep)', () => {
   })
 
   it('w full as child in vertical parent → width 100% + stretch (cross-axis)', () => {
-    const styles = getStyleAt(`
+    const styles = getStyleAt(
+      `
 Frame w 400
-  Frame w full, bg red`, 1)
+  Frame w full, bg red`,
+      1
+    )
     // Cross-axis w full needs BOTH width: 100% AND align-self: stretch
     expect(styles['width']).toBe('100%')
     expect(styles['min-width']).toBe('0')
@@ -527,17 +537,23 @@ Frame w 400
   })
 
   it('h full as child → flex (main-axis)', () => {
-    const styles = getStyleAt(`
+    const styles = getStyleAt(
+      `
 Frame h 400
-  Frame h full, bg red`, 1)
+  Frame h full, bg red`,
+      1
+    )
     expect(styles['flex']).toBe('1 1 0%')
     expect(styles['min-height']).toBe('0')
   })
 
   it('fixed width child gets flex-shrink: 0', () => {
-    const styles = getStyleAt(`
+    const styles = getStyleAt(
+      `
 Frame hor
-  Frame w 100, bg red`, 1)
+  Frame w 100, bg red`,
+      1
+    )
     expect(styles['width']).toBe('100px')
     expect(styles['flex-shrink']).toBe('0')
   })
@@ -551,33 +567,41 @@ describe('Layout Matrix: Grid (Deep)', () => {
   })
 
   it('grid child w 4 → grid-column: span 4', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame grid 12
-  Frame w 4`))
+  Frame w 4`)
+    )
     const child = ir.nodes[0].children[0]
     expect(hasIRStyle(child, 'grid-column', 'span 4')).toBe(true)
   })
 
   it('grid child h 2 → grid-row: span 2', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame grid 12
-  Frame h 2`))
+  Frame h 2`)
+    )
     const child = ir.nodes[0].children[0]
     expect(hasIRStyle(child, 'grid-row', 'span 2')).toBe(true)
   })
 
   it('grid child x 2 → grid-column-start: 2', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame grid 12
-  Frame x 2`))
+  Frame x 2`)
+    )
     const child = ir.nodes[0].children[0]
     expect(hasIRStyle(child, 'grid-column-start', '2')).toBe(true)
   })
 
   it('grid child y 3 → grid-row-start: 3', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame grid 12
-  Frame y 3`))
+  Frame y 3`)
+    )
     const child = ir.nodes[0].children[0]
     expect(hasIRStyle(child, 'grid-row-start', '3')).toBe(true)
   })
@@ -601,9 +625,11 @@ describe('Layout Matrix: Stacked (Deep)', () => {
   })
 
   it('child with x/y in stacked → position: absolute', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame stacked
-  Frame x 50, y 30`))
+  Frame x 50, y 30`)
+    )
     const child = ir.nodes[0].children[0]
     expect(hasIRStyle(child, 'position', 'absolute')).toBe(true)
     expect(hasIRStyle(child, 'left', '50px')).toBe(true)
@@ -611,18 +637,22 @@ Frame stacked
   })
 
   it('child with bottom in stacked → position: absolute, bottom: 0', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame stacked
-  Frame bottom`))
+  Frame bottom`)
+    )
     const child = ir.nodes[0].children[0]
     expect(hasIRStyle(child, 'position', 'absolute')).toBe(true)
     expect(hasIRStyle(child, 'bottom', '0')).toBe(true)
   })
 
   it('child with center in stacked → centered with transform', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame stacked
-  Frame center`))
+  Frame center`)
+    )
     const child = ir.nodes[0].children[0]
     expect(hasIRStyle(child, 'position', 'absolute')).toBe(true)
     expect(hasIRStyle(child, 'top', '50%')).toBe(true)
@@ -631,9 +661,11 @@ Frame stacked
   })
 
   it('child with w full, h full in stacked → 100%', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame stacked
-  Frame w full, h full`))
+  Frame w full, h full`)
+    )
     const child = ir.nodes[0].children[0]
     expect(hasIRStyle(child, 'position', 'absolute')).toBe(true)
     expect(hasIRStyle(child, 'width', '100%')).toBe(true)
@@ -641,9 +673,11 @@ Frame stacked
   })
 
   it('z property sets z-index', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame stacked
-  Frame x 100, y 50, z 10`))
+  Frame x 100, y 50, z 10`)
+    )
     const child = ir.nodes[0].children[0]
     expect(hasIRStyle(child, 'z-index', '10')).toBe(true)
   })
@@ -699,11 +733,13 @@ Frame w 400
   })
 
   it('12-column grid with positioned items', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame grid 12, gap 16
   Frame x 1, w 3
   Frame x 4, w 6
-  Frame x 10, w 3`))
+  Frame x 10, w 3`)
+    )
 
     const container = ir.nodes[0]
     expect(hasIRStyle(container, 'display', 'grid')).toBe(true)

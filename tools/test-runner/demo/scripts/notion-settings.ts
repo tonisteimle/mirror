@@ -16,7 +16,7 @@
  * Ziel: ~70% der Studio-Surfaces in einer plausiblen Story berühren —
  * jeder Schritt ist motiviert, keine Feature-Parade.
  *
- * Spec: docs/concepts/realistic-demo-feature-inventory.md
+ * Spec: docs/archive/concepts/realistic-demo-feature-inventory.md
  *
  * Ausführung:
  *   npm run studio                                                  # Server in Terminal 1

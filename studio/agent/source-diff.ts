@@ -13,7 +13,7 @@
  * Wrapping-Schicht; eigene Impl ist transparenter und vermeidet eine
  * neue Bundle-Dep für eine ohnehin gewrappte Funktion.
  *
- * Siehe: docs/concepts/llm-edit-flow.md (Diff-Ghost), llm-edit-flow-plan.md (T1.4)
+ * Siehe: docs/archive/concepts/llm-edit-flow.md (Diff-Ghost), llm-edit-flow-plan.md (T1.4)
  */
 
 export interface DiffHunk {

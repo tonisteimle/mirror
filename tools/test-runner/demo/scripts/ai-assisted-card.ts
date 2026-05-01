@@ -4,7 +4,7 @@
  * User schreibt einen Prompt mit Mirror's `--`-Marker, AI generiert Code,
  * User verfeinert das Ergebnis via Property-Panel + Inline-Edit.
  *
- * Spec: docs/concepts/ai-assisted-card-demo.md
+ * Spec: docs/archive/concepts/ai-assisted-card-demo.md
  *
  * Mock-Lauf:
  *   npx tsx tools/test.ts \

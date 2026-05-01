@@ -2,7 +2,7 @@
  * Each-Loop — Differential Testing (Schicht 4 der Test-Pyramide)
  *
  * Pinned support matrix per backend für Each-Loop-Sub-Features.
- * Documentation: docs/concepts/each-backend-support.md.
+ * Documentation: docs/archive/concepts/each-backend-support.md.
  */
 
 import { describe, it, expect } from 'vitest'

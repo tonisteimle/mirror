@@ -4,7 +4,7 @@
  * Mirror's Component-Definition-Pattern: components.com mit Card-Definition,
  * index.mir mit drei Card-Instanzen — Single-Source-of-Truth für die UI.
  *
- * Spec: docs/concepts/component-extraction-demo.md
+ * Spec: docs/archive/concepts/component-extraction-demo.md
  */
 
 import type { DemoScript } from '../types'

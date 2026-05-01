@@ -7,7 +7,7 @@
  * solange das Element die spezifizierte Farbe/Größe hat.
  *
  * Gegliedert nach Sub-Features (C1-C20) aus
- * docs/concepts/feature-testing-pyramid.md.
+ * docs/archive/concepts/feature-testing-pyramid.md.
  *
  * @vitest-environment jsdom
  */

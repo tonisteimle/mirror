@@ -198,7 +198,7 @@ Bei Änderungen an `studio/app.js` oder `studio/styles.css`:
 ## Konventionen
 
 - **Dateinamen**: Kleinbuchstaben mit Bindestrichen (`interaction-model.md`, nicht `INTERACTION-MODEL.md`)
-- **Konzeptdokumente**: In `docs/concepts/` ablegen
+- **Projekt-/Konzept-Dokumente**: Werden in `docs/archive/` archiviert. Aktive Doku ist auf wenige Produktdokumente reduziert (siehe `README.md`, `docs/MIRROR-TUTORIAL-FULL.md`, `docs/TEST-FRAMEWORK.md`, `docs/generated/`).
 
 ---
 
@@ -964,7 +964,7 @@ Icon "x", is #ef4444           Icon "x", ic #ef4444         // ic für Farbe, is
 > Mirror-DSL definiert (Frame/Slot/Icon/State) und kommen ohne
 > Zag-Runtime aus. Verwendung im Code (`Checkbox "Newsletter"`,
 > `Dialog`, `Select`, …) bleibt identisch; intern wird das Template
-> expandiert. Siehe `docs/concepts/pure-mirror-components.md`.
+> expandiert. Historische Details: `docs/archive/concepts/pure-mirror-components.md`.
 
 | Component  | Machine     | Slots                    | Description          |
 | ---------- | ----------- | ------------------------ | -------------------- |
@@ -1256,8 +1256,8 @@ npm run test:demos:headed   # Suite mit sichtbarem Browser
 - `--watch` — Re-run on file save
 
 **Volle User-Doc:** `tools/test-runner/demo/README.md`
-**Architektur/Roadmap:** `docs/concepts/demo-infrastructure.md`
-**Headed-Verification-Checkliste:** `docs/concepts/demo-headed-verification.md`
+**Architektur/Roadmap (archiviert):** `docs/archive/concepts/demo-infrastructure.md`
+**Headed-Verification-Checkliste (archiviert):** `docs/archive/concepts/demo-headed-verification.md`
 
 > ⚠️ **Headless validiert** Editor-Source und Computed-Style. **Cursor-
 > Animation, Pacing, Single-Cursor-Effekt, Highlights, Keystroke-Overlay**

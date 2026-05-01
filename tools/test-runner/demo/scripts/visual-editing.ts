@@ -4,8 +4,8 @@
  * Inkrementell aufgebaut: jeder Schritt wird einzeln verifiziert (alle
  * Pflicht-Validierungen grün) bevor der nächste dazukommt.
  *
- * Spec: docs/concepts/visual-editing-demo.md
- * Blueprint: docs/concepts/demo-blueprint.md
+ * Spec: docs/archive/concepts/visual-editing-demo.md
+ * Blueprint: docs/archive/concepts/demo-blueprint.md
  */
 
 import type { DemoScript } from '../types'

@@ -90,6 +90,12 @@ import {
   parseInlineProperties as parseInlinePropertiesExtracted,
   type InlinePropertiesCallbacks,
 } from './inline-property-parser'
+import {
+  parseInstanceBody as parseInstanceBodyExtracted,
+  parseComponentBody as parseComponentBodyExtracted,
+  type InstanceBodyCallbacks,
+  type ComponentBodyCallbacks,
+} from './body-parser'
 import { KEYWORD_TOKEN_TYPES } from './parser-context'
 
 /** Property value type - union of all possible values in Property.values (includes number[] for array props like slider defaultValue) */
@@ -1548,1121 +1554,204 @@ export class Parser {
   }
 
   private parseComponentBody(component: ComponentDefinition): void {
-    while (!this.check('DEDENT') && !this.isAtEnd()) {
-      this.skipNewlines()
-
-      if (this.check('DEDENT') || this.isAtEnd()) break
-
-      // Skip commas between properties
-      if (this.check('COMMA') || this.check('SEMICOLON')) {
-        this.advance()
-        continue
-      }
-
-      // Data binding: data Collection where condition
-      if (this.check('DATA')) {
-        const dataToken = this.advance()
-        const binding = this.parseDataBindingValues()
-        if (binding) {
-          // Data binding values have special structure (collection + optional filter)
-          const values: unknown[] = [binding.collection]
-          if (binding.filter) {
-            values.push({ filter: binding.filter })
-          }
-          component.properties.push({
-            type: 'Property',
-            name: 'data',
-            values: values as Property['values'],
-            line: dataToken.line,
-            column: dataToken.column,
-          })
-        }
-        continue
-      }
-
-      // Selection binding: selection $variable
-      if (this.check('SELECTION')) {
-        const varName = this.parseSelectionVar()
-        if (varName !== null) component.selection = varName
-        continue
-      }
-
-      // Bind: bind varName (or dot-path: bind user.email)
-      if (this.check('BIND')) {
-        const path = this.parseBindPath()
-        if (path !== null) component.bind = path
-        continue
-      }
-
-      // Route: route TargetComponent or route path/to/page
-      if (this.check('ROUTE')) {
-        const routePath = this.parseRouteClause()
-        if (routePath) component.route = routePath
-        continue
-      }
-
-      // Note: SYSTEM_STATES is imported from parser-helpers.ts
-      // It is derived from the schema (dsl.ts) to ensure consistency.
-
-      // Initial state keywords: closed, open, collapsed, expanded
-      // These set the component's initial state when used as standalone properties
-      const INITIAL_STATE_KEYWORDS = new Set(['closed', 'open', 'collapsed', 'expanded'])
-      if (this.check('IDENTIFIER') && INITIAL_STATE_KEYWORDS.has(this.current().value)) {
-        // Check that this is not followed by a colon (which would make it a state block)
-        if (!this.isStateBlockStart()) {
-          component.initialState = this.advance().value
-          continue
-        }
-      }
-
-      // Boolean properties (use module-level constant including position booleans)
-      const booleanProperties = ALL_BOOLEAN_PROPERTIES
-
-      // State block with trigger: selected onclick: or selected toggle onclick:
-      // Use isStateBlockStart() to detect complex state patterns
-      if (this.check('IDENTIFIER') && this.isStateBlockStart()) {
-        const stateToken = this.advance()
-
-        let modifier: 'exclusive' | 'toggle' | 'initial' | undefined
-        let trigger: string | undefined
-
-        // Check for modifier (exclusive, toggle, initial)
-        if (this.check('IDENTIFIER') && STATE_MODIFIERS.has(this.current().value)) {
-          modifier = this.advance().value as 'exclusive' | 'toggle' | 'initial'
-        }
-
-        // Check for trigger (event name like onclick, onhover, onkeydown)
-        if (this.check('IDENTIFIER') && EVENT_NAMES.has(this.current().value)) {
-          const eventToken = this.advance()
-          trigger = eventToken.value
-
-          // Check for key (for onkeydown, onkeyup)
-          if ((trigger === 'onkeydown' || trigger === 'onkeyup') && this.check('IDENTIFIER')) {
-            const keyToken = this.current()
-            if (KEYBOARD_KEYS.has(keyToken.value)) {
-              trigger += ' ' + this.advance().value
-            }
-          }
-        }
-
-        // Parse animation config BEFORE colon
-        let animation: StateAnimation | undefined
-        if (this.check('NUMBER')) {
-          const numToken = this.current()
-          const duration = parseDuration(numToken.value)
-          if (duration !== undefined) {
-            this.advance()
-            animation = { duration }
-            if (this.check('IDENTIFIER') && EASING_FUNCTIONS.has(this.current().value)) {
-              animation.easing = this.advance().value
-            }
-          }
-        }
-
-        this.advance() // consume colon
-
-        // Check for animation preset AFTER colon on same line
-        if (this.check('IDENTIFIER') && !this.check('NEWLINE') && !this.check('INDENT')) {
-          const presetToken = this.current()
-          if (ANIMATION_PRESETS.has(presetToken.value)) {
-            const preset = this.advance().value
-            if (!animation) {
-              animation = { preset }
-            } else {
-              animation.preset = preset
-            }
-          }
-        }
-
-        const state: State = {
-          type: 'State',
-          name: stateToken.value,
-          modifier,
-          trigger,
-          animation,
-          properties: [],
-          childOverrides: [],
-          line: stateToken.line,
-          column: stateToken.column,
-        }
-
-        // Parse inline state properties
-        this.parseInlineProperties(state.properties)
-
-        // Parse block properties, children, and child overrides (indented)
-        this.skipNewlines()
-        if (this.check('INDENT')) {
-          this.advance()
-          while (!this.check('DEDENT') && !this.isAtEnd()) {
-            this.skipNewlines()
-            if (this.check('DEDENT')) break
-
-            // Handle string content as Text child
-            if (this.check('STRING')) {
-              if (!state.children) state.children = []
-              state.children.push(this.createTextChild(this.advance()))
-              continue
-            }
-
-            if (this.check('IDENTIFIER')) {
-              const propName = this.current().value
-
-              // Check for child overrides or children (capitalized names)
-              if (propName[0] === propName[0].toUpperCase()) {
-                // Distinguish between:
-                // 1. ChildOverride: Name followed by COLON (Icon: ic white)
-                // 2. State child: primitive followed by STRING or properties (Icon "plus", Frame hor)
-                // 3. ChildOverride: unknown name (not primitive)
-                //
-                // Priority: COLON check first - if Name: then always childOverride
-                if (this.checkNext('COLON')) {
-                  // Name followed by COLON is always a childOverride
-                  const childOverride = this.parseStateChildOverride()
-                  if (childOverride) state.childOverrides.push(childOverride)
-                } else if (isPrimitive(propName)) {
-                  // Primitive without colon - this is a new state child
-                  const child = this.parseStateChildInstance()
-                  if (child) {
-                    if (!state.children) state.children = []
-                    state.children.push(child)
-                  }
-                } else {
-                  // Unknown capitalized name without colon - treat as property override
-                  const childOverride = this.parseStateChildOverride()
-                  if (childOverride) state.childOverrides.push(childOverride)
-                }
-              } else {
-                this.parseInlineProperties(state.properties)
-              }
-            } else {
-              this.advance()
-            }
-          }
-          if (this.check('DEDENT')) this.advance()
-        }
-
-        component.states.push(state)
-        continue
-      }
-
-      if (this.check('IDENTIFIER') && !this.checkNext('COLON') && !this.checkNext('AS')) {
-        const name = this.current().value
-
-        // System state without colon: hover\n  bg #333
-        if (SYSTEM_STATES.has(name)) {
-          // Check if followed by newline and indent (block state)
-          const savedPos = this.pos
-          const stateToken = this.advance()
-          this.skipNewlines()
-
-          if (this.check('INDENT')) {
-            // It's a state block
-            this.advance() // consume INDENT
-
-            const state: State = {
-              type: 'State',
-              name: stateToken.value,
-              properties: [],
-              childOverrides: [],
-              line: stateToken.line,
-              column: stateToken.column,
-            }
-
-            // Parse state properties, child overrides, and state children
-            while (!this.check('DEDENT') && !this.isAtEnd()) {
-              this.skipNewlines()
-              if (this.check('DEDENT')) break
-
-              // Handle string content as Text child
-              if (this.check('STRING')) {
-                if (!state.children) state.children = []
-                state.children.push(this.createTextChild(this.advance()))
-                continue
-              }
-
-              if (this.check('IDENTIFIER')) {
-                const token = this.current()
-                // Check if this is uppercase (component/child)
-                if (token && this.isUppercase(token.value)) {
-                  // New child: IDENTIFIER followed by STRING (e.g., Text "hello", Icon "check")
-                  // ChildOverride: IDENTIFIER followed by COLON or properties (e.g., Value:, Value col #fff)
-                  if (this.checkNext('STRING')) {
-                    // This is a new child instance with content
-                    const child = this.parseStateChildInstance()
-                    if (child) {
-                      if (!state.children) state.children = []
-                      state.children.push(child)
-                    }
-                  } else {
-                    // This is a childOverride (slot or property override)
-                    const childOverride = this.parseStateChildOverride()
-                    if (childOverride) state.childOverrides.push(childOverride)
-                  }
-                } else {
-                  const prop = this.parseProperty()
-                  if (prop) state.properties.push(prop)
-                }
-              } else {
-                this.advance()
-              }
-            }
-            if (this.check('DEDENT')) this.advance()
-
-            component.states.push(state)
-            continue
-          } else {
-            // Not a state block, restore position
-            this.pos = savedPos
-          }
-        }
-
-        // Behavior state with "state" keyword: state highlighted\n  bg #333
-        // or inline: state highlighted bg #333
-        if (name === 'state') {
-          const savedPos = this.pos
-          this.advance() // consume 'state'
-
-          if (this.check('IDENTIFIER')) {
-            const stateNameToken = this.advance()
-
-            const state: State = {
-              type: 'State',
-              name: stateNameToken.value,
-              properties: [],
-              childOverrides: [],
-              line: stateNameToken.line,
-              column: stateNameToken.column,
-            }
-
-            // Check for inline properties: state highlighted bg #333
-            if (this.check('IDENTIFIER') || this.check('NUMBER') || this.check('STRING')) {
-              this.parseInlineProperties(state.properties)
-            }
-
-            // Check for block properties, children, and child overrides
-            this.skipNewlines()
-            if (this.check('INDENT')) {
-              this.advance() // consume INDENT
-              while (!this.check('DEDENT') && !this.isAtEnd()) {
-                this.skipNewlines()
-                if (this.check('DEDENT')) break
-
-                // Handle string content as Text child
-                if (this.check('STRING')) {
-                  if (!state.children) state.children = []
-                  state.children.push(this.createTextChild(this.advance()))
-                  continue
-                }
-
-                if (this.check('IDENTIFIER')) {
-                  const token = this.current()
-                  // Check if this is uppercase (component/child)
-                  if (token && this.isUppercase(token.value)) {
-                    // New child: IDENTIFIER followed by STRING (e.g., Text "hello", Icon "check")
-                    // ChildOverride: IDENTIFIER followed by COLON or properties (e.g., Value:, Value col #fff)
-                    if (this.checkNext('STRING')) {
-                      // This is a new child instance with content
-                      const child = this.parseStateChildInstance()
-                      if (child) {
-                        if (!state.children) state.children = []
-                        state.children.push(child)
-                      }
-                    } else {
-                      // This is a childOverride (slot or property override)
-                      const childOverride = this.parseStateChildOverride()
-                      if (childOverride) state.childOverrides.push(childOverride)
-                    }
-                  } else {
-                    const prop = this.parseProperty()
-                    if (prop) state.properties.push(prop)
-                  }
-                } else {
-                  this.advance()
-                }
-              }
-              if (this.check('DEDENT')) this.advance()
-            }
-
-            component.states.push(state)
-            continue
-          } else {
-            // Not a valid state, restore position
-            this.pos = savedPos
-          }
-        }
-
-        // Handle boolean properties (no value)
-        if (booleanProperties.has(name)) {
-          const token = this.advance()
-          component.properties.push({
-            type: 'Property',
-            name: token.value,
-            values: [true],
-            line: token.line,
-            column: token.column,
-          })
-          continue
-        }
-
-        // Known properties that take any identifier value (including PascalCase like "Arial")
-        const propertiesWithAnyValue = new Set([
-          'font',
-          'cursor',
-          'align',
-          'weight',
-          'animation',
-          'anim',
-        ])
-
-        // Property line: identifier followed by values (NUMBER, STRING, IDENTIFIER)
-        const next = this.peekAt(1)
-        // If next token looks like a value (NUMBER, STRING, or simple IDENTIFIER not starting with uppercase)
-        // then it's a property
-        if (
-          next &&
-          (next.type === 'NUMBER' ||
-            next.type === 'STRING' ||
-            (next.type === 'IDENTIFIER' && !this.current().value.startsWith('on')))
-        ) {
-          // Check if it's likely a property (next is value) vs child instance (next is STRING only)
-          // Property: pad 16, bg #FFF, col white, font Arial
-          // Instance: Button "Click", Text "Hello"
-          // Heuristic: if name is lowercase and next is number/identifier, it's a property
-          // Exception: known properties like "font" can take PascalCase values
-          const isLikelyProperty =
-            name[0] === name[0].toLowerCase() &&
-            (next.type === 'NUMBER' ||
-              propertiesWithAnyValue.has(name) ||
-              (next.type === 'IDENTIFIER' && next.value[0] === next.value[0].toLowerCase()))
-
-          if (isLikelyProperty) {
-            const prop = this.parseProperty()
-            if (prop) component.properties.push(prop)
-            continue
-          }
-        }
-      }
-
-      // Event with colon: onclick: action
-      // Events are "on" + event name (onclick, onhover, etc.)
-      // NOT just "on" or "off" which are state names
-      const isEventName = (name: string) =>
-        name.startsWith('on') && name.length > 2 && name !== 'on'
-      if (
-        this.check('IDENTIFIER') &&
-        this.checkNext('COLON') &&
-        isEventName(this.current().value)
-      ) {
-        const event = this.parseEvent()
-        if (event) component.events.push(event)
-        continue
-      }
-
-      // State or Slot: Name:
-      // States are lowercase (hover, focus, active, selected, on, off, etc.)
-      // Slots are capitalized (Title, Content, Header, etc.)
-      if (this.check('IDENTIFIER') && this.checkNext('COLON')) {
-        const name = this.current().value
-        const isLikelyState = name[0] === name[0].toLowerCase()
-
-        if (isLikelyState) {
-          // Parse as state
-          const stateName = this.advance()
-          this.advance() // :
-
-          const state: State = {
-            type: 'State',
-            name: stateName.value,
-            properties: [],
-            childOverrides: [],
-            line: stateName.line,
-            column: stateName.column,
-          }
-
-          // Inline state properties
-          this.parseInlineProperties(state.properties)
-
-          // Block state properties
-          this.skipNewlines()
-          if (this.check('INDENT')) {
-            this.advance()
-            while (!this.check('DEDENT') && !this.isAtEnd()) {
-              this.skipNewlines()
-              if (this.check('DEDENT')) break
-
-              if (this.check('IDENTIFIER')) {
-                const prop = this.parseProperty()
-                if (prop) state.properties.push(prop)
-              } else {
-                this.advance()
-              }
-            }
-            if (this.check('DEDENT')) this.advance()
-          }
-
-          component.states.push(state)
-          continue
-        } else {
-          // Capitalized name - likely a slot: Title:
-          const slotName = this.advance()
-          this.advance() // :
-
-          const slot: Instance = {
-            type: 'Instance',
-            component: slotName.value,
-            name: null,
-            properties: [],
-            children: [],
-            line: slotName.line,
-            column: slotName.column,
-          }
-
-          this.parseInlineProperties(slot.properties)
-          this.skipNewlines()
-          if (this.check('INDENT')) {
-            this.advance()
-            this.parseInstanceBody(slot)
-          }
-
-          component.children.push(slot)
-          continue
-        }
-      }
-
-      // Event: onclick action
-      if (this.check('IDENTIFIER') && this.current().value.startsWith('on')) {
-        const event = this.parseEvent()
-        if (event) component.events.push(event)
-        continue
-      }
-
-      // Keys block
-      if (this.check('KEYS')) {
-        this.parseKeysBlock(component.events)
-        continue
-      }
-
-      // Visibility condition: if (state) with or without children
-      if (this.check('IF')) {
-        this.advance() // consume IF
-        const condition = this.parseExpression()
-        this.skipNewlines()
-
-        // Extract state name from condition like "(open)" → "open"
-        const match = condition.match(/^\(?\s*(\w+)\s*\)?$/)
-        const visibleWhen = match ? match[1] : condition
-
-        // If NOT followed by INDENT, it's a visibility condition for current component
-        if (!this.check('INDENT')) {
-          component.visibleWhen = visibleWhen
-          continue
-        }
-
-        // Has children - parse them and set visibleWhen on each
-        this.advance() // consume INDENT
-        for (
-          let iter = 0;
-          !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS;
-          iter++
-        ) {
-          this.skipNewlines()
-          if (this.check('DEDENT') || this.isAtEnd()) break
-
-          // Child component definition: ChildName as primitive:
-          if (this.check('IDENTIFIER') && this.checkNext('AS')) {
-            const childName = this.advance()
-            const child = this.parseComponentDefinition(childName)
-            if (child) {
-              child.visibleWhen = visibleWhen
-              // ComponentDefinition children are treated as Instances in this context
-              component.children.push(child as unknown as Instance)
-            }
-            continue
-          }
-
-          // Child instance
-          if (this.check('IDENTIFIER')) {
-            const name = this.advance()
-            const child = this.parseInstance(name)
-            if (child.type === 'Instance') {
-              child.visibleWhen = visibleWhen
-              component.children.push(child)
-            } else if (child.type === 'Slot') {
-              component.children.push(child)
-            }
-            continue
-          }
-
-          this.advance()
-        }
-        if (this.check('DEDENT')) this.advance()
-
-        // Check for optional 'else' block - set visibleWhen to negated condition
-        this.skipNewlines()
-        if (this.check('ELSE')) {
-          this.advance() // consume ELSE
-          this.skipNewlines()
-          const negatedCondition = '!(' + visibleWhen + ')'
-          if (this.check('INDENT')) {
-            this.advance() // consume INDENT
-            for (
-              let iter = 0;
-              !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS;
-              iter++
-            ) {
-              this.skipNewlines()
-              if (this.check('DEDENT') || this.isAtEnd()) break
-
-              // Child component definition in else block: ChildName as primitive:
-              if (this.check('IDENTIFIER') && this.checkNext('AS')) {
-                const childName = this.advance()
-                const child = this.parseComponentDefinition(childName)
-                if (child) {
-                  child.visibleWhen = negatedCondition
-                  component.children.push(child as unknown as Instance)
-                }
-                continue
-              }
-
-              // Child instance in else block
-              if (this.check('IDENTIFIER')) {
-                const name = this.advance()
-                const child = this.parseInstance(name)
-                if (child.type === 'Instance') {
-                  child.visibleWhen = negatedCondition
-                  component.children.push(child)
-                } else if (child.type === 'Slot') {
-                  component.children.push(child)
-                }
-                continue
-              }
-
-              this.advance()
-            }
-            if (this.check('DEDENT')) this.advance()
-          }
-        }
-        continue
-      }
-
-      // Child component definition: ChildName as primitive:
-      if (this.check('IDENTIFIER') && this.checkNext('AS')) {
-        const childName = this.advance()
-        const child = this.parseComponentDefinition(childName)
-        if (child) {
-          // ComponentDefinition children are treated as Instances in this context
-          component.children.push(child as unknown as Instance)
-        }
-        continue
-      }
-
-      // String content as Text child (for component definitions)
-      if (this.check('STRING')) {
-        component.children.push(this.createTextChild(this.advance()))
-        continue
-      }
-
-      // Implicit onclick action: identifier followed by `(` that is a known
-      // action function (toggle/show/hide/toast/...). Mirror's instance-body
-      // parser turns `Btn toggle(), toast()` into TWO onclick events; for
-      // consistency the component-body parser does the same. Without this
-      // branch, the identifier falls through to parseInstance below and
-      // becomes a phantom child component (e.g. `Base as Btn: onclick t(), s()`
-      // would parse `s` as a child instance instead of a second onclick event).
-      if (
-        this.check('IDENTIFIER') &&
-        this.checkNext('LPAREN') &&
-        this.isImplicitOnclickCandidate(this.current().value)
-      ) {
-        const implicitEvent = this.parseImplicitOnclick()
-        if (implicitEvent) {
-          component.events.push(implicitEvent)
-          continue
-        }
-      }
-
-      // Property-set reference at start of line: `$lay` in Component-Body
-      // composes the referenced property-set's properties into the component.
-      // Without this, `$lay` falls through to parseInstance below and becomes
-      // a phantom child component named `$lay`.
-      if (this.check('IDENTIFIER') && this.current().value.startsWith('$')) {
-        const refToken = this.advance()
-        const refName = refToken.value.slice(1)
-        component.properties.push({
-          type: 'Property',
-          name: 'propset',
-          values: [{ kind: 'token', name: refName }],
-          line: refToken.line,
-          column: refToken.column,
-        })
-        continue
-      }
-
-      // Child instance (without COLON - those are handled above as slots/states)
-      if (this.check('IDENTIFIER')) {
-        const name = this.advance()
-        const child = this.parseInstance(name)
-        if (child.type !== 'ZagComponent') {
-          component.children.push(child as Instance | Slot)
-        }
-        continue
-      }
-
-      this.advance()
+    const ctx: ParserContext = {
+      tokens: this.tokens,
+      source: this.source,
+      loopVariables: this.loopVariables,
+      pos: this.pos,
+      errors: this.errors,
     }
 
-    if (this.check('DEDENT')) this.advance()
+    const callbacks: ComponentBodyCallbacks = {
+      parseExpression: () => {
+        this.pos = ctx.pos
+        const result = this.parseExpression()
+        ctx.pos = this.pos
+        return result
+      },
+      parseInstance: token => {
+        this.pos = ctx.pos
+        const result = this.parseInstance(token)
+        ctx.pos = this.pos
+        return result
+      },
+      parseInstanceBody: instance => {
+        this.pos = ctx.pos
+        this.parseInstanceBody(instance)
+        ctx.pos = this.pos
+      },
+      parseSelectionVar: () => {
+        this.pos = ctx.pos
+        const result = this.parseSelectionVar()
+        ctx.pos = this.pos
+        return result
+      },
+      parseBindPath: () => {
+        this.pos = ctx.pos
+        const result = this.parseBindPath()
+        ctx.pos = this.pos
+        return result
+      },
+      parseRouteClause: () => {
+        this.pos = ctx.pos
+        const result = this.parseRouteClause()
+        ctx.pos = this.pos
+        return result
+      },
+      parseEvent: () => {
+        this.pos = ctx.pos
+        const result = this.parseEvent()
+        ctx.pos = this.pos
+        return result
+      },
+      parseProperty: () => {
+        this.pos = ctx.pos
+        const result = this.parseProperty()
+        ctx.pos = this.pos
+        return result
+      },
+      parseInlineProperties: (properties, events, options) => {
+        this.pos = ctx.pos
+        this.parseInlineProperties(properties, events, options)
+        ctx.pos = this.pos
+      },
+      parseStateChildOverride: () => {
+        this.pos = ctx.pos
+        const result = this.parseStateChildOverride()
+        ctx.pos = this.pos
+        return result
+      },
+      parseStateChildInstance: () => {
+        this.pos = ctx.pos
+        const result = this.parseStateChildInstance()
+        ctx.pos = this.pos
+        return result
+      },
+      parseDataBindingValues: () => {
+        this.pos = ctx.pos
+        const result = this.parseDataBindingValues()
+        ctx.pos = this.pos
+        return result
+      },
+      parseKeysBlock: events => {
+        this.pos = ctx.pos
+        this.parseKeysBlock(events)
+        ctx.pos = this.pos
+      },
+      parseComponentDefinition: name => {
+        this.pos = ctx.pos
+        const result = this.parseComponentDefinition(name)
+        ctx.pos = this.pos
+        return result
+      },
+      parseImplicitOnclick: () => {
+        this.pos = ctx.pos
+        const result = this.parseImplicitOnclick()
+        ctx.pos = this.pos
+        return result
+      },
+      isImplicitOnclickCandidate: name => this.isImplicitOnclickCandidate(name),
+      createTextChild: token => this.createTextChild(token),
+      peekAt: offset => {
+        this.pos = ctx.pos
+        const result = this.peekAt(offset)
+        ctx.pos = this.pos
+        return result
+      },
+    }
+
+    parseComponentBodyExtracted(ctx, component, callbacks)
+    this.pos = ctx.pos
+    this.errors = ctx.errors
   }
 
   private parseInstanceBody(instance: Instance): void {
-    // Boolean properties that can appear in instance body
-    // Using module-level constant (derived from schema via parser-helpers.ts)
-    const booleanProperties = ALL_BOOLEAN_PROPERTIES
-
-    while (!this.check('DEDENT') && !this.isAtEnd()) {
-      this.skipNewlines()
-
-      if (this.check('DEDENT') || this.isAtEnd()) break
-
-      // Visibility condition: if (state) with or without children
-      if (this.check('IF')) {
-        this.advance() // consume IF
-        const condition = this.parseExpression()
-        this.skipNewlines()
-
-        // Extract state name from condition like "(open)" → "open"
-        const match = condition.match(/^\(?\s*(\w+)\s*\)?$/)
-        const visibleWhen = match ? match[1] : condition
-
-        // If NOT followed by INDENT, it's a visibility condition for current instance
-        if (!this.check('INDENT')) {
-          instance.visibleWhen = visibleWhen
-          continue
-        }
-
-        // Has children - parse them and set visibleWhen on each
-        this.advance() // consume INDENT
-        for (
-          let iter = 0;
-          !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS;
-          iter++
-        ) {
-          this.skipNewlines()
-          if (this.check('DEDENT') || this.isAtEnd()) break
-
-          // Child instance (including Zag components)
-          if (this.check('IDENTIFIER')) {
-            const name = this.advance()
-            const child = this.parseInstance(name)
-            if (child.type === 'Instance') {
-              child.visibleWhen = visibleWhen
-            }
-            if (!instance.children) instance.children = []
-            if (child.type === 'Instance' || child.type === 'Slot') {
-              instance.children.push(child)
-            } else if (child.type === 'ZagComponent') {
-              instance.children.push(child as ZagNode)
-            }
-            continue
-          }
-
-          this.advance()
-        }
-        if (this.check('DEDENT')) this.advance()
-
-        // Check for optional 'else' block - set visibleWhen to negated condition
-        this.skipNewlines()
-        if (this.check('ELSE')) {
-          this.advance() // consume ELSE
-          this.skipNewlines()
-          const negatedCondition = '!(' + visibleWhen + ')'
-          if (this.check('INDENT')) {
-            this.advance() // consume INDENT
-            for (
-              let iter = 0;
-              !this.isAtEnd() && !this.check('DEDENT') && iter < Parser.MAX_ITERATIONS;
-              iter++
-            ) {
-              this.skipNewlines()
-              if (this.check('DEDENT') || this.isAtEnd()) break
-
-              // Child instance in else block
-              if (this.check('IDENTIFIER')) {
-                const name = this.advance()
-                const child = this.parseInstance(name)
-                if (child.type === 'Instance') {
-                  child.visibleWhen = negatedCondition
-                }
-                if (!instance.children) instance.children = []
-                if (child.type === 'Instance' || child.type === 'Slot') {
-                  instance.children.push(child)
-                } else if (child.type === 'ZagComponent') {
-                  instance.children.push(child as ZagNode)
-                }
-                continue
-              }
-
-              this.advance()
-            }
-            if (this.check('DEDENT')) this.advance()
-          }
-        }
-        continue
-      }
-
-      // Each loop: each item in collection
-      // Note: Each is treated as a special child type (not standard Instance.children)
-      if (this.check('EACH')) {
-        const each = this.parseEach()
-        if (each) {
-          if (!instance.children) instance.children = []
-          // Each loops are handled specially in IR transformation
-          instance.children.push(each as unknown as Instance)
-        }
-        continue
-      }
-
-      // Selection binding: selection $variable
-      if (this.check('SELECTION')) {
-        const varName = this.parseSelectionVar()
-        if (varName !== null) instance.selection = varName
-        continue
-      }
-
-      // Bind: bind varName (or dot-path: bind user.email)
-      if (this.check('BIND')) {
-        const path = this.parseBindPath()
-        if (path !== null) instance.bind = path
-        continue
-      }
-
-      // Route: route TargetComponent or route path/to/page
-      if (this.check('ROUTE')) {
-        const routePath = this.parseRouteClause()
-        if (routePath) instance.route = routePath
-        continue
-      }
-
-      // Keys block
-      if (this.check('KEYS')) {
-        // Note: Instances skip keys blocks - keyboard events are defined in component definitions
-        // This is intentional: instances inherit behavior from their components
-        this.advance()
-        this.skipNewlines()
-        if (this.check('INDENT')) {
-          this.advance()
-          while (!this.check('DEDENT') && !this.isAtEnd()) {
-            this.skipNewlines()
-            if (this.check('DEDENT')) break
-            this.advance()
-          }
-          if (this.check('DEDENT')) this.advance()
-        }
-        continue
-      }
-
-      // Check for identifier-based parsing
-      if (this.check('IDENTIFIER')) {
-        const name = this.current().value
-
-        // Event block: onclick: or inline event: onclick action
-        // Must check BEFORE state block handling
-        if (EVENT_NAMES.has(name)) {
-          if (!instance.events) instance.events = []
-          const event = this.parseEvent()
-          if (event) instance.events.push(event)
-          continue
-        }
-
-        // Boolean property (focusable, etc.)
-        // Skip if it looks like a state block (visible when X open:)
-        if (booleanProperties.has(name) && !this.isStateBlockStart()) {
-          const token = this.advance()
-          instance.properties.push({
-            type: 'Property',
-            name: token.value,
-            values: [true],
-            line: token.line,
-            column: token.column,
-          })
-          continue
-        }
-
-        // Property line (lowercase identifier that is a known property)
-        if (PROPERTY_STARTERS.has(name)) {
-          this.parseInlineProperties(instance.properties)
-          continue
-        }
-
-        // State block: hover: or selected: or selected onclick: or visible when Menu open:
-        // Also handles external state reference: MenuBtn.open:
-        // Allow ANY identifier as state name if followed by state block pattern (when, modifier, trigger)
-        if (this.isStateBlockStart()) {
-          const stateToken = this.advance()
-
-          let modifier: 'exclusive' | 'toggle' | 'initial' | undefined
-          let trigger: string | undefined
-          let when: StateDependency | undefined
-
-          // Check for external state reference: ElementName.state:
-          // Pattern: we already consumed ElementName, now check for DOT IDENTIFIER COLON
-          let externalStateName: string | undefined
-          if (this.check('DOT')) {
-            this.advance() // consume DOT
-            if (this.check('IDENTIFIER')) {
-              const externalState = this.advance().value
-              // Create a 'when' dependency pointing to the external element's state
-              when = {
-                target: stateToken.value, // The element name (e.g., MenuBtn)
-                state: externalState, // The state name (e.g., open)
-              }
-              // Use a synthetic state name for this block (e.g., "_MenuBtn_open")
-              externalStateName = `_${stateToken.value}_${externalState}`
-            }
-          }
-
-          // Check for modifier (exclusive, toggle, initial)
-          if (this.check('IDENTIFIER') && STATE_MODIFIERS.has(this.current().value)) {
-            modifier = this.advance().value as 'exclusive' | 'toggle' | 'initial'
-          }
-
-          // Check for 'when' dependency (legacy syntax, now prefer ElementName.state:)
-          if (this.check('IDENTIFIER') && this.current().value === 'when') {
-            this.advance() // consume 'when'
-            when = this.parseWhenClause()
-          }
-
-          // Check for trigger (event name like onclick, onhover, onkeydown)
-          if (this.check('IDENTIFIER') && EVENT_NAMES.has(this.current().value)) {
-            const eventToken = this.advance()
-            trigger = eventToken.value
-
-            // Check for key (for onkeydown, onkeyup)
-            if ((trigger === 'onkeydown' || trigger === 'onkeyup') && this.check('IDENTIFIER')) {
-              const keyToken = this.current()
-              if (KEYBOARD_KEYS.has(keyToken.value)) {
-                trigger += ' ' + this.advance().value
-              }
-            }
-          }
-
-          // Parse animation config BEFORE colon
-          // Syntax: selected onclick 0.2s ease-out:
-          let animation: StateAnimation | undefined
-
-          // Check for duration (e.g., 0.2s, 200ms)
-          if (this.check('NUMBER') && !this.check('COLON')) {
-            const numToken = this.current()
-            const duration = parseDuration(numToken.value)
-            if (duration !== undefined) {
-              this.advance()
-              animation = { duration }
-
-              // Check for easing after duration (e.g., ease-out)
-              if (this.check('IDENTIFIER') && !this.check('COLON')) {
-                const easingToken = this.current()
-                if (EASING_FUNCTIONS.has(easingToken.value)) {
-                  animation.easing = this.advance().value
-                }
-              }
-            }
-          }
-
-          this.advance() // consume colon
-
-          // Check for animation preset AFTER colon on same line
-          // Syntax: selected onclick: bounce
-          if (this.check('IDENTIFIER') && !this.check('NEWLINE') && !this.check('INDENT')) {
-            const presetToken = this.current()
-            if (ANIMATION_PRESETS.has(presetToken.value)) {
-              const preset = this.advance().value
-              if (!animation) {
-                animation = { preset }
-              } else {
-                animation.preset = preset
-              }
-            }
-          }
-
-          const state: State = {
-            type: 'State',
-            name: externalStateName || stateToken.value,
-            modifier,
-            trigger,
-            when,
-            animation,
-            properties: [],
-            childOverrides: [],
-            line: stateToken.line,
-            column: stateToken.column,
-          }
-
-          // Parse inline state properties
-          this.parseInlineProperties(state.properties, instance.events)
-
-          // Parse block properties (indented)
-          this.skipNewlines()
-          if (this.check('INDENT')) {
-            this.advance()
-            while (!this.check('DEDENT') && !this.isAtEnd()) {
-              this.skipNewlines()
-              if (this.check('DEDENT')) break
-
-              // Parse properties on each line
-              if (this.check('IDENTIFIER')) {
-                const propName = this.current().value
-
-                // Check for enter:/exit: animation pseudo-properties
-                if ((propName === 'enter' || propName === 'exit') && this.checkNext('COLON')) {
-                  const animType = this.advance().value as 'enter' | 'exit'
-                  this.advance() // consume colon
-
-                  // Parse animation value: preset, duration, easing
-                  const anim: StateAnimation = {}
-
-                  // Check for preset (e.g., slide-in, fade-out)
-                  if (this.check('IDENTIFIER')) {
-                    const token = this.current()
-                    if (ANIMATION_PRESETS.has(token.value)) {
-                      anim.preset = this.advance().value
-                    }
-                  }
-
-                  // Check for duration (e.g., 0.2s)
-                  if (this.check('NUMBER')) {
-                    const duration = parseDuration(this.current().value)
-                    if (duration !== undefined) {
-                      this.advance()
-                      anim.duration = duration
-                    }
-                  }
-
-                  // Check for easing (e.g., ease-out)
-                  if (this.check('IDENTIFIER')) {
-                    const token = this.current()
-                    if (EASING_FUNCTIONS.has(token.value)) {
-                      anim.easing = this.advance().value
-                    }
-                  }
-
-                  state[animType] = anim
-                  continue
-                }
-
-                // Check for child overrides or children (capitalized names)
-                if (propName[0] === propName[0].toUpperCase()) {
-                  // New child: IDENTIFIER followed by STRING (e.g., Text "hello", Icon "check")
-                  // ChildOverride: IDENTIFIER followed by COLON or properties (e.g., Value:, Value col #fff)
-                  if (this.checkNext('STRING')) {
-                    // This is a new child instance with content
-                    const child = this.parseStateChildInstance()
-                    if (child) {
-                      if (!state.children) state.children = []
-                      state.children.push(child)
-                    }
-                  } else {
-                    // This is a childOverride (slot or property override)
-                    const childOverride = this.parseStateChildOverride()
-                    if (childOverride) state.childOverrides.push(childOverride)
-                  }
-                } else {
-                  // Check if this is a target state reference for 'when' dependencies
-                  // Syntax: SearchInput.searching:
-                  //           searching        ← this is the target state
-                  // But NOT if it's a known property like 'visible', 'hidden', etc.
-                  if (
-                    state.when &&
-                    !state.targetState &&
-                    propName[0] === propName[0].toLowerCase() &&
-                    !ALL_BOOLEAN_PROPERTIES.has(propName) &&
-                    (this.checkNext('NEWLINE') || this.checkNext('DEDENT') || this.isAtEnd())
-                  ) {
-                    // This is a target state reference
-                    state.targetState = this.advance().value
-                  } else {
-                    // Regular property
-                    this.parseInlineProperties(state.properties)
-                  }
-                }
-              } else if (this.check('STRING')) {
-                // Handle string content as Text child
-                if (!state.children) state.children = []
-                state.children.push(this.createTextChild(this.advance()))
-              } else {
-                // Skip any other tokens to prevent infinite loops
-                this.advance()
-              }
-            }
-            if (this.check('DEDENT')) this.advance()
-          }
-
-          if (!instance.states) instance.states = []
-          instance.states.push(state)
-          continue
-        }
-
-        // Token reference as property set: $cardstyle applies styles from the token
-        // For text content, use quotes: "$firstName" or "Hello $firstName"
-        if (name.startsWith('$')) {
-          const token = this.advance()
-          instance.properties.push({
-            type: 'Property',
-            name: 'propset', // Property set reference, expanded in IR
-            values: [{ kind: 'token' as const, name: token.value.slice(1) }],
-            line: token.line,
-            column: token.column,
-          })
-          continue
-        }
-
-        // Initial state: any lowercase identifier that isn't a known keyword
-        // This allows setting states defined in components: Button selected, Dialog closed
-        // Must be lowercase (PascalCase = child component) and not a known property/event/modifier
-        if (
-          name[0] === name[0].toLowerCase() &&
-          !EVENT_NAMES.has(name) &&
-          !booleanProperties.has(name) &&
-          !PROPERTY_STARTERS.has(name) &&
-          !STATE_MODIFIERS.has(name) &&
-          name !== 'when' &&
-          name !== 'as'
-        ) {
-          const token = this.advance()
-          instance.initialState = token.value
-          continue
-        }
-
-        // Chart slot: XAxis:, YAxis:, Legend:, etc.
-        // Only parse if this is a chart primitive and the identifier is a valid chart slot
-        const isChartSlotSyntax =
-          isChartSlot(name) && this.checkNext('COLON') && isChartPrimitive(instance.component)
-
-        if (isChartSlotSyntax) {
-          const slotToken = this.advance() // consume slot name
-          this.advance() // consume :
-
-          const chartSlot = this.parseChartSlot(slotToken)
-          if (chartSlot) {
-            if (!instance.chartSlots) instance.chartSlots = {}
-            instance.chartSlots[chartSlot.name] = chartSlot
-          }
-          continue
-        }
-
-        // Child instance (including Zag components)
-        const child = this.parseInstance(this.advance())
-        if (child.type === 'Instance' || child.type === 'Slot') {
-          instance.children.push(child)
-        } else if (child.type === 'ZagComponent') {
-          instance.children.push(child as ZagNode)
-        }
-        continue
-      }
-
-      this.advance()
+    const ctx: ParserContext = {
+      tokens: this.tokens,
+      source: this.source,
+      loopVariables: this.loopVariables,
+      pos: this.pos,
+      errors: this.errors,
     }
 
-    if (this.check('DEDENT')) this.advance()
+    const callbacks: InstanceBodyCallbacks = {
+      parseExpression: () => {
+        this.pos = ctx.pos
+        const result = this.parseExpression()
+        ctx.pos = this.pos
+        return result
+      },
+      parseInstance: token => {
+        this.pos = ctx.pos
+        const result = this.parseInstance(token)
+        ctx.pos = this.pos
+        return result
+      },
+      parseEach: () => {
+        this.pos = ctx.pos
+        const result = this.parseEach()
+        ctx.pos = this.pos
+        return result
+      },
+      parseSelectionVar: () => {
+        this.pos = ctx.pos
+        const result = this.parseSelectionVar()
+        ctx.pos = this.pos
+        return result
+      },
+      parseBindPath: () => {
+        this.pos = ctx.pos
+        const result = this.parseBindPath()
+        ctx.pos = this.pos
+        return result
+      },
+      parseRouteClause: () => {
+        this.pos = ctx.pos
+        const result = this.parseRouteClause()
+        ctx.pos = this.pos
+        return result
+      },
+      parseEvent: () => {
+        this.pos = ctx.pos
+        const result = this.parseEvent()
+        ctx.pos = this.pos
+        return result
+      },
+      parseInlineProperties: (properties, events, options) => {
+        this.pos = ctx.pos
+        this.parseInlineProperties(properties, events, options)
+        ctx.pos = this.pos
+      },
+      parseWhenClause: () => {
+        this.pos = ctx.pos
+        const result = this.parseWhenClause()
+        ctx.pos = this.pos
+        return result
+      },
+      parseStateChildOverride: () => {
+        this.pos = ctx.pos
+        const result = this.parseStateChildOverride()
+        ctx.pos = this.pos
+        return result
+      },
+      parseStateChildInstance: () => {
+        this.pos = ctx.pos
+        const result = this.parseStateChildInstance()
+        ctx.pos = this.pos
+        return result
+      },
+      parseChartSlot: token => {
+        this.pos = ctx.pos
+        const result = this.parseChartSlot(token)
+        ctx.pos = this.pos
+        return result
+      },
+      createTextChild: token => this.createTextChild(token),
+    }
+
+    parseInstanceBodyExtracted(ctx, instance, callbacks)
+    this.pos = ctx.pos
+    this.errors = ctx.errors
   }
 
   /**
@@ -4078,7 +3167,7 @@ export class Parser {
 
 export function parse(source: string): AST {
   // Pre-parse: expand positional shorthand (e.g. `Button hug, 32, #333`)
-  // to explicit property syntax. See docs/concepts/positional-args.md.
+  // to explicit property syntax. See docs/archive/concepts/positional-args.md.
   const expanded = resolvePositionalArgs(source)
   const tokens = tokenize(expanded)
   return new Parser(tokens, expanded).parse()

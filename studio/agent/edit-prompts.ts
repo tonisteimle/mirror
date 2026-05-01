@@ -10,8 +10,8 @@
  *   2. Cmd+Enter mit Selection
  *   3. Cmd+Shift+Enter (mit `instruction`, optional Selection)
  *
- * Siehe: docs/concepts/llm-edit-flow.md (Anforderungen),
- *        docs/concepts/llm-edit-flow-plan.md (T2.2)
+ * Siehe: docs/archive/concepts/llm-edit-flow.md (Anforderungen),
+ *        docs/archive/concepts/llm-edit-flow-plan.md (T2.2)
  */
 
 import { formatProjectFileSection } from './prompt-utils'

@@ -4,7 +4,7 @@
  * Spec für `formatProjectFileSection`. Ursprünglich aus draft-prompts.ts
  * extrahiert; nach Phase 3 ist diese Datei die alleinige Quelle.
  *
- * Siehe: docs/concepts/llm-edit-flow-test-concept.md § 3.1 (prompt-utils)
+ * Siehe: docs/archive/concepts/llm-edit-flow-test-concept.md § 3.1 (prompt-utils)
  */
 
 import { describe, it, expect } from 'vitest'

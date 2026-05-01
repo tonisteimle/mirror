@@ -12,8 +12,8 @@
  * Das macht das Modul testbar (mehrere parallele Tests) und passt zur
  * Singleton-Verwendung in `bootstrap.ts` (ein Handler pro Editor-Instanz).
  *
- * Siehe: docs/concepts/llm-edit-flow.md (Sequenzen),
- *        docs/concepts/llm-edit-flow-plan.md (T3.5)
+ * Siehe: docs/archive/concepts/llm-edit-flow.md (Sequenzen),
+ *        docs/archive/concepts/llm-edit-flow-plan.md (T3.5)
  */
 
 import { EditorView } from '@codemirror/view'

@@ -5,7 +5,7 @@
  * User klickt im Preview, ändert Properties über die Panel-UI, sieht den Code
  * sofort updaten.
  *
- * Spec: docs/concepts/property-workflow-demo.md
+ * Spec: docs/archive/concepts/property-workflow-demo.md
  */
 
 import type { DemoScript } from '../types'

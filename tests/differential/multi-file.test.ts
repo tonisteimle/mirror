@@ -1,7 +1,7 @@
 /**
  * Multi-File — Differential Testing (Schicht 4)
  *
- * Documentation: docs/concepts/multi-file-backend-support.md.
+ * Documentation: docs/archive/concepts/multi-file-backend-support.md.
  *
  * Multi-file support is provided by the language-agnostic `compileProject`
  * preprocessor, which simply concatenates files in canonical order before

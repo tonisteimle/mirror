@@ -4,7 +4,7 @@
  * Line-level diff. Output sind `DiffHunk`s — zusammenhängende Gruppen
  * aus removed/added Zeilen mit Position im alten und neuen Text.
  *
- * Siehe: docs/concepts/llm-edit-flow-test-concept.md § 3.1 (source-diff)
+ * Siehe: docs/archive/concepts/llm-edit-flow-test-concept.md § 3.1 (source-diff)
  */
 
 import { describe, it, expect } from 'vitest'

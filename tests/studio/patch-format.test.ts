@@ -8,8 +8,8 @@
  *   <replace content>
  *   @@END
  *
- * See: docs/concepts/llm-edit-flow.md (Patch-Format)
- *      docs/concepts/llm-edit-flow-test-concept.md § 3.1 (patch-format Pflicht-Cases)
+ * See: docs/archive/concepts/llm-edit-flow.md (Patch-Format)
+ *      docs/archive/concepts/llm-edit-flow-test-concept.md § 3.1 (patch-format Pflicht-Cases)
  */
 
 import { describe, it, expect } from 'vitest'

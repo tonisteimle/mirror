@@ -1,7 +1,7 @@
 /**
  * Layout — Differential Testing (Schicht 4)
  *
- * Documentation: docs/concepts/layout-backend-support.md.
+ * Documentation: docs/archive/concepts/layout-backend-support.md.
  */
 
 import { describe, it, expect } from 'vitest'

@@ -315,11 +315,11 @@ Diese Aspekte sehen wir nur im headed run (`--headed --pacing=video`):
 - **Drop-Indikator-Position** — wirkt der visual-feedback während des Drags richtig?
 
 → Vor jedem Major-Release / Video-Aufnahme: **Headed-Verification** durchlaufen
-(siehe `docs/concepts/demo-headed-verification.md`).
+(historisch: `docs/archive/concepts/demo-headed-verification.md`).
 
 ## Architektur-Entscheidungen
 
-Die folgenden sind in `docs/concepts/demo-infrastructure.md` ausführlich
+Die folgenden sind in `docs/archive/concepts/demo-infrastructure.md` ausführlich
 festgehalten:
 
 - **E1**: Selector ist nur strukturierte Objekte, keine String-Shortcuts.
@@ -329,7 +329,7 @@ festgehalten:
 
 ## Konzept-Dokumente pro Demo
 
-Jede Showcase-Demo hat ein eigenes Konzept-Dokument unter `docs/concepts/`:
+Jede Showcase-Demo hat ein eigenes (archiviertes) Konzept-Dokument unter `docs/archive/concepts/`:
 
 - `visual-editing-demo.md`
 - `property-workflow-demo.md`

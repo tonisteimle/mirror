@@ -5,7 +5,7 @@
  * hier testen wir den Field-State und die Decoration-Bauung gegen ein
  * EditorState ohne View.
  *
- * Siehe: docs/concepts/llm-edit-flow-test-concept.md § 3.1 (ghost-diff)
+ * Siehe: docs/archive/concepts/llm-edit-flow-test-concept.md § 3.1 (ghost-diff)
  *
  * @vitest-environment jsdom
  */

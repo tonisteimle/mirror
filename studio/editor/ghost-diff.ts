@@ -15,8 +15,8 @@
  *      effects: clearGhostDiffEffect }) — gehört dem Caller (siehe T3.4).
  *   5. Esc → verwerfen = view.dispatch({ effects: clearGhostDiffEffect }).
  *
- * Siehe: docs/concepts/llm-edit-flow.md (Diff-Ghost),
- *        docs/concepts/llm-edit-flow-plan.md (T3.1)
+ * Siehe: docs/archive/concepts/llm-edit-flow.md (Diff-Ghost),
+ *        docs/archive/concepts/llm-edit-flow-plan.md (T3.1)
  */
 
 import { StateField, StateEffect, type Text } from '@codemirror/state'

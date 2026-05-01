@@ -5,7 +5,7 @@
  * mit gemockten Handlern. Echtes Wiring an `edit-handler.ts` läuft erst
  * in T3.5 (Phase 3 Schritt B) — dieser Test isoliert die Keymap-Logik.
  *
- * Siehe: docs/concepts/llm-edit-flow-test-concept.md § 3.1 (llm-keymap)
+ * Siehe: docs/archive/concepts/llm-edit-flow-test-concept.md § 3.1 (llm-keymap)
  */
 
 import { describe, it, expect, vi } from 'vitest'

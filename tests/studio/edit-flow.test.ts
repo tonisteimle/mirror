@@ -5,7 +5,7 @@
  * Retry und liefert ein `EditResult`. Pure-async-function: nimmt Source als
  * Input, macht keine Editor-Mutation.
  *
- * Siehe: docs/concepts/llm-edit-flow-test-concept.md § 3.2 (edit-flow)
+ * Siehe: docs/archive/concepts/llm-edit-flow-test-concept.md § 3.2 (edit-flow)
  */
 
 import { describe, test, expect, beforeEach, afterEach } from 'vitest'

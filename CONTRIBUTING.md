@@ -5,26 +5,31 @@ Thank you for your interest in contributing to Mirror! This guide will help you 
 ## Development Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/your-org/mirror.git
    cd mirror
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Build the project**
+
    ```bash
    npm run build          # Build compiler
    npm run build:studio   # Build studio runtime
    ```
 
 4. **Run tests**
+
    ```bash
-   npm test               # Run all tests
-   npm run typecheck      # Run TypeScript type checking
+   npm test                          # Vitest unit tests
+   npm run typecheck                 # TypeScript type checking
+   npm run test:browser:progress     # CDP browser tests (studio E2E) — needs `npm run studio` running
    ```
 
 5. **Start the development server**
@@ -53,11 +58,20 @@ studio/                # Studio Runtime (TypeScript)
 ├── editor/            # CodeMirror Controller
 └── ...
 
-tests/                 # Test Suite
+tests/                 # Test Suite (Vitest)
 ├── compiler/          # IR & Backend Tests
 ├── studio/            # Studio Component Tests
-└── e2e/               # Playwright E2E Tests
+└── integration/       # Cross-module integration tests
+
+studio/test-api/       # Browser test framework (CDP-based)
+└── suites/            # ~225 E2E tests (run via `npm run test:browser:progress`)
+
+tools/test-runner/     # CDP test runner & demo runner
 ```
+
+> Mirror does **not** use Playwright for studio E2E — the CDP test runner is
+> faster and more reliable. The legacy `tests/e2e/` Playwright fixtures are
+> kept only for the playground regression cases.
 
 ## How to Contribute
 
@@ -71,6 +85,7 @@ tests/                 # Test Suite
 ### Pull Requests
 
 1. **Create a branch** from `main`
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -81,15 +96,19 @@ tests/                 # Test Suite
    - Update documentation if needed
 
 3. **Run checks before committing**
+
    ```bash
    npm run typecheck
    npm test
+   npm run test:browser:progress     # Required if Studio code changed
    ```
 
 4. **Commit with clear messages**
+
    ```bash
    git commit -m "feat: add support for XYZ"
    ```
+
    Follow [Conventional Commits](https://www.conventionalcommits.org/):
    - `feat:` - New features
    - `fix:` - Bug fixes
@@ -114,8 +133,9 @@ tests/                 # Test Suite
 
 - Add unit tests in `tests/compiler/` for compiler changes
 - Add unit tests in `tests/studio/` for studio changes
-- Add E2E tests in `tests/e2e/` for user-facing features
+- Add browser tests in `studio/test-api/suites/` for user-facing studio features (run via the CDP test runner)
 - Tests should be independent and repeatable
+- Full test framework reference: [`docs/TEST-FRAMEWORK.md`](./docs/TEST-FRAMEWORK.md)
 
 ### Documentation
 
@@ -133,8 +153,9 @@ tests/                 # Test Suite
 
 ## Getting Help
 
-- Check `CLAUDE.md` for complete language reference
-- Review `tests/compiler/regeln.md` for documented rules
+- Check `CLAUDE.md` for the compact language reference
+- Read `docs/MIRROR-TUTORIAL-FULL.md` for the full DSL tutorial (~5000 lines, didactic)
+- Review `docs/TEST-FRAMEWORK.md` for testing
 - Open an issue for questions
 
 ## Code of Conduct

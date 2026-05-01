@@ -11,7 +11,7 @@
  * Snapshots werden bei jedem `getDiffSinceLastCall` aktualisiert — die
  * nächste Anfrage vergleicht also gegen die _jetzt_ aktuelle Source.
  *
- * Siehe: docs/concepts/llm-edit-flow.md (Diff seit letztem Call),
+ * Siehe: docs/archive/concepts/llm-edit-flow.md (Diff seit letztem Call),
  *        llm-edit-flow-plan.md (T1.3)
  */
 

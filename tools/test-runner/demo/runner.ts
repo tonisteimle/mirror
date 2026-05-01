@@ -1375,7 +1375,7 @@ const MIRROR_ACTIONS_API = `
     throw new Error(
       'aiPrompt: pending rewire to LLM-Edit-Flow ' +
         '(Cmd+Enter → prompt-field → ghost-diff → Tab). ' +
-        'See docs/concepts/llm-edit-flow-plan.md.'
+        'See docs/archive/concepts/llm-edit-flow-plan.md.'
     );
   }
 
@@ -1523,7 +1523,7 @@ export class DemoRunner {
   async run(script: DemoScript): Promise<DemoRunResult> {
     this.resetState()
 
-    // Blueprint enforcement (see docs/concepts/demo-blueprint.md):
+    // Blueprint enforcement (see docs/archive/concepts/demo-blueprint.md):
     // 1. expectCode is required on every mutating step.
     // 2. The first step is auto-injected as expectCode '' so the demo
     //    starts from a known-empty editor (assumes ?demo=blank in URL).

@@ -5,7 +5,7 @@
  * Tokens, im Layout via `$name` referenziert. Token-Änderung an einer Stelle
  * propagiert zu allen Referenzen.
  *
- * Spec: docs/concepts/token-system-demo.md
+ * Spec: docs/archive/concepts/token-system-demo.md
  */
 
 import type { DemoScript } from '../types'

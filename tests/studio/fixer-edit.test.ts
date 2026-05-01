@@ -5,7 +5,7 @@
  * Sie ist eine schmale Schicht über `window.TauriBridge.agent.runAgent`,
  * mit AbortSignal-Support und einheitlichem Fehler-Verhalten.
  *
- * Siehe: docs/concepts/llm-edit-flow-test-concept.md § 3.1 (fixer.runEdit)
+ * Siehe: docs/archive/concepts/llm-edit-flow-test-concept.md § 3.1 (fixer.runEdit)
  */
 
 import { describe, test, expect, beforeEach, afterEach } from 'vitest'

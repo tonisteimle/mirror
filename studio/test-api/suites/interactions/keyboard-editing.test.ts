@@ -6,7 +6,7 @@
  * - Arrow-key spacing adjustment in P/M/G modes
  * - Esc exits spacing mode
  *
- * See docs/concepts/spacing-keyboard-mode.md for the design.
+ * See docs/archive/concepts/spacing-keyboard-mode.md for the design.
  */
 
 import type { TestCase, TestAPI } from '../../types'

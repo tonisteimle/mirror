@@ -5,7 +5,7 @@
  * explicit property syntax. Runs after file combination and before parse,
  * so AST/IR/backends are completely unaware.
  *
- * Rules (R1 + R2 + R3 from docs/concepts/positional-args.md):
+ * Rules (R1 + R2 + R3 from docs/archive/concepts/positional-args.md):
  *   R1 — bare color value (#hex, named, rgba(...)) → default color
  *        property based on primitive (Container → bg, Text/Link → col,
  *        Icon → ic).

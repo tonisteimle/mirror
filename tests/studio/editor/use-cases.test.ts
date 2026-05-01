@@ -1,7 +1,7 @@
 /**
  * Editor Use Cases Tests (Hexagonal Architecture)
  *
- * Tests based on docs/concepts/editor-use-cases.md
+ * Tests based on docs/archive/concepts/editor-use-cases.md
  * Uses TriggerController with mock ports for DOM-free testing.
  *
  * Phase 1: Immediately testable use cases

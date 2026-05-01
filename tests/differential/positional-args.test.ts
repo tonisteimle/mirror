@@ -1,8 +1,8 @@
 /**
  * Positional Arguments — Differential Testing (Schicht 4)
  *
- * Documentation: docs/concepts/positional-args.md +
- *                docs/concepts/positional-args-backend-support.md
+ * Documentation: docs/archive/concepts/positional-args.md +
+ *                docs/archive/concepts/positional-args-backend-support.md
  *
  * The resolver runs *before* the parser, so all backends see identical
  * AST regardless of which form (positional vs explicit) the user wrote.

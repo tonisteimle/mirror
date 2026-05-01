@@ -2,7 +2,7 @@
  * Layout CSS Matrix Tests
  *
  * Systematische Tests für alle Layout-Kombinationen in Mirror.
- * Referenz: docs/concepts/layout-css-matrix.md
+ * Referenz: docs/archive/concepts/layout-css-matrix.md
  */
 
 import { describe, it, expect } from 'vitest'

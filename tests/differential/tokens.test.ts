@@ -2,7 +2,7 @@
  * Tokens — Differential Testing (Schicht 4 der Test-Pyramide)
  *
  * Pinned support matrix per backend für Token-Sub-Features.
- * Documentation: docs/concepts/tokens-backend-support.md.
+ * Documentation: docs/archive/concepts/tokens-backend-support.md.
  */
 
 import { describe, it, expect } from 'vitest'

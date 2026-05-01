@@ -16,8 +16,8 @@
  * Phase-3-Schritt-A keine Abhängigkeit auf das spätere `edit-handler.ts`
  * hat.
  *
- * Siehe: docs/concepts/llm-edit-flow.md (Cmd+Enter Flows),
- *        docs/concepts/llm-edit-flow-plan.md (T3.2)
+ * Siehe: docs/archive/concepts/llm-edit-flow.md (Cmd+Enter Flows),
+ *        docs/archive/concepts/llm-edit-flow-plan.md (T3.2)
  */
 
 import type { EditorView, KeyBinding } from '@codemirror/view'

@@ -2,7 +2,7 @@
  * Conditionals — Differential Testing (Schicht 4 der Test-Pyramide)
  *
  * Pinned support matrix per backend für Conditionals-Sub-Features.
- * Documentation: docs/concepts/conditionals-backend-support.md.
+ * Documentation: docs/archive/concepts/conditionals-backend-support.md.
  */
 
 import { describe, it, expect } from 'vitest'

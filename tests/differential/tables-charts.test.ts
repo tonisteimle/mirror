@@ -1,7 +1,7 @@
 /**
  * Tables + Charts — Differential Testing (Schicht 4)
  *
- * Documentation: docs/concepts/tables-charts-backend-support.md.
+ * Documentation: docs/archive/concepts/tables-charts-backend-support.md.
  */
 
 import { describe, it, expect } from 'vitest'

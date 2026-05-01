@@ -12,7 +12,7 @@
  * mutierte) Working-Copy NICHT zurückgegeben — der Orchestrator startet
  * Retries vom Original-Source.
  *
- * Siehe: docs/concepts/llm-edit-flow.md (Anker-Validierung)
+ * Siehe: docs/archive/concepts/llm-edit-flow.md (Anker-Validierung)
  */
 
 import type { Patch } from './patch-format'

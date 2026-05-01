@@ -9,8 +9,8 @@
  * Das Widget wird absolut positioniert in `document.body`, damit es nicht
  * vom Editor-Overflow geclipped wird.
  *
- * Siehe: docs/concepts/llm-edit-flow.md (Modus 3),
- *        docs/concepts/llm-edit-flow-plan.md (T3.3)
+ * Siehe: docs/archive/concepts/llm-edit-flow.md (Modus 3),
+ *        docs/archive/concepts/llm-edit-flow-plan.md (T3.3)
  */
 
 import type { EditorView } from '@codemirror/view'

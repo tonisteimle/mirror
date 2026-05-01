@@ -7,7 +7,7 @@
  * so drift between the dimensions (the bidirectional-sync class of bugs)
  * is caught the moment it happens, not at the end.
  *
- * See docs/concepts/step-runner.md for the design rationale.
+ * See docs/archive/concepts/step-runner.md for the design rationale.
  */
 
 // =============================================================================

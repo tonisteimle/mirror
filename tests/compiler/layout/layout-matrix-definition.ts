@@ -4,7 +4,7 @@
  * Single source of truth for all layout combinations and their expected CSS output.
  * Used by layout-matrix.test.ts to generate comprehensive tests.
  *
- * Reference: docs/concepts/layout-css-matrix.md
+ * Reference: docs/archive/concepts/layout-css-matrix.md
  */
 
 // =============================================================================
@@ -20,58 +20,58 @@ export const LAYOUT_DIMENSIONS = {
    * Layout mode determines the container type
    */
   layoutMode: [
-    'default',    // flex column
-    'hor',        // flex row
-    'ver',        // flex column (explicit)
-    'grid 12',    // CSS grid with 12 columns
-    'grid 3',     // CSS grid with 3 columns
-    'stacked',    // position: relative container
+    'default', // flex column
+    'hor', // flex row
+    'ver', // flex column (explicit)
+    'grid 12', // CSS grid with 12 columns
+    'grid 3', // CSS grid with 3 columns
+    'stacked', // position: relative container
   ],
 
   /**
    * Alignment determines how children are positioned within the container
    */
   alignment: [
-    'none',       // default (flex-start)
-    'center',     // center both axes
-    'spread',     // space-between
-    'tl',         // top-left
-    'tc',         // top-center
-    'tr',         // top-right
-    'cl',         // center-left
-    'cr',         // center-right
-    'bl',         // bottom-left
-    'bc',         // bottom-center
-    'br',         // bottom-right
+    'none', // default (flex-start)
+    'center', // center both axes
+    'spread', // space-between
+    'tl', // top-left
+    'tc', // top-center
+    'tr', // top-right
+    'cl', // center-left
+    'cr', // center-right
+    'bl', // bottom-left
+    'bc', // bottom-center
+    'br', // bottom-right
   ],
 
   /**
    * Width sizing
    */
   widthType: [
-    'none',       // no width specified
-    'w 100',      // fixed pixel width
-    'w hug',      // fit-content
-    'w full',     // flex: 1 or 100%
+    'none', // no width specified
+    'w 100', // fixed pixel width
+    'w hug', // fit-content
+    'w full', // flex: 1 or 100%
   ],
 
   /**
    * Height sizing
    */
   heightType: [
-    'none',       // no height specified
-    'h 100',      // fixed pixel height
-    'h hug',      // fit-content
-    'h full',     // flex: 1 or 100%
+    'none', // no height specified
+    'h 100', // fixed pixel height
+    'h hug', // fit-content
+    'h full', // flex: 1 or 100%
   ],
 
   /**
    * Spacing properties
    */
   spacing: [
-    'none',       // no spacing
-    'gap 12',     // gap between children
-    'pad 16',     // padding
+    'none', // no spacing
+    'gap 12', // gap between children
+    'pad 16', // padding
     'gap 12, pad 16', // both
   ],
 
@@ -80,8 +80,8 @@ export const LAYOUT_DIMENSIONS = {
    */
   flexBehavior: [
     'none',
-    'wrap',       // flex-wrap: wrap
-    'shrink',     // flex-shrink: 1
+    'wrap', // flex-wrap: wrap
+    'shrink', // flex-shrink: 1
   ],
 } as const
 
@@ -95,48 +95,48 @@ export const LAYOUT_DIMENSIONS = {
  */
 export const EXPECTED_CSS: Record<string, Record<string, string>> = {
   // Direction defaults
-  'Frame': {
-    'display': 'flex',
+  Frame: {
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
   },
   'Frame hor': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
     'align-items': 'flex-start',
   },
   'Frame ver': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
   },
 
   // Sizing
   'Frame w 200': {
-    'width': '200px',
+    width: '200px',
   },
   'Frame h 100': {
-    'height': '100px',
+    height: '100px',
   },
   'Frame w 200, h 100': {
-    'width': '200px',
-    'height': '100px',
+    width: '200px',
+    height: '100px',
   },
   'Frame w hug': {
-    'width': 'fit-content',
+    width: 'fit-content',
   },
   'Frame h hug': {
-    'height': 'fit-content',
+    height: 'fit-content',
   },
 
   // Alignment - center (BOTH axes)
   'Frame center': {
-    'display': 'flex',
+    display: 'flex',
     'justify-content': 'center',
     'align-items': 'center',
   },
   'Frame hor, center': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
     'justify-content': 'center',
     'align-items': 'center',
@@ -144,87 +144,87 @@ export const EXPECTED_CSS: Record<string, Record<string, string>> = {
 
   // Alignment - hor-center (horizontal only)
   'Frame hor-center': {
-    'display': 'flex',
+    display: 'flex',
     'align-items': 'center',
   },
   'Frame hor, hor-center': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
     'justify-content': 'center',
   },
 
   // Alignment - ver-center (vertical only)
   'Frame ver-center': {
-    'display': 'flex',
+    display: 'flex',
     'justify-content': 'center',
   },
   'Frame hor, ver-center': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
     'align-items': 'center',
   },
 
   // Alignment - spread
   'Frame spread': {
-    'display': 'flex',
+    display: 'flex',
     'justify-content': 'space-between',
   },
   'Frame hor, spread': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'row',
     'justify-content': 'space-between',
   },
   'Frame ver, spread': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'space-between',
   },
 
   // 9-zone alignment
   'Frame tl': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'flex-start',
     'align-items': 'flex-start',
   },
   'Frame tc': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'flex-start',
     'align-items': 'center',
   },
   'Frame tr': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'flex-start',
     'align-items': 'flex-end',
   },
   'Frame cl': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
     'align-items': 'flex-start',
   },
   'Frame cr': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
     'align-items': 'flex-end',
   },
   'Frame bl': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'flex-end',
     'align-items': 'flex-start',
   },
   'Frame bc': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'flex-end',
     'align-items': 'center',
   },
   'Frame br': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'flex-end',
     'align-items': 'flex-end',
@@ -232,29 +232,29 @@ export const EXPECTED_CSS: Record<string, Record<string, string>> = {
 
   // Spacing - WICHTIG: Default ist column!
   'Frame gap 12': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'gap': '12px',
+    gap: '12px',
   },
   'Frame pad 16': {
-    'padding': '16px',
+    padding: '16px',
   },
   'Frame pad 12 24': {
-    'padding': '12px 24px',
+    padding: '12px 24px',
   },
   'Frame pad 8 12 16 20': {
-    'padding': '8px 12px 16px 20px',
+    padding: '8px 12px 16px 20px',
   },
   'Frame gap 12, pad 16': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'gap': '12px',
-    'padding': '16px',
+    gap: '12px',
+    padding: '16px',
   },
 
   // Flex behavior - Default ist column!
   'Frame wrap': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'flex-wrap': 'wrap',
   },
@@ -272,14 +272,14 @@ export const EXPECTED_CSS: Record<string, Record<string, string>> = {
 
   // VER Kombinationen (parallel zu HOR)
   'Frame ver, gap 12': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
-    'gap': '12px',
+    gap: '12px',
   },
   'Frame ver, gap 12, pad 16': {
     'flex-direction': 'column',
-    'gap': '12px',
-    'padding': '16px',
+    gap: '12px',
+    padding: '16px',
   },
   'Frame ver, center': {
     'flex-direction': 'column',
@@ -290,104 +290,104 @@ export const EXPECTED_CSS: Record<string, Record<string, string>> = {
     'flex-direction': 'column',
     'justify-content': 'center',
     'align-items': 'center',
-    'gap': '12px',
+    gap: '12px',
   },
   'Frame ver, spread, gap 12': {
     'flex-direction': 'column',
     'justify-content': 'space-between',
-    'gap': '12px',
+    gap: '12px',
   },
 
   // HOR Kombinationen
   'Frame hor, gap 12, pad 16': {
     'flex-direction': 'row',
-    'gap': '12px',
-    'padding': '16px',
+    gap: '12px',
+    padding: '16px',
   },
   'Frame hor, center, gap 12': {
     'flex-direction': 'row',
     'justify-content': 'center',
     'align-items': 'center',
-    'gap': '12px',
+    gap: '12px',
   },
   'Frame hor, spread, gap 12': {
     'flex-direction': 'row',
     'justify-content': 'space-between',
-    'gap': '12px',
+    gap: '12px',
   },
   'Frame hor, wrap, gap 12': {
     'flex-direction': 'row',
     'flex-wrap': 'wrap',
-    'gap': '12px',
+    gap: '12px',
   },
 
   // Default (column) + Alignment
   'Frame center, gap 12': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
     'align-items': 'center',
-    'gap': '12px',
+    gap: '12px',
   },
   'Frame spread, gap 12': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'justify-content': 'space-between',
-    'gap': '12px',
+    gap: '12px',
   },
   'Frame wrap, gap 12': {
-    'display': 'flex',
+    display: 'flex',
     'flex-direction': 'column',
     'flex-wrap': 'wrap',
-    'gap': '12px',
+    gap: '12px',
   },
 
   // Grid
   'Frame grid 12': {
-    'display': 'grid',
+    display: 'grid',
     'grid-template-columns': 'repeat(12, 1fr)',
   },
   'Frame grid 3': {
-    'display': 'grid',
+    display: 'grid',
     'grid-template-columns': 'repeat(3, 1fr)',
   },
   'Frame grid 12, gap 16': {
-    'display': 'grid',
+    display: 'grid',
     'grid-template-columns': 'repeat(12, 1fr)',
-    'gap': '16px',
+    gap: '16px',
   },
   'Frame grid 3, gap-x 16': {
-    'display': 'grid',
+    display: 'grid',
     'column-gap': '16px',
   },
   'Frame grid 3, gap-y 24': {
-    'display': 'grid',
+    display: 'grid',
     'row-gap': '24px',
   },
   'Frame grid 3, row-height 100': {
-    'display': 'grid',
+    display: 'grid',
     'grid-auto-rows': '100px',
   },
   'Frame grid 3, hor': {
-    'display': 'grid',
+    display: 'grid',
     'grid-auto-flow': 'row',
   },
   'Frame grid 3, ver': {
-    'display': 'grid',
+    display: 'grid',
     'grid-auto-flow': 'column',
   },
   'Frame grid 3, dense': {
-    'display': 'grid',
+    display: 'grid',
   },
 
   // Stacked
   'Frame stacked': {
-    'position': 'relative',
+    position: 'relative',
   },
   'Frame stacked, w 400, h 300': {
-    'position': 'relative',
-    'width': '400px',
-    'height': '300px',
+    position: 'relative',
+    width: '400px',
+    height: '300px',
   },
 }
 
@@ -409,13 +409,13 @@ export const CHILD_IN_PARENT_MATRIX: Array<{
   {
     parent: 'Frame',
     child: 'Frame w 100',
-    expectedCSS: { 'width': '100px', 'flex-shrink': '0' },
+    expectedCSS: { width: '100px', 'flex-shrink': '0' },
     description: 'Fixed width child in vertical flex gets flex-shrink: 0',
   },
   {
     parent: 'Frame hor',
     child: 'Frame w 100',
-    expectedCSS: { 'width': '100px', 'flex-shrink': '0' },
+    expectedCSS: { width: '100px', 'flex-shrink': '0' },
     description: 'Fixed width child in horizontal flex gets flex-shrink: 0',
   },
 
@@ -425,13 +425,13 @@ export const CHILD_IN_PARENT_MATRIX: Array<{
   {
     parent: 'Frame w 400',
     child: 'Frame w full',
-    expectedCSS: { 'width': '100%', 'min-width': '0', 'align-self': 'stretch' },
+    expectedCSS: { width: '100%', 'min-width': '0', 'align-self': 'stretch' },
     description: 'w full child in vertical parent gets width 100% + stretch (cross-axis)',
   },
   {
     parent: 'Frame hor, w 400',
     child: 'Frame w full',
-    expectedCSS: { 'flex': '1 1 0%', 'min-width': '0' },
+    expectedCSS: { flex: '1 1 0%', 'min-width': '0' },
     description: 'w full child in horizontal parent gets flex (main-axis)',
   },
 
@@ -440,7 +440,7 @@ export const CHILD_IN_PARENT_MATRIX: Array<{
   {
     parent: 'Frame h 400',
     child: 'Frame h full',
-    expectedCSS: { 'flex': '1 1 0%', 'min-height': '0' },
+    expectedCSS: { flex: '1 1 0%', 'min-height': '0' },
     description: 'h full child in vertical parent gets flex (main-axis)',
   },
 
@@ -448,13 +448,13 @@ export const CHILD_IN_PARENT_MATRIX: Array<{
   {
     parent: 'Frame grid 12',
     child: 'Frame w 4',
-    expectedCSS: { 'grid-column': 'span 4', 'width': '100%' },
+    expectedCSS: { 'grid-column': 'span 4', width: '100%' },
     description: 'w in grid child is column span + fills cell width',
   },
   {
     parent: 'Frame grid 12',
     child: 'Frame h 2',
-    expectedCSS: { 'grid-row': 'span 2', 'height': '100%' },
+    expectedCSS: { 'grid-row': 'span 2', height: '100%' },
     description: 'h in grid child is row span + fills cell height',
   },
   {
@@ -477,8 +477,8 @@ export const CHILD_IN_PARENT_MATRIX: Array<{
       'grid-row-start': '3',
       'grid-column': 'span 4',
       'grid-row': 'span 2',
-      'width': '100%',
-      'height': '100%',
+      width: '100%',
+      height: '100%',
     },
     description: 'Combined grid positioning + cell fill',
   },
@@ -487,43 +487,48 @@ export const CHILD_IN_PARENT_MATRIX: Array<{
   {
     parent: 'Frame stacked, w 400, h 300',
     child: 'Frame x 50, y 30',
-    expectedCSS: { 'position': 'absolute', 'left': '50px', 'top': '30px' },
+    expectedCSS: { position: 'absolute', left: '50px', top: '30px' },
     description: 'x/y in stacked child is absolute positioning',
   },
   {
     parent: 'Frame stacked, w 200, h 150',
     child: 'Frame w full, h full',
-    expectedCSS: { 'position': 'absolute', 'width': '100%', 'height': '100%' },
+    expectedCSS: { position: 'absolute', width: '100%', height: '100%' },
     description: 'w/h full in stacked child fills container',
   },
   {
     parent: 'Frame stacked, w 200, h 150',
     child: 'Frame bottom',
-    expectedCSS: { 'position': 'absolute', 'bottom': '0' },
+    expectedCSS: { position: 'absolute', bottom: '0' },
     description: 'bottom directive positions at bottom',
   },
   {
     parent: 'Frame stacked, w 200, h 150',
     child: 'Frame top, left',
-    expectedCSS: { 'position': 'absolute', 'top': '0', 'left': '0' },
+    expectedCSS: { position: 'absolute', top: '0', left: '0' },
     description: 'top, left directives position at top-left',
   },
   {
     parent: 'Frame stacked, w 200, h 150',
     child: 'Frame bottom, right',
-    expectedCSS: { 'position': 'absolute', 'bottom': '0', 'right': '0' },
+    expectedCSS: { position: 'absolute', bottom: '0', right: '0' },
     description: 'bottom, right directives position at bottom-right',
   },
   {
     parent: 'Frame stacked, w 200, h 150',
     child: 'Frame center',
-    expectedCSS: { 'position': 'absolute', 'top': '50%', 'left': '50%', 'transform': 'translate(-50%, -50%)' },
+    expectedCSS: {
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+    },
     description: 'center in stacked child centers with transform',
   },
   {
     parent: 'Frame stacked',
     child: 'Frame x 100, y 50, z 10',
-    expectedCSS: { 'position': 'absolute', 'left': '100px', 'top': '50px', 'z-index': '10' },
+    expectedCSS: { position: 'absolute', left: '100px', top: '50px', 'z-index': '10' },
     description: 'z property sets z-index',
   },
 
@@ -531,13 +536,13 @@ export const CHILD_IN_PARENT_MATRIX: Array<{
   {
     parent: 'Frame pos',
     child: 'Frame x 50',
-    expectedCSS: { 'position': 'absolute', 'left': '50px' },
+    expectedCSS: { position: 'absolute', left: '50px' },
     description: 'x outside grid is absolute left',
   },
   {
     parent: 'Frame pos',
     child: 'Frame y 100',
-    expectedCSS: { 'position': 'absolute', 'top': '100px' },
+    expectedCSS: { position: 'absolute', top: '100px' },
     description: 'y outside grid is absolute top',
   },
 
@@ -545,7 +550,7 @@ export const CHILD_IN_PARENT_MATRIX: Array<{
   {
     parent: 'Frame hor, w 400',
     child: 'Frame w 60',
-    expectedCSS: { 'width': '60px', 'flex-shrink': '0' },
+    expectedCSS: { width: '60px', 'flex-shrink': '0' },
     description: 'Fixed sidebar in horizontal layout',
   },
 ]
@@ -579,7 +584,7 @@ export const CONFLICT_TESTS: Array<{
   },
   {
     code: 'Frame w 100, w 200',
-    expectedCSS: { 'width': '200px' },
+    expectedCSS: { width: '200px' },
     description: 'Last width wins',
   },
 ]
@@ -598,17 +603,17 @@ export const EDGE_CASE_TESTS: Array<{
 }> = [
   {
     code: 'Frame',
-    expectedCSS: { 'display': 'flex', 'flex-direction': 'column' },
+    expectedCSS: { display: 'flex', 'flex-direction': 'column' },
     description: 'Empty Frame has default flex column layout',
   },
   {
     code: 'Frame w 0',
-    expectedCSS: { 'width': '0px' },
+    expectedCSS: { width: '0px' },
     description: 'Zero width is valid',
   },
   {
     code: 'Frame gap 0',
-    expectedCSS: { 'gap': '0px' },
+    expectedCSS: { gap: '0px' },
     description: 'Zero gap is valid',
   },
 ]
@@ -638,18 +643,18 @@ export const SCROLL_TESTS: Array<{
   },
   {
     code: 'Frame scroll-both',
-    expectedCSS: { 'overflow': 'auto' },
+    expectedCSS: { overflow: 'auto' },
     description: 'Both directions scroll',
   },
   // Scroll + sizing
   {
     code: 'Frame scroll, h 200',
-    expectedCSS: { 'overflow-y': 'auto', 'height': '200px' },
+    expectedCSS: { 'overflow-y': 'auto', height: '200px' },
     description: 'Scroll with fixed height',
   },
   {
     code: 'Frame scroll-hor, w 300',
-    expectedCSS: { 'overflow-x': 'auto', 'width': '300px' },
+    expectedCSS: { 'overflow-x': 'auto', width: '300px' },
     description: 'Horizontal scroll with fixed width',
   },
   // Scroll + layout
@@ -660,18 +665,18 @@ export const SCROLL_TESTS: Array<{
   },
   {
     code: 'Frame ver, scroll, gap 12',
-    expectedCSS: { 'flex-direction': 'column', 'overflow-y': 'auto', 'gap': '12px' },
+    expectedCSS: { 'flex-direction': 'column', 'overflow-y': 'auto', gap: '12px' },
     description: 'Vertical layout with scroll and gap',
   },
   // Clip
   {
     code: 'Frame clip',
-    expectedCSS: { 'overflow': 'hidden' },
+    expectedCSS: { overflow: 'hidden' },
     description: 'Clip overflow',
   },
   {
     code: 'Frame clip, rad 12',
-    expectedCSS: { 'overflow': 'hidden', 'border-radius': '12px' },
+    expectedCSS: { overflow: 'hidden', 'border-radius': '12px' },
     description: 'Clip with border radius (common pattern)',
   },
 ]
@@ -691,34 +696,34 @@ export const POSITION_TESTS: Array<{
   // Position basics
   {
     code: 'Frame absolute',
-    expectedCSS: { 'position': 'absolute' },
+    expectedCSS: { position: 'absolute' },
     description: 'Absolute positioning',
   },
   {
     code: 'Frame relative',
-    expectedCSS: { 'position': 'relative' },
+    expectedCSS: { position: 'relative' },
     description: 'Relative positioning',
   },
   {
     code: 'Frame fixed',
-    expectedCSS: { 'position': 'fixed' },
+    expectedCSS: { position: 'fixed' },
     description: 'Fixed positioning',
   },
   // Position + coordinates
   {
     code: 'Frame absolute, x 10, y 20',
-    expectedCSS: { 'position': 'absolute', 'left': '10px', 'top': '20px' },
+    expectedCSS: { position: 'absolute', left: '10px', top: '20px' },
     description: 'Absolute with coordinates',
   },
   // Position + sizing
   {
     code: 'Frame absolute, w full',
-    expectedCSS: { 'position': 'absolute', 'width': '100%' },
+    expectedCSS: { position: 'absolute', width: '100%' },
     description: 'Absolute with full width',
   },
   {
     code: 'Frame fixed, w full, h 60',
-    expectedCSS: { 'position': 'fixed', 'width': '100%', 'height': '60px' },
+    expectedCSS: { position: 'fixed', width: '100%', height: '60px' },
     description: 'Fixed header pattern',
   },
   // Z-index
@@ -729,7 +734,7 @@ export const POSITION_TESTS: Array<{
   },
   {
     code: 'Frame absolute, z 100',
-    expectedCSS: { 'position': 'absolute', 'z-index': '100' },
+    expectedCSS: { position: 'absolute', 'z-index': '100' },
     description: 'Absolute with z-index',
   },
 ]
@@ -776,7 +781,7 @@ export const SIZING_TESTS: Array<{
   // Min/Max + layout
   {
     code: 'Frame hor, maxw 800, gap 16',
-    expectedCSS: { 'flex-direction': 'row', 'max-width': '800px', 'gap': '16px' },
+    expectedCSS: { 'flex-direction': 'row', 'max-width': '800px', gap: '16px' },
     description: 'Horizontal layout with max-width (container pattern)',
   },
   {
@@ -800,22 +805,22 @@ export const VISIBILITY_TESTS: Array<{
 }> = [
   {
     code: 'Frame hidden',
-    expectedCSS: { 'display': 'none' },
+    expectedCSS: { display: 'none' },
     description: 'Hidden element',
   },
   {
     code: 'Frame opacity 0.5',
-    expectedCSS: { 'opacity': '0.5' },
+    expectedCSS: { opacity: '0.5' },
     description: 'Semi-transparent',
   },
   {
     code: 'Frame opacity 0',
-    expectedCSS: { 'opacity': '0' },
+    expectedCSS: { opacity: '0' },
     description: 'Fully transparent (but still in layout)',
   },
   {
     code: 'Frame disabled',
-    expectedCSS: { 'pointer-events': 'none', 'opacity': '0.5' },
+    expectedCSS: { 'pointer-events': 'none', opacity: '0.5' },
     description: 'Disabled element',
   },
 ]
@@ -844,12 +849,12 @@ export const ASPECT_TESTS: Array<{
   },
   {
     code: 'Frame aspect square, w 200',
-    expectedCSS: { 'aspect-ratio': '1', 'width': '200px' },
+    expectedCSS: { 'aspect-ratio': '1', width: '200px' },
     description: 'Square with fixed width',
   },
   {
     code: 'Frame aspect video, w full',
-    expectedCSS: { 'aspect-ratio': '16/9', 'width': '100%' },
+    expectedCSS: { 'aspect-ratio': '16/9', width: '100%' },
     description: 'Video ratio responsive',
   },
 ]
@@ -875,7 +880,7 @@ export const FLEX_ITEM_TESTS: Array<{
     // Note: explicit width overrides shrink because the compiler always adds flex-shrink: 0
     // to explicit widths to prevent them from being compressed in flex containers
     code: 'Frame shrink, w 200',
-    expectedCSS: { 'flex-shrink': '0', 'width': '200px' },
+    expectedCSS: { 'flex-shrink': '0', width: '200px' },
     description: 'Shrink with preferred width',
   },
   // Note: 'grow' is removed - use 'w full' in horizontal context
@@ -895,27 +900,27 @@ export const HUG_TESTS: Array<{
 }> = [
   {
     code: 'Frame w hug',
-    expectedCSS: { 'width': 'fit-content' },
+    expectedCSS: { width: 'fit-content' },
     description: 'Width hugs content',
   },
   {
     code: 'Frame h hug',
-    expectedCSS: { 'height': 'fit-content' },
+    expectedCSS: { height: 'fit-content' },
     description: 'Height hugs content',
   },
   {
     code: 'Frame w hug, h hug',
-    expectedCSS: { 'width': 'fit-content', 'height': 'fit-content' },
+    expectedCSS: { width: 'fit-content', height: 'fit-content' },
     description: 'Both dimensions hug content',
   },
   {
     code: 'Frame hor, w hug',
-    expectedCSS: { 'flex-direction': 'row', 'width': 'fit-content' },
+    expectedCSS: { 'flex-direction': 'row', width: 'fit-content' },
     description: 'Horizontal layout with hug width',
   },
   {
     code: 'Frame w hug, pad 16',
-    expectedCSS: { 'width': 'fit-content', 'padding': '16px' },
+    expectedCSS: { width: 'fit-content', padding: '16px' },
     description: 'Hug with padding',
   },
 ]
@@ -1124,19 +1129,30 @@ export function isValidCombination(combo: Partial<LayoutCombination>): boolean {
   // stacked with 9-zone alignment is valid (uses absolute positioning)
 
   // Invalid: wrap/shrink with grid or stacked
-  if ((combo.layoutMode === 'grid 12' || combo.layoutMode === 'grid 3' || combo.layoutMode === 'stacked') &&
-      (combo.flexBehavior === 'wrap' || combo.flexBehavior === 'shrink')) {
+  if (
+    (combo.layoutMode === 'grid 12' ||
+      combo.layoutMode === 'grid 3' ||
+      combo.layoutMode === 'stacked') &&
+    (combo.flexBehavior === 'wrap' || combo.flexBehavior === 'shrink')
+  ) {
     return false
   }
 
   // Invalid: spread in grid (no meaning)
-  if ((combo.layoutMode === 'grid 12' || combo.layoutMode === 'grid 3') && combo.alignment === 'spread') {
+  if (
+    (combo.layoutMode === 'grid 12' || combo.layoutMode === 'grid 3') &&
+    combo.alignment === 'spread'
+  ) {
     return false
   }
 
   // Invalid: hor + 9-zone (conceptually incompatible - 9-zone implies column)
   const nineZoneAlignments = ['tl', 'tc', 'tr', 'cl', 'cr', 'bl', 'bc', 'br']
-  if (combo.layoutMode === 'hor' && combo.alignment && nineZoneAlignments.includes(combo.alignment)) {
+  if (
+    combo.layoutMode === 'hor' &&
+    combo.alignment &&
+    nineZoneAlignments.includes(combo.alignment)
+  ) {
     return false
   }
 

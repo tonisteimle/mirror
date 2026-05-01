@@ -1,7 +1,7 @@
 /**
  * Bind — Differential Testing (Schicht 4)
  *
- * Documentation: docs/concepts/bind-backend-support.md.
+ * Documentation: docs/archive/concepts/bind-backend-support.md.
  */
 
 import { describe, it, expect } from 'vitest'

@@ -2,7 +2,7 @@
  * States — Differential Testing (Schicht 4)
  *
  * Per-backend support matrix. Documentation:
- * docs/concepts/states-backend-support.md.
+ * docs/archive/concepts/states-backend-support.md.
  */
 
 import { describe, it, expect } from 'vitest'

@@ -3,7 +3,7 @@
  *
  * Vitest tests for the pure functions in
  * studio/editor/extract/pattern-match.ts. Covers all 12 edge cases
- * from docs/concepts/batch-replace-on-extract.md plus the match-table
+ * from docs/archive/concepts/batch-replace-on-extract.md plus the match-table
  * examples.
  */
 

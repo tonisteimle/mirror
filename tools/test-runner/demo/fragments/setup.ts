@@ -6,7 +6,7 @@ import type { DemoAction } from '../types'
 
 export interface ResetCanvasOptions {
   /** Mirror source to reset to (default: minimal centered Frame). No trailing
-   *  newline — see docs/concepts/visual-editing-demo.md for why. */
+   *  newline — see docs/archive/concepts/visual-editing-demo.md for why. */
   baseCode?: string
   /** Pause after reset to let the editor settle (default 500ms) */
   settleMs?: number

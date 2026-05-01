@@ -4,7 +4,7 @@
  * Prüft Block-`if/else` und Inline-Ternary inkl. nested, in Style-Property,
  * mit Token-Reference, im Text-Content und mit Non-ASCII-Operanden.
  *
- * Sub-Features T1-T12 aus docs/concepts/feature-test-execution-plan.md.
+ * Sub-Features T1-T12 aus docs/archive/concepts/feature-test-execution-plan.md.
  *
  * @vitest-environment jsdom
  */

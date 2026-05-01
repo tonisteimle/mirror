@@ -22,7 +22,7 @@
  * - ⚠️ = partial / degraded behavior (compiles but semantics differ)
  * - ❌ = silently dropped / inlined
  *
- * Documentation: docs/concepts/component-backend-support.md
+ * Documentation: docs/archive/concepts/component-backend-support.md
  */
 
 import { describe, it, expect } from 'vitest'

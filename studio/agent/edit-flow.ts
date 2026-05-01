@@ -10,8 +10,8 @@
  *    von `studio/editor/edit-handler.ts` (Phase 3).
  *  - Kein User-Feedback (Toast, Banner) — der Caller sieht den `EditResult`.
  *
- * Siehe: docs/concepts/llm-edit-flow.md (Anforderungen),
- *        docs/concepts/llm-edit-flow-plan.md (T2.4)
+ * Siehe: docs/archive/concepts/llm-edit-flow.md (Anforderungen),
+ *        docs/archive/concepts/llm-edit-flow-plan.md (T2.4)
  */
 
 import { buildEditPrompt, type EditCaptureCtx } from './edit-prompts'

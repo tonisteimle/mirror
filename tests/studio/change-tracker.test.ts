@@ -6,7 +6,7 @@
  * Snapshot atomar — der nächste Call vergleicht gegen die jetzt aktuelle
  * Source.
  *
- * Siehe: docs/concepts/llm-edit-flow-test-concept.md § 3.1 (change-tracker)
+ * Siehe: docs/archive/concepts/llm-edit-flow-test-concept.md § 3.1 (change-tracker)
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'

@@ -8,7 +8,7 @@
  *  - In Component-Definition, in Conditional, in each-Loop
  *  - Token-in-Token, numeric tokens, multiple suffixes
  *
- * Sub-Features TK1-TK10 aus docs/concepts/feature-test-execution-plan.md.
+ * Sub-Features TK1-TK10 aus docs/archive/concepts/feature-test-execution-plan.md.
  *
  * @vitest-environment jsdom
  */

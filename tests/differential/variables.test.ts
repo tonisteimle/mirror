@@ -2,7 +2,7 @@
  * Variables/Data — Differential Testing (Schicht 4 der Test-Pyramide)
  *
  * Pinned support matrix per backend für Variables/Data-Sub-Features.
- * Documentation: docs/concepts/variables-backend-support.md.
+ * Documentation: docs/archive/concepts/variables-backend-support.md.
  */
 
 import { describe, it, expect } from 'vitest'

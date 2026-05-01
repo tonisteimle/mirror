@@ -7,7 +7,7 @@
  *  - Nested, mit innerem Conditional, mit `bind`
  *  - Bug-Regressions: #17 (parallel), #19 (loopVar), #20 (token-ref)
  *
- * Sub-Features E1-E13 aus docs/concepts/feature-test-execution-plan.md.
+ * Sub-Features E1-E13 aus docs/archive/concepts/feature-test-execution-plan.md.
  *
  * @vitest-environment jsdom
  */

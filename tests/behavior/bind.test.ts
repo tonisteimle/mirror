@@ -7,7 +7,7 @@
  *  - Bind in each-Loop, auf Object-Properties, exclusive
  *  - Initial-Value, Re-Render bei State-Wechsel
  *
- * Sub-Features B1-B10 aus docs/concepts/feature-test-execution-plan.md.
+ * Sub-Features B1-B10 aus docs/archive/concepts/feature-test-execution-plan.md.
  *
  * @vitest-environment jsdom
  */

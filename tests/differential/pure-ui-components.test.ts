@@ -1,7 +1,7 @@
 /**
  * Pure UI Components — Differential Testing (Schicht 4)
  *
- * Documentation: docs/concepts/pure-ui-components-backend-support.md.
+ * Documentation: docs/archive/concepts/pure-ui-components-backend-support.md.
  */
 
 import { describe, it, expect } from 'vitest'

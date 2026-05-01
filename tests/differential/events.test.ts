@@ -1,7 +1,7 @@
 /**
  * Events — Differential Testing (Schicht 4)
  *
- * Documentation: docs/concepts/events-backend-support.md.
+ * Documentation: docs/archive/concepts/events-backend-support.md.
  */
 
 import { describe, it, expect } from 'vitest'

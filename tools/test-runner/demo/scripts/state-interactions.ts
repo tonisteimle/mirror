@@ -5,7 +5,7 @@
  * Hover, Computed-Style ändert sich. Beweist, dass der State-Block in CSS
  * compiliert wird, das auf System-Events reagiert.
  *
- * Spec: docs/concepts/state-interactions-demo.md
+ * Spec: docs/archive/concepts/state-interactions-demo.md
  */
 
 import type { DemoScript } from '../types'

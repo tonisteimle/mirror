@@ -4,7 +4,7 @@
  * Aktuell nur `formatProjectFileSection` — rendert ein Bündel Mirror-Files
  * (Tokens / Components) als Markdown-Block für Prompt-Injection.
  *
- * Siehe: docs/concepts/llm-edit-flow-plan.md (§ 3.1)
+ * Siehe: docs/archive/concepts/llm-edit-flow-plan.md (§ 3.1)
  */
 
 /**

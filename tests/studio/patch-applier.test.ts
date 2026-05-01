@@ -11,7 +11,7 @@
  * gemeinsame Working-Copy angewendet, jeder Patch sieht die Mutation
  * der vorigen.
  *
- * Siehe: docs/concepts/llm-edit-flow-test-concept.md § 3.1 (patch-applier)
+ * Siehe: docs/archive/concepts/llm-edit-flow-test-concept.md § 3.1 (patch-applier)
  */
 
 import { describe, it, expect } from 'vitest'

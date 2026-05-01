@@ -1,7 +1,7 @@
 /**
  * Cleanup — Differential Testing (Schicht 4)
  *
- * Documentation: docs/concepts/cleanup-backend-support.md.
+ * Documentation: docs/archive/concepts/cleanup-backend-support.md.
  */
 
 import { describe, it, expect } from 'vitest'

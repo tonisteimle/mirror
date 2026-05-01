@@ -1,7 +1,7 @@
 /**
  * Positional Arguments — Behavior Spec (Schicht 2)
  *
- * Sub-features (per docs/concepts/positional-args.md):
+ * Sub-features (per docs/archive/concepts/positional-args.md):
  *   PA1 Container hex bg
  *   PA2 Container number → w
  *   PA3 Container size pair → w/h

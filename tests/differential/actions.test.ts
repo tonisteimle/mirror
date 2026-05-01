@@ -1,7 +1,7 @@
 /**
  * Actions — Differential Testing (Schicht 4)
  *
- * Documentation: docs/concepts/actions-backend-support.md.
+ * Documentation: docs/archive/concepts/actions-backend-support.md.
  */
 
 import { describe, it, expect } from 'vitest'

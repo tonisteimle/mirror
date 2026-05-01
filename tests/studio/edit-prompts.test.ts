@@ -7,7 +7,7 @@
  *
  * Snapshots werden aktualisiert mit `npx vitest --run -u tests/studio/edit-prompts.test.ts`.
  *
- * Siehe: docs/concepts/llm-edit-flow-test-concept.md § 3.1 (edit-prompts), § 4.1 (Snapshots)
+ * Siehe: docs/archive/concepts/llm-edit-flow-test-concept.md § 3.1 (edit-prompts), § 4.1 (Snapshots)
  */
 
 import { describe, it, expect } from 'vitest'

@@ -5,7 +5,7 @@
  * Tests laufen in jsdom; visuelle Position-Verifikation erfolgt in T3.5
  * manuell im running Studio.
  *
- * Siehe: docs/concepts/llm-edit-flow-test-concept.md § 3.1 (prompt-field)
+ * Siehe: docs/archive/concepts/llm-edit-flow-test-concept.md § 3.1 (prompt-field)
  *
  * @vitest-environment jsdom
  */
