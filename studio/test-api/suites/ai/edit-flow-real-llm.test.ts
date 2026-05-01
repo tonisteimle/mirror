@@ -297,4 +297,133 @@ export const realLlmEditFlowTests: TestCase[] = describe('AI · LLM-Edit-Flow (r
       api.assert.ok(cm.getContent().includes('weight bold'), 'doc has weight bold after accept')
     }
   ),
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Scenario 5: Esc during thinking → in-flight LLM call cancelled
+  // ───────────────────────────────────────────────────────────────────────
+  testWithSetup(
+    'edge: Esc during thinking → call cancelled, doc untouched, no ghost',
+    'canvas mobile, bg #1a1a1a\n\nButton "Speihern", bg #2271C1, col white',
+    async (api: TestAPI) => {
+      ensureShimInstalled()
+      await api.utils.waitForCompile()
+
+      const cm = api.codemirror
+      cm.focus()
+      cm.setCursor(3, 1)
+
+      const sourceBefore = cm.getContent()
+      cm.executeKeyBinding('Mod-Enter')
+
+      // Wait for thinking, then press Esc immediately. The LLM call is
+      // in-flight (5-15s); Esc must abort it and hide the indicator.
+      await waitUntil(() => getStatusState() === 'thinking', 2000, 50, 'status=thinking')
+      api.assert.equals(getStatusState(), 'thinking', 'thinking before Esc')
+
+      cm.executeKeyBinding('Escape')
+
+      // Status hides + ghost never activates. Give the abort 1s to settle.
+      await waitUntil(() => getStatusState() === null, 3000, 50, 'status hides after Esc')
+      api.assert.ok(!getGhostActive(api), 'no ghost after cancel')
+      api.assert.equals(cm.getContent(), sourceBefore, 'doc unchanged after cancel')
+
+      // Wait an additional second to confirm no late ghost arrives from
+      // a race condition (delayed LLM response after abort).
+      await new Promise(r => setTimeout(r, 1000))
+      api.assert.ok(!getGhostActive(api), 'no late ghost from race')
+      api.assert.equals(cm.getContent(), sourceBefore, 'doc still unchanged')
+    }
+  ),
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Scenario 6: T4.4 auto-discard — typing while ghost active wipes ghost
+  // ───────────────────────────────────────────────────────────────────────
+  testWithSetup(
+    'edge: typing while ghost active → ghost auto-discards (T4.4)',
+    'canvas mobile, bg #1a1a1a\n\nButton "Speihern", bg #2271C1, col white',
+    async (api: TestAPI) => {
+      ensureShimInstalled()
+      await api.utils.waitForCompile()
+
+      const cm = api.codemirror
+      cm.focus()
+      cm.setCursor(3, 1)
+
+      cm.executeKeyBinding('Mod-Enter')
+      await waitUntil(() => getGhostActive(api), 30_000, 200, 'ghost active')
+      api.assert.ok(getGhostActive(api), 'ghost is active before user-edit')
+
+      // User decides to ignore the proposal and types directly. Move
+      // cursor to end-of-doc and type a character. The ghost StateField
+      // sees the docChanged transaction and clears itself; the
+      // ghostDiscardOnEditExtension hides the status indicator.
+      cm.setCursor(3, 100)
+      cm.typeText('X')
+
+      await waitUntil(() => !getGhostActive(api), 1000, 50, 'ghost auto-cleared on edit')
+      api.assert.ok(!getGhostActive(api), 'ghost gone after direct-edit')
+      api.assert.equals(getStatusState(), null, 'status indicator hidden after auto-discard')
+      // The user's character is in the doc, the LLM's proposal is not.
+      api.assert.ok(cm.getContent().endsWith('X'), 'user-typed character is in doc')
+      api.assert.ok(
+        cm.getContent().includes('Speihern'),
+        'original typo still there (proposal discarded)'
+      )
+    }
+  ),
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Scenario 7: Esc dismisses ghost (after LLM finished)
+  // ───────────────────────────────────────────────────────────────────────
+  testWithSetup(
+    'edge: Esc on active ghost → ghost cleared, doc untouched',
+    'canvas mobile, bg #1a1a1a\n\nButton "Speihern", bg #2271C1, col white',
+    async (api: TestAPI) => {
+      ensureShimInstalled()
+      await api.utils.waitForCompile()
+
+      const cm = api.codemirror
+      cm.focus()
+      cm.setCursor(3, 1)
+
+      const sourceBefore = cm.getContent()
+      cm.executeKeyBinding('Mod-Enter')
+      await waitUntil(() => getGhostActive(api), 30_000, 200, 'ghost active')
+
+      cm.executeKeyBinding('Escape')
+
+      await waitUntil(() => !getGhostActive(api), 2000, 50, 'ghost cleared after Esc')
+      api.assert.ok(!getGhostActive(api), 'ghost gone')
+      api.assert.equals(getStatusState(), null, 'status hidden after Esc-dismiss')
+      api.assert.equals(cm.getContent(), sourceBefore, 'doc unchanged after Esc-dismiss')
+    }
+  ),
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Scenario 8: Empty editor → pre-flight guard fires, no LLM call
+  // ───────────────────────────────────────────────────────────────────────
+  testWithSetup(
+    'edge: empty editor → error status, no LLM call',
+    'canvas mobile',
+    async (api: TestAPI) => {
+      ensureShimInstalled()
+      await api.utils.waitForCompile()
+
+      const cm = api.codemirror
+      // Wipe the doc to truly-empty.
+      cm.setContent('')
+      cm.focus()
+
+      api.assert.equals(cm.getContent(), '', 'doc is empty')
+
+      cm.executeKeyBinding('Mod-Enter')
+
+      // The pre-flight guard in runEditFlow returns synchronously with
+      // status=error. No "thinking" state, no LLM call.
+      await waitUntil(() => getStatusState() === 'error', 2000, 50, 'status=error')
+      api.assert.equals(getStatusState(), 'error', 'pre-flight produced error status')
+      api.assert.ok(!getGhostActive(api), 'no ghost (LLM was never called)')
+      api.assert.equals(cm.getContent(), '', 'doc still empty')
+    }
+  ),
 ])
