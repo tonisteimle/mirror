@@ -28,6 +28,8 @@
     "ai-bridge": "npx tsx scripts/ai-bridge-server.ts",
     "eval:ai": "npx tsx scripts/eval-ai-simple.ts",
     "eval:ai:list": "npx tsx scripts/eval-ai-simple.ts --list",
+    "eval:edit": "npx tsx scripts/eval-edit-flow.ts",
+    "eval:edit:list": "npx tsx scripts/eval-edit-flow.ts --list",
     "test": "vitest",
     "test:browser": "npx tsx tools/test.ts",
     "test:browser:progress": "npx tsx tools/test.ts --progress --all",
