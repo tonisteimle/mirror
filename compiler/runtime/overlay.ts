@@ -28,7 +28,8 @@ interface Position {
 // ============================================
 
 /**
- * Get element dimensions, temporarily showing if hidden
+ * Get element dimensions, temporarily showing if hidden.
+ * Restores hidden state after measurement.
  */
 function getElementRect(element: HTMLElement): DOMRect {
   const wasHidden = element.style.display === 'none' || element.hidden
@@ -42,6 +43,26 @@ function getElementRect(element: HTMLElement): DOMRect {
     element.style.visibility = ''
     element.style.display = 'none'
     element.hidden = true
+  }
+  return rect
+}
+
+/**
+ * Get element dimensions, ensuring it is visible synchronously after the call.
+ * Used by show flows where the caller will keep the element visible — avoids
+ * the restore-to-hidden round-trip that would race with batchInFrame'd show().
+ */
+function getElementRectAndShow(element: HTMLElement): DOMRect {
+  const wasHidden = element.style.display === 'none' || element.hidden
+  if (wasHidden) {
+    element.style.visibility = 'hidden'
+    element.style.display = ''
+    element.hidden = false
+  }
+  const rect = element.getBoundingClientRect()
+  if (wasHidden) {
+    element.style.visibility = ''
+    // Leave display='' and hidden=false — caller keeps it visible.
   }
   return rect
 }
@@ -340,7 +361,7 @@ export function showAt(
 function positionAsCenter(el: MirrorElement): void {
   el.style.position = 'fixed'
   const viewport = getViewport()
-  const rect = getElementRect(el)
+  const rect = getElementRectAndShow(el)
 
   el.style.top = `${(viewport.height - rect.height) / 2}px`
   el.style.left = `${(viewport.width - rect.width) / 2}px`
@@ -493,7 +514,7 @@ export function showModal(element: MirrorElement | string | null, backdrop: bool
   el.style.position = 'fixed'
   el.style.zIndex = '1000'
 
-  const rect = getElementRect(el)
+  const rect = getElementRectAndShow(el)
   const viewport = getViewport()
 
   el.style.top = `${Math.max(20, (viewport.height - rect.height) / 2)}px`
