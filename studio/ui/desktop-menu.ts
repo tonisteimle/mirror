@@ -10,14 +10,12 @@
 
 import type { PanelVisibility } from '../core/state'
 
-declare global {
-  interface Window {
-    TauriBridge?: {
-      menu?: {
-        onMenuClick: (cb: (menuId: string) => Promise<void>) => Promise<void>
-      }
-    }
-  }
+interface TauriMenuBridge {
+  onMenuClick: (cb: (menuId: string) => Promise<void>) => Promise<void>
+}
+
+function getMenuBridge(): TauriMenuBridge | undefined {
+  return (window as unknown as { TauriBridge?: { menu?: TauriMenuBridge } }).TauriBridge?.menu
 }
 
 interface DesktopFilesAPI {
@@ -70,18 +68,20 @@ export async function setupDesktopMenuHandler(deps: DesktopMenuDeps): Promise<vo
   if (!deps.isTauriDesktop()) return
 
   let attempts = 0
-  while (!window.TauriBridge?.menu && attempts < 50) {
+  let menuBridge = getMenuBridge()
+  while (!menuBridge && attempts < 50) {
     await new Promise(r => setTimeout(r, 100))
     attempts++
+    menuBridge = getMenuBridge()
   }
 
-  if (!window.TauriBridge?.menu) {
+  if (!menuBridge) {
     errLog('TauriBridge.menu not available after waiting')
     return
   }
 
   try {
-    await window.TauriBridge.menu.onMenuClick(async menuId => {
+    await menuBridge.onMenuClick(async menuId => {
       log('Event:', menuId)
       const desktopFiles = getDesktopFiles()
 
