@@ -56,6 +56,11 @@ export * from './zag'
 // File Types (file type definitions and detection)
 export * from './file-types'
 
+// Code Modifier — bidirectional editing (PropertyExtractor / CodeModifier /
+// RobustModifier). Used by app.js fallback paths that still construct
+// these via the studio bundle (see app.js studioCodeModifier creation).
+export * from './code-modifier'
+
 // React Converter (React/JSX to Mirror DSL)
 export * from './react-converter'
 

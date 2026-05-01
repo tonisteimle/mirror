@@ -120,7 +120,13 @@ import {
   // Property Panel — global DOM event listeners
   setupPropertyPanelIconPicker,
   setupPropertyPanelEventListeners,
-} from './dist/index.js?v=151'
+  // Code-modifier classes — were previously read off MirrorLang (compiler
+  // bundle), but moved to studio/code-modifier in commit ae4f6c41 and no
+  // longer re-exported by the compiler. Use the studio-bundle versions.
+  CodeModifier,
+  PropertyExtractor,
+  createRobustModifier,
+} from './dist/index.js?v=152'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -1722,12 +1728,12 @@ if (typeof window !== 'undefined') {
         studioCodeModifier.updateSource(resolvedCode)
         studioCodeModifier.updateSourceMap(sourceMap)
       } else {
-        studioCodeModifier = new MirrorLang.CodeModifier(resolvedCode, sourceMap)
+        studioCodeModifier = new CodeModifier(resolvedCode, sourceMap)
       }
 
       // Update robust modifier
-      if (MirrorLang.createRobustModifier) {
-        studioRobustModifier = MirrorLang.createRobustModifier(studioCodeModifier)
+      if (createRobustModifier) {
+        studioRobustModifier = createRobustModifier(studioCodeModifier)
       }
 
       // Update state with the resolved source + the actual prelude
@@ -1761,7 +1767,7 @@ if (typeof window !== 'undefined') {
         studioPropertyExtractor.updateAST(ast)
         studioPropertyExtractor.updateSourceMap(sourceMap)
       } else {
-        studioPropertyExtractor = new MirrorLang.PropertyExtractor(ast, sourceMap)
+        studioPropertyExtractor = new PropertyExtractor(ast, sourceMap)
       }
 
       // Update PropertyPanel via updateStudioState (creates panel if not
@@ -2278,7 +2284,7 @@ function updateStudio(ast, ir, sourceMap, source) {
     studioPropertyExtractor.updateAST(ast)
     studioPropertyExtractor.updateSourceMap(sourceMap)
   } else {
-    studioPropertyExtractor = new MirrorLang.PropertyExtractor(ast, sourceMap)
+    studioPropertyExtractor = new PropertyExtractor(ast, sourceMap)
   }
 
   // Update or create CodeModifier
@@ -2286,12 +2292,12 @@ function updateStudio(ast, ir, sourceMap, source) {
     studioCodeModifier.updateSource(source)
     studioCodeModifier.updateSourceMap(sourceMap)
   } else {
-    studioCodeModifier = new MirrorLang.CodeModifier(source, sourceMap)
+    studioCodeModifier = new CodeModifier(source, sourceMap)
   }
 
   // Create/update RobustModifier wrapper for atomic updates
-  if (MirrorLang.createRobustModifier) {
-    studioRobustModifier = MirrorLang.createRobustModifier(studioCodeModifier)
+  if (createRobustModifier) {
+    studioRobustModifier = createRobustModifier(studioCodeModifier)
   }
 
   // NOTE: Selection validation is now handled atomically by state.ts setCompileResult()
