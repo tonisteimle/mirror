@@ -1,7 +1,11 @@
 import { defineConfig } from 'tsup'
 
 export default defineConfig({
-  entry: ['studio/index.ts'],
+  // dialog.ts is a separate entry — loaded directly via <script type="module">
+  // from index.html (so the artifact must live at studio/dist/dialog.js with
+  // a stable name) and imported by the .js sibling modules (app.js,
+  // tauri-bridge.js, desktop-files.js) that aren't part of the main bundle.
+  entry: ['studio/index.ts', 'studio/dialog.ts'],
   format: ['esm'],
   outDir: 'studio/dist',
   splitting: true, // Enable code splitting for lazy-loaded modules

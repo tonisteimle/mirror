@@ -6,7 +6,7 @@
  */
 
 import { storage, projectActions } from './dist/index.js'
-import { alert, confirm, confirmDelete } from './dialog.js'
+import { alert, confirm, confirmDelete } from './dist/dialog.js'
 
 // =============================================================================
 // Project Toolbar (Title Bar + Hamburger Menu)

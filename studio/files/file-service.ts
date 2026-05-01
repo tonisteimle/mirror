@@ -14,7 +14,7 @@ import {
   getBasename,
   getExtension,
 } from './utils'
-import { alert, confirmDelete } from '../dialog.js'
+import { alert, confirmDelete } from '../dialog'
 
 interface StorageService {
   readFile: (path: string) => Promise<string>

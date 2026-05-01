@@ -7,7 +7,7 @@
 import { uiState } from './ui-state'
 import { validateFilename, getFileType } from './utils'
 import { ICON_CHEVRON } from './icons'
-import { alert } from '../dialog.js'
+import { alert } from '../dialog'
 
 interface InlineCallbacks {
   onRename: (oldPath: string, newName: string) => Promise<void>

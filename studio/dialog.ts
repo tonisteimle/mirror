@@ -134,9 +134,8 @@ const dialogStyles = `
 }
 `
 
-// Inject styles once
 let stylesInjected = false
-function injectStyles() {
+function injectStyles(): void {
   if (stylesInjected) return
   const style = document.createElement('style')
   style.textContent = dialogStyles
@@ -145,10 +144,43 @@ function injectStyles() {
 }
 
 // =============================================================================
+// Internal types
+// =============================================================================
+
+interface DialogButton {
+  label: string
+  /** Value passed to onClose when this button is clicked. */
+  value: unknown
+  /** Marks the button as primary (focused, picked up by Enter key). */
+  primary?: boolean
+  /** Visual variant — currently `'danger'` for destructive confirms. */
+  variant?: 'danger'
+}
+
+interface DialogInputConfig {
+  placeholder?: string
+  defaultValue?: string
+}
+
+interface DialogConfig {
+  title?: string
+  message: string
+  input?: DialogInputConfig
+  buttons: DialogButton[]
+  onClose: (result: unknown) => void
+}
+
+interface DialogHandle {
+  overlay: HTMLDivElement
+  dialog: HTMLDivElement
+  close: (result: unknown) => void
+}
+
+// =============================================================================
 // Dialog Creation
 // =============================================================================
 
-function createDialog({ title, message, input, buttons, onClose }) {
+function createDialog(config: DialogConfig): DialogHandle {
   injectStyles()
 
   const overlay = document.createElement('div')
@@ -161,21 +193,21 @@ function createDialog({ title, message, input, buttons, onClose }) {
 
   let html = ''
 
-  if (title) {
-    html += `<div class="mirror-dialog-header"><h2 class="mirror-dialog-title">${escapeHtml(title)}</h2></div>`
+  if (config.title) {
+    html += `<div class="mirror-dialog-header"><h2 class="mirror-dialog-title">${escapeHtml(config.title)}</h2></div>`
   }
 
   html += `<div class="mirror-dialog-body">`
-  html += `<p class="mirror-dialog-message">${escapeHtml(message)}</p>`
+  html += `<p class="mirror-dialog-message">${escapeHtml(config.message)}</p>`
 
-  if (input) {
-    html += `<input type="text" class="mirror-dialog-input" placeholder="${escapeHtml(input.placeholder || '')}" value="${escapeHtml(input.defaultValue || '')}">`
+  if (config.input) {
+    html += `<input type="text" class="mirror-dialog-input" placeholder="${escapeHtml(config.input.placeholder || '')}" value="${escapeHtml(config.input.defaultValue || '')}">`
   }
 
   html += `</div>`
 
   html += `<div class="mirror-dialog-footer">`
-  buttons.forEach((btn, i) => {
+  config.buttons.forEach((btn, i) => {
     const btnClass =
       btn.variant === 'danger'
         ? 'mirror-dialog-btn-danger'
@@ -190,9 +222,8 @@ function createDialog({ title, message, input, buttons, onClose }) {
   overlay.appendChild(dialog)
   document.body.appendChild(overlay)
 
-  // Focus management
-  const inputEl = dialog.querySelector('.mirror-dialog-input')
-  const firstBtn = dialog.querySelector('.mirror-dialog-btn')
+  const inputEl = dialog.querySelector<HTMLInputElement>('.mirror-dialog-input')
+  const firstBtn = dialog.querySelector<HTMLButtonElement>('.mirror-dialog-btn')
 
   requestAnimationFrame(() => {
     overlay.classList.add('visible')
@@ -200,27 +231,26 @@ function createDialog({ title, message, input, buttons, onClose }) {
       inputEl.focus()
       inputEl.select()
     } else if (firstBtn) {
-      // Focus the primary button if exists, otherwise first button
-      const primaryBtn = dialog.querySelector('.mirror-dialog-btn-primary') || firstBtn
+      const primaryBtn =
+        dialog.querySelector<HTMLButtonElement>('.mirror-dialog-btn-primary') || firstBtn
       primaryBtn.focus()
     }
   })
 
-  // Event handlers
-  const close = result => {
+  const close = (result: unknown): void => {
     overlay.classList.remove('visible')
+    document.removeEventListener('keydown', handleKeydown)
     setTimeout(() => {
       overlay.remove()
-      onClose(result)
+      config.onClose(result)
     }, 150)
   }
 
-  // Button clicks
-  dialog.querySelectorAll('.mirror-dialog-btn').forEach(btn => {
+  dialog.querySelectorAll<HTMLButtonElement>('.mirror-dialog-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const index = parseInt(btn.dataset.index)
-      const buttonDef = buttons[index]
-      if (input && buttonDef.primary) {
+      const index = parseInt(btn.dataset.index || '0', 10)
+      const buttonDef = config.buttons[index]
+      if (config.input && buttonDef.primary && inputEl) {
         close(inputEl.value)
       } else {
         close(buttonDef.value)
@@ -228,7 +258,6 @@ function createDialog({ title, message, input, buttons, onClose }) {
     })
   })
 
-  // Enter key in input
   if (inputEl) {
     inputEl.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
@@ -241,20 +270,18 @@ function createDialog({ title, message, input, buttons, onClose }) {
     })
   }
 
-  // Escape key
-  const handleKeydown = e => {
+  const handleKeydown = (e: KeyboardEvent): void => {
     if (e.key === 'Escape') {
       e.preventDefault()
-      const cancelBtn = buttons.find(b => !b.primary)
+      const cancelBtn = config.buttons.find(b => !b.primary)
       close(cancelBtn ? cancelBtn.value : null)
     }
   }
   document.addEventListener('keydown', handleKeydown)
 
-  // Click outside
   overlay.addEventListener('click', e => {
     if (e.target === overlay) {
-      const cancelBtn = buttons.find(b => !b.primary)
+      const cancelBtn = config.buttons.find(b => !b.primary)
       close(cancelBtn ? cancelBtn.value : null)
     }
   })
@@ -262,7 +289,7 @@ function createDialog({ title, message, input, buttons, onClose }) {
   return { overlay, dialog, close }
 }
 
-function escapeHtml(str) {
+function escapeHtml(str: string | null | undefined): string {
   if (str === null || str === undefined) return ''
   return String(str)
     .replace(/&/g, '&amp;')
@@ -275,15 +302,13 @@ function escapeHtml(str) {
 // Public API
 // =============================================================================
 
-/**
- * Show an alert dialog
- * @param {string} message - The message to display
- * @param {Object} options - Optional settings
- * @param {string} options.title - Dialog title
- * @param {string} options.buttonLabel - OK button label (default: "OK")
- * @returns {Promise<void>}
- */
-export function alert(message, options = {}) {
+export interface AlertOptions {
+  title?: string
+  buttonLabel?: string
+}
+
+/** Show an alert dialog. Resolves once dismissed. */
+export function alert(message: string, options: AlertOptions = {}): Promise<void> {
   return new Promise(resolve => {
     createDialog({
       title: options.title,
@@ -294,17 +319,16 @@ export function alert(message, options = {}) {
   })
 }
 
-/**
- * Show a confirm dialog
- * @param {string} message - The message to display
- * @param {Object} options - Optional settings
- * @param {string} options.title - Dialog title
- * @param {string} options.confirmLabel - Confirm button label (default: "OK")
- * @param {string} options.cancelLabel - Cancel button label (default: "Abbrechen")
- * @param {boolean} options.danger - Show confirm button as danger/red
- * @returns {Promise<boolean>}
- */
-export function confirm(message, options = {}) {
+export interface ConfirmOptions {
+  title?: string
+  confirmLabel?: string
+  cancelLabel?: string
+  /** Render the confirm button in the destructive (red) variant. */
+  danger?: boolean
+}
+
+/** Show a confirm dialog. Resolves true if confirmed, false otherwise. */
+export function confirm(message: string, options: ConfirmOptions = {}): Promise<boolean> {
   return new Promise(resolve => {
     createDialog({
       title: options.title,
@@ -323,47 +347,55 @@ export function confirm(message, options = {}) {
   })
 }
 
+export interface PromptOptions {
+  title?: string
+  defaultValue?: string
+  placeholder?: string
+  confirmLabel?: string
+  cancelLabel?: string
+}
+
 /**
- * Show a prompt dialog
- * @param {string} message - The message to display
- * @param {Object} options - Optional settings
- * @param {string} options.title - Dialog title
- * @param {string} options.defaultValue - Default input value
- * @param {string} options.placeholder - Input placeholder
- * @param {string} options.confirmLabel - Confirm button label (default: "OK")
- * @param {string} options.cancelLabel - Cancel button label (default: "Abbrechen")
- * @returns {Promise<string|null>}
+ * Show a prompt dialog. Resolves the entered string or null if cancelled.
+ *
+ * Legacy signature `prompt(message, defaultValueString)` is still supported:
+ * if `options` is a string it's treated as `{ defaultValue: <string> }`.
  */
-export function prompt(message, options = {}) {
-  // Support legacy signature: prompt(message, defaultValue)
-  if (typeof options === 'string') {
-    options = { defaultValue: options }
-  }
+export function prompt(
+  message: string,
+  options: PromptOptions | string = {}
+): Promise<string | null> {
+  const opts: PromptOptions = typeof options === 'string' ? { defaultValue: options } : options
 
   return new Promise(resolve => {
     createDialog({
-      title: options.title,
+      title: opts.title,
       message,
       input: {
-        defaultValue: options.defaultValue || '',
-        placeholder: options.placeholder || '',
+        defaultValue: opts.defaultValue || '',
+        placeholder: opts.placeholder || '',
       },
       buttons: [
-        { label: options.cancelLabel || 'Abbrechen', primary: false, value: null },
-        { label: options.confirmLabel || 'OK', primary: true, value: true },
+        { label: opts.cancelLabel || 'Abbrechen', primary: false, value: null },
+        { label: opts.confirmLabel || 'OK', primary: true, value: true },
       ],
-      onClose: result => resolve(result === null ? null : result),
+      onClose: result => resolve(result === null ? null : (result as string)),
     })
   })
 }
 
-/**
- * Show a delete confirmation dialog
- * @param {string} itemName - Name of item being deleted
- * @param {Object} options - Optional settings
- * @returns {Promise<boolean>}
- */
-export function confirmDelete(itemName, options = {}) {
+export interface ConfirmDeleteOptions {
+  title?: string
+  message?: string
+  confirmLabel?: string
+  cancelLabel?: string
+}
+
+/** Show a delete-confirmation dialog (danger variant by default). */
+export function confirmDelete(
+  itemName: string,
+  options: ConfirmDeleteOptions = {}
+): Promise<boolean> {
   return confirm(options.message || `"${itemName}" wirklich löschen?`, {
     title: options.title || 'Löschen bestätigen',
     confirmLabel: options.confirmLabel || 'Löschen',
@@ -372,18 +404,25 @@ export function confirmDelete(itemName, options = {}) {
   })
 }
 
-/**
- * Show a choice dialog with multiple options
- * @param {string} message - The message to display
- * @param {Array<{label: string, value: any, primary?: boolean}>} choices - The options to choose from
- * @param {Object} options - Optional settings
- * @param {string} options.title - Dialog title
- * @param {string} options.cancelLabel - Cancel button label (default: "Abbrechen")
- * @returns {Promise<any|null>} - The value of the selected choice, or null if cancelled
- */
-export function choose(message, choices, options = {}) {
+export interface Choice<T> {
+  label: string
+  value: T
+  primary?: boolean
+}
+
+export interface ChooseOptions {
+  title?: string
+  cancelLabel?: string
+}
+
+/** Show a multi-choice dialog. Resolves the selected value or null if cancelled. */
+export function choose<T>(
+  message: string,
+  choices: Choice<T>[],
+  options: ChooseOptions = {}
+): Promise<T | null> {
   return new Promise(resolve => {
-    const buttons = [
+    const buttons: DialogButton[] = [
       { label: options.cancelLabel || 'Abbrechen', primary: false, value: null },
       ...choices.map(c => ({
         label: c.label,
@@ -396,12 +435,29 @@ export function choose(message, choices, options = {}) {
       title: options.title,
       message,
       buttons,
-      onClose: result => resolve(result),
+      onClose: result => resolve(result as T | null),
     })
   })
 }
 
-// Make available globally for non-module scripts
+// =============================================================================
+// Global window export for non-module scripts
+// =============================================================================
+
+interface MirrorDialogGlobal {
+  alert: typeof alert
+  confirm: typeof confirm
+  prompt: typeof prompt
+  confirmDelete: typeof confirmDelete
+  choose: typeof choose
+}
+
+declare global {
+  interface Window {
+    MirrorDialog?: MirrorDialogGlobal
+  }
+}
+
 if (typeof window !== 'undefined') {
   window.MirrorDialog = { alert, confirm, prompt, confirmDelete, choose }
 }

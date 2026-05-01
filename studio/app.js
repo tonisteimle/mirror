@@ -41,7 +41,7 @@ import { indentUnit } from '@codemirror/language'
 import { linter, lintGutter, forceLinting } from '@codemirror/lint'
 
 // Custom dialogs
-import { alert } from './dialog.js'
+import { alert } from './dist/dialog.js'
 
 // New architecture imports
 import {

@@ -6,7 +6,7 @@
 
 import type { MenuItem } from './types'
 import { ICON_HAMBURGER, ICON_NEW, ICON_DEMO, ICON_LOAD, ICON_SAVE } from './icons'
-import { confirm } from '../dialog.js'
+import { confirm } from '../dialog'
 
 interface ProjectActions {
   new: () => Promise<void>
