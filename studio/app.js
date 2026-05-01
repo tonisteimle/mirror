@@ -5,7 +5,6 @@ import {
   Prec,
   Annotation,
   Transaction,
-  Compartment,
 } from '@codemirror/state'
 import {
   EditorView,
@@ -42,19 +41,17 @@ import { indentUnit } from '@codemirror/language'
 import { linter, lintGutter, forceLinting } from '@codemirror/lint'
 
 // Custom dialogs
-import { alert, confirm, prompt } from './dialog.js'
+import { alert } from './dialog.js'
 
 // New architecture imports
 import {
   initializeStudio as initNewStudio,
   updateStudioState,
   studio,
-  handleSelectionChange as newHandleSelectionChange,
   events,
   executor,
   RecordedChangeCommand,
   actions as studioActions,
-  state as studioState,
   mirrorCompletions,
   getStateSelectionAdapter,
   // New Unified Trigger System
@@ -68,7 +65,6 @@ import {
   // Fixer Service (AI multi-file code generation)
   // Component Drop Extension (proper CodeMirror integration)
   createComponentDropExtension,
-  insertComponentCode,
   insertComponentWithDefinition,
   generateComponentCodeFromDragData,
   // Property Panel
