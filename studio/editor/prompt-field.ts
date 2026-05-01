@@ -118,7 +118,7 @@ function positionAtCursor(wrapper: HTMLElement, view: EditorView): void {
   // jsdom doesn't fully implement getClientRects; coordsAtPos can throw
   // there. Real browsers reach the happy path. The fallback below is good
   // enough for unit tests that don't care about exact pixels.
-  let coords: { left: number; bottom: number } | null = null
+  let coords: { left: number; bottom: number } | null
   try {
     const head = view.state.selection.main.head
     coords = view.coordsAtPos(head)
