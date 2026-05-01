@@ -166,40 +166,12 @@ export interface TokenDefinition extends BaseNode {
   properties?: Property[] // reusable property combinations
 }
 
-/**
- * Data attribute within a data object
- * e.g., title: "Mein Artikel"
- *
- * Can be nested:
- *   steps:
- *     planning:
- *       title: "Sprint Planning"
- */
-/**
- * A reference to another data entry (e.g., "$users.toni")
- */
-export interface DataReference {
-  kind: 'reference'
-  collection: string
-  entry: string
-}
-
-/**
- * An array of references (e.g., "$users.toni, $users.anna")
- */
-export interface DataReferenceArray {
-  kind: 'referenceArray'
-  references: DataReference[]
-}
-
-export interface DataAttribute {
-  key: string
-  /** Simple value - undefined if this is a nested object */
-  value?: string | number | boolean | string[] | DataReference | DataReferenceArray
-  /** Nested attributes - present if this is a nested object */
-  children?: DataAttribute[]
-  line: number
-}
+// Data types — single source of truth in `./data-types`. Imported for local
+// type-annotations (TokenDefinition.attributes, etc.) and re-exported so
+// existing `import type { DataReference, ... } from '../parser/ast'` keeps
+// working; new code should prefer `parser/data-types`.
+import type { DataReference, DataReferenceArray, DataAttribute } from './data-types'
+export type { DataReference, DataReferenceArray, DataAttribute }
 
 /**
  * Markdown block within a data object

@@ -5,19 +5,22 @@
  */
 
 import type { FocusTrap } from 'focus-trap'
+import type { StateAnimation } from '../parser/ast'
+
+// StateAnimation lives in `parser/ast` (parser-layer concept); re-exported
+// here so runtime modules importing from `./types` keep working.
+export type { StateAnimation }
 
 /**
- * Animation configuration for state transitions
- */
-export interface StateAnimation {
-  preset?: string
-  duration?: number
-  easing?: string
-  delay?: number
-}
-
-/**
- * Element with Mirror runtime metadata
+ * Element with Mirror runtime metadata.
+ *
+ * Single source of truth — both `dom-runtime.ts` and `mirror-runtime.ts`
+ * re-export this type. Fields fall into three groups:
+ *   - state machine (`_stateStyles`, `_stateMachine`, transition flags)
+ *   - bindings (`_textBinding`, `_valueBinding`, `_selectionBinding`,
+ *     `_triggerBinding`)
+ *   - per-feature config (`_eachConfig`, `_conditionalConfig`, focus-trap,
+ *     loop-focus / typeahead, click-outside / escape handlers)
  */
 export interface MirrorElement extends HTMLElement {
   _stateStyles?: Record<string, Record<string, string>>
@@ -43,6 +46,12 @@ export interface MirrorElement extends HTMLElement {
     itemVar: string
     collection: string
     filter?: string
+    /** Compiled filter predicate (replaces `filter` once parsed). */
+    filterFn?: (item: Record<string, unknown>, index: number) => boolean
+    /** Sort key (object-property name on each item). */
+    orderBy?: string
+    /** True for descending sort. */
+    orderDesc?: boolean
     renderItem: (item: unknown, index: number) => HTMLElement
   }
   _conditionalConfig?: {

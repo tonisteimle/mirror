@@ -11,8 +11,6 @@
  * 3. Tree-shakeable for production builds
  */
 
-// Focus trap for modal dialogs - accessibility
-import { createFocusTrap, FocusTrap } from 'focus-trap'
 // Frame batching — single source of truth in batching.ts
 import { batchInFrame } from './batching'
 // Visibility primitives — single source of truth in visibility.ts
@@ -40,71 +38,9 @@ import { isDebug } from './debug'
 // Re-export so legacy callers that imported isDebug from this module still work.
 export { isDebug }
 
-/**
- * Element with Mirror runtime metadata
- */
-export interface MirrorElement extends HTMLElement {
-  _stateStyles?: Record<string, Record<string, string>>
-  _baseStyles?: Record<string, string>
-  _initialState?: string
-  _visibleWhen?: string
-  _visibilityPaths?: string[] // Paths this element's visibility depends on
-  _selectionBinding?: string
-  _textBinding?: string
-  _textPlaceholder?: string
-  _savedDisplay?: string
-  _clickOutsideHandler?: (e: MouseEvent) => void
-  _clickOutsideTimeout?: ReturnType<typeof setTimeout>
-  _autoSelectHandler?: () => void
-  _escapeHandler?: (e: KeyboardEvent) => void
-  _focusTrap?: FocusTrap
-  _previouslyFocused?: Element | null
-  _isTransitioning?: boolean
-  _baseDisplay?: string
-  _valueBinding?: string
-  _textTemplate?: () => string
-  _eachConfig?: {
-    itemVar: string
-    collection: string
-    filter?: string
-    /** Compiled filter predicate (replaces `filter` once parsed). */
-    filterFn?: (item: Record<string, unknown>, index: number) => boolean
-    /** Sort key (object-property name on each item). */
-    orderBy?: string
-    /** True for descending sort. */
-    orderDesc?: boolean
-    renderItem: (item: unknown, index: number) => HTMLElement
-  }
-  _conditionalConfig?: {
-    condition: () => boolean
-    renderThen: () => DocumentFragment
-    renderElse?: () => DocumentFragment
-  }
-  // Loop item stored on template elements for bind/exclusive()
-  _loopItem?: unknown
-  // State machine (interaction model)
-  _stateMachine?: {
-    initial: string
-    current: string
-    states: Record<
-      string,
-      {
-        styles: Record<string, string>
-        children?: () => HTMLElement[] // Factory function to create state children
-        enter?: StateAnimation // Animation when entering this state
-        exit?: StateAnimation // Animation when leaving this state
-      }
-    >
-    transitions: Array<{
-      to: string
-      trigger: string
-      key?: string
-      modifier?: 'exclusive' | 'toggle' | 'initial'
-    }>
-  }
-  // Base children (before any state change)
-  _baseChildren?: HTMLElement[]
-}
+// MirrorElement lives in `./types` (single source of truth); re-exported here
+// so legacy callers importing it from `dom-runtime.ts` keep working.
+export type { MirrorElement } from './types'
 
 /**
  * Mirror property to CSS mapping

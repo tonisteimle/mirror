@@ -5,16 +5,11 @@
  */
 
 import type { SizingFlags } from '../schema/layout-defaults'
+import type { SourcePosition } from '../parser/ast'
 
-/**
- * Source position information for bidirectional editing
- */
-export interface SourcePosition {
-  line: number
-  column: number
-  endLine: number
-  endColumn: number
-}
+// SourcePosition lives in `parser/ast` (parser-layer concept); re-exported here
+// so existing `import { SourcePosition } from './ir/types'` keeps working.
+export type { SourcePosition }
 
 /**
  * Property-level source mapping for precise code modifications

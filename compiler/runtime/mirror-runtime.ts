@@ -31,20 +31,11 @@
 // TYPES
 // =============================================================================
 
-/**
- * Extended HTMLElement with Mirror runtime properties
- * Used for state management, visibility, and event handlers
- */
-export interface MirrorElement extends HTMLElement {
-  /** State-specific styles: { hover: { background: '#333' }, selected: {...} } */
-  _stateStyles?: Record<string, Record<string, string>>
-  /** Base styles saved before applying state styles */
-  _baseStyles?: Record<string, string>
-  /** Saved display value before hiding */
-  _savedDisplay?: string
-  /** Click outside handler for cleanup */
-  _clickOutsideHandler?: (e: Event) => void
-}
+// MirrorElement lives in `./types` (single source of truth); imported for
+// local type-annotations and re-exported for the M-API runtime which only
+// uses a subset of its fields.
+import type { MirrorElement } from './types'
+export type { MirrorElement }
 
 /**
  * Window with Mirror runtime functions
