@@ -54,16 +54,8 @@ export interface ChartConfig {
 // CONSTANTS
 // ============================================
 
-const DEFAULT_CHART_COLORS = [
-  '#2563eb',
-  '#10b981',
-  '#f59e0b',
-  '#ef4444',
-  '#8b5cf6',
-  '#06b6d4',
-  '#ec4899',
-  '#84cc16',
-]
+// Single source of truth in `compiler/schema/chart-primitives.ts`.
+import { DEFAULT_CHART_COLORS } from '../schema/chart-primitives'
 
 // ============================================
 // CHART.JS LOADING
@@ -340,7 +332,6 @@ function buildScalesConfig(config: ChartConfig): Record<string, any> {
 }
 
 function applySlotConfigs(chartConfig: Record<string, any>, slots?: ChartSlotConfig[]): void {
-  // eslint-disable-line @typescript-eslint/no-explicit-any
   if (!slots?.length) return
   slots.forEach(slot =>
     Object.entries(slot.config).forEach(([path, value]) => {

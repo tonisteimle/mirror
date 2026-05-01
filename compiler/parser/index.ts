@@ -1,6 +1,6 @@
-export { parse } from './parser'
+export { parse, parseWithDiagnostics } from './parser'
 export { tokenize, Lexer } from './lexer'
-export type { Token, TokenType } from './lexer'
+export type { Token, TokenType, LexerError, LexerErrorCode } from './lexer'
 
 // AST types - explicitly exclude DataAttribute and DataBlock which are also in data-types
 export type {

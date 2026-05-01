@@ -18,8 +18,7 @@
  *   const result2 = validator.validate(ast2)
  */
 
-import { tokenizeWithErrors, LexerError, LexerErrorCode } from '../parser/lexer'
-import { Parser } from '../parser/parser'
+import { parseWithDiagnostics, type LexerError, type LexerErrorCode } from '../parser'
 import { AST, ParseError, ParseErrorCode } from '../parser/ast'
 import { Validator } from './validator'
 import { ValidationResult, ValidationError, ERROR_CODES } from './types'
@@ -130,15 +129,11 @@ export interface ValidateOptions {
  * @returns Validation result with errors and warnings
  */
 export function validate(source: string, options?: ValidateOptions): ValidationResult {
-  // Tokenize with error collection
-  const lexerResult = tokenizeWithErrors(source)
-  const lexerValidationErrors = convertLexerErrors(lexerResult.errors)
-
-  // Parse
-  const parser = new Parser(lexerResult.tokens, source)
-  const ast = parser.parse()
-
-  // Convert parser errors
+  // Parse with full diagnostics — surfaces both lexer and parser errors,
+  // and runs the positional-args preprocessor so validator output matches
+  // what the compiler actually consumes.
+  const { ast, lexerErrors } = parseWithDiagnostics(source)
+  const lexerValidationErrors = convertLexerErrors(lexerErrors)
   const parserValidationErrors = convertParserErrors(ast.errors)
 
   // Validate AST

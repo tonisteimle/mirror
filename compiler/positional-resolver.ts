@@ -100,7 +100,7 @@ interface SourceScan {
  * Slots inside component definitions (`Title:` indented under `Card:`) are
  * NOT registered as components — only column-0 PascalCase definitions count.
  */
-export function scanSource(source: string): SourceScan {
+function scanSource(source: string): SourceScan {
   const lines = source.split('\n')
   const tokens: TokenSuffixMap = new Map()
   const objects = new Set<string>()
@@ -390,11 +390,7 @@ function transformPropertyList(
  * its kind. Tokens are recognized either by explicit suffix (`$name.suffix`)
  * or by name match against the pre-scanned token-suffix map.
  */
-export function classifyBare(
-  s: string,
-  role: PrimitiveRole,
-  scan: SourceScan
-): BareClassification | null {
+function classifyBare(s: string, role: PrimitiveRole, scan: SourceScan): BareClassification | null {
   // Hex / rgba / named color → role-based color slot
   if (/^#[0-9a-fA-F]{3,8}$/.test(s)) return { kind: 'color' }
   if (/^rgba?\s*\([^)]+\)$/.test(s)) return { kind: 'color' }

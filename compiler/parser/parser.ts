@@ -5,7 +5,7 @@
  * Property recognition is driven by the schema (src/schema/dsl.ts).
  */
 
-import { Token, TokenType, tokenize } from './lexer'
+import { Token, TokenType, tokenize, tokenizeWithErrors, type LexerError } from './lexer'
 import { resolvePositionalArgs } from '../positional-resolver'
 import type {
   AST,
@@ -2324,4 +2324,17 @@ export function parse(source: string): AST {
   const expanded = resolvePositionalArgs(source)
   const tokens = tokenize(expanded)
   return new Parser(tokens, expanded).parse()
+}
+
+/**
+ * Parse with full diagnostics — collects both lexer and parser errors.
+ * Used by `validator/` which surfaces lexer errors (unclosed strings, bad
+ * indentation) separately from parser errors. Standard callers should use
+ * `parse()`; only reach for this when you need lexer-level diagnostics.
+ */
+export function parseWithDiagnostics(source: string): { ast: AST; lexerErrors: LexerError[] } {
+  const expanded = resolvePositionalArgs(source)
+  const lexerResult = tokenizeWithErrors(expanded)
+  const ast = new Parser(lexerResult.tokens, expanded).parse()
+  return { ast, lexerErrors: lexerResult.errors }
 }
