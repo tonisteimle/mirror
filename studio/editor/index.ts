@@ -134,6 +134,9 @@ export { createEditHandler, type EditHandlerConfig, type EditHandlerHandlers } f
 // Image drop & paste (handles dropping images into the editor → upload → insert URL)
 export { initImageDropHandler, type ImageDropDeps } from './image-drop-handler'
 
+// Inline Token Definition Handler — `bg $surface: #333` + Enter → tokens.tok
+export { createInlineTokenExtension, type InlineTokenExtensionDeps } from './inline-token-extension'
+
 // Re-export component templates
 export {
   COMPONENT_DEFINITIONS,

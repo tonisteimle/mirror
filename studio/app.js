@@ -129,6 +129,8 @@ import {
   adjustChangeForWrap,
   // Image drop/paste handler (drops an image into the editor → uploads → inserts URL)
   initImageDropHandler,
+  // Inline Token Definition Handler (`bg $surface: #333` + Enter)
+  createInlineTokenExtension,
   // Panel dividers (resizable sidebar/components/editor/preview)
   initPanelDividers,
   // Play Mode (toolbar button, reset, device selector)
@@ -744,90 +746,8 @@ document.addEventListener('keydown', async e => {
 
 // ============================================
 // Inline Token Definition Handler
+// (delegated to studio/editor/inline-token-extension.ts)
 // ============================================
-
-// Regex: $tokenName: value (at end of property)
-// Examples: bg $surface: #333, rad $m: 4, pad $spacing.md: 8
-const INLINE_TOKEN_REGEX = /\$([a-zA-Z][a-zA-Z0-9._-]*):\s*(.+)$/
-
-/**
- * Extract inline token definition from a line of code
- */
-function extractInlineToken(lineText) {
-  const match = lineText.match(INLINE_TOKEN_REGEX)
-  if (!match) return null
-
-  const tokenName = match[1]
-  const tokenValue = match[2].trim()
-
-  // Validate token name and value
-  if (!/^[a-zA-Z]/.test(tokenName)) return null
-  if (!tokenValue) return null
-
-  return {
-    tokenName,
-    tokenValue,
-    fullMatch: match[0], // "$surface: #333"
-    replacement: `$${tokenName}`, // "$surface"
-  }
-}
-
-/**
- * Escape special regex characters
- */
-function escapeRegex(str) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-/**
- * Ensure tokens file exists, create if not
- */
-function ensureTokensFile() {
-  const tokensFilename = 'tokens.tok'
-  if (!files[tokensFilename]) {
-    files[tokensFilename] = '// Design Tokens\n'
-    // Desktop app: file tree is managed by desktop-files.js
-    saveFile(tokensFilename, files[tokensFilename])
-  }
-}
-
-/**
- * Add or update a token in the tokens file
- */
-function addTokenToFile(tokenName, tokenValue) {
-  ensureTokensFile()
-  const tokensFilename = 'tokens.tok'
-  let content = files[tokensFilename] || '// Design Tokens\n'
-
-  const tokenLine = `$${tokenName}: ${tokenValue}`
-  // Regex to match existing token definition
-  const tokenRegex = new RegExp(`^\\$${escapeRegex(tokenName)}:\\s*.+$`, 'm')
-
-  if (tokenRegex.test(content)) {
-    // Token exists - update it
-    content = content.replace(tokenRegex, tokenLine)
-  } else {
-    // Token doesn't exist - add at end
-    content = content.trimEnd() + `\n${tokenLine}\n`
-  }
-
-  files[tokensFilename] = content
-  saveFile(tokensFilename, content)
-}
-
-/**
- * Show feedback when token is created
- */
-function showTokenCreatedFeedback(tokenName) {
-  const status = document.getElementById('status')
-  if (status) {
-    status.textContent = `Token '$${tokenName}' created`
-    status.className = 'status ok'
-    setTimeout(() => {
-      status.textContent = 'Ready'
-    }, 2000)
-  }
-}
 
 /**
  * Extension: App Lock - Makes "App" on line 1 undeletable
@@ -948,45 +868,12 @@ const appLockDecorationPlugin = ViewPlugin.fromClass(
   { decorations: v => v.decorations }
 )
 
-/**
- * Extension: Handle Enter key for inline token definitions
- * When user types "Card bg $surface: #333" and presses Enter:
- * 1. Token "$surface: #333" is added to tokens file
- * 2. Line becomes "Card bg $surface" (just the reference)
- */
-const inlineTokenExtension = EditorView.domEventHandlers({
-  keydown: (event, view) => {
-    if (event.key !== 'Enter') return false
-
-    // Don't intercept Enter when any picker is visible (use unified TriggerManager)
-    if (getTriggerManager().isOpen()) {
-      return false
-    }
-
-    // Get current line
-    const cursorPos = view.state.selection.main.head
-    const line = view.state.doc.lineAt(cursorPos)
-    const lineText = line.text
-
-    // Check for inline token pattern
-    const match = extractInlineToken(lineText)
-    if (!match) return false // No match → normal Enter behavior
-
-    // Add token to tokens file
-    addTokenToFile(match.tokenName, match.tokenValue)
-
-    // Replace the inline definition with just the reference
-    const newLineText = lineText.replace(match.fullMatch, match.replacement)
-    view.dispatch({
-      changes: { from: line.from, to: line.to, insert: newLineText + '\n' },
-      selection: { anchor: line.from + newLineText.length + 1 },
-    })
-
-    // Show feedback
-    showTokenCreatedFeedback(match.tokenName)
-
-    event.preventDefault()
-    return true
+// Inline-token Enter handler (delegated to studio/editor/inline-token-extension.ts)
+const inlineTokenExtension = createInlineTokenExtension({
+  getFiles: () => files,
+  writeFile: (path, content) => {
+    files[path] = content
+    return saveFile(path, content)
   },
 })
 
