@@ -131,6 +131,9 @@ export {
 
 export { createEditHandler, type EditHandlerConfig, type EditHandlerHandlers } from './edit-handler'
 
+// Image drop & paste (handles dropping images into the editor → upload → insert URL)
+export { initImageDropHandler, type ImageDropDeps } from './image-drop-handler'
+
 // Re-export component templates
 export {
   COMPONENT_DEFINITIONS,

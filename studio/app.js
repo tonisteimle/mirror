@@ -130,6 +130,8 @@ import {
   toCodeMirrorDiagnostics,
   // Wrap-aware change adjuster (single source of truth — see studio/core/wrap-utils.ts)
   adjustChangeForWrap,
+  // Image drop/paste handler (drops an image into the editor → uploads → inserts URL)
+  initImageDropHandler,
 } from './dist/index.js?v=150'
 
 // Annotation to mark changes from property panel (for skipping debounce)
@@ -4094,212 +4096,15 @@ function getImgbbKey() {
 // ==========================================
 // Image Upload Feature
 // ==========================================
+// Implementation lives in studio/editor/image-drop-handler.ts. We just
+// wire the DOM nodes and the imgbb-key getter here.
 
-const IMGBB_UPLOAD_URL = 'https://api.imgbb.com/1/upload'
-const SUPPORTED_IMAGE_FORMATS = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
-const MAX_FILE_SIZE = 32 * 1024 * 1024 // 32 MB
-
-const uploadIndicator = document.getElementById('upload-indicator')
-const dropOverlay = document.getElementById('drop-overlay')
-const editorPanel = document.querySelector('.editor-panel')
-
-// Upload to imgbb
-async function uploadToImgbb(file) {
-  // Check for API key
-  const apiKey = getImgbbKey()
-  if (!apiKey) {
-    throw new Error('Kein imgbb API Key. Bitte in Einstellungen hinterlegen.')
-  }
-
-  // Validate format
-  if (!SUPPORTED_IMAGE_FORMATS.includes(file.type)) {
-    throw new Error(
-      `Format nicht unterstützt: ${file.type.split('/')[1].toUpperCase()}. Erlaubt: PNG, JPG, GIF, WebP`
-    )
-  }
-
-  // Validate size
-  if (file.size > MAX_FILE_SIZE) {
-    const sizeMB = (file.size / 1024 / 1024).toFixed(1)
-    throw new Error(`Datei zu groß: ${sizeMB} MB (Maximum: 32 MB)`)
-  }
-
-  // Create form data
-  const formData = new FormData()
-  formData.append('image', file)
-
-  // Upload
-  const response = await fetch(`${IMGBB_UPLOAD_URL}?key=${apiKey}`, {
-    method: 'POST',
-    body: formData,
-  })
-
-  if (!response.ok) {
-    throw new Error(`Upload fehlgeschlagen (${response.status})`)
-  }
-
-  const data = await response.json()
-
-  if (!data.success) {
-    throw new Error(data.error?.message || 'Upload fehlgeschlagen')
-  }
-
-  return data.data.url
-}
-
-// Insert URL at cursor position
-function insertImageUrl(url) {
-  if (!window.editor) return
-
-  const state = window.editor.state
-  const pos = state.selection.main.head
-  const line = state.doc.lineAt(pos)
-  const textBefore = line.text.slice(0, pos - line.from)
-
-  // Check if already inside a string (odd number of quotes before cursor)
-  const quoteCount = (textBefore.match(/"/g) || []).length
-  const inString = quoteCount % 2 === 1
-
-  let insertText
-  if (inString) {
-    insertText = url
-  } else {
-    insertText = `"${url}"`
-  }
-
-  window.editor.dispatch({
-    changes: { from: pos, to: pos, insert: insertText },
-    selection: { anchor: pos + insertText.length },
-    annotations: Transaction.userEvent.of('input.image'),
-  })
-
-  window.editor.focus()
-}
-
-// Handle image upload
-async function handleImageUpload(file) {
-  try {
-    uploadIndicator.classList.add('visible')
-
-    const url = await uploadToImgbb(file)
-    insertImageUrl(url)
-  } catch (error) {
-    showUploadError(error.message)
-  } finally {
-    uploadIndicator.classList.remove('visible')
-  }
-}
-
-// Show error toast
-function showUploadError(message) {
-  const toast = document.createElement('div')
-  toast.className = 'upload-error'
-  toast.textContent = message
-  document.body.appendChild(toast)
-
-  setTimeout(() => {
-    toast.style.opacity = '0'
-    toast.style.transform = 'translateY(10px)'
-    toast.style.transition = 'all 0.2s ease-out'
-    setTimeout(() => toast.remove(), 200)
-  }, 4000)
-}
-
-// Check if data transfer has image files
-function hasImageFile(dataTransfer) {
-  if (!dataTransfer || !dataTransfer.types.includes('Files')) return false
-
-  for (const item of dataTransfer.items) {
-    if (item.kind === 'file' && SUPPORTED_IMAGE_FORMATS.includes(item.type)) {
-      return true
-    }
-  }
-  return false
-}
-
-// Get image files from data transfer
-function getImageFiles(dataTransfer) {
-  const files = []
-  if (!dataTransfer || !dataTransfer.files) return files
-
-  for (const file of dataTransfer.files) {
-    if (SUPPORTED_IMAGE_FORMATS.includes(file.type)) {
-      files.push(file)
-    }
-  }
-  return files
-}
-
-// Drag & Drop handlers
-let dragCounter = 0
-
-editorPanel.addEventListener('dragenter', e => {
-  if (hasImageFile(e.dataTransfer)) {
-    e.preventDefault()
-    dragCounter++
-    dropOverlay.classList.add('visible')
-  }
-})
-
-editorPanel.addEventListener('dragover', e => {
-  if (hasImageFile(e.dataTransfer)) {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'copy'
-  }
-})
-
-editorPanel.addEventListener('dragleave', e => {
-  dragCounter--
-  if (dragCounter === 0) {
-    dropOverlay.classList.remove('visible')
-  }
-})
-
-editorPanel.addEventListener('drop', async e => {
-  dragCounter = 0
-  dropOverlay.classList.remove('visible')
-
-  // Component drops are handled by EditorDropHandler (see bootstrap.ts)
-  // Skip this handler for component drops
-  if (e.dataTransfer.types.includes('application/mirror-component')) {
-    return
-  }
-
-  const files = getImageFiles(e.dataTransfer)
-  if (files.length === 0) return
-
-  e.preventDefault()
-
-  // Set cursor at drop position if possible
-  if (window.editor) {
-    const cmEditor = document.querySelector('.cm-editor')
-    if (cmEditor) {
-      const pos = window.editor.posAtCoords({ x: e.clientX, y: e.clientY })
-      if (pos !== null) {
-        window.editor.dispatch({ selection: { anchor: pos } })
-      }
-    }
-  }
-
-  // Upload all images
-  for (const file of files) {
-    await handleImageUpload(file)
-  }
-})
-
-// Paste handler
-document.addEventListener('paste', async e => {
-  // Only handle if editor is focused
-  if (!document.activeElement.closest('.cm-editor')) return
-
-  const files = getImageFiles(e.clipboardData)
-  if (files.length === 0) return
-
-  e.preventDefault()
-
-  for (const file of files) {
-    await handleImageUpload(file)
-  }
+initImageDropHandler({
+  editor: window.editor,
+  editorPanel: document.querySelector('.editor-panel'),
+  uploadIndicator: document.getElementById('upload-indicator'),
+  dropOverlay: document.getElementById('drop-overlay'),
+  getImgbbKey,
 })
 
 // ==========================================================================
