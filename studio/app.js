@@ -197,11 +197,7 @@ const PROJECT_KEY = 'mirror-current-project'
 const STORAGE_VERSION_KEY = 'mirror-storage-version'
 const STORAGE_VERSION = 4 // Increment this when storage format changes
 
-const DEBUG_SYNC = false // Enable verbose sync logging
-let currentProject = null
-let projects = []
 const files = {}
-const fileTypes = {} // Stores explicit file types: { 'filename.mirror': 'component' }
 let currentFile = 'index.mir'
 
 // ============================================
@@ -238,30 +234,8 @@ async function loadProjects() {
   }
 }
 
-// Legacy project functions removed - desktop app uses folder-based file management via desktop-files.js
-
-// File tree structure (legacy, kept for compatibility)
-let fileTree = []
-
-// Legacy file list rendering removed - desktop app uses desktop-files.js for file tree
-
-function renderFileList() {
-  // Desktop app uses desktop-files.js for file tree - this function is no longer needed
-  return
-}
-
 // Mode tabs (MIRROR / REACT) — feature removed: .mode-tab UI no longer
 // exists in index.html and the conversion entry points have no callers.
-
-// File rename functions
-// Legacy file rename functions - desktop app uses desktop-files.js
-function startRenameFile(filePath) {
-  console.warn('[Legacy] startRenameFile not supported in desktop app')
-}
-
-async function renameFile(oldPath, newPath) {
-  console.warn('[Legacy] renameFile not supported in desktop app')
-}
 
 // ===========================================
 // FILE TYPES - Single Source of Truth
@@ -279,24 +253,6 @@ function getFileIcon(filename, withColor = true) {
 
 function getFileTypeColor(filename) {
   return getFileTypeColorModule(filename, getFileType)
-}
-
-// Legacy create file/folder functions - desktop app uses native menu + desktop-files.js
-function createNewFile(type = 'layout') {
-  console.warn('[Legacy] createNewFile not supported - use File > New File menu')
-}
-
-function createNewFolder() {
-  console.warn('[Legacy] createNewFolder not supported - use File > New Folder menu')
-}
-
-// Legacy delete functions - desktop app manages files via native file system
-async function deleteFile(filePath) {
-  console.warn('[Legacy] deleteFile not supported - use Finder to delete files')
-}
-
-async function deleteFolder(folderPath) {
-  console.warn('[Legacy] deleteFolder not supported - use Finder to delete folders')
 }
 
 // Save file - Desktop app uses desktop-files.js for actual disk writes
@@ -337,28 +293,8 @@ async function saveCurrentFile() {
   }
 }
 
-// Save file type (explicit user-selected type) - in-memory only
-function saveFileType(filename, type) {
-  fileTypes[filename] = type
-}
-
-// Load file types - no-op (in-memory only)
-function loadFileTypes() {
-  // File types are stored in-memory only (per session)
-}
-
-// Delete file type when file is deleted
-function deleteFileType(filename) {
-  delete fileTypes[filename]
-}
-
-// Get file type (stored or detected)
+// Get file type from extension or content sniffing
 function getFileType(filename) {
-  // First check for explicit stored type
-  if (fileTypes[filename]) {
-    return fileTypes[filename]
-  }
-
   // Check file extension first (most reliable for Tauri desktop files)
   const ext = filename.substring(filename.lastIndexOf('.')).toLowerCase()
   if (ext === '.tok') return 'tokens'
@@ -1056,7 +992,9 @@ function getZagDeps() {
     emitNotification: (type, message) => {
       studio.events.emit(`notification:${type}`, { message, duration: 2000 })
     },
-    updateFileList: () => renderFileList(),
+    updateFileList: () => {
+      // Desktop app's file tree is managed by desktop-files.js — no-op here.
+    },
   }
 }
 
@@ -1147,9 +1085,6 @@ function autoCreateFile(path) {
   // Create file with auto-generated comment
   const content = `// ${filename} (auto-created)`
   saveFile(filename, content)
-
-  // Re-render sidebar
-  renderFileList()
 
   console.log(`Auto-created: ${filename}`)
   return true
