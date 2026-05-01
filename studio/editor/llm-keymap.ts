@@ -5,11 +5,12 @@
  *   - `Mod-Enter`           → handleEditFlow (Cmd+Enter)
  *   - `Mod-Shift-Enter`     → openPromptField (Cmd+Shift+Enter)
  *   - `Tab` (ghost-active)  → acceptGhost
- *   - `Escape` (ghost-active) → dismissGhost
+ *   - `Escape`              → dismissGhost (cancelt In-Flight oder Ghost)
  *
- * Kein Wrapping, keine Delegation — direkte Bindings. Tab und Escape
- * sind Ghost-gated: wenn kein Ghost aktiv ist, geben sie `false` zurück
- * und CodeMirrors Default-Behavior übernimmt.
+ * Kein Wrapping, keine Delegation — direkte Bindings. Tab ist Ghost-gated
+ * im Keymap; Escape delegiert immer an `dismissGhost`, das selbst
+ * entscheidet ob es konsumiert (Ghost active ODER In-Flight) oder die
+ * Default-Behavior an CodeMirror weiterreicht (return false).
  *
  * Die Handler werden via Config injiziert, damit dieses Modul für
  * Phase-3-Schritt-A keine Abhängigkeit auf das spätere `edit-handler.ts`
@@ -63,11 +64,11 @@ export function llmEditKeymap(config: LlmEditKeymapConfig): readonly KeyBinding[
       },
     },
     {
+      // Escape ist NICHT Ghost-gated im Keymap — `dismissGhost` selbst
+      // entscheidet, ob die Tasten-Aktion konsumiert wird. Das deckt
+      // sowohl Ghost-active als auch In-Flight (während "thinking") ab.
       key: 'Escape',
-      run: view => {
-        if (!isGhostActiveSelector(view.state)) return false
-        return config.dismissGhost(view)
-      },
+      run: view => config.dismissGhost(view),
     },
   ]
 }

@@ -13,7 +13,7 @@ import { EditorState, EditorSelection } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { createEditHandler } from '../../studio/editor/edit-handler'
 import { ghostDiffField, ghostDiffExtension } from '../../studio/editor/ghost-diff'
-import { getEditStatusElement } from '../../studio/editor/edit-status-indicator'
+import { getEditStatusElement, hideEditStatus } from '../../studio/editor/edit-status-indicator'
 import type { EditResult } from '../../studio/agent/edit-flow'
 import type { EditCaptureCtx } from '../../studio/agent/edit-prompts'
 
@@ -21,6 +21,10 @@ let view: EditorView
 let parent: HTMLElement
 
 beforeEach(() => {
+  // Reset the status-indicator singleton — its module-scoped `element`
+  // ref otherwise leaks across tests once `document.body.innerHTML = ''`
+  // detaches the DOM node without nulling the reference.
+  hideEditStatus()
   document.body.innerHTML = ''
   parent = document.createElement('div')
   document.body.appendChild(parent)
@@ -245,6 +249,107 @@ describe('EditHandler — supersede / cancel', () => {
     await Promise.resolve()
     handler.dismissGhost(view)
     expect(aborted).toBe(true)
+  })
+
+  it('Escape during thinking: status clears, no ghost, no error (clean abort, no dangling)', async () => {
+    // The runEditFlow rejects with AbortError when its signal aborts —
+    // this matches the production runEdit() contract.
+    const runEditFlow = vi.fn(async (_ctx, opts: { signal?: AbortSignal } = {}) => {
+      return new Promise<EditResult>((_resolve, reject) => {
+        opts.signal?.addEventListener('abort', () => {
+          reject(new DOMException('Aborted', 'AbortError'))
+        })
+      })
+    })
+    const handler = createEditHandler(baseConfig({ runEditFlow }))
+
+    handler.handleEditFlow(view)
+    await Promise.resolve()
+    // Mid-thinking: status indicator is up.
+    expect(getEditStatusElement()?.classList.contains('cm-llm-status-thinking')).toBe(true)
+
+    // User presses Escape → dismissGhost (which is wired in production
+    // via the keymap; here we call it directly).
+    expect(handler.dismissGhost(view)).toBe(true)
+
+    // Wait for the rejected promise to settle through the catch arm.
+    await flush()
+
+    // Clean state: status hidden, no ghost, no error message left behind.
+    expect(getEditStatusElement()).toBeNull()
+    expect(view.state.field(ghostDiffField).active).toBe(false)
+  })
+
+  it('does not paint status/ghost from a superseded call after a new Cmd+Enter', async () => {
+    // First call resolves slowly with a ghost; second call resolves
+    // immediately. The first call's late return must not overwrite the
+    // second call's ghost (or paint an error).
+    let resolveFirst: ((r: EditResult) => void) | null = null
+    let callCount = 0
+    const runEditFlow = vi.fn(async () => {
+      callCount++
+      if (callCount === 1) {
+        return new Promise<EditResult>(resolve => {
+          resolveFirst = resolve
+        })
+      }
+      return ready('SECOND')
+    })
+    const handler = createEditHandler(baseConfig({ runEditFlow }))
+
+    handler.handleEditFlow(view) // call A — pending forever
+    await Promise.resolve()
+    handler.handleEditFlow(view) // call B — supersedes A, resolves to "SECOND"
+    await flush()
+
+    expect(view.state.field(ghostDiffField).newSource).toBe('SECOND')
+
+    // Now resolve call A late — it should be ignored.
+    resolveFirst!(ready('FIRST'))
+    await flush()
+
+    // Ghost still reflects call B, not the late "FIRST" result.
+    expect(view.state.field(ghostDiffField).newSource).toBe('SECOND')
+  })
+
+  it('dismissGhost during thinking: status hidden cleanly, no late ghost from the rejected call', async () => {
+    let signalRef: AbortSignal | null = null
+    // Non-async mock: returns a Promise directly to avoid the extra
+    // microtask wrap that `async` would impose. Matches the production
+    // `runEdit` shape (resolves on completion, rejects on abort).
+    const runEditFlow = vi.fn((_ctx, opts: { signal?: AbortSignal } = {}) => {
+      signalRef = opts.signal ?? null
+      return new Promise<EditResult>((_resolve, reject) => {
+        opts.signal?.addEventListener('abort', () => {
+          reject(new DOMException('Aborted', 'AbortError'))
+        })
+      })
+    })
+    const handler = createEditHandler(baseConfig({ runEditFlow }))
+
+    handler.handleEditFlow(view)
+    await Promise.resolve()
+    handler.dismissGhost(view)
+    await flush()
+
+    expect(signalRef!.aborted).toBe(true)
+    expect(getEditStatusElement()).toBeNull()
+    expect(view.state.field(ghostDiffField).active).toBe(false)
+  })
+
+  it('reports non-Error throws from runEditFlow as a string in the error status', async () => {
+    const runEditFlow = vi.fn(async () => {
+      // Some legacy code paths reject with bare strings.
+      return Promise.reject('plain-string-rejection')
+    })
+    const handler = createEditHandler(baseConfig({ runEditFlow }))
+
+    handler.handleEditFlow(view)
+    await flush()
+
+    const status = getEditStatusElement()
+    expect(status?.classList.contains('cm-llm-status-error')).toBe(true)
+    expect(status?.textContent).toContain('plain-string-rejection')
   })
 })
 

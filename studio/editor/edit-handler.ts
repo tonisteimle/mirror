@@ -93,14 +93,14 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
     try {
       result = await runEditFlow(ctx, { signal: ctrl.signal })
     } catch (err) {
-      // If we were superseded, the new call has already taken over.
+      // currentAbort is always reset before the rejection arrives here:
+      //   - supersede: a new call set currentAbort = ctrl_new.
+      //   - dismissGhost: currentAbort was set to null + status hidden.
+      // In both cases the catch is a no-op and we return early. The only
+      // remaining path to error reporting is a non-abort throw from the
+      // bridge — handled below.
       if (currentAbort !== ctrl) return
       currentAbort = null
-      if (isAbortError(err)) {
-        // The user cancelled; clear status quietly.
-        hideEditStatus()
-        return
-      }
       setEditStatus('error', errorMessage(err))
       return
     }
@@ -118,7 +118,7 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
     } else if (result.status === 'no-change') {
       hideEditStatus()
     } else {
-      setEditStatus('error', result.error ?? 'Unbekannter Fehler')
+      setEditStatus('error', result.error)
     }
   }
 
@@ -168,15 +168,6 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
       return true
     },
   }
-}
-
-function isAbortError(err: unknown): boolean {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    'name' in err &&
-    (err as { name?: string }).name === 'AbortError'
-  )
 }
 
 function errorMessage(err: unknown): string {

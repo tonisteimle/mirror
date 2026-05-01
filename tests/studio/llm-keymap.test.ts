@@ -104,29 +104,37 @@ describe('llmEditKeymap — Tab / Escape (ghost gating)', () => {
     expect(acceptGhost).toHaveBeenCalledWith(activeView)
   })
 
-  it('Escape calls dismissGhost only when ghostDiffField.active', () => {
-    const dismissGhost = vi.fn(() => true)
+  it('Escape always delegates to dismissGhost; the handler decides whether to consume', () => {
+    // Escape is intentionally NOT keymap-gated — dismissGhost self-gates
+    // for ghost-active OR in-flight, and returns false otherwise so
+    // CodeMirror's default Escape behavior (autocomplete close, etc.)
+    // can run.
+    const dismissGhost = vi.fn((_view: EditorView) => false)
     const keymap = llmEditKeymap({
       handleEditFlow: () => true,
       openPromptField: () => true,
       acceptGhost: () => true,
       dismissGhost,
     })
-
-    const inactiveView = fakeView()
     const escBinding = keymap.find(b => b.key === 'Escape')
-    expect(escBinding?.run?.(inactiveView)).toBe(false)
-    expect(dismissGhost).not.toHaveBeenCalled()
 
-    const activeState = EditorState.create({
+    // Idle: dismissGhost returns false → keymap binding returns false.
+    const idleView = fakeView()
+    expect(escBinding?.run?.(idleView)).toBe(false)
+    expect(dismissGhost).toHaveBeenCalledWith(idleView)
+
+    // In-flight or ghost-active: dismissGhost returns true →
+    // keymap consumes Escape so CodeMirror defaults don't fire.
+    dismissGhost.mockReturnValueOnce(true)
+    const ghostState = EditorState.create({
       doc: 'A',
       extensions: [ghostDiffField],
     }).update({
       effects: setGhostDiffEffect.of({ baseSource: 'A', newSource: 'B' }),
     }).state
-    const activeView = fakeView({ state: activeState })
-    expect(escBinding?.run?.(activeView)).toBe(true)
-    expect(dismissGhost).toHaveBeenCalledWith(activeView)
+    const ghostView = fakeView({ state: ghostState })
+    expect(escBinding?.run?.(ghostView)).toBe(true)
+    expect(dismissGhost).toHaveBeenCalledWith(ghostView)
   })
 })
 
