@@ -37,7 +37,6 @@ import {
   createPreviewBreadcrumb,
 } from './preview'
 import { RenderPipeline, createRenderPipeline } from './preview/render-pipeline'
-import { createFixer, type FixerService } from './agent'
 import { PropertyExtractor, CodeModifier } from '../compiler/studio'
 import { PropertyPanel, createPropertyPanel, SettingsPanel, createSettingsPanel } from './panels'
 import {
@@ -102,7 +101,6 @@ export interface StudioInstance {
   userComponentsPanel: UserComponentsPanel | null
   breadcrumb: PreviewBreadcrumb | null
   autocomplete: AutocompleteEngine
-  fixer: FixerService | null
   drawManager: DrawManager | null
   inlineEdit: InlineEditController | null
   /** Settings panel for studio configuration */
@@ -135,7 +133,6 @@ export const studio: StudioInstance = {
   userComponentsPanel: null,
   breadcrumb: null,
   autocomplete: getAutocompleteEngine(),
-  fixer: null,
   drawManager: null,
   inlineEdit: null,
   settingsPanel: null,
@@ -169,7 +166,6 @@ export const studio: StudioInstance = {
     studio.drawManager = null
     studio.inlineEdit = null
     studio.settingsPanel = null
-    studio.fixer = null
   },
 }
 

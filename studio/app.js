@@ -66,8 +66,6 @@ import {
   createComponentExtractExtensionFromConfig,
   createTokenExtractExtensionFromConfig,
   // Fixer Service (AI multi-file code generation)
-  createFixer,
-  getFixer,
   // Component Drop Extension (proper CodeMirror integration)
   createComponentDropExtension,
   insertComponentCode,
@@ -1436,31 +1434,6 @@ registerAllTriggers({
   },
   getCurrentFile: () => currentFile,
 })
-
-// Initialize Fixer Service for AI code generation
-let fixerService = null
-
-function initializeFixer() {
-  if (fixerService) return fixerService
-
-  fixerService = createFixer({
-    getFiles: () => {
-      const fileList = []
-      for (const [name, content] of Object.entries(files)) {
-        const ext = name.split('.').pop()
-        let type = 'layout'
-        if (ext === 'tok' || name.includes('token')) type = 'tokens'
-        else if (ext === 'com' || name.includes('component')) type = 'component'
-
-        fileList.push({ name, type, code: content })
-      }
-      return fileList
-    },
-    getCurrentFile: () => currentFile,
-  })
-
-  return fixerService
-}
 
 // Create component extract extension (:: syntax for inline component definition)
 const componentExtractConfig = {

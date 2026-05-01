@@ -1,36 +1,20 @@
 /**
- * Mirror Fixer Service
+ * Mirror Fixer — Bridge to the Claude CLI for the LLM-Edit-Flow.
  *
- * Single AI entry point for the `??` draft-mode trigger in the editor.
- * Receives a prompt + draft content + full source from the editor, builds
- * the draft prompt via `draft-prompts.ts`, calls Claude through the Tauri
- * bridge, and returns the extracted code block ready for splicing back
- * into the editor.
+ * Single export: `runEdit(prompt, signal?)`. Sends the prompt to Claude
+ * via the Tauri agent bridge with `agentType: 'edit'` and returns the
+ * raw output. Stateless (no session reuse) and cancel-aware via
+ * `AbortSignal`.
  *
- * The historic multi-file `fix()` / `quickFix()` flow (with streaming
- * AgentEvents, JSON FixerResponse parsing, multi-file CodeApplicator,
- * ContextCollector, conversation history, system prompt) was removed —
- * the only live consumer was the deleted chat panel.
+ * The orchestration (prompt building, patch parsing/applying, retry)
+ * lives in `edit-flow.ts`. This module is intentionally small — it
+ * exists so the bridge call is mockable in tests via `window.TauriBridge`.
  */
-
-import type { FileInfo } from './types'
-import { buildDraftPrompt, extractCodeBlock } from './draft-prompts'
-
-// ============================================
-// TYPES
-// ============================================
 
 declare global {
   interface Window {
     TauriBridge?: TauriBridge
   }
-}
-
-export interface FixerConfig {
-  /** All project files (used to inject token + component context). */
-  getFiles: () => FileInfo[]
-  /** Name of the file currently in the editor (excluded from context). */
-  getCurrentFile: () => string
 }
 
 interface TauriBridge {
@@ -51,111 +35,6 @@ interface TauriBridge {
   }
 }
 
-// ============================================
-// FIXER SERVICE
-// ============================================
-
-export class FixerService {
-  private config: FixerConfig
-  private sessionId: string | null = null
-  private isProcessing: boolean = false
-
-  constructor(config: FixerConfig) {
-    this.config = config
-  }
-
-  /** Currently inside a `generateDraftCode` call. */
-  isBusy(): boolean {
-    return this.isProcessing
-  }
-
-  /**
-   * Generate replacement code for a draft block (?? marker syntax).
-   *
-   * Returns a single code string ready to be spliced into the editor at
-   * the draft block position.
-   *
-   * @param prompt - User's prompt (text after the `??` marker), or null
-   * @param content - Code currently inside the draft block (between ?? markers)
-   * @param fullSource - Full editor source, used for surrounding context
-   * @throws if Tauri/Claude CLI is unavailable, or AI returns no code
-   */
-  async generateDraftCode(
-    prompt: string | null,
-    content: string,
-    fullSource: string
-  ): Promise<string> {
-    if (this.isProcessing) {
-      throw new Error('Fixer ist bereits aktiv')
-    }
-    this.isProcessing = true
-    try {
-      const bridge = this.getTauriBridge()
-      if (!bridge || !bridge.isTauri()) {
-        throw new Error('Claude CLI ist nur in der Desktop-App verfügbar')
-      }
-      const cliAvailable = await bridge.agent.checkClaudeCli()
-      if (!cliAvailable) {
-        throw new Error(
-          'Claude CLI nicht gefunden. Bitte installieren: npm install -g @anthropic-ai/claude-code'
-        )
-      }
-
-      // Pull tokens + components from OTHER project files (current file is
-      // already in fullSource). Without this the AI is token-blind and would
-      // invent hex colors / sizes instead of using `$primary`, `$surface` etc.
-      const allFiles = this.config.getFiles()
-      const currentFileName = this.config.getCurrentFile()
-      const tokenFiles: Record<string, string> = {}
-      const componentFiles: Record<string, string> = {}
-      for (const file of allFiles) {
-        if (file.name === currentFileName) continue
-        if (file.type === 'tokens') {
-          tokenFiles[file.name] = file.code
-        } else if (file.type === 'components' || file.type === 'component') {
-          componentFiles[file.name] = file.code
-        }
-      }
-
-      const fullPrompt = buildDraftPrompt({
-        prompt,
-        content,
-        fullSource,
-        tokenFiles,
-        componentFiles,
-      })
-      const result = await bridge.agent.runAgent(fullPrompt, 'draft', '', this.sessionId)
-      this.sessionId = result.session_id
-      if (!result.success) {
-        throw new Error(result.error || 'Claude CLI Fehler')
-      }
-      const code = extractCodeBlock(result.output)
-      if (!code) {
-        throw new Error('Keine Code-Antwort vom AI erhalten')
-      }
-      return code
-    } finally {
-      this.isProcessing = false
-    }
-  }
-
-  /** Reset session id (next call starts a fresh Claude conversation). */
-  clearSession(): void {
-    this.sessionId = null
-  }
-
-  private getTauriBridge(): TauriBridge | null {
-    if (typeof window !== 'undefined' && window.TauriBridge) {
-      return window.TauriBridge
-    }
-    return null
-  }
-}
-
-// ============================================
-// EDIT-FLOW BRIDGE
-// ============================================
-
 function getTauriBridgeOrNull(): TauriBridge | null {
   if (typeof window !== 'undefined' && window.TauriBridge) {
     return window.TauriBridge
@@ -168,21 +47,11 @@ function makeAbortError(): Error {
 }
 
 /**
- * Schmale Bridge für den LLM-Edit-Flow.
+ * Send a prompt to Claude (agentType `'edit'`) and return the raw output.
  *
- * Sendet einen vorgefertigten Prompt an Claude (über die Tauri-Bridge,
- * agentType `'edit'`) und gibt die rohe Antwort zurück. Der Edit-Flow
- * parst die Antwort danach selbst (Search/Replace-Patches).
- *
- * Im Gegensatz zu `FixerService.generateDraftCode` ist `runEdit` zustandslos
- * (keine Session-Wiederverwendung) und unterstützt `AbortSignal` zum
- * Abbrechen laufender Calls (z.B. wenn der User den Diff-Ghost mit Esc
- * verwirft, bevor die Antwort eintrifft).
- *
- * @throws AbortError wenn `signal` schon aborted ist oder während des Calls
- *         aborted wird.
- * @throws Error wenn Bridge fehlt, CLI fehlt, oder das Backend success=false
- *         zurückgibt.
+ * @throws AbortError if `signal` is already aborted or aborts during the call.
+ * @throws Error if the bridge is unavailable, the CLI is missing, or the
+ *         backend reports `success: false`.
  */
 export async function runEdit(prompt: string, signal?: AbortSignal): Promise<string> {
   if (signal?.aborted) {
@@ -224,35 +93,4 @@ export async function runEdit(prompt: string, signal?: AbortSignal): Promise<str
     throw new Error(result.error || 'Claude CLI Fehler')
   }
   return result.output
-}
-
-// ============================================
-// DRAFT PROMPT RE-EXPORTS
-// ============================================
-// Prompt builder + extractor + splice live in draft-prompts.ts (no deps)
-// so the eval driver can import them without dragging in the agent module
-// tree. Re-exported here for API stability of the existing consumers.
-export {
-  buildDraftPrompt,
-  extractCodeBlock,
-  indentBlock,
-  spliceDraftBlock,
-  type DraftPromptInput,
-} from './draft-prompts'
-
-// ============================================
-// FACTORY
-// ============================================
-
-let instance: FixerService | null = null
-
-/** Create or replace the Fixer singleton. Cleans up the old session id. */
-export function createFixer(config: FixerConfig): FixerService {
-  if (instance) instance.clearSession()
-  instance = new FixerService(config)
-  return instance
-}
-
-export function getFixer(): FixerService | null {
-  return instance
 }

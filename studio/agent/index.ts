@@ -1,28 +1,39 @@
 /**
- * Mirror Agent — Fixer-only AI integration
+ * Mirror Agent — LLM-Edit-Flow public API.
  *
- * Single AI path: Claude Code CLI via Tauri Bridge (uses the user's CLI
- * subscription). Triggered by the editor's `??` draft-mode marker.
+ * Single AI path: Claude Code CLI via Tauri Bridge. Triggered from the
+ * editor through `Cmd+Enter` / `Cmd+Shift+Enter` (see `studio/editor/llm-keymap.ts`).
  *
  * @example
  * ```typescript
- * import { createFixer } from './agent'
+ * import { runEditFlow } from './agent'
  *
- * const fixer = createFixer({
- *   getFiles: () => [...],
- *   getCurrentFile: () => 'index.mir',
- * })
- * const code = await fixer.generateDraftCode('blauer button', '', source)
+ * const result = await runEditFlow(ctx, { signal, maxRetries: 2 })
+ * if (result.status === 'ready') {
+ *   // dispatch ghost-diff, etc.
+ * }
  * ```
  */
 
-export { FixerService, createFixer, getFixer } from './fixer'
-export type { FixerConfig } from './fixer'
+export { runEdit } from './fixer'
+
 export {
-  buildDraftPrompt,
-  extractCodeBlock,
-  indentBlock,
-  spliceDraftBlock,
-  type DraftPromptInput,
-} from './draft-prompts'
+  runEditFlow,
+  type RunEditFlowOptions,
+  type EditResult,
+  type EditResultStatus,
+} from './edit-flow'
+
+export { buildEditPrompt, type EditCaptureCtx } from './edit-prompts'
+
+export { parsePatchResponse, type Patch, type ParsedPatchResponse } from './patch-format'
+
+export { applyPatches, type ApplyResult, type RetryHint } from './patch-applier'
+
+export { createChangeTracker, MAX_DIFF_LINES, type ChangeTracker } from './change-tracker'
+
+export { computeLineDiff, formatUnifiedDiff, type DiffHunk } from './source-diff'
+
+export { formatProjectFileSection } from './prompt-utils'
+
 export type { FileType, FileInfo } from './types'
