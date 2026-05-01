@@ -114,9 +114,6 @@ import {
   hsvToHex as hsvToHexModule,
   // Full Color Picker (Clean Code module)
   createFullColorPicker,
-  // Icon Picker (for property panel integration)
-  getGlobalIconPicker,
-  setGlobalIconPickerCallback,
   // LLM-Edit-Flow (Cmd+Enter / Cmd+Shift+Enter)
   ghostDiffExtension,
   llmEditKeymap,
@@ -136,6 +133,9 @@ import {
   initPanelDividers,
   // Play Mode (toolbar button, reset, device selector)
   initPlayMode,
+  // Property Panel — global DOM event listeners
+  setupPropertyPanelIconPicker,
+  setupPropertyPanelEventListeners,
 } from './dist/index.js?v=150'
 
 // Annotation to mark changes from property panel (for skipping debounce)
@@ -2926,11 +2926,15 @@ function initStudio() {
   // Set up move event handlers for debugging
   setupMoveEventHandlers()
 
-  // Set up icon picker for property panel
+  // Set up icon picker for property panel (delegated to studio/panels/property)
   setupPropertyPanelIconPicker()
 
-  // Set up event listeners for property panel (add/delete/edit events)
-  setupPropertyPanelEventListeners()
+  // Set up event listeners for property panel — add/delete/edit events
+  // (delegated to studio/panels/property/event-listeners.ts)
+  setupPropertyPanelEventListeners({
+    getCodeModifier: () => studioCodeModifier,
+    onCodeChange: result => handleStudioCodeChange(result),
+  })
 
   // Initialize play mode button (delegated to studio/preview/play-mode.ts)
   initPlayMode({
@@ -3143,131 +3147,9 @@ function setupMoveEventHandlers() {
   })
 }
 
-/**
- * Setup icon picker for property panel
- * Handles the property-panel:open-icon-picker event
- */
-function setupPropertyPanelIconPicker() {
-  document.addEventListener('property-panel:open-icon-picker', event => {
-    const { onSelect } = event.detail || {}
-    if (!onSelect) {
-      console.warn('[IconPicker] No onSelect callback provided')
-      return
-    }
-
-    // Get the icon picker
-    const iconPicker = getGlobalIconPicker()
-
-    // Load Lucide icons if not already loaded
-    iconPicker.loadLucideIcons()
-
-    // Set the callback for when an icon is selected
-    setGlobalIconPickerCallback(iconName => {
-      onSelect(iconName)
-      iconPicker.hide()
-    })
-
-    // Get the button that triggered the event to position the picker
-    const triggerButton = event.target?.closest?.('button[data-open-icon-picker]')
-    if (triggerButton) {
-      const rect = triggerButton.getBoundingClientRect()
-      iconPicker.showAt(rect.left, rect.bottom + 4)
-    } else {
-      // Fallback: show near the property panel
-      const propertyPanel = document.getElementById('property-panel')
-      if (propertyPanel) {
-        const rect = propertyPanel.getBoundingClientRect()
-        iconPicker.showAt(rect.left + 20, rect.top + 100)
-      }
-    }
-  })
-}
-
-/**
- * Setup event listeners for property panel events
- * Handles add-event, delete-event, and event-change
- */
-function setupPropertyPanelEventListeners() {
-  // Handle adding a new event to an element
-  document.addEventListener('property-panel:add-event', event => {
-    const { nodeId, eventName } = event.detail || {}
-    if (!nodeId || !eventName || !studioCodeModifier) {
-      console.warn('[PropertyPanel] Add event: missing data', { nodeId, eventName })
-      return
-    }
-
-    console.log('[PropertyPanel] Adding event:', eventName, 'to node:', nodeId)
-
-    // Add the event with a default action
-    const result = studioCodeModifier.addEvent(nodeId, eventName, 'toggle')
-    if (result.success) {
-      handleStudioCodeChange(result)
-    } else {
-      console.warn('[PropertyPanel] Failed to add event:', result.error)
-    }
-  })
-
-  // Handle deleting an event from an element
-  document.addEventListener('property-panel:delete-event', event => {
-    const { nodeId, eventName } = event.detail || {}
-    if (!nodeId || !eventName || !studioCodeModifier) {
-      console.warn('[PropertyPanel] Delete event: missing data', { nodeId, eventName })
-      return
-    }
-
-    console.log('[PropertyPanel] Deleting event:', eventName, 'from node:', nodeId)
-
-    // Remove the event
-    const result = studioCodeModifier.removeEvent(nodeId, eventName)
-    if (result.success) {
-      handleStudioCodeChange(result)
-    } else {
-      console.warn('[PropertyPanel] Failed to delete event:', result.error)
-    }
-  })
-
-  // Handle changing an event's actions
-  document.addEventListener('property-panel:event-change', event => {
-    const { nodeId, eventName, actionsString } = event.detail || {}
-    if (!nodeId || !eventName || !studioCodeModifier) {
-      console.warn('[PropertyPanel] Event change: missing data', { nodeId, eventName })
-      return
-    }
-
-    console.log('[PropertyPanel] Changing event:', eventName, 'actions to:', actionsString)
-
-    // Parse the actionsString to extract action name and target
-    // Format: "actionName(target)" or "actionName()" or "actionName"
-    let actionName = actionsString || 'toggle'
-    let target = undefined
-
-    const match = actionsString?.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\(([^)]*)\)$/)
-    if (match) {
-      actionName = match[1]
-      target = match[2] || undefined
-    } else if (actionsString && !actionsString.includes('(')) {
-      // Simple action without parentheses
-      actionName = actionsString
-    }
-
-    // Update the event's actions
-    // updateEvent(nodeId, oldEventName, oldKey, newEventName, newActionName, newTarget, newKey)
-    const result = studioCodeModifier.updateEvent(
-      nodeId,
-      eventName, // oldEventName
-      undefined, // oldKey (no key)
-      eventName, // newEventName (keep same)
-      actionName, // newActionName
-      target, // newTarget
-      undefined // newKey
-    )
-    if (result.success) {
-      handleStudioCodeChange(result)
-    } else {
-      console.warn('[PropertyPanel] Failed to update event:', result.error)
-    }
-  })
-}
+// Property panel global event listeners are wired below in initStudio()
+// via setupPropertyPanelIconPicker / setupPropertyPanelEventListeners
+// (see studio/panels/property/event-listeners.ts).
 
 // Update studio after compile
 function updateStudio(ast, ir, sourceMap, source) {

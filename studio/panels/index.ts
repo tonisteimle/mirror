@@ -13,6 +13,13 @@ export {
   type GetAllSourceCallback,
 } from './property'
 
+// Property Panel — global DOM event listeners
+export {
+  setupPropertyPanelIconPicker,
+  setupPropertyPanelEventListeners,
+  type PropertyPanelEventListenerDeps,
+} from './property/event-listeners'
+
 // Re-export SelectionProvider for backwards compatibility
 export type { SelectionProvider } from './property/types'
 

@@ -21,7 +21,7 @@ export {
   createPropertyPanel,
   type OnCodeChangeCallback,
   type GetAllSourceCallback,
-  type PropertyPanelOptions
+  type PropertyPanelOptions,
 } from './property-panel'
 
 // ============================================
@@ -32,7 +32,7 @@ export {
 export {
   PropertyPanelController,
   createPropertyPanelController,
-  type PropertyPanelControllerOptions
+  type PropertyPanelControllerOptions,
 } from './controller'
 
 // State Machine
@@ -46,15 +46,11 @@ export {
   isShowing,
   isPendingUpdate,
   getCurrentElement,
-  getCurrentNodeId
+  getCurrentNodeId,
 } from './state-machine'
 
 // View
-export {
-  PropertyPanelView,
-  createPropertyPanelView,
-  type PropertyPanelViewOptions
-} from './view'
+export { PropertyPanelView, createPropertyPanelView, type PropertyPanelViewOptions } from './view'
 
 // Ports
 export type {
@@ -69,16 +65,14 @@ export type {
   SpacingToken,
   ColorToken,
   PropertyChange,
-  Rect
+  Rect,
 } from './ports'
 
 // ============================================
 // Types
 // ============================================
 
-export type {
-  SelectionProvider
-} from './types'
+export type { SelectionProvider } from './types'
 
 // ============================================
 // Adapters
@@ -103,3 +97,13 @@ export * from './base'
 // ============================================
 
 export * from './sections'
+
+// ============================================
+// Global event listeners (icon picker, add/delete/change event)
+// ============================================
+
+export {
+  setupPropertyPanelIconPicker,
+  setupPropertyPanelEventListeners,
+  type PropertyPanelEventListenerDeps,
+} from './event-listeners'
