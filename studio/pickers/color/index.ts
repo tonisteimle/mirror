@@ -60,3 +60,12 @@ export {
   type ColorPickerConfig,
   type ColorPickerCallbacks,
 } from './picker'
+
+// Studio setup (FullColorPicker glue, keyboard, window globals)
+export {
+  initColorPicker,
+  type ColorPickerSetupDeps,
+  type ColorPickerHandle,
+  type ColorPickerCallback,
+  type ShowColorPickerOptions,
+} from './setup'
