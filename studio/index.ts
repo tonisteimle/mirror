@@ -59,8 +59,8 @@ export * from './file-types'
 // React Converter (React/JSX to Mirror DSL)
 export * from './react-converter'
 
-// YAML Parser (data file parsing)
-export * from './yaml-parser'
+// YAML Parser (data file parsing) — lives under compile/
+export * from './compile/yaml-parser'
 
 // Bootstrap
 export {
