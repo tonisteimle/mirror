@@ -131,6 +131,8 @@ import {
   collectTokensSource,
   // Auto-create-files factory (stubs for `import` / `route` references)
   createAutoCreateFiles,
+  // Editor-line offset for prelude (maps merged-source lines back to editor)
+  getPreludeLineOffset,
   // Draggable preview elements manager (binds drag handlers to [data-mirror-id])
   createDraggableElementsManager,
   // Code-modifier classes — were previously read off MirrorLang (compiler
@@ -139,7 +141,7 @@ import {
   CodeModifier,
   PropertyExtractor,
   createRobustModifier,
-} from './dist/index.js?v=159'
+} from './dist/index.js?v=160'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -1627,37 +1629,12 @@ function getAllProjectSource() {
   })
 }
 
-/**
- * Calculate the line offset for the current file in the combined source
- * Returns the number of lines that come before the current file
- *
- * Must match the structure created by getPreludeCode() + separator in compile():
- * prelude + '\n\n// === currentFile ===\n' + code
- */
 function getCurrentFileLineOffset() {
-  const fileType = getFileType(currentFile)
-
-  // Only layout files have prelude
-  if (fileType !== 'layout') {
-    return 0
-  }
-
-  // Get the actual prelude and count its lines
-  const prelude = getPreludeCode(currentFile)
-  if (!prelude) {
-    return 0
-  }
-
-  // Count lines in prelude
-  const preludeLines = (prelude.match(/\n/g) || []).length + 1
-
-  // The separator adds: '\n\n// === currentFile ===\n'
-  // That's: 2 newlines + 1 comment line + 1 newline = 3 additional lines
-  // Actually: the line count is prelude lines + 2 (blank line) + 1 (comment line)
-  // The current file content starts on the line AFTER the comment
-  const separatorLines = 3 // \n\n (blank line after prelude) + comment line + \n
-
-  return preludeLines + separatorLines - 1 // -1 because editor line 1 should map to first content line
+  return getPreludeLineOffset({
+    getCurrentFile: () => currentFile,
+    getFileType,
+    getPreludeCode,
+  })
 }
 
 // ============================================

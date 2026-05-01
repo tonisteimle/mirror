@@ -38,6 +38,7 @@ export {
   type AutoCreateFilesDeps,
   type AutoCreateFilesAPI,
 } from './auto-create-files'
+export { getPreludeLineOffset, type PreludeLineOffsetDeps } from './prelude-line-offset'
 export { CodeGenerator, type GeneratorDeps } from './code-generator'
 export { PreviewRenderer, type RendererDeps, type RenderResult } from './preview-renderer'
 export { StudioUpdater, type UpdaterDeps } from './studio-updater'
