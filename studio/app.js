@@ -236,14 +236,6 @@ async function saveFile(filePath, content) {
 async function saveCurrentFile() {
   if (currentFile && files[currentFile] !== undefined) {
     await saveFile(currentFile, files[currentFile])
-    // Update status
-    const status = document.getElementById('status')
-    if (status) {
-      status.textContent = 'Saved'
-      setTimeout(() => {
-        status.textContent = 'Ready'
-      }, 1500)
-    }
   }
 }
 
@@ -893,10 +885,6 @@ document.querySelectorAll('.folder-header').forEach(header => {
 
 // Tab switching (Preview/Generated)
 const preview = document.getElementById('preview')
-const generatedCode = document.getElementById('generated-code')
-const status = document.getElementById('status')
-const tabs = document.querySelectorAll('.tab')
-const tabContents = document.querySelectorAll('.tab-content')
 
 // Preview Renderers (Clean Code modules) - lazy initialized
 let tokenRenderer = null
@@ -972,18 +960,6 @@ function getDropGlobals() {
       addZagDefinitionToComponentsFile(code, file, zagDeps),
   }
 }
-
-tabs.forEach(tab => {
-  tab.addEventListener('click', () => {
-    const targetId = tab.dataset.tab
-    tabs.forEach(t => t.classList.remove('active'))
-    tabContents.forEach(c => c.classList.remove('active'))
-    tab.classList.add('active')
-    document
-      .getElementById(targetId === 'preview' ? 'preview' : 'generated-code')
-      .classList.add('active')
-  })
-})
 
 // Auto-create missing files when referenced
 function autoCreateFile(path) {
@@ -1166,11 +1142,6 @@ function compile(code) {
       </div>
     </div>`
     preview.className = ''
-    if (generatedCode) generatedCode.textContent = ''
-    if (status) {
-      status.textContent = 'Ready'
-      status.className = 'status'
-    }
     // Clear selection and update studio state for empty code
     if (studioSelectionManager) {
       studioSelectionManager.clearSelection()
@@ -1338,7 +1309,6 @@ function compile(code) {
     // Generate DOM code
     const jsCode = MirrorLang.generateDOM(ast)
     timings.codegenEnd = performance.now()
-    if (generatedCode) generatedCode.textContent = jsCode
 
     // Clear preview and set appropriate class
     preview.innerHTML = ''
@@ -1451,11 +1421,6 @@ function compile(code) {
       }
     }
 
-    if (status) {
-      status.textContent = `OK - ${ast.components.length} components, ${ast.instances.length} instances`
-      status.className = 'status ok'
-    }
-
     // Validate code and update linter diagnostics
     // We validate the user's code (not resolved with prelude) so errors show at correct positions
     // BUT we pass prelude tokens/components so the validator knows what's defined in other files
@@ -1519,17 +1484,12 @@ function compile(code) {
       forceLinting(editor)
     }
 
-    if (status) {
-      status.textContent = 'Error'
-      status.className = 'status error'
-    }
     preview.innerHTML = `
       <div class="error-box">
         <h3>Parse/Compile Error</h3>
         <pre>${err.message}</pre>
       </div>
     `
-    if (generatedCode) generatedCode.textContent = `// Error: ${err.message}`
   }
 }
 
@@ -2055,13 +2015,13 @@ function initStudio() {
 }
 
 /**
- * Setup notification event handlers for user feedback
- * Displays messages in the status bar
+ * Wire studio events into app-level handlers (drag drops, immediate
+ * compile, etc). Notification handlers were removed when the #status
+ * bar was deleted from index.html.
  */
 function setupNotificationHandlers() {
   if (!studio?.events) return
 
-  // Handle drag:dropped from v3 DragController (must be before statusEl check!)
   studio.events.on('drag:dropped', ({ source, target, dragData }) => {
     if (!target) {
       console.warn('[Drag v3] Missing target')
@@ -2170,7 +2130,6 @@ function setupNotificationHandlers() {
 
   // Immediate compile when requested (bypasses 300ms debounce for drag-drop operations)
   // This significantly improves perceived performance after drops
-  // NOTE: Registered here before statusEl check so it's always available
   studio.events.on('compile:requested', () => {
     // Cancel pending debounce to avoid duplicate compiles
     if (typeof debouncedCompile !== 'undefined' && debouncedCompile.cancel) {
@@ -2182,56 +2141,6 @@ function setupNotificationHandlers() {
       compile(code)
       debouncedSave(code)
     }
-  })
-
-  const statusEl = document.getElementById('status')
-  if (!statusEl) return
-
-  // Store original status for restoring after notification
-  let originalStatus = statusEl.textContent
-  let originalClass = statusEl.className
-  let notificationTimeout = null
-
-  const showNotification = (message, type, duration = 3000) => {
-    // Clear any existing timeout
-    if (notificationTimeout) {
-      clearTimeout(notificationTimeout)
-    }
-
-    // Save current status if not already in notification mode
-    if (!statusEl.dataset.notifying) {
-      originalStatus = statusEl.textContent
-      originalClass = statusEl.className
-      statusEl.dataset.notifying = 'true'
-    }
-
-    // Show notification
-    statusEl.textContent = message
-    statusEl.className = `status ${type}`
-
-    // Restore original status after duration
-    notificationTimeout = setTimeout(() => {
-      statusEl.textContent = originalStatus
-      statusEl.className = originalClass
-      delete statusEl.dataset.notifying
-      notificationTimeout = null
-    }, duration)
-  }
-
-  studio.events.on('notification:info', ({ message, duration }) => {
-    showNotification(message, 'info', duration ?? 3000)
-  })
-
-  studio.events.on('notification:success', ({ message, duration }) => {
-    showNotification(message, 'ok', duration ?? 3000)
-  })
-
-  studio.events.on('notification:warning', ({ message, duration }) => {
-    showNotification(message, 'warning', duration ?? 4000)
-  })
-
-  studio.events.on('notification:error', ({ message, duration }) => {
-    showNotification(message, 'error', duration ?? 5000)
   })
 }
 
