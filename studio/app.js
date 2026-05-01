@@ -88,10 +88,8 @@ import {
   findOrCreateComponentsFile as findOrCreateComponentsFileModule,
   addZagDefinitionToComponentsFile as addZagDefinitionToComponentsFileModule,
   // File Types (Clean Code module)
-  FILE_TYPES as FILE_TYPES_MODULE,
   detectFileType as detectFileTypeModule,
   getFileIcon as getFileIconModule,
-  getFileTypeColor as getFileTypeColorModule,
   getFileTemplate,
   getFileExtension,
   // React Converter (Clean Code module)
@@ -192,11 +190,6 @@ function isLayoutFile(filename) {
 // App State
 // ============================================
 
-const STORAGE_PREFIX = 'mirror-file-'
-const PROJECT_KEY = 'mirror-current-project'
-const STORAGE_VERSION_KEY = 'mirror-storage-version'
-const STORAGE_VERSION = 4 // Increment this when storage format changes
-
 const files = {}
 let currentFile = 'index.mir'
 
@@ -240,19 +233,14 @@ async function loadProjects() {
 // ===========================================
 // FILE TYPES - Single Source of Truth
 // ===========================================
-// File Types (use Clean Code module)
-const FILE_TYPES = FILE_TYPES_MODULE
-
+// File-type wrappers — bind getFileType so the module helpers can
+// honour explicit per-file type overrides (none today; see getFileType).
 function detectFileType(nameOrContent, content) {
   return detectFileTypeModule(nameOrContent, content)
 }
 
 function getFileIcon(filename, withColor = true) {
   return getFileIconModule(filename, getFileType, withColor)
-}
-
-function getFileTypeColor(filename) {
-  return getFileTypeColorModule(filename, getFileType)
 }
 
 // Save file - Desktop app uses desktop-files.js for actual disk writes
