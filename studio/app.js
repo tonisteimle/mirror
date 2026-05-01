@@ -126,7 +126,7 @@ import {
   CodeModifier,
   PropertyExtractor,
   createRobustModifier,
-} from './dist/index.js?v=152'
+} from './dist/index.js?v=153'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -1657,25 +1657,24 @@ if (typeof window !== 'undefined') {
     getDoc: () => editor.state.doc.toString(),
     // Set code AND wipe undo/redo history so tests that exercise Cmd+Z
     // can't reach back into the *previous* test's history. Without this,
-    // undo from one test's property change reverts the doc to the prior
-    // test's state, leaking content across the test boundary. We:
-    //   1. drain the redo stack (each redo() is a no-op once empty)
-    //   2. drain the undo stack (each undo() walks one step back)
-    //   3. apply the new code with addToHistory.of(false) so the setup
-    //      itself is not undoable.
+    // In-test setCode (preserves undo history). Tests that exercise
+    // undo/redo across multiple setCode calls need each call to land in
+    // history as its own undoable entry; isolateHistory.of('full') keeps
+    // them from merging with adjacent edits.
     setCodeWithHistory: code => {
-      // Replace the entire EditorState. Every CodeMirror history entry
-      // lives inside the state, so creating a fresh state from the same
-      // extensions guarantees a clean undo/redo stack — no cross-test
-      // leak when one test's Cmd+Z would otherwise reach back into the
-      // previous test's content. setState swaps the view's state
-      // atomically; pending debounced compiles must be cancelled first
-      // so they don't fire post-swap with the old doc.
-      // Also clear the studio CommandExecutor: when the editor doesn't
-      // have focus, document-level Cmd+Z falls back to executor.undo()
-      // which has its own (per-app, not per-state) history. Without this
-      // wipe, one test's `Cmd+Z` after a property change replays a
-      // *previous* test's command and clobbers the doc with old content.
+      const transaction = editor.state.update({
+        changes: { from: 0, to: editor.state.doc.length, insert: code },
+        annotations: [Transaction.userEvent.of('test.setCode'), isolateHistory.of('full')],
+      })
+      editor.dispatch(transaction)
+    },
+    // Pre-test setup setCode (wipes history). The test runner calls this
+    // before each test to guarantee Cmd+Z can't reach back into the
+    // previous test's content. Replacing the EditorState from the same
+    // extensions gives a fresh undo/redo stack; clearing the
+    // CommandExecutor wipes the studio's parallel undo history (used
+    // when the editor isn't focused, e.g. preview-driven Cmd+Z).
+    setCodeForTestSetup: code => {
       if (typeof debouncedCompile !== 'undefined' && debouncedCompile.cancel) {
         debouncedCompile.cancel()
       }
