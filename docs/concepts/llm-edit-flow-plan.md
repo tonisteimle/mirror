@@ -479,6 +479,81 @@ Format: `T<phase>.<n> — <subject>`. Effort: **S** = ½ Tag, **M** = 1–2 Tage
 - 3-5-Designer-User-Test: alle bestätigen "in Kontrolle".
 - Nach Phase 3: kein einziger `??`-Mode-Code-Pfad mehr im Repo (`grep` zeigt nur Doku-Referenzen).
 
+## 6.1. Phase-5-Eval-Ergebnis (2026-05-01)
+
+Memo zum Abschluss von T5.1 (Eval-Set), T5.2 (Anker-Hit-Rate), T5.3
+(Latenz + Streaming-Entscheidung). Datenbasis: `scripts/eval-edit-flow.ts`
+mit 30 Scenarios (10 pro Modus), Claude CLI gegen `claude-sonnet-*`,
+single-shot (kein Retry-Loop aktiviert in Eval-Driver).
+
+### T5.2 — Anker-Hit-Rate
+
+- **30 Scenarios** ausgeführt, **102/102 Assertions** grün.
+- **28 Patches** erzeugt (5 Scenarios → no-change, 25 → 1-2 Patches).
+- **28/28 Patches matchten beim ersten Versuch eindeutig** (`apply.success === true` ohne Retry).
+- **Anker-Hit-Rate = 100 %** (Ziel ≥ 95 %).
+
+→ **Kein Prompt-Tuning nötig.** Der aktuelle `buildEditPrompt` (Stand T2.x)
+ist robust genug für die abgedeckten Difficulty-Klassen (Tippfehler,
+Property-Fixes, Token-Extraction, Component-Rename, Multi-Patch). Die
+3 Failure-Cluster, mit denen ich beim Bauen des Eval-Sets gerechnet
+hatte, sind nicht aufgetaucht.
+
+### T5.3 — Latenz-Messung
+
+Über 30 Scenarios, gemessen pro Phase:
+
+| Metric          | P50      | P95      | Mean  | Min   | Max    |
+| --------------- | -------- | -------- | ----- | ----- | ------ |
+| Claude CLI      | 4 989 ms | 9 345 ms | 5 383 | 3 199 | 12 431 |
+| Compile-Check\* | 790 ms   | 2 182 ms | 1 100 | 725   | 2 379  |
+| Total (Eval)    | 6 166 ms | 10 133   | 6 484 | 3 965 | 13 209 |
+
+\* Compile-Check ist nur im Eval-Driver — **nicht im User-Pfad**.
+Im Studio läuft nur der Claude-Call, der Patch-Apply (<1 ms) und das
+Ghost-Diff-Rendering.
+
+**E2E im Studio (= Claude CLI):** P50 ≈ 5.0 s, P95 ≈ 9.3 s.
+
+### T5.3 — Entscheidung Streaming (CLI vs. SDK)
+
+**Zielwerte aus `llm-edit-flow.md`:**
+
+- CLI: P50 < 4 s
+- SDK-Streaming: P50 < 1.5 s
+
+**Ist:** P50 = 5.0 s (CLI) — Ziel um ~1 s überschritten.
+
+**Entscheidung: Bei CLI bleiben für MVP.** Begründung:
+
+1. **Ziel knapp verfehlt, nicht massiv:** 5 s P50 ist 25 % über
+   dem Soll, nicht 200 %. Mit Status-Indicator (T2.7 — "✨ denkt nach…")
+   und weil die Aktion explizit User-getriggert ist, ist die
+   wahrgenommene Latenz tolerierbar.
+2. **SDK-Migration ist nicht-trivial:** Anthropic SDK Streaming braucht
+   Chunked-Output-Parsing für `@@FIND/@@REPLACE/@@END`-Blocks bevor
+   der gesamte Output da ist — das öffnet eine ganze Klasse neuer
+   Race Conditions (Patches während Stream parsen, früh abbrechen,
+   Cancel-Semantik). Aufwand schätze ich auf 2-3 Tage.
+3. **Schwankung ist hoch (P95/P50 = 1.87):** Der Worst-Case (12.4 s)
+   ist der wirklich wehtuende Fall. Streaming würde **Time-to-First-Byte**
+   verbessern, aber Time-to-Apply (Ghost erscheint) hängt am Ende-of-
+   Stream — solange wir auf vollständige Patches warten, hilft Streaming
+   für den Apply-Zeitpunkt nicht.
+4. **User-Test entscheidet:** Phase-6-User-Test mit 3-5 Designern wird
+   zeigen ob 5 s P50 "im Kontrolle"-Gefühl bricht. **Wenn ja**, dann
+   SDK-Streaming als Phase-7-Task. **Wenn nein**, bleibt CLI dauerhaft.
+
+**Folgesachen, die T5.3 nicht löst:**
+
+- Hit-Rate-Messung mit aktivem Retry-Loop fehlt — ist aber moot solange
+  Single-Shot 100 % ergibt.
+- Latenz-Messung mit lokalem Anthropic-API (claude-sonnet-haiku oder
+  ähnlich) fehlt — für SDK-Pfad wäre das die nächste Messung.
+- Eval-Set deckt **kein Multi-File-Refactor** ab (Phase-6-Material).
+
+---
+
 ## 7. Glossar (Ergänzung)
 
 - **Wrapping-Handler** — CM6-Keymap-Eintrag der vor anderen Handlern bindet und durch `return false` an den nächsten delegiert.
