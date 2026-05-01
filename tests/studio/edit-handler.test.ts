@@ -20,7 +20,16 @@ import type { EditCaptureCtx } from '../../studio/agent/edit-prompts'
 let view: EditorView
 let parent: HTMLElement
 
-beforeEach(() => {
+beforeEach(async () => {
+  // Drain pending microtasks AND real-timer macrotasks from prior tests
+  // FIRST. Several supersede/cancel tests use `setTimeout(resolve, 50)`
+  // inside their mock `runEditFlow` and don't await settlement at the
+  // test's tail — without a drain >50ms here, that 50ms timer fires
+  // *during* a later test's body and calls `setEditStatus('ready')`
+  // after we already cleared the singleton, faking up a late "ready"
+  // status the later test never asked for.
+  await new Promise(resolve => setTimeout(resolve, 60))
+
   // Reset the status-indicator singleton — its module-scoped `element`
   // ref otherwise leaks across tests once `document.body.innerHTML = ''`
   // detaches the DOM node without nulling the reference.
