@@ -8,7 +8,7 @@ import { connectCDP, getPageTarget } from './test-runner/cdp'
 import { ConsoleCollector } from './test-runner/console-collector'
 
 const TARGET_URL = process.argv[2] || 'http://localhost:5173/studio/'
-const WAIT_MS = 12000
+const WAIT_MS = 25000
 
 async function main() {
   const chrome = await launchChrome({ headless: true })

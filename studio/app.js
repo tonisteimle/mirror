@@ -126,7 +126,7 @@ import {
   CodeModifier,
   PropertyExtractor,
   createRobustModifier,
-} from './dist/index.js?v=153'
+} from './dist/index.js?v=154'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()

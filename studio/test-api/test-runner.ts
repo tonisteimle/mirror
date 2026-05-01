@@ -48,7 +48,7 @@ class EditorAPIImpl implements EditorAPI {
     return this.editor?.state?.doc?.toString() ?? ''
   }
 
-  async setCode(code: string): Promise<void> {
+  async setCode(code: string, options?: { resetHistory?: boolean }): Promise<void> {
     if (!this.editor) throw new Error('Editor not available')
 
     const cm = (window as any).__codemirror
@@ -61,8 +61,15 @@ class EditorAPIImpl implements EditorAPI {
       setPreludeOffset(0)
     }
 
-    // Use setCodeWithHistory for proper undo tracking
-    if (cm?.setCodeWithHistory) {
+    // Two distinct paths:
+    //  - resetHistory=true: pre-test setup. Wipe undo/redo to prevent
+    //    one test's Cmd+Z from reaching back into a previous test.
+    //  - default (in-test setCode): preserve history so tests like
+    //    "Multiple undos work sequentially" can chain setCode calls
+    //    and walk them back via undo.
+    if (options?.resetHistory && cm?.setCodeForTestSetup) {
+      cm.setCodeForTestSetup(code)
+    } else if (cm?.setCodeWithHistory) {
       cm.setCodeWithHistory(code)
     } else {
       // Fallback: standard approach
@@ -927,7 +934,9 @@ export class TestRunner {
 
       // Always reset editor — tests without setup must start with empty
       // editor, not inherited code from the previous test (pollution).
-      await this.editorApi.setCode(test.setup ?? '')
+      // resetHistory wipes both CodeMirror's undo stack and the studio
+      // CommandExecutor so Cmd+Z can't walk into a prior test's content.
+      await this.editorApi.setCode(test.setup ?? '', { resetHistory: true })
 
       // Run test with timeout
       await Promise.race([

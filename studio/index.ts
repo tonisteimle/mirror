@@ -105,6 +105,12 @@ export * from './react-converter'
 // YAML Parser (data file parsing) — lives under compile/
 export * from './compile/yaml-parser'
 
+// Compile module — prelude / generator / renderer helpers consumed by
+// studio/app.js. Re-exported here so the studio bundle surfaces them
+// (collectPrelude is the load-bearing one — without it app.js fails to
+// boot with "does not provide an export named 'collectPrelude'").
+export * from './compile'
+
 // Bootstrap
 export {
   studio,
