@@ -107,6 +107,13 @@ export { PreviewBreadcrumb, createPreviewBreadcrumb, type BreadcrumbConfig } fro
 // Play Mode (component testing toolbar / device selector)
 export { initPlayMode, type PlayModeDeps } from './play-mode'
 
+// Draggable preview elements (drag handler binding for [data-mirror-id])
+export {
+  createDraggableElementsManager,
+  type DraggableElementsConfig,
+  type DraggableElementsManager,
+} from './draggable-elements'
+
 export interface PreviewConfig {
   container: HTMLElement
   selectedClass?: string

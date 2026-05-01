@@ -120,13 +120,15 @@ import {
   mirrorHighlight,
   // Prelude collector (data + tokens + components → joined string)
   collectPrelude,
+  // Draggable preview elements manager (binds drag handlers to [data-mirror-id])
+  createDraggableElementsManager,
   // Code-modifier classes — were previously read off MirrorLang (compiler
   // bundle), but moved to studio/code-modifier in commit ae4f6c41 and no
   // longer re-exported by the compiler. Use the studio-bundle versions.
   CodeModifier,
   PropertyExtractor,
   createRobustModifier,
-} from './dist/index.js?v=154'
+} from './dist/index.js?v=155'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -1259,7 +1261,7 @@ function compile(code) {
         preview.appendChild(rootEl)
         timings.domAppendEnd = performance.now()
         // Make preview elements draggable AFTER DOM update
-        makePreviewElementsDraggable()
+        draggableElements.refresh()
         timings.draggablesEnd = performance.now()
         // Refresh preview selection after DOM update
         if (studio.preview) {
@@ -1398,8 +1400,10 @@ let studioPropertyPanel = null
 let studioPropertyExtractor = null
 let studioCodeModifier = null
 let studioRobustModifier = null // Robust wrapper for atomic updates
-let canvasDragCleanups = [] // Cleanup functions for canvas element drag handlers
-const initializedDraggables = new WeakSet() // Track elements with drag handlers to prevent duplicates
+// Drag handler binding for preview elements — encapsulates cleanup + WeakSet
+const draggableElements = createDraggableElementsManager({
+  getStudio: () => studio,
+})
 // editorHasFocus is now managed by studio state (studio.state.get().editorHasFocus)
 // This getter provides backwards compatibility for existing code
 function getEditorHasFocus() {
@@ -2104,44 +2108,6 @@ function updateStudio(ast, ir, sourceMap, source) {
   // Ensure visual overlay is in DOM after preview update
   // (preview.innerHTML clears it, this re-appends it)
   studio.preview?.refresh()
-}
-
-/**
- * Makes all preview elements draggable for canvas-internal movement
- *
- * Uses WeakSet to track initialized elements and prevent duplicate event listeners.
- * Cleanup functions are stored for elements that need reinitialization.
- */
-function makePreviewElementsDraggable() {
-  // Cleanup previous bindings for elements that may have been removed
-  canvasDragCleanups.forEach(cleanup => cleanup())
-  canvasDragCleanups = []
-
-  if (!studio.dragDrop) return
-
-  const previewContainer = document.getElementById('preview')
-  if (!previewContainer) return
-
-  // Find all elements with data-mirror-id
-  const elements = previewContainer.querySelectorAll('[data-mirror-id]')
-
-  elements.forEach(el => {
-    const nodeId = el.getAttribute('data-mirror-id')
-    if (!nodeId) return
-
-    // Skip already initialized elements (prevents duplicate listeners)
-    if (initializedDraggables.has(el)) return
-
-    // Skip the actual root element (main component) - it cannot be moved
-    // But allow its children to be dragged even if they're direct children of preview
-    const isMainRoot = el.dataset.mirrorRoot === 'true'
-    if (isMainRoot) return
-
-    // Make element draggable using new DragDropSystem
-    const cleanup = studio.dragDrop.makeElementDraggable(el)
-    canvasDragCleanups.push(cleanup)
-    initializedDraggables.add(el)
-  })
 }
 
 // Handle code changes from property panel.
