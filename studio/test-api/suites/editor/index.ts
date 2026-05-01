@@ -17,7 +17,7 @@ export {
   propertyPanelTests as bidirectionalPropertyTests,
   complexSyncTests,
   errorRecoveryTests,
-} from '../bidirectional-tests'
+} from '../bidirectional'
 
 export {
   allUndoRedoTests,
@@ -26,9 +26,9 @@ export {
   undoEditTypesTests,
   undoWithSelectionTests,
   undoEdgeCasesTests,
-} from '../undo-redo-tests'
+} from '../undo-redo'
 
-export { allAutocompleteTests } from '../autocomplete-tests'
+export { allAutocompleteTests } from '../autocomplete'
 
 export { allSyncTests } from '../sync-tests'
 

@@ -1,11 +1,17 @@
 /**
  * Autocomplete Test Suite Index
- *
- * Re-exports from the existing autocomplete-tests.ts file.
  */
 
+import type { TestCase } from '../../test-runner'
+import { primitiveCompletionTests } from './primitives.test'
+import { propertyCompletionTests } from './properties.test'
+import { valueCompletionTests } from './values.test'
+import { iconCompletionTests } from './icons.test'
+import { tokenCompletionTests } from './tokens.test'
+import { stateCompletionTests } from './states.test'
+import { componentCompletionTests } from './components.test'
+
 export {
-  allAutocompleteTests,
   primitiveCompletionTests,
   propertyCompletionTests,
   valueCompletionTests,
@@ -13,4 +19,14 @@ export {
   tokenCompletionTests,
   stateCompletionTests,
   componentCompletionTests,
-} from '../autocomplete-tests'
+}
+
+export const allAutocompleteTests: TestCase[] = [
+  ...primitiveCompletionTests,
+  ...propertyCompletionTests,
+  ...valueCompletionTests,
+  ...iconCompletionTests,
+  ...tokenCompletionTests,
+  ...stateCompletionTests,
+  ...componentCompletionTests,
+]

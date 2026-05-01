@@ -1,14 +1,26 @@
 /**
  * Undo/Redo Test Suite Index
- *
- * Re-exports from the existing undo-redo-tests.ts file.
  */
 
+import type { TestCase } from '../../test-runner'
+import { basicUndoTests } from './basic-undo.test'
+import { basicRedoTests } from './basic-redo.test'
+import { undoEditTypesTests } from './edit-types.test'
+import { undoWithSelectionTests } from './with-selection.test'
+import { undoEdgeCasesTests } from './edge-cases.test'
+
 export {
-  allUndoRedoTests,
   basicUndoTests,
   basicRedoTests,
   undoEditTypesTests,
   undoWithSelectionTests,
   undoEdgeCasesTests,
-} from '../undo-redo-tests'
+}
+
+export const allUndoRedoTests: TestCase[] = [
+  ...basicUndoTests,
+  ...basicRedoTests,
+  ...undoEditTypesTests,
+  ...undoWithSelectionTests,
+  ...undoEdgeCasesTests,
+]
