@@ -61,10 +61,8 @@ import { createStudioAPI } from './studio-api'
 import { createSnappingAPI, setupSnappingAPI, type SnappingAPI } from './snapping-api'
 import {
   createCodeMirrorTestAPI,
-  createDraftModeTestAPI,
   createEventTestAPI,
   type CodeMirrorTestAPI,
-  type DraftModeTestAPI,
   type EventTestAPI,
 } from './codemirror-api'
 import type { TestCase, TestSuiteResult, ElementInfo } from './types'
@@ -491,43 +489,6 @@ export interface MirrorTestAPI {
     hasFocus: () => boolean
   }
 
-  // Draft Mode API (AI-assist feature testing)
-  /** Draft mode test API */
-  draftMode: {
-    /** Check if extension is registered */
-    isExtensionRegistered: () => boolean
-    /** Check if keymap is registered */
-    isKeymapRegistered: () => boolean
-    /** Check if draft mode is active */
-    isActive: () => boolean
-    /** Get current state */
-    getState: () => {
-      active: boolean
-      startLine: number | null
-      endLine: number | null
-      prompt: string | null
-      indent: number
-      processing: boolean
-    }
-    /** Check if line is in draft */
-    isLineInDraft: (lineNumber: number) => boolean
-    /** Trigger submit (Cmd+Enter) */
-    triggerSubmit: () => Promise<boolean>
-    /** Trigger cancel (Escape) */
-    triggerCancel: () => boolean
-    /** Replace draft block */
-    replaceDraftBlock: (content: string) => boolean
-    /** Wait for submit event */
-    waitForSubmitEvent: (timeout?: number) => Promise<{
-      content: string
-      prompt: string | null
-      startLine: number
-      endLine: number | null
-    }>
-    /** Simulate full AI flow */
-    simulateAIGeneration: (generatedCode: string) => Promise<boolean>
-  }
-
   // Event tracking API
   /** Event test API for verifying event emission */
   events: {
@@ -916,23 +877,6 @@ function createMirrorTestAPI(): MirrorTestAPI {
         getLine: api.getLine.bind(api),
         focus: api.focus.bind(api),
         hasFocus: api.hasFocus.bind(api),
-      }
-    })(),
-
-    // Draft Mode Test API
-    draftMode: (() => {
-      const api = createDraftModeTestAPI()
-      return {
-        isExtensionRegistered: api.isExtensionRegistered.bind(api),
-        isKeymapRegistered: api.isKeymapRegistered.bind(api),
-        isActive: api.isActive.bind(api),
-        getState: api.getState.bind(api),
-        isLineInDraft: api.isLineInDraft.bind(api),
-        triggerSubmit: api.triggerSubmit.bind(api),
-        triggerCancel: api.triggerCancel.bind(api),
-        replaceDraftBlock: api.replaceDraftBlock.bind(api),
-        waitForSubmitEvent: api.waitForSubmitEvent.bind(api),
-        simulateAIGeneration: api.simulateAIGeneration.bind(api),
       }
     })(),
 

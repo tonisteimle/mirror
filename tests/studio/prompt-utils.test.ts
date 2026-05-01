@@ -1,10 +1,8 @@
 /**
  * Tests for studio/agent/prompt-utils.ts
  *
- * Pflicht: Verhaltens-Parität zur ursprünglichen `formatProjectFileSection`
- * in `studio/agent/draft-prompts.ts` (während der Phase-3-Migration). Wird
- * `draft-prompts.ts` in Phase 3 gelöscht, bleibt prompt-utils die kanonische
- * Quelle und diese Tests sind alleinige Spec.
+ * Spec für `formatProjectFileSection`. Ursprünglich aus draft-prompts.ts
+ * extrahiert; nach Phase 3 ist diese Datei die alleinige Quelle.
  *
  * Siehe: docs/concepts/llm-edit-flow-test-concept.md § 3.1 (prompt-utils)
  */
@@ -73,37 +71,5 @@ describe('PromptUtils — formatProjectFileSection', () => {
     expect(idxZ).toBeGreaterThan(-1)
     expect(idxA).toBeGreaterThan(idxZ)
     expect(idxM).toBeGreaterThan(idxA)
-  })
-})
-
-/**
- * Verhaltens-Parität gegen Original: importiere die Original-Funktion und
- * vergleiche Outputs auf identische Inputs. Wird obsolet sobald
- * draft-prompts.ts in Phase 3 gelöscht ist — dann kann dieser Block weg.
- */
-describe('PromptUtils — Parität zu draft-prompts.ts', () => {
-  it('produces identical output to the legacy implementation', async () => {
-    const { formatProjectFileSection: legacy } =
-      (await import('../../studio/agent/draft-prompts')) as any
-
-    const cases = [
-      { heading: 'X', files: undefined },
-      { heading: 'X', files: {} },
-      { heading: 'Tokens', files: { 'a.tok': 'primary.bg: #2271C1' } },
-      {
-        heading: 'Components',
-        files: { 'a.com': 'CardA: bg #111', 'b.com': 'CardB: bg #222' },
-      },
-      { heading: 'X', files: { 'empty.tok': '   \n\n' } },
-    ]
-
-    for (const c of cases) {
-      // legacy is non-exported in draft-prompts.ts, so this only runs if it
-      // happens to be reachable; if not, we still verify our extracted impl
-      // independently above.
-      if (typeof legacy === 'function') {
-        expect(formatProjectFileSection(c.heading, c.files)).toBe(legacy(c.heading, c.files))
-      }
-    }
   })
 })

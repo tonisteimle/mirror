@@ -1358,67 +1358,25 @@ const MIRROR_ACTIONS_API = `
     return out;
   }
 
-  // === AI / Draft-mode (B2, E3) ===
-
-  function _normalizePrompt(p) { return (p || '').replace(/\\s+/g, ' ').trim(); }
+  // === AI / LLM-Edit-Flow (B2, E3) ===
+  // NOTE: The legacy ??-based draft-mode flow has been removed in favor of
+  // the new LLM-Edit-Flow (Cmd+Enter → prompt-field → ghost-diff → Tab to
+  // accept). The demo \`aiPrompt\` action below is intentionally a stub —
+  // it must be rewired to the new flow before the AI demos
+  // (_b2-smoke.ts, notion-settings.ts, ai-assisted-card.ts) can run again.
 
   function installAiMockListener() {
-    if (window.__mirrorAiMockInstalled) return;
-    window.__mirrorAiMockInstalled = true;
-    const studio = window.__mirrorStudio__;
-    if (!studio || !studio.events) return;
-    studio.events.on('draft:submit', (event) => {
-      const fixtures = window.__mirrorAiMock || {};
-      const key = _normalizePrompt(event && event.prompt);
-      if (key in fixtures) {
-        const code = fixtures[key];
-        setTimeout(() => {
-          studio.events.emit('draft:ai-response', { code: code, error: null });
-        }, 80);
-      } else {
-        setTimeout(() => {
-          studio.events.emit('draft:ai-response', {
-            code: '',
-            error: 'No AI mock for prompt: ' + JSON.stringify(key) +
-                   '. Available: ' + Object.keys(fixtures).slice(0, 5).join(' | '),
-          });
-        }, 50);
-      }
-    });
+    // Stub: the new LLM-Edit-Flow uses runEditFlow + ghost-diff instead of
+    // the draft:submit/ai-response event pair. A future iteration will mock
+    // \`window.TauriBridge.agent.runAgent\` to return canned responses.
   }
 
-  async function aiPrompt(promptText, options) {
-    options = options || {};
-    const charDelay = options.charDelay || 50;
-    installAiMockListener();
-    const studio = window.__mirrorStudio__;
-    const editor = window.editor;
-    if (!editor) throw new Error('aiPrompt: editor not available');
-    if (!studio || !studio.draftModeManager) {
-      throw new Error('aiPrompt: studio.draftModeManager not available');
-    }
-    const doc = editor.state.doc;
-    const insertPos = doc.length;
-    const draftLines = '\\n?? ' + promptText + '\\n??';
-    let pos = insertPos;
-    for (const ch of draftLines) {
-      editor.dispatch({
-        changes: { from: pos, insert: ch },
-        selection: { anchor: pos + 1 },
-      });
-      pos += 1;
-      if (window.__mirrorDemo && window.__mirrorDemo.overlay && ch !== '\\n') {
-        window.__mirrorDemo.overlay.show(ch === ' ' ? 'Space' : ch);
-      }
-      await delay(charDelay);
-    }
-    await delay(120);
-    const submitted = await studio.draftModeManager.handleSubmit();
-    if (!submitted) {
-      throw new Error('aiPrompt: draftModeManager.handleSubmit returned false');
-    }
-    await window.__dragTest.waitForCompile();
-    await delay(150);
+  async function aiPrompt(_promptText, _options) {
+    throw new Error(
+      'aiPrompt: pending rewire to LLM-Edit-Flow ' +
+        '(Cmd+Enter → prompt-field → ghost-diff → Tab). ' +
+        'See docs/concepts/llm-edit-flow-plan.md.'
+    );
   }
 
   window.__mirrorActions = {

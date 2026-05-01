@@ -132,15 +132,8 @@ import { demoProjectTests } from './demo-project.test'
 import { allCompilerVerificationTests, allPreludeTests } from './compiler-verification'
 import { allCompilerTests } from './compiler-tests'
 
-// AI (Draft Lines + Draft Mode)
-import {
-  allDraftLineTests,
-  allComprehensiveDraftLineTests,
-  allAIWorkflowTests,
-} from './draft-lines'
-import { allDraftModeTests } from './draft-mode'
-import { draftModeIntegrationTests } from './ai/draft-mode-integration.test'
-import { draftModeSafetyTests } from './ai/draft-mode-safety.test'
+// AI (LLM-Edit-Flow browser tests — populated in Phase 4)
+import { allAITests } from './ai'
 
 // Tutorial
 import { allTutorialTests } from './tutorial'
@@ -317,16 +310,12 @@ export const compilerTests: TestCase[] = [
 ]
 
 /**
- * 15. AI - AI-assist features (draft lines, draft mode)
+ * 15. AI - LLM-Edit-Flow browser tests (Cmd+Enter, Cmd+Shift+Enter, Tab/Esc)
+ *
+ * The bulk of AI logic is unit-tested in tests/studio/ via Vitest+jsdom.
+ * Browser-integration tests get added here in Phase 4.
  */
-export const aiTests: TestCase[] = [
-  ...draftModeIntegrationTests, // CRITICAL: Smoke tests that verify integration is working
-  ...draftModeSafetyTests, // Production-deploy-readiness (auto-submit, splice, failure modes)
-  ...allDraftLineTests,
-  ...allComprehensiveDraftLineTests,
-  ...allAIWorkflowTests,
-  ...allDraftModeTests,
-]
+export const aiTests: TestCase[] = [...allAITests]
 
 /**
  * 16. TUTORIAL - Tutorial verification tests
@@ -466,7 +455,7 @@ export const categories: Record<CategoryName, CategoryInfo> = {
   },
   ai: {
     name: 'ai',
-    description: 'AI-assist (draft lines, draft mode)',
+    description: 'AI-assist (LLM-Edit-Flow browser tests)',
     tests: aiTests,
   },
   tutorial: {

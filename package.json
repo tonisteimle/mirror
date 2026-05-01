@@ -26,8 +26,6 @@
     "dev:studio": "tsup compiler/index.ts --format iife --global-name Mirror --outDir dist/browser --watch",
     "studio": "npx serve . -p 5173",
     "ai-bridge": "npx tsx scripts/ai-bridge-server.ts",
-    "eval:ai": "npx tsx scripts/eval-ai-simple.ts",
-    "eval:ai:list": "npx tsx scripts/eval-ai-simple.ts --list",
     "eval:edit": "npx tsx scripts/eval-edit-flow.ts",
     "eval:edit:list": "npx tsx scripts/eval-edit-flow.ts --list",
     "test": "vitest",

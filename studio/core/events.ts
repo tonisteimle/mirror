@@ -286,20 +286,6 @@ export interface StudioEvents {
   'rename:undone': { oldName: string; newName: string; symbolType: 'component' | 'token' }
   /** File update requested (from rename or other cross-file operations) */
   'file:update-requested': { filename: string; content: string }
-  /** Draft mode events (AI-assisted code editing with ?? marker) */
-  'draft:submit': {
-    prompt: string | null
-    startLine: number
-    endLine: number
-    indent: number
-    content: string
-    fullSource: string
-    abortController: AbortController
-  }
-  'draft:processing': { startLine: number }
-  'draft:completed': { startLine: number; endLine: number; code: string }
-  'draft:cancelled': { startLine: number; reason: string }
-  'draft:ai-response': { code: string; error?: string }
 }
 
 /** Component Panel item (simplified for event typing) */

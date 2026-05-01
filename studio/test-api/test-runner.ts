@@ -29,11 +29,7 @@ import { createPanelAPI } from './panel-api'
 import { createZagAPI } from './zag-api'
 import { createStudioAPI } from './studio-api'
 import { createFixturesAPI } from './fixtures'
-import {
-  createCodeMirrorTestAPI,
-  createDraftModeTestAPI,
-  createEventTestAPI,
-} from './codemirror-api'
+import { createCodeMirrorTestAPI, createEventTestAPI } from './codemirror-api'
 
 // =============================================================================
 // Editor API Implementation
@@ -727,9 +723,8 @@ export class TestRunner {
     const studioApi = createStudioAPI()
     const fixturesApi = createFixturesAPI()
 
-    // Create CodeMirror, DraftMode, and Event APIs
+    // Create CodeMirror and Event APIs
     const codemirrorApi = createCodeMirrorTestAPI()
-    const draftModeApi = createDraftModeTestAPI()
     const eventApi = createEventTestAPI()
 
     return {
@@ -745,7 +740,6 @@ export class TestRunner {
       studio: studioApi,
       fixtures: fixturesApi,
       codemirror: codemirrorApi,
-      draftMode: draftModeApi,
       events: eventApi,
     }
   }

@@ -1,12 +1,10 @@
 /**
- * Prompt-Building-Utilities — geteilt zwischen Edit-Flow-Prompts und
- * (während der Phase-3-Migration) den existierenden Draft-Prompts.
+ * Prompt-Building-Utilities für den LLM-Edit-Flow.
  *
- * `formatProjectFileSection` wurde aus `studio/agent/draft-prompts.ts`
- * extrahiert. In Phase 3 wird `draft-prompts.ts` gelöscht — diese Datei
- * bleibt als kanonische Quelle.
+ * Aktuell nur `formatProjectFileSection` — rendert ein Bündel Mirror-Files
+ * (Tokens / Components) als Markdown-Block für Prompt-Injection.
  *
- * Siehe: docs/concepts/llm-edit-flow-plan.md (T2.1, § 3.1)
+ * Siehe: docs/concepts/llm-edit-flow-plan.md (§ 3.1)
  */
 
 /**

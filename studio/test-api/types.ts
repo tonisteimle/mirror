@@ -235,8 +235,6 @@ export interface TestAPI {
   fixtures: FixturesAPI
   // CodeMirror internals (for testing editor integration)
   codemirror: CodeMirrorAPI
-  // Draft Mode (AI-assist feature)
-  draftMode: DraftModeAPI
   // Event tracking (for testing event emission)
   events: EventAPI
 }
@@ -1067,68 +1065,6 @@ export interface CodeMirrorAPI {
 
   /** Check if editor has focus */
   hasFocus(): boolean
-}
-
-// =============================================================================
-// Draft Mode API (for testing AI-assist features)
-// =============================================================================
-
-export interface DraftModeAPI {
-  /** Check if draft mode extension is registered in editor */
-  isExtensionRegistered(): boolean
-
-  /** Check if draft mode keymap is registered */
-  isKeymapRegistered(): boolean
-
-  /** Check if draft mode is active (?? marker detected) */
-  isActive(): boolean
-
-  /** Get current draft state */
-  getState(): DraftModeState
-
-  /**
-   * Get the live DraftModeManager instance (for tests that need to call
-   * `provideAIResponse(code)` to short-circuit the AI bridge). Returns
-   * null if the manager isn't initialized in this build.
-   */
-  getManager(): {
-    handleSubmit: () => Promise<boolean>
-    provideAIResponse: (code: string) => void
-  } | null
-
-  /** Check if a line is in the draft block */
-  isLineInDraft(lineNumber: number): boolean
-
-  /** Trigger submit (what Cmd+Enter should do) */
-  triggerSubmit(): Promise<boolean>
-
-  /** Cancel draft mode (what Escape should do) */
-  triggerCancel(): boolean
-
-  /** Replace draft block with content */
-  replaceDraftBlock(content: string): boolean
-
-  /** Wait for draft:submit event */
-  waitForSubmitEvent(timeout?: number): Promise<DraftSubmitEvent>
-
-  /** Simulate the full AI flow */
-  simulateAIGeneration(generatedCode: string): Promise<boolean>
-}
-
-export interface DraftModeState {
-  active: boolean
-  startLine: number | null
-  endLine: number | null
-  prompt: string | null
-  indent: number
-  processing: boolean
-}
-
-export interface DraftSubmitEvent {
-  content: string
-  prompt: string | null
-  startLine: number
-  endLine: number | null
 }
 
 // =============================================================================

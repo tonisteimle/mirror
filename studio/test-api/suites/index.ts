@@ -625,50 +625,8 @@ import {
   quickPlayModeTests,
 } from './playmode'
 
-// Draft Lines (AI-assist visual feedback)
-import {
-  allDraftLineTests,
-  draftLineDetectionTests,
-  draftLineDecorationTests,
-  draftLineIntegrationTests,
-  // Comprehensive tests
-  allComprehensiveDraftLineTests,
-  comprehensiveDetectionTests,
-  comprehensiveDecorationTests,
-  comprehensiveStateTests,
-  comprehensiveWorkflowTests,
-  comprehensiveEdgeCaseTests,
-  comprehensiveInspectionTests,
-  // AI Workflow tests
-  allAIWorkflowTests,
-  aiWorkflowTests,
-  visualVerificationTests,
-} from './draft-lines'
-
-// Draft Mode (-- marker for AI code generation)
-import {
-  allDraftModeTests,
-  allBasicDraftModeTests,
-  allVisualDraftModeTests,
-  allAutocompleteDraftModeTests,
-  allScenarioDraftModeTests,
-  detectionTests as draftModeDetectionTests,
-  indentationTests as draftModeIndentationTests,
-  blockStructureTests as draftModeBlockTests,
-  lineDetectionTests as draftModeLineTests,
-  dynamicEditingTests as draftModeDynamicTests,
-  cssClassTests as draftModeCssTests,
-  mutedColorTests as draftModeMutedTests,
-  dynamicVisualTests as draftModeVisualDynamicTests,
-  suppressionTests as draftModeSuppressionTests,
-  pickerTests as draftModePickerTests,
-  generationTests as draftModeGenerationTests,
-  correctionTests as draftModeCorrectionTests,
-  refactoringTests as draftModeRefactoringTests,
-  workflowTests as draftModeWorkflowTests,
-  contextTests as draftModeContextTests,
-  quickDraftModeTests,
-} from './draft-mode'
+// LLM-Edit-Flow browser tests (replaces the old draft-mode/draft-lines suites)
+import { allAITests } from './ai'
 
 // Tutorial Tests (auto-generated from docs/tutorial/*.html)
 import {
@@ -690,6 +648,9 @@ import {
   chapter_14_tabellenTests,
   chapter_15_chartsTests,
 } from './tutorial'
+
+// Step-runner declarative scenarios (3-dim sync validation)
+import { allStepRunnerExampleTests } from './step-runner-examples'
 
 // Property Robustness (various property formats)
 import {
@@ -1209,46 +1170,8 @@ export {
   quickPlayModeTests,
 }
 
-// Draft Lines Tests (AI-assist visual feedback)
-export {
-  allDraftLineTests,
-  draftLineDetectionTests,
-  draftLineDecorationTests,
-  draftLineIntegrationTests,
-  // Comprehensive tests
-  allComprehensiveDraftLineTests,
-  comprehensiveDetectionTests,
-  comprehensiveDecorationTests,
-  comprehensiveStateTests,
-  comprehensiveWorkflowTests,
-  comprehensiveEdgeCaseTests,
-  comprehensiveInspectionTests,
-}
-
-// Draft Mode Tests (-- marker for AI code generation)
-export {
-  allDraftModeTests,
-  allBasicDraftModeTests,
-  allVisualDraftModeTests,
-  allAutocompleteDraftModeTests,
-  allScenarioDraftModeTests,
-  draftModeDetectionTests,
-  draftModeIndentationTests,
-  draftModeBlockTests,
-  draftModeLineTests,
-  draftModeDynamicTests,
-  draftModeCssTests,
-  draftModeMutedTests,
-  draftModeVisualDynamicTests,
-  draftModeSuppressionTests,
-  draftModePickerTests,
-  draftModeGenerationTests,
-  draftModeCorrectionTests,
-  draftModeRefactoringTests,
-  draftModeWorkflowTests,
-  draftModeContextTests,
-  quickDraftModeTests,
-}
+// LLM-Edit-Flow browser tests
+export { allAITests } from './ai'
 
 // Property Robustness Tests
 export {
@@ -1397,10 +1320,10 @@ export const allTests: TestCase[] = [
   ...demoProjectTests,
   ...allCompilerVerificationTests,
   ...allPlayModeTests,
-  ...allDraftLineTests,
-  ...allDraftModeTests,
+  ...allAITests,
   ...allIntegrationTests,
   ...allTutorialTests,
+  ...allStepRunnerExampleTests,
 ]
 
 /**
@@ -1932,45 +1855,8 @@ export const testCounts: Record<string, number> = {
   'testSystem.keyboard': testSystemKeyboardTests.length,
   'testSystem.waitHelper': waitHelperTests.length,
 
-  // === Draft Lines (AI-assist) ===
-  draftLines: allDraftLineTests.length,
-  'draftLines.detection': draftLineDetectionTests.length,
-  'draftLines.decoration': draftLineDecorationTests.length,
-  'draftLines.integration': draftLineIntegrationTests.length,
-  // Comprehensive Draft Lines Tests
-  'draftLines.comprehensive': allComprehensiveDraftLineTests.length,
-
-  // === Draft Mode (-- marker for AI code generation) ===
-  draftMode: allDraftModeTests.length,
-  'draftMode.basic': allBasicDraftModeTests.length,
-  'draftMode.visual': allVisualDraftModeTests.length,
-  'draftMode.autocomplete': allAutocompleteDraftModeTests.length,
-  'draftMode.scenarios': allScenarioDraftModeTests.length,
-  'draftMode.basic.detection': draftModeDetectionTests.length,
-  'draftMode.basic.indentation': draftModeIndentationTests.length,
-  'draftMode.basic.blockStructure': draftModeBlockTests.length,
-  'draftMode.basic.lineDetection': draftModeLineTests.length,
-  'draftMode.basic.dynamic': draftModeDynamicTests.length,
-  'draftMode.visual.css': draftModeCssTests.length,
-  'draftMode.visual.muted': draftModeMutedTests.length,
-  'draftMode.visual.dynamic': draftModeVisualDynamicTests.length,
-  'draftMode.autocomplete.suppression': draftModeSuppressionTests.length,
-  'draftMode.autocomplete.pickers': draftModePickerTests.length,
-  'draftMode.scenarios.generation': draftModeGenerationTests.length,
-  'draftMode.scenarios.correction': draftModeCorrectionTests.length,
-  'draftMode.scenarios.refactoring': draftModeRefactoringTests.length,
-  'draftMode.scenarios.workflow': draftModeWorkflowTests.length,
-  'draftMode.scenarios.context': draftModeContextTests.length,
-  'draftLines.comprehensive.detection': comprehensiveDetectionTests.length,
-  'draftLines.comprehensive.decoration': comprehensiveDecorationTests.length,
-  'draftLines.comprehensive.state': comprehensiveStateTests.length,
-  'draftLines.comprehensive.workflow': comprehensiveWorkflowTests.length,
-  'draftLines.comprehensive.edge': comprehensiveEdgeCaseTests.length,
-  'draftLines.comprehensive.inspection': comprehensiveInspectionTests.length,
-  // AI Workflow
-  'draftLines.aiWorkflow': allAIWorkflowTests.length,
-  'draftLines.aiWorkflow.workflow': aiWorkflowTests.length,
-  'draftLines.aiWorkflow.visual': visualVerificationTests.length,
+  // === AI (LLM-Edit-Flow browser tests) ===
+  ai: allAITests.length,
 
   // === Integration (real-world workflows) ===
   integration: allIntegrationTests.length,
@@ -2477,48 +2363,8 @@ export type TestCategory =
   | 'testSystem.keyboard'
   | 'testSystem.waitHelper'
 
-  // === Draft Lines (AI-assist) ===
-  | 'draftLines'
-  | 'draftLines.detection'
-  | 'draftLines.decoration'
-  | 'draftLines.integration'
-  // Comprehensive Draft Lines Tests
-  | 'draftLines.comprehensive'
-  | 'draftLines.comprehensive.detection'
-  | 'draftLines.comprehensive.decoration'
-  | 'draftLines.comprehensive.state'
-  | 'draftLines.comprehensive.workflow'
-  | 'draftLines.comprehensive.edge'
-  | 'draftLines.comprehensive.inspection'
-  | 'draftLines.aiWorkflow'
-  | 'draftLines.aiWorkflow.workflow'
-  | 'draftLines.aiWorkflow.visual'
-
-  // === Draft Mode (-- marker for AI code generation) ===
-  | 'draftMode'
-  | 'draftMode.basic'
-  | 'draftMode.visual'
-  | 'draftMode.autocomplete'
-  | 'draftMode.scenarios'
-  // Basic sub-categories
-  | 'draftMode.basic.detection'
-  | 'draftMode.basic.indentation'
-  | 'draftMode.basic.blockStructure'
-  | 'draftMode.basic.lineDetection'
-  | 'draftMode.basic.dynamic'
-  // Visual sub-categories
-  | 'draftMode.visual.css'
-  | 'draftMode.visual.muted'
-  | 'draftMode.visual.dynamic'
-  // Autocomplete sub-categories
-  | 'draftMode.autocomplete.suppression'
-  | 'draftMode.autocomplete.pickers'
-  // Scenario sub-categories
-  | 'draftMode.scenarios.generation'
-  | 'draftMode.scenarios.correction'
-  | 'draftMode.scenarios.refactoring'
-  | 'draftMode.scenarios.workflow'
-  | 'draftMode.scenarios.context'
+  // === AI (LLM-Edit-Flow) ===
+  | 'ai'
 
   // === Integration (real-world workflows) ===
   | 'integration'
@@ -3069,49 +2915,8 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'testSystem.keyboard': testSystemKeyboardTests,
     'testSystem.waitHelper': waitHelperTests,
 
-    // === Draft Lines (AI-assist) ===
-    draftLines: allDraftLineTests,
-    'draftLines.detection': draftLineDetectionTests,
-    'draftLines.decoration': draftLineDecorationTests,
-    'draftLines.integration': draftLineIntegrationTests,
-    // Comprehensive Draft Lines Tests
-    'draftLines.comprehensive': allComprehensiveDraftLineTests,
-
-    // Draft Mode (-- marker for AI code generation)
-    draftMode: allDraftModeTests,
-    'draftMode.basic': allBasicDraftModeTests,
-    'draftMode.visual': allVisualDraftModeTests,
-    'draftMode.autocomplete': allAutocompleteDraftModeTests,
-    'draftMode.scenarios': allScenarioDraftModeTests,
-    // Basic sub-categories
-    'draftMode.basic.detection': draftModeDetectionTests,
-    'draftMode.basic.indentation': draftModeIndentationTests,
-    'draftMode.basic.blockStructure': draftModeBlockTests,
-    'draftMode.basic.lineDetection': draftModeLineTests,
-    'draftMode.basic.dynamic': draftModeDynamicTests,
-    // Visual sub-categories
-    'draftMode.visual.css': draftModeCssTests,
-    'draftMode.visual.muted': draftModeMutedTests,
-    'draftMode.visual.dynamic': draftModeVisualDynamicTests,
-    // Autocomplete sub-categories
-    'draftMode.autocomplete.suppression': draftModeSuppressionTests,
-    'draftMode.autocomplete.pickers': draftModePickerTests,
-    // Scenario sub-categories
-    'draftMode.scenarios.generation': draftModeGenerationTests,
-    'draftMode.scenarios.correction': draftModeCorrectionTests,
-    'draftMode.scenarios.refactoring': draftModeRefactoringTests,
-    'draftMode.scenarios.workflow': draftModeWorkflowTests,
-    'draftMode.scenarios.context': draftModeContextTests,
-    'draftLines.comprehensive.detection': comprehensiveDetectionTests,
-    'draftLines.comprehensive.decoration': comprehensiveDecorationTests,
-    'draftLines.comprehensive.state': comprehensiveStateTests,
-    'draftLines.comprehensive.workflow': comprehensiveWorkflowTests,
-    'draftLines.comprehensive.edge': comprehensiveEdgeCaseTests,
-    'draftLines.comprehensive.inspection': comprehensiveInspectionTests,
-    // AI Workflow Tests
-    'draftLines.aiWorkflow': allAIWorkflowTests,
-    'draftLines.aiWorkflow.workflow': aiWorkflowTests,
-    'draftLines.aiWorkflow.visual': visualVerificationTests,
+    // === AI (LLM-Edit-Flow) ===
+    ai: allAITests,
 
     // === Integration (real-world workflows) ===
     integration: allIntegrationTests,
@@ -3569,49 +3374,8 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'testSystem.keyboard': 'Test: Keyboard',
     'testSystem.waitHelper': 'Test: Wait Helper',
 
-    // === Draft Lines (AI-assist) ===
-    draftLines: 'Draft Lines',
-    'draftLines.detection': 'Draft: Detection Logic',
-    'draftLines.decoration': 'Draft: CodeMirror Decoration',
-    'draftLines.integration': 'Draft: Manager Integration',
-    // Comprehensive Draft Lines Tests
-    'draftLines.comprehensive': 'Draft: Comprehensive Suite',
-
-    // Draft Mode (-- marker for AI code generation)
-    draftMode: 'Draft Mode (-- marker)',
-    'draftMode.basic': 'Draft Mode: Basic',
-    'draftMode.visual': 'Draft Mode: Visual Feedback',
-    'draftMode.autocomplete': 'Draft Mode: Autocomplete',
-    'draftMode.scenarios': 'Draft Mode: Scenarios',
-    // Basic sub-categories
-    'draftMode.basic.detection': 'Draft Mode: -- Detection',
-    'draftMode.basic.indentation': 'Draft Mode: Indentation',
-    'draftMode.basic.blockStructure': 'Draft Mode: Block Structure',
-    'draftMode.basic.lineDetection': 'Draft Mode: Line Detection',
-    'draftMode.basic.dynamic': 'Draft Mode: Dynamic Editing',
-    // Visual sub-categories
-    'draftMode.visual.css': 'Draft Mode: CSS Classes',
-    'draftMode.visual.muted': 'Draft Mode: Muted Colors',
-    'draftMode.visual.dynamic': 'Draft Mode: Dynamic Visual',
-    // Autocomplete sub-categories
-    'draftMode.autocomplete.suppression': 'Draft Mode: AC Suppression',
-    'draftMode.autocomplete.pickers': 'Draft Mode: Pickers',
-    // Scenario sub-categories
-    'draftMode.scenarios.generation': 'Draft Mode: Generation',
-    'draftMode.scenarios.correction': 'Draft Mode: Correction',
-    'draftMode.scenarios.refactoring': 'Draft Mode: Refactoring',
-    'draftMode.scenarios.workflow': 'Draft Mode: Workflow',
-    'draftMode.scenarios.context': 'Draft Mode: Context',
-    'draftLines.comprehensive.detection': 'Draft Comprehensive: Detection',
-    'draftLines.comprehensive.decoration': 'Draft Comprehensive: Decoration',
-    'draftLines.comprehensive.state': 'Draft Comprehensive: State',
-    'draftLines.comprehensive.workflow': 'Draft Comprehensive: Workflow',
-    'draftLines.comprehensive.edge': 'Draft Comprehensive: Edge Cases',
-    'draftLines.comprehensive.inspection': 'Draft Comprehensive: Inspection',
-    // AI Workflow Tests
-    'draftLines.aiWorkflow': 'Draft: AI Workflow (Complete Cycle)',
-    'draftLines.aiWorkflow.workflow': 'AI Workflow: Correction Cycles',
-    'draftLines.aiWorkflow.visual': 'AI Workflow: Visual Verification',
+    // === AI (LLM-Edit-Flow) ===
+    ai: 'AI (LLM-Edit-Flow)',
 
     // === Integration ===
     integration: 'Integration (Real-World Workflows)',
@@ -3685,8 +3449,7 @@ export function printTestSummary(): void {
   console.log(`   Project:            ${testCounts.project} tests`)
   console.log(`   Compiler Verify:    ${testCounts.compilerVerification} tests`)
   console.log(`   Play Mode:          ${testCounts.playMode} tests`)
-  console.log(`   Draft Lines:        ${testCounts.draftLines} tests`)
-  console.log(`   Draft Mode:         ${testCounts.draftMode} tests`)
+  console.log(`   AI:                 ${testCounts.ai} tests`)
   console.log(`   ──────────────────────────`)
   console.log(`   Total:              ${testCounts.total} tests`)
   console.log('')

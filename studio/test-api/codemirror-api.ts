@@ -74,53 +74,6 @@ export interface CodeMirrorTestAPI {
   hasFocus(): boolean
 }
 
-export interface DraftModeTestAPI {
-  /** Check if draft mode extension is registered */
-  isExtensionRegistered(): boolean
-
-  /** Check if draft mode keymap is registered */
-  isKeymapRegistered(): boolean
-
-  /** Get the draft mode manager instance */
-  getManager(): any | null
-
-  /** Check if draft mode is active (-- marker detected) */
-  isActive(): boolean
-
-  /** Get current draft state */
-  getState(): {
-    active: boolean
-    startLine: number | null
-    endLine: number | null
-    prompt: string | null
-    indent: number
-    processing: boolean
-  }
-
-  /** Check if a line is in the draft block */
-  isLineInDraft(lineNumber: number): boolean
-
-  /** Trigger submit (what Cmd+Enter should do) */
-  triggerSubmit(): Promise<boolean>
-
-  /** Cancel draft mode (what Escape should do) */
-  triggerCancel(): boolean
-
-  /** Replace draft block with content */
-  replaceDraftBlock(content: string): boolean
-
-  /** Wait for draft:submit event */
-  waitForSubmitEvent(timeout?: number): Promise<{
-    content: string
-    prompt: string | null
-    startLine: number
-    endLine: number | null
-  }>
-
-  /** Simulate the full AI flow: trigger submit, wait for event, replace */
-  simulateAIGeneration(generatedCode: string): Promise<boolean>
-}
-
 export interface EventTestAPI {
   /** Wait for any event */
   waitFor<T = unknown>(eventName: string, timeout?: number): Promise<T>
@@ -364,218 +317,6 @@ export function createCodeMirrorTestAPI(): CodeMirrorTestAPI {
 }
 
 /**
- * Create Draft Mode Test API
- */
-export function createDraftModeTestAPI(): DraftModeTestAPI {
-  const getView = (): EditorView | null => {
-    return (window as any).editor as EditorView | null
-  }
-
-  const getManager = (): any | null => {
-    // Try to get from bootstrap's exports
-    const studio = (window as any).__mirrorStudio__
-    return studio?.draftModeManager ?? null
-  }
-
-  // Dynamic import of draft-mode functions
-  const getDraftModeFunctions = async () => {
-    return import('../editor/draft-mode')
-  }
-
-  return {
-    isExtensionRegistered(): boolean {
-      const view = getView()
-      if (!view) return false
-
-      // Check for draftModeField StateField
-      try {
-        const { draftModeField } = require('../editor/draft-mode')
-        const state = view.state.field(draftModeField, false)
-        return state !== undefined
-      } catch {
-        return false
-      }
-    },
-
-    isKeymapRegistered(): boolean {
-      // This is hard to check directly
-      // We'll verify by checking if the manager exists and has handlers
-      const manager = getManager()
-      return manager !== null && typeof manager.handleSubmit === 'function'
-    },
-
-    getManager(): any | null {
-      return getManager()
-    },
-
-    isActive(): boolean {
-      const view = getView()
-      if (!view) return false
-
-      try {
-        const { isDraftModeActive } = require('../editor/draft-mode')
-        return isDraftModeActive(view)
-      } catch {
-        return false
-      }
-    },
-
-    getState() {
-      const view = getView()
-      if (!view) {
-        return {
-          active: false,
-          startLine: null,
-          endLine: null,
-          prompt: null,
-          indent: 0,
-          processing: false,
-        }
-      }
-
-      try {
-        const { getDraftState } = require('../editor/draft-mode')
-        return getDraftState(view)
-      } catch {
-        return {
-          active: false,
-          startLine: null,
-          endLine: null,
-          prompt: null,
-          indent: 0,
-          processing: false,
-        }
-      }
-    },
-
-    isLineInDraft(lineNumber: number): boolean {
-      const view = getView()
-      if (!view) return false
-
-      try {
-        const { isLineInDraftBlock } = require('../editor/draft-mode')
-        return isLineInDraftBlock(view, lineNumber)
-      } catch {
-        return false
-      }
-    },
-
-    async triggerSubmit(): Promise<boolean> {
-      const manager = getManager()
-      if (!manager || typeof manager.handleSubmit !== 'function') {
-        console.error('Draft mode manager not available or handleSubmit not found')
-        return false
-      }
-
-      try {
-        return manager.handleSubmit()
-      } catch (e) {
-        console.error('triggerSubmit failed:', e)
-        return false
-      }
-    },
-
-    triggerCancel(): boolean {
-      const manager = getManager()
-      if (!manager || typeof manager.handleCancel !== 'function') {
-        console.error('Draft mode manager not available or handleCancel not found')
-        return false
-      }
-
-      try {
-        return manager.handleCancel()
-      } catch (e) {
-        console.error('triggerCancel failed:', e)
-        return false
-      }
-    },
-
-    replaceDraftBlock(content: string): boolean {
-      const manager = getManager()
-      if (!manager || typeof manager.replaceDraftBlock !== 'function') {
-        console.error('Draft mode manager not available or replaceDraftBlock not found')
-        return false
-      }
-
-      try {
-        manager.replaceDraftBlock(content)
-        return true
-      } catch (e) {
-        console.error('replaceDraftBlock failed:', e)
-        return false
-      }
-    },
-
-    waitForSubmitEvent(timeout = 5000): Promise<{
-      content: string
-      prompt: string | null
-      startLine: number
-      endLine: number | null
-    }> {
-      return new Promise((resolve, reject) => {
-        const events = getEvents()
-        const timeoutId = setTimeout(() => {
-          unsubscribe()
-          reject(new Error('Timeout waiting for draft:submit event'))
-        }, timeout)
-
-        const unsubscribe = events.on('draft:submit', (payload: any) => {
-          clearTimeout(timeoutId)
-          unsubscribe()
-          resolve(payload)
-        })
-      })
-    },
-
-    async simulateAIGeneration(generatedCode: string): Promise<boolean> {
-      const manager = getManager()
-      if (!manager) {
-        console.error('No draft mode manager available')
-        return false
-      }
-
-      // The bootstrap registers its OWN listener on `draft:submit` that
-      // calls fixer.generateDraftCode → window.TauriBridge. In a browser
-      // test there is no Tauri runtime, so that path emits a fast
-      // `draft:ai-response` with an error BEFORE we get a chance to call
-      // `manager.provideAIResponse(code)`. The manager listens once on
-      // that event, so the error wins the race and the splice never
-      // happens. Install a one-shot fake bridge that returns the canned
-      // code wrapped in a ```mirror block — the production fixer parses
-      // it and emits the success response itself.
-      const win = window as unknown as { TauriBridge?: unknown }
-      const previousBridge = win.TauriBridge
-      win.TauriBridge = {
-        isTauri: () => true,
-        agent: {
-          checkClaudeCli: async () => true,
-          runAgent: async () => ({
-            session_id: 'simulate-ai-generation',
-            success: true,
-            output: '```mirror\n' + generatedCode + '\n```',
-            error: null,
-          }),
-          onAgentOutput: async () => () => {},
-        },
-      }
-
-      try {
-        await this.triggerSubmit()
-        // Settle the dispatch + state effects.
-        await new Promise(resolve => setTimeout(resolve, 30))
-        return true
-      } catch (e) {
-        console.error('simulateAIGeneration failed:', e)
-        return false
-      } finally {
-        if (previousBridge === undefined) delete win.TauriBridge
-        else win.TauriBridge = previousBridge
-      }
-    },
-  }
-}
-
-/**
  * Create Event Test API
  */
 export function createEventTestAPI(): EventTestAPI {
@@ -585,9 +326,6 @@ export function createEventTestAPI(): EventTestAPI {
 
   // Events to track
   const TRACKED_EVENTS = [
-    'draft:submit',
-    'draft:cancel',
-    'draft:replaced',
     'selection:changed',
     'editor:content-changed',
     'compile:complete',
@@ -654,7 +392,6 @@ export function createEventTestAPI(): EventTestAPI {
 // =============================================================================
 
 let codemirrorAPI: CodeMirrorTestAPI | null = null
-let draftModeAPI: DraftModeTestAPI | null = null
 let eventAPI: EventTestAPI | null = null
 
 export function getCodeMirrorTestAPI(): CodeMirrorTestAPI {
@@ -662,13 +399,6 @@ export function getCodeMirrorTestAPI(): CodeMirrorTestAPI {
     codemirrorAPI = createCodeMirrorTestAPI()
   }
   return codemirrorAPI
-}
-
-export function getDraftModeTestAPI(): DraftModeTestAPI {
-  if (!draftModeAPI) {
-    draftModeAPI = createDraftModeTestAPI()
-  }
-  return draftModeAPI
 }
 
 export function getEventTestAPI(): EventTestAPI {
