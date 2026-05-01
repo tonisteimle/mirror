@@ -2,11 +2,15 @@
  * Test API Core Tests
  *
  * Verifies that the Test API structure and types are correct.
- * For actual DOM interaction tests, see tests/e2e/test-api.spec.ts
+ * Browser-based DOM tests live in studio/test-api/suites/ (CDP runner).
  */
 
 import { describe, it, expect } from 'vitest'
-import { createTestAPI, type MirrorTestAPI, type StateMachineInfo } from '../../compiler/runtime/test-api'
+import {
+  createTestAPI,
+  type MirrorTestAPI,
+  type StateMachineInfo,
+} from '../../compiler/runtime/test-api'
 
 // Mock runtime functions for unit testing
 const mockRuntime = {
@@ -194,8 +198,18 @@ describe('Test API Structure', () => {
       expect(info!.initial).toBe('default')
       expect(info!.states).toEqual(['default', 'active', 'disabled'])
       expect(info!.transitions).toHaveLength(2)
-      expect(info!.transitions[0]).toEqual({ to: 'active', trigger: 'onclick', key: undefined, modifier: undefined })
-      expect(info!.transitions[1]).toEqual({ to: 'disabled', trigger: 'ondisable', key: 'escape', modifier: undefined })
+      expect(info!.transitions[0]).toEqual({
+        to: 'active',
+        trigger: 'onclick',
+        key: undefined,
+        modifier: undefined,
+      })
+      expect(info!.transitions[1]).toEqual({
+        to: 'disabled',
+        trigger: 'ondisable',
+        key: 'escape',
+        modifier: undefined,
+      })
     })
 
     it('should return null for element without state machine', () => {
@@ -204,13 +218,8 @@ describe('Test API Structure', () => {
     })
   })
 
-  // Key Mapping tests require browser environment (KeyboardEvent)
-  // See tests/e2e/test-api.spec.ts for browser-based tests
-  describe.skip('Key Mapping (requires browser)', () => {
-    it('should map keys correctly', () => {
-      // Tested in E2E tests
-    })
-  })
+  // Key Mapping requires a real browser (KeyboardEvent); covered by the
+  // CDP browser runner in studio/test-api/suites/.
 })
 
 describe('StateMachineInfo Type', () => {

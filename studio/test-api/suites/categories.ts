@@ -78,6 +78,7 @@ import {
   allEditorMultiselectTests,
   allUngroupTests,
   allSpreadToggleTests,
+  allValidationTests,
 } from './interactions'
 
 // Property Panel
@@ -101,11 +102,12 @@ import { allIndentationTests } from './editor/indentation.test'
 import { allEditorDropTests } from './editor/editor-drop.test'
 import { allLinterTests } from './editor/linter.test'
 
-// Data (Data Binding, Actions, Events, Responsive)
+// Data (Data Binding, Actions, Events, Responsive, Charts)
 import { allDataBindingTests } from './data-binding'
 import { allActionTests } from './actions'
 import { allEventTests } from './events'
 import { allResponsiveTests } from './responsive'
+import { allChartTests } from './charts'
 
 // Project
 import { allProjectTests } from './project'
@@ -219,13 +221,15 @@ export const handlesTests: TestCase[] = [
 export const stepRunnerTests: TestCase[] = [...allStepRunnerExampleTests]
 
 /**
- * 9. SELECTION - Multi-select, editor multiselect, ungroup, spread toggle
+ * 9. SELECTION - Multi-select, editor multiselect, ungroup, spread toggle,
+ * plus DOM/visual validation (spread CSS, ungroup DOM, undo/redo with selection).
  */
 export const selectionTests: TestCase[] = [
   ...allMultiselectTests,
   ...allEditorMultiselectTests,
   ...allUngroupTests,
   ...allSpreadToggleTests,
+  ...allValidationTests,
 ]
 
 /**
@@ -256,13 +260,14 @@ export const editorTests: TestCase[] = [
 ]
 
 /**
- * 12. DATA - Data binding, actions, events, responsive
+ * 12. DATA - Data binding, actions, events, responsive, charts.
  */
 export const dataTests: TestCase[] = [
   ...allDataBindingTests,
   ...allActionTests,
   ...allEventTests,
   ...allResponsiveTests,
+  ...allChartTests,
 ]
 
 /**

@@ -974,45 +974,17 @@ async function setupTestSuites(): Promise<void> {
       // Print summary
       printSummary: () => suites.printTestSummary(),
 
-      // NEW: Consolidated categories (17 main categories)
+      // 17 main categories (canonical surface)
       categories: suites.categories,
 
-      // Individual test arrays (legacy - for backwards compatibility)
+      // Flat per-category test arrays for `__mirrorTest.category('layout')`
+      // — derived from the registry, no manual list to drift out of sync.
       tests: {
-        // NEW consolidated categories
-        core: suites.coreTests,
-        layout: suites.layoutCategoryTests,
-        styling: suites.stylingCategoryTests,
-        visuals: suites.visualsTests,
-        states: suites.statesTests,
-        components: suites.componentsTests,
-        drag: suites.dragTests,
-        handles: suites.handlesTests,
-        selection: suites.selectionTests,
-        propertyPanel: suites.propertyPanelCategoryTests,
-        editor: suites.editorTests,
-        data: suites.dataTests,
-        project: suites.projectCategoryTests,
-        compiler: suites.compilerCategoryTests,
-        ai: suites.aiTests,
-        tutorial: suites.tutorialCategoryTests,
-        stress: suites.stressAndIntegrationTests,
-
-        // LEGACY categories (backwards compatibility)
-        primitives: suites.allPrimitivesTests,
-        layoutShortcuts: suites.allLayoutShortcutTests,
-        layoutVerification: suites.allLayoutVerificationTests,
-        interactions: suites.allInteractionTests,
-        bidirectional: suites.allBidirectionalTests,
-        undoRedo: suites.allUndoRedoTests,
-        autocomplete: suites.allAutocompleteTests,
-        stackedDrag: suites.allStackedDragTests,
-        flexReorder: suites.allFlexReorderTests,
-        charts: suites.allChartTests,
-        workflow: suites.allWorkflowTests,
-        playMode: suites.allPlayModeTests,
+        ...Object.fromEntries(
+          Object.entries(suites.categories).map(([name, info]) => [name, info.tests])
+        ),
         all: suites.allTests,
-      },
+      } as Record<string, TestCase[]>,
     }
 
     ;(window as any).__mirrorTestSuites = suitesAPI
