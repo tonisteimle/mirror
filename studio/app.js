@@ -90,23 +90,8 @@ import {
   // File Types (Clean Code module)
   detectFileType as detectFileTypeModule,
   getFileIcon as getFileIconModule,
-  getFileTemplate,
-  getFileExtension,
-  // React Converter (Clean Code module)
-  convertReactToMirror as convertReactToMirrorModule,
-  buildReactSystemPrompt as buildReactSystemPromptModule,
-  STYLE_TO_MIRROR,
-  TAG_TO_COMPONENT,
-  TAG_TO_NAME,
   // YAML Parser (Clean Code module)
   generateYAMLDataInjection,
-  // Color Picker Utilities (Clean Code module)
-  hsvToRgb as hsvToRgbModule,
-  rgbToHsv as rgbToHsvModule,
-  hexToRgb as hexToRgbModule,
-  rgbToHex as rgbToHexModule,
-  hexToHsv as hexToHsvModule,
-  hsvToHex as hsvToHexModule,
   // Full Color Picker — studio setup (window globals, keyboard, token grid)
   initColorPicker,
   // LLM-Edit-Flow (Cmd+Enter / Cmd+Shift+Enter)
@@ -2770,15 +2755,3 @@ initImageDropHandler({
   dropOverlay: document.getElementById('drop-overlay'),
   getImgbbKey: () => '',
 })
-
-// ==========================================================================
-// LLM Integration - React to Mirror Workflow (use Clean Code module)
-// ==========================================================================
-
-function convertReactToMirror(reactCode) {
-  return convertReactToMirrorModule(reactCode)
-}
-
-function buildReactSystemPrompt(context) {
-  return buildReactSystemPromptModule(context)
-}
