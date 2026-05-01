@@ -52,7 +52,7 @@ import {
 import { ActivityBar, createActivityBar, ACTIVITY_BAR_ICONS } from './panels/explorer'
 import type { DrawManager } from './visual/draw-manager'
 import type { InlineEditController } from './inline-edit'
-import { initDrawManager, initInlineEdit, initSync } from './bootstrap/index'
+import { initDrawManager, initInlineEdit, initSync } from './init'
 import { initUserSettings } from './storage/user-settings'
 import { initStudioTestAPI } from './test-api'
 import { triggerRename, isRenameActive, closeRename } from './rename'

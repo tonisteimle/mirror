@@ -113,12 +113,14 @@ import {
   createInlineTokenExtension,
   // Panel dividers (resizable sidebar/components/editor/preview)
   initPanelDividers,
+  // Desktop menu handler (Tauri native menu → studio actions)
+  setupDesktopMenuHandler,
   // Play Mode (toolbar button, reset, device selector)
   initPlayMode,
   // Property Panel — global DOM event listeners
   setupPropertyPanelIconPicker,
   setupPropertyPanelEventListeners,
-} from './dist/index.js?v=150'
+} from './dist/index.js?v=151'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -2547,115 +2549,14 @@ if (!isPlaygroundMode) {
 
 // ==========================================
 // Desktop Menu Event Handler (Tauri)
+// (delegated to studio/ui/desktop-menu.ts)
 // ==========================================
-async function setupDesktopMenuHandler() {
-  if (!isTauriDesktop()) return
-
-  // Wait for TauriBridge to be available
-  let attempts = 0
-  while (!window.TauriBridge?.menu && attempts < 50) {
-    await new Promise(r => setTimeout(r, 100))
-    attempts++
-  }
-
-  if (!window.TauriBridge?.menu) {
-    console.error('[Menu] TauriBridge.menu not available after waiting')
-    return
-  }
-
-  try {
-    await window.TauriBridge.menu.onMenuClick(async menuId => {
-      console.log('[Menu] Event:', menuId)
-
-      switch (menuId) {
-        // File menu
-        case 'open_folder':
-          if (window.desktopFiles) {
-            const path = await window.desktopFiles.openFolder()
-            if (path) {
-              console.log('[Menu] Opened folder:', path)
-            }
-          }
-          break
-
-        case 'new_file':
-          console.log('[Menu] new_file - currentFolder:', window.desktopFiles?.getCurrentFolder())
-          if (window.desktopFiles?.getCurrentFolder()) {
-            // Generate unique filename
-            const existingFiles = Object.keys(window.desktopFiles.getFiles() || {})
-            let counter = 1
-            let fileName = 'new.mirror'
-            while (existingFiles.some(f => f.endsWith(fileName))) {
-              fileName = `new-${counter}.mirror`
-              counter++
-            }
-            console.log('[Menu] new_file - creating:', fileName)
-            await window.desktopFiles.createFile(fileName)
-          } else {
-            await alert('Bitte zuerst einen Ordner öffnen (File → Open Folder oder ⌘O)', {
-              title: 'Kein Projekt',
-            })
-          }
-          break
-
-        case 'new_folder':
-          console.log('[Menu] new_folder - currentFolder:', window.desktopFiles?.getCurrentFolder())
-          if (window.desktopFiles?.getCurrentFolder()) {
-            // Generate unique folder name
-            let counter = 1
-            let folderName = 'new-folder'
-            // Note: We can't easily check existing folders, so just increment
-            console.log('[Menu] new_folder - creating:', folderName)
-            await window.desktopFiles.createFolder(folderName)
-          } else {
-            await alert('Bitte zuerst einen Ordner öffnen (File → Open Folder oder ⌘O)', {
-              title: 'Kein Projekt',
-            })
-          }
-          break
-
-        case 'save':
-          if (window.desktopFiles?.getCurrentFile()) {
-            const content = editor.state.doc.toString()
-            await window.desktopFiles.saveFile(window.desktopFiles.getCurrentFile(), content)
-          }
-          break
-
-        case 'save_all':
-          // Save all open files
-          const files = window.desktopFiles?.getFiles() || {}
-          for (const [path, content] of Object.entries(files)) {
-            await window.desktopFiles.saveFile(path, content)
-          }
-          break
-
-        case 'new_project':
-          // Not needed for desktop - just open folder
-          break
-
-        // View menu - Panel toggles
-        case 'toggle_prompt':
-        case 'toggle_files':
-        case 'toggle_code':
-        case 'toggle_components':
-        case 'toggle_preview':
-        case 'toggle_property':
-          const panelKey = menuId.replace('toggle_', '')
-          studioActions.setPanelVisibility(panelKey, !studioActions.getPanelVisibility?.(panelKey))
-          break
-
-        default:
-          console.log('[Menu] Unhandled:', menuId)
-      }
-    })
-    console.log('[App] Desktop menu handler registered')
-  } catch (err) {
-    console.error('[Menu] Failed to register handler:', err)
-  }
-}
-
-// Call the setup function
-setupDesktopMenuHandler()
+setupDesktopMenuHandler({
+  isTauriDesktop,
+  getEditorContent: () => editor.state.doc.toString(),
+  studioActions,
+  alert,
+})
 
 // Expose for debugging
 window.editor = editor

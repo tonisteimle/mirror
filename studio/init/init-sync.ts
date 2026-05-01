@@ -41,12 +41,7 @@ export interface SyncInitResult {
  * LineOffsetService handles editor ↔ SourceMap line translation.
  */
 export function initSync(config: SyncInitConfig): SyncInitResult {
-  const {
-    editorController,
-    previewController,
-    cursorDebounce = 150,
-    debug = false,
-  } = config
+  const { editorController, previewController, cursorDebounce = 150, debug = false } = config
 
   const lineOffset = createLineOffsetService()
   const syncPorts = createProductionSyncPorts() as ExtendedSyncPorts
@@ -57,13 +52,13 @@ export function initSync(config: SyncInitConfig): SyncInitResult {
   })
 
   syncCoordinator.setTargets({
-    scrollEditorToLine: (editorLine) => {
+    scrollEditorToLine: editorLine => {
       // editorLine is already converted from SourceMap line by SyncCoordinator
       // Set cursor AND scroll to make the selection visible
       // The debouncing in handleCursorMove prevents sync loops
       editorController.scrollToLineAndSelect(editorLine)
     },
-    highlightPreviewElement: (nodeId) =>
+    highlightPreviewElement: nodeId =>
       nodeId ? previewController.select(nodeId) : previewController.clearSelection(),
     // Note: PropertyPanel receives updates directly via StateSelectionAdapter
     // which subscribes to selection:changed events. No callback needed here.
@@ -74,8 +69,9 @@ export function initSync(config: SyncInitConfig): SyncInitResult {
   // Inject SyncCoordinator into SelectionAdapter for consistent selection handling
   const selectionAdapter = getStateSelectionAdapter()
   selectionAdapter.setSyncHandler({
-    handleSelectionChange: (nodeId, origin) => syncCoordinator.handleSelectionChange(nodeId, origin),
-    clearSelection: (origin) => syncCoordinator.clearSelection(origin),
+    handleSelectionChange: (nodeId, origin) =>
+      syncCoordinator.handleSelectionChange(nodeId, origin),
+    clearSelection: origin => syncCoordinator.clearSelection(origin),
   })
 
   return {
