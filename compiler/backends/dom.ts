@@ -7,56 +7,21 @@
 
 import type { AST, JavaScriptBlock, TokenDefinition } from '../parser/ast'
 import { toIR } from '../ir'
-import type {
-  IR,
-  IRCanvas,
-  IRNode,
-  IRStyle,
-  IREvent,
-  IRAction,
-  IREach,
-  IRConditional,
-  IRAnimation,
-  IRZagNode,
-  IRStateMachine,
-  IRStateTransition,
-  IRItem,
-  IRProperty,
-  IRSlot,
-  IRItemProperty,
-} from '../ir/types'
+import type { IR, IRNode, IRStateMachine, IRStateTransition } from '../ir/types'
 import { isIRZagNode } from '../ir/types'
-import { DOM_RUNTIME_CODE } from './dom/runtime-template'
 import type { DataFile } from '../parser/data-types'
-import { dispatchZagEmitter } from './dom/zag-emitters'
 import type { ZagEmitterContext } from './dom/base-emitter-context'
 
 // Extracted utilities
-import { escapeJSString, sanitizeVarName, cssPropertyToJS, generateVarName } from './dom/utils'
+import { cssPropertyToJS } from './dom/utils'
 import { ZAG_SLOT_NAMES, type GenerateDOMOptions } from './dom/types'
 import type { EmitterContext, DeferredWhenWatcher } from './dom/base-emitter-context'
-import {
-  emitStateMachine as emitStateMachineExtracted,
-  emitDeferredWhenWatchers,
-} from './dom/state-machine-emitter'
 import type { StateMachineEmitterContext } from './dom/state-machine-emitter'
-import {
-  emitEachLoop as emitEachLoopExtracted,
-  emitConditional as emitConditionalExtracted,
-} from './dom/loop-emitter'
 import type { LoopEmitterContext } from './dom/loop-emitter'
-import {
-  emitEventListener as emitEventListenerExtracted,
-  emitTemplateEventListener as emitTemplateEventListenerExtracted,
-  emitAction as emitActionExtracted,
-  mapKeyName,
-} from './dom/event-emitter'
 import type { EventEmitterContext } from './dom/event-emitter'
-import { emitTokens as emitTokensExtracted } from './dom/token-emitter'
 import type { TokenEmitterContext } from './dom/token-emitter'
 
 // New extracted modules
-import { emitAnimations as emitAnimationsExtracted } from './dom/animation-emitter'
 import type { AnimationEmitterContext } from './dom/animation-emitter'
 import {
   emitElementCreation,
@@ -83,12 +48,7 @@ import {
   emitAppendToParent,
 } from './dom/node-emitter'
 import type { NodeEmitterContext } from './dom/node-emitter'
-import {
-  collectNamedNodes as collectNamedNodesExtracted,
-  emitPublicAPI as emitPublicAPIExtracted,
-  emitInitialization as emitInitializationExtracted,
-  emitAutoMount as emitAutoMountExtracted,
-} from './dom/api-emitter'
+import { emitInitialization as emitInitializationExtracted } from './dom/api-emitter'
 import type { APIEmitterContext } from './dom/api-emitter'
 import { emitChartSetup } from './dom/chart-emitter'
 import type { ChartEmitterContext } from './dom/chart-emitter'
