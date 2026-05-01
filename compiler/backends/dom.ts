@@ -119,21 +119,29 @@ export function generateDOM(ast: AST, options?: GenerateDOMOptions): string {
   return generator.generate()
 }
 
-class DOMGenerator {
-  private ir: IR
-  private javascript?: JavaScriptBlock
-  private astTokens: TokenDefinition[]
-  private dataFiles?: DataFile[]
-  private indent = 0
-  private lines: string[] = []
+import * as emit_loops from './dom/ops/emit-loops'
+import * as emit_zag from './dom/ops/emit-zag'
+import * as resolve_templates from './dom/ops/resolve-templates'
+import * as emit_events from './dom/ops/emit-events'
+import * as emit_state from './dom/ops/emit-state'
+import * as emit_static from './dom/ops/emit-static'
+import * as resolve_utils from './dom/ops/resolve-utils'
+
+export class DOMGenerator {
+  ir: IR
+  javascript?: JavaScriptBlock
+  astTokens: TokenDefinition[]
+  dataFiles?: DataFile[]
+  indent = 0
+  lines: string[] = []
   // Deferred when watchers - emitted after DOM is built
-  private deferredWhenWatchers: Array<{
+  deferredWhenWatchers: Array<{
     varName: string
     transition: IRStateTransition
     sm: IRStateMachine
   }> = []
   // Token lookup map for resolving token-to-token references
-  private tokenMap: Map<string, string | number | boolean> = new Map()
+  tokenMap: Map<string, string | number | boolean> = new Map()
 
   constructor(
     ir: IR,
@@ -153,12 +161,60 @@ class DOMGenerator {
     }
   }
 
+  // === Bound ops methods (extracted to ./dom/ops/*.ts) ===
+  // emit-loops.ts
+  emitEachLoop = emit_loops.emitEachLoop
+  emitConditional = emit_loops.emitConditional
+  emitConditionalTemplateNode = emit_loops.emitConditionalTemplateNode
+  emitEachTemplateNode = emit_loops.emitEachTemplateNode
+  emitEachTemplateNodeContent = emit_loops.emitEachTemplateNodeContent
+  emitNestedEachLoop = emit_loops.emitNestedEachLoop
+  // emit-zag.ts
+  emitZagComponent = emit_zag.emitZagComponent
+  emitZagItems = emit_zag.emitZagItems
+  // resolve-templates.ts
+  resolveTemplateValue = resolve_templates.resolveTemplateValue
+  resolveTemplateStyleValue = resolve_templates.resolveTemplateStyleValue
+  resolveConditionalExpression = resolve_templates.resolveConditionalExpression
+  resolveConditionalValue = resolve_templates.resolveConditionalValue
+  resolveLoopVarMarkers = resolve_templates.resolveLoopVarMarkers
+  resolveStyleValueForTopLevel = resolve_templates.resolveStyleValueForTopLevel
+  parseTopLevelConditional = resolve_templates.parseTopLevelConditional
+  resolveTopLevelCondition = resolve_templates.resolveTopLevelCondition
+  resolveTopLevelValue = resolve_templates.resolveTopLevelValue
+  // emit-events.ts
+  emitTemplateEventListener = emit_events.emitTemplateEventListener
+  emitTemplateAction = emit_events.emitTemplateAction
+  emitEventListener = emit_events.emitEventListener
+  emitAction = emit_events.emitAction
+  // emit-state.ts
+  mapKeyNameMethod = emit_state.mapKeyNameMethod
+  emitStateMachine = emit_state.emitStateMachine
+  emitDeferredWhenWatchersMethod = emit_state.emitDeferredWhenWatchersMethod
+  groupByState = emit_state.groupByState
+  collectNamedNodes = emit_state.collectNamedNodes
+  // emit-static.ts
+  emitCustomIcons = emit_static.emitCustomIcons
+  emitAnimations = emit_static.emitAnimations
+  emitHeader = emit_static.emitHeader
+  emitTokens = emit_static.emitTokens
+  emitPublicAPI = emit_static.emitPublicAPI
+  emitRuntime = emit_static.emitRuntime
+  // resolve-utils.ts
+  sanitizeVarName = resolve_utils.sanitizeVarName
+  resolveContentValue = resolve_utils.resolveContentValue
+  resolveExpressionVariables = resolve_utils.resolveExpressionVariables
+  escapeString = resolve_utils.escapeString
+  escapeTemplateString = resolve_utils.escapeTemplateString
+  resolveLoopCondition = resolve_utils.resolveLoopCondition
+  resolveConditionVariables = resolve_utils.resolveConditionVariables
+
   /**
    * Create a ZagEmitterContext that delegates to this generator's methods.
    * This allows Zag emitters to be extracted into separate files while
    * still having access to the generator's functionality.
    */
-  private createZagEmitterContext(): ZagEmitterContext {
+  createZagEmitterContext(): ZagEmitterContext {
     return {
       emit: (line: string) => this.emit(line),
       getIndent: () => this.indent,
@@ -180,7 +236,7 @@ class DOMGenerator {
   /**
    * Create EmitterContext for extracted emitter modules (table, loops, etc.)
    */
-  private createEmitterContext(): EmitterContext {
+  createEmitterContext(): EmitterContext {
     return {
       emit: (line: string) => this.emit(line),
       emitRaw: (line: string) => this.lines.push(line),
@@ -269,7 +325,7 @@ class DOMGenerator {
    * @param targetName The name of the token being defined (for suffix context)
    * @param visited Set of visited token names (for cycle detection)
    */
-  private resolveTokenValueWithContext(
+  resolveTokenValueWithContext(
     value: string | number | boolean,
     targetName: string,
     visited: Set<string> = new Set()
@@ -332,29 +388,7 @@ class DOMGenerator {
     return this.lines.join('\n')
   }
 
-  /**
-   * Emit custom icon registrations
-   * Icons defined with $icons: are registered before UI creation
-   */
-  private emitCustomIcons(): void {
-    if (!this.ir.icons || this.ir.icons.length === 0) return
-
-    this.emit('')
-    this.emit('// Custom Icons')
-    for (const icon of this.ir.icons) {
-      const viewBox = icon.viewBox || '0 0 24 24'
-      // Escape any quotes in the path data
-      const escapedPath = icon.path.replace(/"/g, '\\"')
-      this.emit(`_runtime.registerIcon('${icon.name}', "${escapedPath}", '${viewBox}')`)
-    }
-  }
-
-  private emitAnimations(): void {
-    const ctx = this.createAnimationEmitterContext()
-    emitAnimationsExtracted(ctx, this.ir.animations)
-  }
-
-  private createAnimationEmitterContext(): AnimationEmitterContext {
+  createAnimationEmitterContext(): AnimationEmitterContext {
     return {
       emit: (line: string) => this.emit(line),
       indentIn: () => {
@@ -366,25 +400,19 @@ class DOMGenerator {
     }
   }
 
-  private emit(line: string): void {
+  emit(line: string): void {
     const indentation = '  '.repeat(this.indent)
     this.lines.push(indentation + line)
   }
 
-  private emitRaw(line: string): void {
+  emitRaw(line: string): void {
     this.lines.push(line)
-  }
-
-  private emitHeader(): void {
-    this.emit('// Generated by Mirror Compiler (DOM Backend)')
-    this.emit('// Do not edit manually')
-    this.emit('')
   }
 
   /**
    * Create a TokenEmitterContext that delegates to this generator's methods.
    */
-  private createTokenEmitterContext(): TokenEmitterContext {
+  createTokenEmitterContext(): TokenEmitterContext {
     return {
       emit: (line: string) => this.emit(line),
       indentIn: () => {
@@ -396,16 +424,7 @@ class DOMGenerator {
     }
   }
 
-  private emitTokens(): void {
-    // Delegate to extracted token emitter
-    const ctx = this.createTokenEmitterContext()
-    emitTokensExtracted(ctx, {
-      tokens: this.ir.tokens,
-      dataFiles: this.dataFiles,
-    })
-  }
-
-  private emitCreateUI(): void {
+  emitCreateUI(): void {
     this.emit('export function createUI(data = {}) {')
     this.indent++
 
@@ -451,7 +470,7 @@ class DOMGenerator {
    * Emit canvas styles to root element
    * Applies base styling and CSS variables for inherited properties
    */
-  private emitCanvasStyles(varName: string): void {
+  emitCanvasStyles(varName: string): void {
     if (!this.ir.canvas?.styles.length) return
 
     this.emit(`Object.assign(${varName}.style, {`)
@@ -472,7 +491,7 @@ class DOMGenerator {
     }
   }
 
-  private emitNode(node: IRNode, parentVar: string, isMainRoot = false): void {
+  emitNode(node: IRNode, parentVar: string, isMainRoot = false): void {
     // Skip definitions - they are not rendered, only instances are
     // Exception: Zag slot names (like CloseTrigger) should always be rendered
     // even when marked as definitions (because they're slot instantiations, not component definitions)
@@ -630,21 +649,13 @@ class DOMGenerator {
   }
 
   // emitEachLoop: migrated to compiler/backends/dom/loop-emitter.ts
-  private emitEachLoop(each: IREach, parentVar: string): void {
-    const ctx = this.createLoopEmitterContext()
-    emitEachLoopExtracted(ctx, each, parentVar)
-  }
 
   // emitConditional: migrated to compiler/backends/dom/loop-emitter.ts
-  private emitConditional(cond: IRConditional, parentVar: string): void {
-    const ctx = this.createLoopEmitterContext()
-    emitConditionalExtracted(ctx, cond, parentVar)
-  }
 
   /**
    * Create a LoopEmitterContext for the extracted loop emitter functions
    */
-  private createLoopEmitterContext(): LoopEmitterContext {
+  createLoopEmitterContext(): LoopEmitterContext {
     return {
       emit: (line: string) => this.emit(line),
       indentIn: () => {
@@ -669,208 +680,6 @@ class DOMGenerator {
     }
   }
 
-  private emitZagComponent(node: IRZagNode, parentVar: string): void {
-    // Try extracted emitters first (gradual migration)
-    const ctx = this.createZagEmitterContext()
-    if (dispatchZagEmitter(node, parentVar, ctx)) {
-      return
-    }
-
-    // Fallback: Generic Zag component handler for unknown types
-    // All 25 specialized emitters are in zag-emitters.ts
-
-    const varName = this.sanitizeVarName(node.id)
-
-    this.emit(`// Zag Component: ${node.name} (${node.zagType})`)
-    this.emit(`const ${varName} = document.createElement('div')`)
-    this.emit(`_elements['${node.id}'] = ${varName}`)
-    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
-    this.emit(`${varName}.dataset.zagComponent = '${node.zagType}'`)
-    if (node.name) {
-      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
-    }
-
-    // Emit machine configuration
-    this.emit(`${varName}._zagConfig = {`)
-    this.indent++
-    this.emit(`type: '${node.zagType}',`)
-    this.emit(`id: '${node.id}',`)
-    this.emit(`machineConfig: ${JSON.stringify(node.machineConfig)},`)
-
-    // Emit slot definitions
-    this.emit(`slots: {`)
-    this.indent++
-    for (const [slotName, slot] of Object.entries(node.slots)) {
-      this.emit(`'${slotName}': {`)
-      this.indent++
-      this.emit(`apiMethod: '${slot.apiMethod}',`)
-      this.emit(`element: '${slot.element}',`)
-      this.emit(`portal: ${slot.portal || false},`)
-      this.emit(`styles: ${JSON.stringify(slot.styles)},`)
-      this.indent--
-      this.emit(`},`)
-    }
-    this.indent--
-    this.emit(`},`)
-
-    // Emit items
-    this.emit(`items: ${JSON.stringify(node.items)},`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-
-    // Create slot elements
-    for (const [slotName, slot] of Object.entries(node.slots)) {
-      const slotVar = `${varName}_${slotName.toLowerCase()}`
-      this.emit(`// Slot: ${slotName}`)
-      this.emit(`const ${slotVar} = document.createElement('${slot.element}')`)
-      this.emit(`${slotVar}.dataset.slot = '${slotName}'`)
-      this.emit(`${slotVar}.dataset.mirrorSlot = '${node.id}-${slotName}'`)
-
-      // Apply base styles and mark as styled to prevent runtime defaults
-      if (slot.styles.length > 0) {
-        this.emit(`${slotVar}.setAttribute('data-styled', 'true')`)
-        this.emit(`Object.assign(${slotVar}.style, {`)
-        this.indent++
-        for (const style of slot.styles) {
-          this.emit(`'${style.property}': '${style.value}',`)
-        }
-        this.indent--
-        this.emit('})')
-      }
-
-      // Append to root
-      // Note: Even portal elements are appended initially - the runtime
-      // can relocate them to a portal container if needed
-      this.emit(`${varName}.appendChild(${slotVar})`)
-      this.emit('')
-    }
-
-    // Create item elements for Content slot
-    if (node.items.length > 0) {
-      const contentSlotVar = `${varName}_content`
-      this.emit(`// Items`)
-      this.emitZagItems(node.items, varName, contentSlotVar)
-      this.emit('')
-    }
-
-    // Append to parent
-    this.emit(`${parentVar}.appendChild(${varName})`)
-    this.emit('')
-
-    // Initialize Zag component via runtime
-    this.emit(`// Initialize Zag machine`)
-    this.emit(`if (typeof _runtime !== 'undefined' && _runtime.initZagComponent) {`)
-    this.indent++
-    this.emit(`_runtime.initZagComponent(${varName})`)
-    this.indent--
-    this.emit(`}`)
-    this.emit('')
-  }
-
-  /**
-   * Emit Zag items (including groups)
-   */
-  private emitZagItems(
-    items: IRItem[],
-    varNamePrefix: string,
-    parentVar: string,
-    indexOffset: number = 0
-  ): void {
-    let itemIndex = indexOffset
-    for (const item of items) {
-      if (item.isGroup) {
-        // Render Group
-        const groupVar = `${varNamePrefix}_group${itemIndex}`
-        this.emit(`// Group: ${item.label || 'Unnamed'}`)
-        this.emit(`const ${groupVar} = document.createElement('div')`)
-        this.emit(`${groupVar}.dataset.slot = 'Group'`)
-        this.emit(`${groupVar}.setAttribute('role', 'group')`)
-
-        // Render GroupLabel if present
-        if (item.label) {
-          const labelVar = `${groupVar}_label`
-          this.emit(`const ${labelVar} = document.createElement('span')`)
-          this.emit(`${labelVar}.dataset.slot = 'GroupLabel'`)
-          this.emit(`${labelVar}.textContent = '${this.escapeString(item.label)}'`)
-          this.emit(`${groupVar}.appendChild(${labelVar})`)
-        }
-
-        // Render group items
-        if (item.items && item.items.length > 0) {
-          this.emitZagItems(item.items, `${groupVar}_item`, groupVar, 0)
-        }
-
-        this.emit(`${parentVar}.appendChild(${groupVar})`)
-        itemIndex++
-      } else {
-        // Render regular Item
-        const itemVar = `${varNamePrefix}_item${itemIndex}`
-        this.emit(`const ${itemVar} = document.createElement('div')`)
-        this.emit(`${itemVar}.dataset.mirrorItem = '${item.value}'`)
-        if (item.disabled) {
-          this.emit(`${itemVar}.dataset.disabled = 'true'`)
-        }
-        // Apply item layout properties if present
-        if (item.properties && item.properties.length > 0) {
-          for (const prop of item.properties) {
-            const propName = prop.name
-            // Handle layout properties
-            if (propName === 'ver' || propName === 'vertical') {
-              this.emit(`${itemVar}.style.display = 'flex'`)
-              this.emit(`${itemVar}.style.flexDirection = 'column'`)
-              this.emit(`${itemVar}.style.alignItems = 'flex-start'`)
-            } else if (propName === 'hor' || propName === 'horizontal') {
-              this.emit(`${itemVar}.style.display = 'flex'`)
-              this.emit(`${itemVar}.style.flexDirection = 'row'`)
-              this.emit(`${itemVar}.style.alignItems = 'center'`)
-            } else if (propName === 'gap' || propName === 'g') {
-              const gapValue = prop.values[0]
-              this.emit(`${itemVar}.style.gap = '${gapValue}px'`)
-            } else if (propName === 'pad' || propName === 'p' || propName === 'padding') {
-              const padValues = prop.values
-              if (padValues.length === 1) {
-                this.emit(`${itemVar}.style.padding = '${padValues[0]}px'`)
-              } else if (padValues.length === 2) {
-                this.emit(`${itemVar}.style.padding = '${padValues[0]}px ${padValues[1]}px'`)
-              } else if (padValues.length === 4) {
-                this.emit(
-                  `${itemVar}.style.padding = '${padValues[0]}px ${padValues[1]}px ${padValues[2]}px ${padValues[3]}px'`
-                )
-              }
-            } else if (propName === 'spread') {
-              this.emit(`${itemVar}.style.display = 'flex'`)
-              this.emit(`${itemVar}.style.justifyContent = 'space-between'`)
-            } else if (propName === 'center') {
-              this.emit(`${itemVar}.style.display = 'flex'`)
-              this.emit(`${itemVar}.style.alignItems = 'center'`)
-              this.emit(`${itemVar}.style.justifyContent = 'center'`)
-            }
-          }
-        }
-        // Render children if present, otherwise use label as text
-        if (item.children && item.children.length > 0) {
-          // Default to horizontal layout with centered alignment if no explicit layout
-          const hasLayoutProp = item.properties?.some((p: IRItemProperty) =>
-            ['ver', 'hor', 'vertical', 'horizontal', 'spread', 'center'].includes(p.name)
-          )
-          if (!hasLayoutProp) {
-            this.emit(`${itemVar}.style.display = 'flex'`)
-            this.emit(`${itemVar}.style.alignItems = 'center'`)
-            this.emit(`${itemVar}.style.gap = '8px'`)
-          }
-          for (const child of item.children) {
-            this.emitNode(child, itemVar)
-          }
-        } else {
-          this.emit(`${itemVar}.textContent = '${this.escapeString(item.label)}'`)
-        }
-        this.emit(`${parentVar}.appendChild(${itemVar})`)
-        itemIndex++
-      }
-    }
-  }
-
   // =========================================================================
   // MIGRATED TO zag-emitters.ts (25 components):
   // Switch, Checkbox, RadioGroup, Slider, Tabs, Select, Tooltip, Dialog,
@@ -879,920 +688,7 @@ class DOMGenerator {
   // TagsInput, NumberInput, DateInput, Accordion, Listbox, Form
   // =========================================================================
 
-  private emitConditionalTemplateNode(node: IRNode, parentVar: string): void {
-    // Handle nested conditionals
-    if (node.conditional) {
-      const nestedId = this.sanitizeVarName(node.conditional.id)
-      const resolvedCondition = this.resolveConditionVariables(node.conditional.condition)
-      this.emit(`// Nested conditional`)
-      this.emit(`const ${nestedId}_nested = document.createElement('div')`)
-      this.emit(`if (${resolvedCondition}) {`)
-      this.indent++
-      for (const child of node.conditional.then) {
-        this.emitConditionalTemplateNode(child, `${nestedId}_nested`)
-      }
-      this.indent--
-      if (node.conditional.else && node.conditional.else.length > 0) {
-        this.emit(`} else {`)
-        this.indent++
-        for (const child of node.conditional.else) {
-          this.emitConditionalTemplateNode(child, `${nestedId}_nested`)
-        }
-        this.indent--
-      }
-      this.emit(`}`)
-      this.emit(`${parentVar}.appendChild(${nestedId}_nested)`)
-      return
-    }
-
-    // Handle each loops inside conditionals
-    if (node.each) {
-      this.emitEachLoop(node.each, parentVar)
-      return
-    }
-
-    const varName = this.sanitizeVarName(node.id) + '_cond'
-
-    this.emit(`const ${varName} = document.createElement('${node.tag}')`)
-    this.emit(`${varName}.dataset.mirrorId = '${node.id}'`)
-    if (node.name) {
-      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
-    }
-
-    // Set HTML properties
-    for (const prop of node.properties) {
-      if (prop.name === 'textContent') {
-        const propValue = String(prop.value)
-        // Handle conditional text content: __conditional:condition?thenValue:elseValue
-        if (propValue.includes('__conditional:')) {
-          const resolved = this.parseTopLevelConditional(propValue)
-          this.emit(`${varName}.textContent = ${resolved}`)
-        } else {
-          // Use resolveContentValue to interpolate $variables
-          // (e.g. "$count Punkte" → `${$get("count")} Punkte`)
-          const value = this.resolveContentValue(prop.value)
-          this.emit(`${varName}.textContent = ${value}`)
-        }
-      } else if (prop.name === 'disabled' || prop.name === 'hidden') {
-        this.emit(`${varName}.${prop.name} = ${prop.value}`)
-      } else {
-        const value =
-          typeof prop.value === 'string' ? `"${this.escapeString(String(prop.value))}"` : prop.value
-        this.emit(`${varName}.setAttribute('${prop.name}', ${value})`)
-      }
-    }
-
-    // Apply base styles
-    const baseStyles = node.styles.filter(s => !s.state)
-    if (baseStyles.length > 0) {
-      // Separate static and conditional styles
-      const staticStyles: Array<{ property: string; value: string }> = []
-      const conditionalStyles: Array<{ property: string; code: string }> = []
-
-      for (const style of baseStyles) {
-        const resolved = this.resolveStyleValueForTopLevel(String(style.value))
-        if (resolved.needsEval) {
-          conditionalStyles.push({ property: style.property, code: resolved.code })
-        } else {
-          staticStyles.push({ property: style.property, value: String(style.value) })
-        }
-      }
-
-      // Emit static styles with Object.assign
-      if (staticStyles.length > 0) {
-        this.emit(`Object.assign(${varName}.style, {`)
-        this.indent++
-        for (const style of staticStyles) {
-          this.emit(`'${style.property}': '${style.value}',`)
-        }
-        this.indent--
-        this.emit('})')
-      }
-
-      // Emit conditional styles as separate assignments
-      for (const cond of conditionalStyles) {
-        this.emit(`${varName}.style['${cond.property}'] = ${cond.code}`)
-      }
-    }
-
-    // Handle icon loading (special case for Icon primitive)
-    if (node.primitive === 'icon') {
-      const iconProp = node.properties.find(p => p.name === 'textContent')
-      if (iconProp && typeof iconProp.value === 'string') {
-        const iconName = iconProp.value
-        // Icon properties are stored as data-icon-* attributes in IR
-        const iconSizeProp = node.properties.find(p => p.name === 'data-icon-size')
-        const iconColorProp = node.properties.find(p => p.name === 'data-icon-color')
-        const iconWeightProp = node.properties.find(p => p.name === 'data-icon-weight')
-        const iconSize =
-          iconSizeProp?.value || node.styles.find(s => s.property === 'fontSize')?.value || '16'
-        const iconColor =
-          iconColorProp?.value ||
-          node.styles.find(s => s.property === 'color')?.value ||
-          'currentColor'
-        const iconWeight =
-          iconWeightProp?.value || node.styles.find(s => s.property === 'strokeWidth')?.value || '2'
-        this.emit(`${varName}.dataset.iconSize = '${String(iconSize).replace('px', '')}'`)
-        this.emit(`${varName}.dataset.iconColor = '${iconColor}'`)
-        this.emit(`${varName}.dataset.iconWeight = '${iconWeight}'`)
-        this.emit(`_runtime.loadIcon(${varName}, '${iconName}')`)
-      }
-    }
-
-    // Add event listeners
-    for (const event of node.events) {
-      // Skip events that are fully handled by state machine transitions
-      const allActionsAreStateMachine = event.actions.every(a => a.isBuiltinStateFunction)
-      if (allActionsAreStateMachine && node.stateMachine) {
-        continue // State machine will handle this event via transitions
-      }
-      this.emitEventListener(varName, event)
-    }
-
-    // Recursively emit children
-    for (const child of node.children) {
-      this.emitConditionalTemplateNode(child, varName)
-    }
-
-    this.emit(`${parentVar}.appendChild(${varName})`)
-  }
-
-  private emitEachTemplateNode(
-    node: IRNode,
-    parentVar: string,
-    itemVar: string,
-    indexVar: string = 'index'
-  ): void {
-    // Handle conditionals inside loops - use loop variables directly
-    if (node.conditional) {
-      const cond = node.conditional
-      const condId = this.sanitizeVarName(cond.id)
-      // Resolve condition for loop context: loop variables stay as-is (local JS vars),
-      // only $-prefixed data variables get wrapped in $get()
-      const resolvedCondition = this.resolveLoopCondition(cond.condition, itemVar, indexVar)
-
-      this.emit(`// Conditional in loop`)
-      this.emit(`const ${condId}_container = document.createElement('div')`)
-      this.emit(`${condId}_container.style.display = 'contents';`)
-      this.emit(`if (${resolvedCondition}) {`)
-      this.indent++
-      for (const child of cond.then) {
-        this.emitEachTemplateNode(child, `${condId}_container`, itemVar, indexVar)
-      }
-      this.indent--
-      if (cond.else && cond.else.length > 0) {
-        this.emit(`} else {`)
-        this.indent++
-        for (const child of cond.else) {
-          this.emitEachTemplateNode(child, `${condId}_container`, itemVar, indexVar)
-        }
-        this.indent--
-      }
-      this.emit(`}`)
-      this.emit(`${parentVar}.appendChild(${condId}_container)`)
-      return
-    }
-
-    // Handle visibleWhen inside loops - use inline if statement with loop variables
-    // When a node has visibleWhen referencing a loop variable (e.g., "entry.billable" or "!entry.billable"),
-    // wrap the node creation in an if statement instead of using _visibleWhen runtime binding
-    if (node.visibleWhen) {
-      // Bug #28 fix: an else-branch from `if/else` becomes
-      // `visibleWhen: "!(task.done)"` (with parens). Strip both leading `!`
-      // and any wrapping parentheses before deriving the first identifier
-      // path — otherwise firstPart was `(task` and didn't match itemVar.
-      const conditionWithoutNot = node.visibleWhen.replace(/^!\(?/, '').replace(/\)$/, '')
-      const firstPart = conditionWithoutNot.split('.')[0].trim()
-      if (firstPart === itemVar || firstPart === indexVar) {
-        // Loop variable reference - emit inline if statement
-        const resolvedCondition = this.resolveLoopCondition(node.visibleWhen, itemVar, indexVar)
-        this.emit(`if (${resolvedCondition}) {`)
-        this.indent++
-        // Create a copy of the node without visibleWhen to avoid infinite recursion
-        const nodeWithoutVisibleWhen = { ...node, visibleWhen: undefined }
-        this.emitEachTemplateNodeContent(nodeWithoutVisibleWhen, parentVar, itemVar, indexVar)
-        this.indent--
-        this.emit(`}`)
-        return
-      }
-      // If visibleWhen doesn't reference loop variable, fall through to normal handling
-      // The _visibleWhen runtime binding will handle it
-    }
-
-    this.emitEachTemplateNodeContent(node, parentVar, itemVar, indexVar)
-  }
-
-  /**
-   * Emit the actual content of an each template node.
-   * Separated from emitEachTemplateNode to allow conditional wrapping.
-   */
-  private emitEachTemplateNodeContent(
-    node: IRNode,
-    parentVar: string,
-    itemVar: string,
-    indexVar: string = 'index'
-  ): void {
-    const varName = this.sanitizeVarName(node.id) + '_tpl'
-
-    this.emit(`const ${varName} = document.createElement('${node.tag}')`)
-    // Index appended for uniqueness: node-5[0], node-5[1], etc.
-    this.emit(`${varName}.dataset.mirrorId = '${node.id}[' + ${indexVar} + ']'`)
-    // Store the loop item on the element for bind/exclusive() to access
-    this.emit(`${varName}._loopItem = ${itemVar}`)
-    if (node.name) {
-      this.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
-    }
-
-    // Bug #30 fix: per-item bind on loop-template nodes (e.g.
-    // `Input bind item.value`). The container-level bind is handled in
-    // loop-emitter.ts; here we emit the per-item bind on the actual element.
-    if (node.bind) {
-      const bindVar = node.bind.startsWith('$') ? node.bind.slice(1) : node.bind
-      const firstPart = bindVar.split('.')[0]
-      if (firstPart === itemVar) {
-        // Per-item bind: data-bind keeps the loop-var path so the runtime
-        // can mutate the loop-item property; initial value comes from
-        // the item itself.
-        this.emit(`${varName}.dataset.bind = '${bindVar}'`)
-        // For input-like elements set the initial value
-        if (node.tag === 'input' || node.tag === 'textarea') {
-          this.emit(`${varName}.value = ${bindVar}`)
-        }
-      }
-    }
-
-    // Set HTML properties (with data binding)
-    for (const prop of node.properties) {
-      if (prop.name === 'textContent') {
-        const value = this.resolveTemplateValue(prop.value, itemVar, indexVar)
-        this.emit(`${varName}.textContent = ${value}`)
-      } else if (prop.name === 'disabled' || prop.name === 'hidden') {
-        this.emit(`${varName}.${prop.name} = ${prop.value}`)
-      } else {
-        const value = this.resolveTemplateValue(prop.value, itemVar, indexVar)
-        this.emit(`${varName}.setAttribute('${prop.name}', ${value})`)
-      }
-    }
-
-    // Apply base styles
-    const baseStyles = node.styles.filter(s => !s.state)
-    if (baseStyles.length > 0) {
-      this.emit(`Object.assign(${varName}.style, {`)
-      this.indent++
-      for (const style of baseStyles) {
-        const value = this.resolveTemplateStyleValue(style.value, itemVar)
-        this.emit(`'${style.property}': ${value},`)
-      }
-      this.indent--
-      this.emit('})')
-    }
-
-    // Handle icon loading (special case for Icon primitive)
-    if (node.primitive === 'icon') {
-      const iconProp = node.properties.find(p => p.name === 'textContent')
-      if (iconProp && typeof iconProp.value === 'string') {
-        const iconName = iconProp.value
-        // Icon properties are stored as data-icon-* attributes in IR
-        const iconSizeProp = node.properties.find(p => p.name === 'data-icon-size')
-        const iconColorProp = node.properties.find(p => p.name === 'data-icon-color')
-        const iconWeightProp = node.properties.find(p => p.name === 'data-icon-weight')
-        const iconSize =
-          iconSizeProp?.value || node.styles.find(s => s.property === 'fontSize')?.value || '16'
-        const iconColor =
-          iconColorProp?.value ||
-          node.styles.find(s => s.property === 'color')?.value ||
-          'currentColor'
-        const iconWeight =
-          iconWeightProp?.value || node.styles.find(s => s.property === 'strokeWidth')?.value || '2'
-        this.emit(`${varName}.dataset.iconSize = '${String(iconSize).replace('px', '')}'`)
-        this.emit(`${varName}.dataset.iconColor = '${iconColor}'`)
-        this.emit(`${varName}.dataset.iconWeight = '${iconWeight}'`)
-        this.emit(`_runtime.loadIcon(${varName}, '${iconName}')`)
-      }
-    }
-
-    // Setup state machine for template nodes (required for toggle, exclusive, etc.)
-    if (node.stateMachine) {
-      this.emitStateMachine(varName, node)
-    }
-
-    // Add event listeners
-    for (const event of node.events) {
-      this.emitTemplateEventListener(varName, event, itemVar)
-    }
-
-    // Handle editable property - generates setupEditable call for in-place editing
-    const editableProp = node.properties.find(p => p.name === 'data-editable' && p.value === true)
-    if (editableProp) {
-      // Find the field being edited from textContent (e.g., "todo.text" → "text")
-      const textContentProp = node.properties.find(p => p.name === 'textContent')
-      if (textContentProp && typeof textContentProp.value === 'string') {
-        const fieldMatch = textContentProp.value.match(/__loopVar:([^,\s]+)/)
-        if (fieldMatch) {
-          const fullPath = fieldMatch[1]
-          // Extract field name from itemVar.field (e.g., "todo.text" → "text")
-          const parts = fullPath.split('.')
-          if (parts.length >= 2) {
-            const field = parts.slice(1).join('.')
-            this.emit(`_runtime.setupEditable(${varName}, ${itemVar}, '${field}')`)
-          }
-        }
-      }
-    }
-
-    // Handle nested each loop if present
-    if (node.each) {
-      this.emitNestedEachLoop(node.each, varName, itemVar, indexVar)
-    }
-
-    // Recursively emit children
-    for (const child of node.children) {
-      this.emitEachTemplateNode(child, varName, itemVar, indexVar)
-    }
-
-    this.emit(`${parentVar}.appendChild(${varName})`)
-  }
-
-  /**
-   * Emit a nested each loop inside a template (for nested loops like `each item in category.items`)
-   */
-  private emitNestedEachLoop(
-    each: IREach,
-    parentVar: string,
-    outerItemVar: string,
-    outerIndexVar: string
-  ): void {
-    const containerId = this.sanitizeVarName(each.id)
-    const innerItemVar = each.itemVar.startsWith('$') ? each.itemVar.slice(1) : each.itemVar
-    const innerIndexVar = each.indexVar
-      ? each.indexVar.startsWith('$')
-        ? each.indexVar.slice(1)
-        : each.indexVar
-      : 'index'
-    const rawCollection = each.collection.startsWith('$')
-      ? each.collection.slice(1)
-      : each.collection
-
-    this.emit(`// Nested each loop: ${innerItemVar} in ${rawCollection}`)
-    this.emit(`const ${containerId}_container = document.createElement('div')`)
-    this.emit(`${containerId}_container.dataset.eachContainer = '${each.id}'`)
-    this.emit(`${containerId}_container.style.display = 'contents';`)
-
-    // For nested loops, the collection references an outer loop variable directly
-    // e.g., category.items where category is the outer loop variable
-    const isInlineArray = rawCollection.startsWith('[')
-
-    // Determine the collection expression
-    let collectionExpr: string
-    if (isInlineArray) {
-      collectionExpr = rawCollection
-    } else {
-      // Check if collection references the outer loop variable (e.g., category.items)
-      const firstPart = rawCollection.split('.')[0]
-      if (firstPart === outerItemVar) {
-        // Direct reference to outer loop variable's property
-        collectionExpr = rawCollection
-      } else {
-        // Use $get for global data
-        collectionExpr = `$get('${rawCollection}') || []`
-      }
-    }
-
-    // Object→Array conversion: Object collections (e.g., `users:\n  max:\n    ...`)
-    // must be normalized to arrays before .forEach. Without this, nested-each
-    // crashes on `forEach is not a function` for object-shaped collections.
-    this.emit(
-      `((d => Array.isArray(d) ? d : (d && typeof d === 'object' ? Object.entries(d).map(([k, v]) => typeof v === 'object' && v !== null ? { _key: k, ...v } : v) : []))(${collectionExpr})).forEach((${innerItemVar}, ${innerIndexVar}) => {`
-    )
-    this.indent++
-
-    // Create container for each item (display: contents makes it layout-transparent)
-    this.emit(`const itemContainer = document.createElement('div')`)
-    this.emit(`itemContainer.dataset.eachItem = ${innerIndexVar}`)
-    this.emit(`itemContainer.style.display = 'contents';`)
-
-    // Render template nodes
-    for (const templateNode of each.template) {
-      this.emitEachTemplateNode(templateNode, 'itemContainer', innerItemVar, innerIndexVar)
-    }
-
-    this.emit(`${containerId}_container.appendChild(itemContainer)`)
-    this.indent--
-    this.emit('})')
-
-    this.emit(`${parentVar}.appendChild(${containerId}_container)`)
-  }
-
-  private resolveTemplateValue(
-    value: string | number | boolean,
-    itemVar: string,
-    indexVar: string = 'index'
-  ): string {
-    if (typeof value === 'string') {
-      // Check for __loopVar: markers (set by IR for loop variable references)
-      // Use regex replacement for ALL occurrences (handles multiple markers in expressions)
-      if (value.includes('__loopVar:')) {
-        // e.g., "__loopVar:user.name" -> user.name (unquoted)
-        // e.g., "__loopVar:index + 1" -> index + 1
-        // e.g., "__loopVar:team.name + __loopVar:team.members.length" -> team.name + team.members.length
-        // Replace __loopVar:name with just name (including array indexing and nested properties)
-        let resolved = value.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, '$1')
-        // Also handle $-variables in expressions
-        resolved = resolved.replace(
-          /\$([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)/g,
-          '$get("$1")'
-        )
-        return resolved
-      }
-
-      // Check for $$ escape followed by item variable reference like $$product.price
-      // This should produce: "$" + product.price (literal $ + loop var value)
-      if (value.includes(`$$${itemVar}.`)) {
-        // Check if value is ONLY $$itemVar.property (no other text)
-        const exactMatch = value.match(new RegExp(`^\\$\\$${itemVar}\\.([a-zA-Z_][a-zA-Z0-9_.]*)$`))
-        if (exactMatch) {
-          // Simple case: "$$product.price" -> "$" + product.price
-          return `"$" + ${itemVar}.${exactMatch[1]}`
-        }
-        // Complex case: "Price: $$product.price" -> template literal with interpolation
-        // Convert $$product.price to ${product.price} within a template literal
-        const resolved = value.replace(
-          new RegExp(`\\$\\$${itemVar}\\.([a-zA-Z_][a-zA-Z0-9_.]*)`, 'g'),
-          `\$\${${itemVar}.$1}`
-        )
-        return `\`${this.escapeTemplateString(resolved)}\``
-      }
-
-      // Check if value contains item variable reference like $task.title
-      // OR an index variable reference like $idx (Bug #27 fix: handle index
-      // var alongside item var in mixed template strings).
-      const hasIndexRef = new RegExp(`\\$${indexVar}\\b`).test(value)
-      if (value.includes(`$${itemVar}.`) || value.includes(`\${${itemVar}.`) || hasIndexRef) {
-        // Two cases:
-        //   (a) value is EXACTLY "$task.title" (with leading $) → JS expression
-        //   (b) value is e.g. "before $task.title after" → template literal
-        const exactMatch = value.match(new RegExp(`^\\$${itemVar}\\.([a-zA-Z_][a-zA-Z0-9_.]*)$`))
-        if (exactMatch) {
-          // Pure expression — emit as raw JS access
-          return `${itemVar}.${exactMatch[1]}`
-        }
-        // Mixed string with $loopvar references — template literal
-        // (also escape user-provided ${...} to prevent JS injection)
-        const ESC = '\x00ESC\x00'
-        let processed = value.replace(/\$\{/g, ESC)
-        // Substitute $itemVar.path FIRST (more specific than $indexVar),
-        // then $indexVar (bare reference).
-        processed = processed.replace(
-          new RegExp(`\\$${itemVar}\\.([a-zA-Z_][a-zA-Z0-9_.]*)`, 'g'),
-          `\$\${${itemVar}.$1}`
-        )
-        // Bug #27 fix: also substitute $indexVar in template strings.
-        // Use word-boundary so `$indexVar` doesn't accidentally match inside
-        // a longer identifier like `$indexVar2`.
-        processed = processed.replace(new RegExp(`\\$${indexVar}\\b`, 'g'), `\$\${${indexVar}}`)
-        const escaped = this.escapeTemplateString(processed)
-        const safe = escaped.replace(new RegExp(ESC, 'g'), '\\${')
-        return `\`${safe}\``
-      }
-      // Check for plain item reference $task -> task
-      if (value === `$${itemVar}`) {
-        return itemVar
-      }
-      // Check for plain index reference $index -> index
-      if (value === `$${indexVar}`) {
-        return indexVar
-      }
-      return `"${this.escapeString(String(value))}"`
-    }
-    return String(value)
-  }
-
-  private resolveTemplateStyleValue(value: string, itemVar: string): string {
-    // Handle __conditional: markers (ternary expressions from IR)
-    // Format: __conditional:condition?thenValue:elseValue
-    if (value.includes('__conditional:')) {
-      return this.resolveConditionalExpression(value, itemVar)
-    }
-
-    // Handle __loopVar: markers
-    if (value.includes('__loopVar:')) {
-      const resolved = value.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, '$1')
-      // Wrap in parentheses if it's an expression
-      if (resolved.includes(' ')) {
-        return `(${resolved})`
-      }
-      return resolved
-    }
-
-    // Check if value is exactly the item variable (e.g., $color -> color)
-    if (value === `$${itemVar}`) {
-      return itemVar
-    }
-    // Check if value contains item variable reference with property access
-    if (value.includes(`$${itemVar}.`) || value.includes(`\${${itemVar}.`)) {
-      const resolved = value.replace(new RegExp(`\\$${itemVar}\\.`, 'g'), `${itemVar}.`)
-      return resolved
-    }
-    return `'${value}'`
-  }
-
-  /**
-   * Resolve __conditional: markers into proper JavaScript ternary expressions
-   * Handles nested conditionals (chained ternary)
-   */
-  private resolveConditionalExpression(value: string, itemVar: string): string {
-    // Parse __conditional:condition?then:else pattern
-    // Note: 'else' part may itself be another __conditional (nested ternary)
-    const parseConditional = (str: string): string => {
-      if (!str.startsWith('__conditional:')) {
-        // Not a conditional - resolve as a value
-        return this.resolveConditionalValue(str, itemVar)
-      }
-
-      // Remove __conditional: prefix
-      const content = str.slice('__conditional:'.length)
-
-      // Find the ? that separates condition from then/else
-      // Need to be careful with nested conditionals
-      let questionPos = -1
-      let depth = 0
-      for (let i = 0; i < content.length; i++) {
-        const char = content[i]
-        if (char === '(') depth++
-        else if (char === ')') depth--
-        else if (char === '?' && depth === 0 && !content.slice(i - 1, i + 1).match(/[=!<>]=?\?/)) {
-          // Found ? not part of === or !== etc
-          questionPos = i
-          break
-        }
-      }
-
-      if (questionPos === -1) {
-        // No valid ternary found, return as-is
-        return this.resolveConditionalValue(content, itemVar)
-      }
-
-      const condition = content.slice(0, questionPos)
-      const rest = content.slice(questionPos + 1)
-
-      // Find the : that separates then from else
-      // Need to handle nested __conditional: in else part
-      let colonPos = -1
-      depth = 0
-      let inConditional = false
-      for (let i = 0; i < rest.length; i++) {
-        const char = rest[i]
-        if (rest.slice(i).startsWith('__conditional:')) {
-          inConditional = true
-        }
-        // Skip the colon that belongs to a marker prefix like `__loopVar:`
-        // or `__conditional:`. `__loopVar:accent:__loopVar:danger` must not
-        // split at the first internal colon.
-        if (rest.slice(i).startsWith('__loopVar:') || rest.slice(i).startsWith('__conditional:')) {
-          i += rest.slice(i).indexOf(':')
-          continue
-        }
-        if (char === '(') depth++
-        else if (char === ')') depth--
-        else if (char === ':' && depth === 0 && !inConditional) {
-          colonPos = i
-          break
-        }
-        // Reset inConditional after seeing a ? in nested conditional
-        if (char === '?' && inConditional) {
-          inConditional = false
-        }
-      }
-
-      if (colonPos === -1) {
-        // Fallback: split at first : not in nested conditional
-        colonPos = rest.indexOf(':')
-      }
-
-      const thenValue = rest.slice(0, colonPos)
-      const elseValue = rest.slice(colonPos + 1)
-
-      // Resolve the condition (replace __loopVar: markers)
-      const resolvedCondition = this.resolveLoopVarMarkers(condition, itemVar)
-
-      // Recursively parse then/else (may be nested conditionals)
-      const resolvedThen = parseConditional(thenValue)
-      const resolvedElse = parseConditional(elseValue)
-
-      return `(${resolvedCondition} ? ${resolvedThen} : ${resolvedElse})`
-    }
-
-    return parseConditional(value)
-  }
-
-  /**
-   * Resolve a single value in a conditional (color, string, etc.)
-   */
-  private resolveConditionalValue(value: string, itemVar: string): string {
-    // Handle __loopVar: markers
-    if (value.includes('__loopVar:')) {
-      return this.resolveLoopVarMarkers(value, itemVar)
-    }
-
-    // Handle item variable reference
-    if (value.includes(`$${itemVar}.`)) {
-      return value.replace(new RegExp(`\\$${itemVar}\\.`, 'g'), `${itemVar}.`)
-    }
-
-    // Already-quoted string from elseTokens — pass through.
-    if (
-      value.length >= 2 &&
-      ((value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'")))
-    ) {
-      return value
-    }
-
-    // Check if it's a color (hex)
-    if (value.startsWith('#')) {
-      return `"${value}"`
-    }
-
-    // Check if it's a number
-    if (/^-?\d+(\.\d+)?$/.test(value)) {
-      return value
-    }
-
-    // Default: wrap in quotes
-    return `"${value}"`
-  }
-
-  /**
-   * Replace __loopVar: markers with actual variable references.
-   *
-   * `__loopVar:name` is the IR's neutral marker for any reference originally
-   * written as `$name`. Whether it's actually a loop variable depends on
-   * context:
-   *  - If `name` matches the current `itemVar`, it stays bare (function arg).
-   *  - Otherwise it's a data/token reference, so it becomes `$get("name")`.
-   */
-  private resolveLoopVarMarkers(str: string, itemVar?: string): string {
-    return str.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, (_, ref) => {
-      const firstPart = ref.split('.')[0].split('[')[0]
-      if (itemVar && firstPart === itemVar) return ref
-      return `$get("${ref}")`
-    })
-  }
-
-  /**
-   * Resolve a style value for non-loop context (top-level nodes)
-   * Handles __conditional: markers by converting them to $get()-based ternary expressions
-   */
-  private resolveStyleValueForTopLevel(value: string): { code: string; needsEval: boolean } {
-    if (!value.includes('__conditional:')) {
-      return { code: `'${value}'`, needsEval: false }
-    }
-
-    // Parse and convert conditional to $get()-based ternary
-    const resolvedCode = this.parseTopLevelConditional(value)
-    return { code: resolvedCode, needsEval: true }
-  }
-
-  private parseTopLevelConditional(str: string): string {
-    if (!str.startsWith('__conditional:')) {
-      return this.resolveTopLevelValue(str)
-    }
-
-    const content = str.slice('__conditional:'.length)
-
-    // Find the ? that separates condition from then/else
-    let questionPos = -1
-    let depth = 0
-    for (let i = 0; i < content.length; i++) {
-      const char = content[i]
-      if (char === '(') depth++
-      else if (char === ')') depth--
-      else if (
-        char === '?' &&
-        depth === 0 &&
-        !content.slice(Math.max(0, i - 1), i + 1).match(/[=!<>]=?\?/)
-      ) {
-        questionPos = i
-        break
-      }
-    }
-
-    if (questionPos === -1) {
-      return this.resolveTopLevelValue(content)
-    }
-
-    const condition = content.slice(0, questionPos).trim()
-    const rest = content.slice(questionPos + 1)
-
-    // Find the : that separates then from else
-    let colonPos = -1
-    depth = 0
-    let inConditional = false
-    let inString: string | null = null // tracks open quote char
-    for (let i = 0; i < rest.length; i++) {
-      const char = rest[i]
-      // Skip colons inside string literals (Bug #26 fix). Without this, a
-      // then-branch like `"Items: $count"` would be split at the colon
-      // inside the string.
-      if (inString) {
-        if (char === inString && rest[i - 1] !== '\\') inString = null
-        continue
-      }
-      if (char === '"' || char === "'") {
-        inString = char
-        continue
-      }
-      if (rest.slice(i).startsWith('__conditional:')) {
-        inConditional = true
-      }
-      // Skip the colon that belongs to a marker prefix like `__loopVar:`
-      // or `__conditional:`. Without this, `__loopVar:accent:__loopVar:danger`
-      // would split at the first internal `:` and produce invalid JS.
-      if (rest.slice(i).startsWith('__loopVar:') || rest.slice(i).startsWith('__conditional:')) {
-        // jump past the marker name + the colon
-        i += rest.slice(i).indexOf(':')
-        continue
-      }
-      if (char === '(') depth++
-      else if (char === ')') depth--
-      else if (char === ':' && depth === 0 && !inConditional) {
-        colonPos = i
-        break
-      }
-      if (char === '?' && inConditional) {
-        inConditional = false
-      }
-    }
-
-    if (colonPos === -1) {
-      return this.resolveTopLevelValue(content)
-    }
-
-    const thenValue = rest.slice(0, colonPos).trim()
-    const elseValue = rest.slice(colonPos + 1).trim()
-
-    // Resolve condition: bare identifiers become $get("identifier")
-    const resolvedCondition = this.resolveTopLevelCondition(condition)
-
-    // Recursively parse then/else
-    const resolvedThen = this.parseTopLevelConditional(thenValue)
-    const resolvedElse = this.parseTopLevelConditional(elseValue)
-
-    return `(${resolvedCondition} ? ${resolvedThen} : ${resolvedElse})`
-  }
-
-  private resolveTopLevelCondition(condition: string): string {
-    // Replace bare identifiers with $get("identifier")
-    const reserved = new Set(['true', 'false', 'null', 'undefined', 'NaN', 'Infinity'])
-
-    // Mask strings BEFORE wrapping bare identifiers — otherwise identifiers
-    // inside user strings get wrapped (e.g. category === "Geschäftlich"
-    // would be split because `ä` is non-ASCII), and the result is invalid JS.
-    // Same trick as `resolveConditionVariables`: wrap placeholder in quotes
-    // so the lookbehind exclusion `["\w$.]` skips it.
-    const stringPlaceholders: string[] = []
-    const placeholderFor = (idx: number) => `"__MIRROR_STR_${idx}_END__"`
-    let result = condition.replace(/"((?:[^"\\]|\\.)*)"/g, m => {
-      const idx = stringPlaceholders.length
-      stringPlaceholders.push(m)
-      return placeholderFor(idx)
-    })
-    result = result.replace(/'((?:[^'\\]|\\.)*)'/g, m => {
-      const idx = stringPlaceholders.length
-      stringPlaceholders.push(m)
-      return placeholderFor(idx)
-    })
-
-    // Strip `__loopVar:` markers (set by IR for loop variable references).
-    // Without this, `__loopVar:item.field` would be wrapped as if `__loopVar`
-    // and `item.field` were two separate identifiers separated by ":" — which
-    // produces invalid JS (`$get("__loopVar"):$get("item.field")`).
-    result = result.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*)/g, '$1')
-
-    // Wrap bare identifiers with $get(). Non-ASCII identifiers (umlauts,
-    // emoji etc.) are NOT matched — they're left alone (treated as raw JS).
-    result = result.replace(
-      /(?<!["\w$.])\b([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\b(?!["\w(])/g,
-      (match, identifier) => {
-        const firstPart = identifier.split('.')[0]
-        if (reserved.has(firstPart)) return match
-        return `$get("${identifier}")`
-      }
-    )
-
-    // Restore strings
-    result = result.replace(
-      /"__MIRROR_STR_(\d+)_END__"/g,
-      (_, idx) => stringPlaceholders[parseInt(idx, 10)]
-    )
-    return result
-  }
-
-  private resolveTopLevelValue(value: string): string {
-    // Already-quoted string (from elseTokens collection) — pass through,
-    // but rewrite `__loopVar:name` markers inside the string into a JS
-    // template literal so the runtime substitutes the variable value
-    // (Bug #26 fix: `"Items: __loopVar:count"` became literal text).
-    if (
-      value.length >= 2 &&
-      ((value.startsWith('"') && value.endsWith('"')) ||
-        (value.startsWith("'") && value.endsWith("'")))
-    ) {
-      const quote = value[0]
-      const inner = value.slice(1, -1)
-      if (inner.includes('__loopVar:')) {
-        // Rewrite into a template literal: `Items: ${$get("count")}`
-        const tpl = inner.replace(
-          /__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*)/g,
-          (_, n) => `\${$get("${n}")}`
-        )
-        return `\`${tpl}\``
-      }
-      return value
-    }
-    // Handle hex colors
-    if (value.startsWith('#')) {
-      return `"${value}"`
-    }
-    // Handle numbers
-    if (/^-?\d+(\.\d+)?$/.test(value)) {
-      return value
-    }
-    // Handle bare `__loopVar:name` — at top-level this is a $get() reference.
-    if (value.startsWith('__loopVar:')) {
-      return `$get("${value.slice('__loopVar:'.length)}")`
-    }
-    // Handle named colors and other values
-    return `"${value}"`
-  }
-
-  /**
-   * Emit template event listener for loop items
-   * Delegates to extracted event-emitter.ts
-   */
-  private emitTemplateEventListener(varName: string, event: IREvent, itemVar: string): void {
-    const ctx = this.createEventEmitterContext()
-    emitTemplateEventListenerExtracted(ctx, varName, event, itemVar, (action, currentVar, item) =>
-      this.emitTemplateAction(action, currentVar, item)
-    )
-  }
-
-  private emitTemplateAction(action: IRAction, currentVar: string, itemVar: string): void {
-    const target = action.target || 'self'
-
-    switch (action.type) {
-      case 'toggle':
-        this.emit(`_runtime.toggle(_elements['${target}'] || ${currentVar})`)
-        break
-      case 'select':
-        this.emit(`_runtime.select(${currentVar})`)
-        break
-      case 'exclusive':
-        // Exclusive selection - deselect siblings, select this one
-        this.emit(`_runtime.exclusive(${currentVar})`)
-        break
-      case 'assign':
-        // Handle assign $selected to $item
-        if (action.args && action.args[0] === `$${itemVar}`) {
-          const stateVar = target.startsWith('$') ? target.slice(1) : target
-          this.emit(`_state['${stateVar}'] = ${itemVar}`)
-          this.emit(`api.update()`)
-        }
-        break
-      default:
-        // For unrecognized actions in template context, try emitting as regular action
-        // This handles custom functions and other action types
-        this.emitAction(action, currentVar)
-    }
-  }
-
-  /**
-   * Emit standard event listener
-   * Delegates to extracted event-emitter.ts
-   */
-  private emitEventListener(varName: string, event: IREvent): void {
-    const ctx = this.createEventEmitterContext()
-    emitEventListenerExtracted(ctx, varName, event, (action, currentVar) =>
-      this.emitAction(action, currentVar)
-    )
-  }
-
-  /**
-   * Emit action call
-   * Delegates to extracted event-emitter.ts
-   */
-  private emitAction(action: IRAction, currentVar: string): void {
-    const ctx = this.createEventEmitterContext()
-    emitActionExtracted(ctx, action, currentVar)
-  }
-
-  private emitPublicAPI(): void {
-    const ctx = this.createAPIEmitterContext()
-    const namedNodes = this.collectNamedNodes(this.ir.nodes)
-    emitPublicAPIExtracted(ctx, namedNodes)
-  }
-
-  private createAPIEmitterContext(): APIEmitterContext {
+  createAPIEmitterContext(): APIEmitterContext {
     return {
       emit: (line: string) => this.emit(line),
       emitRaw: (line: string) => this.emitRaw(line),
@@ -1806,7 +702,7 @@ class DOMGenerator {
     }
   }
 
-  private createChartEmitterContext(): ChartEmitterContext {
+  createChartEmitterContext(): ChartEmitterContext {
     return {
       emit: (line: string) => this.emit(line),
       indentIn: () => {
@@ -1819,7 +715,7 @@ class DOMGenerator {
     }
   }
 
-  private createNodeEmitterContext(): NodeEmitterContext {
+  createNodeEmitterContext(): NodeEmitterContext {
     return {
       emit: (line: string) => this.emit(line),
       getIndent: () => this.indent,
@@ -1836,7 +732,7 @@ class DOMGenerator {
     }
   }
 
-  private createStyleEmitterContext(): StyleEmitterContext {
+  createStyleEmitterContext(): StyleEmitterContext {
     return {
       emit: (line: string) => this.emit(line),
       emitRaw: (line: string) => this.emitRaw(line),
@@ -1859,216 +755,10 @@ class DOMGenerator {
     }
   }
 
-  private emitRuntime(): void {
-    // Emit the pre-built runtime code from separate module
-    // This replaces ~778 lines of inline code generation
-    this.emitRaw(DOM_RUNTIME_CODE)
-    this.emit('')
-
-    // Register tokens in runtime for value functions (increment, decrement, set, reset)
-    if (this.ir.tokens.length > 0) {
-      this.emit('// Register tokens in runtime')
-      for (const token of this.ir.tokens) {
-        const tokenKey = (token.name.startsWith('$') ? token.name.slice(1) : token.name).replace(
-          /\./g,
-          '-'
-        )
-        // Handle numeric values - check if the string represents a number
-        let value: string
-        if (typeof token.value === 'number') {
-          value = String(token.value)
-        } else if (typeof token.value === 'string') {
-          // Check if it's a numeric string
-          const numVal = Number(token.value)
-          if (!isNaN(numVal) && token.value.trim() !== '') {
-            value = String(numVal)
-          } else {
-            // Use JSON.stringify for proper quote escaping. Without this, a
-            // user value containing single quotes would break the outer
-            // `'...'` wrapping (and could leak as JS via injection).
-            value = JSON.stringify(token.value)
-          }
-        } else {
-          value = String(token.value)
-        }
-        this.emit(`_runtime.registerToken('$${tokenKey}', ${value})`)
-      }
-      this.emit('')
-    }
-  }
-
-  /**
-   * Sanitize an ID to create a valid JavaScript variable name.
-   * Delegates to the extracted utility function.
-   */
-  private sanitizeVarName(id: string): string {
-    return sanitizeVarName(id)
-  }
-
-  /**
-   * Resolve content value for textContent, handling $-variables and loop variables
-   * $name → $get('name')
-   * $12.4k → "$12.4k" (literal, starts with digit)
-   * __loopVar:user.name → user.name (unquoted, JS variable)
-   * "literal" → "literal"
-   * "Hello " + $name → "Hello " + $get("name") (expressions)
-   */
-  private resolveContentValue(value: string | number | boolean): string {
-    if (typeof value === 'string') {
-      // Check for loop variable reference (marked by IR)
-      if (value.startsWith('__loopVar:')) {
-        const varName = value.slice('__loopVar:'.length)
-        return varName // Return unquoted - it's a JS variable reference
-      }
-
-      // Check for conditional expression (marked by IR)
-      // Format: __conditional:condition?thenValue:elseValue
-      if (value.includes('__conditional:')) {
-        return this.parseTopLevelConditional(value)
-      }
-
-      // Check if this is a computed expression from the IR
-      // Expressions from IR look like: "Hello " + $name or $count * $price
-      // They have: quoted strings AND/OR $-variables with operators between them
-      // Plain strings look like: Tokens + Komponenten (no quotes, no $)
-      const hasOperators =
-        value.includes(' + ') ||
-        value.includes(' - ') ||
-        value.includes(' * ') ||
-        value.includes(' / ')
-      const hasQuotedParts = /^"[^"]*"/.test(value) || /" [+\-*/] /.test(value)
-      const hasDollarVars = /\$[a-zA-Z_]/.test(value)
-      const hasLoopVarMarkers = value.includes('__loopVar:')
-
-      if (hasOperators && (hasQuotedParts || hasDollarVars || hasLoopVarMarkers)) {
-        // This is a computed expression - replace $varName with $get("varName")
-        // and __loopVar:name with just name
-        return this.resolveExpressionVariables(value)
-      }
-
-      // Check for simple $-variable reference (ONLY the variable, nothing else)
-      // $name, $user.name → variable
-      // $discount% → needs interpolation (has suffix)
-      // $12.4k, $100 → literal (currency/number)
-      const simpleVarMatch = value.match(/^\$([a-zA-Z_][a-zA-Z0-9_.]*)$/)
-      if (simpleVarMatch && !value.startsWith('$get(')) {
-        return `$get("${simpleVarMatch[1]}")`
-      }
-
-      // String interpolation: "Hello $firstName" or "$discount%" → template literal
-      // Handle $$ as escape for literal $ sign followed by variable value
-      if (/\$[a-zA-Z_][a-zA-Z0-9_.]*/.test(value)) {
-        const GET_PLACEHOLDER = '\x00GET\x00'
-        const ESC_PLACEHOLDER = '\x00ESC\x00'
-        let processed = value
-
-        // SECURITY: Mark user-provided ${...} patterns so we can escape them
-        // back into LITERAL `\${` after `escapeTemplateString` runs. Mirror's
-        // variable syntax is `$name` only — there is no `${...}` in the DSL.
-        // Without this, user input `${alert('xss')}` would become a live
-        // template-literal interpolation (arbitrary code execution).
-        processed = processed.replace(/\$\{/g, ESC_PLACEHOLDER)
-
-        // First, handle $$varName pattern: literal $ + variable value
-        // e.g., "$$price" → "$${__GET__("price")}" (placeholder to avoid re-matching)
-        processed = processed.replace(
-          /\$\$([a-zA-Z_][a-zA-Z0-9_.]*)/g,
-          (match, varName) => `\$\${${GET_PLACEHOLDER}("${varName}")}`
-        )
-
-        // Then, convert remaining $varName to ${$get("varName")}
-        // Uses negative lookahead to skip $get( which shouldn't be re-processed.
-        // The optional (...) group at the end captures aggregation arguments
-        // like `$items.sum(value)` — the runtime $get() handles the full
-        // pattern via aggMatch. Without this, `$items.sum(value)` would split
-        // at the `(`, leaving `(value)` as literal trailing text.
-        processed = processed.replace(
-          /\$(?!get\()([a-zA-Z_][a-zA-Z0-9_.]*(?:\([^)]*\))?)/g,
-          (match, varName) => `\${$get("${varName}")}`
-        )
-
-        // Restore $get placeholder
-        processed = processed.replace(new RegExp(GET_PLACEHOLDER, 'g'), '$get')
-
-        // Run the standard backtick/backslash/newline escaping
-        const escaped = this.escapeTemplateString(processed)
-        // NOW restore user `${` as literal `\${` (backslash-dollar-curly).
-        // In a JS template literal, `\${...}` is read as: `\` is escape for `$`
-        // (a no-op that yields a literal `$`), then `{...}` is literal text.
-        // Net effect: the user's `${...}` content is preserved verbatim in the
-        // output, never executed as JS.
-        const safe = escaped.replace(new RegExp(ESC_PLACEHOLDER, 'g'), '\\${')
-        return `\`${safe}\``
-      }
-
-      // Handle $$ in strings without other variables (e.g., "$$100")
-      if (value.includes('$$')) {
-        return `"${this.escapeString(value.replace(/\$\$/g, '$'))}"`
-      }
-
-      // Regular string literal
-      return `"${this.escapeString(value)}"`
-    }
-    // Number or boolean
-    return String(value)
-  }
-
-  /**
-   * Replace $varName patterns in an expression with $get("varName")
-   * and __loopVar:name patterns with just name (unquoted variable reference)
-   * e.g., "Hello " + $name → "Hello " + $get("name")
-   * e.g., $count * $price → $get("count") * $get("price")
-   * e.g., __loopVar:index + 1 → index + 1
-   */
-  private resolveExpressionVariables(expr: string): string {
-    // First, replace __loopVar:name with just name (unquoted)
-    // Handles user.name[0] with array indexing
-    let result = expr.replace(
-      /__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g,
-      (match, varName) => {
-        return varName
-      }
-    )
-    // Then, replace $varName or $var.name.deep patterns (but not $12.4k or $100)
-    // Also handles aggregation method calls: $tasks.sum(hours), $items.sum(data.stats.value)
-    // The pattern inside parentheses allows dots for nested paths like data.stats.value
-    result = result.replace(
-      /\$([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*(?:\([a-zA-Z0-9_.,\s]*\))?)/g,
-      (match, varName) => {
-        return `$get("${varName}")`
-      }
-    )
-    return result
-  }
-
-  /**
-   * Escape a string for use in JavaScript string literals.
-   * Handles backslashes, quotes, newlines, carriage returns, tabs, and other control characters.
-   */
-  private escapeString(str: string | number | boolean | undefined | null): string {
-    const s = String(str ?? '')
-    return s
-      .replace(/\\/g, '\\\\') // Backslashes first
-      .replace(/"/g, '\\"') // Double quotes
-      .replace(/\n/g, '\\n') // Newlines
-      .replace(/\r/g, '\\r') // Carriage returns
-      .replace(/\t/g, '\\t') // Tabs
-      .replace(/\u2028/g, '\\u2028') // Line separator
-      .replace(/\u2029/g, '\\u2029') // Paragraph separator
-  }
-
-  /**
-   * Escape a template string (for backtick literals)
-   * Escapes backticks and backslashes, but preserves ${...} interpolations
-   */
-  private escapeTemplateString(str: string): string {
-    return str.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\n/g, '\\n')
-  }
-
   /**
    * Create an EventEmitterContext for delegation to extracted event-emitter functions
    */
-  private createEventEmitterContext(): EventEmitterContext {
+  createEventEmitterContext(): EventEmitterContext {
     return {
       emit: (line: string) => this.emit(line),
       indentIn: () => {
@@ -2081,186 +771,7 @@ class DOMGenerator {
     }
   }
 
-  /**
-   * Resolve condition for loop context: loop variables (itemVar, indexVar) stay as-is
-   * because they are local JavaScript variables. Only $-prefixed data variables get $get().
-   * e.g., "entry.billable" stays as "entry.billable" (local var)
-   * e.g., "$config.showAll" becomes "$get('config.showAll')"
-   */
-  private resolveLoopCondition(condition: string, itemVar: string, indexVar: string): string {
-    let result = condition
-
-    // Handle $-prefixed variables. Two cases:
-    //   1. $itemVar / $itemVar.field — refers to the loop variable. Strip the
-    //      $ so we get the local JS access (`task.done`, not `$get("task.done")`).
-    //   2. $globalVar.field — wrap in $get() for global data lookup.
-    result = result.replace(
-      /\$([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)/g,
-      (_match, path: string) => {
-        const root = path.split('.')[0]
-        if (root === itemVar || root === indexVar) return path
-        return `$get("${path}")`
-      }
-    )
-
-    // Loop variables (itemVar, indexVar) and their properties are local JS variables,
-    // so they stay as-is (e.g., "entry.billable" remains "entry.billable")
-    return result
-  }
-
-  /**
-   * Transform condition expression to use $get() for variable lookups
-   * e.g., "loggedIn" → "$get("loggedIn")"
-   * e.g., "isAdmin && hasPermission" → "$get("isAdmin") && $get("hasPermission")"
-   * e.g., "count > 0" → "$get("count") > 0"
-   * e.g., "!disabled" → "!$get("disabled")"
-   * e.g., "user.role === \"admin\"" → "$get("user.role") === "admin""
-   */
-  private resolveConditionVariables(condition: string): string {
-    // JS keywords and literals that should NOT be wrapped in $get()
-    const reserved = new Set([
-      'true',
-      'false',
-      'null',
-      'undefined',
-      'NaN',
-      'Infinity',
-      'this',
-      'typeof',
-      'instanceof',
-      'new',
-      'delete',
-      'void',
-      'if',
-      'else',
-      'return',
-      'function',
-      'var',
-      'let',
-      'const',
-    ])
-
-    // First, collect all loop variable references marked with __loopVar:
-    // These should NOT be wrapped in $get() - they are function parameters
-    const loopVars = new Set<string>()
-    condition.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*)/g, (_, varName) => {
-      // Add the base variable name (e.g., "entry" from "entry.project")
-      const baseName = varName.split('.')[0]
-      loopVars.add(baseName)
-      return ''
-    })
-
-    // Handle __loopVar: markers - strip the prefix but keep the variable name
-    let result = condition.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, '$1')
-
-    // SECURITY/CORRECTNESS: Mask string literals BEFORE identifier wrapping so
-    // (a) bare identifiers inside `"..."` are NOT wrapped (which would break
-    //     quote balance — `t.s == "${$get("x")}"` is invalid JS), and
-    // (b) `${...}` template-literal-like patterns inside user strings stay
-    //     literal (they're inside JS double/single quotes, so safe at runtime,
-    //     but escaping helps if the string later moves to a backtick context).
-    const stringPlaceholders: string[] = []
-    // The placeholder is wrapped in quotes so it looks like a string literal:
-    // the surrounding `"` triggers the bare-identifier regex's lookbehind
-    // exclusion (`(?<!["\w$.)])`), so the inner `MIRROR_STR_X_END` token
-    // doesn't get wrapped. On restore, we strip the outer quotes back to
-    // the original string content (which had its own quotes).
-    const placeholderFor = (idx: number) => `"__MIRROR_STR_${idx}_END__"`
-    result = result.replace(/"((?:[^"\\]|\\.)*)"/g, match => {
-      const idx = stringPlaceholders.length
-      stringPlaceholders.push(match)
-      return placeholderFor(idx)
-    })
-    result = result.replace(/'((?:[^'\\]|\\.)*)'/g, match => {
-      const idx = stringPlaceholders.length
-      stringPlaceholders.push(match)
-      return placeholderFor(idx)
-    })
-    // Convert Mirror logical operators (and/or) to JavaScript (&&/||)
-    result = result.replace(/\s+and\s+/g, ' && ').replace(/\s+or\s+/g, ' || ')
-
-    // Then handle $-prefixed variables (already explicit)
-    // Only capture the variable name, not method calls (stop at parenthesis)
-    // $variable.property → $get("variable.property")
-    // $variable.method() → $get("variable").method() (method is handled separately)
-    result = result.replace(
-      /\$([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*?)(?=\s*\(|$|[^a-zA-Z0-9_.])/g,
-      (match, varPath) => {
-        // Check if next char is '(' - means this is followed by method call
-        // In that case, only capture up to the last dot before method
-        const parts = varPath.split('.')
-        if (parts.length > 1) {
-          // Check if the last part is likely a method (followed by parenthesis in original)
-          // Since we can't easily look ahead, we check common method names
-          const methodNames = new Set([
-            'toLowerCase',
-            'toUpperCase',
-            'includes',
-            'startsWith',
-            'endsWith',
-            'trim',
-            'split',
-            'join',
-            'map',
-            'filter',
-            'find',
-            'some',
-            'every',
-            'reduce',
-            'toString',
-            'valueOf',
-          ])
-          const lastPart = parts[parts.length - 1]
-          if (methodNames.has(lastPart)) {
-            // Last part is a method - only wrap up to the property before it
-            const varOnly = parts.slice(0, -1).join('.')
-            return `$get("${varOnly}").${lastPart}`
-          }
-        }
-        return `$get("${varPath}")`
-      }
-    )
-
-    // Now handle bare identifiers (not already wrapped, not in quotes, not reserved)
-    // This regex finds identifiers with optional dot notation
-    // We use a function to check if it's reserved or a loop variable
-    // The lookbehind excludes: " (in string), \w (part of word), $ (variable), . (method call), ) (after function call)
-    result = result.replace(
-      /(?<!["\w$.)])([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)(?!["\w(])/g,
-      (match, identifier) => {
-        const firstPart = identifier.split('.')[0]
-        // Don't wrap if it's a reserved word
-        if (reserved.has(firstPart)) {
-          return match
-        }
-        // Don't wrap if it's a loop variable (marked with __loopVar:)
-        if (loopVars.has(firstPart)) {
-          return match
-        }
-        // Don't wrap if it's already wrapped in $get
-        return `$get("${identifier}")`
-      }
-    )
-
-    // Restore the masked string literals (strip the outer quote-wrapping that
-    // we added in the mask step — the original content already has its quotes).
-    result = result.replace(
-      /"__MIRROR_STR_(\d+)_END__"/g,
-      (_, idx) => stringPlaceholders[parseInt(idx, 10)]
-    )
-
-    return result
-  }
-
-  /**
-   * Map DSL key names to JavaScript key event values
-   * Delegates to extracted event-emitter.ts
-   */
-  private mapKeyNameMethod(key: string): string {
-    return mapKeyName(key)
-  }
-
-  private createStateMachineContext(): StateMachineEmitterContext {
+  createStateMachineContext(): StateMachineEmitterContext {
     return {
       emit: (line: string) => this.emit(line),
       indentIn: () => {
@@ -2276,29 +787,7 @@ class DOMGenerator {
     }
   }
 
-  private emitStateMachine(varName: string, node: IRNode): void {
-    emitStateMachineExtracted(this.createStateMachineContext(), varName, node)
-  }
-
-  private emitDeferredWhenWatchersMethod(): void {
-    emitDeferredWhenWatchers(this.createStateMachineContext(), this.deferredWhenWatchers)
-  }
-
-  private groupByState(styles: IRStyle[]): Record<string, IRStyle[]> {
-    const result: Record<string, IRStyle[]> = {}
-    for (const style of styles) {
-      const state = style.state || 'default'
-      if (!result[state]) result[state] = []
-      result[state].push(style)
-    }
-    return result
-  }
-
-  private collectNamedNodes(nodes: IRNode[]): IRNode[] {
-    return collectNamedNodesExtracted(nodes)
-  }
-
-  private emitInitialization(): void {
+  emitInitialization(): void {
     const ctx = this.createAPIEmitterContext()
     const namedNodes = this.collectNamedNodes(this.ir.nodes)
     emitInitializationExtracted(ctx, namedNodes, this.javascript)
