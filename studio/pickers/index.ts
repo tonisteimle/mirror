@@ -63,6 +63,12 @@ export {
   type CanvasPickerCallbacks,
   type CanvasPickerElements,
   type FullColorPickerConfig,
+  // Studio setup (extracted from app.js)
+  initColorPicker,
+  type ColorPickerSetupDeps,
+  type ColorPickerHandle,
+  type ColorPickerCallback,
+  type ShowColorPickerOptions,
 } from './color'
 
 // Token Picker
