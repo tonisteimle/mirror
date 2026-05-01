@@ -101,10 +101,7 @@ import {
   TAG_TO_COMPONENT,
   TAG_TO_NAME,
   // YAML Parser (Clean Code module)
-  parseYAML as parseYAMLModule,
-  parseYAMLValue as parseYAMLValueModule,
-  collectYAMLData as collectYAMLDataModule,
-  generateYAMLDataInjection as generateYAMLDataInjectionModule,
+  generateYAMLDataInjection,
   // Color Picker Utilities (Clean Code module)
   hsvToRgb as hsvToRgbModule,
   rgbToHsv as rgbToHsvModule,
@@ -206,30 +203,6 @@ let projects = []
 const files = {}
 const fileTypes = {} // Stores explicit file types: { 'filename.mirror': 'component' }
 let currentFile = 'index.mir'
-
-// ============================================
-// YAML Parser (use Clean Code module)
-// ============================================
-
-function getYAMLDeps() {
-  return { getFiles: () => window.desktopFiles?.getFiles?.() || files }
-}
-
-function parseYAML(text) {
-  return parseYAMLModule(text)
-}
-
-function parseYAMLValue(value) {
-  return parseYAMLValueModule(value)
-}
-
-function collectYAMLData() {
-  return collectYAMLDataModule(getYAMLDeps())
-}
-
-function generateYAMLDataInjection() {
-  return generateYAMLDataInjectionModule(getYAMLDeps())
-}
 
 // ============================================
 // Playground Mode (URL parameter ?code=)
@@ -1567,7 +1540,9 @@ function compile(code) {
       const hasAutoInit = finalJsCode.includes('// Auto-initialization')
 
       // Inject YAML data into __mirrorData before UI creation
-      const yamlInjection = generateYAMLDataInjection()
+      const yamlInjection = generateYAMLDataInjection({
+        getFiles: () => window.desktopFiles?.getFiles?.() || files,
+      })
       timings.prepExecStart = performance.now()
 
       let ui
