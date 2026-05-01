@@ -125,7 +125,7 @@ class FrameworkGenerator {
     this.emit('/**')
     this.emit(' * Mount UI to a container element')
     this.emit(' * @param {HTMLElement} container - The container to mount to')
-    this.emit(' * @returns {MirrorUI} - UI controller with get(), destroy() methods')
+    this.emit(' * @returns {MirrorUI} - UI controller with get() method')
     this.emit(' */')
     this.emit('export function mount(container) {')
     this.indent++

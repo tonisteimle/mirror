@@ -95,15 +95,3 @@ export function combineProjectFiles(listFiles: ListFilesFn, readFile: ReadFileFn
 
   return sections.join('\n')
 }
-
-/**
- * Combine files from root directory (flat structure).
- * For simple projects without subdirectories.
- *
- * @param files - List of file paths in order
- * @param readFile - Function to read file contents
- * @returns Combined code
- */
-export function combineFiles(files: string[], readFile: ReadFileFn): string {
-  return files.map(readFile).filter(Boolean).join('\n\n')
-}

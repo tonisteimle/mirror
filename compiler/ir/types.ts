@@ -527,22 +527,6 @@ export function isIRZagNode(node: IRNode): node is IRZagNode {
 }
 
 // ============================================================================
-// Table Component IR Types
-// ============================================================================
-
-/**
- * Inferred data type for table column auto-rendering
- */
-export type InferredDataType =
-  | 'string'
-  | 'number'
-  | 'boolean'
-  | 'date'
-  | 'relation'
-  | 'array'
-  | 'unknown'
-
-// ============================================================================
 // Chart Component IR Types
 // ============================================================================
 

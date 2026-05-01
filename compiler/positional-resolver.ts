@@ -25,46 +25,7 @@
  * Studio's code modifier writes back the explicit form on save.
  */
 
-export interface PrimitiveRole {
-  /** Property name a bare color resolves to. Omit if primitive has no color slot. */
-  color?: string
-  /** Property names that bare sizes fill, in order. First bare → sizes[0], etc. */
-  sizes: string[]
-}
-
-export const PRIMITIVE_ROLES: Record<string, PrimitiveRole> = {
-  // Container primitives → bg + w/h
-  Frame: { color: 'bg', sizes: ['w', 'h'] },
-  Box: { color: 'bg', sizes: ['w', 'h'] },
-  Button: { color: 'bg', sizes: ['w', 'h'] },
-  Header: { color: 'bg', sizes: ['w', 'h'] },
-  Section: { color: 'bg', sizes: ['w', 'h'] },
-  Article: { color: 'bg', sizes: ['w', 'h'] },
-  Aside: { color: 'bg', sizes: ['w', 'h'] },
-  Footer: { color: 'bg', sizes: ['w', 'h'] },
-  Nav: { color: 'bg', sizes: ['w', 'h'] },
-  Main: { color: 'bg', sizes: ['w', 'h'] },
-  H1: { color: 'bg', sizes: ['w', 'h'] },
-  H2: { color: 'bg', sizes: ['w', 'h'] },
-  H3: { color: 'bg', sizes: ['w', 'h'] },
-  H4: { color: 'bg', sizes: ['w', 'h'] },
-  H5: { color: 'bg', sizes: ['w', 'h'] },
-  H6: { color: 'bg', sizes: ['w', 'h'] },
-  Divider: { color: 'bg', sizes: ['w', 'h'] },
-  Spacer: { color: 'bg', sizes: ['w', 'h'] },
-  Input: { color: 'bg', sizes: ['w', 'h'] },
-  Textarea: { color: 'bg', sizes: ['w', 'h'] },
-  Label: { color: 'bg', sizes: ['w', 'h'] },
-  Slot: { color: 'bg', sizes: ['w', 'h'] },
-  // Content primitives → col + w/h
-  Text: { color: 'col', sizes: ['w', 'h'] },
-  Link: { color: 'col', sizes: ['w', 'h'] },
-  // Icon → ic + is
-  Icon: { color: 'ic', sizes: ['is'] },
-  // Image → w/h, no color slot
-  Image: { sizes: ['w', 'h'] },
-  Img: { sizes: ['w', 'h'] },
-}
+import { PRIMITIVE_ROLES, type PrimitiveRole } from './schema/primitive-roles'
 
 const NAMED_COLORS = new Set([
   'red',
@@ -235,11 +196,6 @@ export function scanSource(source: string): SourceScan {
   }
 
   return { tokens, objects, components }
-}
-
-/** @deprecated Use scanSource(); kept for backwards compat. */
-export function scanTokenSuffixes(source: string): TokenSuffixMap {
-  return scanSource(source).tokens
 }
 
 /**
@@ -494,21 +450,6 @@ function pickSuffixForRole(suffixes: Set<string>, role: PrimitiveRole): string |
   const sizeMatches = [...suffixes].filter(s => SIZE_SUFFIXES.has(s))
   if (sizeMatches.length === 1 && role.sizes.length > 0) return sizeMatches[0]
   return null
-}
-
-/**
- * Legacy alias: classifyBareValue is exported for older tests that call
- * it without a scan. Treats input as if no tokens or objects were defined.
- */
-export function classifyBareValue(s: string): 'color' | 'size' | null {
-  const emptyScan: SourceScan = {
-    tokens: new Map(),
-    objects: new Set(),
-    components: new Map(),
-  }
-  const result = classifyBare(s, { sizes: [] }, emptyScan)
-  if (!result || result.kind === 'fixed') return null
-  return result.kind
 }
 
 function findStringEnd(s: string, openPos: number): number {

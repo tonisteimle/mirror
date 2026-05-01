@@ -6,7 +6,7 @@
  */
 
 import type { IRZagNode } from '../../../ir/types'
-import type { ZagEmitterContext } from '../zag-emitter-context'
+import type { ZagEmitterContext } from '../base-emitter-context'
 
 /**
  * Container default styles that should NOT be applied to Zag components.

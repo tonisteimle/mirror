@@ -109,7 +109,7 @@ import {
   mapEventToDom,
   getHtmlTag,
 } from '../schema/ir-helpers'
-import { findProperty, getEvent, getAction, getState, DSL } from '../schema/dsl'
+import { findProperty, getEvent, getAction, getState, DSL, getDevicePreset } from '../schema/dsl'
 import { isZagPrimitive, ZAG_PRIMITIVES } from '../schema/zag-primitives'
 import {
   isChartPrimitive,
@@ -454,26 +454,19 @@ class IRTransformer {
   }
 
   /**
-   * Device preset dimensions
-   */
-  private static readonly DEVICE_PRESETS: Record<string, { width: string; height: string }> = {
-    mobile: { width: '375px', height: '812px' },
-    tablet: { width: '768px', height: '1024px' },
-    desktop: { width: '1440px', height: '900px' },
-  }
-
-  /**
    * Transform canvas definition to IR
    * Converts properties to CSS styles for root element
    */
   private transformCanvas(canvas: CanvasDefinition): IRCanvas {
     const styles: IRStyle[] = []
 
-    // Apply device preset if specified
-    if (canvas.device && IRTransformer.DEVICE_PRESETS[canvas.device]) {
-      const preset = IRTransformer.DEVICE_PRESETS[canvas.device]
-      styles.push({ property: 'width', value: preset.width })
-      styles.push({ property: 'height', value: preset.height })
+    // Apply device preset if specified (sourced from schema)
+    if (canvas.device) {
+      const preset = getDevicePreset(canvas.device)
+      if (preset) {
+        styles.push({ property: 'width', value: `${preset.width}px` })
+        styles.push({ property: 'height', value: `${preset.height}px` })
+      }
     }
 
     // Apply explicit properties (can override device preset)
@@ -769,6 +762,67 @@ class IRTransformer {
     }
   }
 
+  /**
+   * Transforms a single AST Instance node into an IRNode.
+   *
+   * Pipeline (order matters — each step depends on previous ones):
+   *
+   *   1. Special-type dispatch (Each / Conditional / Zag / Chart) — handled
+   *      early because these have their own transformers and bypass the
+   *      Instance pipeline entirely.
+   *   2. Cycle detection — guards against `MyComp as MyComp` infinite recursion.
+   *      Only applies to user-defined components (componentMap), not primitives.
+   *   3. Property merge: primitive defaults < component defaults < expanded
+   *      instance properties. Expansion handles `Btn $primary, ...` style
+   *      mixin references before the merge.
+   *   4. Width/height descendant scan (`hasWidthFullInDescendants`) — used in
+   *      step 5 to decide whether the parent uses fit-content or expands.
+   *      Recursive over component refs because mixins can bring `w full` in.
+   *   5. transformProperties → CSS styles, parent-context-aware (grid x/y
+   *      vs flex direction etc.).
+   *   6. Root-element fix: at the document root, flex-based `w full` /
+   *      `h full` don't apply (no flex parent), so we strip the flex props
+   *      and emit explicit `width: 100%` / `height: 100%`.
+   *   7. State-style transformation from BOTH component definition and
+   *      inline instance states. Returns `hasSizeStates` so we can emit
+   *      `container-type: inline-size` later.
+   *   8. Event transformation (component + instance) THEN state-machine
+   *      build — state machine needs both states and events together to
+   *      decide which states are reachable via transitions.
+   *   9. Inline state/event extraction from children — children like
+   *      `Btn.open: visible` are state declarations, not real children.
+   *  10. childOverrides → instances for slot filling (component-level slot
+   *      defaults can be overridden at instance time).
+   *  11. NodeId generation BEFORE child resolution — children need parentId
+   *      to register themselves correctly in the SourceMap.
+   *  12. Layout context for children: grid (with column count) / absolute
+   *      (relative parent) / flex (with direction). Drives child styling.
+   *  13. Cycle-stack push → resolveChildren → pop. The push/pop pair must
+   *      bracket the recursion (see step 2's check).
+   *  14. Merge dropdown-feature properties (visibleWhen, initialState,
+   *      selection, bind, route) — instance overrides component.
+   *  15. State-machine `initial` override from instance + Figma-variant
+   *      state-children pattern (children of one state become 'default'
+   *      state's children for round-trip toggling).
+   *  16. Route → synthetic click/navigate event.
+   *  17. SourceMap entries (only if tracking enabled) — built AFTER nodeId
+   *      so node + property positions can reference the right ID.
+   *  18. State-conditional childOverrides applied to resolved children.
+   *  19. Layout post-pass: auto-absolute positioning + grid-flex cleanup
+   *      modify already-resolved children based on this node's layout.
+   *
+   * Notes for editors:
+   *   - Steps 7 and 8 must run before 11 (children resolution): inline
+   *     states/events extracted from children (step 9) need to be merged
+   *     into the state machine.
+   *   - Step 17 (SourceMap) can run any time after nodeId; it has no
+   *     ordering dependency with steps 12–19 except needing the node to
+   *     exist.
+   *   - The `hasWidthFullInDescendants` heuristic (step 4) is performance-
+   *     sensitive on deep trees but needed because Mirror's `w full` is
+   *     parent-relative; without the lookahead, parent and children would
+   *     race for available width.
+   */
   private transformInstance(
     instance: Instance | Each | any,
     parentId?: string,
@@ -1613,34 +1667,27 @@ class IRTransformer {
     // First, expand any property set references
     const expandedProperties = this.expandPropertySets(properties)
 
-    // Device presets - expand to width/height
-    const DEVICE_PRESETS: Record<string, { w: number; h: number }> = {
-      mobile: { w: 375, h: 812 },
-      tablet: { w: 768, h: 1024 },
-      desktop: { w: 1440, h: 900 },
-    }
-
-    // Find and expand device property - replace IN PLACE so that explicit w/h after device still wins
+    // Find and expand device property - replace IN PLACE so that explicit w/h after device still wins.
+    // Preset values come from schema (getDevicePreset).
     const deviceIndex = expandedProperties.findIndex(p => p.name === 'device')
     if (deviceIndex !== -1) {
       const deviceProp = expandedProperties[deviceIndex]
       if (deviceProp.values[0]) {
-        const deviceName = String(deviceProp.values[0]).toLowerCase()
-        const preset = DEVICE_PRESETS[deviceName]
+        const preset = getDevicePreset(String(deviceProp.values[0]))
         if (preset) {
           // Replace device property with w/h at the same position
           // This ensures "device mobile, w 400" results in w being 400 (last wins)
           const wProp: Property = {
             type: 'Property',
             name: 'w',
-            values: [preset.w],
+            values: [preset.width],
             line: deviceProp.line,
             column: deviceProp.column,
           }
           const hProp: Property = {
             type: 'Property',
             name: 'h',
-            values: [preset.h],
+            values: [preset.height],
             line: deviceProp.line,
             column: deviceProp.column,
           }

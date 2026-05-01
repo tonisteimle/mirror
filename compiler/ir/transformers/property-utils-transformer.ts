@@ -106,7 +106,7 @@ const DIRECTIONS = new Set([
  */
 const DIRECTIONAL_PROPS = new Set(['padding', 'margin', 'radius', 'border'])
 
-function extractDirectionPrefix(values: (string | number | boolean)[]): string {
+function extractDirectionPrefix(values: readonly unknown[]): string {
   const dirs: string[] = []
   for (const v of values) {
     const val = String(v).toLowerCase()

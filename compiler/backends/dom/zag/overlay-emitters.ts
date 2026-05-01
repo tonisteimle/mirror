@@ -9,7 +9,7 @@
  */
 
 import type { IRZagNode } from '../../../ir/types'
-import type { ZagEmitterContext, ZagEmitterFn } from '../zag-emitter-context'
+import type { ZagEmitterContext, ZagEmitterFn } from '../base-emitter-context'
 import { emitRootStyles, emitRuntimeInit } from './helpers'
 
 export function emitDatePickerComponent(

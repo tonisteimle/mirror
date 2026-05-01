@@ -197,7 +197,7 @@ function getResolvedSizeStateThresholds(
       max: customMax !== undefined ? Number(customMax) : undefined,
     }
   }
-  return getSizeStateThresholds(sizeState)
+  return getSizeStateThresholds(sizeState) ?? {}
 }
 
 /**

@@ -7,7 +7,7 @@
  */
 
 import type { IRZagNode } from '../../../ir/types'
-import type { ZagEmitterContext, ZagEmitterFn } from '../zag-emitter-context'
+import type { ZagEmitterContext, ZagEmitterFn } from '../base-emitter-context'
 
 // Re-export helpers used by the DatePicker emitter
 export { emitRuntimeInit } from './helpers'

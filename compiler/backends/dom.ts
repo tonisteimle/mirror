@@ -29,12 +29,12 @@ import { isIRZagNode } from '../ir/types'
 import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
 import type { DataFile } from '../parser/data-types'
 import { dispatchZagEmitter } from './dom/zag-emitters'
-import type { ZagEmitterContext } from './dom/zag-emitter-context'
+import type { ZagEmitterContext } from './dom/base-emitter-context'
 
 // Extracted utilities
 import { escapeJSString, sanitizeVarName, cssPropertyToJS, generateVarName } from './dom/utils'
 import { ZAG_SLOT_NAMES, type GenerateDOMOptions } from './dom/types'
-import type { EmitterContext, DeferredWhenWatcher } from './dom/emitter-context'
+import type { EmitterContext, DeferredWhenWatcher } from './dom/base-emitter-context'
 import {
   emitStateMachine as emitStateMachineExtracted,
   emitDeferredWhenWatchers,
