@@ -430,25 +430,16 @@ export const selectionUndoRedoTests: TestCase[] = describe('Selection State: Und
       // Multiple property changes
       await api.panel.property.setProperty('gap', '12')
       await api.utils.waitForCompile()
-      const dep1 = (window as any).__codemirror?.undoDepth?.()
 
       await api.panel.property.setProperty('gap', '16')
       await api.utils.waitForCompile()
-      const dep2 = (window as any).__codemirror?.undoDepth?.()
 
       await api.panel.property.setProperty('gap', '20')
       await api.utils.waitForCompile()
-      const dep3 = (window as any).__codemirror?.undoDepth?.()
-      const codeBefore = (window as any).__codemirror?.getDoc?.()
-      const focusBefore = document.activeElement?.tagName
-      const editorHasFocus = (window as any).__mirrorStudio__?.state?.get?.()?.editorHasFocus
 
       // Undo all three
       await api.interact.pressKey('z', { meta: true })
       await api.utils.waitForCompile()
-      const dep4 = (window as any).__codemirror?.undoDepth?.()
-      const code1 = (window as any).__codemirror?.getDoc?.()
-
       await api.interact.pressKey('z', { meta: true })
       await api.utils.waitForCompile()
       await api.interact.pressKey('z', { meta: true })
@@ -462,10 +453,7 @@ export const selectionUndoRedoTests: TestCase[] = describe('Selection State: Und
       )
 
       // Gap should be back to 8
-      api.assert.ok(
-        /gap 8/.test((window as any).__codemirror?.getDoc?.() ?? ''),
-        `dep[${dep1},${dep2},${dep3}→${dep4}] focus=${focusBefore} editorFocus=${editorHasFocus} codeBefore="${codeBefore?.replace(/\n/g, '\\n')}" code1="${code1?.replace(/\n/g, '\\n')}"`
-      )
+      api.assert.codeContains(/gap 8/)
     }
   ),
 ])

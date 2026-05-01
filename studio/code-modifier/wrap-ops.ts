@@ -222,9 +222,12 @@ export function unwrapNode(this: CodeModifier, nodeId: string): ModificationResu
   const containerLine = this.lines[nodeMapping.position.line - 1]
   const containerIndent = this.getLineIndent(containerLine)
 
-  // Get the full block span
+  // Get the full block span. The source-map's `position.endLine` only marks
+  // the line the node itself starts on (single line), so we walk forward by
+  // indentation to find where the children block actually ends. This is the
+  // same helper wrapNodes uses to find sibling block boundaries.
   const startLine = nodeMapping.position.line
-  const endLine = nodeMapping.position.endLine
+  const endLine = this.getBlockEndLine(startLine)
 
   // Extract children's lines (everything after the container line)
   const childrenLines = this.lines.slice(startLine, endLine)

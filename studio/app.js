@@ -2074,7 +2074,12 @@ function handleStudioCodeChange(result) {
 // NOTE: Delete/Backspace is handled by KeyboardHandler in preview/keyboard-handler.ts
 // via executeDelete() in shared-actions.ts - no duplicate handler needed here
 
-// Global undo/redo via CommandExecutor (when preview has focus)
+// Global undo/redo when focus is outside the editor (e.g. preview, panel
+// chrome). We try CommandExecutor first — it owns preview-driven actions
+// like wrap/ungroup/delete that never touch CodeMirror history. If the
+// executor is empty (e.g. only property-panel edits happened, which write
+// straight through ctx.applyChange), fall back to CodeMirror's own
+// history so Cmd+Z still walks back through those edits.
 document.addEventListener('keydown', e => {
   // Don't interfere with editor's own undo/redo
   if (getEditorHasFocus()) return
@@ -2084,39 +2089,47 @@ document.addEventListener('keydown', e => {
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
   const modifier = isMac ? e.metaKey : e.ctrlKey
 
-  if (modifier && e.key === 'z') {
-    if (e.shiftKey) {
-      // Redo
-      if (executor.canRedo()) {
-        e.preventDefault()
-        const result = executor.redo()
-        if (result.success) {
-          compile(editor.state.doc.toString())
-          console.log('Studio: Redo via CommandExecutor')
-        }
-      }
-    } else {
-      // Undo
-      if (executor.canUndo()) {
-        e.preventDefault()
-        const result = executor.undo()
-        if (result.success) {
-          compile(editor.state.doc.toString())
-          console.log('Studio: Undo via CommandExecutor')
-        }
+  const tryUndo = () => {
+    if (executor.canUndo()) {
+      const result = executor.undo()
+      if (result.success) {
+        compile(editor.state.doc.toString())
+        return true
       }
     }
+    if (undoDepth(editor.state) > 0) {
+      undo(editor)
+      compile(editor.state.doc.toString())
+      return true
+    }
+    return false
   }
-  // Also support Ctrl+Y for redo on Windows
-  if (!isMac && e.ctrlKey && e.key === 'y') {
+
+  const tryRedo = () => {
     if (executor.canRedo()) {
-      e.preventDefault()
       const result = executor.redo()
       if (result.success) {
         compile(editor.state.doc.toString())
-        console.log('Studio: Redo via CommandExecutor')
+        return true
       }
     }
+    if (redoDepth(editor.state) > 0) {
+      redo(editor)
+      compile(editor.state.doc.toString())
+      return true
+    }
+    return false
+  }
+
+  if (modifier && e.key === 'z') {
+    e.preventDefault()
+    if (e.shiftKey) tryRedo()
+    else tryUndo()
+  }
+  // Also support Ctrl+Y for redo on Windows
+  if (!isMac && e.ctrlKey && e.key === 'y') {
+    e.preventDefault()
+    tryRedo()
   }
 })
 
