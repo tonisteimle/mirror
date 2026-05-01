@@ -318,20 +318,6 @@ const colorPickerHandle = initColorPicker({
   getEditor: () => window.editor ?? null,
 })
 
-// ==========================================
-// Icon Picker Setup (using new TriggerManager)
-// ==========================================
-
-// componentPrimitives is managed by the new trigger system
-// Expose for debugging
-window.componentPrimitives = getIconTriggerPrimitives()
-
-// Note: Click outside handling is now managed by TriggerManager
-
-// NOTE: Animation Picker has been removed (2026-04-14)
-// The TypeScript version is available at: studio/pickers/animation/
-// and studio/editor/triggers/animation-trigger.ts
-
 // Keyboard shortcut: Cmd+S to save current file
 document.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.key === 's' && !e.shiftKey) {
@@ -1215,7 +1201,6 @@ function compile(code) {
     }
     // Also update TriggerManager's primitives
     setIconTriggerPrimitives(componentPrimitives)
-    window.componentPrimitives = componentPrimitives // Update window reference
 
     // Build IR with source map for bidirectional editing
     const irResult = MirrorLang.toIR(ast, true)
