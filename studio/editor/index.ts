@@ -151,6 +151,9 @@ export { indentGuidesExtension } from './indent-guides'
 // Re-export smart paste extension (auto-adjust indentation on paste)
 export { smartPasteExtension } from './smart-paste'
 
+// Re-export Mirror DSL syntax highlight extension
+export { mirrorHighlight } from './syntax-highlight'
+
 export interface EditorConfig {
   container: HTMLElement
 }

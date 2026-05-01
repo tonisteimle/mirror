@@ -120,6 +120,8 @@ import {
   // Property Panel — global DOM event listeners
   setupPropertyPanelIconPicker,
   setupPropertyPanelEventListeners,
+  // Mirror DSL syntax highlight ViewPlugin
+  mirrorHighlight,
   // Code-modifier classes — were previously read off MirrorLang (compiler
   // bundle), but moved to studio/code-modifier in commit ae4f6c41 and no
   // longer re-exported by the compiler. Use the studio-bundle versions.
@@ -302,94 +304,8 @@ function switchFile(filename) {
 
 const initialCode = files[currentFile] || ''
 
-// Token patterns
-const patterns = [
-  { regex: /\/\/.*$/gm, class: 'mir-comment' },
-  { regex: /"[^"]*"/g, class: 'mir-string' },
-  { regex: /#[0-9A-Fa-f]{3,8}\b/g, class: 'mir-hex' },
-  { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, class: 'mir-number' },
-  { regex: /\b(as|extends|named|each|in|if|else|where|then|data)\b/g, class: 'mir-keyword' },
-  {
-    regex: /\b(hover|focus|active|disabled|filled|state|selected|highlighted|on|off)\b/g,
-    class: 'mir-state',
-  },
-  {
-    regex: /\b(onclick|onhover|onfocus|onblur|onchange|oninput|onkeydown|onkeyup|keys)\b/g,
-    class: 'mir-event',
-  },
-  {
-    regex:
-      /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|min|max|animate|font-size)\b/g,
-    class: 'mir-property',
-  },
-  {
-    regex: /\b(show|hide|toggle|select|highlight|activate|deactivate|call|open|close|page)\b/g,
-    class: 'mir-action',
-  },
-  { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, class: 'mir-component' },
-  { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, class: 'mir-binding' },
-]
-
-// Create decoration marks
-const decorations = {}
-patterns.forEach(p => {
-  decorations[p.class] = Decoration.mark({ class: p.class })
-})
-
-// Tokenize text and build decorations
-function tokenize(view) {
-  const builder = new RangeSetBuilder()
-  const text = view.state.doc.toString()
-  const matches = []
-
-  // Collect all matches with positions
-  for (const pattern of patterns) {
-    pattern.regex.lastIndex = 0
-    let match
-    while ((match = pattern.regex.exec(text)) !== null) {
-      matches.push({
-        from: match.index,
-        to: match.index + match[0].length,
-        class: pattern.class,
-      })
-    }
-  }
-
-  // Sort by position and filter overlaps (first match wins)
-  matches.sort((a, b) => a.from - b.from)
-  const filtered = []
-  let lastEnd = 0
-  for (const m of matches) {
-    if (m.from >= lastEnd) {
-      filtered.push(m)
-      lastEnd = m.to
-    }
-  }
-
-  // Build range set
-  for (const m of filtered) {
-    builder.add(m.from, m.to, decorations[m.class])
-  }
-
-  return builder.finish()
-}
-
-// ViewPlugin for syntax highlighting
-const mirrorHighlight = ViewPlugin.fromClass(
-  class {
-    constructor(view) {
-      this.decorations = tokenize(view)
-    }
-    update(update) {
-      if (update.docChanged || update.viewportChanged) {
-        this.decorations = tokenize(update.view)
-      }
-    }
-  },
-  {
-    decorations: v => v.decorations,
-  }
-)
+// Mirror DSL syntax highlight ViewPlugin (delegated to
+// studio/editor/syntax-highlight.ts).
 
 // Autocomplete - using modular engine from studio/autocomplete/
 // mirrorCompletions is imported from ./dist/index.js
