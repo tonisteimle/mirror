@@ -66,11 +66,43 @@ export interface EditResult {
 
 const DEFAULT_MAX_RETRIES = 2
 
+/**
+ * Hartes Source-Limit, bevor wir den LLM-Call gar nicht erst starten.
+ * Bei dieser Grösse passt der Source noch komfortabel in Claudes Kontext
+ * (≈ 25K Tokens), aber Anker-Hit-Rate sinkt empirisch deutlich darüber.
+ * Datei splitten ist die richtige Antwort.
+ */
+const MAX_SOURCE_CHARS = 100_000
+
 export async function runEditFlow(
   ctx: EditCaptureCtx,
   options: RunEditFlowOptions = {}
 ): Promise<EditResult> {
   const { signal, maxRetries = DEFAULT_MAX_RETRIES, onAttempt } = options
+
+  // Edge-case: leerer Source. Patches brauchen einen Anker im Source —
+  // ohne Source kein Anker. Statt den LLM-Call zu verbrennen, sofort
+  // einen freundlichen Hinweis zurückgeben.
+  if (ctx.source.trim() === '') {
+    return {
+      status: 'error',
+      error: 'Editor ist leer — füge zuerst Code ein, bevor du eine LLM-Bearbeitung anstösst.',
+      retries: 0,
+    }
+  }
+
+  // Edge-case: Source zu gross. Token-Budget-Heuristik (≈ 4 Chars/Token).
+  // Trim wäre fragil (Anker im abgeschnittenen Teil) — splitten ist die
+  // bessere Antwort. Caller bekommt die Begründung im error-Feld.
+  if (ctx.source.length > MAX_SOURCE_CHARS) {
+    return {
+      status: 'error',
+      error:
+        `Datei zu gross für eine LLM-Bearbeitung (${ctx.source.length} > ` +
+        `${MAX_SOURCE_CHARS} Zeichen). Splitte sie in kleinere Files.`,
+      retries: 0,
+    }
+  }
 
   const basePrompt = buildEditPrompt(ctx)
   let prompt = basePrompt

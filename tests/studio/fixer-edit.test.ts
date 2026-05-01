@@ -56,9 +56,19 @@ describe('Fixer — runEdit', () => {
     await expect(runEdit('test prompt')).rejects.toThrow(/rate limit/)
   })
 
-  test('throws when window.TauriBridge is not available', async () => {
+  test('throws a default-message error when the bridge reports failure with no error string', async () => {
+    bridge.runAgent = async (_p, _t, _path, sessionId) => ({
+      session_id: sessionId || 'mock',
+      success: false,
+      output: '',
+      error: null,
+    })
+    await expect(runEdit('test prompt')).rejects.toThrow(/Claude CLI Fehler/)
+  })
+
+  test('throws when window.TauriBridge is not available, with ai-bridge hint (T4.3)', async () => {
     ;(globalThis as any).window.TauriBridge = undefined
-    await expect(runEdit('test prompt')).rejects.toThrow(/Desktop/i)
+    await expect(runEdit('test prompt')).rejects.toThrow(/ai-bridge/i)
   })
 
   test('throws when claude CLI is not installed', async () => {

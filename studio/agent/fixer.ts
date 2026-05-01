@@ -60,7 +60,10 @@ export async function runEdit(prompt: string, signal?: AbortSignal): Promise<str
 
   const bridge = getTauriBridgeOrNull()
   if (!bridge || !bridge.isTauri()) {
-    throw new Error('Claude CLI ist nur in der Desktop-App verfügbar')
+    throw new Error(
+      'AI-Bridge nicht erreichbar. Im Browser: starte den lokalen Bridge-Server mit ' +
+        '`npm run ai-bridge`. Sonst die Desktop-App verwenden.'
+    )
   }
 
   const cliAvailable = await bridge.agent.checkClaudeCli()

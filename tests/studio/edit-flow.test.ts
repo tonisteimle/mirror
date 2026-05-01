@@ -301,6 +301,54 @@ describe('EditFlow — runEditFlow', () => {
     })
   })
 
+  describe('Edge-Cases (T4.3)', () => {
+    test('empty source returns error without calling the bridge', async () => {
+      bridge.runAgent = async () => {
+        throw new Error('bridge should not be called for empty source')
+      }
+      const result = await runEditFlow(baseCtx({ source: '' }))
+      expect(result.status).toBe('error')
+      expect(result.error).toMatch(/leer/i)
+      expect(result.retries).toBe(0)
+    })
+
+    test('whitespace-only source is treated as empty', async () => {
+      bridge.runAgent = async () => {
+        throw new Error('bridge should not be called for whitespace-only source')
+      }
+      const result = await runEditFlow(baseCtx({ source: '   \n\n  \t' }))
+      expect(result.status).toBe('error')
+      expect(result.error).toMatch(/leer/i)
+    })
+
+    test('source over 100K chars returns error without calling the bridge', async () => {
+      bridge.runAgent = async () => {
+        throw new Error('bridge should not be called for oversized source')
+      }
+      const huge = 'A'.repeat(100_001)
+      const result = await runEditFlow(baseCtx({ source: huge }))
+      expect(result.status).toBe('error')
+      expect(result.error).toMatch(/zu gross|splitte/i)
+      expect(result.error).toContain('100')
+    })
+
+    test('source exactly at the 100K limit still goes through the bridge', async () => {
+      bridge.setMockRawOutput('')
+      const atLimit = 'A'.repeat(100_000)
+      const result = await runEditFlow(baseCtx({ source: atLimit }))
+      // No-change because mock returned empty — but importantly NOT
+      // an error from the size check.
+      expect(result.status).toBe('no-change')
+    })
+
+    test('bridge offline (missing window.TauriBridge) → friendly error mentioning ai-bridge', async () => {
+      ;(globalThis as any).window.TauriBridge = undefined
+      const result = await runEditFlow(baseCtx())
+      expect(result.status).toBe('error')
+      expect(result.error).toMatch(/ai-bridge|Bridge/i)
+    })
+  })
+
   describe('Cancellation', () => {
     test('rejects with AbortError when signal is pre-aborted', async () => {
       const ctrl = new AbortController()
