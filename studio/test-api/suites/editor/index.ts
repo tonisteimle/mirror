@@ -30,7 +30,7 @@ export {
 
 export { allAutocompleteTests } from '../autocomplete'
 
-export { allSyncTests } from '../sync-tests'
+export { allSyncTests } from '../sync'
 
 // New indentation tests
 export {

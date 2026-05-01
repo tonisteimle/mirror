@@ -21,7 +21,7 @@ import { allPrimitivesTests } from './primitives'
 // Layout
 import { allLayoutTests } from './layout'
 import { allLayoutShortcutTests, allWrapLayoutTests } from './interactions'
-import { allLayoutVerificationTests } from './layout-verification-tests'
+import { allLayoutVerificationTests } from './layout-verification'
 
 // Styling
 import { allStylingTests } from './styling'
@@ -90,11 +90,11 @@ import {
   allTokenDropdownTests,
   allPrimitiveSectionTests,
 } from './property-panel'
-import { allPropertyRobustnessTests } from './property-robustness-tests'
+import { allPropertyRobustnessTests } from './property-robustness'
 
 // Editor
 import { allBidirectionalTests } from './bidirectional'
-import { allSyncTests } from './sync-tests'
+import { allSyncTests } from './sync'
 import { allUndoRedoTests } from './undo-redo'
 import { allAutocompleteTests } from './autocomplete'
 import { allIndentationTests } from './editor/indentation.test'
@@ -102,20 +102,20 @@ import { allEditorDropTests } from './editor/editor-drop.test'
 import { allLinterTests } from './editor/linter.test'
 
 // Data (Data Binding, Actions, Events, Responsive)
-import { allDataBindingTests } from './data-binding-tests'
-import { allActionTests } from './action-tests'
-import { allEventTests } from './event-tests'
-import { allResponsiveTests } from './responsive-tests'
+import { allDataBindingTests } from './data-binding'
+import { allActionTests } from './actions'
+import { allEventTests } from './events'
+import { allResponsiveTests } from './responsive'
 
 // Project
 import { allProjectTests } from './project'
 import { allWorkflowTests } from './workflow'
-import { allUIBuilderTests } from './ui-builder-tests'
+import { allUIBuilderTests } from './ui-builder'
 import { demoProjectTests } from './demo-project.test'
 
 // Compiler
 import { allCompilerVerificationTests, allPreludeTests } from './compiler-verification'
-import { allCompilerTests } from './compiler-tests'
+import { allCompilerTests } from './compiler'
 
 // AI (LLM-Edit-Flow browser tests — populated in Phase 4)
 import { allAITests } from './ai'
@@ -127,7 +127,7 @@ import { allTutorialTests } from './tutorial'
 import { stressTests as stressTestsFromStress } from './stress'
 import { allIntegrationTests } from './integration'
 import { allPlayModeTests } from './playmode'
-import { allTestSystemTests } from './test-system-tests'
+import { allTestSystemTests } from './test-system'
 
 // Step-Runner Examples (new declarative test framework)
 import { allStepRunnerExampleTests } from './step-runner-examples'

@@ -28,7 +28,7 @@ export {
   basicStackedTests,
   edgeCaseTests,
   layoutDetectionTests,
-} from '../stacked-drag-tests'
+} from '../stacked-drag'
 
 export {
   allFlexReorderTests,
@@ -45,7 +45,7 @@ export {
   nestedContainerReorderTests,
   reorderEdgeCaseTests,
   sequentialReorderTests,
-} from '../flex-reorder-tests'
+} from '../flex-reorder'
 
 export {
   allAlignmentZoneTests,

@@ -532,7 +532,7 @@ import {
   conditionalTests,
   tokenTests,
   inputBindingTests,
-} from './data-binding-tests'
+} from './data-binding'
 
 // Actions
 import {
@@ -547,7 +547,7 @@ import {
   overlayActionTests,
   crudActionTests,
   combinedActionTests,
-} from './action-tests'
+} from './actions'
 
 // Components — DSL system tests (formerly component-tests.ts), now split into
 // ./components/{basic,property-overrides,inheritance,variants,nested-slots,
@@ -576,7 +576,7 @@ import {
   viewEventTests,
   combinedEventTests,
   eventEdgeCaseTests,
-} from './event-tests'
+} from './events'
 
 // Responsive
 import {
@@ -588,7 +588,7 @@ import {
   customThresholdTests,
   responsiveComponentTests,
   complexResponsiveTests,
-} from './responsive-tests'
+} from './responsive'
 
 // Sync (Editor ↔ Preview ↔ Panel)
 import {
@@ -602,7 +602,7 @@ import {
   edgeCaseTests as syncEdgeCaseTests,
   selectionPersistenceTests,
   complexScenarioTests,
-} from './sync-tests'
+} from './sync'
 
 // Play Mode
 import {
@@ -655,20 +655,20 @@ import {
   edgeCaseTests as propertyEdgeCaseTests,
   sequentialModTests,
   previewSyncTests,
-} from './property-robustness-tests'
+} from './property-robustness'
 
 // UI Builder Tests (build UIs with only drag & drop + property panel)
 import {
   allUIBuilderTests,
   level1Tests as uiBuilderLevel1Tests,
   level2Tests as uiBuilderLevel2Tests,
-} from './ui-builder-tests'
+} from './ui-builder'
 
 // =============================================================================
 // Direct Imports (not yet migrated to directories)
 // =============================================================================
 
-import { allCompilerTests, primitiveTests, layoutTests, stylingTests } from './compiler-tests'
+import { allCompilerTests, primitiveTests, layoutTests, stylingTests } from './compiler'
 import {
   allLayoutVerificationTests,
   directionVerificationTests,
@@ -676,14 +676,14 @@ import {
   gapVerificationTests,
   alignmentVerificationTests,
   complexLayoutVerificationTests,
-} from './layout-verification-tests'
+} from './layout-verification'
 import {
   allTestSystemTests,
   fixturesTests,
   isolationTests,
   keyboardTests as testSystemKeyboardTests,
   waitHelperTests,
-} from './test-system-tests'
+} from './test-system'
 
 // Integration Tests (real-world workflows)
 import {
