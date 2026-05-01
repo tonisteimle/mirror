@@ -1618,6 +1618,22 @@ if (typeof window !== 'undefined') {
       if (typeof debouncedCompile !== 'undefined' && debouncedCompile.cancel) {
         debouncedCompile.cancel()
       }
+      // Wipe the project file cache so DEFAULT_PROJECT siblings (tokens.tok,
+      // components.com, data.yaml) can't leak into the test's prelude. Tests
+      // that need cross-file scenarios put everything into the editor doc.
+      // Sync both stores: the in-memory `files` object AND the desktopFiles
+      // cache (getAllProjectSource prefers the cache when it's non-empty).
+      for (const key of Object.keys(files)) {
+        if (key !== currentFile) delete files[key]
+      }
+      files[currentFile] = code
+      const dfFiles = window.desktopFiles?.getFiles?.()
+      if (dfFiles && window.desktopFiles?.updateFileCache) {
+        for (const key of Object.keys(dfFiles)) {
+          if (key !== currentFile) window.desktopFiles.updateFileCache(key, undefined)
+        }
+        window.desktopFiles.updateFileCache(currentFile, code)
+      }
       editor.setState(EditorState.create({ doc: code, extensions: editorExtensions }))
       executor?.clear?.()
     },

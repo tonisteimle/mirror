@@ -92,7 +92,14 @@ export type {
 export * from './zag'
 
 // File Types (file type definitions and detection)
+// NOTE: `isMirrorFile` is re-exported by both `./storage` (broader: includes
+// .yaml/.yml) and `./file-types/extensions` (Mirror DSL source only). With
+// two re-exports of the same name, ESM treats the export as ambiguous and
+// drops it from the bundle, breaking `import { isMirrorFile }` in app.js.
+// Pick the file-types version explicitly here so the studio bundle has a
+// single, well-defined `isMirrorFile`.
 export * from './file-types'
+export { isMirrorFile } from './file-types/extensions'
 
 // Code Modifier — bidirectional editing (PropertyExtractor / CodeModifier /
 // RobustModifier). Used by app.js fallback paths that still construct

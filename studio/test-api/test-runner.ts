@@ -67,8 +67,13 @@ class EditorAPIImpl implements EditorAPI {
     //  - default (in-test setCode): preserve history so tests like
     //    "Multiple undos work sequentially" can chain setCode calls
     //    and walk them back via undo.
-    if (options?.resetHistory && cm?.setCodeForTestSetup) {
+    // If history.clear() was just called, the next setCode is treated as a
+    // baseline replacement (setState, not dispatch) so undo can't go before
+    // it. See HistoryAPIImpl.clear() for the contract.
+    const awaitingBaseline = (window as any).__historyClearedAwaitingBaseline === true
+    if ((options?.resetHistory || awaitingBaseline) && cm?.setCodeForTestSetup) {
       cm.setCodeForTestSetup(code)
+      ;(window as any).__historyClearedAwaitingBaseline = false
     } else if (cm?.setCodeWithHistory) {
       cm.setCodeWithHistory(code)
     } else {

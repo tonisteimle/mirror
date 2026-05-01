@@ -106,6 +106,17 @@ class HistoryAPIImpl implements HistoryAPI {
       this.executor.undoStack = []
       this.executor.redoStack = []
     }
+    // Also wipe CodeMirror's history so the editor's undo/redo aligns with
+    // the cleared state. The convention: after history.clear(), the next
+    // setCode establishes a new baseline (replaces editor state), so undo
+    // can't walk past it. Tests like "Undo does nothing when at beginning"
+    // depend on this.
+    ;(window as any).__historyClearedAwaitingBaseline = true
+    const cm = (window as any).__codemirror
+    if (cm?.editor && cm.setCodeForTestSetup) {
+      // Re-create state with current doc → empty CM history, DOC preserved.
+      cm.setCodeForTestSetup(cm.editor.state.doc.toString())
+    }
   }
 }
 
