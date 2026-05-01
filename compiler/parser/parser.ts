@@ -938,6 +938,45 @@ export class Parser {
     return path
   }
 
+  /**
+   * Parse a `bind <varName>` or `bind <user.email>` clause and return the
+   * resolved path. Caller must have already verified `this.check('BIND')`.
+   *
+   * Bug #31 fix: consume the full dot-path so `bind user.email` doesn't
+   * leave `.email` for the next dispatch iteration (where it would be
+   * mis-interpreted as an initialState keyword).
+   */
+  private parseBindPath(): string | null {
+    this.advance() // consume 'bind'
+    if (!this.check('IDENTIFIER')) return null
+
+    let path = this.advance().value
+    while (this.check('DOT') && this.checkNext('IDENTIFIER')) {
+      this.advance() // consume DOT
+      path += '.' + this.advance().value
+    }
+    return path
+  }
+
+  /**
+   * Parse a `selection <varName>` clause and return the bound variable
+   * name. Caller must have already verified `this.check('SELECTION')`.
+   */
+  private parseSelectionVar(): string | null {
+    this.advance() // consume 'selection'
+    if (!this.check('IDENTIFIER')) return null
+    return this.advance().value
+  }
+
+  /**
+   * Parse a `route <Target>` or `route <path/to/page>` clause and return
+   * the resolved path. Caller must have already verified `this.check('ROUTE')`.
+   */
+  private parseRouteClause(): string | null {
+    this.advance() // consume 'route'
+    return this.parseRoutePath()
+  }
+
   private parseComponentOrInstance():
     | ComponentDefinition
     | Instance
@@ -1543,35 +1582,22 @@ export class Parser {
 
       // Selection binding: selection $variable
       if (this.check('SELECTION')) {
-        this.advance() // consume 'selection'
-        if (this.check('IDENTIFIER')) {
-          const varToken = this.advance()
-          component.selection = varToken.value
-        }
+        const varName = this.parseSelectionVar()
+        if (varName !== null) component.selection = varName
         continue
       }
 
-      // Bind: bind varName (or dot-path: bind user.email — Bug #31 fix)
+      // Bind: bind varName (or dot-path: bind user.email)
       if (this.check('BIND')) {
-        this.advance() // consume 'bind'
-        if (this.check('IDENTIFIER')) {
-          let path = this.advance().value
-          while (this.check('DOT') && this.checkNext('IDENTIFIER')) {
-            this.advance() // consume DOT
-            path += '.' + this.advance().value
-          }
-          component.bind = path
-        }
+        const path = this.parseBindPath()
+        if (path !== null) component.bind = path
         continue
       }
 
       // Route: route TargetComponent or route path/to/page
       if (this.check('ROUTE')) {
-        this.advance() // consume 'route'
-        const routePath = this.parseRoutePath()
-        if (routePath) {
-          component.route = routePath
-        }
+        const routePath = this.parseRouteClause()
+        if (routePath) component.route = routePath
         continue
       }
 
@@ -2298,38 +2324,22 @@ export class Parser {
 
       // Selection binding: selection $variable
       if (this.check('SELECTION')) {
-        this.advance() // consume 'selection'
-        if (this.check('IDENTIFIER')) {
-          const varToken = this.advance()
-          instance.selection = varToken.value
-        }
+        const varName = this.parseSelectionVar()
+        if (varName !== null) instance.selection = varName
         continue
       }
 
       // Bind: bind varName (or dot-path: bind user.email)
-      // Bug #31 fix: the parser used to read only the first identifier and
-      // leave `.email` for the next iteration (which mis-interpreted it as
-      // an initialState). Now we consume the full dot-path.
       if (this.check('BIND')) {
-        this.advance() // consume 'bind'
-        if (this.check('IDENTIFIER')) {
-          let path = this.advance().value
-          while (this.check('DOT') && this.checkNext('IDENTIFIER')) {
-            this.advance() // consume DOT
-            path += '.' + this.advance().value
-          }
-          instance.bind = path
-        }
+        const path = this.parseBindPath()
+        if (path !== null) instance.bind = path
         continue
       }
 
       // Route: route TargetComponent or route path/to/page
       if (this.check('ROUTE')) {
-        this.advance() // consume 'route'
-        const routePath = this.parseRoutePath()
-        if (routePath) {
-          instance.route = routePath
-        }
+        const routePath = this.parseRouteClause()
+        if (routePath) instance.route = routePath
         continue
       }
 
