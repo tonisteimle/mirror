@@ -30,7 +30,6 @@ import { suggestSimilar } from './string-utils'
 import {
   KNOWN_STATE_STYLE_EXTRAS,
   KNOWN_NON_SCHEMA_PROPERTIES,
-  KNOWN_NON_SCHEMA_ACTIONS,
   REQUIRED_PROPERTIES,
   PROPERTY_RANGES,
   ZONE_ALIGNMENT_PROPS,
@@ -491,7 +490,7 @@ export class Validator {
       const actionName = prop.name
       const target = prop.values[0]
 
-      if (!this.rules.validActions.has(actionName) && !KNOWN_NON_SCHEMA_ACTIONS.has(actionName)) {
+      if (!this.rules.validActions.has(actionName)) {
         const suggestion = suggestSimilar(actionName, this.rules.validActions)
         this.addError(
           ERROR_CODES.UNKNOWN_ACTION,
@@ -673,7 +672,7 @@ export class Validator {
     }
 
     const actionName = values[actionIndex]
-    if (!this.rules.validActions.has(actionName) && !KNOWN_NON_SCHEMA_ACTIONS.has(actionName)) {
+    if (!this.rules.validActions.has(actionName)) {
       const suggestion = suggestSimilar(actionName, this.rules.validActions)
       this.addError(
         ERROR_CODES.UNKNOWN_ACTION,
@@ -826,7 +825,7 @@ export class Validator {
   }
 
   private validateAction(action: Action): void {
-    if (!this.rules.validActions.has(action.name) && !KNOWN_NON_SCHEMA_ACTIONS.has(action.name)) {
+    if (!this.rules.validActions.has(action.name)) {
       const suggestion = suggestSimilar(action.name, this.rules.validActions)
       this.addError(
         ERROR_CODES.UNKNOWN_ACTION,

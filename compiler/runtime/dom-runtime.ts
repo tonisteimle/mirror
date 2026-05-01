@@ -134,74 +134,10 @@ export const PROP_MAP: Record<string, string> = {
 export { registerForCleanup, cleanupElement, initCleanupObserver }
 
 // ============================================
-// ELEMENT RESOLUTION
+// VISIBILITY & TOGGLE — re-exported from visibility.ts (single source of truth)
 // ============================================
 
-/**
- * Resolve an element by name string or return the element directly.
- * @param element Element or name string (data-mirror-name attribute)
- */
-function resolveElementByName(element: MirrorElement | string | null): MirrorElement | null {
-  if (!element) return null
-  if (typeof element === 'string') {
-    return document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement
-  }
-  return element
-}
-
-// alignToCSS, getAlign, wrap, ElementWrapper — re-exported from alignment.ts and element-wrapper.ts (single source of truth)
-export { alignToCSS, getAlign, wrap }
-export type { ElementWrapper }
-
-// ============================================
-// VISIBILITY & TOGGLE
-// ============================================
-
-const STATE_PAIRS: Record<string, string> = {
-  closed: 'open',
-  open: 'closed',
-  collapsed: 'expanded',
-  expanded: 'collapsed',
-}
-
-/**
- * Toggle element visibility or state
- */
-export function toggle(el: MirrorElement | null): void {
-  if (!el) return
-  if (el._stateMachine) {
-    stateMachineToggle(el)
-    return
-  }
-  const currentState = el.dataset.state || el._initialState
-  const newState = STATE_PAIRS[currentState as string]
-  if (newState) {
-    setState(el, newState)
-    return
-  }
-  el.hidden = !el.hidden
-  applyState(el, el.hidden ? 'off' : 'on')
-}
-
-// show/hide — re-exported from visibility.ts (single source of truth)
-export { show, hide }
-
-/**
- * Close an element (set to closed/collapsed state or hide)
- */
-export function close(el: MirrorElement | null): void {
-  if (!el) return
-  const states = [el._initialState, el.dataset.state]
-  if (states.some(s => s === 'open' || s === 'closed')) {
-    setState(el, 'closed')
-    return
-  }
-  if (states.some(s => s === 'expanded' || s === 'collapsed')) {
-    setState(el, 'collapsed')
-    return
-  }
-  hide(el)
-}
+export { show, hide, toggle, close } from './visibility'
 
 // ============================================
 // OVERLAYS & POSITIONING — re-exported from overlay.ts (single source of truth)
@@ -212,81 +148,11 @@ export type { OverlayPosition, PositionOptions } from './types'
 export { showAt, showBelow, showAbove, showLeft, showRight, showModal, dismiss }
 
 // ============================================
-// SCROLL FUNCTIONS
+// SCROLL FUNCTIONS — re-exported from scroll.ts (single source of truth)
 // ============================================
 
-/**
- * Scroll options for scrollTo
- */
-export interface ScrollToOptions {
-  behavior?: 'smooth' | 'instant'
-  block?: 'start' | 'center' | 'end' | 'nearest'
-  inline?: 'start' | 'center' | 'end' | 'nearest'
-}
-
-/**
- * Scroll an element into view
- * @param element Element to scroll to (or name string)
- * @param options Scroll options: { behavior?, block?, inline? }
- */
-export function scrollTo(element: MirrorElement | string | null, options?: ScrollToOptions): void {
-  const el = resolveElementByName(element)
-  if (!el) return
-  const { behavior = 'smooth', block = 'start', inline = 'nearest' } = options || {}
-  el.scrollIntoView({ behavior, block, inline })
-}
-
-/**
- * Scroll within a container by a specific offset
- * @param container Container element to scroll (or name string)
- * @param x Horizontal scroll offset (positive = right)
- * @param y Vertical scroll offset (positive = down)
- * @param behavior Scroll behavior: 'smooth' | 'instant'
- */
-export function scrollBy(
-  container: MirrorElement | string | null,
-  x: number = 0,
-  y: number = 0,
-  behavior: 'smooth' | 'instant' = 'smooth'
-): void {
-  const el = resolveElementByName(container)
-  if (!el) return
-  el.scrollBy({ left: x, top: y, behavior })
-}
-
-/**
- * Scroll to top of an element or page
- * @param element Optional element to scroll to top of. If not provided, scrolls page to top.
- * @param behavior Scroll behavior: 'smooth' | 'instant'
- */
-export function scrollToTop(
-  element?: MirrorElement | string | null,
-  behavior: 'smooth' | 'instant' = 'smooth'
-): void {
-  if (!element) {
-    window.scrollTo({ top: 0, behavior })
-    return
-  }
-  const el = resolveElementByName(element)
-  if (el) el.scrollTo({ top: 0, behavior })
-}
-
-/**
- * Scroll to bottom of an element or page
- * @param element Optional element to scroll to bottom of. If not provided, scrolls page to bottom.
- * @param behavior Scroll behavior: 'smooth' | 'instant'
- */
-export function scrollToBottom(
-  element?: MirrorElement | string | null,
-  behavior: 'smooth' | 'instant' = 'smooth'
-): void {
-  if (!element) {
-    window.scrollTo({ top: document.body.scrollHeight, behavior })
-    return
-  }
-  const el = resolveElementByName(element)
-  if (el) el.scrollTo({ top: el.scrollHeight, behavior })
-}
+export type { ScrollToOptions } from './scroll'
+export { scrollTo, scrollBy, scrollToTop, scrollToBottom } from './scroll'
 
 // ============================================
 // VALUE FUNCTIONS + CRUD — re-exported from data.ts (single source of truth)
@@ -330,63 +196,10 @@ export {
 }
 
 // ============================================
-// CLIPBOARD
+// CLIPBOARD — re-exported from clipboard.ts (single source of truth)
 // ============================================
 
-/**
- * Copy text to clipboard
- * @param text - Text to copy (string or element whose textContent will be copied)
- * @param triggerElement - Optional element to apply 'copied' state to
- */
-export async function copy(
-  text: string | HTMLElement,
-  triggerElement?: MirrorElement
-): Promise<void> {
-  const textToCopy = typeof text === 'string' ? text : text.textContent || ''
-
-  const applyFeedback = () => {
-    if (triggerElement) {
-      // Store previous state to restore later
-      const prevState = triggerElement.dataset.state
-      triggerElement.dataset.state = 'copied'
-      // Apply copied styles if defined
-      if (triggerElement._stateStyles?.copied) {
-        Object.assign(triggerElement.style, triggerElement._stateStyles.copied)
-      }
-      // Auto-reset after 2 seconds
-      setTimeout(() => {
-        if (prevState) {
-          triggerElement.dataset.state = prevState
-        } else {
-          delete triggerElement.dataset.state
-        }
-        // Restore base styles
-        if (triggerElement._baseStyles) {
-          Object.assign(triggerElement.style, triggerElement._baseStyles)
-        }
-      }, 2000)
-    }
-  }
-
-  try {
-    await navigator.clipboard.writeText(textToCopy)
-    applyFeedback()
-  } catch (err) {
-    // Fallback for older browsers or restricted contexts
-    const textarea = document.createElement('textarea')
-    textarea.value = textToCopy
-    textarea.style.position = 'fixed'
-    textarea.style.left = '-9999px'
-    document.body.appendChild(textarea)
-    textarea.select()
-    try {
-      document.execCommand('copy')
-      applyFeedback()
-    } finally {
-      document.body.removeChild(textarea)
-    }
-  }
-}
+export { copy } from './clipboard'
 
 // ============================================
 // FEEDBACK: TOAST — re-exported from toast.ts (single source of truth)

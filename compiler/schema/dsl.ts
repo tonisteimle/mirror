@@ -345,6 +345,27 @@ export const DSL = {
     save: { description: 'Save current changes to collection' },
     revert: { description: 'Discard pending changes' },
     delete: { description: 'Delete entry from collection', params: ['entry?', 'confirm?'] },
+    add: { description: 'Append entry to collection', params: ['collection', 'fields'] },
+    remove: { description: 'Remove entry from collection', params: ['entry'] },
+    // Feedback actions
+    toast: {
+      description: 'Show toast notification',
+      params: ['message', 'level?', 'position?'],
+    },
+    // Navigation actions (browser history + external)
+    back: { description: 'Go back in browser history' },
+    forward: { description: 'Go forward in browser history' },
+    openUrl: { description: 'Open external URL', params: ['url'] },
+    // Input control actions
+    clear: { description: 'Clear input value', params: ['target?'] },
+    setError: { description: 'Set error message on input', params: ['target', 'message'] },
+    clearError: { description: 'Clear error message on input', params: ['target'] },
+    // List-navigation helpers (Select / Dropdown / Combobox)
+    highlightNext: { description: 'Highlight next item in list', params: ['list'] },
+    highlightPrev: { description: 'Highlight previous item in list', params: ['list'] },
+    selectHighlighted: { description: 'Select currently highlighted item', params: ['list'] },
+    // State-cycling modifier (parallel to toggle)
+    exclusive: { description: 'Cycle through exclusive states (only one active in group)' },
   } as Record<string, ActionDef>,
 
   // ---------------------------------------------------------------------------

@@ -1270,3 +1270,27 @@ Die 4400 Zeilen dom-runtime.ts existieren primär, weil Tests gegen einen TS-imp
 **Verbleibend in dom-runtime.ts (~553 Z.):** TYPES (`MirrorElement`-Interface, `PROP_MAP`, ~100 Z.), VISIBILITY & TOGGLE (`toggle`/`close` lokal — kein direktes canonical-Pendant, ~50 Z.), ELEMENT RESOLUTION (`resolveElementByName` ~20 Z., wird noch von SCROLL block genutzt), SCROLL FUNCTIONS (`scrollTo`/`scrollBy`/`scrollToTop`/`scrollToBottom` ~75 Z., scroll.ts wurde in earlier sweep gelöscht), CLIPBOARD (`copy` ~60 Z., clipboard.ts gelöscht), TEST API initializer (`initTestAPI`-Wrapper ~40 Z.), plus alle ~15 Re-Export-Blöcke (~150 Z. inkl. headers).
 
 **Bedeutung:** dom-runtime.ts ist nahezu vollständig dekonsolidiert. Die verbleibenden Blöcke (SCROLL, CLIPBOARD, VISIBILITY & TOGGLE) haben keine canonical-Module (wurden in earlier sweeps gelöscht). Strategische Optionen: (a) als-ist belassen — diese Blöcke sind klein und isoliert, kein Duplikat-Risiko mehr; (b) extrahieren zu neuen TS-Modulen `scroll-runtime.ts`/`clipboard-runtime.ts`/`visibility-toggle.ts` falls wir die "alle runtime in TS-Module" Architektur strikt durchziehen wollen. Per `feedback_iterative_micro_steps.md` und Pragmatismus: Variante (a) ist solide.
+
+---
+
+## 2026-05-01 — D-067 → D-069: dom-runtime.ts Sweep 5 — Last-Mile-Extraction
+
+**Scope:** Variante (b) gewählt: alle drei Rest-Blöcke (CLIPBOARD, SCROLL, VISIBILITY & TOGGLE) zu eigenen canonical TS-Modulen extrahiert. Datei-Bilanz: dom-runtime.ts 553 → 350 Z. (-203 Z., -37%).
+
+**Was passiert ist:**
+
+- **D-067 CLIPBOARD:** `compiler/runtime/clipboard.ts` neu angelegt (basierend auf der in earlier sweep gelöschten Version, identisches Verhalten). Refactored mit Helfern: `applyFeedback`, `restorePreviousState`, `tryModernClipboard`, `fallbackCopy`. dom-runtime.ts CLIPBOARD-Block (~60 Z.) → re-exports. Dateigröße neu: 553 → 479 Z.
+- **D-068 SCROLL:** `compiler/runtime/scroll.ts` neu angelegt mit `scrollTo`, `scrollBy`, `scrollToTop`, `scrollToBottom`, `ScrollToOptions`-Type, plus co-located private `resolveElement` Helfer (war als `resolveElementByName` in dom-runtime.ts ELEMENT RESOLUTION-Block). dom-runtime.ts SCROLL FUNCTIONS-Block (~75 Z.) + ELEMENT RESOLUTION-Block (~20 Z.) komplett gelöscht. Dateigröße neu: 479 → 389 Z.
+- **D-069 VISIBILITY & TOGGLE:** `toggle`, `close`, `STATE_PAIRS` zu existierender `compiler/runtime/visibility.ts` hinzugefügt (welche schon `show`, `hide` hatte). visibility.ts importiert jetzt `applyState`/`setState`/`stateMachineToggle` von state-machine.ts (no cycle, weil state-machine.ts visibility nicht importiert). dom-runtime.ts VISIBILITY & TOGGLE-Block (~50 Z.) → `export { show, hide, toggle, close } from './visibility'`. Dateigröße neu: 389 → 350 Z.
+
+**Datei-Bilanz Total D-058 → D-069:** dom-runtime.ts 5037 → 350 Z., **-4687 Z. (-93%)**.
+
+**Tests:** 338 deterministische Tests grün (runtime+integration+e2e). 0 TS-Errors.
+
+**Was jetzt noch in dom-runtime.ts lebt (~350 Z.):**
+
+- TYPES (~100 Z.): Imports + `MirrorElement`-Interface mit allen internal-state Properties + `PROP_MAP` für DSL→CSS mapping. Glue-Code für die ganze Runtime — gehört nicht in ein einzelnes Subsystem.
+- TEST API (~40 Z.): `initTestAPI()` Factory-Wrapper der test-api.ts mit allen Funktionen aufruft (state-machine + visibility + overlay + scroll + clipboard + selection + ...).
+- ~15 Re-Export-Blöcke (~210 Z. inkl. section headers + import statements + export statements).
+
+**Bedeutung:** Die ursprüngliche 5037-Zeilen-Monolith-Datei ist jetzt ein 350-Zeilen-Glue-Modul. Alle echten Runtime-Funktionen leben in canonical TS-Modulen unter `compiler/runtime/`. Diese End-State ist sauber: kein mehr Duplikat-Risiko, jedes Subsystem hat einen klaren single-source-of-truth.

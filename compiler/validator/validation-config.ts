@@ -32,73 +32,32 @@ export const KNOWN_STATE_STYLE_EXTRAS = new Set([
 ])
 
 /**
- * Known actions that aren't (yet) registered in DSL.actions but are
- * documented in the tutorial / used by built-in templates. Treat these as
- * valid to avoid false-positive E300 errors. Long-term these should be
- * lifted into compiler/schema/dsl.ts; this set is the pragmatic bridge.
+ * Properties the validator accepts even though they have no entry in
+ * `DSL.properties` (i.e. they emit no CSS). The set is split into three
+ * named buckets so future readers can tell at a glance whether a name
+ * is an HTML pass-through, a component behavior prop, or a parser marker.
+ *
+ * Anything that produces CSS belongs in `compiler/schema/properties.ts`,
+ * not here.
  */
-export const KNOWN_NON_SCHEMA_ACTIONS = new Set([
-  // Feedback / UI
-  'toast',
-  // Navigation
-  'back',
-  'forward',
-  'openUrl',
-  // Form / input control
-  'clear',
-  'setError',
-  'clearError',
-  // List / collection mutation
-  'add',
-  'remove',
-  // List-navigation helpers (Select, Dropdown, …)
-  'highlightNext',
-  'highlightPrev',
-  'selectHighlighted',
-  // Custom-state cycling helpers
-  'exclusive',
-])
+
+/** HTML attributes passed straight through to the underlying element. */
+const HTML_PASSTHROUGH_PROPS = ['id'] as const
 
 /**
- * Known non-schema properties (HTML attributes, icon props, hover states, animation)
+ * Behavior / configuration props consumed by component templates and
+ * Zag primitives. They modify runtime behavior, not styling.
  */
-export const KNOWN_NON_SCHEMA_PROPERTIES = new Set([
-  'content',
-  'href',
-  'src',
-  'placeholder',
-  'value',
-  'type',
-  'name',
-  'id',
+const COMPONENT_BEHAVIOR_PROPS = [
+  // Two-way binding marker
+  'bind',
+  // Icon content (the icon name string)
   'icon',
-  'icon-size',
-  'is',
-  'icon-color',
-  'ic',
-  'icon-weight',
-  'iw',
-  'fill',
-  'animation',
-  'anim',
-  'hover-bg',
-  'hover-col',
-  'hover-opacity',
-  'hover-opa',
-  'hover-scale',
-  'hover-bor',
-  'hover-border',
-  'hover-boc',
-  'hover-border-color',
-  'hover-rad',
-  'hover-radius',
-  // Internal markers produced by the parser
-  'propset', // Property-set token reference (Frame $cardstyle)
-  // Input
-  'mask', // Input mask pattern
-  'bind', // Two-way data binding
-  'checked', // Checkbox/Switch initial state
-  // Zag DatePicker props (and shared by other Zag primitives)
+  // Component-template state props
+  'open',
+  'show',
+  'badge',
+  // Zag DatePicker (and shared by other Zag primitives)
   'defaultValue',
   'selectionMode',
   'fixedWeeks',
@@ -106,23 +65,25 @@ export const KNOWN_NON_SCHEMA_PROPERTIES = new Set([
   'closeOnSelect',
   'positioning',
   'readOnly',
-  'min',
-  'max',
   'locale',
-  'disabled',
-  // Component-template props (Tabs, Dialog, Select, …)
-  'open',
-  'show',
-  'badge',
-  // Chart properties (Line, Bar, Pie, Donut, Area)
+  // Chart-primitive props
   'colors',
-  'x',
-  'y',
   'where',
   // Chart slot inline shortcuts
   'title',
   'legend',
   'axes',
+] as const
+
+/** Internal markers the parser emits; never written by users. */
+const PARSER_INTERNAL_PROPS = [
+  'propset', // Property-set token reference (Frame $cardstyle)
+] as const
+
+export const KNOWN_NON_SCHEMA_PROPERTIES = new Set<string>([
+  ...HTML_PASSTHROUGH_PROPS,
+  ...COMPONENT_BEHAVIOR_PROPS,
+  ...PARSER_INTERNAL_PROPS,
 ])
 
 /**
