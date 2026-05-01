@@ -153,6 +153,80 @@ export class FixerService {
 }
 
 // ============================================
+// EDIT-FLOW BRIDGE
+// ============================================
+
+function getTauriBridgeOrNull(): TauriBridge | null {
+  if (typeof window !== 'undefined' && window.TauriBridge) {
+    return window.TauriBridge
+  }
+  return null
+}
+
+function makeAbortError(): Error {
+  return new DOMException('Aborted', 'AbortError')
+}
+
+/**
+ * Schmale Bridge für den LLM-Edit-Flow.
+ *
+ * Sendet einen vorgefertigten Prompt an Claude (über die Tauri-Bridge,
+ * agentType `'edit'`) und gibt die rohe Antwort zurück. Der Edit-Flow
+ * parst die Antwort danach selbst (Search/Replace-Patches).
+ *
+ * Im Gegensatz zu `FixerService.generateDraftCode` ist `runEdit` zustandslos
+ * (keine Session-Wiederverwendung) und unterstützt `AbortSignal` zum
+ * Abbrechen laufender Calls (z.B. wenn der User den Diff-Ghost mit Esc
+ * verwirft, bevor die Antwort eintrifft).
+ *
+ * @throws AbortError wenn `signal` schon aborted ist oder während des Calls
+ *         aborted wird.
+ * @throws Error wenn Bridge fehlt, CLI fehlt, oder das Backend success=false
+ *         zurückgibt.
+ */
+export async function runEdit(prompt: string, signal?: AbortSignal): Promise<string> {
+  if (signal?.aborted) {
+    throw makeAbortError()
+  }
+
+  const bridge = getTauriBridgeOrNull()
+  if (!bridge || !bridge.isTauri()) {
+    throw new Error('Claude CLI ist nur in der Desktop-App verfügbar')
+  }
+
+  const cliAvailable = await bridge.agent.checkClaudeCli()
+  if (!cliAvailable) {
+    throw new Error(
+      'Claude CLI nicht gefunden. Bitte installieren: npm install -g @anthropic-ai/claude-code'
+    )
+  }
+
+  const callPromise = bridge.agent.runAgent(prompt, 'edit', '', null)
+
+  const result = signal
+    ? await new Promise<Awaited<typeof callPromise>>((resolve, reject) => {
+        const onAbort = () => reject(makeAbortError())
+        signal.addEventListener('abort', onAbort, { once: true })
+        callPromise.then(
+          value => {
+            signal.removeEventListener('abort', onAbort)
+            resolve(value)
+          },
+          err => {
+            signal.removeEventListener('abort', onAbort)
+            reject(err)
+          }
+        )
+      })
+    : await callPromise
+
+  if (!result.success) {
+    throw new Error(result.error || 'Claude CLI Fehler')
+  }
+  return result.output
+}
+
+// ============================================
 // DRAFT PROMPT RE-EXPORTS
 // ============================================
 // Prompt builder + extractor + splice live in draft-prompts.ts (no deps)
