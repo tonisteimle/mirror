@@ -925,10 +925,9 @@ export class TestRunner {
       // Reset state before each test for isolation
       this.resetTestState()
 
-      // Setup
-      if (test.setup) {
-        await this.editorApi.setCode(test.setup)
-      }
+      // Always reset editor — tests without setup must start with empty
+      // editor, not inherited code from the previous test (pollution).
+      await this.editorApi.setCode(test.setup ?? '')
 
       // Run test with timeout
       await Promise.race([
