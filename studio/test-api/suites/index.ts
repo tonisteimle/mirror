@@ -626,7 +626,7 @@ import {
 } from './playmode'
 
 // LLM-Edit-Flow browser tests (replaces the old draft-mode/draft-lines suites)
-import { allAITests } from './ai'
+import { allAITests, realLlmEditFlowTests } from './ai'
 
 // Tutorial Tests (auto-generated from docs/tutorial/*.html)
 import {
@@ -1171,7 +1171,7 @@ export {
 }
 
 // LLM-Edit-Flow browser tests
-export { allAITests } from './ai'
+export { allAITests, realLlmEditFlowTests } from './ai'
 
 // Property Robustness Tests
 export {
@@ -1857,6 +1857,7 @@ export const testCounts: Record<string, number> = {
 
   // === AI (LLM-Edit-Flow browser tests) ===
   ai: allAITests.length,
+  'ai.realLlm': realLlmEditFlowTests.length,
 
   // === Integration (real-world workflows) ===
   integration: allIntegrationTests.length,
@@ -2917,6 +2918,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
 
     // === AI (LLM-Edit-Flow) ===
     ai: allAITests,
+    'ai.realLlm': realLlmEditFlowTests,
 
     // === Integration (real-world workflows) ===
     integration: allIntegrationTests,
@@ -3376,6 +3378,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
 
     // === AI (LLM-Edit-Flow) ===
     ai: 'AI (LLM-Edit-Flow)',
+    'ai.realLlm': 'AI: Real LLM E2E (slow, needs ai-bridge)',
 
     // === Integration ===
     integration: 'Integration (Real-World Workflows)',
