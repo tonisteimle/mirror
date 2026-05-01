@@ -99,6 +99,29 @@ function getGhostNewSource(api: TestAPI): string | null {
   return state.active ? state.newSource : null
 }
 
+function getPromptInput(): HTMLInputElement | null {
+  return document.querySelector<HTMLInputElement>('.cm-llm-prompt-field .cm-llm-prompt-input')
+}
+
+/**
+ * Wait for `getStatusState()` to leave the `thinking` state. Returns the
+ * final state ('ready', 'error', or null=hidden). Generous timeout because
+ * real LLM calls take 5-15s.
+ */
+async function waitForLlmFinish(timeoutMs = 30_000): Promise<'ready' | 'error' | null> {
+  await waitUntil(
+    () => {
+      const s = getStatusState()
+      return s !== 'thinking'
+    },
+    timeoutMs,
+    200,
+    'LLM call to finish'
+  )
+  const s = getStatusState()
+  return s === 'thinking' ? null : s
+}
+
 // ============================================================================
 // Scenarios
 // ============================================================================
@@ -152,6 +175,126 @@ export const realLlmEditFlowTests: TestCase[] = describe('AI · LLM-Edit-Flow (r
       api.assert.ok(cm.getContent().includes('Speichern'), 'doc has fix after Tab')
       api.assert.ok(!cm.getContent().includes('Speihern'), 'doc dropped typo after Tab')
       api.assert.ok(getStatusState() === null, 'status indicator hidden after accept')
+    }
+  ),
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Scenario 2: Mode 1 no-change — clean idiomatic code stays untouched
+  // ───────────────────────────────────────────────────────────────────────
+  testWithSetup(
+    'mode 1: Cmd+Enter on clean code → no-change → no ghost shown',
+    'canvas mobile, bg #1a1a1a\n\nFrame pad 16, gap 12\n  Text "Hello", col white, fs 18\n  Button "OK", bg #2271C1, col white, pad 10 20, rad 6',
+    async (api: TestAPI) => {
+      ensureShimInstalled()
+      await api.utils.waitForCompile()
+
+      const cm = api.codemirror
+      cm.focus()
+      cm.setCursor(1, 1)
+
+      const sourceBefore = cm.getContent()
+      cm.executeKeyBinding('Mod-Enter')
+
+      await waitUntil(() => getStatusState() === 'thinking', 2000, 50, 'status=thinking')
+
+      const finalStatus = await waitForLlmFinish()
+
+      // For clean code the LLM should return no patches. The flow then
+      // hides the status indicator and never activates the ghost.
+      api.assert.ok(!getGhostActive(api), 'no ghost after no-change response')
+      api.assert.ok(finalStatus === null, 'status hides on no-change (no banner kept open)')
+      api.assert.equals(cm.getContent(), sourceBefore, 'doc untouched on no-change')
+    }
+  ),
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Scenario 3: Mode 2 — selection bounds the edit
+  // ───────────────────────────────────────────────────────────────────────
+  testWithSetup(
+    'mode 2: Cmd+Enter with selection → only selection-area patches',
+    'canvas mobile\n\nFrame gap 12\n  Button "Save", bg #2271C1\n  Button "Cancel", bg #333',
+    async (api: TestAPI) => {
+      ensureShimInstalled()
+      await api.utils.waitForCompile()
+
+      const cm = api.codemirror
+      cm.focus()
+      // Select the Save line (line 4). Use editor selectLines via api.editor.
+      api.editor.selectLines(4, 4)
+
+      cm.executeKeyBinding('Mod-Enter')
+      await waitUntil(() => getStatusState() === 'thinking', 2000, 50, 'status=thinking')
+
+      const finalStatus = await waitForLlmFinish()
+
+      // Either: ghost appeared with a proposal (selection-bounded) OR the
+      // LLM returned no-change. Both are valid. The hard invariant is:
+      // the Cancel line MUST survive, because it's outside the selection.
+      if (finalStatus === 'ready') {
+        api.assert.ok(getGhostActive(api), 'ghost active when status=ready')
+        const proposed = getGhostNewSource(api)
+        api.assert.ok(
+          proposed!.includes('Button "Cancel"'),
+          'Cancel button still in proposed source'
+        )
+        cm.executeKeyBinding('Tab')
+        await waitUntil(() => !getGhostActive(api), 2000, 50, 'ghost cleared')
+        api.assert.ok(cm.getContent().includes('Button "Cancel"'), 'Cancel survived after accept')
+      } else {
+        api.assert.ok(finalStatus === null, 'no-change → status hidden')
+        api.assert.ok(cm.getContent().includes('Button "Cancel"'), 'Cancel survived (no-change)')
+      }
+    }
+  ),
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Scenario 4: Mode 3 — Cmd+Shift+Enter opens prompt-field, instruction submitted
+  // ───────────────────────────────────────────────────────────────────────
+  testWithSetup(
+    'mode 3: Cmd+Shift+Enter → prompt-field → instruction → ghost matches intent',
+    'canvas mobile\n\nText "Headline", fs 24, col white',
+    async (api: TestAPI) => {
+      ensureShimInstalled()
+      await api.utils.waitForCompile()
+
+      const cm = api.codemirror
+      cm.focus()
+      cm.setCursor(1, 1)
+
+      // No prompt field before trigger.
+      api.assert.ok(getPromptInput() === null, 'no prompt field before Cmd+Shift+Enter')
+
+      cm.executeKeyBinding('Mod-Shift-Enter')
+
+      await waitUntil(() => getPromptInput() !== null, 2000, 50, 'prompt field appeared')
+
+      const input = getPromptInput()!
+      api.assert.ok(input !== null, 'prompt field is open')
+
+      // Type the instruction and submit via Enter.
+      input.value = 'Mache den Text fett (weight bold)'
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+      input.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+      )
+
+      // Prompt field closes immediately on submit; status flips to thinking.
+      await waitUntil(() => getStatusState() === 'thinking', 2000, 50, 'status=thinking')
+      api.assert.ok(getPromptInput() === null, 'prompt field closed after submit')
+
+      const finalStatus = await waitForLlmFinish()
+      api.assert.equals(finalStatus, 'ready', 'LLM produced an edit')
+      api.assert.ok(getGhostActive(api), 'ghost active')
+
+      const proposed = getGhostNewSource(api)
+      api.assert.ok(
+        proposed!.includes('weight bold'),
+        `proposed source has weight bold (got: ${proposed!.slice(0, 120)})`
+      )
+
+      cm.executeKeyBinding('Tab')
+      await waitUntil(() => !getGhostActive(api), 2000, 50, 'ghost cleared')
+      api.assert.ok(cm.getContent().includes('weight bold'), 'doc has weight bold after accept')
     }
   ),
 ])
