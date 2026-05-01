@@ -52,9 +52,15 @@ export function extractTutorialExamples(tutorialDir?: string): TutorialChapter[]
   const dir = tutorialDir || join(__dirname, '../../../docs/tutorial')
   const chapters: TutorialChapter[] = []
 
-  // Alle HTML-Dateien im Tutorial-Verzeichnis (sortiert)
+  // Alle HTML-Dateien im Tutorial-Verzeichnis (sortiert).
+  // Skip iCloud conflict copies (`<name> 2.html`, `<name> 3.html`, ...) —
+  // these are sync artifacts that shadow the real chapter files, get
+  // picked up here as duplicate "chapter X 2" entries, and frequently
+  // contain stale or partial content that fails the compile-without-error
+  // assertion. They aren't part of the project source.
   const files = readdirSync(dir)
     .filter(f => f.endsWith('.html') && f !== 'index.html')
+    .filter(f => !/ \d+\.html$/.test(f))
     .sort()
 
   for (const file of files) {
@@ -71,7 +77,7 @@ export function extractTutorialExamples(tutorialDir?: string): TutorialChapter[]
       chapters.push({
         name,
         file,
-        examples
+        examples,
       })
     }
   }
@@ -87,14 +93,14 @@ export function printStats(): void {
   let total = 0
 
   console.log('\nTutorial Examples Statistics:')
-  console.log('=' .repeat(50))
+  console.log('='.repeat(50))
 
   for (const chapter of chapters) {
     console.log(`${chapter.name}: ${chapter.examples.length} examples`)
     total += chapter.examples.length
   }
 
-  console.log('=' .repeat(50))
+  console.log('='.repeat(50))
   console.log(`Total: ${total} examples in ${chapters.length} chapters`)
 }
 

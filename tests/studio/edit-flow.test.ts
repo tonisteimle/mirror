@@ -349,6 +349,188 @@ describe('EditFlow — runEditFlow', () => {
     })
   })
 
+  describe('Quality-retry (qualityRetry: true)', () => {
+    test('runs a 2nd LLM call when ready leaves token-violations and merges in retry result', async () => {
+      const tokens = { 't.tok': 'primary.bg: #2271C1' }
+      const ctx = baseCtx({
+        source: 'Button "Save", bg red',
+        projectFiles: { tokens, components: {} },
+      })
+      // Pass 1: makes a real change (red → #2271C1) that introduces a
+      // hardcoded value matching primary.bg → token-violation.
+      // Pass 2: switches the hardcoded #2271C1 to the $primary token.
+      const responses = [
+        '@@FIND\nButton "Save", bg red\n@@REPLACE\nButton "Save", bg #2271C1, col white\n@@END',
+        '@@FIND\nButton "Save", bg #2271C1, col white\n@@REPLACE\nButton "Save", bg $primary, col white\n@@END',
+      ]
+      let call = 0
+      bridge.runAgent = async (_p, _t, _path, sessionId) => ({
+        session_id: sessionId || 'mock',
+        success: true,
+        output: responses[call++] ?? '',
+        error: null,
+      })
+
+      const events: EditFlowAttemptEvent[] = []
+      const result = await runEditFlow(ctx, {
+        qualityRetry: true,
+        onAttempt: e => events.push(e),
+      })
+
+      expect(call).toBe(2)
+      expect(result.status).toBe('ready')
+      expect(result.proposedSource).toBe('Button "Save", bg $primary, col white')
+      expect(result.qualityRetried).toBe(true)
+      expect(result.qualityViolations?.token.length).toBe(0)
+      const qrEvent = events.find(e => e.kind === 'quality-retry') as Extract<
+        EditFlowAttemptEvent,
+        { kind: 'quality-retry' }
+      >
+      expect(qrEvent).toBeDefined()
+      expect(qrEvent.violationsBefore).toBeGreaterThan(0)
+      expect(qrEvent.violationsAfter).toBe(0)
+      expect(qrEvent.transition).toBe('ready → ready')
+    })
+
+    test('upgrades no-change with violations into ready when retry produces a fix', async () => {
+      const tokens = { 't.tok': 'primary.bg: #2271C1' }
+      const ctx = baseCtx({
+        source: 'Button "Save", bg #2271C1',
+        projectFiles: { tokens, components: {} },
+      })
+      // Pass 1: silence (no-change) — but the source already violates
+      // the token rule. Pass 2: applies the token substitution.
+      const responses = [
+        '',
+        '@@FIND\nButton "Save", bg #2271C1\n@@REPLACE\nButton "Save", bg $primary\n@@END',
+      ]
+      let call = 0
+      bridge.runAgent = async (_p, _t, _path, sessionId) => ({
+        session_id: sessionId || 'mock',
+        success: true,
+        output: responses[call++] ?? '',
+        error: null,
+      })
+
+      const result = await runEditFlow(ctx, { qualityRetry: true })
+      expect(call).toBe(2)
+      expect(result.status).toBe('ready')
+      expect(result.proposedSource).toBe('Button "Save", bg $primary')
+      expect(result.qualityRetried).toBe(true)
+      expect(result.qualityViolations?.token.length).toBe(0)
+    })
+
+    test('skips retry when ready result is already clean', async () => {
+      const tokens = { 't.tok': 'primary.bg: #2271C1' }
+      const ctx = baseCtx({
+        source: 'Button "Save", bg red',
+        projectFiles: { tokens, components: {} },
+      })
+      let call = 0
+      bridge.runAgent = async (_p, _t, _path, sessionId) => {
+        call++
+        return {
+          session_id: sessionId || 'mock',
+          success: true,
+          output: '@@FIND\nButton "Save", bg red\n@@REPLACE\nButton "Save", bg $primary\n@@END',
+          error: null,
+        }
+      }
+
+      const result = await runEditFlow(ctx, { qualityRetry: true })
+      expect(call).toBe(1)
+      expect(result.status).toBe('ready')
+      expect(result.qualityRetried).toBeUndefined()
+    })
+
+    test('keeps first-pass improvements when retry returns silent no-change', async () => {
+      const tokens = { 't.tok': 'primary.bg: #2271C1' }
+      const ctx = baseCtx({
+        source: 'Button "Save", bg red',
+        projectFiles: { tokens, components: {} },
+      })
+      // Pass 1: improves color but introduces a token-violation.
+      // Pass 2: stays silent (LLM gives up). The orchestrator MUST
+      // preserve pass-1 source — otherwise the user loses progress.
+      const responses = [
+        '@@FIND\nButton "Save", bg red\n@@REPLACE\nButton "Save", bg #2271C1\n@@END',
+        '',
+      ]
+      let call = 0
+      bridge.runAgent = async (_p, _t, _path, sessionId) => ({
+        session_id: sessionId || 'mock',
+        success: true,
+        output: responses[call++] ?? '',
+        error: null,
+      })
+
+      const result = await runEditFlow(ctx, { qualityRetry: true })
+      expect(call).toBe(2)
+      expect(result.status).toBe('ready')
+      expect(result.proposedSource).toBe('Button "Save", bg #2271C1')
+      expect(result.qualityRetried).toBe(true)
+      expect(result.qualityViolations?.token.length).toBe(1)
+    })
+
+    test('keeps first result when retry hits a bridge error', async () => {
+      const tokens = { 't.tok': 'primary.bg: #2271C1' }
+      const ctx = baseCtx({
+        source: 'Button "Save", bg red',
+        projectFiles: { tokens, components: {} },
+      })
+      let call = 0
+      bridge.runAgent = async (_p, _t, _path, sessionId) => {
+        call++
+        if (call === 1) {
+          return {
+            session_id: sessionId || 'mock',
+            success: true,
+            output: '@@FIND\nButton "Save", bg red\n@@REPLACE\nButton "Save", bg #2271C1\n@@END',
+            error: null,
+          }
+        }
+        return {
+          session_id: sessionId || 'mock',
+          success: false,
+          output: '',
+          error: 'rate limit',
+        }
+      }
+
+      const result = await runEditFlow(ctx, { qualityRetry: true })
+      expect(call).toBe(2)
+      expect(result.status).toBe('ready')
+      expect(result.proposedSource).toBe('Button "Save", bg #2271C1')
+      expect(result.qualityRetried).toBe(true)
+      // first-pass violations remain
+      expect(result.qualityViolations?.token.length).toBe(1)
+    })
+
+    test('default (no qualityRetry option) makes only one LLM call even with violations', async () => {
+      const tokens = { 't.tok': 'primary.bg: #2271C1' }
+      const ctx = baseCtx({
+        source: 'Button "Save", bg #2271C1',
+        projectFiles: { tokens, components: {} },
+      })
+      let call = 0
+      bridge.runAgent = async (_p, _t, _path, sessionId) => {
+        call++
+        return {
+          session_id: sessionId || 'mock',
+          success: true,
+          output: '',
+          error: null,
+        }
+      }
+
+      const result = await runEditFlow(ctx)
+      expect(call).toBe(1)
+      expect(result.status).toBe('no-change')
+      expect(result.qualityRetried).toBeUndefined()
+      expect(result.qualityViolations?.token.length).toBe(1)
+    })
+  })
+
   describe('Cancellation', () => {
     test('rejects with AbortError when signal is pre-aborted', async () => {
       const ctrl = new AbortController()

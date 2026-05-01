@@ -4,38 +4,32 @@ This document tracks all skipped tests in the Mirror test suite and explains why
 
 ## Summary
 
-| Category             | Count | Status                    |
-| -------------------- | ----- | ------------------------- |
-| Bugs/Known Issues    | 4     | Fix in future sprints     |
-| Not Yet Implemented  | 14    | Feature work needed       |
-| Environment-Specific | 3     | Requires browser/live API |
-| Conditional          | 2     | Run with flags            |
+| Category             | Count | Status                            |
+| -------------------- | ----- | --------------------------------- |
+| Bugs/Known Issues    | 0     | All previously-skipped bugs fixed |
+| Not Yet Implemented  | 14    | Feature work needed               |
+| Environment-Specific | 3     | Requires browser/live API         |
+| Conditional          | 2     | Run with flags                    |
 
-**Total Skipped: 23 tests**
+**Total Skipped: 19 tests**
 
 ---
 
 ## Bugs / Known Issues
 
-### `tests/studio/file-delete.test.ts`
+_No active bug-related skips. The four previously-skipped bug tests have been fixed:_
 
-```
-it.skip('should remove all folder files from cache (BUG: currently fails)')
-```
+### ~~`tests/studio/file-delete.test.ts`: folder-delete cache cleanup~~ — FIXED
 
-**Reason:** Bug in folder deletion logic - files in subfolders not properly removed from cache.
-**Fix:** Investigate `FileManager.deleteFolder()` recursive cache cleanup.
+The controller now listens to `folder:deleted` storage events (in addition to
+`file:deleted`) and strips every cache entry whose path is under the deleted
+folder prefix. Implemented in `studio/file-tree/controller.ts`.
 
-### `tests/integration/two-way-binding-integration.test.ts`
+### ~~`tests/integration/two-way-binding-integration.test.ts`: 3 binding tests~~ — FIXED
 
-```
-test.skip('Text element updates when input changes')
-test.skip('Nested data path binding')
-test.skip('Special characters in value')
-```
-
-**Reason:** Two-way binding integration tests failing due to DOM update timing issues.
-**Fix:** Review `SyncCoordinator` binding update propagation.
+The skip comments referenced `Text $token` not rendering the initial value.
+That's no longer reproducible in the current runtime — the three tests pass
+unmodified once the `test.skip` is dropped.
 
 ---
 

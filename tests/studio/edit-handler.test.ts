@@ -184,6 +184,75 @@ describe('EditHandler — handleEditFlow status transitions', () => {
     expect(view.state.field(ghostDiffField).active).toBe(false)
   })
 
+  it('appends quality-issue count to ready status when violations present', async () => {
+    const runEditFlow = vi.fn(
+      async (): Promise<EditResult> => ({
+        status: 'ready',
+        proposedSource: 'Frame gap 12\n  Text "Hi"',
+        retries: 0,
+        qualityViolations: {
+          token: [
+            {
+              line: 1,
+              elementName: 'Frame',
+              propertyName: 'bg',
+              hardcodedValue: '#2271C1',
+              suggestedToken: '$primary',
+              reason: 'hardcoded-equals-token',
+            },
+          ],
+          component: [],
+          redundancy: [],
+        },
+      })
+    )
+    const handler = createEditHandler(baseConfig({ runEditFlow }))
+
+    handler.handleEditFlow(view)
+    await flush()
+
+    const status = getEditStatusElement()
+    expect(status?.classList.contains('cm-llm-status-ready')).toBe(true)
+    expect(status?.textContent).toContain('Quality-Issue')
+    expect(status?.textContent).toContain('1')
+  })
+
+  it('shows warning status when no-change but violations are present', async () => {
+    const runEditFlow = vi.fn(
+      async (): Promise<EditResult> => ({
+        status: 'no-change',
+        retries: 0,
+        qualityViolations: {
+          token: [],
+          component: [],
+          redundancy: [
+            {
+              line: 1,
+              kind: 'duplicate-property',
+              elementName: 'Frame',
+              detail: 'ver appears 2× on this element',
+            },
+            {
+              line: 2,
+              kind: 'inherited-redundant',
+              elementName: 'Text',
+              detail: 'col white is already inherited from canvas',
+            },
+          ],
+        },
+      })
+    )
+    const handler = createEditHandler(baseConfig({ runEditFlow }))
+
+    handler.handleEditFlow(view)
+    await flush()
+
+    const status = getEditStatusElement()
+    expect(status?.classList.contains('cm-llm-status-warning')).toBe(true)
+    expect(status?.textContent).toContain('2')
+    expect(status?.textContent).toContain('vom AI nicht behoben')
+  })
+
   it('shows error status with the error message on status=error', async () => {
     const runEditFlow = vi.fn(
       async (): Promise<EditResult> => ({

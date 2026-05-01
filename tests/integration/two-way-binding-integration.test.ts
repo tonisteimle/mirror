@@ -109,8 +109,7 @@ Input value $name, placeholder "Name"`)
     expect(mirrorData.name).toBe('Anna')
   })
 
-  // Skip: Text $token without quotes doesn't render initial value correctly
-  test.skip('Text element updates when input changes', () => {
+  test('Text element updates when input changes', () => {
     const { container, window, mirrorData } = compileAndExecute(`$name: "Max"
 
 Frame gap 12
@@ -147,8 +146,7 @@ Frame gap 12
     expect(text.textContent).toContain('Hello, Mirror!')
   })
 
-  // Skip: Text $token without quotes doesn't render initial value correctly
-  test.skip('Nested data path binding', () => {
+  test('Nested data path binding', () => {
     const { container, window, mirrorData } = compileAndExecute(`$user.profile.name: "Deep"
 
 Frame gap 12
@@ -277,8 +275,7 @@ Text "Count: " + $count`)
     expect(text.textContent).toBe('Count: 42')
   })
 
-  // Skip: Text $token without quotes doesn't render initial value correctly
-  test.skip('Special characters in value', () => {
+  test('Special characters in value', () => {
     const { container, window, mirrorData } = compileAndExecute(`$special: "test"
 
 Input value $special
