@@ -34,6 +34,13 @@ test-report.html
 # Generated tutorial data (regenerate with `npm run tutorial:extract`)
 tools/tutorial-extracted.json
 
+# Generated example outputs (regenerate with `npx tsx scripts/build-example.ts <file>.mirror`)
+examples/*-compiled.html
+examples/*-compiled.js
+
+# Generated DSL reference (regenerate with `npm run generate`)
+docs/generated/
+
 # Local data
 local-data/
 
