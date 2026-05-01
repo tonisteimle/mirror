@@ -500,7 +500,25 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     },
     getPreludeOffset: () => state.get().preludeOffset,
     isWrappedWithApp: () => state.get().isWrappedWithApp,
-    applyChange: (change: CodeChange) => config.editor.dispatch({ changes: change }),
+    applyChange: (change: CodeChange) => {
+      // Validate change positions against current editor doc length.
+      // Out-of-range changes throw inside CodeMirror's ChangeSet.of and
+      // poison subsequent dispatches in the same transaction. This guard
+      // matches the property-panel path (bootstrap.ts ~880) so command-
+      // dispatched changes are equally tolerant of stale source-map state
+      // (e.g. a coalesced compile racing with a property edit).
+      const docLength = config.editor.state.doc.length
+      if (change.from < 0 || change.to > docLength || change.from > change.to) {
+        console.warn('[applyChange] dropped out-of-range change', {
+          from: change.from,
+          to: change.to,
+          docLength,
+          insertLen: change.insert?.length,
+        })
+        return
+      }
+      config.editor.dispatch({ changes: change })
+    },
     compile: () => events.emit('compile:requested', {}),
     clearSelection: origin => syncCoordinator.clearSelection(origin),
   })

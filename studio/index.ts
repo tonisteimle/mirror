@@ -47,17 +47,36 @@ export * from './ui'
 // Rename (IDE-style F2 rename symbol)
 export * from './rename'
 
-// Drop (drag-drop handling with Strategy Pattern). Excluded names are
-// the drop-internal interface views that overlap with the canonical
-// code-modifier exports below — drop's CodeModifier / RobustModifier /
-// AddChildOptions / ModificationResult are subsets of the same names
-// shipped from `./code-modifier`, and re-exporting both would shadow.
+// Drop (drag-drop handling with Strategy Pattern). Drop re-exports a
+// handful of *type* aliases (CodeModifier, RobustModifier, AddChildOptions,
+// ModificationResult) that overlap with the canonical class/type exports
+// from `./code-modifier` below — types are erased at runtime, but
+// TypeScript flags the duplicate names. Enumerate Drop's runtime + type
+// exports explicitly and skip the four overlapping type aliases.
 export {
   DropService,
   getDropService,
   DropResultApplier,
   type ApplierDependencies,
   ElementDuplicateHandler,
+  ElementMoveHandler,
+  AbsolutePositionHandler,
+  PaletteDropHandler,
+  ZagComponentHandler,
+  ChartDropHandler,
+  TemplateDropHandler,
+  handleStudioDropNew,
+  createDropContext,
+  createApplierDeps,
+  type AppGlobals,
+  StudioTestHarness,
+  createTestHarness,
+  assertions as dropAssertions,
+  MockEditor,
+  MockEventBus,
+  MockExecutor,
+  type TestDropResult,
+  type HarnessConfig,
 } from './drop'
 export type {
   DropSource,

@@ -595,121 +595,123 @@ const editHandler = createEditHandler({
 
 let editor
 
+const editorExtensions = [
+  indentUnit.of('  '), // 2 spaces for Mirror DSL
+  lineNumbers(),
+  highlightActiveLineGutter(),
+  highlightActiveLine(),
+  drawSelection(),
+  history(),
+  // lintGutter() removed - only inline underlines, no gutter markers
+  mirrorLinter, // Dynamic diagnostics (updated on compile)
+  indentGuidesExtension(), // Visual indent guides (vertical lines)
+  smartPasteExtension(), // Auto-adjust indentation on paste
+  ghostDiffExtension(), // LLM-Edit-Flow: red/green diff overlay
+  editHandler.ghostDiscardOnEditExtension, // Auto-discard ghost on direct edit
+  keymap.of(llmEditKeymap(editHandler)), // Cmd+Enter / Cmd+Shift+Enter / Tab / Esc
+  mirrorHighlight,
+  autocompletion({
+    override: [mirrorCompletions],
+    activateOnTyping: true,
+  }),
+  keymap.of([
+    // Block indent: Cmd+]/[ for indent/outdent
+    { key: 'Mod-]', run: indentMore },
+    { key: 'Mod-[', run: indentLess },
+    ...completionKeymap,
+    ...defaultKeymap,
+    ...historyKeymap,
+    indentWithTab,
+  ]),
+  EditorView.updateListener.of(update => {
+    if (update.docChanged) {
+      // Skip debounced compile if change came from property panel (already compiled immediately)
+      const isFromPropertyPanel = update.transactions.some(tr =>
+        tr.annotation(propertyPanelChangeAnnotation)
+      )
+      if (!isFromPropertyPanel) {
+        debouncedCompile()
+      }
+
+      // Keep color-picker positions synchronized with document changes —
+      // implementation lives in studio/pickers/color/setup.ts.
+      colorPickerHandle.mapChanges(update.changes)
+    }
+    // Track cursor/selection changes for Editor → Preview sync
+    const selection = update.state.selection.main
+    const prevSelection = update.startState.selection.main
+
+    // Check if selection changed (position or range)
+    const selectionChanged =
+      selection.from !== prevSelection.from ||
+      selection.to !== prevSelection.to ||
+      selection.head !== prevSelection.head
+
+    if (selectionChanged && studio.editor) {
+      // Check if this is a range selection (multiple lines selected)
+      const fromLine = update.state.doc.lineAt(selection.from)
+      const toLine = update.state.doc.lineAt(selection.to)
+
+      // DEBUG: Track what selection the update listener sees
+      if (!window.__updateDebugHistory) window.__updateDebugHistory = []
+      window.__updateDebugHistory.push({
+        from: selection.from,
+        to: selection.to,
+        anchor: selection.anchor,
+        head: selection.head,
+        fromLine: fromLine.number,
+        toLine: toLine.number,
+        isMultiLine: fromLine.number !== toLine.number,
+      })
+
+      if (fromLine.number !== toLine.number && studio.sync?.handleEditorSelection) {
+        // Multi-line selection → trigger multiselection in preview
+        studio.sync.handleEditorSelection(fromLine.number, toLine.number)
+      } else {
+        // Single line or cursor only → regular cursor sync
+        const line = update.state.doc.lineAt(selection.head)
+        studio.editor.notifyCursorMove({
+          line: line.number,
+          column: selection.head - line.from + 1,
+          offset: selection.head,
+        })
+      }
+    }
+  }),
+  // New Unified Trigger System (replaces legacy token, color, icon, animation triggers)
+  ...createTriggerExtensions(),
+  Prec.high(inlineTokenExtension),
+  // Note: App lock removed - implicit root wrapper is now added in compile()
+  // Component Drop: Proper CodeMirror integration for drag & drop from component palette
+  // Uses insertComponentWithDefinition to add component definition at top if needed
+  Prec.highest(
+    createComponentDropExtension({
+      onDrop: (dragData, position, view) => {
+        const code = generateComponentCodeFromDragData(dragData, {
+          componentId: dragData.componentId,
+          filename: currentFile || 'index.mir',
+        })
+        // Extract component name from template (e.g., "Select", "Checkbox")
+        const componentName = dragData.componentName || dragData.template || ''
+        // Use insertComponentWithDefinition for Zag components (adds definition if missing)
+        insertComponentWithDefinition(view, code, position, componentName)
+      },
+    })
+  ),
+  EditorView.theme({
+    '&': { height: '100%' },
+    '.cm-scroller': { fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace" },
+  }),
+  // Component extract extension (:: syntax)
+  ...(componentExtractExtension ? [componentExtractExtension] : []),
+  // Token extract extension (:: syntax for tokens)
+  ...(tokenExtractExtension ? [tokenExtractExtension] : []),
+]
+
 editor = new EditorView({
   state: EditorState.create({
     doc: initialCode,
-    extensions: [
-      indentUnit.of('  '), // 2 spaces for Mirror DSL
-      lineNumbers(),
-      highlightActiveLineGutter(),
-      highlightActiveLine(),
-      drawSelection(),
-      history(),
-      // lintGutter() removed - only inline underlines, no gutter markers
-      mirrorLinter, // Dynamic diagnostics (updated on compile)
-      indentGuidesExtension(), // Visual indent guides (vertical lines)
-      smartPasteExtension(), // Auto-adjust indentation on paste
-      ghostDiffExtension(), // LLM-Edit-Flow: red/green diff overlay
-      editHandler.ghostDiscardOnEditExtension, // Auto-discard ghost on direct edit
-      keymap.of(llmEditKeymap(editHandler)), // Cmd+Enter / Cmd+Shift+Enter / Tab / Esc
-      mirrorHighlight,
-      autocompletion({
-        override: [mirrorCompletions],
-        activateOnTyping: true,
-      }),
-      keymap.of([
-        // Block indent: Cmd+]/[ for indent/outdent
-        { key: 'Mod-]', run: indentMore },
-        { key: 'Mod-[', run: indentLess },
-        ...completionKeymap,
-        ...defaultKeymap,
-        ...historyKeymap,
-        indentWithTab,
-      ]),
-      EditorView.updateListener.of(update => {
-        if (update.docChanged) {
-          // Skip debounced compile if change came from property panel (already compiled immediately)
-          const isFromPropertyPanel = update.transactions.some(tr =>
-            tr.annotation(propertyPanelChangeAnnotation)
-          )
-          if (!isFromPropertyPanel) {
-            debouncedCompile()
-          }
-
-          // Keep color-picker positions synchronized with document changes —
-          // implementation lives in studio/pickers/color/setup.ts.
-          colorPickerHandle.mapChanges(update.changes)
-        }
-        // Track cursor/selection changes for Editor → Preview sync
-        const selection = update.state.selection.main
-        const prevSelection = update.startState.selection.main
-
-        // Check if selection changed (position or range)
-        const selectionChanged =
-          selection.from !== prevSelection.from ||
-          selection.to !== prevSelection.to ||
-          selection.head !== prevSelection.head
-
-        if (selectionChanged && studio.editor) {
-          // Check if this is a range selection (multiple lines selected)
-          const fromLine = update.state.doc.lineAt(selection.from)
-          const toLine = update.state.doc.lineAt(selection.to)
-
-          // DEBUG: Track what selection the update listener sees
-          if (!window.__updateDebugHistory) window.__updateDebugHistory = []
-          window.__updateDebugHistory.push({
-            from: selection.from,
-            to: selection.to,
-            anchor: selection.anchor,
-            head: selection.head,
-            fromLine: fromLine.number,
-            toLine: toLine.number,
-            isMultiLine: fromLine.number !== toLine.number,
-          })
-
-          if (fromLine.number !== toLine.number && studio.sync?.handleEditorSelection) {
-            // Multi-line selection → trigger multiselection in preview
-            studio.sync.handleEditorSelection(fromLine.number, toLine.number)
-          } else {
-            // Single line or cursor only → regular cursor sync
-            const line = update.state.doc.lineAt(selection.head)
-            studio.editor.notifyCursorMove({
-              line: line.number,
-              column: selection.head - line.from + 1,
-              offset: selection.head,
-            })
-          }
-        }
-      }),
-      // New Unified Trigger System (replaces legacy token, color, icon, animation triggers)
-      ...createTriggerExtensions(),
-      Prec.high(inlineTokenExtension),
-      // Note: App lock removed - implicit root wrapper is now added in compile()
-      // Component Drop: Proper CodeMirror integration for drag & drop from component palette
-      // Uses insertComponentWithDefinition to add component definition at top if needed
-      Prec.highest(
-        createComponentDropExtension({
-          onDrop: (dragData, position, view) => {
-            const code = generateComponentCodeFromDragData(dragData, {
-              componentId: dragData.componentId,
-              filename: currentFile || 'index.mir',
-            })
-            // Extract component name from template (e.g., "Select", "Checkbox")
-            const componentName = dragData.componentName || dragData.template || ''
-            // Use insertComponentWithDefinition for Zag components (adds definition if missing)
-            insertComponentWithDefinition(view, code, position, componentName)
-          },
-        })
-      ),
-      EditorView.theme({
-        '&': { height: '100%' },
-        '.cm-scroller': { fontFamily: "'SF Mono', 'Fira Code', 'Consolas', monospace" },
-      }),
-      // Component extract extension (:: syntax)
-      ...(componentExtractExtension ? [componentExtractExtension] : []),
-      // Token extract extension (:: syntax for tokens)
-      ...(tokenExtractExtension ? [tokenExtractExtension] : []),
-    ],
+    extensions: editorExtensions,
   }),
   parent: editorContainer,
 })
@@ -771,7 +773,22 @@ function updateUndoRedoButtons() {
 const originalDispatch = editor.dispatch.bind(editor)
 editor.__originalDispatch = originalDispatch // Expose for testing
 editor.dispatch = (...args) => {
-  originalDispatch(...args)
+  try {
+    originalDispatch(...args)
+  } catch (e) {
+    // CodeMirror throws "Position N is out of range for changeset of
+    // length M" when a stale source-map (post test-suite reset, debounced
+    // panel commit racing with a fresh setCode) builds change positions
+    // against an older doc. Swallowing these here keeps the editor and
+    // subsequent test setups alive — without this guard one test's stale
+    // dispatch poisons every subsequent test's setup. Real range bugs
+    // still surface via console for debugging.
+    if (e instanceof RangeError && /Position \d+ is out of range/.test(e.message)) {
+      console.warn('[editor.dispatch] dropped stale change:', e.message)
+      return
+    }
+    throw e
+  }
   updateUndoRedoButtons()
 }
 
@@ -1703,14 +1720,32 @@ if (typeof window !== 'undefined') {
     getEditor: () => editor,
     getState: () => editor.state,
     getDoc: () => editor.state.doc.toString(),
-    // Set code with history tracking (for undo tests)
-    // Uses isolateHistory to ensure each call creates a separate undo entry
+    // Set code AND wipe undo/redo history so tests that exercise Cmd+Z
+    // can't reach back into the *previous* test's history. Without this,
+    // undo from one test's property change reverts the doc to the prior
+    // test's state, leaking content across the test boundary. We:
+    //   1. drain the redo stack (each redo() is a no-op once empty)
+    //   2. drain the undo stack (each undo() walks one step back)
+    //   3. apply the new code with addToHistory.of(false) so the setup
+    //      itself is not undoable.
     setCodeWithHistory: code => {
-      const transaction = editor.state.update({
-        changes: { from: 0, to: editor.state.doc.length, insert: code },
-        annotations: [Transaction.userEvent.of('test.setCode'), isolateHistory.of('full')],
-      })
-      editor.dispatch(transaction)
+      // Replace the entire EditorState. Every CodeMirror history entry
+      // lives inside the state, so creating a fresh state from the same
+      // extensions guarantees a clean undo/redo stack — no cross-test
+      // leak when one test's Cmd+Z would otherwise reach back into the
+      // previous test's content. setState swaps the view's state
+      // atomically; pending debounced compiles must be cancelled first
+      // so they don't fire post-swap with the old doc.
+      // Also clear the studio CommandExecutor: when the editor doesn't
+      // have focus, document-level Cmd+Z falls back to executor.undo()
+      // which has its own (per-app, not per-state) history. Without this
+      // wipe, one test's `Cmd+Z` after a property change replays a
+      // *previous* test's command and clobbers the doc with old content.
+      if (typeof debouncedCompile !== 'undefined' && debouncedCompile.cancel) {
+        debouncedCompile.cancel()
+      }
+      editor.setState(EditorState.create({ doc: code, extensions: editorExtensions }))
+      executor?.clear?.()
     },
   }
 }
