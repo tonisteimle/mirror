@@ -1242,17 +1242,8 @@ export {
   quickIntegrationTests,
 }
 
-// E2E Tests (comprehensive app building simulations)
-export {
-  allE2ETests,
-  uxAgencyAppTests,
-  uxAgencyDesignSystemTests,
-  uxAgencyLayoutTests,
-  uxAgencyFeatureTests,
-  uxAgencyProjectsTests,
-  uxAgencyIntegrationTests,
-  uxAgencyInteractionTests,
-}
+// E2E Tests (comprehensive app building simulations) — REMOVED.
+// The uxAgency suite was deleted; this re-export block was orphaned.
 
 // =============================================================================
 // Combined Exports
@@ -1996,6 +1987,7 @@ export type TestCategory =
   | 'zag.datePicker'
   | 'zag.sidenav'
   | 'zag.inLayout'
+  | 'zag.pureSelect'
 
   // === Interactions ===
   | 'interactions'
@@ -2023,6 +2015,13 @@ export type TestCategory =
   | 'paddingDrag.axis'
   | 'paddingDrag.liveVisual'
   | 'paddingDrag.robustness'
+  | 'marginDrag'
+  | 'marginDrag.singleSide'
+  | 'marginDrag.allSides'
+  | 'marginDrag.axis'
+  | 'marginDrag.liveVisual'
+  | 'marginDrag.robustness'
+  | 'marginDrag.screenshot'
   | 'resizeHandleDblClick'
   | 'resizeHandleDblClick.horizontal'
   | 'resizeHandleDblClick.vertical'
@@ -2366,6 +2365,7 @@ export type TestCategory =
 
   // === AI (LLM-Edit-Flow) ===
   | 'ai'
+  | 'ai.realLlm'
 
   // === Integration (real-world workflows) ===
   | 'integration'
@@ -2406,7 +2406,10 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     throw new Error('Mirror Test API not available')
   }
 
-  const tests: Record<TestCategory, TestCase[]> = {
+  // Use Partial<Record<...>> to tolerate evolving categories — adding a
+  // new test suite shouldn't force an exhaustive TestCategory union update
+  // before the rest of the codebase compiles.
+  const tests: Partial<Record<TestCategory, TestCase[]>> & Record<string, TestCase[]> = {
     // === Primitives ===
     primitives: allPrimitivesTests,
     'primitives.basic': basicPrimitives,
@@ -2954,7 +2957,7 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'tutorial.15-charts': chapter_15_chartsTests,
   }
 
-  const names: Record<TestCategory, string> = {
+  const names: Partial<Record<TestCategory, string>> & Record<string, string> = {
     // === Primitives ===
     primitives: 'Primitives',
     'primitives.basic': 'Basic Primitives',
@@ -3049,6 +3052,13 @@ export async function runCategory(category: TestCategory): Promise<TestSuiteResu
     'paddingDrag.axis': 'Padding: Axis (Alt)',
     'paddingDrag.liveVisual': 'Padding: Live Visual Feedback',
     'paddingDrag.robustness': 'Padding: Robustness (Scroll, Resize)',
+    marginDrag: 'Margin Drag',
+    'marginDrag.singleSide': 'Margin: Single Side',
+    'marginDrag.allSides': 'Margin: All Sides (Shift)',
+    'marginDrag.axis': 'Margin: Axis (Alt)',
+    'marginDrag.liveVisual': 'Margin: Live Visual Feedback',
+    'marginDrag.robustness': 'Margin: Robustness (Scroll, Resize)',
+    'marginDrag.screenshot': 'Margin: Screenshot',
     resizeHandleDblClick: 'Resize Handle Double-Click',
     'resizeHandleDblClick.horizontal': 'Resize DblClick: Horizontal',
     'resizeHandleDblClick.vertical': 'Resize DblClick: Vertical',
@@ -3488,7 +3498,11 @@ export async function runSingleTest(testName: string): Promise<TestSuiteResult> 
     } else {
       console.log('   (no matches)')
     }
-    return { passed: 0, failed: 1, results: [{ name: testName, passed: false, duration: 0 }] }
+    return {
+      passed: 0,
+      failed: 1,
+      results: [{ name: testName, passed: false, duration: 0, assertions: [] }],
+    }
   }
 
   console.log(`🎯 Running: ${test.name}`)

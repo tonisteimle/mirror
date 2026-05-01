@@ -594,9 +594,12 @@ class UtilsAPIImpl implements UtilsAPI {
         // Check for CSS animations
         const animations = (el as HTMLElement).getAnimations?.()
         if (animations && animations.length > 0) {
-          const running = animations.some(
-            a => a.playState === 'running' || a.playState === 'pending'
-          )
+          const running = animations.some(a => {
+            // WAAPI playState can include "running"/"pending" beyond the
+            // narrow lib.dom.d.ts union. Compare via string to keep both.
+            const state = a.playState as string
+            return state === 'running' || state === 'pending'
+          })
           if (running) return false
         }
 
@@ -689,6 +692,10 @@ export class TestRunner {
   private editorApi: EditorAPIImpl
   private stateApi: StateAPIImpl
   private utilsApi: UtilsAPIImpl
+
+  private get previewContainer(): HTMLElement | null {
+    return document.getElementById('preview')
+  }
 
   constructor(options: TestRunnerOptions = {}) {
     this.options = {

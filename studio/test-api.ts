@@ -45,6 +45,19 @@ declare global {
   interface Window {
     __mirrorStudio__?: StudioInstance
     __STUDIO_TEST__?: StudioTestAPI
+    /** Legacy global set by app.js — CodeMirror EditorView. Tests use it. */
+    editor?: import('@codemirror/view').EditorView
+    /** Desktop files API (set by desktop-files.js) — file CRUD for tests. */
+    desktopFiles?: {
+      readFile?: (path: string) => string | Promise<string>
+      writeFile?: (path: string, content: string) => void | Promise<void>
+      listFiles?: () => string[] | Promise<string[]>
+      /** Synchronous cache of all files: { [path]: content }. */
+      getFiles?: () => Record<string, string>
+      getFileContent?: (path: string) => string | undefined
+      updateFileCache?: (path: string, content?: string) => void
+      [key: string]: unknown
+    }
   }
 }
 

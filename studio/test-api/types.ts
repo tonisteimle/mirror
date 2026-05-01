@@ -737,6 +737,8 @@ export interface StateAPI {
 export interface UtilsAPI {
   /** Wait for milliseconds */
   delay(ms: number): Promise<void>
+  /** Alias for delay */
+  sleep(ms: number): Promise<void>
   /** Wait for compilation */
   waitForCompile(timeout?: number): Promise<void>
   /** Wait for condition */

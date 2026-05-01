@@ -15,6 +15,14 @@
 import { animate as motionAnimateFn } from 'motion'
 // Focus trap for modal dialogs - accessibility
 import { createFocusTrap, FocusTrap } from 'focus-trap'
+// Frame batching — single source of truth in batching.ts
+import { batchInFrame } from './batching'
+// Visibility primitives — single source of truth in visibility.ts
+import { show, hide } from './visibility'
+// Cleanup primitives — single source of truth in cleanup.ts
+import { registerForCleanup, cleanupElement, initCleanupObserver } from './cleanup'
+// Data binding — single source of truth in data-binding.ts
+import { bindValue, bindText, bindVisibility, unbindValue, notifyDataChange } from './data-binding'
 
 // ============================================
 // TYPES
@@ -77,6 +85,12 @@ export interface MirrorElement extends HTMLElement {
     itemVar: string
     collection: string
     filter?: string
+    /** Compiled filter predicate (replaces `filter` once parsed). */
+    filterFn?: (item: Record<string, unknown>, index: number) => boolean
+    /** Sort key (object-property name on each item). */
+    orderBy?: string
+    /** True for descending sort. */
+    orderDesc?: boolean
     renderItem: (item: unknown, index: number) => HTMLElement
   }
   _conditionalConfig?: {
@@ -127,128 +141,8 @@ export const PROP_MAP: Record<string, string> = {
 // ============================================
 // EVENT LISTENER CLEANUP
 // ============================================
-
-/**
- * Registry of elements with document-level event listeners.
- * Used for automatic cleanup when elements are removed from DOM.
- */
-const _elementsWithDocListeners = new WeakSet<MirrorElement>()
-
-/**
- * Clean up document-level event listeners for an element.
- * Call this when removing an element from DOM.
- * @param el Element to clean up
- */
-export function cleanupElement(el: MirrorElement): void {
-  // Clean up click-outside handler and pending timeout
-  if (el._clickOutsideTimeout) {
-    clearTimeout(el._clickOutsideTimeout)
-    delete el._clickOutsideTimeout
-  }
-  if (el._clickOutsideHandler) {
-    document.removeEventListener('click', el._clickOutsideHandler)
-    delete el._clickOutsideHandler
-  }
-
-  // Clean up escape handler
-  if (el._escapeHandler) {
-    document.removeEventListener('keydown', el._escapeHandler)
-    delete el._escapeHandler
-  }
-
-  // Clean up auto-select handler
-  if (el._autoSelectHandler) {
-    el.removeEventListener('focus', el._autoSelectHandler)
-    delete el._autoSelectHandler
-  }
-
-  // Clean up focus trap
-  if (el._focusTrap) {
-    try {
-      el._focusTrap.deactivate()
-    } catch {
-      // Ignore errors during deactivation
-    }
-    delete el._focusTrap
-  }
-
-  _elementsWithDocListeners.delete(el)
-}
-
-/**
- * Register an element for automatic cleanup.
- * The element will be cleaned up when removed from DOM.
- * @param el Element to register
- */
-export function registerForCleanup(el: MirrorElement): void {
-  _elementsWithDocListeners.add(el)
-}
-
-// MutationObserver for automatic cleanup when elements are removed
-let _cleanupObserver: MutationObserver | null = null
-
-/**
- * Initialize the cleanup observer (call once on app start).
- * Automatically cleans up document-level listeners when elements are removed.
- */
-export function initCleanupObserver(): void {
-  if (_cleanupObserver || typeof MutationObserver === 'undefined') return
-
-  _cleanupObserver = new MutationObserver(mutations => {
-    for (const mutation of mutations) {
-      for (const node of mutation.removedNodes) {
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          const el = node as MirrorElement
-          // Clean up this element
-          if (_elementsWithDocListeners.has(el)) {
-            cleanupElement(el)
-          }
-          // Clean up any children with listeners
-          const children = el.querySelectorAll?.('[data-mirror-id]')
-          if (children) {
-            for (const child of children) {
-              const mirrorChild = child as MirrorElement
-              if (_elementsWithDocListeners.has(mirrorChild)) {
-                cleanupElement(mirrorChild)
-              }
-            }
-          }
-        }
-      }
-    }
-  })
-
-  _cleanupObserver.observe(document.body, {
-    childList: true,
-    subtree: true,
-  })
-}
-
-// ============================================
-// FRAME BATCHING
-// ============================================
-
-/**
- * Track whether we're currently inside a requestAnimationFrame callback.
- * When true, state transitions should execute immediately to avoid
- * one-frame delay for watched/dependent elements.
- */
-let _insideFrameCallback = false
-
-function batchInFrame(fn: () => void): void {
-  if (_insideFrameCallback) {
-    fn()
-    return
-  }
-  requestAnimationFrame(() => {
-    _insideFrameCallback = true
-    try {
-      fn()
-    } finally {
-      _insideFrameCallback = false
-    }
-  })
-}
+// registerForCleanup, cleanupElement, initCleanupObserver — re-exported from cleanup.ts (single source of truth)
+export { registerForCleanup, cleanupElement, initCleanupObserver }
 
 // ============================================
 // ELEMENT RESOLUTION
@@ -519,34 +413,8 @@ export function toggle(el: MirrorElement | null): void {
   applyState(el, el.hidden ? 'off' : 'on')
 }
 
-/**
- * Show an element
- */
-export function show(el: MirrorElement | null): void {
-  if (!el) return
-  // Batch visibility changes in a single frame
-  batchInFrame(() => {
-    // Restore saved display value or clear inline style
-    el.style.display = el._savedDisplay || ''
-    el.hidden = false
-  })
-}
-
-/**
- * Hide an element
- */
-export function hide(el: MirrorElement | null): void {
-  if (!el) return
-  // Save current display before hiding (unless already hidden)
-  if (el.style.display !== 'none') {
-    el._savedDisplay = el.style.display
-  }
-  // Batch visibility changes in a single frame
-  batchInFrame(() => {
-    el.style.display = 'none'
-    el.hidden = true
-  })
-}
+// show/hide — re-exported from visibility.ts (single source of truth)
+export { show, hide }
 
 /**
  * Close an element (set to closed/collapsed state or hide)
@@ -1913,9 +1781,10 @@ function refreshEachLoops(collectionName: string): void {
     // Apply sorting if present
     if (config.orderBy) {
       const sortDir = config.orderDesc ? -1 : 1
+      const key = config.orderBy
       itemsArray = [...itemsArray].sort((a, b) => {
-        const aVal = a[config.orderBy as string]
-        const bVal = b[config.orderBy as string]
+        const aVal = a[key] as string | number
+        const bVal = b[key] as string | number
         if (aVal < bVal) return -sortDir
         if (aVal > bVal) return sortDir
         return 0
@@ -1974,9 +1843,10 @@ export function refreshAllEachLoops(): void {
     // Apply sorting if present
     if (config.orderBy) {
       const sortDir = config.orderDesc ? -1 : 1
+      const key = config.orderBy
       itemsArray = [...itemsArray].sort((a, b) => {
-        const aVal = a[config.orderBy as string]
-        const bVal = b[config.orderBy as string]
+        const aVal = a[key] as string | number
+        const bVal = b[key] as string | number
         if (aVal < bVal) return -sortDir
         if (aVal > bVal) return sortDir
         return 0
@@ -4383,209 +4253,8 @@ export function getMotionPreset(name: string): (typeof MOTION_PRESETS)[string] |
 // ============================================
 // TWO-WAY DATA BINDING
 // ============================================
-
-/**
- * Registry of elements bound to data paths
- * Maps path (e.g., "user.name") to Set of bound elements
- */
-const _valueBindings: Map<string, Set<MirrorElement>> = new Map()
-
-/**
- * Registry of text elements bound to data paths
- * Maps path (e.g., "user.name") to Set of elements displaying that data
- */
-const _textBindings: Map<string, Set<MirrorElement>> = new Map()
-
-/**
- * Registry of elements with visibility conditions (_visibleWhen) that depend on data
- * Maps path (e.g., "selectedAddress") to Set of elements whose visibility depends on that data
- */
-const _visibilityBindings: Map<string, Set<MirrorElement>> = new Map()
-
-/**
- * Register an input element for two-way data binding
- * @param el The input element to bind
- * @param path The data path (e.g., "user.name")
- */
-export function bindValue(el: MirrorElement, path: string): void {
-  el._valueBinding = path
-
-  if (!_valueBindings.has(path)) {
-    _valueBindings.set(path, new Set())
-  }
-  _valueBindings.get(path)!.add(el)
-}
-
-/**
- * Register a text element for one-way data binding (display only)
- * @param el The element to bind
- * @param path The data path (e.g., "user.name")
- */
-export function bindText(el: MirrorElement, path: string): void {
-  el._textBinding = path
-
-  if (!_textBindings.has(path)) {
-    _textBindings.set(path, new Set())
-  }
-  _textBindings.get(path)!.add(el)
-}
-
-/**
- * Register an element for visibility binding (elements with _visibleWhen that depends on data)
- * @param el The element with _visibleWhen condition
- * @param path The data path the visibility depends on (e.g., "selectedAddress")
- */
-export function bindVisibility(el: MirrorElement, path: string): void {
-  if (!el || !path) return
-  // Store all paths this element depends on
-  if (!el._visibilityPaths) {
-    el._visibilityPaths = []
-  }
-  el._visibilityPaths.push(path)
-  // Register in the bindings map
-  if (!_visibilityBindings.has(path)) {
-    _visibilityBindings.set(path, new Set())
-  }
-  _visibilityBindings.get(path)!.add(el)
-}
-
-/**
- * Evaluate a visibility condition using $get for data lookup
- * Supports both $varName and bare varName formats:
- * - "loggedIn" → $get("loggedIn")
- * - "$loggedIn" → $get("loggedIn")
- * - "!loggedIn" → !$get("loggedIn")
- * - "count > 0" → $get("count") > 0
- */
-function _evaluateVisibilityCondition(condition: string): boolean {
-  try {
-    // Reserved words that should not be wrapped
-    const reserved = new Set([
-      'true',
-      'false',
-      'null',
-      'undefined',
-      'NaN',
-      'Infinity',
-      'typeof',
-      'instanceof',
-      'new',
-      'delete',
-      'void',
-    ])
-
-    // First handle $-prefixed variables: $varName → $get("varName")
-    let evalCondition = condition.replace(/\$([a-zA-Z_][a-zA-Z0-9_.]*)/g, '$get("$1")')
-
-    // Then handle bare identifiers (not already wrapped, not in quotes, not reserved)
-    evalCondition = evalCondition.replace(
-      /(?<!["\w$.])\b([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\b(?!["\w(])/g,
-      (match, identifier) => {
-        const firstPart = identifier.split('.')[0]
-        if (reserved.has(firstPart)) {
-          return match
-        }
-        return `$get("${identifier}")`
-      }
-    )
-
-    // Use Function constructor to evaluate in the context with $get
-    const $getFunc = (window as unknown as { $get: (path: string) => unknown }).$get
-    const result = new Function('$get', 'return ' + evalCondition)($getFunc)
-    return !!result
-  } catch (e) {
-    return false
-  }
-}
-
-/**
- * Notify the runtime that data has changed at a specific path.
- * Updates all bound elements (both input values and text displays).
- * @param path The data path that changed (e.g., "user.name")
- * @param value The new value
- */
-export function notifyDataChange(path: string, value: unknown): void {
-  const stringValue = value != null ? String(value) : ''
-
-  // Collect all paths to update: the exact path AND all sub-paths (e.g., selectedAddress.firstName)
-  const pathsToUpdate: string[] = [path]
-  const pathPrefix = path + '.'
-
-  // Find all registered paths that are sub-paths of the changed path
-  for (const registeredPath of _textBindings.keys()) {
-    if (registeredPath.startsWith(pathPrefix)) {
-      pathsToUpdate.push(registeredPath)
-    }
-  }
-  for (const registeredPath of _valueBindings.keys()) {
-    if (registeredPath.startsWith(pathPrefix) && !pathsToUpdate.includes(registeredPath)) {
-      pathsToUpdate.push(registeredPath)
-    }
-  }
-  for (const registeredPath of _visibilityBindings.keys()) {
-    if (registeredPath.startsWith(pathPrefix) && !pathsToUpdate.includes(registeredPath)) {
-      pathsToUpdate.push(registeredPath)
-    }
-  }
-
-  // Update all affected paths
-  for (const updatePath of pathsToUpdate) {
-    // Update bound input elements (skip the currently focused one to avoid cursor jumping)
-    const inputElements = _valueBindings.get(updatePath)
-    if (inputElements) {
-      for (const el of inputElements) {
-        // Skip the element that's currently being typed in
-        if (el !== document.activeElement) {
-          ;(el as HTMLInputElement).value = stringValue
-        }
-      }
-    }
-
-    // Update bound text elements
-    // Use _textTemplate if available for expression re-evaluation
-    const textElements = _textBindings.get(updatePath)
-    if (textElements) {
-      for (const el of textElements) {
-        if (el._textTemplate) {
-          // Re-evaluate the template expression
-          try {
-            el.textContent = el._textTemplate()
-          } catch (e) {
-            console.warn('Failed to re-evaluate text template:', e)
-            el.textContent = stringValue
-          }
-        } else {
-          el.textContent = stringValue
-        }
-      }
-    }
-
-    // Update visibility of elements with _visibleWhen that depend on this path
-    const visElements = _visibilityBindings.get(updatePath)
-    if (visElements) {
-      for (const el of visElements) {
-        if (el._visibleWhen) {
-          const visible = _evaluateVisibilityCondition(el._visibleWhen)
-          el.style.display = visible ? '' : 'none'
-        }
-      }
-    }
-  }
-
-  // Refresh all each loops as their filter expressions may depend on the changed value
-  refreshAllEachLoops()
-}
-
-/**
- * Unregister an element from two-way binding
- * @param el The element to unbind
- */
-export function unbindValue(el: MirrorElement): void {
-  const path = el._valueBinding
-  if (path && _valueBindings.has(path)) {
-    _valueBindings.get(path)!.delete(el)
-  }
-}
+// bindValue, bindText, bindVisibility, unbindValue, notifyDataChange — re-exported from data-binding.ts (single source of truth)
+export { bindValue, bindText, bindVisibility, unbindValue, notifyDataChange }
 
 // ============================================
 // CHARTS
