@@ -26,7 +26,7 @@ import type {
   IRItemProperty,
 } from '../ir/types'
 import { isIRZagNode } from '../ir/types'
-import { DOM_RUNTIME_CODE } from '../runtime/dom-runtime-string'
+import { DOM_RUNTIME_CODE } from './dom/runtime-template'
 import type { DataFile } from '../parser/data-types'
 import { dispatchZagEmitter } from './dom/zag-emitters'
 import type { ZagEmitterContext } from './dom/base-emitter-context'

@@ -3,7 +3,7 @@
  *
  * Single source of truth für `window.__MIRROR_DEBUG__`. Vor diesem Modul
  * gab es drei separate `isDebug()`-Definitionen (dom-runtime.ts, data.ts,
- * dom-runtime-string.ts) — wenn jemand die Flag umbenennt, muss nur eine
+ * backends/dom/runtime-template/index.ts) — wenn jemand die Flag umbenennt, muss nur eine
  * Stelle nachgezogen werden.
  *
  * Verwendung:
