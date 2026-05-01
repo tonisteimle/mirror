@@ -241,7 +241,9 @@ export class Validator {
         }
       }
     }
-    for (const inst of ast.instances ?? []) visitInstance(inst, 0)
+    for (const inst of ast.instances ?? []) {
+      if ((inst as Instance).type === 'Instance') visitInstance(inst as Instance, 0)
+    }
     for (const component of ast.components) {
       for (const child of component.children ?? []) {
         if (child && (child as Instance).type === 'Instance') {
