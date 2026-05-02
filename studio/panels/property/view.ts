@@ -932,14 +932,13 @@ export class PropertyPanelView {
       const data = JSON.parse(jsonValue)
       const { value, dir } = data
 
-      // Mirrors handlePaddingChange — naive single-property update.
-      // TODO: Per-side directional margin (mar-t / mar-r / …) — same
-      // shape as the padding TODO above; both will be addressed together
-      // when parseSpacingValue learns about per-side props.
-      if (dir === 'h' || dir === 'v') {
-        this.controller.changeProperty('mar', value)
+      const target = dirToSpacingProp('mar', dir)
+      if (!target) return
+
+      if (value === '') {
+        this.controller.removeProperty(target)
       } else {
-        this.controller.changeProperty('mar', value)
+        this.controller.changeProperty(target, value)
       }
     } catch (e) {
       log.error('Failed to parse margin change:', e)
