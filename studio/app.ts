@@ -43,6 +43,7 @@ import type { Diagnostic } from '@codemirror/lint'
 
 // Custom dialogs
 import { alert } from './dialog'
+import { initNotifications } from './init'
 
 // New architecture imports
 import {
@@ -73,8 +74,8 @@ import {
   // Preview Renderers (Clean Code modules)
   TokenRenderer,
   ComponentRenderer,
-  // Drop Service (Clean Code module)
-  handleStudioDropNew,
+  // Drop Service: handleStudioDropNew now consumed only by
+  // studio/init/init-notifications.ts (Phase D extraction).
   // Zag Helpers (Clean Code module)
   isZagComponent,
   findExistingZagDefinition,
@@ -1999,7 +2000,15 @@ function initStudio() {
   // Editor sync is done by SyncCoordinator via previewController.onSelect() callback
 
   // Set up notification handlers for user feedback
-  setupNotificationHandlers()
+  // (extracted to studio/init/init-notifications.ts in Phase D refactor)
+  initNotifications({
+    studio,
+    editor,
+    compile,
+    debouncedCompile,
+    debouncedSave,
+    getDropGlobals,
+  })
 
   // Set up icon picker for property panel (delegated to studio/panels/property)
   setupPropertyPanelIconPicker()
@@ -2018,141 +2027,8 @@ function initStudio() {
   })
 }
 
-/**
- * Wire studio events into app-level handlers (drag drops, immediate
- * compile, etc). Notification handlers were removed when the #status
- * bar was deleted from index.html.
- */
-function setupNotificationHandlers() {
-  if (!studio?.events) return
-
-  studio.events.on('drag:dropped', ({ source, target, dragData }) => {
-    if (!target) {
-      log.warn('[Drag v3] Missing target')
-      return
-    }
-    // Canvas-only state: editor has no Mirror node tree (just an empty
-    // editor or a `canvas …` declaration). Mirror still synthesizes an
-    // implicit wrapper node for hit-detection, but it has no source-map
-    // entry, so handleStudioDropNew can't insert into it. Fall back to
-    // "append as new top-level element" — what the user actually means
-    // by dropping a palette item there.
-    if (source?.type === 'palette') {
-      const before = editor?.state?.doc?.toString() ?? ''
-      const trimmed = before.trim()
-      const isEmptyOrCanvasOnly = trimmed === '' || /^canvas\b[^\n]*$/i.test(trimmed)
-      if (isEmptyOrCanvasOnly) {
-        const componentName = (dragData && dragData.componentName) || source.componentName
-        let elementCode = (dragData && dragData.mirTemplate) || componentName
-        if (dragData && !dragData.mirTemplate) {
-          if (dragData.textContent) elementCode += ' "' + dragData.textContent + '"'
-          if (dragData.properties) {
-            elementCode += dragData.textContent
-              ? ', ' + dragData.properties
-              : ' ' + dragData.properties
-          }
-        }
-        // Drops on canvas-only state always append as plain top-level
-        // elements. Tried wrapping with `Frame w full, h full, <zone>`
-        // to honor the drop's alignment zone, but it broke Mirror's
-        // source-map for subsequent drops into the new tree. A proper
-        // alignment-zone-honoring fix needs a Studio-level change in
-        // the drop pipeline. Until then, demos that need a centred
-        // element should explicitly set `center` via setProperty after
-        // the drop.
-        const inserted = elementCode
-        const appended =
-          before.length === 0 ? inserted : before.replace(/\s*$/, '') + '\n\n' + inserted
-        const len = editor.state.doc.length
-        editor.dispatch({ changes: { from: 0, to: len, insert: appended } })
-        // Force an immediate recompile so the SourceMap reflects the
-        // newly inserted nodes — without this, subsequent drops into
-        // those new nodes get silently rejected because their source-map
-        // entries don't exist yet.
-        try {
-          studio.events.emit('compile:requested', {})
-        } catch (_e) {
-          /* ignore */
-        }
-        return
-      }
-    }
-
-    // Handle canvas element move (type: 'canvas')
-    if (source?.type === 'canvas' && source.nodeId) {
-      // Object-literal `type: 'element'` widens to `string` without an
-      // explicit annotation; cast to the imported DropResult shape.
-      const dropResult: import('./drop/types').DropResult = {
-        source: {
-          type: 'element',
-          nodeId: source.nodeId,
-        },
-        targetNodeId: target.containerId,
-        // Use 'absolute' placement for stacked containers with position
-        placement: target.mode === 'absolute' && target.position ? 'absolute' : 'inside',
-        insertionIndex: target.insertionIndex,
-        // Include position for absolute/stacked drops
-        absolutePosition: target.position || undefined,
-        // Include alignment for aligned drops (9-point grid)
-        alignment: target.mode === 'aligned' ? { zone: target.alignmentProperty } : undefined,
-      }
-      handleStudioDropNew(dropResult, getDropGlobals())
-      return
-    }
-
-    // Handle palette component insert (type: 'palette')
-    if (!dragData) {
-      log.warn('[Drag v3] Missing dragData for palette drop')
-      return
-    }
-
-    // Convert v3 format to DropResult format. Cast through the typed
-    // shape — the dragData fields are a structural superset of DropSource,
-    // and `type: 'palette'` would otherwise widen to `string`.
-    const dropResult: import('./drop/types').DropResult = {
-      source: {
-        type: 'palette',
-        componentId: dragData.componentId,
-        componentName: dragData.componentName,
-        // 'template' is a legacy alias kept for downstream consumers;
-        // the typed DropSource doesn't list it but extra fields are
-        // accepted via structural typing.
-        properties: dragData.properties,
-        textContent: dragData.textContent,
-        children: dragData.children,
-        mirTemplate: dragData.mirTemplate,
-        dataBlock: dragData.dataBlock,
-      } as import('./drop/types').DropSource,
-      targetNodeId: target.containerId,
-      // Use 'absolute' placement for stacked containers with position
-      placement: target.mode === 'absolute' && target.position ? 'absolute' : 'inside',
-      insertionIndex: target.insertionIndex,
-      // Include position for absolute/stacked drops
-      absolutePosition: target.position || undefined,
-      // Include alignment for aligned drops (9-point grid)
-      alignment: target.mode === 'aligned' ? { zone: target.alignmentProperty } : undefined,
-    }
-
-    handleStudioDropNew(dropResult, getDropGlobals()).catch(err => {
-      log.error('[Drag v3] handleStudioDropNew failed:', err)
-    })
-  })
-
-  // Immediate compile when requested (bypasses 300ms debounce for drag-drop operations)
-  // This significantly improves perceived performance after drops
-  studio.events.on('compile:requested', () => {
-    // Cancel pending debounce to avoid duplicate compiles
-    if (typeof debouncedCompile !== 'undefined' && debouncedCompile.cancel) {
-      debouncedCompile.cancel()
-    }
-    // Compile immediately with current editor content
-    const code = editor?.state?.doc?.toString()
-    if (code !== undefined) {
-      compile(code)
-      debouncedSave(code)
-    }
-  })
-}
+// (setupNotificationHandlers extracted to studio/init/init-notifications.ts —
+// invoked from initStudio() above as `initNotifications({...})`.)
 
 // Property panel global event listeners are wired below in initStudio()
 // via setupPropertyPanelIconPicker / setupPropertyPanelEventListeners

@@ -16,3 +16,4 @@ export {
   type InlineEditInitResult,
 } from './init-inline-edit'
 export { initSync, type SyncInitConfig, type SyncInitResult } from './init-sync'
+export { initNotifications, type NotificationInitConfig } from './init-notifications'
