@@ -89,24 +89,36 @@ const PROP_MAP_LITERAL = JSON.stringify(PROP_MAP)
 const ALIGN_MAP_LITERAL = JSON.stringify(ALIGN_MAP)
 const FALLBACK_ICON_LITERAL = JSON.stringify(FALLBACK_ICON)
 
+// Vite SSR (Vitest dev mode) rewrites cross-module imports to
+// `__vite_ssr_import_N__.foo` lookups. When a function is later
+// stamped via .toString(), those rewritten references leak into the
+// emitted runtime string and blow up at execution time with
+// "ReferenceError: __vite_ssr_import_0__ is not defined". Production
+// builds (tsup/esbuild) inline cross-module references to bare names,
+// so this only bites the test runner — but the unhandled errors mask
+// real failures. Strip the SSR shim everywhere we stamp.
+function stamp(fn: { toString(): string }): string {
+  return fn.toString().replace(/__vite_ssr_import_\d+__\s*\.\s*([A-Za-z_$][\w$]*)/g, '$1')
+}
+
 // Stamp the typed security functions verbatim. Both are self-contained
 // (helpers are nested in the function body) so .toString() yields a
 // runnable snippet. This kills the security drift the third audit
 // flagged: production runtime now uses the SAME validation/sanitization
 // as the typed module that has dedicated unit tests.
-const SANITIZE_ICON_NAME_SRC = sanitizeIconName.toString()
-const SANITIZE_SVG_SRC = sanitizeSVG.toString()
+const SANITIZE_ICON_NAME_SRC = stamp(sanitizeIconName)
+const SANITIZE_SVG_SRC = stamp(sanitizeSVG)
 
 // Stamp the typed scroll helpers. resolveElement is the shared lookup;
 // the four scroll functions reference it by name. They become top-level
 // declarations in the emitted runtime; _runtime exposes them via shorthand
 // property assignment (scrollTo, scrollBy, …) so emitter call sites
 // (_runtime.scrollTo(...)) keep working.
-const RESOLVE_ELEMENT_SRC = resolveElement.toString()
-const SCROLL_TO_SRC = scrollToTyped.toString()
-const SCROLL_BY_SRC = scrollByTyped.toString()
-const SCROLL_TO_TOP_SRC = scrollToTopTyped.toString()
-const SCROLL_TO_BOTTOM_SRC = scrollToBottomTyped.toString()
+const RESOLVE_ELEMENT_SRC = stamp(resolveElement)
+const SCROLL_TO_SRC = stamp(scrollToTyped)
+const SCROLL_BY_SRC = stamp(scrollByTyped)
+const SCROLL_TO_TOP_SRC = stamp(scrollToTopTyped)
+const SCROLL_TO_BOTTOM_SRC = stamp(scrollToBottomTyped)
 
 // Stamp the toast factory. createToastModule.toString() yields a
 // self-contained closure that owns its own counter + active-toast map.
@@ -116,25 +128,25 @@ const SCROLL_TO_BOTTOM_SRC = scrollToBottomTyped.toString()
 // while the compiler emits the options-object form
 // (toast(msg, { type, position })) — so types/positions were silently
 // ignored in production.
-const CREATE_TOAST_MODULE_SRC = createToastModule.toString()
+const CREATE_TOAST_MODULE_SRC = stamp(createToastModule)
 
 // Stamp the typed input-control helpers. Each accepts string|element
 // (string lookup via resolveElement, the existing top-level helper)
 // and is fully self-contained — no state-machine dependency, just
 // dataset.state assignment. _runtime exposes them via shorthand.
-const FOCUS_SRC = focusTyped.toString()
-const BLUR_SRC = blurTyped.toString()
-const CLEAR_SRC = clearTyped.toString()
-const SELECT_TEXT_SRC = selectTextTyped.toString()
-const SET_ERROR_SRC = setErrorTyped.toString()
-const CLEAR_ERROR_SRC = clearErrorTyped.toString()
+const FOCUS_SRC = stamp(focusTyped)
+const BLUR_SRC = stamp(blurTyped)
+const CLEAR_SRC = stamp(clearTyped)
+const SELECT_TEXT_SRC = stamp(selectTextTyped)
+const SET_ERROR_SRC = stamp(setErrorTyped)
+const CLEAR_ERROR_SRC = stamp(clearErrorTyped)
 
 // Stamp typed show/hide/toggle. close() stays inline because it has a
 // `this.transitionTo(el, 'default')` fast-path for state-machine
 // elements — and transitionTo isn't yet stamped.
-const SHOW_SRC = showTyped.toString()
-const HIDE_SRC = hideTyped.toString()
-const TOGGLE_SRC = toggleTyped.toString()
+const SHOW_SRC = stamp(showTyped)
+const HIDE_SRC = stamp(hideTyped)
+const TOGGLE_SRC = stamp(toggleTyped)
 
 // Stamp the state-machine cluster (no-animation half).
 // applyState / removeState — pure DOM ops.
@@ -148,41 +160,41 @@ const TOGGLE_SRC = toggleTyped.toString()
 // are still inline _runtime methods because they pull in
 // playStateAnimation + batchInFrame from animations.ts/batching.ts —
 // that's a separate consolidation pass.
-const APPLY_STATE_SRC = applyState.toString()
-const REMOVE_STATE_SRC = removeState.toString()
-const COLLECT_STATE_PROPERTIES_SRC = collectStateProperties.toString()
-const STORE_BASE_STYLES_SRC = storeBaseStyles.toString()
-const ENSURE_BASE_STYLES_SRC = ensureBaseStyles.toString()
-const BUILD_STATE_CONTEXT_SRC = buildStateContext.toString()
-const EVALUATE_TOKEN_SRC = evaluateToken.toString()
-const HAS_LOGICAL_OPERATORS_SRC = hasLogicalOperators.toString()
-const EVALUATE_CONDITION_SRC = evaluateCondition.toString()
-const EVALUATE_CHILD_VISIBILITY_SRC = evaluateChildVisibility.toString()
-const UPDATE_VISIBILITY_SRC = updateVisibility.toString()
-const SET_STATE_SRC = setState.toString()
-const TOGGLE_STATE_SRC = toggleState.toString()
+const APPLY_STATE_SRC = stamp(applyState)
+const REMOVE_STATE_SRC = stamp(removeState)
+const COLLECT_STATE_PROPERTIES_SRC = stamp(collectStateProperties)
+const STORE_BASE_STYLES_SRC = stamp(storeBaseStyles)
+const ENSURE_BASE_STYLES_SRC = stamp(ensureBaseStyles)
+const BUILD_STATE_CONTEXT_SRC = stamp(buildStateContext)
+const EVALUATE_TOKEN_SRC = stamp(evaluateToken)
+const HAS_LOGICAL_OPERATORS_SRC = stamp(hasLogicalOperators)
+const EVALUATE_CONDITION_SRC = stamp(evaluateCondition)
+const EVALUATE_CHILD_VISIBILITY_SRC = stamp(evaluateChildVisibility)
+const UPDATE_VISIBILITY_SRC = stamp(updateVisibility)
+const SET_STATE_SRC = stamp(setState)
+const TOGGLE_STATE_SRC = stamp(toggleState)
 
 // Stamp the full selection cluster from compiler/runtime/selection.ts.
 // Both helpers and the public API are exported from the typed module
 // just so the template can stamp them by name; the public API
 // references the helpers by name so they MUST be top-level in the
 // emitted runtime.
-const UPDATE_BOUND_ELEMENTS_SRC = updateBoundElements.toString()
-const UPDATE_TRIGGER_TEXT_SRC = updateTriggerText.toString()
-const UPDATE_SELECTION_BINDING_SRC = updateSelectionBinding.toString()
-const BIND_TRIGGER_TEXT_SRC = bindTriggerText.toString()
-const DESELECT_SIBLINGS_SRC = deselectSiblings.toString()
-const UNHIGHLIGHT_SIBLINGS_SRC = unhighlightSiblings.toString()
-const GET_HIGHLIGHTABLE_ITEMS_SRC = getHighlightableItems.toString()
-const SELECT_SRC = selectTyped.toString()
-const DESELECT_SRC = deselectTyped.toString()
-const SELECT_HIGHLIGHTED_SRC = selectHighlighted.toString()
-const HIGHLIGHT_SRC = highlightTyped.toString()
-const UNHIGHLIGHT_SRC = unhighlightTyped.toString()
-const HIGHLIGHT_NEXT_SRC = highlightNext.toString()
-const HIGHLIGHT_PREV_SRC = highlightPrev.toString()
-const HIGHLIGHT_FIRST_SRC = highlightFirst.toString()
-const HIGHLIGHT_LAST_SRC = highlightLast.toString()
+const UPDATE_BOUND_ELEMENTS_SRC = stamp(updateBoundElements)
+const UPDATE_TRIGGER_TEXT_SRC = stamp(updateTriggerText)
+const UPDATE_SELECTION_BINDING_SRC = stamp(updateSelectionBinding)
+const BIND_TRIGGER_TEXT_SRC = stamp(bindTriggerText)
+const DESELECT_SIBLINGS_SRC = stamp(deselectSiblings)
+const UNHIGHLIGHT_SIBLINGS_SRC = stamp(unhighlightSiblings)
+const GET_HIGHLIGHTABLE_ITEMS_SRC = stamp(getHighlightableItems)
+const SELECT_SRC = stamp(selectTyped)
+const DESELECT_SRC = stamp(deselectTyped)
+const SELECT_HIGHLIGHTED_SRC = stamp(selectHighlighted)
+const HIGHLIGHT_SRC = stamp(highlightTyped)
+const UNHIGHLIGHT_SRC = stamp(unhighlightTyped)
+const HIGHLIGHT_NEXT_SRC = stamp(highlightNext)
+const HIGHLIGHT_PREV_SRC = stamp(highlightPrev)
+const HIGHLIGHT_FIRST_SRC = stamp(highlightFirst)
+const HIGHLIGHT_LAST_SRC = stamp(highlightLast)
 
 // Stamp the page-name sanitizer. Closes a real gap: the inline
 // template's navigateToPage built filenames straight from user input
@@ -192,7 +204,7 @@ const HIGHLIGHT_LAST_SRC = highlightLast.toString()
 // runtime, which legitimately contains every "dangerous" pattern the
 // scanner looked for. sanitizePageName at the entry point is the
 // real defence — see compiler/runtime/component-navigation.ts.)
-const SANITIZE_PAGE_NAME_SRC = sanitizePageName.toString()
+const SANITIZE_PAGE_NAME_SRC = stamp(sanitizePageName)
 
 export const DOM_RUNTIME_CODE = `
 // Mirror DOM Runtime
