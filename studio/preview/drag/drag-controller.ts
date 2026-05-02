@@ -348,7 +348,7 @@ export class DragController implements Reportable<ControllerReport> {
 
   /** Execute drop callback safely. Tolerates a null target (root-drop path). */
   private async executeDropCallback(source: DragSource, target: DropTarget | null): Promise<void> {
-    console.log('[DragController] executeDropCallback called', {
+    log.debug('[DragController] executeDropCallback called', {
       hasCallbacks: !!this.callbacks,
       hasOnDrop: !!this.callbacks?.onDrop,
       source: source.type,
@@ -356,16 +356,16 @@ export class DragController implements Reportable<ControllerReport> {
     })
 
     if (!this.callbacks?.onDrop) {
-      console.warn('[DragController] No onDrop callback set - drop will not be processed')
+      log.warn('[DragController] No onDrop callback set - drop will not be processed')
       return
     }
 
     try {
-      console.log('[DragController] Calling onDrop callback...')
+      log.debug('[DragController] Calling onDrop callback...')
       await this.callbacks.onDrop(source, target as DropTarget)
-      console.log('[DragController] onDrop callback completed')
+      log.debug('[DragController] onDrop callback completed')
     } catch (error) {
-      console.error('[DragController] Drop failed:', error)
+      log.error('[DragController] Drop failed:', error)
     }
   }
 
@@ -603,10 +603,10 @@ export function setupGlobalDragReporting(): void {
       recordingAdapter = new RecordingAdapter()
       reporter.addAdapter(recordingAdapter)
       reporter.addAdapter(new ConsoleAdapter({ level: 'minimal' }))
-      console.log('[DragReporting] Recording enabled. Use __getDragRecordings() to access.')
+      log.debug('[DragReporting] Recording enabled. Use __getDragRecordings() to access.')
     } else {
       reporter.addAdapter(new ConsoleAdapter({ level: mode }))
-      console.log(`[DragReporting] Console logging enabled (${mode})`)
+      log.debug(`[DragReporting] Console logging enabled (${mode})`)
     }
 
     reporter.enable()
@@ -614,11 +614,11 @@ export function setupGlobalDragReporting(): void {
   ;(globalThis as any).__disableDragReporting = () => {
     const reporter = getDragReporter()
     reporter.disable()
-    console.log('[DragReporting] Disabled')
+    log.debug('[DragReporting] Disabled')
   }
   ;(globalThis as any).__getDragRecordings = () => {
     if (!recordingAdapter) {
-      console.log(
+      log.debug(
         '[DragReporting] No recording adapter. Call __enableDragReporting("recording") first.'
       )
       return null
@@ -627,7 +627,7 @@ export function setupGlobalDragReporting(): void {
   }
   ;(globalThis as any).__downloadDragRecordings = () => {
     if (!recordingAdapter) {
-      console.log(
+      log.debug(
         '[DragReporting] No recording adapter. Call __enableDragReporting("recording") first.'
       )
       return

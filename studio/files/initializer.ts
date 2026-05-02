@@ -28,6 +28,9 @@ import { setContextCallbacks } from './context-menu'
 import { setInlineCallbacks, startInlineRename, startInlineCreate } from './inline-editor'
 import { setDragCallbacks } from './drag-drop'
 import { setProjectActions, initProjectToolbar } from './toolbar'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('FileInitializer')
 
 interface Storage {
   isInitialized: boolean
@@ -83,7 +86,7 @@ async function initStorage(): Promise<void> {
     await storage!.init()
   }
   setStorage(storage!)
-  console.log(`[Files] Initialized with ${storage!.providerType} provider`)
+  log.debug(`[Files] Initialized with ${storage!.providerType} provider`)
 }
 
 function initModules(projectActions: ProjectActions): void {
@@ -153,7 +156,7 @@ async function cacheFile(path: string): Promise<void> {
     uiState.updateCache(path, content)
     syncToWindow(path, content)
   } catch (e) {
-    console.warn('[Files] Failed to cache:', path)
+    log.warn('[Files] Failed to cache:', path)
   }
 }
 
@@ -216,14 +219,14 @@ function handleFileRenamed(data: unknown): void {
 }
 
 function handleProjectClosed(): void {
-  console.log('[Files] Project closed')
+  log.debug('[Files] Project closed')
   uiState.reset()
   renderFileTree()
 }
 
 async function handleProjectOpened(data: unknown): Promise<void> {
   const { project } = data as { project: { name: string } }
-  console.log('[Files] Project opened:', project.name)
+  log.debug('[Files] Project opened:', project.name)
 
   uiState.reset()
   await preloadAllFiles()
@@ -233,7 +236,7 @@ async function handleProjectOpened(data: unknown): Promise<void> {
 
 function handleError(data: unknown): void {
   const { error, operation } = data as { error: Error; operation: string }
-  console.error(`[Files] Error in ${operation}:`, error)
+  log.error(`[Files] Error in ${operation}:`, error)
 }
 
 async function preloadAllFiles(): Promise<void> {
@@ -241,11 +244,11 @@ async function preloadAllFiles(): Promise<void> {
   const paths = collectFilePaths(tree)
 
   if (paths.length > 100) {
-    console.warn(`[Files] Large project: ${paths.length} files`)
+    log.warn(`[Files] Large project: ${paths.length} files`)
   }
 
   await loadFilesInBatches(paths)
-  console.log('[Files] Preloaded', Object.keys(uiState.getCache()).length, 'files')
+  log.debug('[Files] Preloaded', Object.keys(uiState.getCache()).length, 'files')
 }
 
 function collectFilePaths(items: TreeItem[]): string[] {
@@ -292,12 +295,12 @@ async function openInitialProject(): Promise<void> {
       await createDefaultProject()
     }
   } catch (e) {
-    console.error('[Files] Server error:', e)
+    log.error('[Files] Server error:', e)
   }
 }
 
 async function createDefaultProject(): Promise<void> {
-  console.log('[Files] Creating default project...')
+  log.debug('[Files] Creating default project...')
   const project = await storage!.createProject('My Project')
   await storage!.openProject(project.id)
 }
@@ -330,7 +333,7 @@ function syncRename(oldPath: string, newPath: string): void {
 // Project operations
 export async function openFolder(): Promise<string | null> {
   if (!storage!.canOpenFolderDialog()) {
-    console.log('[Files] Folder dialog not available')
+    log.debug('[Files] Folder dialog not available')
     return null
   }
 
@@ -339,7 +342,7 @@ export async function openFolder(): Promise<string | null> {
     if (path) await storage!.openProject(path)
     return path
   } catch (e) {
-    console.error('[Files] Open folder failed:', e)
+    log.error('[Files] Open folder failed:', e)
     return null
   }
 }

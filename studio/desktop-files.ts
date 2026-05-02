@@ -8,6 +8,9 @@
 import { alert, confirm, confirmDelete } from './dialog'
 import { storage, projectActions } from './storage'
 import type { StorageItem } from './storage'
+import { createLogger } from '../compiler/utils/logger'
+
+const log = createLogger('DesktopFiles')
 
 // =============================================================================
 // Local types
@@ -414,9 +417,7 @@ async function preloadAllFiles(): Promise<void> {
 
   // Warn about large projects
   if (filePaths.length > LARGE_PROJECT_WARNING) {
-    console.warn(
-      `[DesktopFiles] Large project: ${filePaths.length} files. Loading may take a moment.`
-    )
+    log.warn(`[DesktopFiles] Large project: ${filePaths.length} files. Loading may take a moment.`)
   }
 
   // Load files in batches with concurrency limit
@@ -440,11 +441,11 @@ async function preloadAllFiles(): Promise<void> {
         }
         loaded++
       } else {
-        console.warn('[DesktopFiles] Failed to preload:', result.reason)
+        log.warn('[DesktopFiles] Failed to preload:', result.reason)
       }
     }
   }
-  console.log('[DesktopFiles] Preloaded', Object.keys(filesCache).length, 'files')
+  log.debug('[DesktopFiles] Preloaded', Object.keys(filesCache).length, 'files')
 }
 
 // =============================================================================
@@ -468,7 +469,7 @@ export async function initDesktopFiles(options: InternalFileCallbacks = {}): Pro
     await storage.init()
   }
 
-  console.log(`[DesktopFiles] Initialized with ${storage.providerType} provider`)
+  log.debug(`[DesktopFiles] Initialized with ${storage.providerType} provider`)
 
   // Subscribe to storage events
   storage.events.on('tree:changed', ({ tree }) => {
@@ -485,7 +486,7 @@ export async function initDesktopFiles(options: InternalFileCallbacks = {}): Pro
         window.desktopFiles.updateFileCache(path, content)
       }
     } catch (e) {
-      console.warn('[DesktopFiles] Failed to cache new file:', path)
+      log.warn('[DesktopFiles] Failed to cache new file:', path)
     }
     // Auto-select new file
     selectFile(path)
@@ -538,13 +539,13 @@ export async function initDesktopFiles(options: InternalFileCallbacks = {}): Pro
   })
 
   storage.events.on('project:closed', () => {
-    console.log('[DesktopFiles] Project closed')
+    log.debug('[DesktopFiles] Project closed')
     resetUIState()
     renderFileTree()
   })
 
   storage.events.on('project:opened', async ({ project }) => {
-    console.log('[DesktopFiles] Project opened:', project.name)
+    log.debug('[DesktopFiles] Project opened:', project.name)
 
     // Reset UI state before loading new project
     resetUIState()
@@ -563,7 +564,7 @@ export async function initDesktopFiles(options: InternalFileCallbacks = {}): Pro
   })
 
   storage.events.on('error', ({ error, operation }) => {
-    console.error(`[DesktopFiles] Error in ${operation}:`, error)
+    log.error(`[DesktopFiles] Error in ${operation}:`, error)
   })
 
   // Auto-open first available project if no project is open
@@ -575,22 +576,22 @@ export async function initDesktopFiles(options: InternalFileCallbacks = {}): Pro
       if (projects.length > 0) {
         // Open existing project
         await storage.openProject(projects[0].id)
-        console.log('[DesktopFiles] Opened existing project:', projects[0].name)
+        log.debug('[DesktopFiles] Opened existing project:', projects[0].name)
       } else if ((storage.providerType as string) === 'server') {
         // No projects exist on server - create one automatically
         // PHP API creates default files (index.mir, tokens.tok, components.com)
-        console.log('[DesktopFiles] No server projects, creating default project...')
+        log.debug('[DesktopFiles] No server projects, creating default project...')
         const newProject = await storage.createProject('My Project')
         await storage.openProject(newProject.id)
-        console.log('[DesktopFiles] Created and opened new project:', newProject.name)
+        log.debug('[DesktopFiles] Created and opened new project:', newProject.name)
       } else {
         // Non-server provider - this shouldn't happen in browser mode
-        console.error('[DesktopFiles] Unexpected provider type:', storage.providerType)
+        log.error('[DesktopFiles] Unexpected provider type:', storage.providerType)
       }
     } catch (e) {
       // Server error - show error
       const msg = e instanceof Error ? e.message : String(e)
-      console.error('[DesktopFiles] Server error:', msg)
+      log.error('[DesktopFiles] Server error:', msg)
       // Don't fallback to DemoProvider - just show the error
     }
   }
@@ -628,11 +629,11 @@ export async function openFolder(): Promise<string | null> {
       }
     } else {
       // No native dialogs available - browser mode doesn't support this
-      console.log('[DesktopFiles] Native folder dialog not available in browser mode')
+      log.debug('[DesktopFiles] Native folder dialog not available in browser mode')
       return null
     }
   } catch (e) {
-    console.error('[DesktopFiles] Open folder failed:', e)
+    log.error('[DesktopFiles] Open folder failed:', e)
   }
   return null
 }
@@ -669,7 +670,7 @@ export async function selectFile(filePath: string): Promise<void> {
           await storage.writeFile(currentFile, liveContent)
         }
       } catch (saveErr) {
-        console.warn('[DesktopFiles] Failed to persist outgoing file:', currentFile, saveErr)
+        log.warn('[DesktopFiles] Failed to persist outgoing file:', currentFile, saveErr)
       }
     }
 
@@ -687,7 +688,7 @@ export async function selectFile(filePath: string): Promise<void> {
       window._desktopFiles.onFileSelect(filePath, content)
     }
   } catch (e) {
-    console.error('[DesktopFiles] Select file failed:', e)
+    log.error('[DesktopFiles] Select file failed:', e)
   }
 }
 
@@ -701,7 +702,7 @@ export async function saveFile(filePath: string, content: string): Promise<void>
   try {
     await storage.writeFile(filePath, content)
   } catch (e) {
-    console.error('[DesktopFiles] Save failed:', e)
+    log.error('[DesktopFiles] Save failed:', e)
   }
 }
 
@@ -739,7 +740,7 @@ export async function createFile(
     await storage.writeFile(targetPath, content)
     await selectFile(targetPath)
   } catch (e) {
-    console.error('[DesktopFiles] Create file failed:', e)
+    log.error('[DesktopFiles] Create file failed:', e)
   }
 }
 
@@ -760,7 +761,7 @@ export async function createFolder(
   try {
     await storage.createFolder(targetPath)
   } catch (e) {
-    console.error('[DesktopFiles] Create folder failed:', e)
+    log.error('[DesktopFiles] Create folder failed:', e)
     await alert('Ordner erstellen fehlgeschlagen', { title: 'Fehler' })
   }
 }
@@ -775,7 +776,7 @@ export async function renameItem(oldPath: string, newName: string): Promise<void
   try {
     await storage.renameFile(oldPath, newPath)
   } catch (e) {
-    console.error('[DesktopFiles] Rename failed:', e)
+    log.error('[DesktopFiles] Rename failed:', e)
   }
 }
 
@@ -816,7 +817,7 @@ export async function duplicateFile(path: string): Promise<void> {
   try {
     await storage.copyFile(path, newPath)
   } catch (e) {
-    console.error('[DesktopFiles] Duplicate failed:', e)
+    log.error('[DesktopFiles] Duplicate failed:', e)
   }
 }
 
@@ -836,7 +837,7 @@ export async function deleteItem(path: string, isFolder = false): Promise<void> 
       await storage.deleteFile(path)
     }
   } catch (e) {
-    console.error('[DesktopFiles] Delete failed:', e)
+    log.error('[DesktopFiles] Delete failed:', e)
   }
 }
 
@@ -849,14 +850,14 @@ export async function moveItem(sourcePath: string, targetFolder: string): Promis
 
   if (sourcePath === newPath) return
   if (newPath.startsWith(sourcePath + '/')) {
-    console.warn('[DesktopFiles] Cannot move folder into itself')
+    log.warn('[DesktopFiles] Cannot move folder into itself')
     return
   }
 
   try {
     await storage.moveItem(sourcePath, targetFolder)
   } catch (e) {
-    console.error('[DesktopFiles] Move failed:', e)
+    log.error('[DesktopFiles] Move failed:', e)
   }
 }
 
