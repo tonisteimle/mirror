@@ -14,32 +14,7 @@ import {
   type EventHandlerMap,
 } from '../base/section'
 import type { SpacingToken } from '../types'
-
-/**
- * Parse margin value into T, R, B, L components.
- * Mirrors `parseSpacingValue` in spacing-section.ts.
- */
-function parseMarginValue(value: string): { t: string; r: string; b: string; l: string } {
-  const parts = value.split(/\s+/).filter(Boolean)
-  let t = '',
-    r = '',
-    b = '',
-    l = ''
-
-  if (parts.length === 1) {
-    t = r = b = l = parts[0]
-  } else if (parts.length === 2) {
-    t = b = parts[0]
-    r = l = parts[1]
-  } else if (parts.length === 4) {
-    t = parts[0]
-    r = parts[1]
-    b = parts[2]
-    l = parts[3]
-  }
-
-  return { t, r, b, l }
-}
+import { extractSides, spacingPropertyNames } from '../utils/spacing-parse'
 
 /**
  * Build margin value from T, R, B, L (collapses to 1- or 2-form when symmetric).
@@ -74,15 +49,15 @@ export class MarginSection extends BaseSection {
 
     const props = category.properties
 
-    // Find margin values (full-shorthand `margin` or aliases `mar`/`m`)
-    const marProp = props.find(p => p.name === 'margin' || p.name === 'mar' || p.name === 'm')
-    const marValue = marProp?.value || ''
-    const marIsOverride = marProp?.source === 'instance'
+    // Resolve T/R/B/L from shorthand + axis + per-side margin props.
+    const { t: tMar, r: rMar, b: bMar, l: lMar } = extractSides(props, 'margin', 'mar', 'm')
+    // Collapsed view: top wins for V, right wins for H when asymmetric.
+    const vMar = tMar
+    const hMar = rMar
 
-    // Parse margin value
-    const { t: tMar, r: rMar, b: bMar, l: lMar } = parseMarginValue(marValue)
-    const vMar = tMar,
-      hMar = rMar
+    // Override marker spans the whole margin family.
+    const marNames = new Set(spacingPropertyNames('margin', 'mar', 'm'))
+    const marIsOverride = props.some(p => marNames.has(p.name) && p.source === 'instance')
 
     // Get tokens (.mar suffix)
     const tokens = data.spacingTokens?.filter(t => t.fullName.endsWith('.mar')) || []
@@ -280,4 +255,4 @@ export function createMarginSection(deps: SectionDependencies): MarginSection {
   return new MarginSection(deps)
 }
 
-export { parseMarginValue, buildMarginValue }
+export { buildMarginValue }

@@ -382,6 +382,51 @@ describe('Property Panel Sections', () => {
       expect(handlers).toHaveProperty('input[data-mar-dir]')
       expect(handlers).not.toHaveProperty('input[data-pad-dir]')
     })
+
+    it('parses 3-value margin shorthand', () => {
+      const cat = createMockCategory('spacing', [{ name: 'mar', value: '4 8 12' }])
+      const data: SectionData = {
+        ...createMockSectionData({ category: cat }),
+        expandedSections: new Set(['margin']),
+      }
+      const html = section.render(data)
+      expect(html).toMatch(/value="4"\s+data-mar-dir="t"/)
+      expect(html).toMatch(/value="8"\s+data-mar-dir="r"/)
+      expect(html).toMatch(/value="12"\s+data-mar-dir="b"/)
+      expect(html).toMatch(/value="8"\s+data-mar-dir="l"/)
+    })
+
+    it('reads per-side margin props (mar-t, ...)', () => {
+      const cat = createMockCategory('spacing', [
+        { name: 'mar-t', value: '4' },
+        { name: 'mar-r', value: '8' },
+        { name: 'mar-b', value: '12' },
+        { name: 'mar-l', value: '16' },
+      ])
+      const data: SectionData = {
+        ...createMockSectionData({ category: cat }),
+        expandedSections: new Set(['margin']),
+      }
+      const html = section.render(data)
+      expect(html).toMatch(/value="4"\s+data-mar-dir="t"/)
+      expect(html).toMatch(/value="8"\s+data-mar-dir="r"/)
+      expect(html).toMatch(/value="12"\s+data-mar-dir="b"/)
+      expect(html).toMatch(/value="16"\s+data-mar-dir="l"/)
+    })
+
+    it('per-side margin props override shorthand', () => {
+      const cat = createMockCategory('spacing', [
+        { name: 'mar', value: '8' },
+        { name: 'mar-t', value: '20' },
+      ])
+      const data: SectionData = {
+        ...createMockSectionData({ category: cat }),
+        expandedSections: new Set(['margin']),
+      }
+      const html = section.render(data)
+      expect(html).toMatch(/value="20"\s+data-mar-dir="t"/)
+      expect(html).toMatch(/value="8"\s+data-mar-dir="r"/)
+    })
   })
 
   describe('BorderSection', () => {
