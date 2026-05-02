@@ -977,8 +977,11 @@ function getZagDeps() {
   }
 }
 
-function getDropGlobals() {
+function getDropGlobals(): import('./drop').AppGlobals {
   const zagDeps = getZagDeps()
+  // The studio bootstrap object's `preview` is typed without `hideDropZone`,
+  // but the runtime instance does have that method (added by the preview
+  // controller). Bridge the structural mismatch via cast.
   return {
     studioCodeModifier,
     studioRobustModifier,
@@ -1004,7 +1007,7 @@ function getDropGlobals() {
     findOrCreateComponentsFile: () => findOrCreateComponentsFile(zagDeps),
     addZagDefinitionToComponentsFile: (code: string, file: string) =>
       addZagDefinitionToComponentsFile(code, file, zagDeps),
-  }
+  } as unknown as import('./drop').AppGlobals
 }
 
 // Auto-create files for `import` / `route` references — encapsulated
@@ -2157,9 +2160,14 @@ function updateStudio(ast: Program, ir: IR, sourceMap: SourceMap, source: string
     }
     studioPropertyPanel.updateDependencies(studioPropertyExtractor, studioCodeModifier)
   } else {
+    // PropertyPanel wants a full SelectionProvider; the AppSelectionManager
+    // typedef is a deliberately narrow subset of what StateSelectionAdapter
+    // (the actual runtime value) implements. Cross-shape cast through
+    // ConstructorParameters so the cast tracks the constructor signature.
+    type PropertyPanelArgs = ConstructorParameters<typeof PropertyPanel>
     studioPropertyPanel = new PropertyPanel(
       propertyPanelContainer,
-      studioSelectionManager,
+      studioSelectionManager as unknown as PropertyPanelArgs[1],
       studioPropertyExtractor,
       studioCodeModifier,
       handleStudioCodeChange,
@@ -2407,21 +2415,35 @@ window.files = files
 window.switchFile = switchFile // For test API (panel.files.open) and external scripts
 window.getCurrentFile = () => currentFile // For test API (panel.files.getCurrentFile)
 window.studio = studio // New architecture
-window.generateComponentCodeFromDragData = generateComponentCodeFromDragData // For editor drop tests
+// The typed source accepts ComponentDragData; the test-runner global is
+// declared with `dragData: unknown` (callers pass arbitrary JSON). The
+// callee tolerates the wider input — bridge with a cast.
+window.generateComponentCodeFromDragData = generateComponentCodeFromDragData as (
+  dragData: unknown,
+  options?: { componentId?: string; filename?: string }
+) => string
 
 // ==========================================
 // Resizable Panel Dividers with localStorage persistence
 // (delegated to studio/ui/panel-dividers.ts)
 // ==========================================
+// editorPanel / editorDivider / previewPanel are required by
+// initPanelDividers's typed config. The DOM element existence is
+// enforced by the studio template; non-null assertions document
+// that contract while keeping the boot path uncluttered.
 initPanelDividers({
   sidebar: document.getElementById('explorer-panel'),
   sidebarDivider: document.getElementById('sidebar-divider'),
   componentsPanel: document.getElementById('components-panel'),
   componentsDivider: document.getElementById('components-divider'),
-  editorPanel: document.querySelector('.editor-panel'),
-  editorDivider: document.getElementById('editor-divider'),
-  previewPanel: document.querySelector('.preview-panel'),
-  getStudio: () => window.MirrorStudio,
+  editorPanel: document.querySelector<HTMLElement>('.editor-panel')!,
+  editorDivider: document.getElementById('editor-divider')!,
+  previewPanel: document.querySelector<HTMLElement>('.preview-panel')!,
+  // initPanelDividers wants the public MirrorStudioBridge shape; app.ts
+  // sets window.MirrorStudio to the StudioInstance from bootstrap.
+  // Both share the state/actions/events fields the dividers actually
+  // read — bridge with a cast.
+  getStudio: () => window.MirrorStudio as unknown as undefined,
 })
 
 // ==========================================
@@ -2432,9 +2454,9 @@ initPanelDividers({
 // API key needed) — pass an empty key so the handler short-circuits.
 
 initImageDropHandler({
-  editor: window.editor,
-  editorPanel: document.querySelector('.editor-panel'),
-  uploadIndicator: document.getElementById('upload-indicator'),
-  dropOverlay: document.getElementById('drop-overlay'),
+  editor: window.editor!,
+  editorPanel: document.querySelector<HTMLElement>('.editor-panel')!,
+  uploadIndicator: document.getElementById('upload-indicator')!,
+  dropOverlay: document.getElementById('drop-overlay')!,
   getImgbbKey: () => '',
 })
