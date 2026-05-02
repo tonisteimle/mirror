@@ -1,0 +1,220 @@
+    :root {
+      /* ============================================
+         DESIGN TOKENS - Mirror Studio
+         Alle Farben und Design-Werte zentral definiert
+         ============================================ */
+
+      /* Typography - Font Families */
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+
+      /* Typography - Font Sizes (4 Kernstufen - Optimiert) */
+      --font-xs: 10px;     /* Klein: Labels, Meta, Icons */
+      --font-sm: 11px;     /* Standard: Body Text (Hauptgröße) */
+      --font-base: 12px;   /* Basis: Inputs, Buttons */
+      --font-md: 13px;     /* Medium: Headings, Emphasis */
+
+      /* Typography - Font Weights */
+      --weight-medium: 500;
+      --weight-semibold: 600;
+
+      /* Typography - Line Heights */
+      --leading-tight: 1.4;
+      --leading-normal: 1.5;
+
+      /* Typography - Letter Spacing */
+      --tracking-wide: 0.5px;
+
+      /* Typography - Font Style */
+      --font-italic: italic;
+
+      /* Typography - Text Transform */
+      --text-uppercase: uppercase;
+
+      /* Base Colors */
+      --color-white: #ffffff;
+      --color-black: #000000;
+
+      /* Primary Colors - Brand: #5BA8F5 (light), #2271C1 (dark) */
+      --color-primary: #5BA8F5;
+      --color-primary-hover: #2271C1;
+      --color-primary-light: #5BA8F5;
+      --color-primary-muted: var(--primary-30);
+      --color-primary-selection: rgba(91, 168, 245, 0.25);
+      --color-primary-bg: var(--primary-10);
+
+      /* Accent Colors (Alias for Primary) */
+      --accent: #5BA8F5;
+      --accent-hover: #2271C1;
+
+      /* Semantic Colors */
+      --color-success: #22c55e;
+      --color-success-muted: rgba(34, 197, 94, 0.2);
+      --color-warning: #f59e0b;
+      --color-warning-muted: rgba(245, 158, 11, 0.2);
+      --color-error: #ef4444;
+      --color-error-muted: rgba(239, 68, 68, 0.2);
+      --color-error-bg: #7f1d1d;
+      --color-error-dark: #1c1012;
+      --color-error-light: #fca5a5;
+      --color-error-lighter: #fecaca;
+      --color-info: #5BA8F5;
+      --color-purple: #8B5CF6;
+      --color-purple-light: #A78BFA;
+      --color-purple-muted: rgba(139, 92, 246, 0.2);
+      --color-multi-select: #F97316;
+      --color-override: #f97316;
+
+      /* Slot Colors (drag & drop targets) */
+      --slot-border: #5BA8F5;
+      --slot-border-hover: #2271C1;
+      --slot-bg: rgba(91, 168, 245, 0.03);
+      --slot-bg-hover: rgba(91, 168, 245, 0.06);
+      --slot-bg-active: var(--primary-10);
+
+      /* Zone Indicator Colors */
+      --zone-bg: #1a1a1a;
+      --zone-border: #333333;
+      --zone-text: #E5E7EB;
+
+      /* Background Colors - Consolidated */
+      --bg-base: #0a0a0a;           /* App background (darkest) */
+      --bg-panel: #141414;          /* All panel backgrounds */
+      --bg-elevated: #1e1e1e;       /* Floating elements (dropdowns, popovers) */
+      --bg-input: #222222;          /* Inputs, toggles, interactive elements */
+      --bg-hover: #27272a;          /* Hover state */
+      --bg-active: #3f3f46;         /* Active/pressed state */
+
+      /* Text Colors - Consolidated */
+      --text-primary: #e4e4e7;      /* Main text */
+      --text-secondary: #a1a1aa;    /* Secondary text */
+      --text-muted: #71717a;        /* Muted/dim text */
+      --text-disabled: #52525b;     /* Disabled text */
+      --text-placeholder: #555;     /* Placeholder text */
+      --text-inverse: #ffffff;      /* Text on dark backgrounds */
+
+      /* Border Colors - Consolidated */
+      --border-default: #27272a;    /* Default borders */
+      --border-subtle: #3f3f46;     /* Subtle/muted borders */
+      --border-strong: #52525b;     /* Strong/hover borders */
+
+      /* Light/Contrast Colors (for checkmarks, icons on dark bg) */
+      --color-light: #ddd;
+      --color-lighter: #E5E5E5;
+      --color-lightest: #fafafa;
+
+      /* Icon Colors */
+      --icon-default: #71717a;
+      --icon-muted: #555;
+      --icon-accent: #5BA8F5;
+
+      /* Syntax Highlighting */
+      --syntax-keyword: #c9a87c;
+      --syntax-string: #a88fb0;
+      --syntax-comment: #5c6370;
+      --syntax-number: #c9a87c;
+      --syntax-function: #7fb3a8;
+      --syntax-variable: #8aabbd;
+      --syntax-property: #7fb3a8;
+      --syntax-event: #7a9ec2;
+      --syntax-state: #a88fb0;
+      --syntax-hex: #a88fb0;
+      --syntax-component: #8aabbd;
+      --syntax-punctuation: #5c6370;
+      --syntax-hex-pink: #f9a8d4;
+      --syntax-number-orange: #fdba74;
+
+      /* Additional Backgrounds */
+      --bg-button-hover: #252525;
+      --bg-grid: #1a1a1a;
+      --bg-button-dark: #222;
+      --bg-checkerboard-light: #606060;
+      --bg-checkerboard-dark: #404040;
+      --bg-cell-hover: #666;
+
+      /* Transparent Colors - White */
+      --white-5: rgba(255, 255, 255, 0.05);
+      --white-6: rgba(255, 255, 255, 0.06);
+      --white-10: rgba(255, 255, 255, 0.1);
+      --white-12: rgba(255, 255, 255, 0.12);
+      --white-20: rgba(255, 255, 255, 0.2);
+      --white-50: rgba(255, 255, 255, 0.5);
+      --white-70: rgba(255, 255, 255, 0.7);
+
+      /* Transparent Colors - Black */
+      --black-30: rgba(0, 0, 0, 0.3);
+      --black-40: rgba(0, 0, 0, 0.4);
+      --black-50: rgba(0, 0, 0, 0.5);
+      --black-60: rgba(0, 0, 0, 0.6);
+      --black-80: rgba(0, 0, 0, 0.8);
+      --black-85: rgba(0, 0, 0, 0.85);
+
+      /* Transparent Colors - Primary (Brand #5BA8F5 = rgb(91, 168, 245)) */
+      --primary-8: rgba(91, 168, 245, 0.08);
+      --primary-10: rgba(91, 168, 245, 0.1);
+      --primary-15: rgba(91, 168, 245, 0.15);
+      --primary-30: rgba(91, 168, 245, 0.3);
+      --primary-40: rgba(91, 168, 245, 0.4);
+      --primary-50: rgba(91, 168, 245, 0.5);
+      --primary-60: rgba(91, 168, 245, 0.6);
+      --primary-80: rgba(91, 168, 245, 0.8);
+      --primary-90: rgba(91, 168, 245, 0.9);
+
+      /* Transparent Colors - Semantic */
+      --error-10: rgba(239, 68, 68, 0.1);
+      --success-10: rgba(34, 197, 94, 0.1);
+      --warning-10: rgba(245, 158, 11, 0.1);
+      --multi-select-20: rgba(249, 115, 22, 0.2);
+
+      /* Focus Ring */
+      --focus-ring: 0 0 0 1px var(--primary-60), 0 0 8px var(--primary-15);
+      --focus-ring-sm: 0 0 0 1px var(--primary-60), 0 0 6px var(--primary-15);
+
+      /* Shadows */
+      --shadow-sm: 0 1px 2px var(--black-30);
+      --shadow-md: 0 4px 12px var(--black-40);
+      --shadow-lg: 0 8px 32px var(--black-50);
+      --shadow-xl: 0 16px 48px var(--black-50);
+
+      /* Layout - Radii */
+      --radius-xs: 2px;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 12px;
+      --radius-full: 9999px;
+
+      /* Layout - Spacing Scale */
+      --space-1: 2px;
+      --space-2: 4px;
+      --space-3: 6px;
+      --space-4: 8px;
+      --space-5: 10px;
+      --space-6: 12px;
+      --space-8: 16px;
+      --space-10: 20px;
+      --space-12: 24px;
+
+      /* Layout - Component Sizes */
+      --size-icon-xs: 12px;
+      --size-icon-sm: 14px;
+      --size-icon-md: 16px;
+      --size-icon-lg: 18px;
+      --size-icon-xl: 20px;
+      --size-icon-2xl: 24px;
+
+      /* Layout - Control Heights */
+      --input-height: 30px;
+      --panel-header-height: 36px;
+      --activity-bar-item: 40px;
+
+      /* Layout - Legacy (to be migrated) */
+      --spacing-unit: 28px;
+      --spacing-gap: var(--space-1);
+      --label-width: 64px;
+
+      /* Transitions */
+      --transition-fast: 0.1s ease;
+      --transition-normal: 0.15s ease;
+      --transition-slow: 0.3s ease;
+    }
