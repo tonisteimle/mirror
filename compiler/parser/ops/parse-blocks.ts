@@ -39,7 +39,8 @@ import {
   type InstanceBodyCallbacks,
   type ComponentBodyCallbacks,
 } from '../body-parser'
-import { Parser } from '../parser'
+import type { Parser } from '../parser'
+import { MAX_LOOKAHEAD } from './limits'
 
 export function parseComponentOrInstance(
   this: Parser
@@ -414,7 +415,7 @@ export function parseSlotPrimitive(this: Parser, slotToken: Token): Slot {
 export function hasInlineChildSyntax(this: Parser): boolean {
   let ahead = 0
   // Use MAX_LOOKAHEAD to prevent DoS on malformed input with very long lines
-  while (this.pos + ahead < this.tokens.length && ahead < Parser.MAX_LOOKAHEAD) {
+  while (this.pos + ahead < this.tokens.length && ahead < MAX_LOOKAHEAD) {
     const token = this.tokens[this.pos + ahead]
     if (token.type === 'NEWLINE' || token.type === 'INDENT' || token.type === 'EOF') {
       return false
@@ -442,7 +443,7 @@ export function hasInlineChildSyntax(this: Parser): boolean {
 export function hasColonOnLine(this: Parser): boolean {
   let ahead = 0
   // Use MAX_LOOKAHEAD to prevent DoS on malformed input with very long lines
-  while (this.pos + ahead < this.tokens.length && ahead < Parser.MAX_LOOKAHEAD) {
+  while (this.pos + ahead < this.tokens.length && ahead < MAX_LOOKAHEAD) {
     const token = this.tokens[this.pos + ahead]
     if (token.type === 'NEWLINE' || token.type === 'INDENT' || token.type === 'EOF') {
       return false

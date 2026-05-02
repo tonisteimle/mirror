@@ -25,7 +25,8 @@ import {
   parseSchemaField as parseSchemaFieldExtracted,
   parseIconDefinitions as parseIconDefinitionsExtracted,
 } from '../declaration-parser'
-import { Parser } from '../parser'
+import type { Parser } from '../parser'
+import { MAX_ITERATIONS } from './limits'
 
 export function parseTokenDefinition(this: Parser, section?: string): TokenDefinition | null {
   return this.withSubParserContext(ctx => parseTokenDefinitionExtracted(ctx, section))
@@ -110,11 +111,7 @@ export function parseNumericArray(this: Parser): number[] {
   const items: number[] = []
   this.advance() // [
 
-  for (
-    let iter = 0;
-    !this.isAtEnd() && !this.check('RBRACKET') && iter < Parser.MAX_ITERATIONS;
-    iter++
-  ) {
+  for (let iter = 0; !this.isAtEnd() && !this.check('RBRACKET') && iter < MAX_ITERATIONS; iter++) {
     if (this.check('NUMBER')) {
       items.push(parseFloat(this.advance().value))
     } else if (this.check('COMMA')) {
@@ -160,7 +157,7 @@ export function parsePropertySet(this: Parser, section?: string): TokenDefinitio
 
   for (
     let iter = 0;
-    !this.isAtEnd() && !this.check('NEWLINE') && !this.check('EOF') && iter < Parser.MAX_ITERATIONS;
+    !this.isAtEnd() && !this.check('NEWLINE') && !this.check('EOF') && iter < MAX_ITERATIONS;
     iter++
   ) {
     // Skip comma separators

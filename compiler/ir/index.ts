@@ -14,10 +14,6 @@ import type {
   IconDefinition,
 } from '../parser/ast'
 
-// ExpressionPart has been moved to transformers/expression-transformer.ts
-// ConditionalBlock has been moved to transformers/control-flow-transformer.ts
-// SyntheticSlotDef and SyntheticZagItem moved to transformers/zag-transformer.ts
-
 import { isComponent, isZagComponent, isSlot } from '../parser/ast'
 import type { IR, IRCanvas, IRStyle, IRWarning, IRToken } from './types'
 import { SourceMap, SourceMapBuilder, calculateSourcePosition } from './source-map'
@@ -68,9 +64,6 @@ export function toIR(ast: AST, includeSourceMap?: boolean): IR | IRResult {
 
   return ir
 }
-
-// BUILTIN_STATE_FUNCTIONS is imported from transformers/event-transformer.ts
-// LayoutContext and ParentLayoutContext are imported from transformers/layout-transformer.ts and transformer-context.ts
 
 import * as instance_ops from './ops/instance-ops'
 import * as children_resolver from './ops/children-resolver'
@@ -328,10 +321,6 @@ export class IRTransformer {
     }
   }
 
-  // Data and animation transformation functions (transformDataAttributes, transformDataValue,
-  // transformAnimation, transformAnimationKeyframe, transformAnimationProperty)
-  // have been extracted to transformers/data-transformer.ts
-
   generateId(): string {
     return `node-${++this.nodeIdCounter}`
   }
@@ -359,56 +348,4 @@ export class IRTransformer {
         : undefined,
     }
   }
-
-  // fixLoopVariableReferences has been extracted to ./transformers/loop-utils.ts
-
-  // childOverridesToInstances and mergeSlotPropertiesIntoFiller
-  // have been extracted to ./transformers/slot-utils.ts
-
-  // resolveComponent and mergeStates have been extracted to transformers/component-resolver.ts
-
-  /**
-   * Convert DefaultProperty[] from primitives.ts to Property[] for merging.
-   * Defaults have no source position since they're not from user code.
-   */
-  // convertDefaultsToProperties, determineLayoutType, mergeProperties
-  // have been extracted to transformers/property-utils-transformer.ts
-
-  // Layout functions (applyAlignmentsToContext, generateLayoutStyles, resolveGridColumns)
-  // have been extracted to transformers/layout-transformer.ts
-
-  // transformStates has been extracted to transformers/state-styles-transformer.ts
-
-  // buildStateMachine implementation extracted to transformers/state-machine-transformer.ts
-
-  // State conversion functions (convertStateDependency, convertStateAnimation)
-  // have been extracted to transformers/data-transformer.ts
-
-  // applyStateChildOverrides has been extracted to transformers/state-styles-transformer.ts
-
-  // propertyToCSS implementation extracted to transformers/property-transformer.ts
-
-  /**
-   * Format value for CSS
-   */
-  // formatCSSValue has been extracted to transformers/style-utils-transformer.ts
-
-  // parseDirectionalSpacing has been extracted to transformers/style-utils-transformer.ts
-
-  // formatBorderValue has been extracted to transformers/style-utils-transformer.ts
-
-  // PROPERTY_TO_TOKEN_SUFFIX has been moved to schema/ir-helpers.ts
-  // resolveValue, resolveContentValue, resolveTokenWithContext, extractHTMLProperties
-  // have been extracted to transformers/value-resolver.ts
-
-  // extractValueBinding has been extracted to transformers/property-utils-transformer.ts
-
-  // Event transformation functions (transformEvents, transformAction)
-  // have been extracted to transformers/event-transformer.ts
-
-  /**
-   * Convert boolean property to CSS
-   * Uses schema as primary source, with fallback for special cases
-   */
-  // booleanPropertyToCSS has been extracted to transformers/style-utils-transformer.ts
 }

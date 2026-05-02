@@ -16,7 +16,8 @@ import { parseAnimationDefinition as parseAnimationDefinitionExtracted } from '.
 import type { ParserContext } from '../parser-context'
 import { type EachParserCallbacks } from '../each-parser'
 import { type StateChildParserCallbacks } from '../state-child-parser'
-import { Parser } from '../parser'
+import type { Parser } from '../parser'
+import { MAX_ITERATIONS } from './limits'
 
 export function parseJavaScript(this: Parser): JavaScriptBlock | null {
   const startToken = this.current()
@@ -38,7 +39,7 @@ export function parseJavaScript(this: Parser): JavaScriptBlock | null {
   const code = this.source.slice(charPos).trim()
 
   // Advance to end
-  for (let i = 0; !this.isAtEnd() && i < Parser.MAX_ITERATIONS; i++) {
+  for (let i = 0; !this.isAtEnd() && i < MAX_ITERATIONS; i++) {
     this.advance()
   }
 

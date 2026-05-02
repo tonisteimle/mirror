@@ -6,7 +6,7 @@
  */
 
 import type { IRZagNode, IRItem, IRItemProperty } from '../../../ir/types'
-import { dispatchZagEmitter } from '../../dom/zag-emitters'
+import { dispatchZagEmitter } from '../../dom/zag'
 import type { DOMGenerator } from '../../dom'
 
 export function emitZagComponent(this: DOMGenerator, node: IRZagNode, parentVar: string): void {

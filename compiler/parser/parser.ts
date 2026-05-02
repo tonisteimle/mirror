@@ -17,12 +17,11 @@ import type {
   ZagNode,
 } from './ast'
 import { isValidProperty } from '../schema/parser-helpers'
+import { MAX_ITERATIONS, MAX_LOOKAHEAD } from './ops/limits'
 
-// JavaScript keywords that signal the start of JS code
-export const JS_KEYWORDS = new Set(['let', 'const', 'var', 'function', 'class'])
-
-// Note: KEYBOARD_KEYS and STATE_NAMES are now imported from parser-helpers.ts
-// They are derived from the schema (dsl.ts) to ensure consistency.
+// Re-export shared constants for any external consumers (none today, but
+// historically they lived on the Parser class).
+export { JS_KEYWORDS, MAX_ITERATIONS, MAX_LOOKAHEAD, MAX_CONDITION_DEPTH } from './ops/limits'
 
 import * as token_cursor from './ops/token-cursor'
 import * as parse_decls from './ops/parse-decls'
@@ -44,24 +43,6 @@ export class Parser {
    * rather than properties.
    */
   loopVariables: Set<string> = new Set()
-
-  /**
-   * Maximum iterations for while loops to prevent infinite loops.
-   * This is a safety measure - real code should never hit this limit.
-   */
-  static readonly MAX_ITERATIONS = 100000
-
-  /**
-   * Maximum lookahead distance for line-based scans.
-   * Prevents DoS from malformed input with very long lines.
-   */
-  static readonly MAX_LOOKAHEAD = 1000
-
-  /**
-   * Maximum depth for condition chains (and/or).
-   * Prevents infinite loops in cross-element state conditions.
-   */
-  static readonly MAX_CONDITION_DEPTH = 100
 
   constructor(tokens: Token[], source: string = '') {
     this.tokens = tokens
@@ -176,7 +157,7 @@ export class Parser {
     let currentSection: string | undefined = undefined
 
     let iterations = 0
-    while (!this.isAtEnd() && iterations++ < Parser.MAX_ITERATIONS) {
+    while (!this.isAtEnd() && iterations++ < MAX_ITERATIONS) {
       this.skipNewlines()
 
       if (this.isAtEnd()) break
@@ -347,7 +328,7 @@ export class Parser {
           let lookAhead = 2
           while (
             (this.checkAt(lookAhead, 'NEWLINE') || this.checkAt(lookAhead, 'COMMENT')) &&
-            lookAhead < Parser.MAX_LOOKAHEAD
+            lookAhead < MAX_LOOKAHEAD
           ) {
             lookAhead++
           }

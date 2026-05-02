@@ -8,7 +8,8 @@
 import { Token, TokenType } from '../lexer'
 import type { Instance, ParseErrorCode } from '../ast'
 import { KEYWORD_TOKEN_TYPES } from '../parser-context'
-import { Parser, JS_KEYWORDS } from '../parser'
+import type { Parser } from '../parser'
+import { JS_KEYWORDS, MAX_ITERATIONS } from './limits'
 
 export function generateNodeId(this: Parser): string {
   return `def-${++this.nodeIdCounter}`
@@ -141,7 +142,7 @@ export function recoverToNextDefinition(this: Parser): void {
   // Skip tokens until we find a likely next definition start:
   // - After NEWLINE, check if next token could start a definition
   // - Or end of file
-  for (let iter = 0; !this.isAtEnd() && iter < Parser.MAX_ITERATIONS; iter++) {
+  for (let iter = 0; !this.isAtEnd() && iter < MAX_ITERATIONS; iter++) {
     if (this.check('NEWLINE')) {
       this.advance()
       // After newline, check if next token could start a new definition
