@@ -2123,6 +2123,7 @@ function updateStudio(ast: Program, ir: IR, sourceMap: SourceMap, source: string
 
   const propertyPanelContainer = document.getElementById('property-panel')
   const previewContainer = document.getElementById('preview')
+  if (!propertyPanelContainer || !previewContainer) return
 
   // Update or create PropertyExtractor
   if (studioPropertyExtractor) {
@@ -2150,7 +2151,7 @@ function updateStudio(ast: Program, ir: IR, sourceMap: SourceMap, source: string
 
   // Update or create PropertyPanel
   if (studioPropertyPanel) {
-    const selection = studioSelectionManager.getSelection()
+    const selection = studioSelectionManager.getSelection?.()
     if (selection) {
       console.log('Studio: Refreshing property panel, selection:', selection)
     }
