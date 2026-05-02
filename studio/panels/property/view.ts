@@ -418,12 +418,12 @@ export class PropertyPanelView {
         this.renderNotFound(state.nodeId)
         break
       case 'showing':
-        this.renderElement(state.element, state.isInPositionedContainer)
+        this.renderElement(state.element, state.isInPositionedContainer, state.expandedSections)
         break
       case 'pending-update':
         // Show previous element while waiting for compile
         if (state.previousElement) {
-          this.renderElement(state.previousElement, false)
+          this.renderElement(state.previousElement, false, undefined)
         } else {
           this.renderLoading()
         }
@@ -476,11 +476,16 @@ export class PropertyPanelView {
     `
   }
 
-  private renderElement(element: ExtractedElement, isInPositionedContainer: boolean): void {
+  private renderElement(
+    element: ExtractedElement,
+    isInPositionedContainer: boolean,
+    expandedSections?: Set<string>
+  ): void {
     const categoriesHtml = this.renderCategories(
       element.categories,
       element,
-      isInPositionedContainer
+      isInPositionedContainer,
+      expandedSections
     )
 
     // Use component name in title (e.g., "Text Properties", "Button Properties")
@@ -517,7 +522,8 @@ export class PropertyPanelView {
   private renderCategories(
     categories: PropertyCategory[],
     element: ExtractedElement,
-    isInPositionedContainer: boolean
+    isInPositionedContainer: boolean,
+    expandedSections?: Set<string>
   ): string {
     if (categories.length === 0) {
       return `<div class="pp-empty"><p>No properties</p></div>`
@@ -539,6 +545,7 @@ export class PropertyPanelView {
       allProperties: element.allProperties,
       primitive,
       compact: config.compact,
+      expandedSections,
       getSpacingTokens: propType => this.ports.tokens.getSpacingTokens(propType),
       getColorTokens: () => this.ports.tokens.getColorTokens(),
       resolveTokenValue: (ref, propType) => this.ports.tokens.resolveTokenValue(ref, propType),

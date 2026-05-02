@@ -128,8 +128,12 @@ export class BorderSection extends BaseSection {
     const fullRadiusActive = radiusValue === '999'
     const fullRadiusBtn = `<button class="token-btn ${fullRadiusActive ? 'active' : ''}" data-radius="999" title="Full: 999">${CIRCLE_ICON}</button>`
 
+    const radiusExpanded = this.isExpanded('radius')
+    const radiusSectionClass = `section${radiusExpanded ? ' expanded' : ''}`
+    const radiusContainerClass = `section-content${radiusExpanded ? ' expanded' : ''}`
+
     return `
-      <div class="section">
+      <div class="${radiusSectionClass}">
         <div class="section-label">
           <span>Radius</span>
           <button class="section-expand-btn" data-expand="radius" title="Toggle corner details">
@@ -141,7 +145,7 @@ export class BorderSection extends BaseSection {
             </svg>
           </button>
         </div>
-        <div class="section-content" data-expand-container="radius">
+        <div class="${radiusContainerClass}" data-expand-container="radius">
           <div class="prop-row collapsed-row${isOverride ? ' override' : ''}" data-expand-group="radius">
             <span class="prop-label">All</span>
             <div class="prop-content">
@@ -209,8 +213,12 @@ export class BorderSection extends BaseSection {
       </div>
     `
 
+    const borderExpanded = this.isExpanded('border')
+    const borderSectionClass = `section${borderExpanded ? ' expanded' : ''}`
+    const borderContainerClass = `section-content${borderExpanded ? ' expanded' : ''}`
+
     return `
-      <div class="section">
+      <div class="${borderSectionClass}">
         <div class="section-label">
           <span>Border</span>
           <button class="section-expand-btn" data-expand="border" title="Toggle side details">
@@ -222,7 +230,7 @@ export class BorderSection extends BaseSection {
             </svg>
           </button>
         </div>
-        <div class="section-content" data-expand-container="border">
+        <div class="${borderContainerClass}" data-expand-container="border">
           <div class="prop-row collapsed-row${isOverride ? ' override' : ''}" data-expand-group="border">
             <span class="prop-label">All</span>
             <div class="prop-content">

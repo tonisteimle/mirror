@@ -84,8 +84,12 @@ export class SpacingSection extends BaseSection {
     const tokens = data.spacingTokens?.filter(t => t.fullName.endsWith('.pad')) || []
     const hasTokens = tokens.length > 0
 
+    const expanded = this.isExpanded('spacing')
+    const sectionClass = `section${expanded ? ' expanded' : ''}`
+    const containerClass = `section-content${expanded ? ' expanded' : ''}`
+
     return `
-      <div class="section">
+      <div class="${sectionClass}">
         <div class="section-label">
           <span>Padding</span>
           <button class="section-expand-btn" data-expand="spacing" title="Toggle detail view">
@@ -97,7 +101,7 @@ export class SpacingSection extends BaseSection {
             </svg>
           </button>
         </div>
-        <div class="section-content" data-expand-container="spacing">
+        <div class="${containerClass}" data-expand-container="spacing">
           ${this.renderSpacingRow('Horizontal', hPad, 'h', tokens, hasTokens, padIsOverride, 'collapsed-row')}
           ${this.renderSpacingRow('Vertical', vPad, 'v', tokens, hasTokens, padIsOverride, 'collapsed-row')}
           ${this.renderSpacingRow('Top', tPad, 't', tokens, hasTokens, padIsOverride, 'expanded-row')}

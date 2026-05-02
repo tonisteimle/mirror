@@ -38,6 +38,15 @@ export interface SectionData {
   isInPositionedContainer?: boolean
   /** Events of the current element (passed to the events section) */
   events?: unknown[]
+  /**
+   * Names that are currently in the expanded state. The section render
+   * uses this to apply the `expanded` CSS class to its outer `.section`
+   * and `[data-expand-container]` so the per-side detail rows are shown.
+   *
+   * Spacing uses key `'spacing'`, border uses `'border'`, radius uses
+   * `'radius'` — same keys as the chevron's `data-expand` attribute.
+   */
+  expandedSections?: Set<string>
 }
 
 /**
@@ -176,6 +185,14 @@ export abstract class BaseSection {
     ...names: string[]
   ): ExtractedProperty | undefined {
     return props.find(p => names.includes(p.name))
+  }
+
+  /**
+   * Helper: Check whether a per-detail expand key is currently expanded.
+   * Returns false when no `expandedSections` set is provided.
+   */
+  protected isExpanded(name: string): boolean {
+    return this.data?.expandedSections?.has(name) ?? false
   }
 }
 

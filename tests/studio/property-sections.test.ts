@@ -15,8 +15,10 @@ import {
   createSizingSection,
   SpacingSection,
   createSpacingSection,
+  BorderSection,
+  createBorderSection,
   ColorSection,
-  createColorSection
+  createColorSection,
 } from '../../studio/panels/property'
 import type { SectionDependencies } from '../../studio/panels/property/base/section'
 import type { SectionData, PropertyCategory } from '../../studio/panels/property/types'
@@ -26,19 +28,27 @@ function createMockDeps(): SectionDependencies {
   return {
     onPropertyChange: vi.fn(),
     onToggleProperty: vi.fn(),
-    escapeHtml: (str: string) => str.replace(/[&<>"']/g, c => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    }[c] || c)),
-    getDisplayLabel: (name: string) => name.charAt(0).toUpperCase() + name.slice(1)
+    escapeHtml: (str: string) =>
+      str.replace(
+        /[&<>"']/g,
+        c =>
+          ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+          })[c] || c
+      ),
+    getDisplayLabel: (name: string) => name.charAt(0).toUpperCase() + name.slice(1),
   }
 }
 
 // Create mock category
-function createMockCategory(name: string, properties: Array<{ name: string; value: string; hasValue?: boolean }>): PropertyCategory {
+function createMockCategory(
+  name: string,
+  properties: Array<{ name: string; value: string; hasValue?: boolean }>
+): PropertyCategory {
   return {
     name,
     label: name.charAt(0).toUpperCase() + name.slice(1),
@@ -46,8 +56,8 @@ function createMockCategory(name: string, properties: Array<{ name: string; valu
       name: p.name,
       value: p.value,
       hasValue: p.hasValue ?? true,
-      source: 'instance' as const
-    }))
+      source: 'instance' as const,
+    })),
   }
 }
 
@@ -55,27 +65,28 @@ function createMockCategory(name: string, properties: Array<{ name: string; valu
 // - LayoutSection uses `categories` (plural) to find category by name
 // - SizingSection and SpacingSection use `category` (singular)
 // - ColorSection uses `allProperties`
-function createMockSectionData(options: {
-  category?: PropertyCategory
-  categories?: PropertyCategory[]
-  allProperties?: Array<{ name: string; value: string; source?: string }>
-} = {}): SectionData {
-  const allProperties = options.allProperties || options.categories?.flatMap(c => c.properties) || []
+function createMockSectionData(
+  options: {
+    category?: PropertyCategory
+    categories?: PropertyCategory[]
+    allProperties?: Array<{ name: string; value: string; source?: string }>
+  } = {}
+): SectionData {
+  const allProperties =
+    options.allProperties || options.categories?.flatMap(c => c.properties) || []
   return {
     category: options.category,
     categories: options.categories,
     allProperties,
     spacingTokens: [
       { name: 'sm', fullName: 'sm.pad', value: '4' },
-      { name: 'md', fullName: 'md.pad', value: '8' }
+      { name: 'md', fullName: 'md.pad', value: '8' },
     ],
-    colorTokens: [
-      { name: 'primary', value: '#2563eb' }
-    ],
+    colorTokens: [{ name: 'primary', value: '#2563eb' }],
     getSpacingTokens: () => [
       { name: 'sm', fullName: 'sm.gap', value: '4' },
-      { name: 'md', fullName: 'md.gap', value: '8' }
-    ]
+      { name: 'md', fullName: 'md.gap', value: '8' },
+    ],
   }
 }
 
@@ -102,7 +113,7 @@ describe('Property Panel Sections', () => {
     it('should render layout controls when layout category exists', () => {
       const layoutCategory = createMockCategory('layout', [
         { name: 'horizontal', value: 'true' },
-        { name: 'gap', value: '12' }
+        { name: 'gap', value: '12' },
       ])
       const data = createMockSectionData({ categories: [layoutCategory] })
       const html = section.render(data)
@@ -135,7 +146,7 @@ describe('Property Panel Sections', () => {
       // SizingSection uses data.category (singular)
       const sizingCategory = createMockCategory('sizing', [
         { name: 'width', value: '200' },
-        { name: 'height', value: '100' }
+        { name: 'height', value: '100' },
       ])
       const data = createMockSectionData({ category: sizingCategory })
       const html = section.render(data)
@@ -150,7 +161,7 @@ describe('Property Panel Sections', () => {
       // SizingSection uses data.category (singular)
       const sizingCategory = createMockCategory('sizing', [
         { name: 'w', value: 'hug' },
-        { name: 'h', value: 'full' }
+        { name: 'h', value: 'full' },
       ])
       const data = createMockSectionData({ category: sizingCategory })
       const html = section.render(data)
@@ -176,9 +187,7 @@ describe('Property Panel Sections', () => {
 
     it('should render padding controls', () => {
       // SpacingSection uses data.category (singular) and renders as "Padding"
-      const spacingCategory = createMockCategory('spacing', [
-        { name: 'pad', value: '16' }
-      ])
+      const spacingCategory = createMockCategory('spacing', [{ name: 'pad', value: '16' }])
       const data = createMockSectionData({ category: spacingCategory })
       const html = section.render(data)
 
@@ -188,15 +197,107 @@ describe('Property Panel Sections', () => {
 
     it('should handle shorthand padding values', () => {
       // SpacingSection uses data.category (singular)
-      const spacingCategory = createMockCategory('spacing', [
-        { name: 'pad', value: '10 20' }
-      ])
+      const spacingCategory = createMockCategory('spacing', [{ name: 'pad', value: '10 20' }])
       const data = createMockSectionData({ category: spacingCategory })
       const html = section.render(data)
 
       // Should render without error
       expect(html).toBeDefined()
       expect(html).toContain('Padding')
+    })
+
+    it('should NOT add expanded class when expandedSections is empty', () => {
+      const spacingCategory = createMockCategory('spacing', [{ name: 'pad', value: '8' }])
+      const data: SectionData = {
+        ...createMockSectionData({ category: spacingCategory }),
+        expandedSections: new Set<string>(),
+      }
+      const html = section.render(data)
+      expect(html).toContain('class="section"')
+      expect(html).toContain('class="section-content"')
+      expect(html).not.toContain('class="section expanded"')
+      expect(html).not.toContain('class="section-content expanded"')
+    })
+
+    it('should add expanded class when expandedSections has "spacing"', () => {
+      const spacingCategory = createMockCategory('spacing', [{ name: 'pad', value: '8' }])
+      const data: SectionData = {
+        ...createMockSectionData({ category: spacingCategory }),
+        expandedSections: new Set(['spacing']),
+      }
+      const html = section.render(data)
+      expect(html).toContain('class="section expanded"')
+      expect(html).toContain('class="section-content expanded"')
+    })
+
+    it('should not throw when expandedSections is undefined', () => {
+      const spacingCategory = createMockCategory('spacing', [{ name: 'pad', value: '8' }])
+      const data = createMockSectionData({ category: spacingCategory })
+      expect(() => section.render(data)).not.toThrow()
+      const html = section.render(data)
+      // Outer wrappers stay collapsed — `expanded-row` on individual rows is
+      // a separate, pre-existing CSS hook so we only assert the wrapper classes.
+      expect(html).not.toContain('class="section expanded"')
+      expect(html).not.toContain('class="section-content expanded"')
+    })
+  })
+
+  describe('BorderSection', () => {
+    let section: BorderSection
+    let deps: SectionDependencies
+
+    beforeEach(() => {
+      deps = createMockDeps()
+      section = createBorderSection(deps)
+    })
+
+    it('should render Radius and Border subsections', () => {
+      const borderCategory = createMockCategory('border', [
+        { name: 'radius', value: '8' },
+        { name: 'border', value: '1 #333' },
+      ])
+      const data = createMockSectionData({ category: borderCategory })
+      const html = section.render(data)
+      expect(html).toContain('Radius')
+      expect(html).toContain('Border')
+    })
+
+    it('should add expanded class on radius container when "radius" is expanded', () => {
+      const borderCategory = createMockCategory('border', [{ name: 'radius', value: '8' }])
+      const data: SectionData = {
+        ...createMockSectionData({ category: borderCategory }),
+        expandedSections: new Set(['radius']),
+      }
+      const html = section.render(data)
+      // Radius container shows expanded
+      expect(html).toMatch(/class="section-content expanded"\s+data-expand-container="radius"/)
+      // Border container should NOT (only "radius" key is in the set)
+      expect(html).toMatch(/class="section-content"\s+data-expand-container="border"/)
+    })
+
+    it('should add expanded class on border container when "border" is expanded', () => {
+      const borderCategory = createMockCategory('border', [{ name: 'border', value: '1 #333' }])
+      const data: SectionData = {
+        ...createMockSectionData({ category: borderCategory }),
+        expandedSections: new Set(['border']),
+      }
+      const html = section.render(data)
+      expect(html).toMatch(/class="section-content expanded"\s+data-expand-container="border"/)
+      expect(html).toMatch(/class="section-content"\s+data-expand-container="radius"/)
+    })
+
+    it('should add expanded class on both subsections independently', () => {
+      const borderCategory = createMockCategory('border', [
+        { name: 'radius', value: '8' },
+        { name: 'border', value: '1 #333' },
+      ])
+      const data: SectionData = {
+        ...createMockSectionData({ category: borderCategory }),
+        expandedSections: new Set(['radius', 'border']),
+      }
+      const html = section.render(data)
+      expect(html).toMatch(/class="section-content expanded"\s+data-expand-container="radius"/)
+      expect(html).toMatch(/class="section-content expanded"\s+data-expand-container="border"/)
     })
   })
 
@@ -224,9 +325,7 @@ describe('Property Panel Sections', () => {
     it('should show color inputs', () => {
       // ColorSection uses data.allProperties (not category)
       const data = createMockSectionData({
-        allProperties: [
-          { name: 'bg', value: '#2563eb' }
-        ]
+        allProperties: [{ name: 'bg', value: '#2563eb' }],
       })
       const html = section.render(data)
 
