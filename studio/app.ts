@@ -1941,6 +1941,7 @@ function initStudio() {
       userComponentsPanelContainer: isPlaygroundMode
         ? undefined
         : (userComponentsPanelContainer ?? undefined),
+      tokensPanelContainer: isPlaygroundMode ? undefined : (tokensPanelContainer ?? undefined),
       initialSource: files[currentFile] || '',
       currentFile: currentFile,
       getAllSource: getAllProjectSource,

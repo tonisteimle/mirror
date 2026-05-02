@@ -2,6 +2,45 @@
  * Data Management System
  *
  * YAML data loading, state management, and CRUD operations.
+ *
+ * STORAGE ARCHITECTURE — read this before stamping into the runtime template.
+ *
+ * The Mirror runtime maintains THREE distinct stores, each with a
+ * different purpose:
+ *
+ *   1. `window.__mirrorData` — runtime data store. The Mirror compiler
+ *      initialises it from data: declarations (`count: 0`, collections,
+ *      tokens). `$get(name)` / `$set(path, value)` (the helpers compiled
+ *      INTO emitted output) read/write here. This is the canonical
+ *      store for user data.
+ *
+ *   2. `window._mirrorState` — bind/select binding store. Selection
+ *      writes the chosen item's text here under the binding variable
+ *      name (e.g. `_mirrorState.choice = "Berlin"`). `$get()` falls
+ *      back to this after `__mirrorData`.
+ *
+ *   3. `_runtime._tokens` (template only, NOT in this typed module) —
+ *      legacy duplicate of `__mirrorData` writes. Set+notified by
+ *      `_runtime.set/increment/decrement`. Reads check `__mirrorData`
+ *      first, fall back here. Effectively dead writes today; keeping
+ *      the read-side fallback during the migration.
+ *
+ * This typed module's `getMirrorState()` returns `_mirrorState` —
+ * which is WRONG for plain data ops (get/set/increment) but matches
+ * what selection.ts uses. The functions here are NOT yet stamped into
+ * the runtime template; doing so would change which store production
+ * data reads from. Consolidation requires:
+ *   - Decide canonical store for explicit user actions (likely
+ *     __mirrorData, since that's what the compiler writes to).
+ *   - Refactor get/set/increment/decrement/reset to use it.
+ *   - Add `_notifyTokenWatchers` integration (the template has it on
+ *     _runtime; typed module doesn't).
+ *   - Then stamp + drop the inline _runtime methods + the _tokens
+ *     duplicate.
+ *
+ * Until that's done, _runtime.get/set/increment/decrement live as
+ * inline methods on the runtime object — see compiler/backends/dom/
+ * runtime-template/index.ts.
  */
 
 import type { MirrorElement } from './types'
