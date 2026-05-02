@@ -129,15 +129,14 @@ mkdir -f mirror/tutorial
 mkdir -f mirror/assets
 
 # Upload studio files to /mirror/
+# (app.js, dialog.js, tauri-bridge.js, desktop-files.js sind nach
+#  TS-Migration aus studio/-Root verschwunden — sie werden jetzt vom
+#  Build nach studio/dist/ gelegt und unten via `mput *.js` geladen.)
 cd mirror
 lcd "$STUDIO_DIR"
 put index.html
-put app.js
 put styles.css
 put logo.png
-put tauri-bridge.js
-put desktop-files.js
-put dialog.js
 
 # Upload studio/dist (new architecture modules + chunks)
 mkdir -f dist
