@@ -41,7 +41,7 @@ export class MirrorStudioControl {
    * since compile will re-set the prelude offset from file system
    */
   setCode(code: string): void {
-    const editor = (window as any).editor
+    const editor = window.editor
     if (!editor) throw new Error('Editor not available')
 
     const transaction = editor.state.update({
@@ -54,7 +54,7 @@ export class MirrorStudioControl {
    * Get current editor code
    */
   getCode(): string {
-    const editor = (window as any).editor
+    const editor = window.editor
     return editor?.state?.doc?.toString() ?? ''
   }
 
@@ -96,7 +96,7 @@ export class MirrorStudioControl {
     this.setCode(code)
 
     // Use the test compile function that skips prelude
-    const compileTestCode = (window as any).__compileTestCode
+    const compileTestCode = window.__compileTestCode
     if (compileTestCode) {
       compileTestCode(code)
       // Small delay for DOM updates
@@ -112,11 +112,11 @@ export class MirrorStudioControl {
    * Force a recompile and wait
    */
   async recompile(): Promise<void> {
-    const events = (window as any).__mirrorStudio__?.events
+    const events = window.__mirrorStudio__?.events
     if (events) {
       // Trigger recompile
       const code = this.getCode()
-      events.emit('source:changed', { source: code })
+      events.emit('source:changed', { source: code, origin: 'external' })
       await this.waitForCompile()
     }
   }
@@ -125,9 +125,9 @@ export class MirrorStudioControl {
    * Show/hide panels
    */
   setPanelVisibility(panel: string, visible: boolean): void {
-    const studio = (window as any).__mirrorStudio__
-    if (studio?.state?.setPanelVisibility) {
-      studio.state.setPanelVisibility(panel, visible)
+    const actions = window.__mirrorStudio__?.actions
+    if (actions?.setPanelVisibility) {
+      actions.setPanelVisibility(panel as never, visible)
     }
   }
 
@@ -135,9 +135,9 @@ export class MirrorStudioControl {
    * Toggle a panel
    */
   togglePanel(panel: string): void {
-    const studio = (window as any).__mirrorStudio__
-    if (studio?.state?.togglePanelVisibility) {
-      studio.state.togglePanelVisibility(panel)
+    const actions = window.__mirrorStudio__?.actions
+    if (actions?.togglePanelVisibility) {
+      actions.togglePanelVisibility(panel as never)
     }
   }
 
@@ -175,7 +175,7 @@ export class MirrorStudioControl {
    */
   selectNode(nodeId: string): void {
     // Use actions.setSelection from the Studio instance
-    const studio = (window as any).__mirrorStudio__
+    const studio = window.__mirrorStudio__
     if (studio?.actions?.setSelection) {
       studio.actions.setSelection(nodeId, 'preview')
       return
@@ -193,7 +193,7 @@ export class MirrorStudioControl {
    * Get current selection
    */
   getSelection(): string | null {
-    const studio = (window as any).__mirrorStudio__
+    const studio = window.__mirrorStudio__
     return studio?.state?.get()?.selection?.nodeId ?? null
   }
 
@@ -201,7 +201,7 @@ export class MirrorStudioControl {
    * Clear selection
    */
   clearSelection(): void {
-    const studio = (window as any).__mirrorStudio__
+    const studio = window.__mirrorStudio__
     if (studio?.actions?.setSelection) {
       studio.actions.setSelection(null, 'preview')
     }
@@ -221,7 +221,7 @@ export class MirrorStudioControl {
    * Get SourceMap
    */
   getSourceMap(): any {
-    const studio = (window as any).__mirrorStudio__
+    const studio = window.__mirrorStudio__
     return studio?.state?.get()?.sourceMap ?? null
   }
 
@@ -241,7 +241,7 @@ export class MirrorStudioControl {
    * @param indent - Number of indentation levels (2 spaces each)
    */
   insertCodeAt(code: string, line: number, indent: number = 0): void {
-    const editor = (window as any).editor
+    const editor = window.editor
     if (!editor) throw new Error('Editor not available')
 
     const docString = editor.state.doc.toString()
@@ -334,7 +334,7 @@ export class MirrorStudioControl {
    * Get prelude offset (for debugging)
    */
   getPreludeOffset(): number {
-    const studio = (window as any).__mirrorStudio__
+    const studio = window.__mirrorStudio__
     // The preludeOffset is stored in state
     return studio?.state?.get()?.preludeOffset ?? 0
   }
@@ -346,12 +346,12 @@ export class MirrorStudioControl {
    */
   resetPreludeOffset(): void {
     // Use global function to reset both state and app.js module variable
-    const setOffset = (window as any).__setPreludeOffset
+    const setOffset = window.__setPreludeOffset
     if (setOffset) {
       setOffset(0)
     } else {
       // Fallback: try just setting state
-      const studio = (window as any).__mirrorStudio__
+      const studio = window.__mirrorStudio__
       if (studio?.state?.set) {
         studio.state.set({ preludeOffset: 0, preludeLineOffset: 0 })
       }
@@ -772,7 +772,7 @@ export class MirrorStudioControl {
    * Get the property panel instance
    */
   private getPropertyPanel(): any {
-    const studio = (window as any).__mirrorStudio__
+    const studio = window.__mirrorStudio__
     return studio?.propertyPanel ?? null
   }
 
@@ -781,7 +781,7 @@ export class MirrorStudioControl {
    * Returns all properties, categories, and metadata
    */
   getElement(nodeId: string): ExtractedElementInfo | null {
-    const studio = (window as any).__mirrorStudio__
+    const studio = window.__mirrorStudio__
     const studioState = studio?.state?.get()
 
     if (!studioState?.ast || !studioState?.sourceMap) {
@@ -790,7 +790,7 @@ export class MirrorStudioControl {
 
     // Create PropertyExtractor from current AST and SourceMap
     // Note: The browser bundle uses 'MirrorLang' as the global name (see tsup.config.ts)
-    const PropertyExtractor = (window as any).MirrorLang?.PropertyExtractor
+    const PropertyExtractor = window.MirrorLang?.PropertyExtractor
     if (!PropertyExtractor) {
       // Fallback: try to get from property panel
       const panel = studio?.propertyPanel
@@ -873,7 +873,7 @@ export class MirrorStudioControl {
     propertyName: string,
     value: string
   ): Promise<PropertyModificationResult> {
-    const studio = (window as any).__mirrorStudio__
+    const studio = window.__mirrorStudio__
     const modifier = studio?.modules?.compiler?.codeModifier
     const state = studio?.state
 
@@ -887,7 +887,7 @@ export class MirrorStudioControl {
       if (result.success && result.newSource) {
         // Update state and trigger compile
         state.set({ source: result.newSource })
-        studio.events?.emit('source:changed', { source: result.newSource, origin: 'test' })
+        studio.events?.emit('source:changed', { source: result.newSource, origin: 'external' })
         studio.events?.emit('compile:requested', {})
 
         // Wait for compile
@@ -910,7 +910,7 @@ export class MirrorStudioControl {
    * Remove a property from a node
    */
   async removeProperty(nodeId: string, propertyName: string): Promise<PropertyModificationResult> {
-    const studio = (window as any).__mirrorStudio__
+    const studio = window.__mirrorStudio__
     const modifier = studio?.modules?.compiler?.codeModifier
     const state = studio?.state
 
@@ -923,7 +923,7 @@ export class MirrorStudioControl {
 
       if (result.success && result.newSource) {
         state.set({ source: result.newSource })
-        studio.events?.emit('source:changed', { source: result.newSource, origin: 'test' })
+        studio.events?.emit('source:changed', { source: result.newSource, origin: 'external' })
         studio.events?.emit('compile:requested', {})
 
         await this.waitForCompile()
@@ -949,7 +949,7 @@ export class MirrorStudioControl {
     propertyName: string,
     enabled: boolean
   ): Promise<PropertyModificationResult> {
-    const studio = (window as any).__mirrorStudio__
+    const studio = window.__mirrorStudio__
     const modifier = studio?.modules?.compiler?.codeModifier
     const state = studio?.state
 
@@ -962,7 +962,7 @@ export class MirrorStudioControl {
 
       if (result.success && result.newSource) {
         state.set({ source: result.newSource })
-        studio.events?.emit('source:changed', { source: result.newSource, origin: 'test' })
+        studio.events?.emit('source:changed', { source: result.newSource, origin: 'external' })
         studio.events?.emit('compile:requested', {})
 
         await this.waitForCompile()
@@ -987,7 +987,7 @@ export class MirrorStudioControl {
     nodeId: string,
     changes: Array<{ name: string; value: string; action: 'set' | 'remove' | 'toggle' }>
   ): Promise<PropertyModificationResult> {
-    const studio = (window as any).__mirrorStudio__
+    const studio = window.__mirrorStudio__
     const modifier = studio?.modules?.compiler?.codeModifier
     const state = studio?.state
 
@@ -998,7 +998,7 @@ export class MirrorStudioControl {
     try {
       // Apply changes sequentially to ensure proper source updates
       let currentSource = state.get().source
-      let lastChange: any = null
+      let lastChange: { from: number; to: number; insert: string } | undefined
 
       for (const change of changes) {
         // Re-get modifier with updated source
@@ -1027,7 +1027,7 @@ export class MirrorStudioControl {
       }
 
       // Trigger compile after all changes
-      studio.events?.emit('source:changed', { source: currentSource, origin: 'test' })
+      studio.events?.emit('source:changed', { source: currentSource, origin: 'external' })
       studio.events?.emit('compile:requested', {})
       await this.waitForCompile()
 
@@ -1045,7 +1045,7 @@ export class MirrorStudioControl {
    * Get available color tokens
    */
   getColorTokens(): TokenInfo[] {
-    const studio = (window as any).__mirrorStudio__
+    const studio = window.__mirrorStudio__
     const state = studio?.state?.get()
     if (!state?.source) return []
 
@@ -1073,7 +1073,7 @@ export class MirrorStudioControl {
    * Get available spacing tokens
    */
   getSpacingTokens(): TokenInfo[] {
-    const studio = (window as any).__mirrorStudio__
+    const studio = window.__mirrorStudio__
     const state = studio?.state?.get()
     if (!state?.source) return []
 

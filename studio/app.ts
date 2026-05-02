@@ -179,6 +179,18 @@ interface MirrorLangGlobal {
   }
   generateDOM: (ast: Program) => string
   generateReact?: (ast: Program) => string
+  /**
+   * Browser bundle exposes the PropertyExtractor class so test code can
+   * inspect element properties without re-implementing the extraction
+   * logic. Concrete shape: see studio/code-modifier/property-extractor.ts.
+   */
+  PropertyExtractor?: new (
+    ast: unknown,
+    sourceMap: unknown,
+    options?: { showAllProperties?: boolean }
+  ) => {
+    getProperties(nodeId: string): unknown
+  }
 }
 
 declare global {
@@ -1901,6 +1913,9 @@ function initStudio() {
   // Components Panel containers (separate from explorer)
   const componentsPanelContainer = document.getElementById('components-panel-container')
   const userComponentsPanelContainer = document.getElementById('user-components-panel-container')
+
+  // Tokens sidebar container — rendered via the existing TokenRenderer
+  const tokensPanelContainer = document.getElementById('tokens-panel-container')
 
   // Hide explorer panel in playground mode
   if (isPlaygroundMode && explorerPanelContainer) {
