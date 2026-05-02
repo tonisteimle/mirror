@@ -13,6 +13,9 @@
  */
 
 import { alert, confirm } from './dialog'
+import { createLogger } from '../compiler/utils/logger'
+
+const log = createLogger('TauriBridge')
 
 // =============================================================================
 // Tauri runtime types (minimal, declared locally)
@@ -222,16 +225,16 @@ export const TauriMenu = {
   async onMenuClick(callback: (menuId: string) => void): Promise<() => void> {
     const event = await getTauriEvent()
     if (!event) {
-      console.warn('[TauriMenu] No event API available')
+      log.warn('[TauriMenu] No event API available')
       return () => {}
     }
 
-    console.log('[TauriMenu] Registering menu event listener...')
+    log.debug('[TauriMenu] Registering menu event listener...')
     const unlisten = await event.listen<string>('menu', e => {
-      console.log('[TauriMenu] Received event:', e.payload)
+      log.debug('[TauriMenu] Received event:', e.payload)
       callback(e.payload)
     })
-    console.log('[TauriMenu] Menu event listener registered')
+    log.debug('[TauriMenu] Menu event listener registered')
 
     return unlisten
   },
@@ -243,7 +246,7 @@ export const TauriMenu = {
   async emitMenuAction(menuId: string): Promise<void> {
     const event = await getTauriEvent()
     if (!event) return
-    console.log('[TauriMenu] Action:', menuId)
+    log.debug('[TauriMenu] Action:', menuId)
   },
 }
 
@@ -316,12 +319,12 @@ export interface TauriDialogFileFilter {
 
 export const TauriDialog = {
   async openFolder(): Promise<string | null> {
-    console.log('[TauriDialog] openFolder called')
+    log.debug('[TauriDialog] openFolder called')
     if (!isTauri()) throw new Error('Not running in Tauri')
     try {
       const core = await getTauriCore()
       if (!core) throw new Error('Tauri core not available')
-      console.log('[TauriDialog] core loaded:', !!core)
+      log.debug('[TauriDialog] core loaded:', !!core)
       // Use plugin command directly - options must be wrapped
       const result = await core.invoke<string | null>('plugin:dialog|open', {
         options: {
@@ -330,10 +333,10 @@ export const TauriDialog = {
           title: 'Ordner auswählen',
         },
       })
-      console.log('[TauriDialog] result:', result)
+      log.debug('[TauriDialog] result:', result)
       return result
     } catch (err) {
-      console.error('[TauriDialog] openFolder error:', err)
+      log.error('[TauriDialog] openFolder error:', err)
       throw err
     }
   },
@@ -423,4 +426,4 @@ if (typeof window !== 'undefined') {
   }
 }
 
-console.log('[Tauri Bridge]', isTauri() ? 'Running in Tauri desktop app' : 'Running in browser')
+log.debug('[Tauri Bridge]', isTauri() ? 'Running in Tauri desktop app' : 'Running in browser')

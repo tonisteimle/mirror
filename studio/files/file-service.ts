@@ -15,6 +15,9 @@ import {
   getExtension,
 } from './utils'
 import { alert, confirmDelete } from '../dialog'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('FileService')
 
 interface StorageService {
   readFile: (path: string) => Promise<string>
@@ -43,7 +46,7 @@ export async function selectFile(path: string): Promise<void> {
     uiState.updateCache(path, content)
     uiState.notifyFileSelect(path, content)
   } catch (e) {
-    console.error('[FileService] Select failed:', e)
+    log.error('[FileService] Select failed:', e)
   }
 }
 
@@ -52,7 +55,7 @@ export async function saveFile(path: string, content: string): Promise<void> {
   try {
     await storage?.writeFile(path, content)
   } catch (e) {
-    console.error('[FileService] Save failed:', e)
+    log.error('[FileService] Save failed:', e)
   }
 }
 
@@ -67,7 +70,7 @@ export async function createFile(fileName: string, parentFolder: string | null):
     await storage?.writeFile(targetPath, createFileContent(fileName))
     await selectFile(targetPath)
   } catch (e) {
-    console.error('[FileService] Create file failed:', e)
+    log.error('[FileService] Create file failed:', e)
   }
 }
 
@@ -81,7 +84,7 @@ export async function createFolder(folderName: string, parentFolder: string | nu
   try {
     await storage?.createFolder(targetPath)
   } catch (e) {
-    console.error('[FileService] Create folder failed:', e)
+    log.error('[FileService] Create folder failed:', e)
     await alert('Ordner erstellen fehlgeschlagen', { title: 'Fehler' })
   }
 }
@@ -93,7 +96,7 @@ export async function renameItem(oldPath: string, newName: string): Promise<void
   try {
     await storage?.renameFile(oldPath, newPath)
   } catch (e) {
-    console.error('[FileService] Rename failed:', e)
+    log.error('[FileService] Rename failed:', e)
   }
 }
 
@@ -104,7 +107,7 @@ export async function duplicateFile(path: string): Promise<void> {
   try {
     await storage.copyFile(path, newPath)
   } catch (e) {
-    console.error('[FileService] Duplicate failed:', e)
+    log.error('[FileService] Duplicate failed:', e)
   }
 }
 
@@ -155,7 +158,7 @@ export async function deleteItem(path: string, isFolder: boolean): Promise<void>
   try {
     isFolder ? await storage?.deleteFolder(path) : await storage?.deleteFile(path)
   } catch (e) {
-    console.error('[FileService] Delete failed:', e)
+    log.error('[FileService] Delete failed:', e)
   }
 }
 
@@ -168,14 +171,14 @@ export async function moveItem(sourcePath: string, targetFolder: string): Promis
   try {
     await storage?.moveItem(sourcePath, targetFolder)
   } catch (e) {
-    console.error('[FileService] Move failed:', e)
+    log.error('[FileService] Move failed:', e)
   }
 }
 
 function isValidMove(source: string, dest: string, targetFolder: string): boolean {
   if (source === dest) return false
   if (dest.startsWith(source + '/')) {
-    console.warn('[FileService] Cannot move folder into itself')
+    log.warn('[FileService] Cannot move folder into itself')
     return false
   }
   return true

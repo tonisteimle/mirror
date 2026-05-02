@@ -11,6 +11,9 @@
 
 import { getGlobalIconPicker, setGlobalIconPickerCallback } from '../../pickers/icon'
 import type { CodeModifier, ModificationResult } from '../../code-modifier/code-modifier'
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('PropertyEvents')
 
 // =============================================================================
 // Icon picker (property-panel:open-icon-picker)
@@ -32,7 +35,7 @@ export function setupPropertyPanelIconPicker(): void {
     const detail = (e as CustomEvent<IconPickerEventDetail>).detail
     const onSelect = detail?.onSelect
     if (!onSelect) {
-      console.warn('[IconPicker] No onSelect callback provided')
+      log.warn('[IconPicker] No onSelect callback provided')
       return
     }
 
@@ -101,16 +104,16 @@ export function setupPropertyPanelEventListeners(deps: PropertyPanelEventListene
     const { nodeId, eventName } = (e as CustomEvent<AddEventDetail>).detail || {}
     const codeModifier = deps.getCodeModifier()
     if (!nodeId || !eventName || !codeModifier) {
-      console.warn('[PropertyPanel] Add event: missing data', { nodeId, eventName })
+      log.warn('[PropertyPanel] Add event: missing data', { nodeId, eventName })
       return
     }
 
-    console.log('[PropertyPanel] Adding event:', eventName, 'to node:', nodeId)
+    log.debug('[PropertyPanel] Adding event:', eventName, 'to node:', nodeId)
     const result = codeModifier.addEvent(nodeId, eventName, 'toggle')
     if (result.success) {
       deps.onCodeChange(result)
     } else {
-      console.warn('[PropertyPanel] Failed to add event:', result.error)
+      log.warn('[PropertyPanel] Failed to add event:', result.error)
     }
   })
 
@@ -118,16 +121,16 @@ export function setupPropertyPanelEventListeners(deps: PropertyPanelEventListene
     const { nodeId, eventName } = (e as CustomEvent<DeleteEventDetail>).detail || {}
     const codeModifier = deps.getCodeModifier()
     if (!nodeId || !eventName || !codeModifier) {
-      console.warn('[PropertyPanel] Delete event: missing data', { nodeId, eventName })
+      log.warn('[PropertyPanel] Delete event: missing data', { nodeId, eventName })
       return
     }
 
-    console.log('[PropertyPanel] Deleting event:', eventName, 'from node:', nodeId)
+    log.debug('[PropertyPanel] Deleting event:', eventName, 'from node:', nodeId)
     const result = codeModifier.removeEvent(nodeId, eventName)
     if (result.success) {
       deps.onCodeChange(result)
     } else {
-      console.warn('[PropertyPanel] Failed to delete event:', result.error)
+      log.warn('[PropertyPanel] Failed to delete event:', result.error)
     }
   })
 
@@ -135,11 +138,11 @@ export function setupPropertyPanelEventListeners(deps: PropertyPanelEventListene
     const { nodeId, eventName, actionsString } = (e as CustomEvent<ChangeEventDetail>).detail || {}
     const codeModifier = deps.getCodeModifier()
     if (!nodeId || !eventName || !codeModifier) {
-      console.warn('[PropertyPanel] Event change: missing data', { nodeId, eventName })
+      log.warn('[PropertyPanel] Event change: missing data', { nodeId, eventName })
       return
     }
 
-    console.log('[PropertyPanel] Changing event:', eventName, 'actions to:', actionsString)
+    log.debug('[PropertyPanel] Changing event:', eventName, 'actions to:', actionsString)
 
     // Parse "actionName(target)" / "actionName()" / "actionName"
     let actionName = actionsString || 'toggle'
@@ -165,7 +168,7 @@ export function setupPropertyPanelEventListeners(deps: PropertyPanelEventListene
     if (result.success) {
       deps.onCodeChange(result)
     } else {
-      console.warn('[PropertyPanel] Failed to update event:', result.error)
+      log.warn('[PropertyPanel] Failed to update event:', result.error)
     }
   })
 }
