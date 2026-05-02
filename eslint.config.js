@@ -14,7 +14,6 @@ export default tseslint.config(
       'packages/*/dist/**',
       'packages/*/node_modules/**',
       'docs/**',
-      'studio/app.js', // Legacy file
       '*.min.js',
     ],
   },

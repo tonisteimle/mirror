@@ -41,7 +41,7 @@ import { indentUnit } from '@codemirror/language'
 import { linter, lintGutter, forceLinting } from '@codemirror/lint'
 
 // Custom dialogs
-import { alert } from './dist/dialog.js'
+import { alert } from './dialog'
 
 // New architecture imports
 import {
@@ -141,7 +141,7 @@ import {
   CodeModifier,
   PropertyExtractor,
   createRobustModifier,
-} from './dist/index.js?v=160'
+} from '.'
 
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
@@ -1197,8 +1197,8 @@ function compile(code) {
     // We validate the user's code (not resolved with prelude) so errors show at correct positions
     // BUT we pass prelude tokens/components so the validator knows what's defined in other files
     const preludeForValidation = getPreludeCode(currentFile)
-    let preludeTokens = new Set()
-    let preludeComponents = new Set()
+    const preludeTokens = new Set()
+    const preludeComponents = new Set()
     if (preludeForValidation) {
       const preludeAST = MirrorLang.parse(preludeForValidation)
       for (const token of preludeAST.tokens || []) {
@@ -1479,7 +1479,7 @@ if (typeof window !== 'undefined') {
         previewContainer.innerHTML = ''
         // Execute the generated code (same logic as main compile)
         const hasAutoInit = jsCode.includes('// Auto-initialization')
-        let execCode = jsCode
+        const execCode = jsCode
           .replace('export function createUI', 'function createUI')
           .replace('document.body.appendChild(_ui.root)', '')
 
@@ -2122,7 +2122,7 @@ compile(initialCode)
 // Works in both Tauri (real files) and Browser (demo files)
 // ==========================================
 if (!isPlaygroundMode) {
-  import('./dist/desktop-files.js')
+  import('./desktop-files')
     .then(module => {
       // Initialize with callback to load files into editor
       module.initDesktopFiles({

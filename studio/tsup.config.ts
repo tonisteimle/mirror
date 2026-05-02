@@ -1,16 +1,16 @@
 import { defineConfig } from 'tsup'
 
 export default defineConfig({
-  // dialog.ts, tauri-bridge.ts and desktop-files.ts are separate entries —
-  // loaded directly via <script type="module"> from index.html (so the
-  // artifacts must live at studio/dist/{dialog,tauri-bridge,desktop-files}.js
-  // with stable names) and imported by the sibling modules (app.js) that
-  // aren't part of the main bundle.
+  // dialog.ts, tauri-bridge.ts, desktop-files.ts and app.ts are separate
+  // entries — loaded directly via <script type="module"> from index.html
+  // (so the artifacts must live at studio/dist/{dialog,tauri-bridge,
+  // desktop-files,app}.js with stable names).
   entry: [
     'studio/index.ts',
     'studio/dialog.ts',
     'studio/tauri-bridge.ts',
     'studio/desktop-files.ts',
+    'studio/app.ts',
   ],
   format: ['esm'],
   outDir: 'studio/dist',
