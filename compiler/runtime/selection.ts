@@ -185,16 +185,19 @@ export function unhighlight(el: MirrorElement | null): void {
 // ============================================
 
 /**
- * Find current highlight index
+ * Find current highlight index. Exported so the runtime template can
+ * stamp it as a top-level helper — `highlightNext`/`highlightPrev`
+ * reference it by name, so it must exist at runtime.
  */
-function findHighlightIndex(items: MirrorElement[]): number {
+export function findHighlightIndex(items: MirrorElement[]): number {
   return items.findIndex(el => el.dataset.highlighted === 'true')
 }
 
 /**
- * Check if container has loop-focus enabled
+ * Check if container has loop-focus enabled. Exported so the runtime
+ * template can stamp it (referenced by `highlightNext`/`highlightPrev`).
  */
-function hasLoopFocus(container: MirrorElement): boolean {
+export function hasLoopFocus(container: MirrorElement): boolean {
   return container._loopFocus === true || container.dataset.loopFocus === 'true'
 }
 
@@ -273,18 +276,23 @@ export function highlightLast(container: MirrorElement | null): void {
 // ============================================
 
 /**
- * Check if element is highlightable
+ * Check if element is highlightable. Exported so the runtime template
+ * can stamp it (referenced by `findHighlightableItems`).
  */
-function isHighlightable(el: MirrorElement, requireHighlightState: boolean): boolean {
+export function isHighlightable(el: MirrorElement, requireHighlightState: boolean): boolean {
   if (el._stateStyles?.highlighted) return true
   if (!requireHighlightState && el.style.cursor === 'pointer') return true
   return false
 }
 
 /**
- * Recursively find highlightable items
+ * Recursively find highlightable items. Exported so the runtime template
+ * can stamp it (referenced by `getHighlightableItems`).
  */
-function findHighlightableItems(el: HTMLElement, requireHighlightState: boolean): MirrorElement[] {
+export function findHighlightableItems(
+  el: HTMLElement,
+  requireHighlightState: boolean
+): MirrorElement[] {
   const items: MirrorElement[] = []
 
   for (const child of el.children) {

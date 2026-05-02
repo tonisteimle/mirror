@@ -69,8 +69,10 @@ import {
   bindTriggerText,
   deselectSiblings,
   unhighlightSiblings,
+  activate,
+  deactivate,
 } from '../../compiler/runtime/selection'
-import { DOM_RUNTIME_CODE } from '../../compiler/backends/dom/runtime-template'
+import { DOM_RUNTIME_CODE, stamp } from '../../compiler/backends/dom/runtime-template'
 
 const REPO_ROOT = resolve(fileURLToPath(import.meta.url), '../../..')
 
@@ -172,11 +174,11 @@ describe('Runtime template parity', () => {
       // .toString() of an esbuild/tsx-transpiled function may include
       // __name() helper calls; the template defines a no-op __name to
       // make those harmless. The function body itself must appear.
-      expect(DOM_RUNTIME_CODE).toContain(sanitizeIconName.toString())
+      expect(DOM_RUNTIME_CODE).toContain(stamp(sanitizeIconName))
     })
 
     it('sanitizeSVG is stamped verbatim from the typed module', () => {
-      expect(DOM_RUNTIME_CODE).toContain(sanitizeSVG.toString())
+      expect(DOM_RUNTIME_CODE).toContain(stamp(sanitizeSVG))
     })
 
     it('loadIcon calls sanitizeIconName before using the name', () => {
@@ -210,11 +212,11 @@ describe('Runtime template parity', () => {
 
   describe('scroll helpers (audit-3 MED-5)', () => {
     it('typed scroll functions are stamped verbatim', () => {
-      expect(DOM_RUNTIME_CODE).toContain(resolveElement.toString())
-      expect(DOM_RUNTIME_CODE).toContain(scrollTo.toString())
-      expect(DOM_RUNTIME_CODE).toContain(scrollBy.toString())
-      expect(DOM_RUNTIME_CODE).toContain(scrollToTop.toString())
-      expect(DOM_RUNTIME_CODE).toContain(scrollToBottom.toString())
+      expect(DOM_RUNTIME_CODE).toContain(stamp(resolveElement))
+      expect(DOM_RUNTIME_CODE).toContain(stamp(scrollTo))
+      expect(DOM_RUNTIME_CODE).toContain(stamp(scrollBy))
+      expect(DOM_RUNTIME_CODE).toContain(stamp(scrollToTop))
+      expect(DOM_RUNTIME_CODE).toContain(stamp(scrollToBottom))
     })
 
     it('_runtime exposes scroll helpers via shorthand property', () => {
@@ -238,7 +240,7 @@ describe('Runtime template parity', () => {
 
   describe('toast (cluster-API consolidation)', () => {
     it('createToastModule factory is stamped verbatim', () => {
-      expect(DOM_RUNTIME_CODE).toContain(createToastModule.toString())
+      expect(DOM_RUNTIME_CODE).toContain(stamp(createToastModule))
     })
 
     it('runtime instantiates the toast module exactly once', () => {
@@ -266,12 +268,12 @@ describe('Runtime template parity', () => {
 
   describe('input-control (cluster-API consolidation)', () => {
     it('typed focus/blur/clear/selectText/setError/clearError are stamped', () => {
-      expect(DOM_RUNTIME_CODE).toContain(focusTyped.toString())
-      expect(DOM_RUNTIME_CODE).toContain(blurTyped.toString())
-      expect(DOM_RUNTIME_CODE).toContain(clearTyped.toString())
-      expect(DOM_RUNTIME_CODE).toContain(selectTextTyped.toString())
-      expect(DOM_RUNTIME_CODE).toContain(setErrorTyped.toString())
-      expect(DOM_RUNTIME_CODE).toContain(clearErrorTyped.toString())
+      expect(DOM_RUNTIME_CODE).toContain(stamp(focusTyped))
+      expect(DOM_RUNTIME_CODE).toContain(stamp(blurTyped))
+      expect(DOM_RUNTIME_CODE).toContain(stamp(clearTyped))
+      expect(DOM_RUNTIME_CODE).toContain(stamp(selectTextTyped))
+      expect(DOM_RUNTIME_CODE).toContain(stamp(setErrorTyped))
+      expect(DOM_RUNTIME_CODE).toContain(stamp(clearErrorTyped))
     })
 
     it('_runtime exposes input-control via shorthand', () => {
@@ -293,8 +295,8 @@ describe('Runtime template parity', () => {
 
   describe('visibility (cluster-API consolidation, partial)', () => {
     it('typed show/hide are stamped verbatim', () => {
-      expect(DOM_RUNTIME_CODE).toContain(showTyped.toString())
-      expect(DOM_RUNTIME_CODE).toContain(hideTyped.toString())
+      expect(DOM_RUNTIME_CODE).toContain(stamp(showTyped))
+      expect(DOM_RUNTIME_CODE).toContain(stamp(hideTyped))
     })
 
     it('_runtime exposes show/hide via shorthand', () => {
@@ -315,7 +317,7 @@ describe('Runtime template parity', () => {
 
   describe('navigation security (cluster-API consolidation)', () => {
     it('typed sanitizePageName is stamped verbatim', () => {
-      expect(DOM_RUNTIME_CODE).toContain(sanitizePageName.toString())
+      expect(DOM_RUNTIME_CODE).toContain(stamp(sanitizePageName))
     })
 
     it('navigateToPage calls sanitizePageName before constructing the filename', () => {
@@ -350,8 +352,8 @@ describe('Runtime template parity', () => {
 
   describe('state-machine pure ops (audit-4)', () => {
     it('typed applyState/removeState are stamped verbatim', () => {
-      expect(DOM_RUNTIME_CODE).toContain(applyState.toString())
-      expect(DOM_RUNTIME_CODE).toContain(removeState.toString())
+      expect(DOM_RUNTIME_CODE).toContain(stamp(applyState))
+      expect(DOM_RUNTIME_CODE).toContain(stamp(removeState))
     })
 
     it('_runtime exposes applyState/removeState via shorthand (no inline impl)', () => {
@@ -384,7 +386,7 @@ describe('Runtime template parity', () => {
         unhighlightSiblings,
       ]
       for (const fn of fns) {
-        expect(DOM_RUNTIME_CODE, `expected ${fn.name} stamp`).toContain(fn.toString())
+        expect(DOM_RUNTIME_CODE, `expected ${fn.name} stamp`).toContain(stamp(fn))
       }
     })
 
@@ -417,6 +419,26 @@ describe('Runtime template parity', () => {
       // — no method dispatch. Make sure the inline impl doesn't sneak
       // back in.
       expect(DOM_RUNTIME_CODE).not.toMatch(/^\s*select\(el\)\s*\{[\s\S]*?this\.deselect/m)
+    })
+  })
+
+  describe('activation (cluster-API consolidation)', () => {
+    it('typed activate / deactivate are stamped verbatim', () => {
+      expect(DOM_RUNTIME_CODE).toContain(stamp(activate))
+      expect(DOM_RUNTIME_CODE).toContain(stamp(deactivate))
+    })
+
+    it('_runtime exposes activate / deactivate via shorthand', () => {
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*activate,\s*$/m)
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*deactivate,\s*$/m)
+    })
+
+    it('the previous inline activate(el) { ... } method is gone', () => {
+      // Old _runtime.activate had `el.dataset.active = 'true';
+      // this.applyState(el, 'active')`. The stamped top-level one
+      // calls applyState(el, 'active') (no `this`). Make sure the
+      // method form doesn't sneak back in.
+      expect(DOM_RUNTIME_CODE).not.toMatch(/^\s*activate\(el\)\s*\{[\s\S]*?this\.applyState/m)
     })
   })
 

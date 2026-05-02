@@ -83,6 +83,16 @@ import {
   highlightPrev,
   highlightFirst,
   highlightLast,
+  // Private helpers in selection.ts that the public navigation API
+  // calls by name. They MUST be stamped as top-level declarations in
+  // the runtime template, otherwise highlightNext/highlightPrev throw
+  // ReferenceError at runtime (broke Select keyboard nav).
+  findHighlightIndex,
+  hasLoopFocus,
+  isHighlightable,
+  findHighlightableItems,
+  activate,
+  deactivate,
 } from '../../../runtime/selection'
 
 const PROP_MAP_LITERAL = JSON.stringify(PROP_MAP)
@@ -97,7 +107,7 @@ const FALLBACK_ICON_LITERAL = JSON.stringify(FALLBACK_ICON)
 // builds (tsup/esbuild) inline cross-module references to bare names,
 // so this only bites the test runner — but the unhandled errors mask
 // real failures. Strip the SSR shim everywhere we stamp.
-function stamp(fn: { toString(): string }): string {
+export function stamp(fn: { toString(): string }): string {
   return fn.toString().replace(/__vite_ssr_import_\d+__\s*\.\s*([A-Za-z_$][\w$]*)/g, '$1')
 }
 
@@ -185,6 +195,12 @@ const UPDATE_SELECTION_BINDING_SRC = stamp(updateSelectionBinding)
 const BIND_TRIGGER_TEXT_SRC = stamp(bindTriggerText)
 const DESELECT_SIBLINGS_SRC = stamp(deselectSiblings)
 const UNHIGHLIGHT_SIBLINGS_SRC = stamp(unhighlightSiblings)
+// Private helpers — stamped as top-level so the public functions
+// (which reference them by bare name) resolve at runtime.
+const FIND_HIGHLIGHT_INDEX_SRC = stamp(findHighlightIndex)
+const HAS_LOOP_FOCUS_SRC = stamp(hasLoopFocus)
+const IS_HIGHLIGHTABLE_SRC = stamp(isHighlightable)
+const FIND_HIGHLIGHTABLE_ITEMS_SRC = stamp(findHighlightableItems)
 const GET_HIGHLIGHTABLE_ITEMS_SRC = stamp(getHighlightableItems)
 const SELECT_SRC = stamp(selectTyped)
 const DESELECT_SRC = stamp(deselectTyped)
@@ -195,6 +211,8 @@ const HIGHLIGHT_NEXT_SRC = stamp(highlightNext)
 const HIGHLIGHT_PREV_SRC = stamp(highlightPrev)
 const HIGHLIGHT_FIRST_SRC = stamp(highlightFirst)
 const HIGHLIGHT_LAST_SRC = stamp(highlightLast)
+const ACTIVATE_SRC = stamp(activate)
+const DEACTIVATE_SRC = stamp(deactivate)
 
 // Stamp the page-name sanitizer. Closes a real gap: the inline
 // template's navigateToPage built filenames straight from user input
@@ -279,7 +297,11 @@ ${UPDATE_SELECTION_BINDING_SRC}
 ${BIND_TRIGGER_TEXT_SRC}
 ${DESELECT_SIBLINGS_SRC}
 ${UNHIGHLIGHT_SIBLINGS_SRC}
+${IS_HIGHLIGHTABLE_SRC}
+${FIND_HIGHLIGHTABLE_ITEMS_SRC}
 ${GET_HIGHLIGHTABLE_ITEMS_SRC}
+${FIND_HIGHLIGHT_INDEX_SRC}
+${HAS_LOOP_FOCUS_SRC}
 ${SELECT_SRC}
 ${DESELECT_SRC}
 ${SELECT_HIGHLIGHTED_SRC}
@@ -289,6 +311,8 @@ ${HIGHLIGHT_NEXT_SRC}
 ${HIGHLIGHT_PREV_SRC}
 ${HIGHLIGHT_FIRST_SRC}
 ${HIGHLIGHT_LAST_SRC}
+${ACTIVATE_SRC}
+${DEACTIVATE_SRC}
 
 const _runtime = {
   // Debug mode check
@@ -1628,18 +1652,9 @@ const _runtime = {
 
   selectHighlighted,
 
-  // Activation
-  activate(el) {
-    if (!el) return
-    el.dataset.active = 'true'
-    this.applyState(el, 'active')
-  },
-
-  deactivate(el) {
-    if (!el) return
-    delete el.dataset.active
-    this.removeState(el, 'active')
-  },
+  // activate / deactivate stamped from compiler/runtime/selection.ts (top-level above).
+  activate,
+  deactivate,
 
   // State management
   // applyState / removeState stamped from compiler/runtime/state-machine.ts
