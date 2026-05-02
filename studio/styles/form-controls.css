@@ -1,0 +1,197 @@
+/* Settings dialog: form controls */
+
+/* Toggle button (checkbox style) */
+.settings-dialog-overlay .toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  color: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.settings-dialog-overlay .toggle-btn:hover {
+  border-color: var(--color-primary-muted);
+}
+
+.settings-dialog-overlay .toggle-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.settings-dialog-overlay .toggle-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Select dropdown */
+.settings-dialog-overlay .prop-select {
+  width: 160px;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  color: var(--text-default);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.settings-dialog-overlay .prop-select:hover {
+  border-color: var(--border-hover);
+}
+
+.settings-dialog-overlay .prop-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Text/password input */
+.settings-dialog-overlay .prop-input.full-width {
+  width: 160px;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  color: var(--text-default);
+  font-size: 13px;
+  transition: border-color 0.15s ease;
+}
+
+.settings-dialog-overlay .prop-input.full-width:hover {
+  border-color: var(--border-hover);
+}
+
+.settings-dialog-overlay .prop-input.full-width:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Number input with unit */
+.settings-dialog-overlay .input-wrapper {
+  display: flex;
+  align-items: center;
+  width: 80px;
+  height: 32px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  transition: border-color 0.15s ease;
+}
+
+.settings-dialog-overlay .input-wrapper:hover {
+  border-color: var(--border-hover);
+}
+
+.settings-dialog-overlay .input-wrapper:focus-within {
+  border-color: var(--color-primary);
+}
+
+.settings-dialog-overlay .input-wrapper .prop-input {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  padding: 0 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-default);
+  font-size: 13px;
+  text-align: right;
+}
+
+.settings-dialog-overlay .input-wrapper .prop-input:focus {
+  outline: none;
+}
+
+.settings-dialog-overlay .input-unit {
+  padding-right: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+/* Agent fields container */
+.settings-dialog-overlay .agent-fields {
+  /* No extra spacing needed */
+}
+
+.input-wrapper .prop-input,
+.pp-content .input-wrapper .prop-input {
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  flex: 1 !important;
+  min-width: 30px !important;
+  width: auto !important;
+  height: 100% !important;
+  padding: 0 4px 0 8px !important;
+  min-height: unset !important;
+  max-height: unset !important;
+}
+
+.input-unit {
+  padding: 0 8px 0 0;
+  font-size: var(--font-xs);
+  color: var(--text-disabled);
+  user-select: none;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Slider */
+.slider-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex: 1;
+}
+
+.prop-slider {
+  flex: 1;
+  height: 4px;
+  background: var(--bg-input);
+  border-radius: var(--radius-xs);
+  appearance: none;
+  cursor: pointer;
+}
+
+.prop-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: var(--size-icon-xs);
+  height: var(--size-icon-xs);
+  background: var(--color-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.prop-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.prop-slider::-moz-range-thumb {
+  width: var(--size-icon-xs);
+  height: var(--size-icon-xs);
+  background: var(--color-primary);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.slider-value {
+  min-width: 28px;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  text-align: right;
+  font-family: var(--font-mono);
+}
