@@ -33,7 +33,6 @@ studio/                # Studio Runtime (TypeScript) - Modulare Architektur
 ├── code-modifier/     # Bidirectional editing (Code ops + Property extraction)
 ├── core/              # State, Events, Commands, Executor
 ├── modules/           # Feature-Module
-│   ├── file-manager/  # File Operations, Storage
 │   └── compiler/      # Compiler Wrapper, Prelude Builder
 ├── pickers/           # UI Pickers
 │   ├── base/          # BasePicker, KeyboardNav
@@ -44,16 +43,27 @@ studio/                # Studio Runtime (TypeScript) - Modulare Architektur
 ├── panels/            # UI Panels
 │   ├── property/      # PropertyPanel
 │   ├── tree/          # AST Tree Navigation
-│   └── files/         # File Management UI
+│   ├── files/         # File Management UI
+│   └── components/    # Components/Tokens Panels
 ├── preview/           # Preview Controller & Renderer
+├── compile/           # YAML/Component/Token-Renderer für Preview
+├── drop/              # Drag-Drop-Strategy-Handlers
+├── visual/            # Drag/Resize/Snap, Smart-Guides, Layout-Inference (großes Subsystem)
+├── agent/             # LLM-Edit-Flow / Quality-Checks
+├── storage/           # File-Abstraction + User-Settings
+├── ui/                # Zag-Inputs (Inputs, Selects, Toggles)
+├── rename/            # F2-IDE-Style-Rename
 ├── sync/              # Editor ↔ Preview Synchronisation
 ├── editor/            # CodeMirror Controller
 ├── autocomplete/      # Completions
-├── llm/               # LLM Integration
-├── bootstrap.ts       # Initialisierung
-├── app.js             # Legacy UI
+├── file-tree/         # File-Tree-Controller
+├── inline-edit/       # Inline-Editing (Text-Slots)
+├── react-converter/   # Mirror → React Konverter
+├── test-api/          # Browser-Test-Framework (separater Stack, nicht Runtime)
+├── bootstrap.ts       # Architektur Entry Point (Kernel)
+├── app.ts             # Legacy IIFE-Wrapper, ruft initializeStudio()
 ├── index.html         # Entry Point
-└── styles.css         # Styling
+└── styles.css         # Styling (modularisiert via @import)
 
 tests/                 # Test Suite
 ├── compiler/          # IR & Backend Tests
@@ -72,23 +82,26 @@ dist/                  # Build Output
 
 ## Wichtige Dateien
 
-| Datei                          | Beschreibung                          |
-| ------------------------------ | ------------------------------------- |
-| `studio/bootstrap.ts`          | Architektur Entry Point               |
-| `studio/core/state.ts`         | Single Source of Truth                |
-| `studio/modules/file-manager/` | File Operations                       |
-| `studio/modules/compiler/`     | Compiler Wrapper                      |
-| `studio/pickers/`              | Color, Token, Icon, Animation Picker  |
-| `studio/panels/`               | Property, Tree, Files Panel           |
-| `studio/test-api/`             | Browser Test Framework                |
-| `compiler/ir/index.ts`         | IR-Transformation, SourceMap          |
-| `compiler/backends/dom.ts`     | DOM Code-Generator                    |
-| `studio/code-modifier/`        | Code-Änderungen + Property-Extraktion |
-| `compiler/schema/dsl.ts`       | DSL Schema (Single Source of Truth)   |
-| `compiler/validator/index.ts`  | Code Validator API                    |
-| `tools/test.ts`                | Browser Test Runner CLI               |
-| `tools/test-runner/`           | Test Runner Implementation (CDP)      |
-| `docs/TEST-FRAMEWORK.md`       | **Test Framework Dokumentation**      |
+| Datei                         | Beschreibung                             |
+| ----------------------------- | ---------------------------------------- |
+| `studio/bootstrap.ts`         | Architektur Entry Point (Kernel)         |
+| `studio/app.ts`               | Legacy IIFE-Wrapper um bootstrap.ts      |
+| `studio/core/state.ts`        | Single Source of Truth                   |
+| `studio/storage/`             | File Operations & User-Settings          |
+| `studio/modules/compiler/`    | Compiler Wrapper                         |
+| `studio/pickers/`             | Color, Token, Icon, Animation Picker     |
+| `studio/panels/`              | Property, Tree, Files, Components        |
+| `studio/visual/`              | Drag/Resize/Snap, Smart-Guides           |
+| `studio/agent/`               | LLM-Edit-Flow                            |
+| `studio/test-api/`            | Browser Test Framework (separater Stack) |
+| `compiler/ir/index.ts`        | IR-Transformation, SourceMap             |
+| `compiler/backends/dom.ts`    | DOM Code-Generator                       |
+| `studio/code-modifier/`       | Code-Änderungen + Property-Extraktion    |
+| `compiler/schema/dsl.ts`      | DSL Schema (Single Source of Truth)      |
+| `compiler/validator/index.ts` | Code Validator API                       |
+| `tools/test.ts`               | Browser Test Runner CLI                  |
+| `tools/test-runner/`          | Test Runner Implementation (CDP)         |
+| `docs/TEST-FRAMEWORK.md`      | **Test Framework Dokumentation**         |
 
 ## Commands
 

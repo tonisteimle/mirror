@@ -35,9 +35,6 @@ export {
   type TreeNode,
 } from './tree'
 
-// File Panel
-export { FilePanel, createFilePanel, type FilePanelConfig, type FilePanelCallbacks } from './files'
-
 // Component Panel
 export {
   ComponentPanel,
