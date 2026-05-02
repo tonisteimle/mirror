@@ -1,0 +1,165 @@
+    /* Preview Panel */
+    #preview {
+      flex: 1;
+      overflow: auto;
+    }
+
+    #preview.tokens-preview,
+    #preview.components-preview {
+      padding: var(--space-8);
+    }
+
+    /* Tokens Preview Styles */
+    .tokens-preview-section {
+      margin-bottom: 24px;
+    }
+
+    .tokens-preview-section-header {
+      font-size: var(--font-sm);
+      font-weight: var(--weight-semibold);
+      color: var(--text-muted);
+      text-transform: var(--text-uppercase);
+      letter-spacing: var(--tracking-wide);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-default);
+    }
+
+    .tokens-preview-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .tokens-preview-row {
+      border-bottom: 1px solid var(--bg-input);
+    }
+
+    .tokens-preview-row:hover {
+      background: var(--bg-panel);
+    }
+
+    .tokens-preview-cell {
+      padding: var(--space-4) 12px;
+      vertical-align: middle;
+    }
+
+    .tokens-preview-swatch {
+      width: 28px;
+      height: var(--input-height);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      box-shadow: inset 0 0 0 1px var(--white-10);
+    }
+
+    .tokens-preview-spacing {
+      background: var(--color-primary);
+      border-radius: var(--radius-xs);
+      min-width: 8px;
+      min-height: 8px;
+    }
+
+    .tokens-preview-value {
+      font-family: var(--font-mono);
+      font-size: var(--font-sm);
+      color: var(--text-secondary);
+    }
+
+    /* Value type colors matching editor syntax highlighting */
+    .tokens-preview-value.hex {
+      color: var(--syntax-hex-pink);
+    }
+
+    .tokens-preview-value.number {
+      color: var(--syntax-number-orange);
+    }
+
+    .tokens-preview-value.token-ref {
+      color: var(--syntax-keyword);
+    }
+
+    .tokens-preview-name {
+      font-family: var(--font-mono);
+      font-size: var(--font-sm);
+      color: var(--syntax-keyword);
+    }
+
+    /* Components Preview Styles */
+    .components-preview-section {
+      margin-bottom: 32px;
+    }
+
+    .components-preview-section-header {
+      font-size: var(--font-md);
+      font-weight: var(--weight-semibold);
+      color: var(--color-lightest);
+      margin-bottom: 16px;
+    }
+
+    .components-preview-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-12);
+    }
+
+    .components-preview-component {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .components-preview-row {
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;  /* Allow children to define their height */
+      gap: var(--space-4);
+      min-height: 36px;
+    }
+
+    .components-preview-name {
+      font-size: var(--font-md);
+      font-weight: var(--weight-medium);
+      color: var(--text-secondary);
+      width: 80px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;  /* Center text vertically */
+    }
+
+    .components-preview-state {
+      font-size: var(--font-xs);
+      color: var(--text-muted);
+      text-transform: var(--text-uppercase);
+      letter-spacing: var(--tracking-wide);
+      width: 60px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;  /* Center text vertically */
+    }
+
+    .components-preview-render {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      min-height: 36px;
+    }
+
+    /* Artificial parent wrapper for component previews */
+    .components-preview-wrapper {
+      display: inline-flex;
+      position: relative;
+    }
+
+    /* Show component name for empty components */
+    .components-preview-wrapper > *:empty::before {
+      content: attr(data-component);
+      color: var(--white-50);
+      font-size: var(--font-sm);
+      padding: var(--space-2) 8px;
+      display: block;
+    }
+
+    /* Ensure empty components have minimum size */
+    .components-preview-wrapper > *:empty {
+      min-width: 40px;
+      min-height: var(--size-icon-2xl);
+    }
