@@ -380,25 +380,10 @@ const _runtime = {
     }
   },
 
-  // Visibility
-  toggle(el) {
-    if (!el) return
-    const currentState = el.dataset.state || el._initialState
-    if (currentState === 'closed' || currentState === 'open') {
-      const newState = currentState === 'closed' ? 'open' : 'closed'
-      this.setState(el, newState)
-    } else if (currentState === 'collapsed' || currentState === 'expanded') {
-      const newState = currentState === 'collapsed' ? 'expanded' : 'collapsed'
-      this.setState(el, newState)
-    } else {
-      el.hidden = !el.hidden
-      this.applyState(el, el.hidden ? 'off' : 'on')
-    }
-  },
-
-  // show/hide stamped from compiler/runtime/visibility.ts (top-level)
+  // show/hide/toggle stamped from compiler/runtime/visibility.ts (top-level)
   show,
   hide,
+  toggle,
 
   close(el) {
     if (!el) return
@@ -1649,33 +1634,9 @@ const _runtime = {
   applyState,
   removeState,
 
-  setState(el, stateName) {
-    if (!el) return
-    if (!el._baseStyles && el._stateStyles) {
-      el._baseStyles = {}
-      const stateProps = new Set()
-      for (const state of Object.values(el._stateStyles)) {
-        for (const prop of Object.keys(state)) stateProps.add(prop)
-      }
-      for (const prop of stateProps) {
-        el._baseStyles[prop] = el.style[prop] || ''
-      }
-    }
-    if (el._baseStyles) Object.assign(el.style, el._baseStyles)
-    el.dataset.state = stateName
-    if (stateName !== 'default' && el._stateStyles && el._stateStyles[stateName]) {
-      Object.assign(el.style, el._stateStyles[stateName])
-    }
-    this.updateVisibility(el)
-  },
-
-  toggleState(el, state1, state2) {
-    if (!el) return
-    state2 = state2 || 'default'
-    const current = el.dataset.state || state2
-    const next = current === state1 ? state2 : state1
-    this.setState(el, next)
-  },
+  // setState / toggleState stamped from state-machine.ts (top-level above).
+  setState,
+  toggleState,
 
   // State Machine Functions (Interaction Model)
   transitionTo(el, stateName, animation) {
@@ -1904,88 +1865,11 @@ const _runtime = {
     }
   },
 
-  // Safe condition evaluator - replaces dangerous eval()
-  _evaluateCondition(condition, state) {
-    // Build state context
-    const states = {
-      open: state === 'open',
-      closed: state === 'closed',
-      expanded: state === 'expanded',
-      collapsed: state === 'collapsed',
-      active: state === 'active',
-      inactive: state === 'inactive',
-      selected: state === 'selected',
-      disabled: state === 'disabled',
-      loading: state === 'loading',
-      error: state === 'error',
-      on: state === 'on',
-      off: state === 'off',
-    }
-    // Also support the current state name directly
-    states[state] = true
-
-    // Tokenize: split by && and || while preserving operators
-    const tokens = condition.split(/(\s*&&\s*|\s*\|\|\s*)/).filter(t => t.trim())
-
-    let result = null
-    let pendingOp = null
-
-    for (const token of tokens) {
-      const trimmed = token.trim()
-
-      if (trimmed === '&&' || trimmed === '||') {
-        pendingOp = trimmed
-        continue
-      }
-
-      // Handle negation
-      let negate = false
-      let stateName = trimmed
-      if (stateName.startsWith('!')) {
-        negate = true
-        stateName = stateName.slice(1).trim()
-      }
-
-      // Get state value (default to checking against current state)
-      let value = states[stateName] !== undefined ? states[stateName] : (state === stateName)
-      if (negate) value = !value
-
-      // Apply operator
-      if (result === null) {
-        result = value
-      } else if (pendingOp === '&&') {
-        result = result && value
-      } else if (pendingOp === '||') {
-        result = result || value
-      }
-      pendingOp = null
-    }
-
-    return result === true
-  },
-
-  updateVisibility(el) {
-    if (!el) return
-    const state = el.dataset.state
-    const children = el.querySelectorAll('[data-mirror-id]')
-    children.forEach(child => {
-      if (child._visibleWhen) {
-        const condition = child._visibleWhen
-        let visible = false
-        if (condition.includes('&&') || condition.includes('||') || condition.includes('!')) {
-          try {
-            visible = this._evaluateCondition(condition, state)
-          } catch (e) {
-            console.warn('[Mirror] Invalid visibility condition:', condition, e)
-            visible = false
-          }
-        } else {
-          visible = state === condition
-        }
-        child.style.display = visible ? '' : 'none'
-      }
-    })
-  },
+  // updateVisibility stamped from state-machine.ts (top-level above).
+  // The inline _evaluateCondition was orphaned after this consolidation
+  // (the typed updateVisibility uses evaluateChildVisibility which is
+  // also stamped at top-level).
+  updateVisibility,
 
   // Navigation
   navigate(targetName, clickedElement) {
