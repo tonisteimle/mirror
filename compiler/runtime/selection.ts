@@ -327,69 +327,55 @@ export function getHighlightableItems(container: MirrorElement): MirrorElement[]
 // TYPEAHEAD
 // ============================================
 
-// Typeahead state per container
-const typeaheadBuffers = new WeakMap<MirrorElement, { text: string; timeout: number }>()
-
 /**
- * Setup typeahead for a container
- * Typing characters jumps to matching item
+ * Setup typeahead for a container — typing characters jumps to the
+ * first item whose text starts with the typed prefix. Buffer clears
+ * after 500ms of no typing.
+ *
+ * Self-contained: per-container typing buffer is captured in the
+ * keydown listener's closure (one closure per container, guarded by
+ * `_typeaheadEnabled` so we don't double-bind). No module-level
+ * WeakMap — keeps the function stampable into the runtime template
+ * via .toString().
  */
 export function setupTypeahead(container: MirrorElement): void {
   if (container._typeaheadEnabled) return
   container._typeaheadEnabled = true
 
+  // Per-container typing buffer + timeout id, closed over by the
+  // listener below. Outlives individual keypresses; dies with the
+  // container (which holds the listener via addEventListener).
+  const state = { text: '', timeout: 0 }
+
   container.addEventListener('keydown', (e: KeyboardEvent) => {
     // Only handle printable characters
     if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return
 
-    const char = e.key.toLowerCase()
-    handleTypeahead(container, char)
+    const items = getHighlightableItems(container)
+    if (!items.length) return
+
+    if (state.timeout) clearTimeout(state.timeout)
+    state.text += e.key.toLowerCase()
+
+    const searchText = state.text
+    const match = items.find(item => {
+      const text = item.textContent?.trim().toLowerCase() || ''
+      return text.startsWith(searchText)
+    })
+
+    if (match) {
+      highlight(match)
+      match.scrollIntoView({ block: 'nearest' })
+    }
+
+    state.timeout = window.setTimeout(() => {
+      state.text = ''
+    }, 500)
   })
 }
 
 /**
- * Handle typeahead character input
- */
-function handleTypeahead(container: MirrorElement, char: string): void {
-  const items = getHighlightableItems(container)
-  if (!items.length) return
-
-  // Get or create buffer
-  let state = typeaheadBuffers.get(container)
-  if (!state) {
-    state = { text: '', timeout: 0 }
-    typeaheadBuffers.set(container, state)
-  }
-
-  // Clear previous timeout
-  if (state.timeout) {
-    clearTimeout(state.timeout)
-  }
-
-  // Add character to buffer
-  state.text += char
-
-  // Find matching item
-  const searchText = state.text.toLowerCase()
-  const match = items.find(item => {
-    const text = item.textContent?.trim().toLowerCase() || ''
-    return text.startsWith(searchText)
-  })
-
-  if (match) {
-    highlight(match)
-    // Scroll into view if needed
-    match.scrollIntoView({ block: 'nearest' })
-  }
-
-  // Clear buffer after 500ms of no typing
-  state.timeout = window.setTimeout(() => {
-    state!.text = ''
-  }, 500)
-}
-
-/**
- * Enable typeahead on a container (can be called from DSL)
+ * Enable typeahead on a container (can be called from DSL).
  */
 export function typeahead(container: MirrorElement | null): void {
   if (!container) return

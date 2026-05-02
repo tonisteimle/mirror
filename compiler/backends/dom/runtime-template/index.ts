@@ -93,6 +93,9 @@ import {
   findHighlightableItems,
   activate,
   deactivate,
+  setupTypeahead,
+  typeahead,
+  setupHoverHighlight,
 } from '../../../runtime/selection'
 
 const PROP_MAP_LITERAL = JSON.stringify(PROP_MAP)
@@ -225,6 +228,9 @@ const HIGHLIGHT_FIRST_SRC = stamp(highlightFirst)
 const HIGHLIGHT_LAST_SRC = stamp(highlightLast)
 const ACTIVATE_SRC = stamp(activate)
 const DEACTIVATE_SRC = stamp(deactivate)
+const SETUP_TYPEAHEAD_SRC = stamp(setupTypeahead)
+const TYPEAHEAD_SRC = stamp(typeahead)
+const SETUP_HOVER_HIGHLIGHT_SRC = stamp(setupHoverHighlight)
 
 // Stamp the page-name sanitizer. Closes a real gap: the inline
 // template's navigateToPage built filenames straight from user input
@@ -325,6 +331,9 @@ ${HIGHLIGHT_FIRST_SRC}
 ${HIGHLIGHT_LAST_SRC}
 ${ACTIVATE_SRC}
 ${DEACTIVATE_SRC}
+${SETUP_TYPEAHEAD_SRC}
+${TYPEAHEAD_SRC}
+${SETUP_HOVER_HIGHLIGHT_SRC}
 
 const _runtime = {
   // Debug mode check
@@ -690,135 +699,19 @@ const _runtime = {
   },
 
   // ============================================
-  // TYPEAHEAD NAVIGATION (Accessibility)
+  // TYPEAHEAD + HOVER (Accessibility / mouse UX)
   // ============================================
-
-  /**
-   * Setup typeahead for a list container
-   * Typing characters jumps to matching item
-   */
-  setupTypeahead(container) {
-    if (!container) return
-    if (container._typeaheadEnabled) return // Already setup
-    container._typeaheadEnabled = true
-
-    // Typeahead state
-    const state = { text: '', timeout: null }
-
-    // Get highlightable items
-    const getItems = () => {
-      const findItems = (el, requireState) => {
-        const items = []
-        for (const child of el.children) {
-          if (child._stateStyles?.highlighted) {
-            items.push(child)
-          } else if (!requireState && child.style.cursor === 'pointer') {
-            items.push(child)
-          } else {
-            items.push(...findItems(child, requireState))
-          }
-        }
-        return items
-      }
-      // First try with highlight state, then fallback to cursor:pointer
-      let items = findItems(container, true)
-      if (!items.length) items = findItems(container, false)
-      return items
-    }
-
-    container.addEventListener('keydown', (e) => {
-      // Only handle printable characters
-      if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return
-
-      const char = e.key.toLowerCase()
-      const items = getItems()
-      if (!items.length) return
-
-      // Clear previous timeout
-      if (state.timeout) clearTimeout(state.timeout)
-
-      // Add character to buffer
-      state.text += char
-
-      // Find matching item
-      const searchText = state.text.toLowerCase()
-      const match = items.find(item => {
-        const text = item.textContent?.trim().toLowerCase() || ''
-        return text.startsWith(searchText)
-      })
-
-      if (match) {
-        // Unhighlight others, highlight match
-        for (const item of items) {
-          if (item !== match && item.dataset.highlighted) {
-            delete item.dataset.highlighted
-            this.removeState(item, 'highlighted')
-          }
-        }
-        match.dataset.highlighted = 'true'
-        this.applyState(match, 'highlighted')
-        match.scrollIntoView({ block: 'nearest' })
-      }
-
-      // Clear buffer after 500ms
-      state.timeout = setTimeout(() => {
-        state.text = ''
-      }, 500)
-    })
-  },
+  // setupTypeahead / typeahead / setupHoverHighlight stamped from
+  // compiler/runtime/selection.ts (top-level above). All three now
+  // share the canonical getHighlightableItems / highlight / removeState
+  // implementations stamped above instead of duplicating findItems
+  // inline (the inline copies became dead code).
+  setupTypeahead,
+  typeahead,
+  setupHoverHighlight,
 
   // Bind trigger text to show selected value (stamped from selection.ts).
   bindTriggerText,
-
-  /**
-   * Hover-to-highlight for list items inside a loop-focus container.
-   * Mirrors the keyboard arrow behaviour so mouse-driven UX (Select,
-   * Menu, Combobox) and keyboard navigation share the same "current"
-   * item. A single delegated mouseover listener handles all items —
-   * cheaper than per-item and survives DOM swaps.
-   */
-  setupHoverHighlight(container) {
-    if (!container) return
-    if (container._hoverHighlightEnabled) return
-    container._hoverHighlightEnabled = true
-
-    const findItems = (el, requireState) => {
-      const items = []
-      for (const child of el.children) {
-        if (child._stateStyles?.highlighted) {
-          items.push(child)
-        } else if (!requireState && child.style.cursor === 'pointer') {
-          items.push(child)
-        } else {
-          items.push(...findItems(child, requireState))
-        }
-      }
-      return items
-    }
-
-    const getItems = () => {
-      let items = findItems(container, true)
-      if (!items.length) items = findItems(container, false)
-      return items
-    }
-
-    container.addEventListener('mouseover', (e) => {
-      const target = e.target
-      if (!target) return
-      const items = getItems()
-      const item = items.find(it => it === target || it.contains(target))
-      if (!item) return
-      // Unhighlight siblings, highlight current
-      for (const sibling of items) {
-        if (sibling !== item && sibling.dataset.highlighted === 'true') {
-          delete sibling.dataset.highlighted
-          this.removeState(sibling, 'highlighted')
-        }
-      }
-      item.dataset.highlighted = 'true'
-      this.applyState(item, 'highlighted')
-    })
-  },
 
   // ============================================
   // TABLE FUNCTIONS (Built-in)
