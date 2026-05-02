@@ -628,6 +628,120 @@ describe('PropertyPanel', () => {
       expect(panel).toBeInstanceOf(PropertyPanel)
     })
   })
+
+  describe('Section-expand chevron', () => {
+    function setupFrameWithSpacingAndBorder(): void {
+      const padProp = createSampleProperty({
+        name: 'pad',
+        value: '8',
+        category: 'spacing',
+        type: 'numeric',
+      })
+      const radProp = createSampleProperty({
+        name: 'radius',
+        value: '4',
+        category: 'border',
+        type: 'numeric',
+      })
+      const element = createSampleElement({
+        nodeId: 'frame-1',
+        componentName: 'Frame',
+        allProperties: [padProp, radProp],
+        categories: [
+          createSampleCategory({
+            name: 'spacing',
+            label: 'Spacing',
+            properties: [padProp],
+          }),
+          createSampleCategory({
+            name: 'border',
+            label: 'Border',
+            properties: [radProp],
+          }),
+        ],
+      })
+
+      propertyExtractor = createMockPropertyExtractor(new Map([['frame-1', element]]))
+
+      panel = new PropertyPanel(
+        container,
+        selectionManager,
+        propertyExtractor,
+        codeModifier,
+        onCodeChange
+      )
+
+      selectionManager._triggerSelection('frame-1')
+    }
+
+    it('renders a chevron for spacing/border/radius sections', () => {
+      setupFrameWithSpacingAndBorder()
+
+      expect(container.querySelector('[data-expand="spacing"]')).toBeTruthy()
+      expect(container.querySelector('[data-expand="border"]')).toBeTruthy()
+      expect(container.querySelector('[data-expand="radius"]')).toBeTruthy()
+    })
+
+    it('clicking a chevron toggles .expanded on its container', () => {
+      setupFrameWithSpacingAndBorder()
+
+      // Default: 'radius' is NOT in default expanded set → starts collapsed
+      const radiusContainer = container.querySelector(
+        '[data-expand-container="radius"]'
+      ) as HTMLElement
+      expect(radiusContainer.classList.contains('expanded')).toBe(false)
+
+      const radiusChevron = container.querySelector(
+        '.section-expand-btn[data-expand="radius"]'
+      ) as HTMLButtonElement
+      radiusChevron.click()
+
+      // Re-query — view re-renders on toggle
+      const radiusContainerAfter = container.querySelector(
+        '[data-expand-container="radius"]'
+      ) as HTMLElement
+      expect(radiusContainerAfter.classList.contains('expanded')).toBe(true)
+    })
+
+    it('clicking an already-expanded chevron collapses it', () => {
+      setupFrameWithSpacingAndBorder()
+
+      // Default: 'spacing' IS in default expanded set → starts expanded
+      const spacingContainer = container.querySelector(
+        '[data-expand-container="spacing"]'
+      ) as HTMLElement
+      expect(spacingContainer.classList.contains('expanded')).toBe(true)
+
+      const spacingChevron = container.querySelector(
+        '.section-expand-btn[data-expand="spacing"]'
+      ) as HTMLButtonElement
+      spacingChevron.click()
+
+      const spacingContainerAfter = container.querySelector(
+        '[data-expand-container="spacing"]'
+      ) as HTMLElement
+      expect(spacingContainerAfter.classList.contains('expanded')).toBe(false)
+    })
+
+    it('toggles each chevron independently', () => {
+      setupFrameWithSpacingAndBorder()
+
+      const radiusChevron = container.querySelector(
+        '.section-expand-btn[data-expand="radius"]'
+      ) as HTMLButtonElement
+      radiusChevron.click() // radius now expanded
+
+      // Border was already expanded by default — should stay expanded.
+      const borderContainer = container.querySelector(
+        '[data-expand-container="border"]'
+      ) as HTMLElement
+      const radiusContainer = container.querySelector(
+        '[data-expand-container="radius"]'
+      ) as HTMLElement
+      expect(borderContainer.classList.contains('expanded')).toBe(true)
+      expect(radiusContainer.classList.contains('expanded')).toBe(true)
+    })
+  })
 })
 
 describe('createPropertyPanel', () => {

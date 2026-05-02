@@ -687,6 +687,22 @@ export class PropertyPanelView {
         })
       }
     }
+
+    // Section-expand chevron is a panel-level concern (the per-side detail
+    // toggle), not owned by any single section — wire it once here.
+    const expandListener = (e: Event) => {
+      const target = (e.target as HTMLElement).closest<HTMLElement>('.section-expand-btn')
+      if (!target || !this.container.contains(target)) return
+      const name = target.dataset.expand
+      if (name) {
+        e.preventDefault()
+        this.controller.toggleSection(name)
+      }
+    }
+    this.container.addEventListener('click', expandListener)
+    this.eventCleanups.push(() => {
+      this.container.removeEventListener('click', expandListener)
+    })
   }
 
   private cleanupEventListeners(): void {
