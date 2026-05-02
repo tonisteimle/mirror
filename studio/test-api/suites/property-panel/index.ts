@@ -8,6 +8,7 @@ import { tokenValueTests } from './tokens-values.test'
 import { tokenInteractionTests } from './tokens-interaction.test'
 import { projectTokenTests } from './tokens-project.test'
 import { radiusChangeTests } from './radius-changes.test'
+import { sectionExpandTests } from './section-expand.test'
 
 export {
   tokenDisplayTests,
@@ -15,6 +16,7 @@ export {
   tokenInteractionTests,
   projectTokenTests,
   radiusChangeTests,
+  sectionExpandTests,
 }
 
 export const allPropertyPanelTests: TestCase[] = [
@@ -23,6 +25,7 @@ export const allPropertyPanelTests: TestCase[] = [
   ...tokenInteractionTests,
   ...projectTokenTests,
   ...radiusChangeTests,
+  ...sectionExpandTests,
 ]
 
 export {

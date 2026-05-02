@@ -29,7 +29,21 @@ export default defineConfig({
     '@codemirror/autocomplete',
   ],
   // Force bundling of ALL @zag-js, @atlaskit, and @anthropic-ai packages (not external)
-  noExternal: [/^@zag-js\/.*/, /^@atlaskit\/.*/, /^@anthropic-ai\/.*/],
+  // and the runtime/animation deps that compiler/runtime/animations.ts pulls in —
+  // the studio is loaded as <script type="module"> from a static server, so any
+  // bare specifier left in the bundle fails to resolve in the browser.
+  noExternal: [
+    /^@zag-js\/.*/,
+    /^@atlaskit\/.*/,
+    /^@anthropic-ai\/.*/,
+    'motion',
+    'framer-motion',
+    'motion-dom',
+    'motion-utils',
+    'focus-trap',
+    'tabbable',
+    'fdir',
+  ],
 
   // FUTURE: Separate Compiler Bundle (~1.3MB savings)
   // To make the compiler external:
