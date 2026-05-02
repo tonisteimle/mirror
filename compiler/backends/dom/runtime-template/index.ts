@@ -45,6 +45,8 @@ import {
   setError as setErrorTyped,
   clearError as clearErrorTyped,
 } from '../../../runtime/input-control'
+import { show as showTyped, hide as hideTyped } from '../../../runtime/visibility'
+import { sanitizePageName } from '../../../runtime/component-navigation'
 
 const PROP_MAP_LITERAL = JSON.stringify(PROP_MAP)
 const ALIGN_MAP_LITERAL = JSON.stringify(ALIGN_MAP)
@@ -90,6 +92,22 @@ const SELECT_TEXT_SRC = selectTextTyped.toString()
 const SET_ERROR_SRC = setErrorTyped.toString()
 const CLEAR_ERROR_SRC = clearErrorTyped.toString()
 
+// Stamp typed show/hide. Pure DOM ops via resolveElement, no
+// state-machine deps. toggle/close stay as inline _runtime methods
+// for now — they need state-machine helpers (this.setState etc.)
+// which are a separate consolidation target.
+const SHOW_SRC = showTyped.toString()
+const HIDE_SRC = hideTyped.toString()
+
+// Stamp the page-name sanitizer. Closes a real gap: the inline
+// template's navigateToPage built filenames straight from user input
+// without any path-traversal / absolute-path / weird-character check.
+// (Note: validateCompiledCode from the typed module is intentionally
+// NOT stamped — its dangerous-pattern regex set is over-eager with
+// the /i flag and would reject every real Mirror-compiled page. That
+// validator needs a tightening pass before it can ship.)
+const SANITIZE_PAGE_NAME_SRC = sanitizePageName.toString()
+
 export const DOM_RUNTIME_CODE = `
 // Mirror DOM Runtime
 
@@ -125,6 +143,13 @@ ${CLEAR_SRC}
 ${SELECT_TEXT_SRC}
 ${SET_ERROR_SRC}
 ${CLEAR_ERROR_SRC}
+
+// Visibility helpers (stamped from compiler/runtime/visibility.ts)
+${SHOW_SRC}
+${HIDE_SRC}
+
+// Page-navigation security (stamped from compiler/runtime/component-navigation.ts)
+${SANITIZE_PAGE_NAME_SRC}
 
 const _runtime = {
   // Debug mode check
@@ -244,22 +269,9 @@ const _runtime = {
     }
   },
 
-  show(el) {
-    if (!el) return
-    el.hidden = false
-    // Restore saved display value or clear inline style
-    el.style.display = el._savedDisplay || ''
-  },
-
-  hide(el) {
-    if (!el) return
-    // Save current display before hiding (unless already hidden)
-    if (el.style.display !== 'none') {
-      el._savedDisplay = el.style.display
-    }
-    el.hidden = true
-    el.style.display = 'none'
-  },
+  // show/hide stamped from compiler/runtime/visibility.ts (top-level)
+  show,
+  hide,
 
   close(el) {
     if (!el) return
@@ -275,7 +287,9 @@ const _runtime = {
     } else if (initialState === 'expanded' || initialState === 'collapsed' || currentState === 'expanded' || currentState === 'collapsed') {
       this.setState(el, 'collapsed')
     } else {
-      this.hide(el)
+      // Falls through to the top-level stamped hide() function
+      // (lexical scope picks it up, no method-on-_runtime lookup).
+      hide(el)
     }
   },
 
@@ -1993,7 +2007,12 @@ const _runtime = {
 
   navigateToPage(pageName, clickedElement) {
     if (!pageName) return
-    const filename = pageName.endsWith('.mirror') ? pageName : pageName + '.mirror'
+    // Reject path-traversal / absolute-path / weird-character page names
+    // BEFORE constructing a filename. sanitizePageName is stamped from
+    // compiler/runtime/component-navigation.ts.
+    const safePage = sanitizePageName(pageName)
+    if (!safePage) return
+    const filename = safePage.endsWith('.mirror') ? safePage : safePage + '.mirror'
     const readFile = this._readFile || window._mirrorReadFile
     if (!readFile) {
       console.warn('No readFile callback available for page navigation')

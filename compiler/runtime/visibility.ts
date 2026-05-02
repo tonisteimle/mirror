@@ -2,35 +2,46 @@
  * Visibility Control Functions
  *
  * Functions for showing, hiding, and toggling element visibility.
+ *
+ * `show` and `hide` accept string|element (Mirror data-mirror-name
+ * lookup) and are self-contained so they can be stamped into the
+ * runtime template. The previous implementation wrapped DOM writes in
+ * batchInFrame() — dropped here to align with the template, which
+ * never batched. Re-introduce batching in a dedicated pass once the
+ * batching module itself is stamped.
+ *
+ * `toggle` and `close` still depend on the state-machine helpers
+ * (applyState, setState, stateMachineToggle). They're not yet stamped
+ * — the template uses its own this.setState/applyState methods on
+ * _runtime, which works but diverges from this typed implementation.
+ * Consolidation of the state-machine cluster is a separate sprint.
  */
 
 import type { MirrorElement } from './types'
-import { batchInFrame } from './batching'
+import { resolveElement } from './dom-lookup'
 import { applyState, setState, stateMachineToggle } from './state-machine'
 
 /**
- * Show an element by restoring its display value
+ * Show an element by restoring its display value.
  */
-export function show(el: MirrorElement | null): void {
-  if (!el) return
-  batchInFrame(() => {
-    el.style.display = el._savedDisplay || ''
-    el.hidden = false
-  })
+export function show(el: MirrorElement | string | null): void {
+  const target = resolveElement(el)
+  if (!target) return
+  target.style.display = target._savedDisplay || ''
+  target.hidden = false
 }
 
 /**
- * Hide an element by setting display to none
+ * Hide an element by setting display to none.
  */
-export function hide(el: MirrorElement | null): void {
-  if (!el) return
-  if (el.style.display !== 'none') {
-    el._savedDisplay = el.style.display
+export function hide(el: MirrorElement | string | null): void {
+  const target = resolveElement(el)
+  if (!target) return
+  if (target.style.display !== 'none') {
+    target._savedDisplay = target.style.display
   }
-  batchInFrame(() => {
-    el.style.display = 'none'
-    el.hidden = true
-  })
+  target.style.display = 'none'
+  target.hidden = true
 }
 
 const STATE_PAIRS: Record<string, string> = {

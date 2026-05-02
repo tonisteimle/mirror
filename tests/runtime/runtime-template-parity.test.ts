@@ -49,6 +49,8 @@ import {
   setError as setErrorTyped,
   clearError as clearErrorTyped,
 } from '../../compiler/runtime/input-control'
+import { show as showTyped, hide as hideTyped } from '../../compiler/runtime/visibility'
+import { sanitizePageName } from '../../compiler/runtime/component-navigation'
 import { DOM_RUNTIME_CODE } from '../../compiler/backends/dom/runtime-template'
 
 const REPO_ROOT = resolve(fileURLToPath(import.meta.url), '../../..')
@@ -267,6 +269,63 @@ describe('Runtime template parity', () => {
       // setError/clearError; we removed that to align with what
       // production has always actually done.
       expect(DOM_RUNTIME_CODE).not.toMatch(/this\.transitionTo\s*&&\s*this\.transitionTo/)
+    })
+  })
+
+  describe('visibility (cluster-API consolidation, partial)', () => {
+    it('typed show/hide are stamped verbatim', () => {
+      expect(DOM_RUNTIME_CODE).toContain(showTyped.toString())
+      expect(DOM_RUNTIME_CODE).toContain(hideTyped.toString())
+    })
+
+    it('_runtime exposes show/hide via shorthand', () => {
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*show,\s*$/m)
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*hide,\s*$/m)
+    })
+
+    it('close() falls through to top-level hide() (not this.hide)', () => {
+      // After the visibility stamp, the inline close() method had to
+      // change `this.hide(el)` → `hide(el)` so it picks up the
+      // stamped top-level function rather than (a now-missing) method.
+      const m = DOM_RUNTIME_CODE.match(/close\(el\)\s*\{([\s\S]*?)^\s*\},/m)
+      expect(m, 'expected close() body in template').not.toBeNull()
+      expect(m![1]).not.toMatch(/this\.hide\b/)
+      expect(m![1]).toMatch(/\bhide\(el\)/)
+    })
+  })
+
+  describe('navigation security (cluster-API consolidation)', () => {
+    it('typed sanitizePageName is stamped verbatim', () => {
+      expect(DOM_RUNTIME_CODE).toContain(sanitizePageName.toString())
+    })
+
+    it('navigateToPage calls sanitizePageName before constructing the filename', () => {
+      const m = DOM_RUNTIME_CODE.match(
+        /navigateToPage\(pageName,\s*clickedElement\)\s*\{([\s\S]*?)^\s*\},/m
+      )
+      expect(m, 'expected navigateToPage body in template').not.toBeNull()
+      const body = m![1]
+      const sanitizeIdx = body.indexOf('sanitizePageName(pageName)')
+      const filenameIdx = body.indexOf('.endsWith(')
+      const readFileIdx = body.indexOf('readFile(')
+      expect(sanitizeIdx).toBeGreaterThan(-1)
+      // Sanitize must run before the filename is built and before the
+      // readFile callback is invoked.
+      if (filenameIdx > -1) expect(sanitizeIdx).toBeLessThan(filenameIdx)
+      if (readFileIdx > -1) expect(sanitizeIdx).toBeLessThan(readFileIdx)
+    })
+
+    it('the filename is built from the sanitized name, not the raw input', () => {
+      // Ensure the post-sanitize variable (safePage) is what gets the
+      // .mirror suffix and reaches readFile, not the original pageName.
+      const m = DOM_RUNTIME_CODE.match(
+        /navigateToPage\(pageName,\s*clickedElement\)\s*\{([\s\S]*?)^\s*\},/m
+      )
+      expect(m).not.toBeNull()
+      const body = m![1]
+      // safePage.endsWith → good; pageName.endsWith → regression
+      expect(body).toMatch(/safePage\.endsWith/)
+      expect(body).not.toMatch(/pageName\.endsWith/)
     })
   })
 

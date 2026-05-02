@@ -25,9 +25,10 @@ export function setReadFileCallback(callback: (filename: string) => string | nul
 // ============================================
 
 /**
- * Sanitize page name to prevent path traversal attacks
+ * Sanitize page name to prevent path traversal attacks. Self-contained
+ * so the runtime template can stamp it verbatim via .toString().
  */
-function sanitizePageName(name: string): string | null {
+export function sanitizePageName(name: string): string | null {
   if (!name || typeof name !== 'string') return null
 
   if (name.includes('..')) {
@@ -52,45 +53,48 @@ function sanitizePageName(name: string): string | null {
 // CODE VALIDATION
 // ============================================
 
-const DANGEROUS_PATTERNS = [
-  /\beval\s*\(/i,
-  /\bFunction\s*\(/i,
-  /\bsetTimeout\s*\(\s*['"`]/i,
-  /\bsetInterval\s*\(\s*['"`]/i,
-  /\bdocument\s*\.\s*write/i,
-  /\binnerHTML\s*=\s*[^'"`]/,
-  /\b__proto__\s*=/i,
-  /\bprototype\s*\[/i,
-  /\bconstructor\s*\[/i,
-  /\bimport\s*\(/i,
-  /\brequire\s*\(/i,
-  /\bprocess\s*\./i,
-  /\bchild_process/i,
-  /\bfs\s*\./i,
-  /<script/i,
-  /javascript\s*:/i,
-  /data\s*:\s*text\/html/i,
-]
-
 /**
- * Check for dangerous patterns in code
+ * Validate compiled Mirror code before passing it to `new Function()`.
+ * Rejects code containing dangerous patterns (eval, setTimeout with
+ * string arg, innerHTML assignment to unquoted value, prototype
+ * pollution, dynamic import/require, Node fs/process/child_process,
+ * <script> tags, javascript: URLs, data:text/html). Also requires the
+ * output to look like Mirror compiler output (have createUI).
+ *
+ * Self-contained — all helpers and the dangerous-pattern table are
+ * nested in the function body so .toString() yields a runnable
+ * snippet for the runtime template.
  */
-function hasDangerousPattern(code: string): boolean {
-  return DANGEROUS_PATTERNS.some(pattern => pattern.test(code))
-}
+export function validateCompiledCode(code: string): boolean {
+  const DANGEROUS_PATTERNS = [
+    /\beval\s*\(/i,
+    /\bFunction\s*\(/i,
+    /\bsetTimeout\s*\(\s*['"`]/i,
+    /\bsetInterval\s*\(\s*['"`]/i,
+    /\bdocument\s*\.\s*write/i,
+    /\binnerHTML\s*=\s*[^'"`]/,
+    /\b__proto__\s*=/i,
+    /\bprototype\s*\[/i,
+    /\bconstructor\s*\[/i,
+    /\bimport\s*\(/i,
+    /\brequire\s*\(/i,
+    /\bprocess\s*\./i,
+    /\bchild_process/i,
+    /\bfs\s*\./i,
+    /<script/i,
+    /javascript\s*:/i,
+    /data\s*:\s*text\/html/i,
+  ]
 
-/**
- * Check for valid Mirror output structure
- */
-function hasMirrorStructure(code: string): boolean {
-  return code.includes('function createUI') || code.includes('export function createUI')
-}
+  function hasDangerous(c: string): boolean {
+    return DANGEROUS_PATTERNS.some(p => p.test(c))
+  }
 
-/**
- * Validate compiled Mirror code
- */
-function validateCompiledCode(code: string): boolean {
-  if (hasDangerousPattern(code)) {
+  function hasMirrorStructure(c: string): boolean {
+    return c.includes('function createUI') || c.includes('export function createUI')
+  }
+
+  if (hasDangerous(code)) {
     console.warn('[Security] Dangerous pattern detected in compiled code')
     return false
   }
