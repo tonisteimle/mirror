@@ -374,3 +374,76 @@ export function lineHasProperties(this: CodeModifier, line: string): boolean {
 export function escapeRegex(this: CodeModifier, str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
+
+/**
+ * Atomic batch property change.
+ *
+ * Snapshot before, apply each change in sequence (each call updates
+ * `this.source` and `this.lines`), restore on first failure. The result
+ * folds the per-change diffs into one whole-file CodeChange so that
+ * downstream consumers (CodeMirror, undo history) treat the batch as
+ * a single edit step.
+ */
+export interface BatchPropertyChange {
+  name: string
+  value: string
+  action: 'set' | 'remove' | 'toggle'
+}
+
+export function applyBatchChanges(
+  this: CodeModifier,
+  nodeId: string,
+  changes: BatchPropertyChange[]
+): ModificationResult {
+  if (changes.length === 0) {
+    return {
+      success: true,
+      newSource: this.source,
+      change: { from: 0, to: 0, insert: '' },
+      noChange: true,
+    }
+  }
+
+  const originalSource = this.source
+  this.createSnapshot()
+
+  for (const change of changes) {
+    let result: ModificationResult
+    switch (change.action) {
+      case 'set':
+        result = this.updateProperty(nodeId, change.name, change.value)
+        break
+      case 'remove':
+        result = this.removeProperty(nodeId, change.name)
+        break
+      case 'toggle':
+        result =
+          change.value === 'true'
+            ? this.addProperty(nodeId, change.name, '')
+            : this.removeProperty(nodeId, change.name)
+        break
+    }
+
+    if (!result.success) {
+      this.restoreSnapshot()
+      return {
+        success: false,
+        newSource: originalSource,
+        change: { from: 0, to: 0, insert: '' },
+        error: result.error ?? `Batch failed at ${change.action} ${change.name}`,
+      }
+    }
+  }
+
+  // All changes succeeded — fold into a single whole-file replacement so
+  // editor/undo history sees the batch as one step.
+  return {
+    success: true,
+    newSource: this.source,
+    change: {
+      from: 0,
+      to: originalSource.length,
+      insert: this.source,
+    },
+  }
+}

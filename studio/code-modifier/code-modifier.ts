@@ -299,6 +299,7 @@ export class CodeModifier {
   updateProperty = propertyOps.updateProperty
   addProperty = propertyOps.addProperty
   removeProperty = propertyOps.removeProperty
+  applyBatchChanges = propertyOps.applyBatchChanges
   findAndReplaceProperty = propertyOps.findAndReplaceProperty
   findAndRemoveProperty = propertyOps.findAndRemoveProperty
   formatProperty = propertyOps.formatProperty

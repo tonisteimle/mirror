@@ -137,39 +137,12 @@ export function createModificationAdapter(
     },
 
     batchUpdate(nodeId, changes) {
-      // Apply changes sequentially for now
-      // TODO: Implement true batch update in CodeModifier
-      let lastResult: ModificationResult = {
-        success: false,
-        newSource: '',
-        change: { from: 0, to: 0, insert: '' },
-      }
-
-      for (const change of changes) {
-        switch (change.action) {
-          case 'set':
-            lastResult = codeModifier.updateProperty(nodeId, change.name, change.value)
-            break
-          case 'remove':
-            lastResult = codeModifier.removeProperty(nodeId, change.name)
-            break
-          case 'toggle':
-            if (change.value === 'true') {
-              lastResult = codeModifier.addProperty(nodeId, change.name, '')
-            } else {
-              lastResult = codeModifier.removeProperty(nodeId, change.name)
-            }
-            break
-        }
-
-        if (!lastResult.success) {
-          onCodeChange(lastResult)
-          return lastResult
-        }
-      }
-
-      onCodeChange(lastResult)
-      return lastResult
+      // Atomic batch via CodeModifier.applyBatchChanges — snapshots once,
+      // restores on any per-step failure, returns a single whole-file
+      // diff so editor/undo treats the whole batch as one step.
+      const result = codeModifier.applyBatchChanges(nodeId, changes)
+      onCodeChange(result)
+      return result
     },
   }
 }
