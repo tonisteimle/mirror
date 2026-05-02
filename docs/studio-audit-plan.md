@@ -249,12 +249,12 @@ README-Hinweis im Source-Tree, dass `test-api/` Test-Code ist.
 
 ## Fortschritt
 
-| Phase | Status | Datum | Notiz |
-| ----- | ------ | ----- | ----- |
-| A     | offen  | —     | —     |
-| B     | offen  | —     | —     |
-| C     | offen  | —     | —     |
-| D     | offen  | —     | —     |
-| E     | offen  | —     | —     |
-| F     | offen  | —     | —     |
-| G     | offen  | —     | —     |
+| Phase | Status        | Datum      | Notiz                                                                                                      |
+| ----- | ------------- | ---------- | ---------------------------------------------------------------------------------------------------------- |
+| A     | abgeschlossen | 2026-05-02 | CLAUDE.md aktualisiert + orphans entfernt                                                                  |
+| B     | abgeschlossen | 2026-05-02 | window-globals.d.ts; alle 23 `(window as any)` casts entfernt; latenter Bug in setPanelVisibility gefunden |
+| C     | abgeschlossen | 2026-05-02 | createLogger über alle studio-files; ESLint `no-console: error`; localStorage-Override                     |
+| D     | partiell      | 2026-05-02 | D1 (setupNotificationHandlers extrahiert) — D2..D6 brauchen eigene Session                                 |
+| E     | abgeschlossen | 2026-05-02 | applyBatchChanges atomar mit snapshot/restore + 5 Vitests; production-adapters delegiert                   |
+| F     | in Arbeit     | 2026-05-02 | F1+F2+F3+F4 grün — 96 neue Vitests; F5+F6 (margin-/padding-/layout-converter) noch offen                   |
+| G     | offen         | —          | —                                                                                                          |
