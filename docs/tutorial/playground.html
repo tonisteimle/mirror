@@ -471,25 +471,17 @@ Frame bg #18181b, gap 0
       }
 
       try {
-        // Parse and generate
-        const ast = MirrorLang.parse(source);
+        // Compile to runnable JS, eval, mount the returned root element.
+        const code = MirrorLang.compile(source);
+        const execCode = code.replace('export function createUI', 'function createUI');
+        const fn = new Function(execCode + '\nreturn createUI();');
+        const root = fn();
 
-        if (ast.errors && ast.errors.length > 0) {
-          throw new Error(ast.errors[0].message);
+        preview.innerHTML = '';
+        if (root) {
+          root.classList.add('mirror-root');
+          preview.appendChild(root);
         }
-
-        const html = MirrorLang.generateDOM(ast);
-
-        // Render
-        preview.innerHTML = html;
-
-        // Execute any scripts
-        const scripts = preview.querySelectorAll('script');
-        scripts.forEach(script => {
-          const newScript = document.createElement('script');
-          newScript.textContent = script.textContent;
-          script.parentNode.replaceChild(newScript, script);
-        });
 
         statusDot.className = 'status-dot';
         statusText.textContent = 'Compiled';

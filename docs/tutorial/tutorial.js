@@ -12,8 +12,16 @@ const patterns = [
   { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
   { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
   { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-  { regex: /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full|shrink|placeholder|row-height)\b/g, cls: 'syn-property' },
-  { regex: /\b(hover|focus|active|disabled|onclick|onhover|onfocus|onblur|oninput|onchange|onkeydown|onclick-outside|selected|state|show|hide|toggle|cycle|exclusive|open|close|as|on|todo|doing|done|loading|valid|invalid|error|loaded|default)\b/g, cls: 'syn-keyword' },
+  {
+    regex:
+      /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full|shrink|placeholder|row-height)\b/g,
+    cls: 'syn-property',
+  },
+  {
+    regex:
+      /\b(hover|focus|active|disabled|onclick|onhover|onfocus|onblur|oninput|onchange|onkeydown|onclick-outside|selected|state|show|hide|toggle|cycle|exclusive|open|close|as|on|todo|doing|done|loading|valid|invalid|error|loaded|default)\b/g,
+    cls: 'syn-keyword',
+  },
   { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
 ]
 
@@ -31,9 +39,13 @@ function highlight(text) {
   const filtered = []
   let lastEnd = 0
   for (const m of matches) {
-    if (m.from >= lastEnd) { filtered.push(m); lastEnd = m.to }
+    if (m.from >= lastEnd) {
+      filtered.push(m)
+      lastEnd = m.to
+    }
   }
-  let result = '', pos = 0
+  let result = '',
+    pos = 0
   for (const m of filtered) {
     if (m.from > pos) result += html.slice(pos, m.from)
     const escaped = m.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -66,7 +78,9 @@ function initializePlaygrounds() {
     }
     codeContainer.appendChild(studioBtn)
 
-    function updateHighlight() { pre.innerHTML = highlight(textarea.value) }
+    function updateHighlight() {
+      pre.innerHTML = highlight(textarea.value)
+    }
 
     // Use Shadow DOM to scope CSS per playground
     let shadow = preview.shadowRoot
@@ -87,11 +101,11 @@ function initializePlaygrounds() {
         const code = MirrorLang.compile(textarea.value)
         const execCode = code.replace('export function createUI', 'function createUI')
         const fn = new Function(execCode + '\nreturn createUI();')
-        const ui = fn()
-        if (ui && ui.root) {
-          // Add mirror-root class to the root element
-          ui.root.classList.add('mirror-root')
-          shadow.appendChild(ui.root)
+        // createUI() returns the root DOM element directly.
+        const root = fn()
+        if (root) {
+          root.classList.add('mirror-root')
+          shadow.appendChild(root)
         }
       } catch (e) {
         shadow.innerHTML = `<div class="playground-error" style="color:#ef4444;font-size:14px;padding:12px;">${e.message}</div>`
@@ -108,14 +122,18 @@ function initializePlaygrounds() {
       if (e.key === 'Tab') {
         e.preventDefault()
         const s = textarea.selectionStart
-        textarea.value = textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
+        textarea.value =
+          textarea.value.slice(0, s) + '  ' + textarea.value.slice(textarea.selectionEnd)
         textarea.selectionStart = textarea.selectionEnd = s + 2
         updateHighlight()
         compile()
       }
     })
 
-    textarea.addEventListener('scroll', () => { pre.scrollTop = textarea.scrollTop; pre.scrollLeft = textarea.scrollLeft })
+    textarea.addEventListener('scroll', () => {
+      pre.scrollTop = textarea.scrollTop
+      pre.scrollLeft = textarea.scrollLeft
+    })
     updateHighlight()
     compile()
   })
