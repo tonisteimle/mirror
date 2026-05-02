@@ -33,6 +33,13 @@ import {
   sanitizeIconName,
   sanitizeSVG,
 } from '../../compiler/runtime/icons'
+import {
+  resolveElement,
+  scrollTo,
+  scrollBy,
+  scrollToTop,
+  scrollToBottom,
+} from '../../compiler/runtime/scroll'
 import { DOM_RUNTIME_CODE } from '../../compiler/backends/dom/runtime-template'
 
 const REPO_ROOT = resolve(fileURLToPath(import.meta.url), '../../..')
@@ -168,6 +175,34 @@ describe('Runtime template parity', () => {
       const cacheIdx = body.indexOf('_iconCache.set')
       expect(fetchIdx).toBeLessThan(sanitizeIdx)
       expect(sanitizeIdx).toBeLessThan(cacheIdx)
+    })
+  })
+
+  describe('scroll helpers (audit-3 MED-5)', () => {
+    it('typed scroll functions are stamped verbatim', () => {
+      expect(DOM_RUNTIME_CODE).toContain(resolveElement.toString())
+      expect(DOM_RUNTIME_CODE).toContain(scrollTo.toString())
+      expect(DOM_RUNTIME_CODE).toContain(scrollBy.toString())
+      expect(DOM_RUNTIME_CODE).toContain(scrollToTop.toString())
+      expect(DOM_RUNTIME_CODE).toContain(scrollToBottom.toString())
+    })
+
+    it('_runtime exposes scroll helpers via shorthand property', () => {
+      // The runtime should reference the top-level functions, not
+      // re-implement them inline. Match the shorthand pattern in the
+      // _runtime object literal.
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*scrollTo,\s*$/m)
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*scrollBy,\s*$/m)
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*scrollToTop,\s*$/m)
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*scrollToBottom,\s*$/m)
+    })
+
+    it('the old inline scroll implementations are gone', () => {
+      // Earlier the template re-defined these as object methods that
+      // didn't honour the smooth-behavior default. Make sure no method
+      // form sneaks back.
+      expect(DOM_RUNTIME_CODE).not.toMatch(/^\s*scrollTo\(el,\s*options/m)
+      expect(DOM_RUNTIME_CODE).not.toMatch(/container\.scrollTop\s*=\s*0/m)
     })
   })
 

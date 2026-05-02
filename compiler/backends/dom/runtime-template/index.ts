@@ -29,6 +29,13 @@ import { ZAG_RUNTIME } from './parts/zag-runtime'
 import { PROP_MAP } from '../../../runtime/dom-runtime'
 import { ALIGN_MAP } from '../../../runtime/alignment'
 import { FALLBACK_ICON, LUCIDE_CDN, sanitizeIconName, sanitizeSVG } from '../../../runtime/icons'
+import {
+  resolveElement,
+  scrollTo as scrollToTyped,
+  scrollBy as scrollByTyped,
+  scrollToTop as scrollToTopTyped,
+  scrollToBottom as scrollToBottomTyped,
+} from '../../../runtime/scroll'
 
 const PROP_MAP_LITERAL = JSON.stringify(PROP_MAP)
 const ALIGN_MAP_LITERAL = JSON.stringify(ALIGN_MAP)
@@ -41,6 +48,17 @@ const FALLBACK_ICON_LITERAL = JSON.stringify(FALLBACK_ICON)
 // as the typed module that has dedicated unit tests.
 const SANITIZE_ICON_NAME_SRC = sanitizeIconName.toString()
 const SANITIZE_SVG_SRC = sanitizeSVG.toString()
+
+// Stamp the typed scroll helpers. resolveElement is the shared lookup;
+// the four scroll functions reference it by name. They become top-level
+// declarations in the emitted runtime; _runtime exposes them via shorthand
+// property assignment (scrollTo, scrollBy, …) so emitter call sites
+// (`_runtime.scrollTo(...)`) keep working.
+const RESOLVE_ELEMENT_SRC = resolveElement.toString()
+const SCROLL_TO_SRC = scrollToTyped.toString()
+const SCROLL_BY_SRC = scrollByTyped.toString()
+const SCROLL_TO_TOP_SRC = scrollToTopTyped.toString()
+const SCROLL_TO_BOTTOM_SRC = scrollToBottomTyped.toString()
 
 export const DOM_RUNTIME_CODE = `
 // Mirror DOM Runtime
@@ -56,6 +74,13 @@ function __name(fn, _name) { return fn }
 // Security helpers (stamped from compiler/runtime/icons.ts via .toString())
 ${SANITIZE_ICON_NAME_SRC}
 ${SANITIZE_SVG_SRC}
+
+// Scroll helpers (stamped from compiler/runtime/scroll.ts via .toString())
+${RESOLVE_ELEMENT_SRC}
+${SCROLL_TO_SRC}
+${SCROLL_BY_SRC}
+${SCROLL_TO_TOP_SRC}
+${SCROLL_TO_BOTTOM_SRC}
 
 const _runtime = {
   // Debug mode check
@@ -332,39 +357,16 @@ const _runtime = {
   // SCROLL FUNCTIONS (Built-in)
   // ============================================
 
-  scrollTo(el, options = {}) {
-    if (typeof el === 'string') {
-      el = document.querySelector('[data-mirror-name="' + el + '"]')
-    }
-    if (!el) return
-    el.scrollIntoView({ behavior: options.behavior || 'smooth', block: options.block || 'start' })
-  },
-
-  scrollBy(container, x, y, behavior = 'smooth') {
-    if (typeof container === 'string') {
-      container = document.querySelector('[data-mirror-name="' + container + '"]')
-    }
-    if (!container) return
-    container.scrollBy({ left: x, top: y, behavior: behavior })
-  },
-
-  scrollToTop(container) {
-    if (typeof container === 'string') {
-      container = document.querySelector('[data-mirror-name="' + container + '"]')
-    }
-    if (container) {
-      container.scrollTop = 0
-    }
-  },
-
-  scrollToBottom(container) {
-    if (typeof container === 'string') {
-      container = document.querySelector('[data-mirror-name="' + container + '"]')
-    }
-    if (container) {
-      container.scrollTop = container.scrollHeight
-    }
-  },
+  // scrollTo / scrollBy / scrollToTop / scrollToBottom are stamped from
+  // compiler/runtime/scroll.ts as top-level functions; expose them on
+  // _runtime via shorthand property assignment so the emitter's
+  // _runtime.scrollTo(...) call sites keep working — the typed unit
+  // tests in tests/integration/builtin-scroll.test.ts now exercise the
+  // exact same code that ships in production.
+  scrollTo,
+  scrollBy,
+  scrollToTop,
+  scrollToBottom,
 
   // ============================================
   // FEEDBACK: Toast Notifications

@@ -14,7 +14,12 @@ export interface ScrollToOptions {
 
 type ScrollBehavior = 'smooth' | 'instant'
 
-function resolveElement(element: MirrorElement | string | null): MirrorElement | null {
+/**
+ * Resolve a Mirror element reference: pass-through HTMLElement, or look
+ * up by data-mirror-name attribute when given a string. Exported so the
+ * runtime template can stamp it alongside the scroll helpers.
+ */
+export function resolveElement(element: MirrorElement | string | null): MirrorElement | null {
   if (!element) return null
   if (typeof element !== 'string') return element
   return document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement
