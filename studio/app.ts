@@ -168,6 +168,9 @@ import {
 import type { Program } from '../compiler/parser/ast'
 import type { IR } from '../compiler/ir/types'
 import type { SourceMap } from '../compiler/ir'
+import { createLogger } from '../compiler/utils/logger'
+
+const log = createLogger('App')
 
 interface MirrorLangGlobal {
   parse: (code: string) => Program
@@ -301,9 +304,9 @@ if (playgroundCode) {
     files['playground.mir'] = decodedCode
     currentFile = 'playground.mir'
     isPlaygroundMode = true
-    console.log('[App] Playground mode activated')
+    log.debug('[App] Playground mode activated')
   } catch (e) {
-    console.error('[App] Failed to decode playground code:', e)
+    log.error('[App] Failed to decode playground code:', e)
   }
 }
 
@@ -329,9 +332,9 @@ async function saveFile(filePath: string, content: string) {
   if (dfApi?.saveFile && dfApi.getCurrentFolder?.()) {
     try {
       await dfApi.saveFile(filePath, content)
-      console.log('[Save] File saved via desktop-files.js:', filePath)
+      log.debug('[Save] File saved via desktop-files.js:', filePath)
     } catch (e) {
-      console.error('[Save] Failed to save:', e)
+      log.error('[Save] Failed to save:', e)
     }
   } else {
     // Browser / test mode: no folder bound, but the desktopFiles cache
@@ -615,7 +618,7 @@ registerAllTriggers({
         return JSON.parse(stored)
       }
     } catch (e) {
-      console.warn('Failed to read files from localStorage:', e)
+      log.warn('Failed to read files from localStorage:', e)
     }
     return files
   },
@@ -916,7 +919,7 @@ editor.dispatch = ((...args: Parameters<EditorView['dispatch']>) => {
     // dispatch poisons every subsequent test's setup. Real range bugs
     // still surface via console for debugging.
     if (e instanceof RangeError && /Position \d+ is out of range/.test(e.message)) {
-      console.warn('[editor.dispatch] dropped stale change:', e.message)
+      log.warn('[editor.dispatch] dropped stale change:', e.message)
       return
     }
     throw e
@@ -1081,7 +1084,7 @@ function compile(code: string) {
   // This preserves the generated HTML app in Spec Studio mode
   const previewEl = document.getElementById('preview')
   if (previewEl?.dataset.generatedMode === 'true') {
-    console.log('[Spec Studio] Skipping compile - showing generated content')
+    log.debug('[Spec Studio] Skipping compile - showing generated content')
     return
   }
 
@@ -1432,41 +1435,39 @@ function compile(code: string) {
     const totalTime = compileEnd - compileStart
     if (totalTime > 50) {
       // Only log slow compiles
-      console.log('[CompilePerf] ========== SLOW COMPILE ==========')
+      log.debug('[CompilePerf] ========== SLOW COMPILE ==========')
       // All `timings.*` reads use `?? 0` so the perf log degrades gracefully
       // if a phase never ran (e.g. early-return when preview was empty); the
       // outer gate `timings.execEnd` already keeps the exec block coherent.
       const t = (v: number | undefined) => v ?? 0
-      console.log(`[CompilePerf] Total: ${totalTime.toFixed(1)}ms`)
-      console.log(`[CompilePerf] Prelude: ${(t(timings.preludeEnd) - compileStart).toFixed(1)}ms`)
-      console.log(
+      log.debug(`[CompilePerf] Total: ${totalTime.toFixed(1)}ms`)
+      log.debug(`[CompilePerf] Prelude: ${(t(timings.preludeEnd) - compileStart).toFixed(1)}ms`)
+      log.debug(
         `[CompilePerf] Parse: ${(t(timings.parseEnd) - t(timings.preludeEnd)).toFixed(1)}ms`
       )
-      console.log(`[CompilePerf] IR: ${(t(timings.irEnd) - t(timings.parseEnd)).toFixed(1)}ms`)
-      console.log(
-        `[CompilePerf] Codegen: ${(t(timings.codegenEnd) - t(timings.irEnd)).toFixed(1)}ms`
-      )
+      log.debug(`[CompilePerf] IR: ${(t(timings.irEnd) - t(timings.parseEnd)).toFixed(1)}ms`)
+      log.debug(`[CompilePerf] Codegen: ${(t(timings.codegenEnd) - t(timings.irEnd)).toFixed(1)}ms`)
       if (timings.execEnd) {
-        console.log(
+        log.debug(
           `[CompilePerf] Exec: ${(t(timings.execEnd) - t(timings.prepExecStart)).toFixed(1)}ms`
         )
-        console.log(
+        log.debug(
           `[CompilePerf] UpdateStudio: ${(t(timings.updateStudioEnd) - t(timings.execEnd)).toFixed(1)}ms`
         )
-        console.log(
+        log.debug(
           `[CompilePerf] DOM Append: ${(t(timings.domAppendEnd) - t(timings.updateStudioEnd)).toFixed(1)}ms`
         )
-        console.log(
+        log.debug(
           `[CompilePerf] Draggables: ${(t(timings.draggablesEnd) - t(timings.domAppendEnd)).toFixed(1)}ms`
         )
-        console.log(
+        log.debug(
           `[CompilePerf] Refresh: ${(t(timings.refreshEnd) - t(timings.draggablesEnd)).toFixed(1)}ms`
         )
-        console.log(
+        log.debug(
           `[CompilePerf] Sync: ${(t(timings.syncEnd) - t(timings.refreshEnd)).toFixed(1)}ms`
         )
       }
-      console.log('[CompilePerf] ================================')
+      log.debug('[CompilePerf] ================================')
     }
   } catch (err) {
     // Reset compile status on error
@@ -1545,7 +1546,7 @@ let testModeActive = false // When true, normal compile() skips prelude offset u
 // the prelude offset needs to be reset to 0
 if (typeof window !== 'undefined') {
   window.__setPreludeOffset = offset => {
-    console.log('[Test] Setting prelude offset:', offset, '(was:', currentPreludeOffset, ')')
+    log.debug('[Test] Setting prelude offset:', offset, '(was:', currentPreludeOffset, ')')
     // Cancel any pending debounced compile first, so it doesn't reset our offset
     if (typeof debouncedCompile !== 'undefined' && debouncedCompile.cancel) {
       debouncedCompile.cancel()
@@ -1564,7 +1565,7 @@ if (typeof window !== 'undefined') {
   window.__getPreludeLineOffset = () => currentPreludeLineOffset
   window.__isTestMode = () => testModeActive
   window.__exitTestMode = () => {
-    console.log('[Test] Exiting test mode')
+    log.debug('[Test] Exiting test mode')
     testModeActive = false
   }
 
@@ -1756,10 +1757,10 @@ if (typeof window !== 'undefined') {
       studio.sync?.setSourceMap(sourceMap)
       studio.preview?.setSourceMap(sourceMap)
 
-      console.log('[Test] Test code compiled successfully')
+      log.debug('[Test] Test code compiled successfully')
       return true
     } catch (error) {
-      console.error('[Test] Test code compile failed:', error)
+      log.error('[Test] Test code compile failed:', error)
       return false
     }
   }
@@ -1902,7 +1903,7 @@ function initStudio() {
   const previewContainer = document.getElementById('preview')
 
   if (!propertyPanelContainer || !previewContainer) {
-    console.warn('Studio: Property panel or preview container not found')
+    log.warn('Studio: Property panel or preview container not found')
     return
   }
 
@@ -1978,9 +1979,9 @@ function initStudio() {
         }
       },
     })
-    console.log('Studio: New architecture initialized')
+    log.debug('Studio: New architecture initialized')
   } catch (e) {
-    console.warn('Studio: New architecture failed to initialize:', e)
+    log.warn('Studio: New architecture failed to initialize:', e)
   }
 
   // ============================================
@@ -1992,7 +1993,7 @@ function initStudio() {
   // Focus tracking is now handled by EditorController and PreviewController
   // The state.editorHasFocus is updated automatically by the new architecture
 
-  console.log('Studio: Initialized')
+  log.debug('Studio: Initialized')
   // Preview click handling is done by PreviewController (new architecture)
   // Editor sync is done by SyncCoordinator via previewController.onSelect() callback
 
@@ -2026,7 +2027,7 @@ function setupNotificationHandlers() {
 
   studio.events.on('drag:dropped', ({ source, target, dragData }) => {
     if (!target) {
-      console.warn('[Drag v3] Missing target')
+      log.warn('[Drag v3] Missing target')
       return
     }
     // Canvas-only state: editor has no Mirror node tree (just an empty
@@ -2100,7 +2101,7 @@ function setupNotificationHandlers() {
 
     // Handle palette component insert (type: 'palette')
     if (!dragData) {
-      console.warn('[Drag v3] Missing dragData for palette drop')
+      log.warn('[Drag v3] Missing dragData for palette drop')
       return
     }
 
@@ -2132,7 +2133,7 @@ function setupNotificationHandlers() {
     }
 
     handleStudioDropNew(dropResult, getDropGlobals()).catch(err => {
-      console.error('[Drag v3] handleStudioDropNew failed:', err)
+      log.error('[Drag v3] handleStudioDropNew failed:', err)
     })
   })
 
@@ -2174,7 +2175,7 @@ function updateStudio(ast: Program, ir: IR, sourceMap: SourceMap, source: string
     // Now update state (this calls setSourceMap which may trigger initial sync)
     updateStudioState(ast, ir, sourceMap, source)
   } catch (e) {
-    console.warn('Studio: New architecture update failed:', e)
+    log.warn('Studio: New architecture update failed:', e)
   }
 
   // SourceMap sync handled by new architecture via updateStudioState()
@@ -2212,7 +2213,7 @@ function updateStudio(ast: Program, ir: IR, sourceMap: SourceMap, source: string
   if (studioPropertyPanel) {
     const selection = studioSelectionManager.getSelection?.()
     if (selection) {
-      console.log('Studio: Refreshing property panel, selection:', selection)
+      log.debug('Studio: Refreshing property panel, selection:', selection)
     }
     studioPropertyPanel.updateDependencies(studioPropertyExtractor, studioCodeModifier)
   } else {
@@ -2268,7 +2269,7 @@ interface StudioCodeChangeResult {
 
 function handleStudioCodeChange(result: StudioCodeChangeResult) {
   if (!result.success) {
-    console.warn('Studio: Code modification failed:', result.error)
+    log.warn('Studio: Code modification failed:', result.error)
     return
   }
 
@@ -2286,7 +2287,7 @@ function handleStudioCodeChange(result: StudioCodeChangeResult) {
     adjustedChange.to > docLength ||
     adjustedChange.from > adjustedChange.to
   ) {
-    console.warn('Studio: Invalid change range after adjustment', {
+    log.warn('Studio: Invalid change range after adjustment', {
       original: result.change,
       adjusted: adjustedChange,
       preludeOffset: currentPreludeOffset,
@@ -2422,7 +2423,7 @@ if (!isPlaygroundMode) {
       // Initialize with callback to load files into editor
       module.initDesktopFiles({
         onFileSelect: (filePath, content) => {
-          console.log('[DesktopFiles] Loading file into editor:', filePath)
+          log.debug('[DesktopFiles] Loading file into editor:', filePath)
           // Update currentFile for appLockExtension
           currentFile = filePath
           // Track previewFile separately: only follow the editor when the
@@ -2445,16 +2446,16 @@ if (!isPlaygroundMode) {
           compile(content)
         },
         onFileChange: (filePath, content) => {
-          console.log('[DesktopFiles] File changed:', filePath)
+          log.debug('[DesktopFiles] File changed:', filePath)
         },
       })
-      console.log('[App] File management initialized')
+      log.debug('[App] File management initialized')
     })
     .catch(err => {
-      console.error('[App] Failed to load studio bundle:', err)
+      log.error('[App] Failed to load studio bundle:', err)
     })
 } else {
-  console.log('[App] Playground mode - skipping file management')
+  log.debug('[App] Playground mode - skipping file management')
 }
 
 // ==========================================

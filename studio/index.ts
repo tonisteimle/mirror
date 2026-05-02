@@ -115,8 +115,50 @@ export * from './compile/yaml-parser'
 // Compile module — prelude / generator / renderer helpers consumed by
 // studio/app.js. Re-exported here so the studio bundle surfaces them
 // (collectPrelude is the load-bearing one — without it app.js fails to
-// boot with "does not provide an export named 'collectPrelude'").
-export * from './compile'
+// boot with "does not provide an export named 'collectPrelude'"). We
+// enumerate explicitly to avoid `export *` collisions: `./compile`
+// duplicates names that other barrels (`./agent` FileType,
+// `./code-modifier` SourceMap, `./core` ParseError/StudioState,
+// `./modules` PreludeResult, `./preview` PreviewRenderer) already
+// surface. Re-exporting only compile-unique members keeps both sides.
+export {
+  CompileService,
+  PreludeBuilder,
+  collectPrelude,
+  collectAllProjectSource,
+  collectTokensSource,
+  createAutoCreateFiles,
+  getPreludeLineOffset,
+  CodeGenerator,
+  StudioUpdater,
+  PerfLogger,
+  type PreludeDeps,
+  type CollectPreludeDeps,
+  type PreludeFileType,
+  type CollectAllProjectSourceDeps,
+  type CollectTokensSourceDeps,
+  type AutoCreateFilesDeps,
+  type AutoCreateFilesAPI,
+  type PreludeLineOffsetDeps,
+  type GeneratorDeps,
+  type RendererDeps,
+  type RenderResult,
+  type UpdaterDeps,
+} from './compile'
+export type {
+  AST as CompileAST,
+  Component as CompileComponent,
+  Instance as CompileInstance,
+  Token as CompileToken,
+  IRResult,
+  CompileResult,
+  RenderContext,
+  CompileDependencies,
+  MirrorLangAPI,
+  StudioActions,
+  Studio,
+  CompileTimings,
+} from './compile'
 
 // Bootstrap
 export {
