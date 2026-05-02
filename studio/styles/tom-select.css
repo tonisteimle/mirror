@@ -1,0 +1,178 @@
+/* ========================================
+   Tom Select - Dark Theme Override
+   ======================================== */
+
+/* CRITICAL: Hide the original select element that tom-select wraps */
+.ts-hidden-accessible,
+select.tomselected,
+.pp-content select.tomselected {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.ts-wrapper,
+.pp-content .ts-wrapper,
+.pp-content .ts-wrapper.single,
+.pp-content .ts-wrapper.single.full {
+  font-size: var(--font-sm);
+  flex: 1;
+  padding: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  /* Reset tom-select CSS variables */
+  --ts-pr-min: 0 !important;
+  --ts-pr-clear-button: 0 !important;
+  --ts-pr-caret: 0 !important;
+}
+
+.ts-wrapper .ts-control,
+.ts-wrapper.single .ts-control,
+.ts-control {
+  display: flex !important;
+  align-items: center !important;
+  background: var(--bg-input) !important;
+  border: none !important;
+  border-radius: var(--radius-md) !important;
+  padding: 0 !important;
+  padding-left: var(--space-4) !important;
+  padding-right: var(--space-4) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  min-height: var(--input-height) !important;
+  height: var(--input-height) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+  line-height: var(--input-height) !important;
+  font-size: var(--font-sm) !important;
+  gap: 0 !important;
+}
+
+/* Reset ALL children of ts-control */
+.ts-control > *,
+.ts-wrapper .ts-control > *,
+.ts-wrapper.single .ts-control > * {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Hide any default caret/prefix from tom-select */
+.ts-control::before,
+.ts-wrapper .ts-control::before,
+.ts-wrapper.single .ts-control::before {
+  display: none !important;
+  content: none !important;
+  width: 0 !important;
+}
+
+.ts-control:hover {
+  border-color: var(--border-subtle) !important;
+}
+
+.ts-wrapper.focus .ts-control {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 1px var(--color-primary) !important;
+}
+
+.ts-control input,
+.ts-wrapper .ts-control input,
+.ts-wrapper.single .ts-control input {
+  color: var(--text-primary) !important;
+  padding: 0 !important;
+  padding-left: 0 !important;
+  margin: 0 !important;
+  margin-left: 0 !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+  width: 0 !important;
+}
+
+.ts-control input::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.ts-dropdown {
+  background: var(--bg-panel) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 8px 24px var(--black-40) !important;
+  margin-top: 4px !important;
+}
+
+.ts-dropdown .ts-dropdown-content {
+  padding: var(--space-2) !important;
+}
+
+.ts-dropdown [data-selectable] {
+  padding: var(--space-2) 8px !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-secondary) !important;
+  font-size: var(--font-sm) !important;
+}
+
+.ts-dropdown [data-selectable]:hover,
+.ts-dropdown .active {
+  background: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+}
+
+.ts-dropdown .optgroup-header {
+  color: var(--text-muted) !important;
+  font-size: var(--font-xs) !important;
+  text-transform: var(--text-uppercase) !important;
+  letter-spacing: var(--tracking-wide) !important;
+  padding: var(--space-4) 10px 4px !important;
+}
+
+/* Selected item styling */
+.ts-control .item,
+.ts-wrapper .ts-control .item,
+.ts-wrapper.single .ts-control .item,
+.ts-wrapper.single .ts-control > .item {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  line-height: var(--input-height) !important;
+  max-width: calc(100% - 18px) !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Caret/arrow - SVG chevron like section expand buttons */
+.ts-control::after {
+  content: '' !important;
+  display: block !important;
+  width: 10px !important;
+  height: 10px !important;
+  border: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 4l3 3 3-3' fill='none' stroke='%2371717a' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: contain !important;
+  flex-shrink: 0 !important;
+  margin-left: auto !important;
+  position: static !important;
+  transform: none !important;
+  transition: transform 0.15s ease !important;
+  pointer-events: none !important;
+}
+
+.ts-wrapper.dropdown-active .ts-control::after {
+  transform: rotate(180deg) !important;
+}
