@@ -8,7 +8,7 @@
 // ALIGNMENT MAPS
 // ============================================
 
-const ALIGN_MAP: Record<string, string> = {
+export const ALIGN_MAP: Record<string, string> = {
   left: 'flex-start',
   right: 'flex-end',
   center: 'center',

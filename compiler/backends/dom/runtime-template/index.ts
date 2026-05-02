@@ -22,23 +22,26 @@ import { CHARTS_RUNTIME } from './parts/charts-runtime'
 import { TEST_API_RUNTIME } from './parts/test-api-runtime'
 import { ZAG_RUNTIME } from './parts/zag-runtime'
 
+// Single-source-of-truth constants from the typed runtime modules.
+// Stamped into the template string at module-load time so a change in
+// dom-runtime.ts (or debug.ts) is automatically picked up by the
+// emitted runtime — no hand-sync.
+import { PROP_MAP } from '../../../runtime/dom-runtime'
+import { ALIGN_MAP } from '../../../runtime/alignment'
+import { FALLBACK_ICON, LUCIDE_CDN } from '../../../runtime/icons'
+
+const PROP_MAP_LITERAL = JSON.stringify(PROP_MAP)
+const ALIGN_MAP_LITERAL = JSON.stringify(ALIGN_MAP)
+const FALLBACK_ICON_LITERAL = JSON.stringify(FALLBACK_ICON)
+
 export const DOM_RUNTIME_CODE = `
 // Mirror DOM Runtime
 const _runtime = {
   // Debug mode check
   _isDebug() { return typeof window !== 'undefined' && window.__MIRROR_DEBUG__ === true },
 
-  // Property mapping
-  _propMap: {
-    'bg': 'background',
-    'col': 'color',
-    'pad': 'padding',
-    'rad': 'borderRadius',
-    'gap': 'gap',
-    'w': 'width',
-    'h': 'height',
-    'opacity': 'opacity',
-  },
+  // Property mapping (stamped from compiler/runtime/dom-runtime.ts → PROP_MAP)
+  _propMap: ${PROP_MAP_LITERAL},
 
   // SVG Icon Constants (extracted to avoid duplication)
   _icons: {
@@ -62,7 +65,7 @@ const _runtime = {
   _alignToCSS(el, prop, value) {
     const dir = el.style.flexDirection || 'column'
     const isRow = dir === 'row'
-    const alignMap = { 'left': 'flex-start', 'right': 'flex-end', 'center': 'center', 'top': 'flex-start', 'bottom': 'flex-end' }
+    const alignMap = ${ALIGN_MAP_LITERAL}
     const cssVal = alignMap[value] || value
 
     if (prop === 'align' || prop === 'hor-align') {
@@ -2213,7 +2216,7 @@ ${ZAG_RUNTIME}
   _iconCache: new Map(),
   _customIcons: new Map(),
   _pendingIcons: new Map(),
-  _fallbackIcon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></svg>',
+  _fallbackIcon: ${FALLBACK_ICON_LITERAL},
 
   // Register a user-defined icon via $icons: name: "M..." path data.
   // Stored in a separate registry that loadIcon consults first, ahead of
@@ -2278,7 +2281,7 @@ ${ZAG_RUNTIME}
 
   async _fetchIcon(iconName) {
     try {
-      const url = \`https://unpkg.com/lucide-static/icons/\${iconName}.svg\`
+      const url = \`${LUCIDE_CDN}/\${iconName}.svg\`
       const res = await fetch(url)
       if (!res.ok) return null
       const svgText = await res.text()

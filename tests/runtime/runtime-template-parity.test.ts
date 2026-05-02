@@ -26,6 +26,8 @@ import { fileURLToPath } from 'url'
 
 import { PROP_MAP } from '../../compiler/runtime/dom-runtime'
 import { isDebug } from '../../compiler/runtime/debug'
+import { ALIGN_MAP } from '../../compiler/runtime/alignment'
+import { FALLBACK_ICON, LUCIDE_CDN } from '../../compiler/runtime/icons'
 import { DOM_RUNTIME_CODE } from '../../compiler/backends/dom/runtime-template'
 
 const REPO_ROOT = resolve(fileURLToPath(import.meta.url), '../../..')
@@ -33,18 +35,13 @@ const REPO_ROOT = resolve(fileURLToPath(import.meta.url), '../../..')
 describe('Runtime template parity', () => {
   describe('PROP_MAP', () => {
     it('typed PROP_MAP is the same object as the template _propMap', () => {
-      // Extract the _propMap object literal from the template.
-      const m = DOM_RUNTIME_CODE.match(/_propMap:\s*\{([^}]*)\}/)
+      // The template now stamps PROP_MAP via JSON.stringify, so it
+      // appears verbatim as a JSON object literal — extract via JSON.parse.
+      const m = DOM_RUNTIME_CODE.match(/_propMap:\s*(\{[^}]*\})/)
       expect(m, 'expected _propMap block in DOM_RUNTIME_CODE').not.toBeNull()
-      const body = m![1]
 
-      // Parse `'key': 'value',` pairs out of the literal.
-      const templateMap: Record<string, string> = {}
-      const re = /'([^']+)':\s*'([^']+)'/g
-      let pair: RegExpExecArray | null
-      while ((pair = re.exec(body)) !== null) {
-        templateMap[pair[1]] = pair[2]
-      }
+      // The literal is valid JSON (JSON.stringify guarantees double quotes).
+      const templateMap = JSON.parse(m![1]) as Record<string, string>
 
       // Both maps must agree completely. If a new prop is added in one
       // place, the build fails here.
@@ -69,20 +66,26 @@ describe('Runtime template parity', () => {
     })
   })
 
-  describe('alignment helper', () => {
-    it('template _alignToCSS uses the same flex-mapping vocabulary as typed alignToCSS', () => {
-      // The typed module owns the canonical alignment vocabulary
-      // (left/right/center/top/bottom → flex-start/flex-end/center).
-      const alignSource = readFileSync(resolve(REPO_ROOT, 'compiler/runtime/alignment.ts'), 'utf8')
+  describe('ALIGN_MAP', () => {
+    it('typed ALIGN_MAP is the same object as the template alignMap literal', () => {
+      // The template stamps ALIGN_MAP via JSON.stringify into the body of
+      // _alignToCSS — extract and compare.
+      const m = DOM_RUNTIME_CODE.match(/const alignMap\s*=\s*(\{[^}]*\})/)
+      expect(m, 'expected alignMap literal in _alignToCSS body').not.toBeNull()
+      const templateMap = JSON.parse(m![1]) as Record<string, string>
+      expect(templateMap).toEqual(ALIGN_MAP)
+    })
+  })
 
-      // Both forms must map "left" → "flex-start" and "right" → "flex-end".
-      // We assert on the literal mapping rather than calling the function
-      // so the test stays valid even if alignment.ts grows new helpers.
-      expect(alignSource).toMatch(/left[^a-zA-Z]+flex-start/)
-      expect(alignSource).toMatch(/right[^a-zA-Z]+flex-end/)
-      expect(DOM_RUNTIME_CODE).toMatch(/'left':\s*'flex-start'/)
-      expect(DOM_RUNTIME_CODE).toMatch(/'right':\s*'flex-end'/)
-      expect(DOM_RUNTIME_CODE).toMatch(/'center':\s*'center'/)
+  describe('icon constants', () => {
+    it('typed FALLBACK_ICON is verbatim in the template', () => {
+      expect(DOM_RUNTIME_CODE).toContain(JSON.stringify(FALLBACK_ICON))
+    })
+
+    it('typed LUCIDE_CDN is verbatim in the template URL', () => {
+      // The template stamps LUCIDE_CDN inline (not via JSON.stringify) so
+      // the URL appears as a substring.
+      expect(DOM_RUNTIME_CODE).toContain(LUCIDE_CDN)
     })
   })
 
