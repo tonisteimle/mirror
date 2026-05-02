@@ -9,22 +9,24 @@ import { alert, confirm, confirmDelete } from './dialog'
 import { storage, projectActions } from './storage'
 import type { StorageItem } from './storage'
 import { createLogger } from '../compiler/utils/logger'
+import {
+  FILE_TYPES,
+  escapeHtml,
+  escapeAttr,
+  validateFilename,
+  getFileType,
+  findFirstFile,
+  getExtensionPriority,
+  sortTreeItems,
+  type FileTypeConfig,
+  type FileTypeInfo,
+} from './desktop-files-utils'
 
 const log = createLogger('DesktopFiles')
 
 // =============================================================================
 // Local types
 // =============================================================================
-
-interface FileTypeConfig {
-  extensions: string[]
-  color: string
-  icon: string
-}
-
-interface FileTypeInfo extends FileTypeConfig {
-  type: string
-}
 
 interface ContextMenuState {
   element: HTMLElement
@@ -280,118 +282,12 @@ function resetUIState(): void {
 // File Types with Icons and Colors
 // =============================================================================
 
-const FILE_TYPES: Record<string, FileTypeConfig> = {
-  layout: {
-    extensions: ['.mir', '.mirror'],
-    color: '#5BA8F5',
-    // Lucide: LayoutDashboard
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>
-    </svg>`,
-  },
-  tokens: {
-    extensions: ['.tok', '.tokens'],
-    color: '#F59E0B',
-    // Lucide: Palette
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"/>
-    </svg>`,
-  },
-  component: {
-    extensions: ['.com', '.components'],
-    color: '#8B5CF6',
-    // Lucide: Package
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>
-    </svg>`,
-  },
-}
-
 // Icons
 const ICON_FOLDER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`
 const ICON_FOLDER_OPEN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v1"></path><path d="M5 12h16l-2 7H3l2-7z"></path></svg>`
 const ICON_CHEVRON = `<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>`
 
-// =============================================================================
-// Utilities
-// =============================================================================
-
-/**
- * Escape HTML entities to prevent XSS in text content
- */
-function escapeHtml(text: string): string {
-  const div = document.createElement('div')
-  div.textContent = text
-  return div.innerHTML
-}
-
-/**
- * Escape for use in HTML attributes (escapes quotes)
- */
-function escapeAttr(text: string): string {
-  return String(text)
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-}
-
-/**
- * Validate filename - returns error message or null if valid
- * Note: Only ASCII characters allowed (security requirement)
- */
-function validateFilename(name: string): string | null {
-  if (!name || !name.trim()) return 'Name cannot be empty'
-  if (name.includes('/') || name.includes('\\')) return 'Name cannot contain / or \\'
-  if (name.includes(':')) return 'Name cannot contain :'
-  if (name.startsWith('.')) return 'Name cannot start with .'
-  // Only ASCII alphanumeric, -, _, and . allowed (matches server validation)
-  if (!/^[a-zA-Z0-9_.-]+$/.test(name)) {
-    return 'Name can only contain letters, numbers, hyphens, and underscores'
-  }
-  return null
-}
-
-/**
- * Get file type from filename
- */
-function getFileType(filename: string): FileTypeInfo {
-  for (const [type, config] of Object.entries(FILE_TYPES)) {
-    if (config.extensions.some(ext => filename.endsWith(ext))) {
-      return { type, ...config }
-    }
-  }
-  // Default to layout for unknown
-  return { type: 'layout', ...FILE_TYPES.layout }
-}
-
-/**
- * Find first file in tree
- * Prioritizes index.mir over other files
- */
-function findFirstFile(tree: StorageItem[]): string | null {
-  // First pass: look for index.mir
-  for (const item of tree) {
-    if (item.type === 'file' && item.path.endsWith('index.mir')) {
-      return item.path
-    }
-    if (item.type === 'folder' && item.children) {
-      const found = findFirstFile(item.children)
-      if (found && found.endsWith('index.mir')) return found
-    }
-  }
-
-  // Second pass: return any file
-  for (const item of tree) {
-    if (item.type === 'file') return item.path
-    if (item.type === 'folder' && item.children) {
-      const found = findFirstFile(item.children)
-      if (found) return found
-    }
-  }
-  return null
-}
+// Utilities are now imported from ./desktop-files-utils.
 
 /**
  * Preload all files into cache for synchronous access
@@ -1199,35 +1095,6 @@ function renderFileTree(): void {
   `
 
   attachTreeEvents(container)
-}
-
-/**
- * Get sort priority for file extension
- * .mir = 0, .com = 1, .tok = 2, others = 3
- */
-function getExtensionPriority(name: string): number {
-  if (name.endsWith('.mir') || name.endsWith('.mirror')) return 0
-  if (name.endsWith('.com') || name.endsWith('.components')) return 1
-  if (name.endsWith('.tok') || name.endsWith('.tokens')) return 2
-  return 3
-}
-
-/**
- * Sort items: folders first, then files by extension priority, then alphabetically
- */
-function sortTreeItems(items: StorageItem[]): StorageItem[] {
-  return [...items].sort((a, b) => {
-    // Folders first
-    if (a.type !== b.type) return a.type === 'folder' ? -1 : 1
-    // Files: sort by extension priority
-    if (a.type === 'file') {
-      const priorityA = getExtensionPriority(a.name)
-      const priorityB = getExtensionPriority(b.name)
-      if (priorityA !== priorityB) return priorityA - priorityB
-    }
-    // Then alphabetically
-    return a.name.localeCompare(b.name)
-  })
 }
 
 function renderTreeItems(items: StorageItem[], depth = 1): string {
