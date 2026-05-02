@@ -216,6 +216,35 @@ viele Imports.
 Wert hat angesichts des Aufwands. Möglicherweise reicht stattdessen ein
 README-Hinweis im Source-Tree, dass `test-api/` Test-Code ist.
 
+**G1 Bestandsaufnahme (2026-05-02):**
+
+- Imports von `studio/test-api/` außerhalb test-api/: **2** (`studio/test-api.ts` Bridge, `studio/bootstrap.ts`).
+  Plan-Schwelle (> 50 = Plan überdenken) klar **unterschritten**.
+- Up-Imports innerhalb `studio/test-api/` (`../core`, `../visual`, `../../compiler` …): **790** in 481 Dateien.
+  Bei einem Move nach `tests/browser/` müsste jede dieser 790 Pfad-Strings ein `../` mehr bekommen
+  (sed-fähig, aber nicht trivial: relative Pfade durch absolute / `studio/` ersetzen wäre sauberer).
+- Tools/Scripts mit Hard-Coded Pfaden: 3 (`tools/analyze-test-quality.ts`,
+  `tools/generate-tutorial-tests.ts`, Kommentar in `tools/test-runner/demo/runner.ts`).
+- Größe: 482 Dateien, 4,1 MB.
+- Runtime-Bindung: `bootstrap.ts` ruft `initStudioTestAPI()` zur Laufzeit auf. Nach Move
+  müsste der Build (tsup) auch `tests/browser/` einbinden, damit der Test-Stack im Studio
+  bei `npm run studio` weiterhin verfügbar ist.
+
+**Bewertung:** Der Move ist **mechanisch machbar**, der Mehrwert aber
+gering: `studio/test-api/` IST Test-Infrastruktur, nur eben Browser-
+Test-Suite (separater Stack). Die einzige neue Erkenntnis aus dem
+Audit war "in CLAUDE.md nicht klar als Test-Code beschrieben" — das
+ist mit Phase A bereits behoben.
+
+**Empfehlung:** **G überspringen.** Stattdessen reicht der Hinweis in
+CLAUDE.md (bereits in Phase A drin) und ein knappes
+`studio/test-api/README.md` mit „Browser-Test-Suite, wird via CDP
+geladen, nicht in Production-Bundle". Die 790 relativen Imports
+würden nach Move alle länger und unleserlicher.
+
+**Phase G: abgesagt.** Aufwand ≫ Nutzen, kein Bug, kein Coverage-
+Verlust.
+
 ---
 
 ## Ablauf-Empfehlung
@@ -249,12 +278,12 @@ README-Hinweis im Source-Tree, dass `test-api/` Test-Code ist.
 
 ## Fortschritt
 
-| Phase | Status        | Datum      | Notiz                                                                                                      |
-| ----- | ------------- | ---------- | ---------------------------------------------------------------------------------------------------------- |
-| A     | abgeschlossen | 2026-05-02 | CLAUDE.md aktualisiert + orphans entfernt                                                                  |
-| B     | abgeschlossen | 2026-05-02 | window-globals.d.ts; alle 23 `(window as any)` casts entfernt; latenter Bug in setPanelVisibility gefunden |
-| C     | abgeschlossen | 2026-05-02 | createLogger über alle studio-files; ESLint `no-console: error`; localStorage-Override                     |
-| D     | partiell      | 2026-05-02 | D1 (setupNotificationHandlers extrahiert) — D2..D6 brauchen eigene Session                                 |
-| E     | abgeschlossen | 2026-05-02 | applyBatchChanges atomar mit snapshot/restore + 5 Vitests; production-adapters delegiert                   |
-| F     | in Arbeit     | 2026-05-02 | F1+F2+F3+F4 grün — 96 neue Vitests; F5+F6 (margin-/padding-/layout-converter) noch offen                   |
-| G     | offen         | —          | —                                                                                                          |
+| Phase | Status        | Datum      | Notiz                                                                                                                   |
+| ----- | ------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------- |
+| A     | abgeschlossen | 2026-05-02 | CLAUDE.md aktualisiert + orphans entfernt                                                                               |
+| B     | abgeschlossen | 2026-05-02 | window-globals.d.ts; alle 23 `(window as any)` casts entfernt; latenter Bug in setPanelVisibility gefunden              |
+| C     | abgeschlossen | 2026-05-02 | createLogger über alle studio-files; ESLint `no-console: error`; localStorage-Override                                  |
+| D     | partiell      | 2026-05-02 | D1 (setupNotificationHandlers extrahiert) — D2..D6 brauchen eigene Session                                              |
+| E     | abgeschlossen | 2026-05-02 | applyBatchChanges atomar mit snapshot/restore + 5 Vitests; production-adapters delegiert                                |
+| F     | abgeschlossen | 2026-05-02 | 111 neue Vitests über 8 Dateien; visual/\* + desktop-files-utils ≥60% Line-Coverage; margin/padding bewusst weggelassen |
+| G     | abgesagt      | 2026-05-02 | G1-Recon: Aufwand ≫ Nutzen → README in studio/test-api/ als Mitigation                                                  |
