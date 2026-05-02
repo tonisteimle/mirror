@@ -6574,7 +6574,7 @@ function resolveElement(element) {
 	return document.querySelector(`[data-mirror-name="${element}"]`);
 }
 function scrollTo(element, options) {
-	const el = (0,__vite_ssr_import_0__.resolveElement)(element);
+	const el = resolveElement(element);
 	if (!el) return;
 	const { behavior = "smooth", block = "start", inline = "nearest" } = options || {};
 	el.scrollIntoView({
@@ -6584,7 +6584,7 @@ function scrollTo(element, options) {
 	});
 }
 function scrollBy(container, x = 0, y = 0, behavior = "smooth") {
-	const el = (0,__vite_ssr_import_0__.resolveElement)(container);
+	const el = resolveElement(container);
 	if (!el) return;
 	el.scrollBy({
 		left: x,
@@ -6600,7 +6600,7 @@ function scrollToTop(element, behavior = "smooth") {
 		});
 		return;
 	};
-	const el = (0,__vite_ssr_import_0__.resolveElement)(element);
+	const el = resolveElement(element);
 	if (el) el.scrollTo({
 		top: 0,
 		behavior
@@ -6614,7 +6614,7 @@ function scrollToBottom(element, behavior = "smooth") {
 		});
 		return;
 	};
-	const el = (0,__vite_ssr_import_0__.resolveElement)(element);
+	const el = resolveElement(element);
 	if (el) el.scrollTo({
 		top: el.scrollHeight,
 		behavior
@@ -6790,9 +6790,45 @@ function createToastModule() {
 }
 const { toast, dismissToast } = createToastModule()
 
+// Batching module (stamped factory from compiler/runtime/batching.ts).
+// Available as batchInFrame(fn) for any future stamps that need
+// requestAnimationFrame coalescing.
+function createBatchingModule() {
+	// Track whether we're currently inside a requestAnimationFrame
+	// callback. When true, state transitions execute immediately to
+	// avoid one-frame delay for watched/dependent elements.
+	let insideFrame = false;
+	function isInsideFrame() {
+		return insideFrame;
+	}
+	function setFrameState(value) {
+		insideFrame = value;
+	}
+	function batchInFrame(fn) {
+		if (insideFrame) {
+			fn();
+			return;
+		};
+		requestAnimationFrame(() => {
+			insideFrame = true;
+			try {
+				fn();
+			} finally {
+				insideFrame = false;
+			}
+		});
+	}
+	return {
+		isInsideFrame,
+		setFrameState,
+		batchInFrame
+	};
+}
+const { isInsideFrame, setFrameState, batchInFrame } = createBatchingModule()
+
 // Input-control helpers (stamped from compiler/runtime/input-control.ts)
 function focus(el) {
-	const target = (0,__vite_ssr_import_0__.resolveElement)(el);
+	const target = resolveElement(el);
 	if (!target) return;
 	const isFormElement = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement || target instanceof HTMLButtonElement;
 	if (isFormElement) {
@@ -6803,12 +6839,12 @@ function focus(el) {
 	}
 }
 function blur(el) {
-	const target = (0,__vite_ssr_import_0__.resolveElement)(el);
+	const target = resolveElement(el);
 	if (!target) return;
 	target.blur();
 }
 function clear(el) {
-	const target = (0,__vite_ssr_import_0__.resolveElement)(el);
+	const target = resolveElement(el);
 	if (!target) return;
 	const isTextInput = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
 	if (isTextInput) {
@@ -6818,7 +6854,7 @@ function clear(el) {
 	}
 }
 function selectText(el) {
-	const target = (0,__vite_ssr_import_0__.resolveElement)(el);
+	const target = resolveElement(el);
 	if (!target) return;
 	const isTextInput = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
 	if (isTextInput) {
@@ -6827,7 +6863,7 @@ function selectText(el) {
 	}
 }
 function setError(el, message) {
-	const target = (0,__vite_ssr_import_0__.resolveElement)(el);
+	const target = resolveElement(el);
 	if (!target) return;
 	target.dataset.invalid = "true";
 	target.dataset.state = "invalid";
@@ -6854,7 +6890,7 @@ function setError(el, message) {
 	}
 }
 function clearError(el) {
-	const target = (0,__vite_ssr_import_0__.resolveElement)(el);
+	const target = resolveElement(el);
 	if (!target) return;
 	delete target.dataset.invalid;
 	if (target.dataset.state === "invalid") {
@@ -6876,23 +6912,6 @@ function clearError(el) {
 	}
 }
 
-// Visibility helpers (stamped from compiler/runtime/visibility.ts)
-function show(el) {
-	const target = (0,__vite_ssr_import_0__.resolveElement)(el);
-	if (!target) return;
-	target.style.display = target._savedDisplay || "";
-	target.hidden = false;
-}
-function hide(el) {
-	const target = (0,__vite_ssr_import_0__.resolveElement)(el);
-	if (!target) return;
-	if (target.style.display !== "none") {
-		target._savedDisplay = target.style.display;
-	};
-	target.style.display = "none";
-	target.hidden = true;
-}
-
 // Page-navigation security (stamped from compiler/runtime/component-navigation.ts)
 function sanitizePageName(name) {
 	if (!name || typeof name !== "string") return null;
@@ -6911,10 +6930,11 @@ function sanitizePageName(name) {
 	return name;
 }
 
-// State-machine pure ops (stamped from compiler/runtime/state-machine.ts).
-// applyState/removeState are referenced by name from the selection
-// cluster below; both must be at top-level for those references to
-// resolve.
+// State-machine cluster (stamped from compiler/runtime/state-machine.ts).
+// Helpers in dep order: collectStateProperties → storeBaseStyles →
+// ensureBaseStyles, buildStateContext → evaluateToken → evaluateCondition,
+// hasLogicalOperators → evaluateChildVisibility → updateVisibility, and
+// finally setState / toggleState which use the lot.
 function applyState(el, state) {
 	if (!el?._stateStyles?.[state]) return;
 	Object.assign(el.style, el._stateStyles[state]);
@@ -6922,6 +6942,146 @@ function applyState(el, state) {
 function removeState(el, _state) {
 	if (!el?._baseStyles) return;
 	Object.assign(el.style, el._baseStyles);
+}
+function collectStateProperties(stateStyles) {
+	const props = new Set();
+	for (const state of Object.values(stateStyles)) {
+		for (const prop of Object.keys(state)) {
+			props.add(prop);
+		}
+	};
+	return props;
+}
+function storeBaseStyles(el, props) {
+	el._baseStyles = {};
+	for (const prop of props) {
+		el._baseStyles[prop] = el.style[prop] || "";
+	}
+}
+function ensureBaseStyles(el) {
+	if (el._baseStyles || !el._stateStyles) return;
+	const props = collectStateProperties(el._stateStyles);
+	storeBaseStyles(el, props);
+}
+function buildStateContext(currentState) {
+	const states = {};
+	for (const name of KNOWN_STATES) {
+		states[name] = currentState === name;
+	};
+	if (currentState) {
+		states[currentState] = true;
+	};
+	return states;
+}
+function evaluateToken(token, states, currentState) {
+	let negate = false;
+	let stateName = token;
+	if (stateName.startsWith("!")) {
+		negate = true;
+		stateName = stateName.slice(1).trim();
+	};
+	const value = states[stateName] !== undefined ? states[stateName] : currentState === stateName;
+	return negate ? !value : value;
+}
+function hasLogicalOperators(condition) {
+	return condition.includes("&&") || condition.includes("||") || condition.includes("!");
+}
+function evaluateCondition(condition, currentState) {
+	const states = buildStateContext(currentState);
+	const tokens = condition.split(/(\s*&&\s*|\s*\|\|\s*)/).filter((t) => t.trim());
+	let result = null;
+	let pendingOp = null;
+	for (const token of tokens) {
+		const trimmed = token.trim();
+		if (trimmed === "&&" || trimmed === "||") {
+			pendingOp = trimmed;
+			continue;
+		};
+		const value = evaluateToken(trimmed, states, currentState);
+		if (result === null) {
+			result = value;
+		} else if (pendingOp === "&&") {
+			result = result && value;
+		} else if (pendingOp === "||") {
+			result = result || value;
+		};
+		pendingOp = null;
+	};
+	return result === true;
+}
+function evaluateChildVisibility(condition, state) {
+	if (hasLogicalOperators(condition)) {
+		try {
+			return evaluateCondition(condition, state);
+		} catch (err) {
+			console.warn(`[Mirror] Invalid visibility condition "${condition}":`, err);
+			return false;
+		}
+	};
+	return state === condition;
+}
+function updateVisibility(el) {
+	if (!el) return;
+	const state = el.dataset.state;
+	const children = el.querySelectorAll("[data-mirror-id]");
+	for (const child of children) {
+		if (child._visibleWhen) {
+			const visible = evaluateChildVisibility(child._visibleWhen, state);
+			child.style.display = visible ? "" : "none";
+		}
+	}
+}
+function setState(el, stateName) {
+	if (!el) return;
+	ensureBaseStyles(el);
+	if (el._baseStyles) Object.assign(el.style, el._baseStyles);
+	el.dataset.state = stateName;
+	if (stateName !== "default" && el._stateStyles?.[stateName]) Object.assign(el.style, el._stateStyles[stateName]);
+	updateVisibility(el);
+}
+function toggleState(el, state1, state2) {
+	if (!el) return;
+	const fallback = state2 || "default";
+	const current = el.dataset.state || fallback;
+	const next = current === state1 ? fallback : state1;
+	setState(el, next);
+}
+
+// Visibility helpers (stamped from compiler/runtime/visibility.ts).
+// show/hide/toggle reference top-level applyState/setState (above).
+// close() stays as inline _runtime method (state-machine fast-path).
+function show(el) {
+	const target = resolveElement(el);
+	if (!target) return;
+	target.style.display = target._savedDisplay || "";
+	target.hidden = false;
+}
+function hide(el) {
+	const target = resolveElement(el);
+	if (!target) return;
+	if (target.style.display !== "none") {
+		target._savedDisplay = target.style.display;
+	};
+	target.style.display = "none";
+	target.hidden = true;
+}
+function toggle(el) {
+	const target = resolveElement(el);
+	if (!target) return;
+	const STATE_PAIRS = {
+		closed: "open",
+		open: "closed",
+		collapsed: "expanded",
+		expanded: "collapsed"
+	};
+	const currentState = target.dataset.state || target._initialState;
+	const newState = STATE_PAIRS[currentState];
+	if (newState) {
+		setState(target, newState);
+		return;
+	};
+	target.hidden = !target.hidden;
+	applyState(target, target.hidden ? "off" : "on");
 }
 
 // Selection / highlight cluster (stamped from compiler/runtime/selection.ts).
@@ -6990,6 +7150,23 @@ function unhighlightSiblings(el) {
 		}
 	}
 }
+function isHighlightable(el, requireHighlightState) {
+	if (el._stateStyles?.highlighted) return true;
+	if (!requireHighlightState && el.style.cursor === "pointer") return true;
+	return false;
+}
+function findHighlightableItems(el, requireHighlightState) {
+	const items = [];
+	for (const child of el.children) {
+		const mirrorChild = child;
+		if (isHighlightable(mirrorChild, requireHighlightState)) {
+			items.push(mirrorChild);
+		} else {
+			items.push(...findHighlightableItems(mirrorChild, requireHighlightState));
+		}
+	};
+	return items;
+}
 function getHighlightableItems(container) {
 	// First try items with explicit highlight state
 	let items = findHighlightableItems(container, true);
@@ -6999,17 +7176,23 @@ function getHighlightableItems(container) {
 	};
 	return items;
 }
+function findHighlightIndex(items) {
+	return items.findIndex((el) => el.dataset.highlighted === "true");
+}
+function hasLoopFocus(container) {
+	return container._loopFocus === true || container.dataset.loopFocus === "true";
+}
 function select(el) {
 	if (!el) return;
 	deselectSiblings(el);
 	el.dataset.selected = "true";
-	(0,__vite_ssr_import_0__.applyState)(el, "selected");
+	applyState(el, "selected");
 	updateSelectionBinding(el);
 }
 function deselect(el) {
 	if (!el) return;
 	delete el.dataset.selected;
-	(0,__vite_ssr_import_0__.removeState)(el, "selected");
+	removeState(el, "selected");
 }
 function selectHighlighted(container) {
 	if (!container) return;
@@ -7021,12 +7204,12 @@ function highlight(el) {
 	if (!el) return;
 	unhighlightSiblings(el);
 	el.dataset.highlighted = "true";
-	(0,__vite_ssr_import_0__.applyState)(el, "highlighted");
+	applyState(el, "highlighted");
 }
 function unhighlight(el) {
 	if (!el) return;
 	delete el.dataset.highlighted;
-	(0,__vite_ssr_import_0__.removeState)(el, "highlighted");
+	removeState(el, "highlighted");
 }
 function highlightNext(container) {
 	if (!container) return;
@@ -7069,6 +7252,62 @@ function highlightLast(container) {
 	if (!container) return;
 	const items = getHighlightableItems(container);
 	if (items.length) highlight(items[items.length - 1]);
+}
+function activate(el) {
+	if (!el) return;
+	el.dataset.active = "true";
+	applyState(el, "active");
+}
+function deactivate(el) {
+	if (!el) return;
+	delete el.dataset.active;
+	removeState(el, "active");
+}
+function setupTypeahead(container) {
+	if (container._typeaheadEnabled) return;
+	container._typeaheadEnabled = true;
+	// Per-container typing buffer + timeout id, closed over by the
+	// listener below. Outlives individual keypresses; dies with the
+	// container (which holds the listener via addEventListener).
+	const state = {
+		text: "",
+		timeout: 0
+	};
+	container.addEventListener("keydown", (e) => {
+		// Only handle printable characters
+		if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return;
+		const items = getHighlightableItems(container);
+		if (!items.length) return;
+		if (state.timeout) clearTimeout(state.timeout);
+		state.text += e.key.toLowerCase();
+		const searchText = state.text;
+		const match = items.find((item) => {
+			const text = item.textContent?.trim().toLowerCase() || "";
+			return text.startsWith(searchText);
+		});
+		if (match) {
+			highlight(match);
+			match.scrollIntoView({ block: "nearest" });
+		};
+		state.timeout = window.setTimeout(() => {
+			state.text = "";
+		}, 500);
+	});
+}
+function typeahead(container) {
+	if (!container) return;
+	setupTypeahead(container);
+}
+function setupHoverHighlight(container) {
+	if (container._hoverHighlightEnabled) return;
+	container._hoverHighlightEnabled = true;
+	container.addEventListener("mouseover", (e) => {
+		const target = e.target;
+		if (!target) return;
+		const items = getHighlightableItems(container);
+		const item = items.find((it) => it === target || it.contains(target));
+		if (item) highlight(item);
+	});
 }
 
 const _runtime = {
@@ -7173,25 +7412,10 @@ const _runtime = {
     }
   },
 
-  // Visibility
-  toggle(el) {
-    if (!el) return
-    const currentState = el.dataset.state || el._initialState
-    if (currentState === 'closed' || currentState === 'open') {
-      const newState = currentState === 'closed' ? 'open' : 'closed'
-      this.setState(el, newState)
-    } else if (currentState === 'collapsed' || currentState === 'expanded') {
-      const newState = currentState === 'collapsed' ? 'expanded' : 'collapsed'
-      this.setState(el, newState)
-    } else {
-      el.hidden = !el.hidden
-      this.applyState(el, el.hidden ? 'off' : 'on')
-    }
-  },
-
-  // show/hide stamped from compiler/runtime/visibility.ts (top-level)
+  // show/hide/toggle stamped from compiler/runtime/visibility.ts (top-level)
   show,
   hide,
+  toggle,
 
   close(el) {
     if (!el) return
@@ -7450,135 +7674,19 @@ const _runtime = {
   },
 
   // ============================================
-  // TYPEAHEAD NAVIGATION (Accessibility)
+  // TYPEAHEAD + HOVER (Accessibility / mouse UX)
   // ============================================
-
-  /**
-   * Setup typeahead for a list container
-   * Typing characters jumps to matching item
-   */
-  setupTypeahead(container) {
-    if (!container) return
-    if (container._typeaheadEnabled) return // Already setup
-    container._typeaheadEnabled = true
-
-    // Typeahead state
-    const state = { text: '', timeout: null }
-
-    // Get highlightable items
-    const getItems = () => {
-      const findItems = (el, requireState) => {
-        const items = []
-        for (const child of el.children) {
-          if (child._stateStyles?.highlighted) {
-            items.push(child)
-          } else if (!requireState && child.style.cursor === 'pointer') {
-            items.push(child)
-          } else {
-            items.push(...findItems(child, requireState))
-          }
-        }
-        return items
-      }
-      // First try with highlight state, then fallback to cursor:pointer
-      let items = findItems(container, true)
-      if (!items.length) items = findItems(container, false)
-      return items
-    }
-
-    container.addEventListener('keydown', (e) => {
-      // Only handle printable characters
-      if (e.key.length !== 1 || e.ctrlKey || e.metaKey || e.altKey) return
-
-      const char = e.key.toLowerCase()
-      const items = getItems()
-      if (!items.length) return
-
-      // Clear previous timeout
-      if (state.timeout) clearTimeout(state.timeout)
-
-      // Add character to buffer
-      state.text += char
-
-      // Find matching item
-      const searchText = state.text.toLowerCase()
-      const match = items.find(item => {
-        const text = item.textContent?.trim().toLowerCase() || ''
-        return text.startsWith(searchText)
-      })
-
-      if (match) {
-        // Unhighlight others, highlight match
-        for (const item of items) {
-          if (item !== match && item.dataset.highlighted) {
-            delete item.dataset.highlighted
-            this.removeState(item, 'highlighted')
-          }
-        }
-        match.dataset.highlighted = 'true'
-        this.applyState(match, 'highlighted')
-        match.scrollIntoView({ block: 'nearest' })
-      }
-
-      // Clear buffer after 500ms
-      state.timeout = setTimeout(() => {
-        state.text = ''
-      }, 500)
-    })
-  },
+  // setupTypeahead / typeahead / setupHoverHighlight stamped from
+  // compiler/runtime/selection.ts (top-level above). All three now
+  // share the canonical getHighlightableItems / highlight / removeState
+  // implementations stamped above instead of duplicating findItems
+  // inline (the inline copies became dead code).
+  setupTypeahead,
+  typeahead,
+  setupHoverHighlight,
 
   // Bind trigger text to show selected value (stamped from selection.ts).
   bindTriggerText,
-
-  /**
-   * Hover-to-highlight for list items inside a loop-focus container.
-   * Mirrors the keyboard arrow behaviour so mouse-driven UX (Select,
-   * Menu, Combobox) and keyboard navigation share the same "current"
-   * item. A single delegated mouseover listener handles all items —
-   * cheaper than per-item and survives DOM swaps.
-   */
-  setupHoverHighlight(container) {
-    if (!container) return
-    if (container._hoverHighlightEnabled) return
-    container._hoverHighlightEnabled = true
-
-    const findItems = (el, requireState) => {
-      const items = []
-      for (const child of el.children) {
-        if (child._stateStyles?.highlighted) {
-          items.push(child)
-        } else if (!requireState && child.style.cursor === 'pointer') {
-          items.push(child)
-        } else {
-          items.push(...findItems(child, requireState))
-        }
-      }
-      return items
-    }
-
-    const getItems = () => {
-      let items = findItems(container, true)
-      if (!items.length) items = findItems(container, false)
-      return items
-    }
-
-    container.addEventListener('mouseover', (e) => {
-      const target = e.target
-      if (!target) return
-      const items = getItems()
-      const item = items.find(it => it === target || it.contains(target))
-      if (!item) return
-      // Unhighlight siblings, highlight current
-      for (const sibling of items) {
-        if (sibling !== item && sibling.dataset.highlighted === 'true') {
-          delete sibling.dataset.highlighted
-          this.removeState(sibling, 'highlighted')
-        }
-      }
-      item.dataset.highlighted = 'true'
-      this.applyState(item, 'highlighted')
-    })
-  },
 
   // ============================================
   // TABLE FUNCTIONS (Built-in)
@@ -8424,51 +8532,18 @@ const _runtime = {
 
   selectHighlighted,
 
-  // Activation
-  activate(el) {
-    if (!el) return
-    el.dataset.active = 'true'
-    this.applyState(el, 'active')
-  },
-
-  deactivate(el) {
-    if (!el) return
-    delete el.dataset.active
-    this.removeState(el, 'active')
-  },
+  // activate / deactivate stamped from compiler/runtime/selection.ts (top-level above).
+  activate,
+  deactivate,
 
   // State management
   // applyState / removeState stamped from compiler/runtime/state-machine.ts
   applyState,
   removeState,
 
-  setState(el, stateName) {
-    if (!el) return
-    if (!el._baseStyles && el._stateStyles) {
-      el._baseStyles = {}
-      const stateProps = new Set()
-      for (const state of Object.values(el._stateStyles)) {
-        for (const prop of Object.keys(state)) stateProps.add(prop)
-      }
-      for (const prop of stateProps) {
-        el._baseStyles[prop] = el.style[prop] || ''
-      }
-    }
-    if (el._baseStyles) Object.assign(el.style, el._baseStyles)
-    el.dataset.state = stateName
-    if (stateName !== 'default' && el._stateStyles && el._stateStyles[stateName]) {
-      Object.assign(el.style, el._stateStyles[stateName])
-    }
-    this.updateVisibility(el)
-  },
-
-  toggleState(el, state1, state2) {
-    if (!el) return
-    state2 = state2 || 'default'
-    const current = el.dataset.state || state2
-    const next = current === state1 ? state2 : state1
-    this.setState(el, next)
-  },
+  // setState / toggleState stamped from state-machine.ts (top-level above).
+  setState,
+  toggleState,
 
   // State Machine Functions (Interaction Model)
   transitionTo(el, stateName, animation) {
@@ -8697,88 +8772,11 @@ const _runtime = {
     }
   },
 
-  // Safe condition evaluator - replaces dangerous eval()
-  _evaluateCondition(condition, state) {
-    // Build state context
-    const states = {
-      open: state === 'open',
-      closed: state === 'closed',
-      expanded: state === 'expanded',
-      collapsed: state === 'collapsed',
-      active: state === 'active',
-      inactive: state === 'inactive',
-      selected: state === 'selected',
-      disabled: state === 'disabled',
-      loading: state === 'loading',
-      error: state === 'error',
-      on: state === 'on',
-      off: state === 'off',
-    }
-    // Also support the current state name directly
-    states[state] = true
-
-    // Tokenize: split by && and || while preserving operators
-    const tokens = condition.split(/(s*&&s*|s*||s*)/).filter(t => t.trim())
-
-    let result = null
-    let pendingOp = null
-
-    for (const token of tokens) {
-      const trimmed = token.trim()
-
-      if (trimmed === '&&' || trimmed === '||') {
-        pendingOp = trimmed
-        continue
-      }
-
-      // Handle negation
-      let negate = false
-      let stateName = trimmed
-      if (stateName.startsWith('!')) {
-        negate = true
-        stateName = stateName.slice(1).trim()
-      }
-
-      // Get state value (default to checking against current state)
-      let value = states[stateName] !== undefined ? states[stateName] : (state === stateName)
-      if (negate) value = !value
-
-      // Apply operator
-      if (result === null) {
-        result = value
-      } else if (pendingOp === '&&') {
-        result = result && value
-      } else if (pendingOp === '||') {
-        result = result || value
-      }
-      pendingOp = null
-    }
-
-    return result === true
-  },
-
-  updateVisibility(el) {
-    if (!el) return
-    const state = el.dataset.state
-    const children = el.querySelectorAll('[data-mirror-id]')
-    children.forEach(child => {
-      if (child._visibleWhen) {
-        const condition = child._visibleWhen
-        let visible = false
-        if (condition.includes('&&') || condition.includes('||') || condition.includes('!')) {
-          try {
-            visible = this._evaluateCondition(condition, state)
-          } catch (e) {
-            console.warn('[Mirror] Invalid visibility condition:', condition, e)
-            visible = false
-          }
-        } else {
-          visible = state === condition
-        }
-        child.style.display = visible ? '' : 'none'
-      }
-    })
-  },
+  // updateVisibility stamped from state-machine.ts (top-level above).
+  // The inline _evaluateCondition was orphaned after this consolidation
+  // (the typed updateVisibility uses evaluateChildVisibility which is
+  // also stamped at top-level).
+  updateVisibility,
 
   // Navigation
   navigate(targetName, clickedElement) {
