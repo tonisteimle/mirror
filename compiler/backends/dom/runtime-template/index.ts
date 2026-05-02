@@ -47,6 +47,25 @@ import {
 } from '../../../runtime/input-control'
 import { show as showTyped, hide as hideTyped } from '../../../runtime/visibility'
 import { sanitizePageName } from '../../../runtime/component-navigation'
+import { applyState, removeState } from '../../../runtime/state-machine'
+import {
+  updateBoundElements,
+  updateSelectionBinding,
+  updateTriggerText,
+  bindTriggerText,
+  deselectSiblings,
+  unhighlightSiblings,
+  getHighlightableItems,
+  select as selectTyped,
+  deselect as deselectTyped,
+  selectHighlighted,
+  highlight as highlightTyped,
+  unhighlight as unhighlightTyped,
+  highlightNext,
+  highlightPrev,
+  highlightFirst,
+  highlightLast,
+} from '../../../runtime/selection'
 
 const PROP_MAP_LITERAL = JSON.stringify(PROP_MAP)
 const ALIGN_MAP_LITERAL = JSON.stringify(ALIGN_MAP)
@@ -99,13 +118,44 @@ const CLEAR_ERROR_SRC = clearErrorTyped.toString()
 const SHOW_SRC = showTyped.toString()
 const HIDE_SRC = hideTyped.toString()
 
+// Stamp the two pure state-machine helpers (applyState, removeState).
+// They have no this-binding and no dependencies — selection.ts uses
+// only these two from state-machine. setState/toggleState/transitionTo
+// are NOT stamped here; they live as inline _runtime methods because
+// they touch shared helpers that aren't yet consolidated.
+const APPLY_STATE_SRC = applyState.toString()
+const REMOVE_STATE_SRC = removeState.toString()
+
+// Stamp the full selection cluster from compiler/runtime/selection.ts.
+// Both helpers and the public API are exported from the typed module
+// just so the template can stamp them by name; the public API
+// references the helpers by name so they MUST be top-level in the
+// emitted runtime.
+const UPDATE_BOUND_ELEMENTS_SRC = updateBoundElements.toString()
+const UPDATE_TRIGGER_TEXT_SRC = updateTriggerText.toString()
+const UPDATE_SELECTION_BINDING_SRC = updateSelectionBinding.toString()
+const BIND_TRIGGER_TEXT_SRC = bindTriggerText.toString()
+const DESELECT_SIBLINGS_SRC = deselectSiblings.toString()
+const UNHIGHLIGHT_SIBLINGS_SRC = unhighlightSiblings.toString()
+const GET_HIGHLIGHTABLE_ITEMS_SRC = getHighlightableItems.toString()
+const SELECT_SRC = selectTyped.toString()
+const DESELECT_SRC = deselectTyped.toString()
+const SELECT_HIGHLIGHTED_SRC = selectHighlighted.toString()
+const HIGHLIGHT_SRC = highlightTyped.toString()
+const UNHIGHLIGHT_SRC = unhighlightTyped.toString()
+const HIGHLIGHT_NEXT_SRC = highlightNext.toString()
+const HIGHLIGHT_PREV_SRC = highlightPrev.toString()
+const HIGHLIGHT_FIRST_SRC = highlightFirst.toString()
+const HIGHLIGHT_LAST_SRC = highlightLast.toString()
+
 // Stamp the page-name sanitizer. Closes a real gap: the inline
 // template's navigateToPage built filenames straight from user input
 // without any path-traversal / absolute-path / weird-character check.
-// (Note: validateCompiledCode from the typed module is intentionally
-// NOT stamped — its dangerous-pattern regex set is over-eager with
-// the /i flag and would reject every real Mirror-compiled page. That
-// validator needs a tightening pass before it can ship.)
+// (The typed module also had a validateCompiledCode regex scanner;
+// audit-4 deleted it because compiled output always embeds the Mirror
+// runtime, which legitimately contains every "dangerous" pattern the
+// scanner looked for. sanitizePageName at the entry point is the
+// real defence — see compiler/runtime/component-navigation.ts.)
 const SANITIZE_PAGE_NAME_SRC = sanitizePageName.toString()
 
 export const DOM_RUNTIME_CODE = `
@@ -150,6 +200,32 @@ ${HIDE_SRC}
 
 // Page-navigation security (stamped from compiler/runtime/component-navigation.ts)
 ${SANITIZE_PAGE_NAME_SRC}
+
+// State-machine pure ops (stamped from compiler/runtime/state-machine.ts).
+// applyState/removeState are referenced by name from the selection
+// cluster below; both must be at top-level for those references to
+// resolve.
+${APPLY_STATE_SRC}
+${REMOVE_STATE_SRC}
+
+// Selection / highlight cluster (stamped from compiler/runtime/selection.ts).
+// Helpers come first so the public API can reference them by name.
+${UPDATE_BOUND_ELEMENTS_SRC}
+${UPDATE_TRIGGER_TEXT_SRC}
+${UPDATE_SELECTION_BINDING_SRC}
+${BIND_TRIGGER_TEXT_SRC}
+${DESELECT_SIBLINGS_SRC}
+${UNHIGHLIGHT_SIBLINGS_SRC}
+${GET_HIGHLIGHTABLE_ITEMS_SRC}
+${SELECT_SRC}
+${DESELECT_SRC}
+${SELECT_HIGHLIGHTED_SRC}
+${HIGHLIGHT_SRC}
+${UNHIGHLIGHT_SRC}
+${HIGHLIGHT_NEXT_SRC}
+${HIGHLIGHT_PREV_SRC}
+${HIGHLIGHT_FIRST_SRC}
+${HIGHLIGHT_LAST_SRC}
 
 const _runtime = {
   // Debug mode check
@@ -607,14 +683,8 @@ const _runtime = {
     })
   },
 
-  /**
-   * Bind trigger text to show selected value
-   * When an item is selected, update the trigger element's text
-   */
-  bindTriggerText(container) {
-    if (!container) return
-    container._triggerBinding = 'true'
-  },
+  // Bind trigger text to show selected value (stamped from selection.ts).
+  bindTriggerText,
 
   /**
    * Hover-to-highlight for list items inside a loop-focus container.
@@ -1494,118 +1564,21 @@ const _runtime = {
     }
   },
 
-  // Selection
-  select(el) {
-    if (!el) return
-    if (el.parentElement) {
-      Array.from(el.parentElement.children).forEach(sibling => {
-        if (sibling !== el && sibling.dataset.selected) {
-          this.deselect(sibling)
-        }
-      })
-    }
-    el.dataset.selected = 'true'
-    this.applyState(el, 'selected')
-    this.updateSelectionBinding(el)
-  },
+  // Selection + highlight cluster — stamped from compiler/runtime/selection.ts
+  // (see top-level declarations above _runtime). Helpers use the
+  // top-level applyState/removeState by lexical name lookup, not
+  // this.applyState method dispatch.
+  select,
+  deselect,
+  highlight,
+  unhighlight,
+  highlightNext,
+  highlightPrev,
+  highlightFirst,
+  highlightLast,
+  getHighlightableItems,
 
-  deselect(el) {
-    if (!el) return
-    delete el.dataset.selected
-    this.removeState(el, 'selected')
-  },
-
-  // Highlighting
-  highlight(el) {
-    if (!el) return
-    if (el.parentElement) {
-      Array.from(el.parentElement.children).forEach(sibling => {
-        if (sibling !== el && sibling.dataset.highlighted) {
-          this.unhighlight(sibling)
-        }
-      })
-    }
-    el.dataset.highlighted = 'true'
-    this.applyState(el, 'highlighted')
-  },
-
-  unhighlight(el) {
-    if (!el) return
-    delete el.dataset.highlighted
-    this.removeState(el, 'highlighted')
-  },
-
-  highlightNext(container) {
-    if (!container) return
-    const items = this.getHighlightableItems(container)
-    if (!items.length) return
-    const current = items.findIndex(el => el.dataset.highlighted === 'true')
-    const loop = container._loopFocus === true || container.dataset.loopFocus === 'true'
-    let next
-    if (current === -1) {
-      next = 0
-    } else if (loop) {
-      next = (current + 1) % items.length
-    } else {
-      next = Math.min(current + 1, items.length - 1)
-    }
-    this.highlight(items[next])
-  },
-
-  highlightPrev(container) {
-    if (!container) return
-    const items = this.getHighlightableItems(container)
-    if (!items.length) return
-    const current = items.findIndex(el => el.dataset.highlighted === 'true')
-    const loop = container._loopFocus === true || container.dataset.loopFocus === 'true'
-    let prev
-    if (current === -1) {
-      prev = items.length - 1
-    } else if (loop) {
-      prev = (current - 1 + items.length) % items.length
-    } else {
-      prev = Math.max(current - 1, 0)
-    }
-    this.highlight(items[prev])
-  },
-
-  highlightFirst(container) {
-    if (!container) return
-    const items = this.getHighlightableItems(container)
-    if (items.length) this.highlight(items[0])
-  },
-
-  highlightLast(container) {
-    if (!container) return
-    const items = this.getHighlightableItems(container)
-    if (items.length) this.highlight(items[items.length - 1])
-  },
-
-  getHighlightableItems(container) {
-    const findItems = (el, requireHighlightState) => {
-      const items = []
-      for (const child of el.children) {
-        if (child._stateStyles?.highlighted) {
-          items.push(child)
-        } else if (!requireHighlightState && child.style.cursor === 'pointer') {
-          items.push(child)
-        } else {
-          items.push(...findItems(child, requireHighlightState))
-        }
-      }
-      return items
-    }
-    let items = findItems(container, true)
-    if (!items.length) items = findItems(container, false)
-    return items
-  },
-
-  selectHighlighted(container) {
-    if (!container) return
-    const items = this.getHighlightableItems(container)
-    const highlighted = items.find(el => el.dataset.highlighted === 'true')
-    if (highlighted) this.select(highlighted)
-  },
+  selectHighlighted,
 
   // Activation
   activate(el) {
@@ -1621,15 +1594,9 @@ const _runtime = {
   },
 
   // State management
-  applyState(el, state) {
-    if (!el?._stateStyles || !el._stateStyles[state]) return
-    Object.assign(el.style, el._stateStyles[state])
-  },
-
-  removeState(el, state) {
-    if (!el?._baseStyles) return
-    Object.assign(el.style, el._baseStyles)
-  },
+  // applyState / removeState stamped from compiler/runtime/state-machine.ts
+  applyState,
+  removeState,
 
   setState(el, stateName) {
     if (!el) return
@@ -2067,56 +2034,11 @@ const _runtime = {
     return null
   },
 
-  // Selection binding
-  updateSelectionBinding(el) {
-    if (!el) return
-    const value = el.textContent?.trim() || ''
-    let parent = el.parentElement
-    while (parent) {
-      // Selection variable binding
-      if (parent._selectionBinding) {
-        const varName = parent._selectionBinding
-        window._mirrorState = window._mirrorState || {}
-        window._mirrorState[varName] = value
-        this.updateBoundElements(varName, value)
-      }
-      // Trigger text binding - update trigger to show selected value
-      if (parent._triggerBinding) {
-        this.updateTriggerText(parent, value)
-      }
-      parent = parent.parentElement
-    }
-  },
-
-  // Update trigger text to show selected value
-  updateTriggerText(container, selectedText) {
-    // Find the trigger element within the container
-    // Try both data-trigger attribute and data-mirror-name="Trigger"
-    const trigger = container.querySelector('[data-trigger]') || container.querySelector('[data-mirror-name="Trigger"]')
-    if (trigger) {
-      // Find the text element within the trigger (span or element with data-text)
-      const textEl = trigger.querySelector('span, [data-text]')
-      if (textEl) {
-        textEl.textContent = selectedText
-      } else {
-        // If no text element, update the trigger's first text node
-        const textNode = Array.from(trigger.childNodes).find(
-          node => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()
-        )
-        if (textNode) {
-          textNode.textContent = selectedText
-        }
-      }
-    }
-  },
-
-  updateBoundElements(varName, value) {
-    document.querySelectorAll('[data-mirror-id]').forEach(el => {
-      if (el._textBinding === varName) {
-        el.textContent = value || el._textPlaceholder || ''
-      }
-    })
-  },
+  // Selection binding + trigger-text + bound-elements update —
+  // stamped from compiler/runtime/selection.ts.
+  updateSelectionBinding,
+  updateTriggerText,
+  updateBoundElements,
 
   // Cleanup
   destroy(el) {

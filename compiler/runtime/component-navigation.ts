@@ -50,61 +50,27 @@ export function sanitizePageName(name: string): string | null {
 }
 
 // ============================================
-// CODE VALIDATION
+// CODE STRUCTURE CHECK
 // ============================================
 
 /**
- * Validate compiled Mirror code before passing it to `new Function()`.
- * Rejects code containing dangerous patterns (eval, setTimeout with
- * string arg, innerHTML assignment to unquoted value, prototype
- * pollution, dynamic import/require, Node fs/process/child_process,
- * <script> tags, javascript: URLs, data:text/html). Also requires the
- * output to look like Mirror compiler output (have createUI).
+ * Sanity check that compiled code looks like Mirror compiler output.
+ * Doesn't claim to be a security boundary — it only catches obviously
+ * mangled output (e.g. readFile returned wrong file) before we hand
+ * it to new Function().
  *
- * Self-contained — all helpers and the dangerous-pattern table are
- * nested in the function body so .toString() yields a runnable
- * snippet for the runtime template.
+ * Audit-4 removed the previous regex-based dangerous-pattern check:
+ * the validator scanned full compiled output, but compiled output
+ * always embeds the Mirror runtime — which legitimately contains
+ * `new Function(...)` (ternary evaluator), `"javascript:"` literals
+ * (in sanitizeSVG), regex patterns mentioning `<script`, and
+ * sanitized `innerHTML = svgText` writes. Those triggered every
+ * legit page. Real defence is at the entry point: sanitizePageName
+ * blocks path traversal so the readFile callback can't be tricked
+ * into loading arbitrary files.
  */
-export function validateCompiledCode(code: string): boolean {
-  const DANGEROUS_PATTERNS = [
-    /\beval\s*\(/i,
-    /\bFunction\s*\(/i,
-    /\bsetTimeout\s*\(\s*['"`]/i,
-    /\bsetInterval\s*\(\s*['"`]/i,
-    /\bdocument\s*\.\s*write/i,
-    /\binnerHTML\s*=\s*[^'"`]/,
-    /\b__proto__\s*=/i,
-    /\bprototype\s*\[/i,
-    /\bconstructor\s*\[/i,
-    /\bimport\s*\(/i,
-    /\brequire\s*\(/i,
-    /\bprocess\s*\./i,
-    /\bchild_process/i,
-    /\bfs\s*\./i,
-    /<script/i,
-    /javascript\s*:/i,
-    /data\s*:\s*text\/html/i,
-  ]
-
-  function hasDangerous(c: string): boolean {
-    return DANGEROUS_PATTERNS.some(p => p.test(c))
-  }
-
-  function hasMirrorStructure(c: string): boolean {
-    return c.includes('function createUI') || c.includes('export function createUI')
-  }
-
-  if (hasDangerous(code)) {
-    console.warn('[Security] Dangerous pattern detected in compiled code')
-    return false
-  }
-
-  if (!hasMirrorStructure(code)) {
-    console.warn('[Security] Code does not match expected Mirror output structure')
-    return false
-  }
-
-  return true
+export function hasMirrorStructure(code: string): boolean {
+  return code.includes('function createUI') || code.includes('export function createUI')
 }
 
 // ============================================
@@ -112,11 +78,14 @@ export function validateCompiledCode(code: string): boolean {
 // ============================================
 
 /**
- * Execute compiled Mirror code safely
+ * Execute compiled Mirror code. Skips structural check via
+ * hasMirrorStructure to catch mangled output before new Function()
+ * sees it — see the docstring there for why we don't pattern-match
+ * for "dangerous" code.
  */
 function executeCompiledCode(code: string): { root?: HTMLElement } | null {
-  if (!validateCompiledCode(code)) {
-    console.error('[Security] Compiled code validation failed - execution blocked')
+  if (!hasMirrorStructure(code)) {
+    console.warn('[component-navigation] Compiled code does not look like Mirror output')
     return null
   }
 

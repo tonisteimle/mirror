@@ -55,9 +55,12 @@ export function updateSelectionBinding(el: MirrorElement): void {
 }
 
 /**
- * Update trigger element text to show selected value
+ * Update trigger element text to show selected value.
+ * Exported so the runtime template can stamp it alongside the
+ * public selection API (it's referenced by name from
+ * updateSelectionBinding).
  */
-function updateTriggerText(container: MirrorElement, selectedText: string): void {
+export function updateTriggerText(container: MirrorElement, selectedText: string): void {
   // Find the trigger element within the container
   // Try both data-trigger attribute and data-mirror-name="Trigger"
   const trigger = (container.querySelector('[data-trigger]') ||
@@ -93,9 +96,10 @@ export function bindTriggerText(container: MirrorElement | null): void {
 // ============================================
 
 /**
- * Deselect siblings of element
+ * Deselect siblings of element. Exported for runtime-template stamping
+ * (referenced by name from select()).
  */
-function deselectSiblings(el: MirrorElement): void {
+export function deselectSiblings(el: MirrorElement): void {
   if (!el.parentElement) return
 
   for (const sibling of el.parentElement.children) {
@@ -143,9 +147,10 @@ export function selectHighlighted(container: MirrorElement | null): void {
 // ============================================
 
 /**
- * Unhighlight siblings of element
+ * Unhighlight siblings of element. Exported for runtime-template
+ * stamping (referenced by name from highlight()).
  */
-function unhighlightSiblings(el: MirrorElement): void {
+export function unhighlightSiblings(el: MirrorElement): void {
   if (!el.parentElement) return
 
   for (const sibling of el.parentElement.children) {

@@ -51,6 +51,25 @@ import {
 } from '../../compiler/runtime/input-control'
 import { show as showTyped, hide as hideTyped } from '../../compiler/runtime/visibility'
 import { sanitizePageName } from '../../compiler/runtime/component-navigation'
+import { applyState, removeState } from '../../compiler/runtime/state-machine'
+import {
+  select as selectTyped,
+  deselect as deselectTyped,
+  highlight as highlightTyped,
+  unhighlight as unhighlightTyped,
+  selectHighlighted,
+  highlightNext,
+  highlightPrev,
+  highlightFirst,
+  highlightLast,
+  getHighlightableItems,
+  updateSelectionBinding,
+  updateTriggerText,
+  updateBoundElements,
+  bindTriggerText,
+  deselectSiblings,
+  unhighlightSiblings,
+} from '../../compiler/runtime/selection'
 import { DOM_RUNTIME_CODE } from '../../compiler/backends/dom/runtime-template'
 
 const REPO_ROOT = resolve(fileURLToPath(import.meta.url), '../../..')
@@ -326,6 +345,78 @@ describe('Runtime template parity', () => {
       // safePage.endsWith → good; pageName.endsWith → regression
       expect(body).toMatch(/safePage\.endsWith/)
       expect(body).not.toMatch(/pageName\.endsWith/)
+    })
+  })
+
+  describe('state-machine pure ops (audit-4)', () => {
+    it('typed applyState/removeState are stamped verbatim', () => {
+      expect(DOM_RUNTIME_CODE).toContain(applyState.toString())
+      expect(DOM_RUNTIME_CODE).toContain(removeState.toString())
+    })
+
+    it('_runtime exposes applyState/removeState via shorthand (no inline impl)', () => {
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*applyState,\s*$/m)
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*removeState,\s*$/m)
+      // The previous inline `applyState(el, state) { ... }` form must
+      // be gone; otherwise we have two definitions racing.
+      expect(DOM_RUNTIME_CODE).not.toMatch(/^\s*applyState\(el,\s*state\)\s*\{/m)
+    })
+  })
+
+  describe('selection cluster (audit-4)', () => {
+    it('all selection helpers + public API are stamped', () => {
+      const fns = [
+        selectTyped,
+        deselectTyped,
+        highlightTyped,
+        unhighlightTyped,
+        selectHighlighted,
+        highlightNext,
+        highlightPrev,
+        highlightFirst,
+        highlightLast,
+        getHighlightableItems,
+        updateSelectionBinding,
+        updateTriggerText,
+        updateBoundElements,
+        bindTriggerText,
+        deselectSiblings,
+        unhighlightSiblings,
+      ]
+      for (const fn of fns) {
+        expect(DOM_RUNTIME_CODE, `expected ${fn.name} stamp`).toContain(fn.toString())
+      }
+    })
+
+    it('_runtime exposes the selection public API via shorthand', () => {
+      const props = [
+        'select',
+        'deselect',
+        'highlight',
+        'unhighlight',
+        'highlightNext',
+        'highlightPrev',
+        'highlightFirst',
+        'highlightLast',
+        'selectHighlighted',
+        'getHighlightableItems',
+        'updateSelectionBinding',
+        'updateTriggerText',
+        'updateBoundElements',
+        'bindTriggerText',
+      ]
+      for (const p of props) {
+        const re = new RegExp(`^\\s*${p},\\s*$`, 'm')
+        expect(DOM_RUNTIME_CODE, `expected shorthand for ${p}`).toMatch(re)
+      }
+    })
+
+    it('the previous inline this.deselect/this.highlight/etc. impls are gone', () => {
+      // Old template's select() body did `this.deselect(sibling)`.
+      // After stamping, select() uses lexical-scope deselectSiblings()
+      // — no method dispatch. Make sure the inline impl doesn't sneak
+      // back in.
+      expect(DOM_RUNTIME_CODE).not.toMatch(/^\s*select\(el\)\s*\{[\s\S]*?this\.deselect/m)
     })
   })
 
