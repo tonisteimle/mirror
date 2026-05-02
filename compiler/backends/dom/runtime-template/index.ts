@@ -37,6 +37,7 @@ import {
   scrollToBottom as scrollToBottomTyped,
 } from '../../../runtime/scroll'
 import { createToastModule } from '../../../runtime/toast'
+import { createBatchingModule } from '../../../runtime/batching'
 import {
   focus as focusTyped,
   blur as blurTyped,
@@ -155,6 +156,13 @@ const SCROLL_TO_BOTTOM_SRC = stamp(scrollToBottomTyped)
 // ignored in production.
 const CREATE_TOAST_MODULE_SRC = stamp(createToastModule)
 
+// Stamp the batching factory. Same pattern as createToastModule —
+// closure-captured frame state. Unblocks future stamping of code that
+// wraps DOM writes in batchInFrame() (visibility, state-machine
+// transitions). Currently nothing stamped uses it; the singleton just
+// sits ready.
+const CREATE_BATCHING_MODULE_SRC = stamp(createBatchingModule)
+
 // Stamp the typed input-control helpers. Each accepts string|element
 // (string lookup via resolveElement, the existing top-level helper)
 // and is fully self-contained — no state-machine dependency, just
@@ -269,6 +277,12 @@ ${SCROLL_TO_BOTTOM_SRC}
 // public API as top-level functions so _runtime can shorthand them.
 ${CREATE_TOAST_MODULE_SRC}
 const { toast, dismissToast } = createToastModule()
+
+// Batching module (stamped factory from compiler/runtime/batching.ts).
+// Available as batchInFrame(fn) for any future stamps that need
+// requestAnimationFrame coalescing.
+${CREATE_BATCHING_MODULE_SRC}
+const { isInsideFrame, setFrameState, batchInFrame } = createBatchingModule()
 
 // Input-control helpers (stamped from compiler/runtime/input-control.ts)
 ${FOCUS_SRC}
