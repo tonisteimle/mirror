@@ -26,16 +26,39 @@
       <p class="subtitle">Die Entwicklungsumgebung für Designer</p>
     </header>
 
-    <p class="intro">Mirror ist eine einfache Programmiersprache, um UIs zu beschreiben und zu steuern. Du kannst direkt Code schreiben, visuell im Editor arbeiten, oder AI generieren lassen – alle drei Wege führen zum selben lesbaren Code.</p>
+    <section>
+      <p class="intro">Stell dir vor, du bist Designer in einem Team, das eine anspruchsvolle Anwendung baut. Deine Entwickler bieten dir zwei Wege an:</p>
+      <ul>
+        <li><strong>Weg eins:</strong> Du arbeitest direkt in Claude Design oder Claude Code. Du beschreibst, das LLM generiert.</li>
+        <li><strong>Weg zwei:</strong> Du lieferst eine UI-Spezifikation; die Entwickler setzen sie mit Claude Code in der Zieltechnologie um.</li>
+      </ul>
+      <p>Beides fühlt sich unbefriedigend an. Und du brauchst eine Weile, um zu verstehen warum.</p>
+      <p>Bei Weg eins regiert das LLM. Es macht ständig <em>fast</em> das, was du wolltest. Ein Button-Detail anpassen? Drei Prompts. Eine Farbe sauber durchziehen? Fünf. Am Ende stehst du vor Code, den du nicht liest – Tailwind-Klassen, drei Komponenten-Bibliotheken, Logik, die du nicht einschätzen kannst. Eine <strong>Black Box</strong>, die irgendetwas tut.</p>
+      <p>Bei Weg zwei verlierst du die Kontrolle früher: an die Übersetzung. Was du gemeint hast, ist nicht, was zurückkommt – oder erst nach Tagen. Das saubere Design-System, das du eigentlich aufbauen wolltest, zerfällt in Tickets, Reviews und Kompromisse.</p>
+      <p>Beiden Wegen fehlt dasselbe: <strong>das Gefühl, dass das Ding gut wird, während du daran arbeitest.</strong></p>
+    </section>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Code, den du verstehst</h2>
-      <p>AI kann UI generieren. Das Ergebnis sieht oft gut aus – aber der Code dahinter bleibt eine <strong>Black Box</strong>. Du kannst nicht beurteilen, ob er sauber ist. Du hast kein Gefühl der Kontrolle.</p>
-      <p>Und wenn du etwas ändern willst? Für "mach den Button etwas größer" musst du wieder die AI fragen. Dabei wäre es oft viel schneller, selbst drei Zeichen im Code zu ändern – wenn du ihn nur verstehen würdest.</p>
-      <p><strong>Mirror löst dieses Problem.</strong></p>
-      <p>Mirror ist eine Sprache, die AI versteht <em>und</em> Menschen lesen können:</p>
+      <h2>Mirror ist dafür gebaut</h2>
+      <p>Mirror hat zwei Teile: eine <strong>Sprache</strong> und ein <strong>Studio</strong>. Im Studio arbeitest du in dem Modus, der gerade passt:</p>
+      <ul>
+        <li><strong>Tippen.</strong> Du schreibst direkt Mirror-Code. Drei Zeichen statt drei Prompts.</li>
+        <li><strong>Greifen.</strong> Du selektierst ein Element im Preview und ziehst die Resize-Handles. Mit <code>P</code>, <code>M</code>, <code>G</code> werden Padding, Margin und Gap zu Schiebern, die du mit der Maus einstellst. Doppelklick auf Text öffnet den Inline-Editor. Smart-Guides helfen beim Ausrichten.</li>
+        <li><strong>Klicken.</strong> Im Property-Panel siehst du alles, was am selektierten Element hängt: Größen, Abstände, Layout, Typografie. Farben, Tokens, Icons und Animationen wählst du aus Pickern.</li>
+        <li><strong>Generieren.</strong> Das LLM erzeugt Mirror-Code – auf einen Prompt hin oder als Vorschlag. Du liest, verstehst, verfeinerst.</li>
+      </ul>
+      <p>Diese vier Wege sind keine Modi, zwischen denen du dich entscheiden musst. <strong>Code, Property-Panel und Preview sind drei Sichten auf dieselbe Datei</strong>: Klick im Preview selektiert die Code-Zeile; tippst du im Editor, wandert die Selektion mit; ziehst du am Padding-Handle, schreibt sich genau die richtige <code>pad</code>-Zeile. Du wechselst, wann du willst, ohne je etwas zu verlieren.</p>
+      <p>Und der Mirror-Code, den du am Ende des Tages hast – egal ob getippt, gezogen, geklickt oder generiert – ist gleichzeitig die <strong>Spezifikation</strong>. Wenn du oder deine Entwickler die Anwendung später in der Zieltechnologie umsetzen – React, ein internes Framework, was auch immer – wisst ihr exakt, was gebaut werden soll: nicht in Worten oder Screenshots, sondern in präzisem, lesbarem Code, der bereits läuft.</p>
+      <p>Mirror compiliert sofort. Sein eigentlicher Wert ist aber, dass er die Brücke zwischen Designer, AI und Entwickler ist – eine, die in beide Richtungen begehbar ist.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Wie Mirror-Code aussieht</h2>
+      <p>Eine einzige Zeile reicht für einen kompletten Button:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Button "Speichern", bg #2271C1, col white, pad 12 24, rad 6</textarea>
