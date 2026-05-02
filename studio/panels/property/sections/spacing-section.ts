@@ -11,11 +11,24 @@ import {
   type EventHandlerMap,
 } from '../base/section'
 import type { SpacingToken } from '../types'
+import type { ExtractedProperty } from '../../../core/compiler-types'
+
+interface Sides {
+  t: string
+  r: string
+  b: string
+  l: string
+}
 
 /**
- * Parse padding/margin value into T, R, B, L components
+ * Parse a CSS-shorthand-style spacing value (`8`, `8 16`, `8 16 12`,
+ * `8 16 12 24`) into T, R, B, L components.
+ *
+ * The 3-value form follows CSS: T=parts[0], R=L=parts[1], B=parts[2]
+ * (the "B differs from T" form). Anything else (zero parts, 5+ parts)
+ * returns empty strings.
  */
-function parseSpacingValue(value: string): { t: string; r: string; b: string; l: string } {
+function parseSpacingValue(value: string): Sides {
   const parts = value.split(/\s+/).filter(Boolean)
   let t = '',
     r = '',
@@ -27,6 +40,10 @@ function parseSpacingValue(value: string): { t: string; r: string; b: string; l:
   } else if (parts.length === 2) {
     t = b = parts[0]
     r = l = parts[1]
+  } else if (parts.length === 3) {
+    t = parts[0]
+    r = l = parts[1]
+    b = parts[2]
   } else if (parts.length === 4) {
     t = parts[0]
     r = parts[1]
@@ -35,6 +52,51 @@ function parseSpacingValue(value: string): { t: string; r: string; b: string; l:
   }
 
   return { t, r, b, l }
+}
+
+/**
+ * Resolve the canonical T/R/B/L for a spacing-style property by combining
+ * the shorthand (e.g. `pad 8 16`) with per-axis (`pad-x` / `pad-y`) and
+ * per-side (`pad-t` / `pad-r` / `pad-b` / `pad-l`) overrides.
+ *
+ * Precedence (later wins, matching CSS specificity once compiled):
+ *   shorthand → pad-y / pad-x → pad-t / pad-r / pad-b / pad-l
+ *
+ * `baseName` is the shorthand prop name (`padding` or `margin`); `prefix`
+ * is its short alias used by the per-side props (`pad`, `mar`).
+ */
+function extractSidesFromProps(
+  props: ExtractedProperty[],
+  baseName: 'padding' | 'margin',
+  prefix: 'pad' | 'mar'
+): Sides {
+  const shortAlias = prefix
+  const ultraShort = prefix === 'pad' ? 'p' : 'm'
+
+  const shorthand = props.find(
+    p => p.name === baseName || p.name === shortAlias || p.name === ultraShort
+  )
+  const sides = parseSpacingValue(shorthand?.value || '')
+
+  const lookup = (name: string): string | undefined => props.find(p => p.name === name)?.value
+
+  // Axis overrides
+  const axisX = lookup(`${prefix}-x`)
+  const axisY = lookup(`${prefix}-y`)
+  if (axisY) sides.t = sides.b = axisY
+  if (axisX) sides.r = sides.l = axisX
+
+  // Per-side overrides win last
+  const sideT = lookup(`${prefix}-t`)
+  const sideR = lookup(`${prefix}-r`)
+  const sideB = lookup(`${prefix}-b`)
+  const sideL = lookup(`${prefix}-l`)
+  if (sideT !== undefined) sides.t = sideT
+  if (sideR !== undefined) sides.r = sideR
+  if (sideB !== undefined) sides.b = sideB
+  if (sideL !== undefined) sides.l = sideL
+
+  return sides
 }
 
 /**
@@ -70,15 +132,32 @@ export class SpacingSection extends BaseSection {
 
     const props = category.properties
 
-    // Find padding values
-    const padProp = props.find(p => p.name === 'padding' || p.name === 'pad' || p.name === 'p')
-    const padValue = padProp?.value || ''
-    const padIsOverride = padProp?.source === 'instance'
+    // Resolve T/R/B/L from shorthand + axis + per-side props.
+    const { t: tPad, r: rPad, b: bPad, l: lPad } = extractSidesFromProps(props, 'padding', 'pad')
 
-    // Parse padding value
-    const { t: tPad, r: rPad, b: bPad, l: lPad } = parseSpacingValue(padValue)
-    const vPad = tPad,
-      hPad = rPad
+    // For collapsed-mode H/V rows: only meaningful when sides are
+    // symmetric. When asymmetric (e.g. T differs from B) we still
+    // populate the field with the top/right value, matching the prior
+    // behaviour — the user can switch to the expanded view to edit
+    // each side individually.
+    const vPad = tPad === bPad ? tPad : tPad
+    const hPad = rPad === lPad ? rPad : rPad
+
+    // Override marker: any padding-shaped prop being an instance override
+    // marks the section as overridden.
+    const padIsOverride = props.some(
+      p =>
+        (p.name === 'padding' ||
+          p.name === 'pad' ||
+          p.name === 'p' ||
+          p.name === 'pad-x' ||
+          p.name === 'pad-y' ||
+          p.name === 'pad-t' ||
+          p.name === 'pad-r' ||
+          p.name === 'pad-b' ||
+          p.name === 'pad-l') &&
+        p.source === 'instance'
+    )
 
     // Get tokens
     const tokens = data.spacingTokens?.filter(t => t.fullName.endsWith('.pad')) || []

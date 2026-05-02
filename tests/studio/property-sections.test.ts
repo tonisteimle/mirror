@@ -242,6 +242,90 @@ describe('Property Panel Sections', () => {
       expect(html).not.toContain('class="section expanded"')
       expect(html).not.toContain('class="section-content expanded"')
     })
+
+    it('parses 3-value padding shorthand (T H B form)', () => {
+      // CSS: `padding: 8 16 12` → T=8, R=L=16, B=12
+      const cat = createMockCategory('spacing', [{ name: 'pad', value: '8 16 12' }])
+      const data: SectionData = {
+        ...createMockSectionData({ category: cat }),
+        expandedSections: new Set(['spacing']),
+      }
+      const html = section.render(data)
+      // Top input = 8
+      expect(html).toMatch(/value="8"\s+data-pad-dir="t"/)
+      // Right input = 16
+      expect(html).toMatch(/value="16"\s+data-pad-dir="r"/)
+      // Bottom input = 12
+      expect(html).toMatch(/value="12"\s+data-pad-dir="b"/)
+      // Left input = 16 (mirrored from R in 3-form)
+      expect(html).toMatch(/value="16"\s+data-pad-dir="l"/)
+    })
+
+    it('reads per-side props (pad-t, pad-r, ...) when shorthand is absent', () => {
+      const cat = createMockCategory('spacing', [
+        { name: 'pad-t', value: '4' },
+        { name: 'pad-r', value: '8' },
+        { name: 'pad-b', value: '12' },
+        { name: 'pad-l', value: '16' },
+      ])
+      const data: SectionData = {
+        ...createMockSectionData({ category: cat }),
+        expandedSections: new Set(['spacing']),
+      }
+      const html = section.render(data)
+      expect(html).toMatch(/value="4"\s+data-pad-dir="t"/)
+      expect(html).toMatch(/value="8"\s+data-pad-dir="r"/)
+      expect(html).toMatch(/value="12"\s+data-pad-dir="b"/)
+      expect(html).toMatch(/value="16"\s+data-pad-dir="l"/)
+    })
+
+    it('per-side props override shorthand', () => {
+      // pad 8 sets all sides to 8, then pad-t 20 overrides T only
+      const cat = createMockCategory('spacing', [
+        { name: 'pad', value: '8' },
+        { name: 'pad-t', value: '20' },
+      ])
+      const data: SectionData = {
+        ...createMockSectionData({ category: cat }),
+        expandedSections: new Set(['spacing']),
+      }
+      const html = section.render(data)
+      expect(html).toMatch(/value="20"\s+data-pad-dir="t"/)
+      expect(html).toMatch(/value="8"\s+data-pad-dir="r"/)
+      expect(html).toMatch(/value="8"\s+data-pad-dir="b"/)
+      expect(html).toMatch(/value="8"\s+data-pad-dir="l"/)
+    })
+
+    it('pad-x / pad-y axis props apply to both sides on that axis', () => {
+      const cat = createMockCategory('spacing', [
+        { name: 'pad-x', value: '12' },
+        { name: 'pad-y', value: '4' },
+      ])
+      const data: SectionData = {
+        ...createMockSectionData({ category: cat }),
+        expandedSections: new Set(['spacing']),
+      }
+      const html = section.render(data)
+      expect(html).toMatch(/value="4"\s+data-pad-dir="t"/)
+      expect(html).toMatch(/value="4"\s+data-pad-dir="b"/)
+      expect(html).toMatch(/value="12"\s+data-pad-dir="r"/)
+      expect(html).toMatch(/value="12"\s+data-pad-dir="l"/)
+    })
+
+    it('per-side props win over axis props', () => {
+      // pad-x sets both r/l to 12; pad-r 30 overrides r
+      const cat = createMockCategory('spacing', [
+        { name: 'pad-x', value: '12' },
+        { name: 'pad-r', value: '30' },
+      ])
+      const data: SectionData = {
+        ...createMockSectionData({ category: cat }),
+        expandedSections: new Set(['spacing']),
+      }
+      const html = section.render(data)
+      expect(html).toMatch(/value="30"\s+data-pad-dir="r"/)
+      expect(html).toMatch(/value="12"\s+data-pad-dir="l"/)
+    })
   })
 
   describe('MarginSection', () => {
