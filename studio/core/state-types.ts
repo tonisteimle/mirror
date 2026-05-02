@@ -83,6 +83,7 @@ export interface PanelVisibility {
   code: boolean
   components: boolean
   tokens: boolean
+  'design-system': boolean
   preview: boolean
   property: boolean
 }
