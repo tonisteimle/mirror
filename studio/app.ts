@@ -39,6 +39,7 @@ import {
 } from '@codemirror/autocomplete'
 import { indentUnit } from '@codemirror/language'
 import { linter, lintGutter, forceLinting } from '@codemirror/lint'
+import type { Diagnostic } from '@codemirror/lint'
 
 // Custom dialogs
 import { alert } from './dialog'
@@ -158,22 +159,26 @@ import {
 // `__compileTestCode` / `__compileMirror` are test hooks set on window from
 // here for the CDP test runner.
 
-interface MirrorAst {
-  errors?: unknown[]
-  components?: Array<{ name: string; [k: string]: unknown }>
-  instances?: Array<{ component: string; [k: string]: unknown }>
-  [k: string]: unknown
-}
+// Mirror compiler global is structurally identical to the typed
+// `mirror-lang` package surface. Pull the real types from the compiler
+// so AST/IR/SourceMap arguments line up with what the studio modules
+// expect (they import from the same compiler, just via the studio
+// barrel). Without this, every `MirrorLang.parse(…)` callsite would
+// drop into `unknown` and conflict with downstream typed APIs.
+import type { Program } from '../compiler/parser/ast'
+import type { IR } from '../compiler/ir/types'
+import type { SourceMap } from '../compiler/ir'
 
 interface MirrorLangGlobal {
-  parse: (code: string) => MirrorAst
-  toIR: (
-    ast: MirrorAst,
-    withSourceMap?: boolean
-  ) => { ir: unknown; sourceMap?: unknown; errors?: unknown[]; [k: string]: unknown }
-  generateDOM: (ast: MirrorAst) => string
-  generateReact?: (ast: MirrorAst) => string
-  [k: string]: unknown
+  parse: (code: string) => Program
+  // Overloaded to match `compiler/ir/index.ts`: `withSourceMap=true`
+  // returns the full IRResult; the boolean-only call returns plain IR.
+  toIR: {
+    (ast: Program, withSourceMap: true): { ir: IR; sourceMap: SourceMap; errors?: unknown[] }
+    (ast: Program, withSourceMap?: boolean): { ir: IR; sourceMap?: SourceMap; errors?: unknown[] }
+  }
+  generateDOM: (ast: Program) => string
+  generateReact?: (ast: Program) => string
 }
 
 declare global {
@@ -193,7 +198,7 @@ declare global {
     /** Devtools history of update events (push-style debug log). */
     __updateDebugHistory?: unknown[]
     /** Synchronous file-content reader installed by app.ts for misc consumers. */
-    _mirrorReadFile?: (path: string) => string | undefined
+    _mirrorReadFile?: (path: string) => string | null | undefined
     /** Test/runner hook: compile a Mirror snippet and return the JS source. */
     __compileMirror?: (code: string) => string
     /** Test/runner hook: compile and execute a Mirror snippet in the preview. */
@@ -296,14 +301,22 @@ function isTauriDesktop() {
 }
 
 // Save file - Desktop app uses desktop-files.js for actual disk writes
-async function saveFile(filePath, content) {
+async function saveFile(filePath: string, content: string) {
   // Update local cache
   files[filePath] = content
 
   // Desktop: use desktop-files.js for actual disk save (Tauri mode).
-  if (window.desktopFiles?.saveFile && window.desktopFiles.getCurrentFolder()) {
+  // window.desktopFiles is declared with an index signature at studio/test-api.ts
+  // so non-listed members type as `unknown`. Local cast to the real shape here.
+  const dfApi = window.desktopFiles as
+    | {
+        saveFile?: (path: string, content: string) => void | Promise<void>
+        getCurrentFolder?: () => unknown
+      }
+    | undefined
+  if (dfApi?.saveFile && dfApi.getCurrentFolder?.()) {
     try {
-      await window.desktopFiles.saveFile(filePath, content)
+      await dfApi.saveFile(filePath, content)
       console.log('[Save] File saved via desktop-files.js:', filePath)
     } catch (e) {
       console.error('[Save] Failed to save:', e)
@@ -326,7 +339,7 @@ async function saveCurrentFile() {
 }
 
 // Get file type from extension or content sniffing
-function getFileType(filename) {
+function getFileType(filename: string) {
   // Check file extension first (most reliable for Tauri desktop files)
   const ext = filename.substring(filename.lastIndexOf('.')).toLowerCase()
   if (ext === '.tok') return 'tokens'
@@ -341,7 +354,7 @@ function getFileType(filename) {
 }
 
 // File switching
-function switchFile(filename) {
+function switchFile(filename: string) {
   if (typeof editor === 'undefined') return
 
   // IMPORTANT: Cancel any pending debounced operations to prevent race conditions
@@ -415,7 +428,8 @@ document.addEventListener('keydown', async e => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'o' && !e.shiftKey) {
     e.preventDefault()
     if (isTauriDesktop() && window.desktopFiles) {
-      await window.desktopFiles.openFolder()
+      const openFolder = window.desktopFiles.openFolder as (() => Promise<unknown>) | undefined
+      if (openFolder) await openFolder()
     }
   }
 })
@@ -519,17 +533,17 @@ const autoIndentExtension = EditorView.domEventHandlers({
 const appLockDecoration = Decoration.mark({ class: 'cm-app-locked' })
 const appLockDecorationPlugin = ViewPlugin.fromClass(
   class {
-    decorations
-    constructor(view) {
+    decorations: import('@codemirror/view').DecorationSet
+    constructor(view: EditorView) {
       this.decorations = this.buildDecorations(view)
     }
-    update(update) {
+    update(update: import('@codemirror/view').ViewUpdate): void {
       if (update.docChanged || update.viewportChanged) {
         this.decorations = this.buildDecorations(update.view)
       }
     }
-    buildDecorations(view) {
-      const builder = new RangeSetBuilder()
+    buildDecorations(view: EditorView): import('@codemirror/view').DecorationSet {
+      const builder = new RangeSetBuilder<Decoration>()
       // Only show "App" decoration for .mir layout files
       if (!isLayoutFile(currentFile)) {
         return builder.finish()
@@ -554,7 +568,14 @@ const inlineTokenExtension = createInlineTokenExtension({
 })
 
 // Create editor
-const editorContainer = document.getElementById('editor-container')
+// IIFE so the throw narrows the result to HTMLElement at every callsite,
+// not just the lines following the inline `if (!… ) throw …` (closures
+// don't carry control-flow narrowing).
+const editorContainer = ((): HTMLElement => {
+  const el = document.getElementById('editor-container')
+  if (!el) throw new Error('[Studio] #editor-container missing — boot order is broken')
+  return el
+})()
 
 // Register all triggers with the new unified TriggerManager
 registerAllTriggers({
@@ -589,7 +610,7 @@ registerAllTriggers({
       code,
     }))
   },
-  updateFile: (filename, content) => {
+  updateFile: (filename: string, content: string) => {
     // Update local cache
     files[filename] = content
     // Save to storage
@@ -626,7 +647,7 @@ const componentExtractConfig = {
       code,
     }))
   },
-  updateFile: (filename, content) => {
+  updateFile: (filename: string, content: string) => {
     // Update local cache
     files[filename] = content
     // Save to storage
@@ -644,7 +665,7 @@ const componentExtractExtension = createComponentExtractExtensionFromConfig(comp
 const tokenExtractExtension = createTokenExtractExtensionFromConfig(componentExtractConfig)
 
 // Linter state - store current diagnostics for the linter extension
-let currentDiagnostics = []
+let currentDiagnostics: Diagnostic[] = []
 
 // Create linter extension that returns stored diagnostics
 const mirrorLinter = linter(view => {
@@ -661,8 +682,8 @@ const editHandler = createEditHandler({
     // Snapshot tokens + components from all OTHER files (current file is in
     // the editor view, not in projectFiles).
     const allFiles = window.desktopFiles?.getFiles?.() || files
-    const tokens = {}
-    const components = {}
+    const tokens: Record<string, string> = {}
+    const components: Record<string, string> = {}
     for (const [name, content] of Object.entries(allFiles)) {
       if (name === currentFile) continue
       if (typeof content !== 'string') continue
@@ -677,7 +698,7 @@ const editHandler = createEditHandler({
   getCurrentFileName: () => currentFile,
 })
 
-let editor
+let editor: EditorView
 
 const editorExtensions = [
   indentUnit.of('  '), // 2 spaces for Mirror DSL
@@ -805,20 +826,23 @@ editor = new EditorView({
 })
 
 // Debounce helper with cancel support
-function debounce(fn, ms) {
-  let timeout
-  const debounced = (...args) => {
+function debounce<A extends unknown[]>(
+  fn: (...args: A) => void,
+  ms: number
+): ((...args: A) => void) & { cancel: () => void } {
+  let timeout: ReturnType<typeof setTimeout> | undefined
+  const debounced = ((...args: A) => {
     clearTimeout(timeout)
     timeout = setTimeout(() => fn(...args), ms)
-  }
-  debounced.cancel = () => {
+  }) as ((...args: A) => void) & { cancel: () => void }
+  debounced.cancel = (): void => {
     clearTimeout(timeout)
   }
   return debounced
 }
 
 // Save current file (debounced) - uses API for logged-in users
-const debouncedSave = debounce(code => {
+const debouncedSave = debounce((code: string) => {
   saveFile(currentFile, code)
   // Update icon if content type changed
   updateFileIcon(currentFile)
@@ -861,7 +885,7 @@ function updateUndoRedoButtons() {
 const originalDispatch = editor.dispatch.bind(editor)
 ;(editor as unknown as { __originalDispatch: typeof originalDispatch }).__originalDispatch =
   originalDispatch // Expose for testing
-editor.dispatch = (...args) => {
+editor.dispatch = ((...args: Parameters<EditorView['dispatch']>) => {
   try {
     originalDispatch(...args)
   } catch (e) {
@@ -879,7 +903,7 @@ editor.dispatch = (...args) => {
     throw e
   }
   updateUndoRedoButtons()
-}
+}) as EditorView['dispatch']
 
 // Initial state
 updateUndoRedoButtons()
@@ -887,16 +911,20 @@ updateUndoRedoButtons()
 // Folder toggle
 document.querySelectorAll('.folder-header').forEach(header => {
   header.addEventListener('click', () => {
-    header.parentElement.classList.toggle('collapsed')
+    header.parentElement?.classList.toggle('collapsed')
   })
 })
 
 // Tab switching (Preview/Generated)
-const preview = document.getElementById('preview')
+const preview = ((): HTMLElement => {
+  const el = document.getElementById('preview')
+  if (!el) throw new Error('[Studio] #preview missing — boot order is broken')
+  return el
+})()
 
 // Preview Renderers (Clean Code modules) - lazy initialized
-let tokenRenderer = null
-let componentRenderer = null
+let tokenRenderer: TokenRenderer | null = null
+let componentRenderer: ComponentRenderer | null = null
 
 function getTokenRenderer() {
   if (!tokenRenderer) {
@@ -912,7 +940,11 @@ function getComponentRenderer() {
   if (!componentRenderer) {
     componentRenderer = new ComponentRenderer({
       preview,
-      MirrorLang: window.MirrorLang,
+      // window.MirrorLang and the MirrorLangAPI used by ComponentRenderer
+      // share parse/toIR/generateDOM, but the runtime global is
+      // optionally undefined and structurally typed against the compiler
+      // export rather than studio/compile/types — bridge with a cast.
+      MirrorLang: window.MirrorLang as unknown as import('./compile/types').MirrorLangAPI,
       getTokensSource,
       getCurrentFileSource: () => files[currentFile] || '',
     })
@@ -926,12 +958,18 @@ function getZagDeps() {
     getAst: () => (studio.state as unknown as { ast?: unknown })?.ast,
     getCurrentFile: () => currentFile,
     getFiles: () => window.desktopFiles?.getFiles?.() || files,
-    parseCode: code => MirrorLang.parse(code),
+    parseCode: (code: string) => MirrorLang.parse(code),
     isMirrorFile,
     isComponentsFile,
     getEditor: () => editor,
-    emitNotification: (type, message) => {
-      studio.events.emit(`notification:${type}`, { message, duration: 2000 })
+    emitNotification: (type: string, message: string) => {
+      // The notification:* event names are dynamic, but `studio.events.emit`
+      // is typed against `keyof StudioEvents`. Bypass with a structural cast
+      // — the runtime emitter has no allow-list.
+      ;(studio.events.emit as (e: string, p: unknown) => void)(`notification:${type}`, {
+        message,
+        duration: 2000,
+      })
     },
     updateFileList: () => {
       // Desktop app's file tree is managed by desktop-files.js — no-op here.
@@ -958,13 +996,13 @@ function getDropGlobals() {
     debouncedSave,
     isComponentsFile,
     isZagComponent,
-    findExistingZagDefinition: name => findExistingZagDefinition(name, zagDeps),
-    generateZagComponentName: name => generateZagComponentName(name, zagDeps),
+    findExistingZagDefinition: (name: string) => findExistingZagDefinition(name, zagDeps),
+    generateZagComponentName: (name: string) => generateZagComponentName(name, zagDeps),
     generateZagDefinitionCode,
     generateZagInstanceCode,
-    addZagDefinitionToCode: code => addZagDefinitionToCode(code, zagDeps),
+    addZagDefinitionToCode: (code: string) => addZagDefinitionToCode(code, zagDeps),
     findOrCreateComponentsFile: () => findOrCreateComponentsFile(zagDeps),
-    addZagDefinitionToComponentsFile: (code, file) =>
+    addZagDefinitionToComponentsFile: (code: string, file: string) =>
       addZagDefinitionToComponentsFile(code, file, zagDeps),
   }
 }
@@ -980,7 +1018,7 @@ const autoCreateFiles = createAutoCreateFiles({
 const { autoCreateFile, readFile, autoCreateReferencedFiles } = autoCreateFiles
 
 // Update file icon based on current content
-function updateFileIcon(filename) {
+function updateFileIcon(filename: string) {
   const fileEl = document.querySelector(`[data-file="${filename}"]`)
   if (!fileEl) return
 
@@ -1003,7 +1041,7 @@ window._mirrorReadFile = readFile
 
 // Get all token and component files as prelude code
 // This ensures tokens and components are available when compiling layouts
-function getPreludeCode(excludeFile) {
+function getPreludeCode(excludeFile = '') {
   return collectPrelude({
     excludeFile,
     getInMemoryFiles: () => files,
@@ -1013,7 +1051,7 @@ function getPreludeCode(excludeFile) {
 }
 
 // Compile and render
-function compile(code) {
+function compile(code: string) {
   const compileStart = performance.now()
   const timings: CompileTimings = {}
 
@@ -1094,7 +1132,7 @@ function compile(code) {
 
       // Check if code contains component definitions at root level (lines ending with ":" at indent 0)
       // These should NOT be wrapped in App, as they would become slot definitions instead
-      const hasRootComponentDefs = code.split('\n').some(line => {
+      const hasRootComponentDefs = code.split('\n').some((line: string) => {
         const trimmed = line.trim()
         // Component definition: starts with capital letter, ends with ":"
         // But not a state like "hover:" or "focus:" (lowercase)
@@ -1121,7 +1159,7 @@ function compile(code) {
         // Indent user code to be children of the implicit root
         const indentedCode = code
           .split('\n')
-          .map(line => (line ? '  ' + line : ''))
+          .map((line: string) => (line ? '  ' + line : ''))
           .join('\n')
 
         // Note: We do NOT add indent to currentPreludeOffset because CodeModifier
@@ -1210,12 +1248,16 @@ function compile(code) {
     // Render based on file type
     if (fileType === 'tokens') {
       preview.className = 'tokens-preview'
-      getTokenRenderer().render(ast)
+      // TokenRenderer/ComponentRenderer's `render(ast)` is typed against
+      // studio/compile/types.AST (a narrower view of the parser AST).
+      // Pass the parser Program through unchanged — the renderers only
+      // touch the shared shape (components/instances/tokens/errors).
+      getTokenRenderer().render(ast as unknown as import('./compile/types').AST)
       // Update studio module with AST, IR and source map for tokens too
       updateStudio(ast, irResult.ir, sourceMap, resolvedCode)
     } else if (fileType === 'component') {
       preview.className = 'components-preview'
-      getComponentRenderer().render(ast)
+      getComponentRenderer().render(ast as unknown as import('./compile/types').AST)
       // Update studio module with AST, IR and source map for component definitions
       updateStudio(ast, irResult.ir, sourceMap, resolvedCode)
     } else {
@@ -1228,8 +1270,15 @@ function compile(code) {
       const localAst = MirrorLang.parse(code)
       const localComponentNames = (localAst.components || []).map(c => c.name)
 
-      // Check which local components are NOT already instanced
-      const instancedNames = new Set((ast.instances || []).map(i => i.component))
+      // Check which local components are NOT already instanced. The
+      // Program.instances union now includes Slot/Each/ConditionalNode/etc.
+      // — narrow to the literal `Instance` type (which is the only branch
+      // with `component: string`).
+      const instancedNames = new Set(
+        (ast.instances || [])
+          .filter((i): i is import('../compiler/parser/ast').Instance => i.type === 'Instance')
+          .map(i => i.component)
+      )
       const uninstancedComponents = localComponentNames.filter(name => !instancedNames.has(name))
 
       // Add implicit instances for uninstanced local components
@@ -1318,8 +1367,8 @@ function compile(code) {
     // We validate the user's code (not resolved with prelude) so errors show at correct positions
     // BUT we pass prelude tokens/components so the validator knows what's defined in other files
     const preludeForValidation = getPreludeCode(currentFile)
-    const preludeTokens = new Set()
-    const preludeComponents = new Set()
+    const preludeTokens = new Set<string>()
+    const preludeComponents = new Set<string>()
     if (preludeForValidation) {
       const preludeAST = MirrorLang.parse(preludeForValidation)
       for (const token of preludeAST.tokens || []) {
@@ -1344,26 +1393,38 @@ function compile(code) {
     if (totalTime > 50) {
       // Only log slow compiles
       console.log('[CompilePerf] ========== SLOW COMPILE ==========')
+      // All `timings.*` reads use `?? 0` so the perf log degrades gracefully
+      // if a phase never ran (e.g. early-return when preview was empty); the
+      // outer gate `timings.execEnd` already keeps the exec block coherent.
+      const t = (v: number | undefined) => v ?? 0
       console.log(`[CompilePerf] Total: ${totalTime.toFixed(1)}ms`)
-      console.log(`[CompilePerf] Prelude: ${(timings.preludeEnd - compileStart).toFixed(1)}ms`)
-      console.log(`[CompilePerf] Parse: ${(timings.parseEnd - timings.preludeEnd).toFixed(1)}ms`)
-      console.log(`[CompilePerf] IR: ${(timings.irEnd - timings.parseEnd).toFixed(1)}ms`)
-      console.log(`[CompilePerf] Codegen: ${(timings.codegenEnd - timings.irEnd).toFixed(1)}ms`)
+      console.log(`[CompilePerf] Prelude: ${(t(timings.preludeEnd) - compileStart).toFixed(1)}ms`)
+      console.log(
+        `[CompilePerf] Parse: ${(t(timings.parseEnd) - t(timings.preludeEnd)).toFixed(1)}ms`
+      )
+      console.log(`[CompilePerf] IR: ${(t(timings.irEnd) - t(timings.parseEnd)).toFixed(1)}ms`)
+      console.log(
+        `[CompilePerf] Codegen: ${(t(timings.codegenEnd) - t(timings.irEnd)).toFixed(1)}ms`
+      )
       if (timings.execEnd) {
-        console.log(`[CompilePerf] Exec: ${(timings.execEnd - timings.prepExecStart).toFixed(1)}ms`)
         console.log(
-          `[CompilePerf] UpdateStudio: ${(timings.updateStudioEnd - timings.execEnd).toFixed(1)}ms`
+          `[CompilePerf] Exec: ${(t(timings.execEnd) - t(timings.prepExecStart)).toFixed(1)}ms`
         )
         console.log(
-          `[CompilePerf] DOM Append: ${(timings.domAppendEnd - timings.updateStudioEnd).toFixed(1)}ms`
+          `[CompilePerf] UpdateStudio: ${(t(timings.updateStudioEnd) - t(timings.execEnd)).toFixed(1)}ms`
         )
         console.log(
-          `[CompilePerf] Draggables: ${(timings.draggablesEnd - timings.domAppendEnd).toFixed(1)}ms`
+          `[CompilePerf] DOM Append: ${(t(timings.domAppendEnd) - t(timings.updateStudioEnd)).toFixed(1)}ms`
         )
         console.log(
-          `[CompilePerf] Refresh: ${(timings.refreshEnd - timings.draggablesEnd).toFixed(1)}ms`
+          `[CompilePerf] Draggables: ${(t(timings.draggablesEnd) - t(timings.domAppendEnd)).toFixed(1)}ms`
         )
-        console.log(`[CompilePerf] Sync: ${(timings.syncEnd - timings.refreshEnd).toFixed(1)}ms`)
+        console.log(
+          `[CompilePerf] Refresh: ${(t(timings.refreshEnd) - t(timings.draggablesEnd)).toFixed(1)}ms`
+        )
+        console.log(
+          `[CompilePerf] Sync: ${(t(timings.syncEnd) - t(timings.refreshEnd)).toFixed(1)}ms`
+        )
       }
       console.log('[CompilePerf] ================================')
     }
@@ -1377,10 +1438,11 @@ function compile(code) {
       forceLinting(editor)
     }
 
+    const message = err instanceof Error ? err.message : String(err)
     preview.innerHTML = `
       <div class="error-box">
         <h3>Parse/Compile Error</h3>
-        <pre>${err.message}</pre>
+        <pre>${message}</pre>
       </div>
     `
   }
@@ -1405,14 +1467,22 @@ function getTokensSource() {
 // State for studio module
 // NOTE: AST and SourceMap are now managed by studio/core/state.ts
 // Access via: studio.state.get().ast, studio.state.get().sourceMap
-let studioSelectionManager = null
-let studioPropertyPanel = null
-let studioPropertyExtractor = null
-let studioCodeModifier = null
-let studioRobustModifier = null // Robust wrapper for atomic updates
+interface AppSelectionManager {
+  clearSelection: () => void
+  setBreadcrumb: (items: { id: string; name: string }[]) => void
+  getSelection?: () => unknown
+}
+let studioSelectionManager: AppSelectionManager | null = null
+let studioPropertyPanel: PropertyPanel | null = null
+let studioPropertyExtractor: PropertyExtractor | null = null
+let studioCodeModifier: CodeModifier | null = null
+let studioRobustModifier: ReturnType<typeof createRobustModifier> | null = null // Robust wrapper for atomic updates
 // Drag handler binding for preview elements — encapsulates cleanup + WeakSet
 const draggableElements = createDraggableElementsManager({
-  getStudio: () => studio,
+  // The studio bootstrap object exposes more than the drag-drop bridge
+  // needs; cast through unknown to satisfy the narrower
+  // `StudioWithDragDrop` interface inside the manager.
+  getStudio: () => studio as unknown as { dragDrop?: unknown },
 })
 // editorHasFocus is now managed by studio state (studio.state.get().editorHasFocus)
 // This getter provides backwards compatibility for existing code
@@ -1561,7 +1631,7 @@ if (typeof window !== 'undefined') {
         })
         studio.actions.setCompileResult({
           ast,
-          ir: irResult,
+          ir: irResult.ir,
           sourceMap,
           errors: [],
         })
@@ -1588,7 +1658,7 @@ if (typeof window !== 'undefined') {
       // exists, updates dependencies). Pass the resolved code so the
       // panel sees both prelude (tokens/components) and active file.
       if (typeof updateStudioState === 'function') {
-        updateStudioState(ast, irResult, sourceMap, resolvedCode)
+        updateStudioState(ast, irResult.ir, sourceMap, resolvedCode)
       } else if (studio?.propertyPanel?.updateDependencies) {
         // Fallback: Update PropertyPanel dependencies so it can extract tokens from new source
         studio.propertyPanel.updateDependencies(studioPropertyExtractor, studioCodeModifier)
@@ -1675,7 +1745,7 @@ if (typeof window !== 'undefined') {
     // undo/redo across multiple setCode calls need each call to land in
     // history as its own undoable entry; isolateHistory.of('full') keeps
     // them from merging with adjacent edits.
-    setCodeWithHistory: code => {
+    setCodeWithHistory: (code: string) => {
       const transaction = editor.state.update({
         changes: { from: 0, to: editor.state.doc.length, insert: code },
         annotations: [Transaction.userEvent.of('test.setCode'), isolateHistory.of('full')],
@@ -1688,7 +1758,7 @@ if (typeof window !== 'undefined') {
     // extensions gives a fresh undo/redo stack; clearing the
     // CommandExecutor wipes the studio's parallel undo history (used
     // when the editor isn't focused, e.g. preview-driven Cmd+Z).
-    setCodeForTestSetup: code => {
+    setCodeForTestSetup: (code: string) => {
       if (typeof debouncedCompile !== 'undefined' && debouncedCompile.cancel) {
         debouncedCompile.cancel()
       }
@@ -1795,26 +1865,41 @@ function initStudio() {
     initNewStudio({
       editor: editor,
       previewContainer: previewContainer,
-      propertyPanelContainer: propertyPanelContainer,
+      propertyPanelContainer: propertyPanelContainer ?? undefined,
       // Don't pass explorer containers in playground mode
-      explorerPanelContainer: isPlaygroundMode ? undefined : explorerPanelContainer,
-      fileTreeContainer: isPlaygroundMode ? undefined : fileTreeContainer,
+      explorerPanelContainer: isPlaygroundMode ? undefined : (explorerPanelContainer ?? undefined),
+      fileTreeContainer: isPlaygroundMode ? undefined : (fileTreeContainer ?? undefined),
       // Components Panel containers (separate from explorer)
-      componentPanelContainer: isPlaygroundMode ? undefined : componentsPanelContainer,
-      userComponentsPanelContainer: isPlaygroundMode ? undefined : userComponentsPanelContainer,
+      componentPanelContainer: isPlaygroundMode
+        ? undefined
+        : (componentsPanelContainer ?? undefined),
+      userComponentsPanelContainer: isPlaygroundMode
+        ? undefined
+        : (userComponentsPanelContainer ?? undefined),
       initialSource: files[currentFile] || '',
       currentFile: currentFile,
       getAllSource: getAllProjectSource,
       getCurrentFile: () => currentFile,
       getFiles: () => {
         const allFiles = window.desktopFiles?.getFiles?.() || files
+        // detectFileType returns FileTypeName (which includes 'javascript')
+        // while initNewStudio's getFiles consumes a slightly different
+        // string union (includes 'unknown' / 'components'). The Mirror
+        // project today never produces a 'javascript' result here, so
+        // bridge with a structural cast.
         return Object.entries(allFiles).map(([name, code]) => ({
           name,
-          type: detectFileType(name, code),
-          code,
+          type: detectFileType(name, code) as
+            | 'tokens'
+            | 'components'
+            | 'component'
+            | 'layout'
+            | 'data'
+            | 'unknown',
+          code: code as string,
         }))
       },
-      updateFile: (filename, content) => {
+      updateFile: (filename: string, content: string) => {
         files[filename] = content
         if (filename === currentFile) {
           editor.dispatch({
@@ -2002,7 +2087,7 @@ function setupNotificationHandlers() {
 // (see studio/panels/property/event-listeners.ts).
 
 // Update studio after compile
-function updateStudio(ast, ir, sourceMap, source) {
+function updateStudio(ast: Program, ir: IR, sourceMap: SourceMap, source: string) {
   if (!studioSelectionManager) return
 
   // ============================================
@@ -2093,7 +2178,14 @@ function updateStudio(ast, ir, sourceMap, source) {
 // Delegates the resolved-source → editor-source coordinate translation
 // to studio/core/wrap-utils.ts so this path and bootstrap.ts's
 // PropertyPanel onCodeChange callback can never drift apart.
-function handleStudioCodeChange(result) {
+interface StudioCodeChangeResult {
+  success: boolean
+  change?: { from: number; to?: number; insert?: string }
+  error?: unknown
+  [k: string]: unknown
+}
+
+function handleStudioCodeChange(result: StudioCodeChangeResult) {
   if (!result.success) {
     console.warn('Studio: Code modification failed:', result.error)
     return
