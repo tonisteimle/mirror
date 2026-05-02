@@ -5,8 +5,52 @@
  * Uses the abstracted storage service for all file operations.
  */
 
-import { storage, projectActions } from './dist/index.js'
-import { alert, confirm, confirmDelete } from './dist/dialog.js'
+import { alert, confirm, confirmDelete } from './dialog'
+import { storage, projectActions } from './storage'
+import type { StorageItem } from './storage'
+
+// =============================================================================
+// Local types
+// =============================================================================
+
+interface FileTypeConfig {
+  extensions: string[]
+  color: string
+  icon: string
+}
+
+interface FileTypeInfo extends FileTypeConfig {
+  type: string
+}
+
+interface ContextMenuState {
+  element: HTMLElement
+  path: string | null
+  isFile: boolean
+  isFolder: boolean
+}
+
+interface InternalFileCallbacks {
+  onFileSelect?: (path: string, content: string) => void
+  onFileChange?: (path: string, content: string) => void
+}
+
+declare global {
+  interface Window {
+    /**
+     * Internal callbacks set by the host app (app.js) before
+     * `initDesktopFiles()` is invoked.
+     */
+    _desktopFiles?: InternalFileCallbacks
+  }
+}
+
+interface MenuItemSpec {
+  id?: string
+  type?: 'separator'
+  icon?: string
+  label?: string
+}
 
 // =============================================================================
 // Project Toolbar (Title Bar + Hamburger Menu)
@@ -98,7 +142,7 @@ function initProjectToolbar() {
   toolbarInitialized = true
 }
 
-function toggleProjectMenu(anchorBtn) {
+function toggleProjectMenu(anchorBtn: HTMLElement): void {
   // Remove existing menu
   const existingMenu = document.getElementById('project-menu')
   if (existingMenu) {
@@ -112,7 +156,7 @@ function toggleProjectMenu(anchorBtn) {
   menu.id = 'project-menu'
   menu.className = 'dropdown-menu'
 
-  const menuItems = [
+  const menuItems: MenuItemSpec[] = [
     { id: 'new', icon: ICON_NEW, label: 'Neues Projekt' },
     { id: 'demo', icon: ICON_DEMO, label: 'Demo-Projekt' },
     { type: 'separator' },
@@ -129,10 +173,12 @@ function toggleProjectMenu(anchorBtn) {
       const btn = document.createElement('button')
       btn.className = 'dropdown-menu-item'
       btn.innerHTML = `
-        <span class="dropdown-menu-icon">${item.icon}</span>
-        <span class="dropdown-menu-label">${item.label}</span>
+        <span class="dropdown-menu-icon">${item.icon ?? ''}</span>
+        <span class="dropdown-menu-label">${item.label ?? ''}</span>
       `
-      btn.addEventListener('click', () => handleMenuAction(item.id))
+      btn.addEventListener('click', () => {
+        if (item.id) handleMenuAction(item.id)
+      })
       menu.appendChild(btn)
     }
   }
@@ -148,8 +194,9 @@ function toggleProjectMenu(anchorBtn) {
   menuOpen = true
 
   // Close on click outside
-  const closeMenu = e => {
-    if (!menu.contains(e.target) && e.target !== anchorBtn) {
+  const closeMenu = (e: MouseEvent): void => {
+    const target = e.target as Node | null
+    if (target && !menu.contains(target) && target !== anchorBtn) {
       menu.remove()
       menuOpen = false
       document.removeEventListener('click', closeMenu)
@@ -158,7 +205,7 @@ function toggleProjectMenu(anchorBtn) {
   setTimeout(() => document.addEventListener('click', closeMenu), 0)
 }
 
-async function handleMenuAction(action) {
+async function handleMenuAction(action: string): Promise<void> {
   // Close menu
   const menu = document.getElementById('project-menu')
   if (menu) {
@@ -205,19 +252,19 @@ if (document.readyState === 'loading') {
 // State (UI only - file data comes from storage service)
 // =============================================================================
 
-let currentFile = null // Currently selected file path
-let contextMenu = null // Current context menu state
-let draggedItem = null // Currently dragged item path
-const expandedFolders = new Set() // Track expanded folders (UI state)
+let currentFile: string | null = null // Currently selected file path
+let contextMenu: ContextMenuState | null = null // Current context menu state
+let draggedItem: string | null = null // Currently dragged item path
+const expandedFolders = new Set<string>() // Track expanded folders (UI state)
 
 // Synchronous file cache for app.js compatibility
 // This is updated by storage events and provides sync access to file contents
-let filesCache = {}
+let filesCache: Record<string, string> = {}
 
 /**
  * Reset all UI state (called on project close/switch)
  */
-function resetUIState() {
+function resetUIState(): void {
   currentFile = null
   contextMenu = null
   draggedItem = null
@@ -230,7 +277,7 @@ function resetUIState() {
 // File Types with Icons and Colors
 // =============================================================================
 
-const FILE_TYPES = {
+const FILE_TYPES: Record<string, FileTypeConfig> = {
   layout: {
     extensions: ['.mir', '.mirror'],
     color: '#5BA8F5',
@@ -269,7 +316,7 @@ const ICON_CHEVRON = `<svg class="chevron" viewBox="0 0 24 24" fill="none" strok
 /**
  * Escape HTML entities to prevent XSS in text content
  */
-function escapeHtml(text) {
+function escapeHtml(text: string): string {
   const div = document.createElement('div')
   div.textContent = text
   return div.innerHTML
@@ -278,7 +325,7 @@ function escapeHtml(text) {
 /**
  * Escape for use in HTML attributes (escapes quotes)
  */
-function escapeAttr(text) {
+function escapeAttr(text: string): string {
   return String(text)
     .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;')
@@ -291,7 +338,7 @@ function escapeAttr(text) {
  * Validate filename - returns error message or null if valid
  * Note: Only ASCII characters allowed (security requirement)
  */
-function validateFilename(name) {
+function validateFilename(name: string): string | null {
   if (!name || !name.trim()) return 'Name cannot be empty'
   if (name.includes('/') || name.includes('\\')) return 'Name cannot contain / or \\'
   if (name.includes(':')) return 'Name cannot contain :'
@@ -306,7 +353,7 @@ function validateFilename(name) {
 /**
  * Get file type from filename
  */
-function getFileType(filename) {
+function getFileType(filename: string): FileTypeInfo {
   for (const [type, config] of Object.entries(FILE_TYPES)) {
     if (config.extensions.some(ext => filename.endsWith(ext))) {
       return { type, ...config }
@@ -320,7 +367,7 @@ function getFileType(filename) {
  * Find first file in tree
  * Prioritizes index.mir over other files
  */
-function findFirstFile(tree) {
+function findFirstFile(tree: StorageItem[]): string | null {
   // First pass: look for index.mir
   for (const item of tree) {
     if (item.type === 'file' && item.path.endsWith('index.mir')) {
@@ -347,14 +394,14 @@ function findFirstFile(tree) {
  * Preload all files into cache for synchronous access
  * Uses batched loading with concurrency limit to prevent OOM
  */
-async function preloadAllFiles() {
+async function preloadAllFiles(): Promise<void> {
   const tree = storage.getTree()
   const MAX_CONCURRENT = 5
   const LARGE_PROJECT_WARNING = 100
 
   // Collect all file paths
-  const filePaths = []
-  function collectFiles(items) {
+  const filePaths: string[] = []
+  function collectFiles(items: StorageItem[]): void {
     for (const item of items) {
       if (item.type === 'file') {
         filePaths.push(item.path)
@@ -407,7 +454,7 @@ async function preloadAllFiles() {
 /**
  * Initialize desktop file management
  */
-export async function initDesktopFiles(options = {}) {
+export async function initDesktopFiles(options: InternalFileCallbacks = {}): Promise<void> {
   const { onFileSelect, onFileChange } = options
 
   // Store callbacks
@@ -529,7 +576,7 @@ export async function initDesktopFiles(options = {}) {
         // Open existing project
         await storage.openProject(projects[0].id)
         console.log('[DesktopFiles] Opened existing project:', projects[0].name)
-      } else if (storage.providerType === 'server') {
+      } else if ((storage.providerType as string) === 'server') {
         // No projects exist on server - create one automatically
         // PHP API creates default files (index.mir, tokens.tok, components.com)
         console.log('[DesktopFiles] No server projects, creating default project...')
@@ -542,7 +589,8 @@ export async function initDesktopFiles(options = {}) {
       }
     } catch (e) {
       // Server error - show error
-      console.error('[DesktopFiles] Server error:', e.message)
+      const msg = e instanceof Error ? e.message : String(e)
+      console.error('[DesktopFiles] Server error:', msg)
       // Don't fallback to DemoProvider - just show the error
     }
   }
@@ -570,7 +618,7 @@ export async function initDesktopFiles(options = {}) {
 /**
  * Open a folder via dialog
  */
-export async function openFolder() {
+export async function openFolder(): Promise<string | null> {
   try {
     if (storage.canOpenFolderDialog()) {
       const path = await storage.openFolderDialog()
@@ -592,7 +640,7 @@ export async function openFolder() {
 /**
  * Load a folder (for external calls)
  */
-export async function loadFolder(folderPath) {
+export async function loadFolder(folderPath: string): Promise<void> {
   await storage.openProject(folderPath)
 }
 
@@ -608,7 +656,7 @@ export async function loadFolder(folderPath) {
  * `view.dispatch` performed by the `::` component-extract trigger) are
  * silently dropped when the editor swaps to the new file's content.
  */
-export async function selectFile(filePath) {
+export async function selectFile(filePath: string): Promise<void> {
   try {
     // Persist the previous file's live editor content first so we don't
     // lose unsaved edits on the switch.
@@ -646,7 +694,7 @@ export async function selectFile(filePath) {
 /**
  * Save file content
  */
-export async function saveFile(filePath, content) {
+export async function saveFile(filePath: string, content: string): Promise<void> {
   // Update cache immediately for sync access
   filesCache[filePath] = content
 
@@ -660,7 +708,10 @@ export async function saveFile(filePath, content) {
 /**
  * Create a new file
  */
-export async function createFile(fileName, parentFolder = null) {
+export async function createFile(
+  fileName: string,
+  parentFolder: string | null = null
+): Promise<void> {
   // Determine target folder
   let targetPath = fileName
 
@@ -695,7 +746,10 @@ export async function createFile(fileName, parentFolder = null) {
 /**
  * Create a new folder
  */
-export async function createFolder(folderName, parentFolder = null) {
+export async function createFolder(
+  folderName: string,
+  parentFolder: string | null = null
+): Promise<void> {
   let targetPath = folderName
 
   // Only prepend parent folder if it's a real path (not root "." or "demo")
@@ -714,7 +768,7 @@ export async function createFolder(folderName, parentFolder = null) {
 /**
  * Rename a file or folder
  */
-export async function renameItem(oldPath, newName) {
+export async function renameItem(oldPath: string, newName: string): Promise<void> {
   const dir = oldPath.substring(0, oldPath.lastIndexOf('/'))
   const newPath = dir ? `${dir}/${newName}` : newName
 
@@ -728,17 +782,17 @@ export async function renameItem(oldPath, newName) {
 /**
  * Duplicate a file
  */
-export async function duplicateFile(path) {
-  const name = path.split('/').pop()
+export async function duplicateFile(path: string): Promise<void> {
+  const name = path.split('/').pop() ?? ''
   const ext = name.substring(name.lastIndexOf('.'))
   const baseName = name.substring(0, name.lastIndexOf('.'))
   const dir = path.substring(0, path.lastIndexOf('/'))
 
   // Find unique name
   const tree = storage.getTree()
-  const existingNames = new Set()
+  const existingNames = new Set<string>()
 
-  function collectNames(items) {
+  function collectNames(items: StorageItem[]): void {
     for (const item of items) {
       if (item.type === 'file') {
         existingNames.add(item.path)
@@ -769,8 +823,8 @@ export async function duplicateFile(path) {
 /**
  * Delete a file or folder
  */
-export async function deleteItem(path, isFolder = false) {
-  const name = path.split('/').pop()
+export async function deleteItem(path: string, isFolder = false): Promise<void> {
+  const name = path.split('/').pop() ?? ''
   const message = isFolder ? `Ordner "${name}" und alle Inhalte löschen?` : `"${name}" löschen?`
 
   if (!(await confirmDelete(name, { message }))) return
@@ -789,8 +843,8 @@ export async function deleteItem(path, isFolder = false) {
 /**
  * Move an item to a new folder
  */
-export async function moveItem(sourcePath, targetFolder) {
-  const name = sourcePath.split('/').pop()
+export async function moveItem(sourcePath: string, targetFolder: string): Promise<void> {
+  const name = sourcePath.split('/').pop() ?? ''
   const newPath = `${targetFolder}/${name}`
 
   if (sourcePath === newPath) return
@@ -810,19 +864,25 @@ export async function moveItem(sourcePath, targetFolder) {
 // Context Menu
 // =============================================================================
 
-function showContextMenu(e, target) {
+function showContextMenu(e: MouseEvent, target: HTMLElement | null): void {
   e.preventDefault()
   e.stopPropagation()
   hideContextMenu()
 
-  const isFile = target?.classList.contains('file-tree-file')
+  const isFile = target?.classList.contains('file-tree-file') ?? false
   // Only detect folder if target is NOT a file (files are inside folders, so closest() would find parent)
-  const folderElement =
-    !isFile &&
-    (target?.classList.contains('file-tree-folder') ? target : target?.closest('.file-tree-folder'))
+  const folderElement: HTMLElement | null =
+    !isFile && target
+      ? target.classList.contains('file-tree-folder')
+        ? target
+        : (target.closest('.file-tree-folder') as HTMLElement | null)
+      : null
   const isFolder = !!folderElement
-  const isRoot = folderElement?.dataset?.root === 'true'
-  const path = target?.dataset?.path || target?.closest('[data-path]')?.dataset?.path
+  const isRoot = folderElement?.dataset.root === 'true'
+  const path: string | null =
+    target?.dataset.path ??
+    (target?.closest('[data-path]') as HTMLElement | null)?.dataset.path ??
+    null
 
   const menu = document.createElement('div')
   menu.className = 'context-menu'
@@ -876,23 +936,24 @@ function showContextMenu(e, target) {
 
   contextMenu = { element: menu, path, isFile, isFolder }
 
-  menu.querySelectorAll('.context-menu-item').forEach(item => {
+  menu.querySelectorAll<HTMLElement>('.context-menu-item').forEach(item => {
     item.addEventListener('click', e => {
       e.stopPropagation()
-      handleContextAction(item.dataset.action)
+      const action = item.dataset.action
+      if (action) handleContextAction(action)
     })
   })
 }
 
-function hideContextMenu() {
+function hideContextMenu(): void {
   if (contextMenu?.element) {
     contextMenu.element.remove()
     contextMenu = null
   }
 }
 
-async function handleContextAction(action) {
-  const { path, isFile, isFolder } = contextMenu || {}
+async function handleContextAction(action: string): Promise<void> {
+  const { path = null, isFile = false, isFolder = false } = contextMenu ?? {}
   hideContextMenu()
 
   switch (action) {
@@ -918,14 +979,14 @@ async function handleContextAction(action) {
 // Inline Rename
 // =============================================================================
 
-function startInlineRename(path) {
-  const element = document.querySelector(`[data-path="${path}"]`)
+function startInlineRename(path: string): void {
+  const element = document.querySelector<HTMLElement>(`[data-path="${path}"]`)
   if (!element) return
 
-  const nameSpan = element.querySelector('span:last-child')
+  const nameSpan = element.querySelector<HTMLElement>('span:last-child')
   if (!nameSpan) return
 
-  const oldName = nameSpan.textContent
+  const oldName = nameSpan.textContent ?? ''
 
   const input = document.createElement('input')
   input.type = 'text'
@@ -977,22 +1038,22 @@ function startInlineRename(path) {
 /**
  * Start inline creation of a new file or folder
  */
-function startInlineCreate(type, parentPath) {
+function startInlineCreate(type: 'file' | 'folder', parentPath: string | null): void {
   // Find the container where to insert the new element
-  let container
+  let container: HTMLElement | null = null
   if (parentPath && parentPath !== '.') {
     // Find parent folder and expand it
-    const parentFolder = document.querySelector(`[data-path="${parentPath}"]`)
+    const parentFolder = document.querySelector<HTMLElement>(`[data-path="${parentPath}"]`)
     if (parentFolder) {
       expandedFolders.add(parentPath)
       parentFolder.classList.add('expanded')
-      container = parentFolder.querySelector('.file-tree-folder-children')
+      container = parentFolder.querySelector<HTMLElement>('.file-tree-folder-children')
     }
   }
 
   // Fallback to root folder children
   if (!container) {
-    container = document.querySelector('[data-root="true"] .file-tree-folder-children')
+    container = document.querySelector<HTMLElement>('[data-root="true"] .file-tree-folder-children')
   }
 
   if (!container) return
@@ -1025,7 +1086,8 @@ function startInlineCreate(type, parentPath) {
   // Insert at the beginning of the container
   container.insertBefore(tempElement, container.firstChild)
 
-  const input = tempElement.querySelector('input')
+  const input = tempElement.querySelector<HTMLInputElement>('input')
+  if (!input) return
   input.focus()
 
   // Select name without extension for files
@@ -1040,7 +1102,7 @@ function startInlineCreate(type, parentPath) {
     input.select()
   }
 
-  const finishCreate = async () => {
+  const finishCreate = async (): Promise<void> => {
     const name = input.value.trim()
 
     if (!name) {
@@ -1092,7 +1154,7 @@ function startInlineCreate(type, parentPath) {
 // Render File Tree
 // =============================================================================
 
-function renderFileTree() {
+function renderFileTree(): void {
   // Ensure toolbar is initialized first (creates file-tree-content)
   initProjectToolbar()
 
@@ -1142,7 +1204,7 @@ function renderFileTree() {
  * Get sort priority for file extension
  * .mir = 0, .com = 1, .tok = 2, others = 3
  */
-function getExtensionPriority(name) {
+function getExtensionPriority(name: string): number {
   if (name.endsWith('.mir') || name.endsWith('.mirror')) return 0
   if (name.endsWith('.com') || name.endsWith('.components')) return 1
   if (name.endsWith('.tok') || name.endsWith('.tokens')) return 2
@@ -1152,7 +1214,7 @@ function getExtensionPriority(name) {
 /**
  * Sort items: folders first, then files by extension priority, then alphabetically
  */
-function sortTreeItems(items) {
+function sortTreeItems(items: StorageItem[]): StorageItem[] {
   return [...items].sort((a, b) => {
     // Folders first
     if (a.type !== b.type) return a.type === 'folder' ? -1 : 1
@@ -1167,7 +1229,7 @@ function sortTreeItems(items) {
   })
 }
 
-function renderTreeItems(items, depth = 1) {
+function renderTreeItems(items: StorageItem[], depth = 1): string {
   const sortedItems = sortTreeItems(items)
   return sortedItems
     .map(item => {
@@ -1205,36 +1267,40 @@ function renderTreeItems(items, depth = 1) {
     .join('')
 }
 
-function attachTreeEvents(container) {
+function attachTreeEvents(container: HTMLElement): void {
   // File clicks
-  container.querySelectorAll('.file-tree-file').forEach(el => {
+  container.querySelectorAll<HTMLElement>('.file-tree-file').forEach(el => {
     el.addEventListener('click', e => {
-      if (e.target.closest('.file-tree-rename-input')) return
-      selectFile(el.dataset.path)
+      const target = e.target as HTMLElement | null
+      if (target?.closest('.file-tree-rename-input')) return
+      const path = el.dataset.path
+      if (path) selectFile(path)
     })
-    el.addEventListener('contextmenu', e => showContextMenu(e, el))
+    el.addEventListener('contextmenu', e => showContextMenu(e as MouseEvent, el))
   })
 
   // Folder toggle
-  container.querySelectorAll('.file-tree-folder-header').forEach(el => {
+  container.querySelectorAll<HTMLElement>('.file-tree-folder-header').forEach(el => {
     el.addEventListener('click', e => {
-      if (e.target.closest('.file-tree-rename-input')) return
-      const folder = el.closest('.file-tree-folder')
-      const path = folder.dataset.path
-      if (path !== '.') {
+      const target = e.target as HTMLElement | null
+      if (target?.closest('.file-tree-rename-input')) return
+      const folder = el.closest<HTMLElement>('.file-tree-folder')
+      const path = folder?.dataset.path
+      if (path && path !== '.') {
         toggleFolder(path)
       }
     })
     el.addEventListener('contextmenu', e => {
-      const folder = el.closest('.file-tree-folder')
-      showContextMenu(e, folder)
+      const folder = el.closest<HTMLElement>('.file-tree-folder')
+      showContextMenu(e as MouseEvent, folder)
     })
   })
 
   // Empty area context menu
   container.addEventListener('contextmenu', e => {
-    if (e.target === container || e.target.classList.contains('file-tree-items')) {
-      showContextMenu(e, null)
+    const target = e.target as HTMLElement | null
+    if (target === container || target?.classList.contains('file-tree-items')) {
+      showContextMenu(e as MouseEvent, null)
     }
   })
 
@@ -1242,7 +1308,7 @@ function attachTreeEvents(container) {
   attachDragEvents(container)
 }
 
-function toggleFolder(folderPath) {
+function toggleFolder(folderPath: string): void {
   if (expandedFolders.has(folderPath)) {
     expandedFolders.delete(folderPath)
   } else {
@@ -1255,37 +1321,47 @@ function toggleFolder(folderPath) {
 // Drag & Drop
 // =============================================================================
 
-function attachDragEvents(container) {
-  container.querySelectorAll('.file-tree-file, .file-tree-folder').forEach(el => {
+function attachDragEvents(container: HTMLElement): void {
+  container.querySelectorAll<HTMLElement>('.file-tree-file, .file-tree-folder').forEach(el => {
     if (el.dataset.root === 'true') return
 
     el.addEventListener('dragstart', e => {
-      draggedItem = el.dataset.path
+      const path = el.dataset.path
+      if (!path) return
+      draggedItem = path
       el.classList.add('dragging')
-      e.dataTransfer.effectAllowed = 'move'
-      e.dataTransfer.setData('text/plain', el.dataset.path)
+      const evt = e as DragEvent
+      if (evt.dataTransfer) {
+        evt.dataTransfer.effectAllowed = 'move'
+        evt.dataTransfer.setData('text/plain', path)
+      }
     })
 
     el.addEventListener('dragend', () => {
       el.classList.remove('dragging')
       draggedItem = null
-      container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'))
+      container
+        .querySelectorAll<HTMLElement>('.drag-over')
+        .forEach(other => other.classList.remove('drag-over'))
     })
   })
 
-  container.querySelectorAll('.file-tree-folder').forEach(folder => {
+  container.querySelectorAll<HTMLElement>('.file-tree-folder').forEach(folder => {
     folder.addEventListener('dragover', e => {
       e.preventDefault()
-      if (draggedItem && draggedItem !== folder.dataset.path) {
-        if (!draggedItem.startsWith(folder.dataset.path + '/')) {
+      const folderPath = folder.dataset.path
+      if (draggedItem && folderPath && draggedItem !== folderPath) {
+        if (!draggedItem.startsWith(folderPath + '/')) {
           folder.classList.add('drag-over')
-          e.dataTransfer.dropEffect = 'move'
+          const evt = e as DragEvent
+          if (evt.dataTransfer) evt.dataTransfer.dropEffect = 'move'
         }
       }
     })
 
     folder.addEventListener('dragleave', e => {
-      if (!folder.contains(e.relatedTarget)) {
+      const related = (e as DragEvent).relatedTarget as Node | null
+      if (!related || !folder.contains(related)) {
         folder.classList.remove('drag-over')
       }
     })
@@ -1295,10 +1371,11 @@ function attachDragEvents(container) {
       e.stopPropagation()
       folder.classList.remove('drag-over')
 
-      if (!draggedItem || draggedItem === folder.dataset.path) return
-      if (draggedItem.startsWith(folder.dataset.path + '/')) return
+      const folderPath = folder.dataset.path
+      if (!draggedItem || !folderPath || draggedItem === folderPath) return
+      if (draggedItem.startsWith(folderPath + '/')) return
 
-      const targetFolder = folder.dataset.path === '.' ? '' : folder.dataset.path
+      const targetFolder = folderPath === '.' ? '' : folderPath
       await moveItem(draggedItem, targetFolder)
       draggedItem = null
     })
@@ -1309,11 +1386,11 @@ function attachDragEvents(container) {
 // Exports
 // =============================================================================
 
-export function getCurrentFolder() {
+export function getCurrentFolder(): string | null {
   return storage.hasProject ? storage.currentProjectName : null
 }
 
-export function getCurrentFile() {
+export function getCurrentFile(): string | null {
   return currentFile
 }
 
@@ -1321,14 +1398,14 @@ export function getCurrentFile() {
  * Get all files (synchronous - returns cached content)
  * Used by app.js for prelude building
  */
-export function getFiles() {
+export function getFiles(): Record<string, string> {
   return filesCache
 }
 
 /**
  * Get file content (synchronous - returns cached content)
  */
-export function getFileContent(path) {
+export function getFileContent(path: string): string | undefined {
   return filesCache[path]
 }
 
@@ -1336,7 +1413,7 @@ export function getFileContent(path) {
  * Update file in cache (called by app.js when editor content changes)
  * Pass undefined as content to delete the entry.
  */
-export function updateFileCache(path, content) {
+export function updateFileCache(path: string, content: string | undefined): void {
   if (content === undefined) {
     delete filesCache[path]
   } else {

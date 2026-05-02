@@ -2122,7 +2122,7 @@ compile(initialCode)
 // Works in both Tauri (real files) and Browser (demo files)
 // ==========================================
 if (!isPlaygroundMode) {
-  import('./desktop-files.js')
+  import('./dist/desktop-files.js')
     .then(module => {
       // Initialize with callback to load files into editor
       module.initDesktopFiles({
