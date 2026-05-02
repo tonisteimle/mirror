@@ -40,6 +40,15 @@ import {
   scrollToTop,
   scrollToBottom,
 } from '../../compiler/runtime/scroll'
+import { createToastModule } from '../../compiler/runtime/toast'
+import {
+  focus as focusTyped,
+  blur as blurTyped,
+  clear as clearTyped,
+  selectText as selectTextTyped,
+  setError as setErrorTyped,
+  clearError as clearErrorTyped,
+} from '../../compiler/runtime/input-control'
 import { DOM_RUNTIME_CODE } from '../../compiler/backends/dom/runtime-template'
 
 const REPO_ROOT = resolve(fileURLToPath(import.meta.url), '../../..')
@@ -203,6 +212,61 @@ describe('Runtime template parity', () => {
       // form sneaks back.
       expect(DOM_RUNTIME_CODE).not.toMatch(/^\s*scrollTo\(el,\s*options/m)
       expect(DOM_RUNTIME_CODE).not.toMatch(/container\.scrollTop\s*=\s*0/m)
+    })
+  })
+
+  describe('toast (cluster-API consolidation)', () => {
+    it('createToastModule factory is stamped verbatim', () => {
+      expect(DOM_RUNTIME_CODE).toContain(createToastModule.toString())
+    })
+
+    it('runtime instantiates the toast module exactly once', () => {
+      // Count actual invocations (preceded by `=` or whitespace, not the
+      // function declaration's parameter list).
+      const matches = DOM_RUNTIME_CODE.match(/=\s*createToastModule\(\)/g)
+      expect(matches?.length, 'expected one createToastModule() invocation').toBe(1)
+    })
+
+    it('_runtime exposes toast/dismissToast via shorthand', () => {
+      // Shorthand pattern: `toast,` and `dismissToast,` lines, not method
+      // declarations like `toast(message, type, position) {`
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*toast,\s*$/m)
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*dismissToast,\s*$/m)
+    })
+
+    it('the broken positional toast(message, type, position) signature is gone', () => {
+      // Bug: compiler emits toast(msg, { type, position }) but the old
+      // template impl took positional args, so type/position were
+      // silently dropped. Must not regress.
+      expect(DOM_RUNTIME_CODE).not.toMatch(/toast\(message,\s*type\s*=\s*['"]info['"]/m)
+      expect(DOM_RUNTIME_CODE).not.toMatch(/^\s*_toastCounter:\s*0/m)
+    })
+  })
+
+  describe('input-control (cluster-API consolidation)', () => {
+    it('typed focus/blur/clear/selectText/setError/clearError are stamped', () => {
+      expect(DOM_RUNTIME_CODE).toContain(focusTyped.toString())
+      expect(DOM_RUNTIME_CODE).toContain(blurTyped.toString())
+      expect(DOM_RUNTIME_CODE).toContain(clearTyped.toString())
+      expect(DOM_RUNTIME_CODE).toContain(selectTextTyped.toString())
+      expect(DOM_RUNTIME_CODE).toContain(setErrorTyped.toString())
+      expect(DOM_RUNTIME_CODE).toContain(clearErrorTyped.toString())
+    })
+
+    it('_runtime exposes input-control via shorthand', () => {
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*focus,\s*$/m)
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*blur,\s*$/m)
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*clear,\s*$/m)
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*selectText,\s*$/m)
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*setError,\s*$/m)
+      expect(DOM_RUNTIME_CODE).toMatch(/^\s*clearError,\s*$/m)
+    })
+
+    it('the old transitionTo-based setError/clearError fallbacks are gone', () => {
+      // Old template called this.transitionTo(...) at the end of
+      // setError/clearError; we removed that to align with what
+      // production has always actually done.
+      expect(DOM_RUNTIME_CODE).not.toMatch(/this\.transitionTo\s*&&\s*this\.transitionTo/)
     })
   })
 

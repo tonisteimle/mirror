@@ -5,6 +5,12 @@
  */
 
 import type { MirrorElement } from './types'
+import { resolveElement } from './dom-lookup'
+
+// Re-export so the runtime template can keep importing `resolveElement`
+// from this module — it physically lives in dom-lookup now (shared with
+// input-control and other consumers).
+export { resolveElement }
 
 export interface ScrollToOptions {
   behavior?: 'smooth' | 'instant'
@@ -13,17 +19,6 @@ export interface ScrollToOptions {
 }
 
 type ScrollBehavior = 'smooth' | 'instant'
-
-/**
- * Resolve a Mirror element reference: pass-through HTMLElement, or look
- * up by data-mirror-name attribute when given a string. Exported so the
- * runtime template can stamp it alongside the scroll helpers.
- */
-export function resolveElement(element: MirrorElement | string | null): MirrorElement | null {
-  if (!element) return null
-  if (typeof element !== 'string') return element
-  return document.querySelector(`[data-mirror-name="${element}"]`) as MirrorElement
-}
 
 /**
  * Scroll an element into view

@@ -2,203 +2,133 @@
  * Input Control Functions
  *
  * Focus, blur, clear, and error handling for form inputs.
+ *
+ * Each public function accepts either a real HTMLElement or a Mirror
+ * element name (string). Self-contained — type guards and error-DOM
+ * helpers are nested inside the public functions so the runtime
+ * template can stamp each one verbatim via .toString() with no
+ * external references.
+ *
+ * State management note: the previous version called `applyState`/
+ * `removeState` from state-machine.ts, which was inconsistent with the
+ * template that just toggled dataset.state directly. Aligning on the
+ * direct-dataset approach: simpler, no state-machine round-trip, and
+ * matches what production runtime has always actually shipped.
  */
 
 import type { MirrorElement } from './types'
-import { applyState, removeState } from './state-machine'
-
-// ============================================
-// TYPE GUARDS
-// ============================================
+import { resolveElement } from './dom-lookup'
 
 /**
- * Check if element is a focusable form element
+ * Focus an input element (or focusable element with tabindex).
  */
-function isFormElement(
-  el: unknown
-): el is HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | HTMLButtonElement {
-  return (
-    el instanceof HTMLInputElement ||
-    el instanceof HTMLTextAreaElement ||
-    el instanceof HTMLSelectElement ||
-    el instanceof HTMLButtonElement
-  )
-}
-
-/**
- * Check if element is a text input
- */
-function isTextInput(el: unknown): el is HTMLInputElement | HTMLTextAreaElement {
-  return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement
-}
-
-// ============================================
-// FOCUS CONTROL
-// ============================================
-
-/**
- * Focus an input element
- */
-export function focus(el: MirrorElement | null): void {
-  if (!el) return
-
-  if (isFormElement(el)) {
-    el.focus()
-  } else if (el.tabIndex >= 0 || el.hasAttribute('tabindex')) {
-    el.focus()
+export function focus(el: MirrorElement | string | null): void {
+  const target = resolveElement(el)
+  if (!target) return
+  const isFormElement =
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    target instanceof HTMLButtonElement
+  if (isFormElement) {
+    ;(target as HTMLInputElement).focus()
+  } else if (target.tabIndex >= 0 || target.hasAttribute('tabindex')) {
+    target.focus()
   }
 }
 
 /**
- * Remove focus from an input element
+ * Remove focus from an element.
  */
-export function blur(el: MirrorElement | null): void {
-  if (!el) return
-  el.blur()
+export function blur(el: MirrorElement | string | null): void {
+  const target = resolveElement(el)
+  if (!target) return
+  target.blur()
 }
 
 /**
- * Clear the value of an input element
+ * Clear the value of an input element.
  */
-export function clear(el: MirrorElement | null): void {
-  if (!el) return
-
-  if (isTextInput(el)) {
-    el.value = ''
-    el.dispatchEvent(new Event('input', { bubbles: true }))
+export function clear(el: MirrorElement | string | null): void {
+  const target = resolveElement(el)
+  if (!target) return
+  const isTextInput = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement
+  if (isTextInput) {
+    ;(target as HTMLInputElement).value = ''
+    target.dispatchEvent(new Event('input', { bubbles: true }))
   }
 }
 
 /**
- * Select all text in an input element
+ * Select all text in an input element.
  */
-export function selectText(el: MirrorElement | null): void {
-  if (!el) return
-
-  if (isTextInput(el)) {
-    el.select()
-  }
-}
-
-// ============================================
-// ERROR HANDLING
-// ============================================
-
-/**
- * Apply visual error state to element
- */
-function applyErrorState(el: MirrorElement): void {
-  el.dataset.invalid = 'true'
-  applyState(el, 'invalid')
-}
-
-/**
- * Set custom validity on form element
- */
-function setFormValidity(el: MirrorElement, message: string): void {
-  if (isTextInput(el)) {
-    el.setCustomValidity(message)
+export function selectText(el: MirrorElement | string | null): void {
+  const target = resolveElement(el)
+  if (!target) return
+  const isTextInput = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement
+  if (isTextInput) {
+    ;(target as HTMLInputElement).select()
   }
 }
 
 /**
- * Create error message element
+ * Set error state on an element with optional message. Sets
+ * dataset.state='invalid', sets aria-invalid, sets custom validity
+ * on form inputs, and renders/updates a sibling error-message span.
  */
-function createErrorElement(id: string): HTMLSpanElement {
-  const errorEl = document.createElement('span')
-  errorEl.id = id
-  errorEl.className = 'mirror-error-message'
-  errorEl.style.cssText = 'color: #ef4444; font-size: 12px; margin-top: 4px; display: block;'
-  return errorEl
-}
+export function setError(el: MirrorElement | string | null, message?: string): void {
+  const target = resolveElement(el)
+  if (!target) return
+  target.dataset.invalid = 'true'
+  target.dataset.state = 'invalid'
+  target.setAttribute('aria-invalid', 'true')
 
-/**
- * Get or create error element for input
- */
-function getOrCreateErrorElement(el: MirrorElement): HTMLElement {
-  const errorId = el.dataset.errorId || `${el.id || el.dataset.name || 'field'}-error`
-  el.dataset.errorId = errorId
-
-  let errorEl = document.getElementById(errorId)
-  if (!errorEl) {
-    errorEl = createErrorElement(errorId)
-    el.parentNode?.insertBefore(errorEl, el.nextSibling)
+  const isTextInput = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement
+  if (isTextInput) {
+    ;(target as HTMLInputElement).setCustomValidity(message || 'Invalid')
   }
-
-  return errorEl
-}
-
-/**
- * Set accessibility attributes for error
- */
-function setErrorAccessibility(el: MirrorElement, errorId: string): void {
-  el.setAttribute('aria-describedby', errorId)
-  el.setAttribute('aria-invalid', 'true')
-}
-
-/**
- * Set error state on an element with optional message
- */
-export function setError(el: MirrorElement | null, message?: string): void {
-  if (!el) return
-
-  applyErrorState(el)
-  setFormValidity(el, message || 'Invalid')
 
   if (message) {
-    const errorEl = getOrCreateErrorElement(el)
+    const errorId = target.dataset.errorId || `${target.id || target.dataset.name || 'field'}-error`
+    target.dataset.errorId = errorId
+
+    let errorEl = document.getElementById(errorId)
+    if (!errorEl) {
+      errorEl = document.createElement('span')
+      errorEl.id = errorId
+      errorEl.className = 'mirror-error-message'
+      errorEl.style.cssText = 'color: #ef4444; font-size: 12px; margin-top: 4px; display: block;'
+      target.parentNode?.insertBefore(errorEl, target.nextSibling)
+    }
     errorEl.textContent = message
     errorEl.style.display = 'block'
-    setErrorAccessibility(el, errorEl.id)
+    target.setAttribute('aria-describedby', errorId)
   }
 }
 
 /**
- * Remove visual error state from element
+ * Clear error state from an element.
  */
-function removeErrorState(el: MirrorElement): void {
-  delete el.dataset.invalid
-  removeState(el, 'invalid')
-}
-
-/**
- * Clear custom validity on form element
- */
-function clearFormValidity(el: MirrorElement): void {
-  if (isTextInput(el)) {
-    el.setCustomValidity('')
+export function clearError(el: MirrorElement | string | null): void {
+  const target = resolveElement(el)
+  if (!target) return
+  delete target.dataset.invalid
+  if (target.dataset.state === 'invalid') {
+    delete target.dataset.state
   }
-}
+  target.removeAttribute('aria-describedby')
+  target.removeAttribute('aria-invalid')
 
-/**
- * Hide error message element
- */
-function hideErrorElement(el: MirrorElement): void {
-  const errorId = el.dataset.errorId
+  const isTextInput = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement
+  if (isTextInput) {
+    ;(target as HTMLInputElement).setCustomValidity('')
+  }
+
+  const errorId = target.dataset.errorId
   if (errorId) {
     const errorEl = document.getElementById(errorId)
     if (errorEl) {
       errorEl.style.display = 'none'
     }
   }
-}
-
-/**
- * Clear accessibility attributes
- */
-function clearErrorAccessibility(el: MirrorElement): void {
-  el.removeAttribute('aria-describedby')
-  el.removeAttribute('aria-invalid')
-}
-
-/**
- * Clear error state from an element
- */
-export function clearError(el: MirrorElement | null): void {
-  if (!el) return
-
-  removeErrorState(el)
-  clearFormValidity(el)
-  hideErrorElement(el)
-  clearErrorAccessibility(el)
 }

@@ -36,6 +36,15 @@ import {
   scrollToTop as scrollToTopTyped,
   scrollToBottom as scrollToBottomTyped,
 } from '../../../runtime/scroll'
+import { createToastModule } from '../../../runtime/toast'
+import {
+  focus as focusTyped,
+  blur as blurTyped,
+  clear as clearTyped,
+  selectText as selectTextTyped,
+  setError as setErrorTyped,
+  clearError as clearErrorTyped,
+} from '../../../runtime/input-control'
 
 const PROP_MAP_LITERAL = JSON.stringify(PROP_MAP)
 const ALIGN_MAP_LITERAL = JSON.stringify(ALIGN_MAP)
@@ -53,12 +62,33 @@ const SANITIZE_SVG_SRC = sanitizeSVG.toString()
 // the four scroll functions reference it by name. They become top-level
 // declarations in the emitted runtime; _runtime exposes them via shorthand
 // property assignment (scrollTo, scrollBy, …) so emitter call sites
-// (`_runtime.scrollTo(...)`) keep working.
+// (_runtime.scrollTo(...)) keep working.
 const RESOLVE_ELEMENT_SRC = resolveElement.toString()
 const SCROLL_TO_SRC = scrollToTyped.toString()
 const SCROLL_BY_SRC = scrollByTyped.toString()
 const SCROLL_TO_TOP_SRC = scrollToTopTyped.toString()
 const SCROLL_TO_BOTTOM_SRC = scrollToBottomTyped.toString()
+
+// Stamp the toast factory. createToastModule.toString() yields a
+// self-contained closure that owns its own counter + active-toast map.
+// At runtime the template invokes the factory once and exposes
+// toast/dismissToast on _runtime. This fixes a real bug: the previous
+// inline template used positional args (toast(msg, type, position))
+// while the compiler emits the options-object form
+// (toast(msg, { type, position })) — so types/positions were silently
+// ignored in production.
+const CREATE_TOAST_MODULE_SRC = createToastModule.toString()
+
+// Stamp the typed input-control helpers. Each accepts string|element
+// (string lookup via resolveElement, the existing top-level helper)
+// and is fully self-contained — no state-machine dependency, just
+// dataset.state assignment. _runtime exposes them via shorthand.
+const FOCUS_SRC = focusTyped.toString()
+const BLUR_SRC = blurTyped.toString()
+const CLEAR_SRC = clearTyped.toString()
+const SELECT_TEXT_SRC = selectTextTyped.toString()
+const SET_ERROR_SRC = setErrorTyped.toString()
+const CLEAR_ERROR_SRC = clearErrorTyped.toString()
 
 export const DOM_RUNTIME_CODE = `
 // Mirror DOM Runtime
@@ -81,6 +111,20 @@ ${SCROLL_TO_SRC}
 ${SCROLL_BY_SRC}
 ${SCROLL_TO_TOP_SRC}
 ${SCROLL_TO_BOTTOM_SRC}
+
+// Toast module (stamped factory from compiler/runtime/toast.ts).
+// Invoke once to get a fresh counter + active-toast map; expose the
+// public API as top-level functions so _runtime can shorthand them.
+${CREATE_TOAST_MODULE_SRC}
+const { toast, dismissToast } = createToastModule()
+
+// Input-control helpers (stamped from compiler/runtime/input-control.ts)
+${FOCUS_SRC}
+${BLUR_SRC}
+${CLEAR_SRC}
+${SELECT_TEXT_SRC}
+${SET_ERROR_SRC}
+${CLEAR_ERROR_SRC}
 
 const _runtime = {
   // Debug mode check
@@ -372,193 +416,27 @@ const _runtime = {
   // FEEDBACK: Toast Notifications
   // ============================================
 
-  _toastCounter: 0,
-  _activeToasts: new Map(),
-
-  toast(message, type = 'info', position = 'bottom') {
-    const toastId = ++this._toastCounter
-    const duration = 3000
-
-    // Dismiss existing toasts at the same position
-    for (const [id, t] of this._activeToasts) {
-      if (t.element.dataset.position === position) {
-        this.dismissToast(id)
-      }
-    }
-
-    // Create toast element
-    const toastEl = document.createElement('div')
-    toastEl.className = 'mirror-toast'
-    toastEl.dataset.type = type
-    toastEl.dataset.position = position
-    toastEl.dataset.toastId = String(toastId)
-    toastEl.textContent = message
-
-    // Base styles
-    Object.assign(toastEl.style, {
-      position: 'fixed',
-      zIndex: '10000',
-      padding: '12px 20px',
-      borderRadius: '8px',
-      fontSize: '14px',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-      transition: 'opacity 0.2s, transform 0.2s',
-      opacity: '0',
-      transform: 'translateY(10px)',
-    })
-
-    // Position styles
-    const posStyles = {
-      'top': { top: '20px', left: '50%', transform: 'translateX(-50%) translateY(-10px)' },
-      'bottom': { bottom: '20px', left: '50%', transform: 'translateX(-50%) translateY(10px)' },
-      'top-left': { top: '20px', left: '20px', transform: 'translateY(-10px)' },
-      'top-right': { top: '20px', right: '20px', transform: 'translateY(-10px)' },
-      'bottom-left': { bottom: '20px', left: '20px', transform: 'translateY(10px)' },
-      'bottom-right': { bottom: '20px', right: '20px', transform: 'translateY(10px)' },
-    }
-    Object.assign(toastEl.style, posStyles[position] || posStyles.bottom)
-
-    // Type colors
-    const typeColors = {
-      'info': { bg: '#1a1a1a', color: '#fff', border: '#333' },
-      'success': { bg: '#052e16', color: '#4ade80', border: '#166534' },
-      'error': { bg: '#450a0a', color: '#f87171', border: '#991b1b' },
-      'warning': { bg: '#422006', color: '#fbbf24', border: '#92400e' },
-    }
-    const colors = typeColors[type] || typeColors.info
-    toastEl.style.background = colors.bg
-    toastEl.style.color = colors.color
-    toastEl.style.border = '1px solid ' + colors.border
-
-    document.body.appendChild(toastEl)
-
-    // Store toast info
-    this._activeToasts.set(toastId, {
-      element: toastEl,
-      timerId: null
-    })
-
-    // Animate in
-    requestAnimationFrame(() => {
-      toastEl.style.opacity = '1'
-      toastEl.style.transform = position.startsWith('top')
-        ? 'translateX(-50%) translateY(0)'
-        : 'translateX(-50%) translateY(0)'
-      if (!position.includes('-')) {
-        toastEl.style.transform = position.startsWith('top')
-          ? 'translateX(-50%) translateY(0)'
-          : 'translateX(-50%) translateY(0)'
-      } else {
-        toastEl.style.transform = 'translateY(0)'
-      }
-    })
-
-    // Auto dismiss
-    const timerId = setTimeout(() => this.dismissToast(toastId), duration)
-    this._activeToasts.get(toastId).timerId = timerId
-
-    return toastId
-  },
-
-  dismissToast(toastId) {
-    const toast = this._activeToasts.get(toastId)
-    if (!toast) return
-
-    if (toast.timerId) clearTimeout(toast.timerId)
-
-    toast.element.style.opacity = '0'
-    toast.element.style.transform = toast.element.dataset.position?.startsWith('top')
-      ? 'translateY(-10px)'
-      : 'translateY(10px)'
-
-    setTimeout(() => {
-      toast.element.remove()
-      this._activeToasts.delete(toastId)
-    }, 200)
-  },
+  // toast / dismissToast are stamped from compiler/runtime/toast.ts
+  // (see createToastModule call above the _runtime declaration).
+  // Compiler emits toast(message, { type, position }) — the typed
+  // function honours that signature; the previous inline impl took
+  // positional args and silently dropped the options object.
+  toast,
+  dismissToast,
 
   // ============================================
   // INPUT CONTROL: Focus, Clear, Error
   // ============================================
-
-  focus(el) {
-    if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
-    if (target && typeof target.focus === 'function') {
-      target.focus()
-    }
-  },
-
-  blur(el) {
-    if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
-    if (target && typeof target.blur === 'function') {
-      target.blur()
-    }
-  },
-
-  clear(el) {
-    if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
-    if (target && 'value' in target) {
-      target.value = ''
-      target.dispatchEvent(new Event('input', { bubbles: true }))
-    }
-  },
-
-  selectText(el) {
-    if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
-    if (target && typeof target.select === 'function') {
-      target.select()
-    }
-  },
-
-  setError(el, message) {
-    if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
-    if (!target) return
-
-    // Set invalid state
-    target.dataset.state = 'invalid'
-    target.setAttribute('aria-invalid', 'true')
-
-    // Store error message
-    if (message) {
-      target._errorMessage = message
-      // Try to find or create error display
-      let errorEl = target.parentElement?.querySelector('.mirror-error-message')
-      if (!errorEl) {
-        errorEl = document.createElement('span')
-        errorEl.className = 'mirror-error-message'
-        errorEl.style.cssText = 'color:#ef4444;font-size:12px;margin-top:4px;display:block;'
-        target.parentElement?.appendChild(errorEl)
-      }
-      errorEl.textContent = message
-    }
-
-    // Apply invalid styles via state machine if available
-    this.transitionTo && this.transitionTo(target, 'invalid')
-  },
-
-  clearError(el) {
-    if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
-    if (!target) return
-
-    // Clear invalid state
-    delete target.dataset.state
-    target.removeAttribute('aria-invalid')
-    delete target._errorMessage
-
-    // Remove error message element
-    const errorEl = target.parentElement?.querySelector('.mirror-error-message')
-    if (errorEl) errorEl.remove()
-
-    // Revert to default state
-    this.transitionTo && this.transitionTo(target, 'default')
-  },
+  // Stamped from compiler/runtime/input-control.ts. Each accepts
+  // string|element via resolveElement. setError/clearError now use
+  // dataset.state directly (no state-machine roundtrip), matching
+  // what production has always actually shipped.
+  focus,
+  blur,
+  clear,
+  selectText,
+  setError,
+  clearError,
 
   // ============================================
   // NAVIGATION: Back, Forward, OpenUrl
