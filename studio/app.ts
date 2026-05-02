@@ -44,6 +44,7 @@ import type { Diagnostic } from '@codemirror/lint'
 // Custom dialogs
 import { alert } from './dialog'
 import { initNotifications } from './init'
+import { debounce } from './core/debounce'
 
 // New architecture imports
 import {
@@ -848,21 +849,7 @@ editor = new EditorView({
   parent: editorContainer,
 })
 
-// Debounce helper with cancel support
-function debounce<A extends unknown[]>(
-  fn: (...args: A) => void,
-  ms: number
-): ((...args: A) => void) & { cancel: () => void } {
-  let timeout: ReturnType<typeof setTimeout> | undefined
-  const debounced = ((...args: A) => {
-    clearTimeout(timeout)
-    timeout = setTimeout(() => fn(...args), ms)
-  }) as ((...args: A) => void) & { cancel: () => void }
-  debounced.cancel = (): void => {
-    clearTimeout(timeout)
-  }
-  return debounced
-}
+// debounce now lives in ./core/debounce — imported above.
 
 // Save current file (debounced) - uses API for logged-in users
 const debouncedSave = debounce((code: string) => {
