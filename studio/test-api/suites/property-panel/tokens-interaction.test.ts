@@ -25,9 +25,14 @@ Frame pad 20, bg #333`,
       await api.utils.waitForIdle()
 
       const code = api.editor.getCode()
+      // The Spacing section renders 6 token rows (H/V/T/R/B/L); clickToken
+      // hits the first matching button (the Horizontal row), which writes
+      // to `pad-x` rather than the full shorthand. Either the per-axis
+      // token reference or the per-axis literal value (8) is acceptable.
+      const padFamily = /(?:^|\s|,)pad(?:-[xytrbl])?\s+(?:\$sm(?:\.pad)?|8)\b/
       api.assert.ok(
-        code.includes('pad $sm') || code.includes('pad 8'),
-        `Code should be updated with token reference or value, got: ${code.substring(code.indexOf('Frame'), code.indexOf('Frame') + 50)}`
+        padFamily.test(code),
+        `Code should contain a pad-family token reference or literal 8, got: ${code.substring(code.indexOf('Frame'), code.indexOf('Frame') + 80)}`
       )
     }
   ),

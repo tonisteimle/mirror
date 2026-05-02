@@ -287,9 +287,14 @@ Button "Test", pad 20, bg #333`,
       await api.utils.waitForCompile()
 
       const code = api.editor.getCode()
+      // The Spacing section renders 6 token rows (H/V/T/R/B/L); clickToken
+      // hits the first matching button (the Horizontal row), which writes
+      // to `pad-x` rather than the full shorthand. Either the per-axis
+      // token reference or the per-axis literal value (16) is acceptable.
+      const padFamily = /(?:^|\s|,)pad(?:-[xytrbl])?\s+(?:\$l(?:\.pad)?|16)\b/
       api.assert.ok(
-        code.includes('pad $l') || code.includes('pad 16'),
-        `Code should contain token reference or value, got: ${code.substring(code.indexOf('Button'), code.indexOf('Button') + 50)}...`
+        padFamily.test(code),
+        `Code should contain a pad-family token reference or literal 16, got: ${code.substring(code.indexOf('Button'), code.indexOf('Button') + 80)}...`
       )
     }
   ),

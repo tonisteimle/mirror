@@ -82,6 +82,7 @@ export interface PanelVisibility {
   files: boolean
   code: boolean
   components: boolean
+  tokens: boolean
   preview: boolean
   property: boolean
 }
@@ -169,6 +170,14 @@ export interface StudioState {
   cursor: { line: number; column: number }
   editorHasFocus: boolean
   currentFile: string
+  /**
+   * Layout file currently rendered in the preview. Decoupled from
+   * `currentFile` so that editing a tokens / components / data file keeps
+   * the same layout visible. Sticky: stays put when a non-layout file is
+   * opened, follows `currentFile` when a layout (`.mir` / `.mirror`) is
+   * opened. May be null when no layout has been opened yet.
+   */
+  previewFile: string | null
   files: Record<string, string>
   fileTypes: Record<string, string>
   panels: { left: boolean; right: boolean }

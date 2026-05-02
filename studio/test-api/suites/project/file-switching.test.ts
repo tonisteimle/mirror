@@ -78,4 +78,64 @@ export const fileSwitchingTests: TestSuite = [
       await files.delete('test2.mir')
     },
   },
+
+  {
+    name: 'Project: Editing tokens.tok keeps the layout in the preview',
+    run: async (api: TestAPI) => {
+      // Verifies the previewFile decoupling: when the editor is on a non-
+      // layout file (tokens), the preview keeps showing the last-opened
+      // layout — driven by the redirect inside compile() in app.ts.
+      const w = window as any
+      const studio = w.studio
+
+      // Seed both files into the in-memory and desktop-files caches so the
+      // prelude/cross-file token resolution sees them.
+      const TOKENS = 'primary.bg: #2271C1\ntext.col: white'
+      const LAYOUT = 'Frame bg $primary, pad 16, w 100, h 100\n  Text "Hello", col $text'
+      w.files['tokens.tok'] = TOKENS
+      w.files['app.mir'] = LAYOUT
+      w.desktopFiles?.updateFileCache?.('tokens.tok', TOKENS)
+      w.desktopFiles?.updateFileCache?.('app.mir', LAYOUT)
+
+      // Force the preview to track app.mir, then drive the editor to
+      // tokens.tok and call compile() the same way switchFile() does.
+      studio.actions.setPreviewFile('app.mir')
+      w.editor.dispatch({
+        changes: { from: 0, to: w.editor.state.doc.length, insert: TOKENS },
+      })
+      // The local module-private `currentFile` is what compile() reads to
+      // decide whether to redirect. We can't set it from the outside, but
+      // calling the production switchFile flips it to 'tokens.tok' and
+      // triggers compile(); the redirect inside should render app.mir.
+      w.switchFile('tokens.tok')
+
+      try {
+        await api.utils.waitForCompile()
+      } catch (e) {
+        const cf = w.getCurrentFile?.()
+        const pf = studio.state.get().previewFile
+        throw new Error(
+          `Compile timeout — redirect should produce layout nodes (cf=${cf} pf=${pf})`
+        )
+      }
+      await api.utils.delay(100)
+
+      const cf = w.getCurrentFile?.()
+      const pf = studio.state.get().previewFile
+      api.assert.ok(
+        pf === 'app.mir',
+        `previewFile should remain app.mir after switching editor to tokens.tok, got ${pf}`
+      )
+
+      const frame = api.preview.inspect('node-1')
+      api.assert.ok(
+        frame !== null && frame.styles.backgroundColor === 'rgb(34, 113, 193)',
+        `Layout should render in blue while editor edits a non-layout file. ` +
+          `bg=${frame?.styles.backgroundColor} cf=${cf} pf=${pf}`
+      )
+
+      delete w.files['tokens.tok']
+      delete w.files['app.mir']
+    },
+  },
 ]

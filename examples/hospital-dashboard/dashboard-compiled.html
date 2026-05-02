@@ -6488,21 +6488,595 @@ export function createUI(data = {}) {
 
 
 // Mirror DOM Runtime
+
+// Stamping shim: when the typed runtime modules are .toString()'d at
+// compile time, esbuild/tsx may insert __name(fn, "label") calls to
+// preserve Function.name across minification. The compiled output
+// references __name at runtime; declare a no-op so the calls are
+// harmless. (Real function names come from the function declarations
+// themselves; this only masks the build-tool helper.)
+function __name(fn, _name) { return fn }
+
+// Security helpers (stamped from compiler/runtime/icons.ts via .toString())
+function sanitizeIconName(name) {
+	if (!name || typeof name !== "string") return null;
+	if (!/^[a-z0-9\-]+$/.test(name)) {
+		console.warn("[Security] Invalid icon name rejected:", name);
+		return null;
+	};
+	if (name.length > 50) {
+		console.warn("[Security] Icon name too long:", name);
+		return null;
+	};
+	return name;
+}
+function sanitizeSVG(svgText) {
+	function parseSvgDocument(text) {
+		const parser = new DOMParser();
+		const doc = parser.parseFromString(text, "image/svg+xml");
+		if (doc.querySelector("parsererror")) {
+			console.warn("[Security] Invalid SVG content");
+			return null;
+		};
+		return doc;
+	}
+	function isValidSvgRoot(element) {
+		if (element.tagName.toLowerCase() !== "svg") {
+			console.warn("[Security] Not an SVG element");
+			return false;
+		};
+		return true;
+	}
+	function removeDangerousElements(svg) {
+		const dangerous = [
+			"script",
+			"foreignObject",
+			"use",
+			"image",
+			"a",
+			"style",
+			"defs",
+			"metadata",
+			"animate",
+			"set"
+		];
+		for (const tag of dangerous) svg.querySelectorAll(tag).forEach((el) => el.remove());
+	}
+	function removeDangerousAttributes(svg) {
+		const dangerousPattern = /^(on|href|xlink:href|src|data|formaction)/i;
+		function isDangerous(attr) {
+			return dangerousPattern.test(attr.name) || attr.value.includes("javascript:");
+		}
+		for (const el of svg.querySelectorAll("*")) {
+			for (const attr of Array.from(el.attributes)) {
+				if (isDangerous(attr)) el.removeAttribute(attr.name);
+			}
+		}
+	}
+	try {
+		const doc = parseSvgDocument(svgText);
+		if (!doc) return null;
+		const svg = doc.documentElement;
+		if (!isValidSvgRoot(svg)) return null;
+		removeDangerousElements(svg);
+		removeDangerousAttributes(svg);
+		return svg.outerHTML;
+	} catch (err) {
+		console.warn("[Security] SVG sanitization failed:", err);
+		return null;
+	}
+}
+
+// Scroll helpers (stamped from compiler/runtime/scroll.ts via .toString())
+function resolveElement(element) {
+	if (!element) return null;
+	if (typeof element !== "string") return element;
+	return document.querySelector(`[data-mirror-name="${element}"]`);
+}
+function scrollTo(element, options) {
+	const el = (0,__vite_ssr_import_0__.resolveElement)(element);
+	if (!el) return;
+	const { behavior = "smooth", block = "start", inline = "nearest" } = options || {};
+	el.scrollIntoView({
+		behavior,
+		block,
+		inline
+	});
+}
+function scrollBy(container, x = 0, y = 0, behavior = "smooth") {
+	const el = (0,__vite_ssr_import_0__.resolveElement)(container);
+	if (!el) return;
+	el.scrollBy({
+		left: x,
+		top: y,
+		behavior
+	});
+}
+function scrollToTop(element, behavior = "smooth") {
+	if (!element) {
+		window.scrollTo({
+			top: 0,
+			behavior
+		});
+		return;
+	};
+	const el = (0,__vite_ssr_import_0__.resolveElement)(element);
+	if (el) el.scrollTo({
+		top: 0,
+		behavior
+	});
+}
+function scrollToBottom(element, behavior = "smooth") {
+	if (!element) {
+		window.scrollTo({
+			top: document.body.scrollHeight,
+			behavior
+		});
+		return;
+	};
+	const el = (0,__vite_ssr_import_0__.resolveElement)(element);
+	if (el) el.scrollTo({
+		top: el.scrollHeight,
+		behavior
+	});
+}
+
+// Toast module (stamped factory from compiler/runtime/toast.ts).
+// Invoke once to get a fresh counter + active-toast map; expose the
+// public API as top-level functions so _runtime can shorthand them.
+function createToastModule() {
+	// ============================================
+	// CONSTANTS
+	// ============================================
+	const POSITION_STYLES = {
+		top: {
+			top: "20px",
+			left: "50%",
+			transform: "translateX(-50%) translateY(-10px)"
+		},
+		bottom: {
+			bottom: "20px",
+			left: "50%",
+			transform: "translateX(-50%) translateY(10px)"
+		},
+		"top-left": {
+			top: "20px",
+			left: "20px",
+			transform: "translateY(-10px)"
+		},
+		"top-right": {
+			top: "20px",
+			right: "20px",
+			transform: "translateY(-10px)"
+		},
+		"bottom-left": {
+			bottom: "20px",
+			left: "20px",
+			transform: "translateY(10px)"
+		},
+		"bottom-right": {
+			bottom: "20px",
+			right: "20px",
+			transform: "translateY(10px)"
+		}
+	};
+	const TYPE_COLORS = {
+		info: {
+			bg: "#1a1a1a",
+			color: "#fff"
+		},
+		success: {
+			bg: "#10b981",
+			color: "#fff"
+		},
+		error: {
+			bg: "#ef4444",
+			color: "#fff"
+		},
+		warning: {
+			bg: "#f59e0b",
+			color: "#000"
+		}
+	};
+	// ============================================
+	// STATE
+	// ============================================
+	let toastCounter = 0;
+	const activeToasts = new Map();
+	// ============================================
+	// ELEMENT CREATION
+	// ============================================
+	function createToastElement(message, type, position, toastId) {
+		const el = document.createElement("div");
+		el.className = "mirror-toast";
+		el.dataset.type = type;
+		el.dataset.position = position;
+		el.dataset.toastId = String(toastId);
+		el.textContent = message;
+		Object.assign(el.style, {
+			position: "fixed",
+			zIndex: "10000",
+			padding: "12px 20px",
+			borderRadius: "8px",
+			fontSize: "14px",
+			fontFamily: "system-ui, -apple-system, sans-serif",
+			boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+			transition: "opacity 0.2s, transform 0.2s",
+			opacity: "0",
+			transform: "translateY(10px)"
+		});
+		Object.assign(el.style, POSITION_STYLES[position]);
+		const colors = TYPE_COLORS[type] || TYPE_COLORS.info;
+		el.style.background = colors.bg;
+		el.style.color = colors.color;
+		return el;
+	}
+	// ============================================
+	// ANIMATIONS
+	// ============================================
+	function animateIn(el, position) {
+		requestAnimationFrame(() => {
+			el.style.opacity = "1";
+			if (position === "top" || position === "bottom") {
+				el.style.transform = "translateX(-50%) translateY(0)";
+			} else {
+				el.style.transform = "translateY(0)";
+			}
+		});
+	}
+	// ============================================
+	// DISMISSAL
+	// ============================================
+	function dismissToastsAtPosition(position) {
+		for (const [id, t] of activeToasts) {
+			if (t.element.dataset.position === position) {
+				dismissSingleToast(id);
+			}
+		}
+	}
+	function dismissSingleToast(toastId) {
+		const t = activeToasts.get(toastId);
+		if (!t) return;
+		clearTimeout(t.dismissTimeout);
+		clearTimeout(t.fadeTimeout);
+		t.element.remove();
+		activeToasts.delete(toastId);
+	}
+	function scheduleAutoDismiss(toastId, el, duration) {
+		const dismissTimeout = window.setTimeout(() => startFadeOut(toastId, el), duration);
+		activeToasts.set(toastId, {
+			element: el,
+			dismissTimeout,
+			fadeTimeout: 0
+		});
+	}
+	function startFadeOut(toastId, el) {
+		const data = activeToasts.get(toastId);
+		if (!data) return;
+		el.style.opacity = "0";
+		const fadeTimeout = window.setTimeout(() => {
+			if (el.parentNode) el.remove();
+			activeToasts.delete(toastId);
+		}, 200);
+		data.fadeTimeout = fadeTimeout;
+	}
+	// ============================================
+	// PUBLIC API
+	// ============================================
+	function toast(message, options) {
+		const opts = options || {};
+		const duration = opts.duration ?? 3e3;
+		const type = opts.type ?? "info";
+		const position = opts.position ?? "bottom";
+		const toastId = ++toastCounter;
+		dismissToastsAtPosition(position);
+		const el = createToastElement(message, type, position, toastId);
+		document.body.appendChild(el);
+		animateIn(el, position);
+		scheduleAutoDismiss(toastId, el, duration);
+		return toastId;
+	}
+	function dismissToast(toastId) {
+		if (toastId !== undefined) {
+			dismissSingleToast(toastId);
+		} else {
+			for (const [id] of activeToasts) dismissSingleToast(id);
+		}
+	}
+	return {
+		toast,
+		dismissToast
+	};
+}
+const { toast, dismissToast } = createToastModule()
+
+// Input-control helpers (stamped from compiler/runtime/input-control.ts)
+function focus(el) {
+	const target = (0,__vite_ssr_import_0__.resolveElement)(el);
+	if (!target) return;
+	const isFormElement = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement || target instanceof HTMLButtonElement;
+	if (isFormElement) {
+		;
+		target.focus();
+	} else if (target.tabIndex >= 0 || target.hasAttribute("tabindex")) {
+		target.focus();
+	}
+}
+function blur(el) {
+	const target = (0,__vite_ssr_import_0__.resolveElement)(el);
+	if (!target) return;
+	target.blur();
+}
+function clear(el) {
+	const target = (0,__vite_ssr_import_0__.resolveElement)(el);
+	if (!target) return;
+	const isTextInput = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
+	if (isTextInput) {
+		;
+		target.value = "";
+		target.dispatchEvent(new Event("input", { bubbles: true }));
+	}
+}
+function selectText(el) {
+	const target = (0,__vite_ssr_import_0__.resolveElement)(el);
+	if (!target) return;
+	const isTextInput = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
+	if (isTextInput) {
+		;
+		target.select();
+	}
+}
+function setError(el, message) {
+	const target = (0,__vite_ssr_import_0__.resolveElement)(el);
+	if (!target) return;
+	target.dataset.invalid = "true";
+	target.dataset.state = "invalid";
+	target.setAttribute("aria-invalid", "true");
+	const isTextInput = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
+	if (isTextInput) {
+		;
+		target.setCustomValidity(message || "Invalid");
+	};
+	if (message) {
+		const errorId = target.dataset.errorId || `${target.id || target.dataset.name || "field"}-error`;
+		target.dataset.errorId = errorId;
+		let errorEl = document.getElementById(errorId);
+		if (!errorEl) {
+			errorEl = document.createElement("span");
+			errorEl.id = errorId;
+			errorEl.className = "mirror-error-message";
+			errorEl.style.cssText = "color: #ef4444; font-size: 12px; margin-top: 4px; display: block;";
+			target.parentNode?.insertBefore(errorEl, target.nextSibling);
+		};
+		errorEl.textContent = message;
+		errorEl.style.display = "block";
+		target.setAttribute("aria-describedby", errorId);
+	}
+}
+function clearError(el) {
+	const target = (0,__vite_ssr_import_0__.resolveElement)(el);
+	if (!target) return;
+	delete target.dataset.invalid;
+	if (target.dataset.state === "invalid") {
+		delete target.dataset.state;
+	};
+	target.removeAttribute("aria-describedby");
+	target.removeAttribute("aria-invalid");
+	const isTextInput = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
+	if (isTextInput) {
+		;
+		target.setCustomValidity("");
+	};
+	const errorId = target.dataset.errorId;
+	if (errorId) {
+		const errorEl = document.getElementById(errorId);
+		if (errorEl) {
+			errorEl.style.display = "none";
+		}
+	}
+}
+
+// Visibility helpers (stamped from compiler/runtime/visibility.ts)
+function show(el) {
+	const target = (0,__vite_ssr_import_0__.resolveElement)(el);
+	if (!target) return;
+	target.style.display = target._savedDisplay || "";
+	target.hidden = false;
+}
+function hide(el) {
+	const target = (0,__vite_ssr_import_0__.resolveElement)(el);
+	if (!target) return;
+	if (target.style.display !== "none") {
+		target._savedDisplay = target.style.display;
+	};
+	target.style.display = "none";
+	target.hidden = true;
+}
+
+// Page-navigation security (stamped from compiler/runtime/component-navigation.ts)
+function sanitizePageName(name) {
+	if (!name || typeof name !== "string") return null;
+	if (name.includes("..")) {
+		console.warn("[Security] Path traversal attempt blocked:", name);
+		return null;
+	};
+	if (name.startsWith("/") || name.startsWith("\\")) {
+		console.warn("[Security] Absolute path blocked:", name);
+		return null;
+	};
+	if (!/^[a-zA-Z0-9_\-/]+(\.[a-zA-Z0-9]+)?$/.test(name)) {
+		console.warn("[Security] Invalid page name characters:", name);
+		return null;
+	};
+	return name;
+}
+
+// State-machine pure ops (stamped from compiler/runtime/state-machine.ts).
+// applyState/removeState are referenced by name from the selection
+// cluster below; both must be at top-level for those references to
+// resolve.
+function applyState(el, state) {
+	if (!el?._stateStyles?.[state]) return;
+	Object.assign(el.style, el._stateStyles[state]);
+}
+function removeState(el, _state) {
+	if (!el?._baseStyles) return;
+	Object.assign(el.style, el._baseStyles);
+}
+
+// Selection / highlight cluster (stamped from compiler/runtime/selection.ts).
+// Helpers come first so the public API can reference them by name.
+function updateBoundElements(varName, value) {
+	const elements = document.querySelectorAll("[data-mirror-id]");
+	for (const el of elements) {
+		if (el._textBinding === varName) {
+			el.textContent = value || el._textPlaceholder || "";
+		}
+	}
+}
+function updateTriggerText(container, selectedText) {
+	// Find the trigger element within the container
+	// Try both data-trigger attribute and data-mirror-name="Trigger"
+	const trigger = container.querySelector("[data-trigger]") || container.querySelector("[data-mirror-name=\"Trigger\"]");
+	if (trigger) {
+		// Find the text element within the trigger (span or element with data-text)
+		const textEl = trigger.querySelector("span, [data-text]");
+		if (textEl) {
+			textEl.textContent = selectedText;
+		} else {
+			// If no text element, update the trigger's first text node
+			const textNode = Array.from(trigger.childNodes).find((node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim());
+			if (textNode) {
+				textNode.textContent = selectedText;
+			}
+		}
+	}
+}
+function updateSelectionBinding(el) {
+	if (!el) return;
+	let parent = el.parentElement;
+	const value = el.textContent?.trim() || "";
+	while (parent) {
+		if (parent._selectionBinding) {
+			const varName = parent._selectionBinding;
+			const mirrorState = window._mirrorState ||= {};
+			mirrorState[varName] = value;
+			updateBoundElements(varName, value);
+		};
+		// Update trigger elements that display the selected value
+		if (parent._triggerBinding) {
+			updateTriggerText(parent, value);
+		};
+		parent = parent.parentElement;
+	}
+}
+function bindTriggerText(container) {
+	if (!container) return;
+	container._triggerBinding = "true";
+}
+function deselectSiblings(el) {
+	if (!el.parentElement) return;
+	for (const sibling of el.parentElement.children) {
+		if (sibling !== el && sibling.dataset.selected) {
+			deselect(sibling);
+		}
+	}
+}
+function unhighlightSiblings(el) {
+	if (!el.parentElement) return;
+	for (const sibling of el.parentElement.children) {
+		if (sibling !== el && sibling.dataset.highlighted) {
+			unhighlight(sibling);
+		}
+	}
+}
+function getHighlightableItems(container) {
+	// First try items with explicit highlight state
+	let items = findHighlightableItems(container, true);
+	// Fallback to items with cursor:pointer
+	if (!items.length) {
+		items = findHighlightableItems(container, false);
+	};
+	return items;
+}
+function select(el) {
+	if (!el) return;
+	deselectSiblings(el);
+	el.dataset.selected = "true";
+	(0,__vite_ssr_import_0__.applyState)(el, "selected");
+	updateSelectionBinding(el);
+}
+function deselect(el) {
+	if (!el) return;
+	delete el.dataset.selected;
+	(0,__vite_ssr_import_0__.removeState)(el, "selected");
+}
+function selectHighlighted(container) {
+	if (!container) return;
+	const items = getHighlightableItems(container);
+	const highlighted = items.find((el) => el.dataset.highlighted === "true");
+	if (highlighted) select(highlighted);
+}
+function highlight(el) {
+	if (!el) return;
+	unhighlightSiblings(el);
+	el.dataset.highlighted = "true";
+	(0,__vite_ssr_import_0__.applyState)(el, "highlighted");
+}
+function unhighlight(el) {
+	if (!el) return;
+	delete el.dataset.highlighted;
+	(0,__vite_ssr_import_0__.removeState)(el, "highlighted");
+}
+function highlightNext(container) {
+	if (!container) return;
+	const items = getHighlightableItems(container);
+	if (!items.length) return;
+	const current = findHighlightIndex(items);
+	const loop = hasLoopFocus(container);
+	let next;
+	if (current === -1) {
+		next = 0;
+	} else if (loop) {
+		next = (current + 1) % items.length;
+	} else {
+		next = Math.min(current + 1, items.length - 1);
+	};
+	highlight(items[next]);
+}
+function highlightPrev(container) {
+	if (!container) return;
+	const items = getHighlightableItems(container);
+	if (!items.length) return;
+	const current = findHighlightIndex(items);
+	const loop = hasLoopFocus(container);
+	let prev;
+	if (current === -1) {
+		prev = items.length - 1;
+	} else if (loop) {
+		prev = (current - 1 + items.length) % items.length;
+	} else {
+		prev = Math.max(current - 1, 0);
+	};
+	highlight(items[prev]);
+}
+function highlightFirst(container) {
+	if (!container) return;
+	const items = getHighlightableItems(container);
+	if (items.length) highlight(items[0]);
+}
+function highlightLast(container) {
+	if (!container) return;
+	const items = getHighlightableItems(container);
+	if (items.length) highlight(items[items.length - 1]);
+}
+
 const _runtime = {
   // Debug mode check
   _isDebug() { return typeof window !== 'undefined' && window.__MIRROR_DEBUG__ === true },
 
-  // Property mapping
-  _propMap: {
-    'bg': 'background',
-    'col': 'color',
-    'pad': 'padding',
-    'rad': 'borderRadius',
-    'gap': 'gap',
-    'w': 'width',
-    'h': 'height',
-    'opacity': 'opacity',
-  },
+  // Property mapping (stamped from compiler/runtime/dom-runtime.ts → PROP_MAP)
+  _propMap: {"bg":"background","col":"color","pad":"padding","rad":"borderRadius","gap":"gap","w":"width","h":"height","opacity":"opacity"},
 
   // SVG Icon Constants (extracted to avoid duplication)
   _icons: {
@@ -6526,7 +7100,7 @@ const _runtime = {
   _alignToCSS(el, prop, value) {
     const dir = el.style.flexDirection || 'column'
     const isRow = dir === 'row'
-    const alignMap = { 'left': 'flex-start', 'right': 'flex-end', 'center': 'center', 'top': 'flex-start', 'bottom': 'flex-end' }
+    const alignMap = {"left":"flex-start","right":"flex-end","center":"center","top":"flex-start","bottom":"flex-end"}
     const cssVal = alignMap[value] || value
 
     if (prop === 'align' || prop === 'hor-align') {
@@ -6615,22 +7189,9 @@ const _runtime = {
     }
   },
 
-  show(el) {
-    if (!el) return
-    el.hidden = false
-    // Restore saved display value or clear inline style
-    el.style.display = el._savedDisplay || ''
-  },
-
-  hide(el) {
-    if (!el) return
-    // Save current display before hiding (unless already hidden)
-    if (el.style.display !== 'none') {
-      el._savedDisplay = el.style.display
-    }
-    el.hidden = true
-    el.style.display = 'none'
-  },
+  // show/hide stamped from compiler/runtime/visibility.ts (top-level)
+  show,
+  hide,
 
   close(el) {
     if (!el) return
@@ -6646,7 +7207,9 @@ const _runtime = {
     } else if (initialState === 'expanded' || initialState === 'collapsed' || currentState === 'expanded' || currentState === 'collapsed') {
       this.setState(el, 'collapsed')
     } else {
-      this.hide(el)
+      // Falls through to the top-level stamped hide() function
+      // (lexical scope picks it up, no method-on-_runtime lookup).
+      hide(el)
     }
   },
 
@@ -6772,231 +7335,42 @@ const _runtime = {
   // SCROLL FUNCTIONS (Built-in)
   // ============================================
 
-  scrollTo(el, options = {}) {
-    if (typeof el === 'string') {
-      el = document.querySelector('[data-mirror-name="' + el + '"]')
-    }
-    if (!el) return
-    el.scrollIntoView({ behavior: options.behavior || 'smooth', block: options.block || 'start' })
-  },
-
-  scrollBy(container, x, y, behavior = 'smooth') {
-    if (typeof container === 'string') {
-      container = document.querySelector('[data-mirror-name="' + container + '"]')
-    }
-    if (!container) return
-    container.scrollBy({ left: x, top: y, behavior: behavior })
-  },
-
-  scrollToTop(container) {
-    if (typeof container === 'string') {
-      container = document.querySelector('[data-mirror-name="' + container + '"]')
-    }
-    if (container) {
-      container.scrollTop = 0
-    }
-  },
-
-  scrollToBottom(container) {
-    if (typeof container === 'string') {
-      container = document.querySelector('[data-mirror-name="' + container + '"]')
-    }
-    if (container) {
-      container.scrollTop = container.scrollHeight
-    }
-  },
+  // scrollTo / scrollBy / scrollToTop / scrollToBottom are stamped from
+  // compiler/runtime/scroll.ts as top-level functions; expose them on
+  // _runtime via shorthand property assignment so the emitter's
+  // _runtime.scrollTo(...) call sites keep working — the typed unit
+  // tests in tests/integration/builtin-scroll.test.ts now exercise the
+  // exact same code that ships in production.
+  scrollTo,
+  scrollBy,
+  scrollToTop,
+  scrollToBottom,
 
   // ============================================
   // FEEDBACK: Toast Notifications
   // ============================================
 
-  _toastCounter: 0,
-  _activeToasts: new Map(),
-
-  toast(message, type = 'info', position = 'bottom') {
-    const toastId = ++this._toastCounter
-    const duration = 3000
-
-    // Dismiss existing toasts at the same position
-    for (const [id, t] of this._activeToasts) {
-      if (t.element.dataset.position === position) {
-        this.dismissToast(id)
-      }
-    }
-
-    // Create toast element
-    const toastEl = document.createElement('div')
-    toastEl.className = 'mirror-toast'
-    toastEl.dataset.type = type
-    toastEl.dataset.position = position
-    toastEl.dataset.toastId = String(toastId)
-    toastEl.textContent = message
-
-    // Base styles
-    Object.assign(toastEl.style, {
-      position: 'fixed',
-      zIndex: '10000',
-      padding: '12px 20px',
-      borderRadius: '8px',
-      fontSize: '14px',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-      transition: 'opacity 0.2s, transform 0.2s',
-      opacity: '0',
-      transform: 'translateY(10px)',
-    })
-
-    // Position styles
-    const posStyles = {
-      'top': { top: '20px', left: '50%', transform: 'translateX(-50%) translateY(-10px)' },
-      'bottom': { bottom: '20px', left: '50%', transform: 'translateX(-50%) translateY(10px)' },
-      'top-left': { top: '20px', left: '20px', transform: 'translateY(-10px)' },
-      'top-right': { top: '20px', right: '20px', transform: 'translateY(-10px)' },
-      'bottom-left': { bottom: '20px', left: '20px', transform: 'translateY(10px)' },
-      'bottom-right': { bottom: '20px', right: '20px', transform: 'translateY(10px)' },
-    }
-    Object.assign(toastEl.style, posStyles[position] || posStyles.bottom)
-
-    // Type colors
-    const typeColors = {
-      'info': { bg: '#1a1a1a', color: '#fff', border: '#333' },
-      'success': { bg: '#052e16', color: '#4ade80', border: '#166534' },
-      'error': { bg: '#450a0a', color: '#f87171', border: '#991b1b' },
-      'warning': { bg: '#422006', color: '#fbbf24', border: '#92400e' },
-    }
-    const colors = typeColors[type] || typeColors.info
-    toastEl.style.background = colors.bg
-    toastEl.style.color = colors.color
-    toastEl.style.border = '1px solid ' + colors.border
-
-    document.body.appendChild(toastEl)
-
-    // Store toast info
-    this._activeToasts.set(toastId, {
-      element: toastEl,
-      timerId: null
-    })
-
-    // Animate in
-    requestAnimationFrame(() => {
-      toastEl.style.opacity = '1'
-      toastEl.style.transform = position.startsWith('top')
-        ? 'translateX(-50%) translateY(0)'
-        : 'translateX(-50%) translateY(0)'
-      if (!position.includes('-')) {
-        toastEl.style.transform = position.startsWith('top')
-          ? 'translateX(-50%) translateY(0)'
-          : 'translateX(-50%) translateY(0)'
-      } else {
-        toastEl.style.transform = 'translateY(0)'
-      }
-    })
-
-    // Auto dismiss
-    const timerId = setTimeout(() => this.dismissToast(toastId), duration)
-    this._activeToasts.get(toastId).timerId = timerId
-
-    return toastId
-  },
-
-  dismissToast(toastId) {
-    const toast = this._activeToasts.get(toastId)
-    if (!toast) return
-
-    if (toast.timerId) clearTimeout(toast.timerId)
-
-    toast.element.style.opacity = '0'
-    toast.element.style.transform = toast.element.dataset.position?.startsWith('top')
-      ? 'translateY(-10px)'
-      : 'translateY(10px)'
-
-    setTimeout(() => {
-      toast.element.remove()
-      this._activeToasts.delete(toastId)
-    }, 200)
-  },
+  // toast / dismissToast are stamped from compiler/runtime/toast.ts
+  // (see createToastModule call above the _runtime declaration).
+  // Compiler emits toast(message, { type, position }) — the typed
+  // function honours that signature; the previous inline impl took
+  // positional args and silently dropped the options object.
+  toast,
+  dismissToast,
 
   // ============================================
   // INPUT CONTROL: Focus, Clear, Error
   // ============================================
-
-  focus(el) {
-    if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
-    if (target && typeof target.focus === 'function') {
-      target.focus()
-    }
-  },
-
-  blur(el) {
-    if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
-    if (target && typeof target.blur === 'function') {
-      target.blur()
-    }
-  },
-
-  clear(el) {
-    if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
-    if (target && 'value' in target) {
-      target.value = ''
-      target.dispatchEvent(new Event('input', { bubbles: true }))
-    }
-  },
-
-  selectText(el) {
-    if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
-    if (target && typeof target.select === 'function') {
-      target.select()
-    }
-  },
-
-  setError(el, message) {
-    if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
-    if (!target) return
-
-    // Set invalid state
-    target.dataset.state = 'invalid'
-    target.setAttribute('aria-invalid', 'true')
-
-    // Store error message
-    if (message) {
-      target._errorMessage = message
-      // Try to find or create error display
-      let errorEl = target.parentElement?.querySelector('.mirror-error-message')
-      if (!errorEl) {
-        errorEl = document.createElement('span')
-        errorEl.className = 'mirror-error-message'
-        errorEl.style.cssText = 'color:#ef4444;font-size:12px;margin-top:4px;display:block;'
-        target.parentElement?.appendChild(errorEl)
-      }
-      errorEl.textContent = message
-    }
-
-    // Apply invalid styles via state machine if available
-    this.transitionTo && this.transitionTo(target, 'invalid')
-  },
-
-  clearError(el) {
-    if (!el) return
-    const target = typeof el === 'string' ? document.querySelector('[data-mirror-name="' + el + '"]') : el
-    if (!target) return
-
-    // Clear invalid state
-    delete target.dataset.state
-    target.removeAttribute('aria-invalid')
-    delete target._errorMessage
-
-    // Remove error message element
-    const errorEl = target.parentElement?.querySelector('.mirror-error-message')
-    if (errorEl) errorEl.remove()
-
-    // Revert to default state
-    this.transitionTo && this.transitionTo(target, 'default')
-  },
+  // Stamped from compiler/runtime/input-control.ts. Each accepts
+  // string|element via resolveElement. setError/clearError now use
+  // dataset.state directly (no state-machine roundtrip), matching
+  // what production has always actually shipped.
+  focus,
+  blur,
+  clear,
+  selectText,
+  setError,
+  clearError,
 
   // ============================================
   // NAVIGATION: Back, Forward, OpenUrl
@@ -7153,14 +7527,8 @@ const _runtime = {
     })
   },
 
-  /**
-   * Bind trigger text to show selected value
-   * When an item is selected, update the trigger element's text
-   */
-  bindTriggerText(container) {
-    if (!container) return
-    container._triggerBinding = 'true'
-  },
+  // Bind trigger text to show selected value (stamped from selection.ts).
+  bindTriggerText,
 
   /**
    * Hover-to-highlight for list items inside a loop-focus container.
@@ -8040,118 +8408,21 @@ const _runtime = {
     }
   },
 
-  // Selection
-  select(el) {
-    if (!el) return
-    if (el.parentElement) {
-      Array.from(el.parentElement.children).forEach(sibling => {
-        if (sibling !== el && sibling.dataset.selected) {
-          this.deselect(sibling)
-        }
-      })
-    }
-    el.dataset.selected = 'true'
-    this.applyState(el, 'selected')
-    this.updateSelectionBinding(el)
-  },
+  // Selection + highlight cluster — stamped from compiler/runtime/selection.ts
+  // (see top-level declarations above _runtime). Helpers use the
+  // top-level applyState/removeState by lexical name lookup, not
+  // this.applyState method dispatch.
+  select,
+  deselect,
+  highlight,
+  unhighlight,
+  highlightNext,
+  highlightPrev,
+  highlightFirst,
+  highlightLast,
+  getHighlightableItems,
 
-  deselect(el) {
-    if (!el) return
-    delete el.dataset.selected
-    this.removeState(el, 'selected')
-  },
-
-  // Highlighting
-  highlight(el) {
-    if (!el) return
-    if (el.parentElement) {
-      Array.from(el.parentElement.children).forEach(sibling => {
-        if (sibling !== el && sibling.dataset.highlighted) {
-          this.unhighlight(sibling)
-        }
-      })
-    }
-    el.dataset.highlighted = 'true'
-    this.applyState(el, 'highlighted')
-  },
-
-  unhighlight(el) {
-    if (!el) return
-    delete el.dataset.highlighted
-    this.removeState(el, 'highlighted')
-  },
-
-  highlightNext(container) {
-    if (!container) return
-    const items = this.getHighlightableItems(container)
-    if (!items.length) return
-    const current = items.findIndex(el => el.dataset.highlighted === 'true')
-    const loop = container._loopFocus === true || container.dataset.loopFocus === 'true'
-    let next
-    if (current === -1) {
-      next = 0
-    } else if (loop) {
-      next = (current + 1) % items.length
-    } else {
-      next = Math.min(current + 1, items.length - 1)
-    }
-    this.highlight(items[next])
-  },
-
-  highlightPrev(container) {
-    if (!container) return
-    const items = this.getHighlightableItems(container)
-    if (!items.length) return
-    const current = items.findIndex(el => el.dataset.highlighted === 'true')
-    const loop = container._loopFocus === true || container.dataset.loopFocus === 'true'
-    let prev
-    if (current === -1) {
-      prev = items.length - 1
-    } else if (loop) {
-      prev = (current - 1 + items.length) % items.length
-    } else {
-      prev = Math.max(current - 1, 0)
-    }
-    this.highlight(items[prev])
-  },
-
-  highlightFirst(container) {
-    if (!container) return
-    const items = this.getHighlightableItems(container)
-    if (items.length) this.highlight(items[0])
-  },
-
-  highlightLast(container) {
-    if (!container) return
-    const items = this.getHighlightableItems(container)
-    if (items.length) this.highlight(items[items.length - 1])
-  },
-
-  getHighlightableItems(container) {
-    const findItems = (el, requireHighlightState) => {
-      const items = []
-      for (const child of el.children) {
-        if (child._stateStyles?.highlighted) {
-          items.push(child)
-        } else if (!requireHighlightState && child.style.cursor === 'pointer') {
-          items.push(child)
-        } else {
-          items.push(...findItems(child, requireHighlightState))
-        }
-      }
-      return items
-    }
-    let items = findItems(container, true)
-    if (!items.length) items = findItems(container, false)
-    return items
-  },
-
-  selectHighlighted(container) {
-    if (!container) return
-    const items = this.getHighlightableItems(container)
-    const highlighted = items.find(el => el.dataset.highlighted === 'true')
-    if (highlighted) this.select(highlighted)
-  },
+  selectHighlighted,
 
   // Activation
   activate(el) {
@@ -8167,15 +8438,9 @@ const _runtime = {
   },
 
   // State management
-  applyState(el, state) {
-    if (!el?._stateStyles || !el._stateStyles[state]) return
-    Object.assign(el.style, el._stateStyles[state])
-  },
-
-  removeState(el, state) {
-    if (!el?._baseStyles) return
-    Object.assign(el.style, el._baseStyles)
-  },
+  // applyState / removeState stamped from compiler/runtime/state-machine.ts
+  applyState,
+  removeState,
 
   setState(el, stateName) {
     if (!el) return
@@ -8553,7 +8818,12 @@ const _runtime = {
 
   navigateToPage(pageName, clickedElement) {
     if (!pageName) return
-    const filename = pageName.endsWith('.mirror') ? pageName : pageName + '.mirror'
+    // Reject path-traversal / absolute-path / weird-character page names
+    // BEFORE constructing a filename. sanitizePageName is stamped from
+    // compiler/runtime/component-navigation.ts.
+    const safePage = sanitizePageName(pageName)
+    if (!safePage) return
+    const filename = safePage.endsWith('.mirror') ? safePage : safePage + '.mirror'
     const readFile = this._readFile || window._mirrorReadFile
     if (!readFile) {
       console.warn('No readFile callback available for page navigation')
@@ -8608,56 +8878,11 @@ const _runtime = {
     return null
   },
 
-  // Selection binding
-  updateSelectionBinding(el) {
-    if (!el) return
-    const value = el.textContent?.trim() || ''
-    let parent = el.parentElement
-    while (parent) {
-      // Selection variable binding
-      if (parent._selectionBinding) {
-        const varName = parent._selectionBinding
-        window._mirrorState = window._mirrorState || {}
-        window._mirrorState[varName] = value
-        this.updateBoundElements(varName, value)
-      }
-      // Trigger text binding - update trigger to show selected value
-      if (parent._triggerBinding) {
-        this.updateTriggerText(parent, value)
-      }
-      parent = parent.parentElement
-    }
-  },
-
-  // Update trigger text to show selected value
-  updateTriggerText(container, selectedText) {
-    // Find the trigger element within the container
-    // Try both data-trigger attribute and data-mirror-name="Trigger"
-    const trigger = container.querySelector('[data-trigger]') || container.querySelector('[data-mirror-name="Trigger"]')
-    if (trigger) {
-      // Find the text element within the trigger (span or element with data-text)
-      const textEl = trigger.querySelector('span, [data-text]')
-      if (textEl) {
-        textEl.textContent = selectedText
-      } else {
-        // If no text element, update the trigger's first text node
-        const textNode = Array.from(trigger.childNodes).find(
-          node => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()
-        )
-        if (textNode) {
-          textNode.textContent = selectedText
-        }
-      }
-    }
-  },
-
-  updateBoundElements(varName, value) {
-    document.querySelectorAll('[data-mirror-id]').forEach(el => {
-      if (el._textBinding === varName) {
-        el.textContent = value || el._textPlaceholder || ''
-      }
-    })
-  },
+  // Selection binding + trigger-text + bound-elements update —
+  // stamped from compiler/runtime/selection.ts.
+  updateSelectionBinding,
+  updateTriggerText,
+  updateBoundElements,
 
   // Cleanup
   destroy(el) {
@@ -9303,7 +9528,7 @@ const _runtime = {
   _iconCache: new Map(),
   _customIcons: new Map(),
   _pendingIcons: new Map(),
-  _fallbackIcon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></svg>',
+  _fallbackIcon: "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"m9 9 6 6\"/><path d=\"m15 9-6 6\"/></svg>",
 
   // Register a user-defined icon via $icons: name: "M..." path data.
   // Stored in a separate registry that loadIcon consults first, ahead of
@@ -9314,6 +9539,11 @@ const _runtime = {
 
   async loadIcon(el, iconName) {
     if (!el || !iconName) return
+    // Reject malicious icon names (path traversal, scripts, oversized).
+    // sanitizeIconName is stamped from compiler/runtime/icons.ts.
+    const safeName = sanitizeIconName(iconName)
+    if (!safeName) return
+    iconName = safeName
     const size = el.dataset.iconSize || '16'
     const color = el.dataset.iconColor || 'currentColor'
     const strokeWidth = el.dataset.iconWeight || '2'
@@ -9367,15 +9597,24 @@ const _runtime = {
   },
 
   async _fetchIcon(iconName) {
+    // Defence-in-depth: reject unsafe names even if a caller bypasses
+    // loadIcon's check. sanitizeIconName is stamped from icons.ts.
+    const safeName = sanitizeIconName(iconName)
+    if (!safeName) return null
     try {
-      const url = `https://unpkg.com/lucide-static/icons/${iconName}.svg`
+      const url = `https://unpkg.com/lucide-static/icons/${safeName}.svg`
       const res = await fetch(url)
       if (!res.ok) return null
-      const svgText = await res.text()
-      this._iconCache.set(iconName, svgText)
+      const rawSvg = await res.text()
+      // Strip script/foreignObject/use/event-handlers from CDN response
+      // before it ever reaches innerHTML. sanitizeSVG is stamped from
+      // compiler/runtime/icons.ts.
+      const svgText = sanitizeSVG(rawSvg)
+      if (!svgText) return null
+      this._iconCache.set(safeName, svgText)
       return svgText
     } catch (err) {
-      console.warn(`Failed to load icon "${iconName}":`, err)
+      console.warn(`Failed to load icon "${safeName}":`, err)
       return null
     }
   },

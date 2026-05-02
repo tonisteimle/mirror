@@ -373,6 +373,13 @@ function switchFile(filename: string) {
   // Switch to new file
   currentFile = filename
 
+  // Update previewFile only when the new file is itself a layout.
+  // For tokens / components / data we keep the previously-shown layout
+  // visible, so editing those files updates the same preview.
+  if (getFileType(filename) === 'layout') {
+    studioActions.setPreviewFile(filename)
+  }
+
   // Clear selection and reset sync for new file
   if (studio.sync) {
     studio.sync.clearSelection('editor')
@@ -1069,7 +1076,24 @@ function compile(code: string) {
   // Update files with current code so ComponentRenderer can access it
   files[currentFile] = code
 
-  if (!code.trim()) {
+  // Preview redirection: when the editor is on a non-layout file (tokens,
+  // components, data) and we have a separate previewFile, compile the
+  // layout instead so its rendered preview reflects the just-edited tokens
+  // / components / data via the prelude. The editor's own content was
+  // already saved into `files[currentFile]` above, so the prelude built
+  // for the layout picks it up.
+  let compileFile = currentFile
+  let compileCode = code
+  const editingFileType = getFileType(currentFile)
+  if (editingFileType !== 'layout' && studio?.state) {
+    const previewFile = studio.state.get().previewFile
+    if (previewFile && previewFile !== currentFile && getFileType(previewFile) === 'layout') {
+      compileFile = previewFile
+      compileCode = files[previewFile] ?? ''
+    }
+  }
+
+  if (!compileCode.trim()) {
     // Render empty App container for drop target support
     preview.innerHTML = `<div class="mirror-root" style="width: 100%; height: 100%;">
       <div data-mirror-id="node-1" data-mirror-root="true" data-mirror-name="App" data-component="App"
@@ -1095,25 +1119,26 @@ function compile(code: string) {
   // Mark compilation as in progress
   studioActions.setCompiling(true)
 
-  // Determine file type for preview mode
-  const fileType = getFileType(currentFile)
+  // Determine file type for preview mode (uses compileFile, which equals
+  // currentFile unless we redirected to a layout above).
+  const fileType = getFileType(compileFile)
 
   try {
     // Auto-create any missing referenced files
-    autoCreateReferencedFiles(code)
+    autoCreateReferencedFiles(compileCode)
 
     // For layout files, prepend all tokens and components
     // and wrap user code in an implicit full-screen root container
-    let resolvedCode = code
+    let resolvedCode = compileCode
     // In test mode, build the same tokens/components prelude as
     // production so cross-file token + component resolution is
     // available. The App-wrapping is intentionally skipped (tests want
     // node-1 to be the user's first element, not the synthetic App).
     if (testModeActive && fileType === 'layout') {
-      const prelude = getPreludeCode(currentFile)
+      const prelude = getPreludeCode(compileFile)
       if (prelude) {
-        const separator = '\n\n// === ' + currentFile + ' ===\n'
-        resolvedCode = prelude + separator + code
+        const separator = '\n\n// === ' + compileFile + ' ===\n'
+        resolvedCode = prelude + separator + compileCode
         currentPreludeOffset = prelude.length + separator.length
         currentPreludeLineOffset =
           resolvedCode.substring(0, currentPreludeOffset).split('\n').length - 1
@@ -1123,19 +1148,19 @@ function compile(code: string) {
       }
     } else if (testModeActive) {
       // Non-layout in test mode (tokens.tok, components.com): compile alone.
-      resolvedCode = code
+      resolvedCode = compileCode
       currentPreludeOffset = 0
       currentPreludeLineOffset = 0
     } else if (fileType === 'layout') {
       currentPreludeOffset = 0 // Reset prelude offset only in normal mode
-      const prelude = getPreludeCode(currentFile)
+      const prelude = getPreludeCode(compileFile)
 
       // Check if code already starts with "App" (legacy files)
-      const startsWithApp = code.trimStart().startsWith('App')
+      const startsWithApp = compileCode.trimStart().startsWith('App')
 
       // Check if code contains component definitions at root level (lines ending with ":" at indent 0)
       // These should NOT be wrapped in App, as they would become slot definitions instead
-      const hasRootComponentDefs = code.split('\n').some((line: string) => {
+      const hasRootComponentDefs = compileCode.split('\n').some((line: string) => {
         const trimmed = line.trim()
         // Component definition: starts with capital letter, ends with ":"
         // But not a state like "hover:" or "focus:" (lowercase)
@@ -1149,8 +1174,8 @@ function compile(code: string) {
         // Component definitions at root level would become slot definitions if wrapped
         isWrappedWithApp = false
         if (prelude) {
-          const separator = '\n\n// === ' + currentFile + ' ===\n'
-          resolvedCode = prelude + separator + code
+          const separator = '\n\n// === ' + compileFile + ' ===\n'
+          resolvedCode = prelude + separator + compileCode
           currentPreludeOffset = prelude.length + separator.length
         }
       } else {
@@ -1160,7 +1185,7 @@ function compile(code: string) {
         const rootWrapper = 'App'
 
         // Indent user code to be children of the implicit root
-        const indentedCode = code
+        const indentedCode = compileCode
           .split('\n')
           .map((line: string) => (line ? '  ' + line : ''))
           .join('\n')
@@ -1169,7 +1194,7 @@ function compile(code: string) {
         // returns line-start positions (including indent). The indent is stripped
         // separately in handleStudioCodeChange when applying changes to the editor.
         if (prelude) {
-          const separator = '\n\n// === ' + currentFile + ' ===\n'
+          const separator = '\n\n// === ' + compileFile + ' ===\n'
           resolvedCode = prelude + separator + rootWrapper + '\n' + indentedCode
           currentPreludeOffset = prelude.length + separator.length + rootWrapper.length + 1
         } else {
@@ -1270,7 +1295,7 @@ function compile(code: string) {
       let finalJsCode = jsCode
 
       // Find components defined in the current file (not prelude)
-      const localAst = MirrorLang.parse(code)
+      const localAst = MirrorLang.parse(compileCode)
       const localComponentNames = (localAst.components || []).map(c => c.name)
 
       // Check which local components are NOT already instanced. The
@@ -1557,16 +1582,32 @@ if (typeof window !== 'undefined') {
       files[currentFile] = code
     }
 
+    // Preview redirection (mirror the production compile path): when the
+    // editor is on a non-layout file (tokens / components / data) and a
+    // separate previewFile is set, compile the layout instead. The just-
+    // saved editor content is already in `files`, so the prelude for the
+    // layout picks it up automatically.
+    let compileFile = currentFile
+    let compileCode = code
+    const editingFileType = getFileType(currentFile)
+    if (editingFileType !== 'layout' && studio?.state) {
+      const previewFile = studio.state.get().previewFile
+      if (previewFile && previewFile !== currentFile && getFileType(previewFile) === 'layout') {
+        compileFile = previewFile
+        compileCode = files[previewFile] ?? ''
+      }
+    }
+
     // Build prelude for layout files; tokens/component files compile alone.
-    const fileType = getFileType(currentFile)
-    let resolvedCode = code
+    const fileType = getFileType(compileFile)
+    let resolvedCode = compileCode
     let preludeOffset = 0
     let preludeLineOffset = 0
     if (fileType === 'layout') {
-      const prelude = getPreludeCode(currentFile)
+      const prelude = getPreludeCode(compileFile)
       if (prelude) {
-        const separator = '\n\n// === ' + currentFile + ' ===\n'
-        resolvedCode = prelude + separator + code
+        const separator = '\n\n// === ' + compileFile + ' ===\n'
+        resolvedCode = prelude + separator + compileCode
         preludeOffset = prelude.length + separator.length
         preludeLineOffset = resolvedCode.substring(0, preludeOffset).split('\n').length - 1
       }
@@ -2369,6 +2410,12 @@ if (!isPlaygroundMode) {
           console.log('[DesktopFiles] Loading file into editor:', filePath)
           // Update currentFile for appLockExtension
           currentFile = filePath
+          // Track previewFile separately: only follow the editor when the
+          // newly selected file is a layout. For tokens / components / data
+          // the previously visible layout stays in the preview pane.
+          if (getFileType(filePath) === 'layout') {
+            studioActions.setPreviewFile(filePath)
+          }
           // Update editor content
           const transaction = editor.state.update({
             changes: {

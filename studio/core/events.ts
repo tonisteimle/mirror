@@ -65,11 +65,12 @@ export interface StudioEvents {
   'preview:element-hovered': { nodeId: string | null; element: HTMLElement | null }
   'preview:element-dblclicked': { nodeId: string; element: HTMLElement }
   'preview:playmode': { active: boolean }
+  'preview:file-changed': { path: string | null }
   'panel:property-changed': { nodeId: string; property: string; value: string }
   'panel:property-removed': { nodeId: string; property: string }
   'panel:update-requested': { nodeId: string }
   'panel:visibility-changed': {
-    panel: 'prompt' | 'files' | 'code' | 'components' | 'preview' | 'property'
+    panel: 'prompt' | 'files' | 'code' | 'components' | 'tokens' | 'preview' | 'property'
     visible: boolean
   }
   'panel:sizes-changed': { sizes: { sidebar: number; editor: number; preview: number } }

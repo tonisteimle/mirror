@@ -55,6 +55,7 @@ const defaultPanelVisibility: PanelVisibility = {
   files: true,
   code: true,
   components: true, // Standalone components panel
+  tokens: true, // Standalone tokens panel
   preview: true,
   property: true,
 }
@@ -123,6 +124,7 @@ const initialState: StudioState = {
   cursor: { line: 1, column: 1 },
   editorHasFocus: true,
   currentFile: 'index.mir',
+  previewFile: 'index.mir',
   files: {},
   fileTypes: {},
   panels: { left: true, right: true },
@@ -367,6 +369,18 @@ export const actions = {
   setEditorFocus(hasFocus: boolean): void {
     state.set({ editorHasFocus: hasFocus })
     events.emit(hasFocus ? 'editor:focused' : 'editor:blurred')
+  },
+
+  /**
+   * Set the preview file (layout rendered in the preview pane).
+   * Decoupled from currentFile so editing tokens/components keeps the
+   * layout visible.
+   */
+  setPreviewFile(path: string | null): void {
+    const current = state.get().previewFile
+    if (current === path) return
+    state.set({ previewFile: path })
+    events.emit('preview:file-changed', { path })
   },
 
   /**
