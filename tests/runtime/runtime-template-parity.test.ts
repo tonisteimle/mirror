@@ -32,19 +32,57 @@ import { DOM_RUNTIME_CODE } from '../../compiler/backends/dom/runtime-template'
 
 const REPO_ROOT = resolve(fileURLToPath(import.meta.url), '../../..')
 
+/**
+ * Extract a JSON object literal from `source` that follows `prefix`.
+ *
+ * `prefix` is matched as a regex (e.g. /_propMap:\s* /); the function
+ * walks balanced braces from the opening brace and returns the matched
+ * substring. Robust against nested objects — unlike a flat
+ * "open-to-first-close" regex, which stops at the first inner brace.
+ *
+ * Returns null if the prefix isn't found or braces don't balance.
+ */
+function extractJsonLiteralAfter(source: string, prefix: RegExp): string | null {
+  const m = prefix.exec(source)
+  if (!m) return null
+  let i = m.index + m[0].length
+  if (source[i] !== '{') return null
+  let depth = 0
+  let inString = false
+  let escape = false
+  for (; i < source.length; i++) {
+    const ch = source[i]
+    if (escape) {
+      escape = false
+      continue
+    }
+    if (ch === '\\') {
+      escape = true
+      continue
+    }
+    if (ch === '"') {
+      inString = !inString
+      continue
+    }
+    if (inString) continue
+    if (ch === '{') depth++
+    else if (ch === '}') {
+      depth--
+      if (depth === 0) {
+        const start = m.index + m[0].length
+        return source.slice(start, i + 1)
+      }
+    }
+  }
+  return null
+}
+
 describe('Runtime template parity', () => {
   describe('PROP_MAP', () => {
     it('typed PROP_MAP is the same object as the template _propMap', () => {
-      // The template now stamps PROP_MAP via JSON.stringify, so it
-      // appears verbatim as a JSON object literal — extract via JSON.parse.
-      const m = DOM_RUNTIME_CODE.match(/_propMap:\s*(\{[^}]*\})/)
-      expect(m, 'expected _propMap block in DOM_RUNTIME_CODE').not.toBeNull()
-
-      // The literal is valid JSON (JSON.stringify guarantees double quotes).
-      const templateMap = JSON.parse(m![1]) as Record<string, string>
-
-      // Both maps must agree completely. If a new prop is added in one
-      // place, the build fails here.
+      const literal = extractJsonLiteralAfter(DOM_RUNTIME_CODE, /_propMap:\s*/)
+      expect(literal, 'expected _propMap block in DOM_RUNTIME_CODE').not.toBeNull()
+      const templateMap = JSON.parse(literal!) as Record<string, string>
       expect(templateMap).toEqual(PROP_MAP)
     })
   })
@@ -68,11 +106,9 @@ describe('Runtime template parity', () => {
 
   describe('ALIGN_MAP', () => {
     it('typed ALIGN_MAP is the same object as the template alignMap literal', () => {
-      // The template stamps ALIGN_MAP via JSON.stringify into the body of
-      // _alignToCSS — extract and compare.
-      const m = DOM_RUNTIME_CODE.match(/const alignMap\s*=\s*(\{[^}]*\})/)
-      expect(m, 'expected alignMap literal in _alignToCSS body').not.toBeNull()
-      const templateMap = JSON.parse(m![1]) as Record<string, string>
+      const literal = extractJsonLiteralAfter(DOM_RUNTIME_CODE, /const alignMap\s*=\s*/)
+      expect(literal, 'expected alignMap literal in _alignToCSS body').not.toBeNull()
+      const templateMap = JSON.parse(literal!) as Record<string, string>
       expect(templateMap).toEqual(ALIGN_MAP)
     })
   })
@@ -86,6 +122,23 @@ describe('Runtime template parity', () => {
       // The template stamps LUCIDE_CDN inline (not via JSON.stringify) so
       // the URL appears as a substring.
       expect(DOM_RUNTIME_CODE).toContain(LUCIDE_CDN)
+    })
+  })
+
+  describe('extractor robustness', () => {
+    it('handles nested objects (proves the extractor is balanced-brace, not flat-regex)', () => {
+      const sample = 'foo: {"a":{"b":1,"c":[2,3]},"d":"}{"} after'
+      const out = extractJsonLiteralAfter(sample, /foo:\s*/)
+      expect(out).toBe('{"a":{"b":1,"c":[2,3]},"d":"}{"}')
+      expect(JSON.parse(out!)).toEqual({ a: { b: 1, c: [2, 3] }, d: '}{' })
+    })
+
+    it('returns null when the prefix is not present', () => {
+      expect(extractJsonLiteralAfter('no match here', /foo:\s*/)).toBeNull()
+    })
+
+    it('returns null when braces are unbalanced', () => {
+      expect(extractJsonLiteralAfter('foo: {"a":1', /foo:\s*/)).toBeNull()
     })
   })
 

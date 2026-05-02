@@ -17,7 +17,7 @@ export function emitZagComponent(this: DOMGenerator, node: IRZagNode, parentVar:
   }
 
   // Fallback: Generic Zag component handler for unknown types
-  // All 25 specialized emitters are in zag-emitters.ts
+  // (specialized emitters live in compiler/backends/dom/zag/)
 
   const varName = this.sanitizeVarName(node.id)
 

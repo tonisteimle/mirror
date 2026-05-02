@@ -20,7 +20,8 @@ import type {
   IconDefinition,
 } from './ast'
 import type { ParserContext } from './parser-context'
-import { ParserUtils, MAX_ITERATIONS } from './parser-context'
+import { ParserUtils } from './parser-context'
+import { MAX_ITERATIONS } from './ops/limits'
 
 const U = ParserUtils
 

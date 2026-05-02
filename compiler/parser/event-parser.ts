@@ -22,7 +22,8 @@
 import type { Token } from './lexer'
 import type { Event, Action } from './ast'
 import type { ParserContext } from './parser-context'
-import { ParserUtils, MAX_ITERATIONS } from './parser-context'
+import { ParserUtils } from './parser-context'
+import { MAX_ITERATIONS } from './ops/limits'
 import {
   PROPERTY_STARTERS,
   ALL_BOOLEAN_PROPERTIES,

@@ -30,7 +30,8 @@ import type {
   ComputedExpression,
 } from './ast'
 import type { ParserContext } from './parser-context'
-import { ParserUtils, MAX_LOOKAHEAD } from './parser-context'
+import { ParserUtils } from './parser-context'
+import { MAX_LOOKAHEAD } from './ops/limits'
 import {
   PROPERTY_STARTERS,
   LAYOUT_BOOLEANS,

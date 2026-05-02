@@ -640,14 +640,6 @@ export class DOMGenerator {
     }
   }
 
-  // =========================================================================
-  // MIGRATED TO zag-emitters.ts (25 components):
-  // Switch, Checkbox, RadioGroup, Slider, Tabs, Select, Tooltip, Dialog,
-  // SideNav, Popover, HoverCard, Collapsible, DatePicker, ToggleGroup,
-  // SegmentedControl, TreeView, PasswordInput, PinInput, Editable,
-  // TagsInput, NumberInput, DateInput, Accordion, Listbox, Form
-  // =========================================================================
-
   createAPIEmitterContext(): APIEmitterContext {
     return {
       emit: (line: string) => this.emit(line),

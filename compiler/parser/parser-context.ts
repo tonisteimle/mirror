@@ -33,21 +33,6 @@ export interface ParserContext {
 }
 
 /**
- * Maximum iterations for while loops to prevent infinite loops.
- */
-export const MAX_ITERATIONS = 100000
-
-/**
- * Maximum lookahead distance for line-based scans.
- */
-export const MAX_LOOKAHEAD = 1000
-
-/**
- * Maximum depth for condition chains.
- */
-export const MAX_CONDITION_DEPTH = 100
-
-/**
  * Token types for reserved keywords that can be used as identifier/property
  * names in certain contexts (e.g. `card.desc` where `desc` is a keyword
  * elsewhere). Shared by parser.ts (property-access chains) and

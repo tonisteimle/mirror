@@ -36,7 +36,8 @@ import type {
   DataReferenceArray,
 } from './ast'
 import type { ParserContext } from './parser-context'
-import { ParserUtils, MAX_ITERATIONS, KEYWORD_TOKEN_TYPES } from './parser-context'
+import { ParserUtils, KEYWORD_TOKEN_TYPES } from './parser-context'
+import { MAX_ITERATIONS } from './ops/limits'
 
 const U = ParserUtils
 

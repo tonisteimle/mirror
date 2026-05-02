@@ -19,7 +19,8 @@
  */
 
 import type { ParserContext } from './parser-context'
-import { ParserUtils, MAX_CONDITION_DEPTH } from './parser-context'
+import { ParserUtils } from './parser-context'
+import { MAX_CONDITION_DEPTH } from './ops/limits'
 import {
   EVENT_NAMES,
   STATE_MODIFIERS,
