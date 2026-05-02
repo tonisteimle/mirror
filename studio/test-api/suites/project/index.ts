@@ -27,6 +27,7 @@ import { tokenComponentTests } from './token-component.test'
 import { screenNavigationTests } from './screen-navigation.test'
 import { complexLayoutTests } from './complex-layout.test'
 import { fileSwitchingTests } from './file-switching.test'
+import { tokensSidebarTests } from './tokens-sidebar.test'
 
 export {
   allEmptyProjectTests,
@@ -39,6 +40,7 @@ export {
   screenNavigationTests,
   complexLayoutTests,
   fileSwitchingTests,
+  tokensSidebarTests,
 }
 
 export const allProjectTests: TestSuite = [
@@ -48,6 +50,7 @@ export const allProjectTests: TestSuite = [
   ...screenNavigationTests,
   ...complexLayoutTests,
   ...fileSwitchingTests,
+  ...tokensSidebarTests,
 ]
 
 export default allProjectTests

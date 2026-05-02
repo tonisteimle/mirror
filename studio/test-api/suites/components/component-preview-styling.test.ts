@@ -32,7 +32,14 @@ card.rad: 8`
 Card: bg $card, pad $card, rad $card`
       await api.panel.files.create('components.com', componentContent)
 
-      // Step 3: Switch to the .com file
+      // Step 3: Clear the previewFile redirect (default 'index.mir') so
+      // compile() renders the .com directly via ComponentRenderer instead
+      // of redirecting to a layout (see compile() preview-redirect block
+      // in studio/app.ts).
+      const studio = (window as any).studio
+      studio?.actions?.setPreviewFile?.(null)
+
+      // Step 4: Switch to the .com file
       await api.panel.files.open('components.com')
 
       // Step 4: Wait for component preview to render
@@ -99,6 +106,12 @@ Card: bg $card, pad $card, rad $card`
 Btn: bg #2271C1, pad 12, rad 6, col white`
 
     await api.panel.files.create('simple.com', componentContent)
+
+    // Clear the previewFile redirect so compile() renders the .com
+    // directly via ComponentRenderer instead of redirecting to a layout.
+    const studio = (window as any).studio
+    studio?.actions?.setPreviewFile?.(null)
+
     await api.panel.files.open('simple.com')
 
     await new Promise(resolve => setTimeout(resolve, 500))
