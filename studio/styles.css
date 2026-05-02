@@ -10,6 +10,7 @@
 @import url('./styles/chat-panel.css');
 @import url('./styles/cm-editor.css');
 @import url('./styles/settings-dialog.css');
+@import url('./styles/click-to-draw.css');
 
 
     * {
@@ -5192,63 +5193,6 @@
 }
 
 
-/* ============================================================================
- * Click-to-Draw Overlay Styles
- * ============================================================================ */
-
-/* Full-screen overlay for drawing rectangles */
-.draw-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 9999;
-  display: none;
-}
-
-/* Rectangle being drawn */
-.draw-rect {
-  position: absolute;
-  border: 2px dashed var(--color-primary);
-  background: var(--primary-10);
-  pointer-events: none;
-  transition: none;
-}
-
-/* Label base styles */
-.draw-rect-label {
-  position: absolute;
-  background: var(--color-primary);
-  color: white;
-  padding: var(--space-1) 8px;
-  border-radius: var(--radius-sm);
-  font-size: var(--font-sm);
-  font-weight: var(--weight-medium);
-  white-space: nowrap;
-  font-family: var(--font-mono);
-}
-
-/* Dimension label (shows "200 × 150") */
-.draw-rect-label-dimensions {
-  bottom: -24px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-/* Position label (shows "x: 50, y: 30") */
-.draw-rect-label-position {
-  top: -24px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-/* Crosshair cursor during draw mode */
-.draw-cursor-crosshair,
-.draw-cursor-crosshair * {
-  cursor: crosshair !important;
-}
 
 /* ========================================
    Tom Select - Dark Theme Override
