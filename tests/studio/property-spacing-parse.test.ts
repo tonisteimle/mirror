@@ -9,6 +9,7 @@ import {
   parseSidesValue,
   extractSides,
   spacingPropertyNames,
+  dirToSpacingProp,
 } from '../../studio/panels/property/utils/spacing-parse'
 import type { ExtractedProperty } from '../../studio/core/compiler-types'
 
@@ -121,5 +122,38 @@ describe('spacingPropertyNames', () => {
       'mar-b',
       'mar-l',
     ])
+  })
+})
+
+describe('dirToSpacingProp', () => {
+  it('maps axis directions to *-x / *-y', () => {
+    expect(dirToSpacingProp('pad', 'h')).toBe('pad-x')
+    expect(dirToSpacingProp('pad', 'v')).toBe('pad-y')
+    expect(dirToSpacingProp('mar', 'h')).toBe('mar-x')
+    expect(dirToSpacingProp('mar', 'v')).toBe('mar-y')
+  })
+
+  it('maps per-side directions to *-t / *-r / *-b / *-l', () => {
+    expect(dirToSpacingProp('pad', 't')).toBe('pad-t')
+    expect(dirToSpacingProp('pad', 'r')).toBe('pad-r')
+    expect(dirToSpacingProp('pad', 'b')).toBe('pad-b')
+    expect(dirToSpacingProp('pad', 'l')).toBe('pad-l')
+    expect(dirToSpacingProp('mar', 't')).toBe('mar-t')
+    expect(dirToSpacingProp('mar', 'r')).toBe('mar-r')
+    expect(dirToSpacingProp('mar', 'b')).toBe('mar-b')
+    expect(dirToSpacingProp('mar', 'l')).toBe('mar-l')
+  })
+
+  it('returns null for unknown directions', () => {
+    expect(dirToSpacingProp('pad', 'all')).toBeNull()
+    expect(dirToSpacingProp('pad', '')).toBeNull()
+    expect(dirToSpacingProp('pad', 'x')).toBeNull()
+  })
+
+  it('round-trips through extractSides — writing pad-t leaves shorthand intact', () => {
+    // The whole point: writing per-side overrides while keeping the shorthand.
+    const sides = extractSides([prop('pad', '8'), prop('pad-t', '20')], 'padding', 'pad', 'p')
+    expect(sides).toEqual({ t: '20', r: '8', b: '8', l: '8' })
+    expect(dirToSpacingProp('pad', 't')).toBe('pad-t')
   })
 })

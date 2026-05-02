@@ -25,6 +25,7 @@ import {
   createVisualSection,
 } from './sections'
 import type { BaseSection, SectionData, EventHandlerMap, SectionDependencies } from './base/section'
+import { dirToSpacingProp } from './utils/spacing-parse'
 import { createLogger } from '../../../compiler/utils/logger'
 
 const log = createLogger('PropertyPanelView')
@@ -913,14 +914,13 @@ export class PropertyPanelView {
       const data = JSON.parse(jsonValue)
       const { value, dir } = data
 
-      // For now, simplify: just set pad directly
-      // TODO: Implement proper directional padding handling
-      if (dir === 'h' || dir === 'v') {
-        // Simple padding value
-        this.controller.changeProperty('pad', value)
+      const target = dirToSpacingProp('pad', dir)
+      if (!target) return
+
+      if (value === '') {
+        this.controller.removeProperty(target)
       } else {
-        // Directional padding - would need more complex handling
-        this.controller.changeProperty('pad', value)
+        this.controller.changeProperty(target, value)
       }
     } catch (e) {
       log.error('Failed to parse padding change:', e)

@@ -118,3 +118,32 @@ export function spacingPropertyNames(
     `${prefix}-l`,
   ]
 }
+
+/**
+ * Map a row direction emitted by the spacing UI (`h`/`v`/`t`/`r`/`b`/`l`)
+ * to the canonical write-target property for that direction.
+ *
+ *   h → `${prefix}-x`     v → `${prefix}-y`
+ *   t → `${prefix}-t`     r → `${prefix}-r`
+ *   b → `${prefix}-b`     l → `${prefix}-l`
+ *
+ * Returns null for unknown directions. Per-side writes leave the
+ * shorthand untouched on purpose — `extractSides` resolves per-side
+ * overrides on top of the shorthand, so typing into "Top" does not
+ * blow away `pad: 8`.
+ */
+export function dirToSpacingProp(prefix: string, dir: string): string | null {
+  switch (dir) {
+    case 'h':
+      return `${prefix}-x`
+    case 'v':
+      return `${prefix}-y`
+    case 't':
+    case 'r':
+    case 'b':
+    case 'l':
+      return `${prefix}-${dir}`
+    default:
+      return null
+  }
+}
