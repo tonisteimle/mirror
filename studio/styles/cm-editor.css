@@ -1,0 +1,170 @@
+    #react-editor-container {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #react-editor-container .cm-editor {
+      background: var(--bg-base);
+    }
+
+    /* CodeMirror Theme */
+    .cm-editor {
+      height: 100%;
+      font-family: var(--font-mono) !important;
+      font-size: var(--font-sm);
+      background: var(--bg-base);
+    }
+
+    .cm-editor .cm-scroller {
+      padding-top: 8px;
+      overflow: auto !important;
+    }
+
+    .cm-editor .cm-gutters {
+      background: var(--bg-base);
+      border-right: none;
+      color: var(--text-disabled);
+    }
+
+    .cm-editor .cm-activeLineGutter {
+      background: var(--bg-hover);
+      color: var(--text-secondary);
+    }
+
+    .cm-editor .cm-activeLine {
+      background: var(--white-12);
+    }
+
+    .cm-editor .cm-selectionBackground {
+      background: var(--color-primary-selection) !important;
+    }
+
+    .cm-editor.cm-focused .cm-selectionBackground {
+      background: var(--color-primary-selection) !important;
+    }
+
+    .cm-editor .cm-cursor {
+      border-left-color: var(--color-lightest);
+    }
+
+    .cm-editor .cm-content {
+      caret-color: var(--color-lightest);
+    }
+
+    /* Syntax Highlighting Classes
+       Very muted palette - Nord/Solarized inspired
+       Subtle color hints, easy on the eyes */
+    .mir-comment { color: var(--syntax-comment) !important; font-style: var(--font-italic); }
+    .mir-string { color: var(--syntax-string) !important; }
+    .mir-hex { color: var(--syntax-hex) !important; }
+    .mir-number { color: var(--syntax-number) !important; }
+    .mir-keyword { color: var(--syntax-event) !important; }
+    .mir-state { color: var(--syntax-state) !important; }
+    .mir-event { color: var(--syntax-event) !important; }
+    .mir-property { color: var(--syntax-property) !important; }
+    .mir-action { color: var(--syntax-state) !important; }
+    .mir-component { color: var(--syntax-component) !important; font-weight: var(--weight-medium); }
+    .mir-binding { color: var(--syntax-number) !important; }
+    .mir-punctuation { color: var(--syntax-punctuation) !important; }
+
+    /* Autocomplete - unified with Token Picker */
+    .cm-tooltip-autocomplete {
+      background: var(--bg-panel) !important;
+      border: 1px solid var(--border-default) !important;
+      border-radius: var(--radius-lg) !important;
+      box-shadow: var(--shadow-lg) !important;
+      min-width: 220px;
+      max-width: 320px;
+      max-height: 320px;
+      overflow: hidden;
+    }
+
+    .cm-tooltip-autocomplete ul {
+      max-height: 260px;
+      overflow-y: auto;
+      padding: var(--space-2) 0;
+    }
+
+    .cm-tooltip-autocomplete ul li {
+      display: flex !important;
+      align-items: center !important;
+      gap: var(--space-3) !important;
+      padding: var(--space-2) var(--space-3) !important;
+      cursor: pointer !important;
+      transition: background 0.1s !important;
+      border: none !important;
+      background: transparent !important;
+      line-height: 1.4 !important;
+    }
+
+    .cm-tooltip-autocomplete ul li[aria-selected] {
+      background: var(--color-primary) !important;
+    }
+
+    .cm-tooltip-autocomplete ul li:hover:not([aria-selected]) {
+      background: var(--bg-hover) !important;
+    }
+
+    /* Hide completion icons completely */
+    .cm-tooltip-autocomplete .cm-completionIcon {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      font-size: 0 !important;
+      line-height: 0 !important;
+      overflow: hidden !important;
+    }
+
+    .cm-completionLabel {
+      flex: 1 !important;
+      font-family: var(--font-mono) !important;
+      font-size: var(--font-sm) !important;
+      color: var(--text-primary) !important;
+    }
+
+    .cm-tooltip-autocomplete ul li[aria-selected] .cm-completionLabel {
+      color: var(--text-inverse) !important;
+    }
+
+    .cm-completionDetail {
+      max-width: 120px !important;
+      flex-shrink: 0 !important;
+      font-family: var(--font-mono) !important;
+      font-size: var(--font-xs) !important;
+      color: var(--text-muted) !important;
+      font-style: normal !important;
+      text-align: left !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+
+    .cm-tooltip-autocomplete ul li[aria-selected] .cm-completionDetail {
+      color: var(--white-70) !important;
+    }
+
+    /* Editor Drop Indicator - shows where component will be inserted */
+    .editor-drop-indicator {
+      pointer-events: none;
+      background: var(--color-primary);
+      opacity: 0.8;
+      z-index: 100;
+      border-radius: 1px;
+      box-shadow: 0 0 4px var(--color-primary);
+    }
+
+    /* Editor drop target highlight - blue border when dragging over */
+    .cm-editor.editor-drop-target {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+    }
+
+    /* App Lock - "App" prefix on line 1 is locked/readonly */
+    .cm-app-locked {
+      color: var(--text-muted);
+      font-weight: var(--weight-medium);
+      pointer-events: none;
+      user-select: none;
+    }
