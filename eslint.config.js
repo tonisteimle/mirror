@@ -78,5 +78,24 @@ export default tseslint.config(
     rules: {
       'no-console': ['warn', { allow: ['warn', 'error', 'debug', 'log'] }],
     },
+  },
+  {
+    // Studio production code: route all logging through createLogger.
+    // Excluded: test stacks, drag-test transport adapters, perf-logger
+    // (which IS the console-routed perf channel).
+    files: ['studio/**/*.ts'],
+    ignores: [
+      'studio/test-api/**',
+      'studio/**/*.test.ts',
+      'studio/**/*.spec.ts',
+      'studio/preview/drag/test-api/**',
+      'studio/preview/drag/test-runner*.ts',
+      'studio/preview/drag/browser-test-api.ts',
+      'studio/preview/drag/reporter/adapters/console-adapter.ts',
+      'studio/compile/perf-logger.ts',
+    ],
+    rules: {
+      'no-console': 'error',
+    },
   }
 )

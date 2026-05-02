@@ -10,8 +10,10 @@
  * the existing behaviour until the splitter migration lands.
  */
 
-const log = (...args: unknown[]): void => console.log('[PanelResizer]', ...args)
-const warn = (...args: unknown[]): void => console.warn('[PanelResizer]', ...args)
+import { createLogger } from '../../compiler/utils/logger'
+const panelLog = createLogger('PanelResizer')
+const log = (...args: unknown[]): void => panelLog.debug(...(args as [unknown, ...unknown[]]))
+const warn = (...args: unknown[]): void => panelLog.warn(...(args as [unknown, ...unknown[]]))
 
 interface PanelSizes {
   sidebar: number

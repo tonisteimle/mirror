@@ -44,8 +44,10 @@ export interface DesktopMenuDeps {
   alert: (msg: string, opts?: { title?: string }) => Promise<void>
 }
 
-const log = (...args: unknown[]): void => console.log('[Menu]', ...args)
-const errLog = (...args: unknown[]): void => console.error('[Menu]', ...args)
+import { createLogger } from '../../compiler/utils/logger'
+const menuLog = createLogger('Menu')
+const log = (...args: unknown[]): void => menuLog.debug(...(args as [unknown, ...unknown[]]))
+const errLog = (...args: unknown[]): void => menuLog.error(...(args as [unknown, ...unknown[]]))
 
 const FOLDER_ALERT = 'Bitte zuerst einen Ordner öffnen (File → Open Folder oder ⌘O)'
 const FOLDER_ALERT_TITLE = 'Kein Projekt'

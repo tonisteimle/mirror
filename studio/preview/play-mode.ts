@@ -11,6 +11,9 @@
  */
 
 import { state, actions, events } from '../core'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('PlayMode')
 
 /**
  * Device presets for play-mode simulation.
@@ -50,7 +53,7 @@ export function initPlayMode(deps: PlayModeDeps): void {
   const preview = document.getElementById('preview')
 
   if (!playBtn || !previewPanel) {
-    console.warn('[PlayMode] Missing required elements')
+    log.warn('[PlayMode] Missing required elements')
     return
   }
 
@@ -59,7 +62,7 @@ export function initPlayMode(deps: PlayModeDeps): void {
   })
 
   resetBtn?.addEventListener('click', () => {
-    console.log('[PlayMode] Resetting state via recompile')
+    log.debug('[PlayMode] Resetting state via recompile')
     deps.recompile(deps.getEditorSource())
   })
 
@@ -71,14 +74,14 @@ export function initPlayMode(deps: PlayModeDeps): void {
         preview.style.setProperty('--device-height', `${preset.height}px`)
         preview.classList.remove('device-mode', 'device-mode-max')
         preview.classList.add(preset.mode === 'max' ? 'device-mode-max' : 'device-mode')
-        console.log(
+        log.debug(
           `[PlayMode] Device set to ${deviceSelect.value} (${preset.width}×${preset.height}, ${preset.mode})`
         )
       } else {
         preview.classList.remove('device-mode', 'device-mode-max')
         preview.style.removeProperty('--device-width')
         preview.style.removeProperty('--device-height')
-        console.log('[PlayMode] Device set to Responsive')
+        log.debug('[PlayMode] Device set to Responsive')
       }
     })
   }
@@ -105,5 +108,5 @@ export function initPlayMode(deps: PlayModeDeps): void {
     }
   })
 
-  console.log('[PlayMode] Initialized')
+  log.debug('[PlayMode] Initialized')
 }

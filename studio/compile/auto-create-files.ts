@@ -18,6 +18,10 @@
  * than tying the helper to any one storage layer.
  */
 
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('AutoCreate')
+
 export interface AutoCreateFilesDeps {
   /** Returns the in-memory files map (mutated by `saveFile`). */
   getFiles: () => Record<string, string>
@@ -54,7 +58,7 @@ export function createAutoCreateFiles(deps: AutoCreateFilesDeps): AutoCreateFile
     const files = deps.getFiles()
     if (files[filename]) return false
     deps.saveFile(filename, `// ${filename} (auto-created)`)
-    console.log(`Auto-created: ${filename}`)
+    log.debug(`Auto-created: ${filename}`)
     return true
   }
 

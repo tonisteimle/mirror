@@ -5,6 +5,10 @@
  * Supports: strings, numbers, booleans, arrays, objects.
  */
 
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('YAML')
+
 // ============================================
 // TYPES
 // ============================================
@@ -303,10 +307,10 @@ function extractBaseName(filename: string): string {
 function tryParseYAML(filename: string, content: string): YAMLValue | null {
   try {
     const result = parseYAML(content)
-    console.log(`[YAML] Loaded ${extractBaseName(filename)}:`, result)
+    log.debug(`[YAML] Loaded ${extractBaseName(filename)}:`, result)
     return result
   } catch (e) {
-    console.warn(`[YAML] Failed to parse ${filename}:`, e)
+    log.warn(`[YAML] Failed to parse ${filename}:`, e)
     return null
   }
 }

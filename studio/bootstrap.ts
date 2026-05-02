@@ -61,7 +61,21 @@ import { triggerRename, isRenameActive, closeRename } from './rename'
 import type { AST, IR, SourceMap } from '../compiler'
 import type { CodeChange } from './code-modifier'
 import type { EditorView } from '@codemirror/view'
-import { logBootstrap } from '../compiler/utils/logger'
+import { logBootstrap, setLogLevel, type LogLevel } from '../compiler/utils/logger'
+
+// Allow developers to override the default log level via DevTools:
+//   localStorage.setItem('mirror.logLevel', 'debug')  // or info | warn | error | silent
+// Persists across reloads. Default is 'warn' (set in compiler/utils/logger.ts).
+const VALID_LOG_LEVELS: readonly LogLevel[] = ['debug', 'info', 'warn', 'error', 'silent']
+try {
+  const stored =
+    typeof localStorage !== 'undefined' ? localStorage.getItem('mirror.logLevel') : null
+  if (stored && (VALID_LOG_LEVELS as readonly string[]).includes(stored)) {
+    setLogLevel(stored as LogLevel)
+  }
+} catch {
+  // localStorage unavailable (private mode / SSR) — fall back to default level
+}
 
 export interface BootstrapConfig {
   /** CodeMirror EditorView instance */
@@ -414,7 +428,10 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     }
 
     renderTokens()
-    eventUnsubscribes.push(events.on('source:changed', () => renderTokens()))
+    // compile:completed fires after every successful compile (regardless
+    // of which file is currently in the editor), so swatches stay in sync
+    // even when the user is editing index.mir while tokens.tok changes.
+    eventUnsubscribes.push(events.on('compile:completed', () => renderTokens()))
     logBootstrap.info(' Tokens sidebar initialized')
   }
 

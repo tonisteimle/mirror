@@ -5,6 +5,10 @@
  * Each function is focused and < 10 lines.
  */
 
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('Zag')
+
 // ============================================
 // TYPES
 // ============================================
@@ -270,7 +274,7 @@ function findExistingComFile(deps: ZagDependencies): string | null {
 async function createNewComFile(deps: ZagDependencies): Promise<string | null> {
   const currentFile = deps.getCurrentFile()
   if (!currentFile) {
-    console.warn('[Zag] No current file, cannot determine directory')
+    log.warn('[Zag] No current file, cannot determine directory')
     return null
   }
 
@@ -306,10 +310,10 @@ async function writeTauriComFile(
     await TauriBridge.fs.writeFile(filePath, content)
     if (desktopFiles?.getFiles) desktopFiles.getFiles()[filePath] = content
     desktopFiles?.loadFolder?.(dir.slice(0, -1))
-    console.log('[Zag] Created new components file:', filePath)
+    log.debug('[Zag] Created new components file:', filePath)
     return filePath
   } catch (err) {
-    console.error('[Zag] Failed to create components.com:', err)
+    log.error('[Zag] Failed to create components.com:', err)
     return null
   }
 }
@@ -321,7 +325,7 @@ function writeBrowserComFile(
 ): string | null {
   deps.getFiles()[filePath] = content
   deps.updateFileList()
-  console.log('[Zag] Created new components file (browser):', filePath)
+  log.debug('[Zag] Created new components file (browser):', filePath)
   return filePath
 }
 
@@ -370,7 +374,7 @@ async function writeTauriDefinition(
     deps.emitNotification('success', `Definition wurde zu ${filename} hinzugefügt`)
     return true
   } catch (err) {
-    console.error('[Zag] Failed to write:', err)
+    log.error('[Zag] Failed to write:', err)
     deps.emitNotification('error', `Konnte nicht zu ${filename} speichern`)
     return false
   }

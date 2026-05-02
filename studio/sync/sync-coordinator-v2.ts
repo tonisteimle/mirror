@@ -459,13 +459,11 @@ export class SyncCoordinator {
           }
 
           if (isInFile) {
-            // DEBUG: Track when scrollEditorToLine is called
-            console.log('[SYNC DEBUG] scrollEditorToLine called', { origin, editorLine, nodeId })
+            logSync.debug('scrollEditorToLine called', { origin, editorLine, nodeId })
             this.targets.scrollEditorToLine?.(editorLine)
           }
         } else if (node?.position) {
-          // DEBUG: Track when scroll is SKIPPED
-          console.log('[SYNC DEBUG] scrollEditorToLine SKIPPED (origin=editor)', { origin, nodeId })
+          logSync.debug('scrollEditorToLine SKIPPED (origin=editor)', { origin, nodeId })
         }
 
         // Highlight preview when selection comes from non-preview origin

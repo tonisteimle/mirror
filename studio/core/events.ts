@@ -424,10 +424,14 @@ export function createLoggerMiddleware(
         : filter.test(event)
       : true
     if (shouldLog) {
+      // Console-grouped output is the whole point of this middleware —
+      // createLogger() flattens to lines and would lose DevTools group nesting.
+      /* eslint-disable no-console */
       ;(collapsed ? console.groupCollapsed : console.group)(`[Event] ${event}`)
       console.log('Payload:', payload)
       console.log('Meta:', meta)
       console.groupEnd()
+      /* eslint-enable no-console */
     }
     return { payload, meta }
   }
