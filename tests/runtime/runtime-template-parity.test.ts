@@ -27,7 +27,12 @@ import { fileURLToPath } from 'url'
 import { PROP_MAP } from '../../compiler/runtime/dom-runtime'
 import { isDebug } from '../../compiler/runtime/debug'
 import { ALIGN_MAP } from '../../compiler/runtime/alignment'
-import { FALLBACK_ICON, LUCIDE_CDN } from '../../compiler/runtime/icons'
+import {
+  FALLBACK_ICON,
+  LUCIDE_CDN,
+  sanitizeIconName,
+  sanitizeSVG,
+} from '../../compiler/runtime/icons'
 import { DOM_RUNTIME_CODE } from '../../compiler/backends/dom/runtime-template'
 
 const REPO_ROOT = resolve(fileURLToPath(import.meta.url), '../../..')
@@ -122,6 +127,47 @@ describe('Runtime template parity', () => {
       // The template stamps LUCIDE_CDN inline (not via JSON.stringify) so
       // the URL appears as a substring.
       expect(DOM_RUNTIME_CODE).toContain(LUCIDE_CDN)
+    })
+  })
+
+  describe('icon security (audit-3 HIGH-2)', () => {
+    it('sanitizeIconName is stamped verbatim from the typed module', () => {
+      // .toString() of an esbuild/tsx-transpiled function may include
+      // __name() helper calls; the template defines a no-op __name to
+      // make those harmless. The function body itself must appear.
+      expect(DOM_RUNTIME_CODE).toContain(sanitizeIconName.toString())
+    })
+
+    it('sanitizeSVG is stamped verbatim from the typed module', () => {
+      expect(DOM_RUNTIME_CODE).toContain(sanitizeSVG.toString())
+    })
+
+    it('loadIcon calls sanitizeIconName before using the name', () => {
+      // Match the runtime's loadIcon body and assert the validation runs
+      // BEFORE any cache lookup or fetch.
+      const m = DOM_RUNTIME_CODE.match(/loadIcon\(el, iconName\)\s*\{([\s\S]*?)^\s*\},/m)
+      expect(m, 'expected loadIcon body in template').not.toBeNull()
+      const body = m![1]
+      // sanitizeIconName must be the first non-trivial call in loadIcon.
+      const sanitizeIdx = body.indexOf('sanitizeIconName(iconName)')
+      const cacheIdx = body.indexOf('_iconCache')
+      const fetchIdx = body.indexOf('_fetchIcon')
+      expect(sanitizeIdx).toBeGreaterThan(-1)
+      if (cacheIdx > -1) expect(sanitizeIdx).toBeLessThan(cacheIdx)
+      if (fetchIdx > -1) expect(sanitizeIdx).toBeLessThan(fetchIdx)
+    })
+
+    it('_fetchIcon calls sanitizeSVG on the network response', () => {
+      const m = DOM_RUNTIME_CODE.match(/_fetchIcon\(iconName\)\s*\{([\s\S]*?)^\s*\},/m)
+      expect(m, 'expected _fetchIcon body in template').not.toBeNull()
+      const body = m![1]
+      // sanitizeSVG must run AFTER fetch but BEFORE the cache write.
+      expect(body).toMatch(/sanitizeSVG\(/)
+      const fetchIdx = body.indexOf('await fetch(')
+      const sanitizeIdx = body.indexOf('sanitizeSVG(')
+      const cacheIdx = body.indexOf('_iconCache.set')
+      expect(fetchIdx).toBeLessThan(sanitizeIdx)
+      expect(sanitizeIdx).toBeLessThan(cacheIdx)
     })
   })
 

@@ -28,14 +28,35 @@ import { ZAG_RUNTIME } from './parts/zag-runtime'
 // emitted runtime — no hand-sync.
 import { PROP_MAP } from '../../../runtime/dom-runtime'
 import { ALIGN_MAP } from '../../../runtime/alignment'
-import { FALLBACK_ICON, LUCIDE_CDN } from '../../../runtime/icons'
+import { FALLBACK_ICON, LUCIDE_CDN, sanitizeIconName, sanitizeSVG } from '../../../runtime/icons'
 
 const PROP_MAP_LITERAL = JSON.stringify(PROP_MAP)
 const ALIGN_MAP_LITERAL = JSON.stringify(ALIGN_MAP)
 const FALLBACK_ICON_LITERAL = JSON.stringify(FALLBACK_ICON)
 
+// Stamp the typed security functions verbatim. Both are self-contained
+// (helpers are nested in the function body) so .toString() yields a
+// runnable snippet. This kills the security drift the third audit
+// flagged: production runtime now uses the SAME validation/sanitization
+// as the typed module that has dedicated unit tests.
+const SANITIZE_ICON_NAME_SRC = sanitizeIconName.toString()
+const SANITIZE_SVG_SRC = sanitizeSVG.toString()
+
 export const DOM_RUNTIME_CODE = `
 // Mirror DOM Runtime
+
+// Stamping shim: when the typed runtime modules are .toString()'d at
+// compile time, esbuild/tsx may insert __name(fn, "label") calls to
+// preserve Function.name across minification. The compiled output
+// references __name at runtime; declare a no-op so the calls are
+// harmless. (Real function names come from the function declarations
+// themselves; this only masks the build-tool helper.)
+function __name(fn, _name) { return fn }
+
+// Security helpers (stamped from compiler/runtime/icons.ts via .toString())
+${SANITIZE_ICON_NAME_SRC}
+${SANITIZE_SVG_SRC}
+
 const _runtime = {
   // Debug mode check
   _isDebug() { return typeof window !== 'undefined' && window.__MIRROR_DEBUG__ === true },
@@ -2227,6 +2248,11 @@ ${ZAG_RUNTIME}
 
   async loadIcon(el, iconName) {
     if (!el || !iconName) return
+    // Reject malicious icon names (path traversal, scripts, oversized).
+    // sanitizeIconName is stamped from compiler/runtime/icons.ts.
+    const safeName = sanitizeIconName(iconName)
+    if (!safeName) return
+    iconName = safeName
     const size = el.dataset.iconSize || '16'
     const color = el.dataset.iconColor || 'currentColor'
     const strokeWidth = el.dataset.iconWeight || '2'
@@ -2280,15 +2306,24 @@ ${ZAG_RUNTIME}
   },
 
   async _fetchIcon(iconName) {
+    // Defence-in-depth: reject unsafe names even if a caller bypasses
+    // loadIcon's check. sanitizeIconName is stamped from icons.ts.
+    const safeName = sanitizeIconName(iconName)
+    if (!safeName) return null
     try {
-      const url = \`${LUCIDE_CDN}/\${iconName}.svg\`
+      const url = \`${LUCIDE_CDN}/\${safeName}.svg\`
       const res = await fetch(url)
       if (!res.ok) return null
-      const svgText = await res.text()
-      this._iconCache.set(iconName, svgText)
+      const rawSvg = await res.text()
+      // Strip script/foreignObject/use/event-handlers from CDN response
+      // before it ever reaches innerHTML. sanitizeSVG is stamped from
+      // compiler/runtime/icons.ts.
+      const svgText = sanitizeSVG(rawSvg)
+      if (!svgText) return null
+      this._iconCache.set(safeName, svgText)
       return svgText
     } catch (err) {
-      console.warn(\`Failed to load icon "\${iconName}":\`, err)
+      console.warn(\`Failed to load icon "\${safeName}":\`, err)
       return null
     }
   },

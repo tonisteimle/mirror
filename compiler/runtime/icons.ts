@@ -171,19 +171,21 @@ function applyFillMode(svg: SVGElement, isFilled: boolean, strokeWidth: string):
 // ICON NAME SECURITY
 // ============================================
 
-function sanitizeIconName(name: string): string | null {
+/**
+ * Validate an icon name before using it in URL construction or DOM
+ * manipulation. Self-contained (no external deps) so it can be stamped
+ * verbatim into the runtime template.
+ */
+export function sanitizeIconName(name: string): string | null {
   if (!name || typeof name !== 'string') return null
-
   if (!/^[a-z0-9\-]+$/.test(name)) {
     console.warn('[Security] Invalid icon name rejected:', name)
     return null
   }
-
   if (name.length > 50) {
     console.warn('[Security] Icon name too long:', name)
     return null
   }
-
   return name
 }
 
@@ -191,7 +193,63 @@ function sanitizeIconName(name: string): string | null {
 // SVG SECURITY
 // ============================================
 
-function sanitizeSVG(svgText: string): string | null {
+/**
+ * Sanitize SVG content fetched from external sources. Strips script tags,
+ * dangerous wrappers (foreignObject/use/image/a/etc.), event handlers
+ * (on*), href/xlink:href, and javascript: URLs.
+ *
+ * Self-contained: all helpers are defined inside the function body so
+ * `sanitizeSVG.toString()` produces a runnable snippet that can be
+ * stamped verbatim into the runtime template (no helper imports
+ * required at the call site).
+ */
+export function sanitizeSVG(svgText: string): string | null {
+  function parseSvgDocument(text: string): Document | null {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(text, 'image/svg+xml')
+    if (doc.querySelector('parsererror')) {
+      console.warn('[Security] Invalid SVG content')
+      return null
+    }
+    return doc
+  }
+
+  function isValidSvgRoot(element: Element): boolean {
+    if (element.tagName.toLowerCase() !== 'svg') {
+      console.warn('[Security] Not an SVG element')
+      return false
+    }
+    return true
+  }
+
+  function removeDangerousElements(svg: Element): void {
+    const dangerous = [
+      'script',
+      'foreignObject',
+      'use',
+      'image',
+      'a',
+      'style',
+      'defs',
+      'metadata',
+      'animate',
+      'set',
+    ]
+    for (const tag of dangerous) svg.querySelectorAll(tag).forEach(el => el.remove())
+  }
+
+  function removeDangerousAttributes(svg: Element): void {
+    const dangerousPattern = /^(on|href|xlink:href|src|data|formaction)/i
+    function isDangerous(attr: Attr): boolean {
+      return dangerousPattern.test(attr.name) || attr.value.includes('javascript:')
+    }
+    for (const el of svg.querySelectorAll('*')) {
+      for (const attr of Array.from(el.attributes)) {
+        if (isDangerous(attr)) el.removeAttribute(attr.name)
+      }
+    }
+  }
+
   try {
     const doc = parseSvgDocument(svgText)
     if (!doc) return null
@@ -204,56 +262,4 @@ function sanitizeSVG(svgText: string): string | null {
     console.warn('[Security] SVG sanitization failed:', err)
     return null
   }
-}
-
-function parseSvgDocument(svgText: string): Document | null {
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(svgText, 'image/svg+xml')
-
-  if (doc.querySelector('parsererror')) {
-    console.warn('[Security] Invalid SVG content')
-    return null
-  }
-
-  return doc
-}
-
-function isValidSvgRoot(element: Element): boolean {
-  if (element.tagName.toLowerCase() !== 'svg') {
-    console.warn('[Security] Not an SVG element')
-    return false
-  }
-  return true
-}
-
-function removeDangerousElements(svg: Element): void {
-  const dangerous = [
-    'script',
-    'foreignObject',
-    'use',
-    'image',
-    'a',
-    'style',
-    'defs',
-    'metadata',
-    'animate',
-    'set',
-  ]
-  for (const tag of dangerous) svg.querySelectorAll(tag).forEach(el => el.remove())
-}
-
-function removeDangerousAttributes(svg: Element): void {
-  const dangerousPattern = /^(on|href|xlink:href|src|data|formaction)/i
-
-  for (const el of svg.querySelectorAll('*')) {
-    for (const attr of Array.from(el.attributes)) {
-      if (isDangerousAttribute(attr, dangerousPattern)) {
-        el.removeAttribute(attr.name)
-      }
-    }
-  }
-}
-
-function isDangerousAttribute(attr: Attr, pattern: RegExp): boolean {
-  return pattern.test(attr.name) || attr.value.includes('javascript:')
 }
