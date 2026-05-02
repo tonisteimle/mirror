@@ -143,6 +143,122 @@ import {
   createRobustModifier,
 } from '.'
 
+// =============================================================================
+// Global / Window-augmentation declarations
+//
+// app.ts is the legacy IIFE — it pokes at several window-level escape
+// hatches (Tauri internals, debug toggles, the compiler bundle's global,
+// host callbacks). Declaring them centrally here lets the rest of the
+// file stay readable without per-callsite casts.
+// =============================================================================
+//
+// `MirrorLang` is the global the compiler bundle (`dist/browser/index.global.js`)
+// installs on `window`; we re-declare it as a non-window-prefixed global so
+// that bare references compile.
+// `__compileTestCode` / `__compileMirror` are test hooks set on window from
+// here for the CDP test runner.
+
+interface MirrorAst {
+  errors?: unknown[]
+  components?: Array<{ name: string; [k: string]: unknown }>
+  instances?: Array<{ component: string; [k: string]: unknown }>
+  [k: string]: unknown
+}
+
+interface MirrorLangGlobal {
+  parse: (code: string) => MirrorAst
+  toIR: (
+    ast: MirrorAst,
+    withSourceMap?: boolean
+  ) => { ir: unknown; sourceMap?: unknown; errors?: unknown[]; [k: string]: unknown }
+  generateDOM: (ast: MirrorAst) => string
+  generateReact?: (ast: MirrorAst) => string
+  [k: string]: unknown
+}
+
+declare global {
+  // Compiler bundle global — installed by dist/browser/index.global.js.
+  // Re-declared as a free variable here so `MirrorLang.parse(…)` compiles
+  // without rewriting every call to `window.MirrorLang.parse(…)`.
+
+  var MirrorLang: MirrorLangGlobal
+
+  interface Window {
+    /** Tauri runtime marker — present iff the host is the Tauri shell. */
+    __TAURI_INTERNALS__?: unknown
+    /** Compiler bundle global (mirrors the free `MirrorLang` declaration). */
+    MirrorLang?: MirrorLangGlobal
+    /** Debug log of editor transactions (devtools / tests poke this). */
+    __txFilterDebug?: unknown[]
+    /** Devtools history of update events (push-style debug log). */
+    __updateDebugHistory?: unknown[]
+    /** Synchronous file-content reader installed by app.ts for misc consumers. */
+    _mirrorReadFile?: (path: string) => string | undefined
+    /** Test/runner hook: compile a Mirror snippet and return the JS source. */
+    __compileMirror?: (code: string) => string
+    /** Test/runner hook: compile and execute a Mirror snippet in the preview. */
+    __compileTestCode?: (code: string) => unknown
+    /** Test hook — feed a custom prelude line offset into the sync layer. */
+    __setPreludeOffset?: (offset: number) => void
+    /** Test hook — read the current prelude offset (chars). */
+    __getPreludeOffset?: () => number
+    /** Test hook — read the current prelude line offset. */
+    __getPreludeLineOffset?: () => number
+    /** Test hook — true while a CDP-driven test scenario is running. */
+    __isTestMode?: () => boolean
+    /** Test hook — exit test mode and restore live compile loop. */
+    __exitTestMode?: () => void
+    /** Debug helper: read merged source for the running project. */
+    getAllProjectSource?: () => string
+    /** Devtools hook — exposed CodeMirror namespace bag. */
+    __codemirror?: Record<string, unknown>
+    /** Sync hook — refresh code-modifier source after external edits. */
+    ensureCodeModifierInSync?: () => void
+    /** Multi-select state manager (selection.ts). */
+    studioSelectionManager?: unknown
+    /** CodeMirror autocomplete bridges set by app.ts for the test runner. */
+    startCompletion?: typeof startCompletion
+    closeCompletion?: typeof closeCompletion
+    /** Test/runner hook — switch the editor to another file in the project. */
+    switchFile?: (path: string) => Promise<void> | void
+    /** Test/runner hook — return the currently-edited file path. */
+    getCurrentFile?: () => string
+    /** Test/runner / extension reference to the studio instance. */
+    studio?: unknown
+    /** Test/runner hook — generate Mirror code from a drag-data payload. */
+    generateComponentCodeFromDragData?: (
+      dragData: unknown,
+      options?: { componentId?: string; filename?: string }
+    ) => string
+    /**
+     * Legacy capital-D alias seen at a couple of call sites; no module
+     * actually populates it. Kept optional so the dead-code branches
+     * compile without per-line casts.
+     */
+    DesktopFiles?: { renderFileTree?: () => void }
+    /**
+     * Legacy `window.files` reference — same map as the in-module `files`
+     * constant. A few code paths read it via `window.files`; declared here
+     * so they compile.
+     */
+    files?: Record<string, string>
+  }
+}
+
+interface CompileTimings {
+  preludeEnd?: number
+  parseEnd?: number
+  irEnd?: number
+  codegenEnd?: number
+  prepExecStart?: number
+  execEnd?: number
+  updateStudioEnd?: number
+  domAppendEnd?: number
+  draggablesEnd?: number
+  refreshEnd?: number
+  syncEnd?: number
+}
+
 // Annotation to mark changes from property panel (for skipping debounce)
 const propertyPanelChangeAnnotation = Annotation.define()
 
@@ -153,7 +269,7 @@ const fileSwitchAnnotation = Annotation.define()
 // App State
 // ============================================
 
-const files = {}
+const files: Record<string, string> = {}
 let currentFile = 'index.mir'
 
 // ============================================
@@ -659,8 +775,12 @@ const editorExtensions = [
           componentId: dragData.componentId,
           filename: currentFile || 'index.mir',
         })
-        // Extract component name from template (e.g., "Select", "Checkbox")
-        const componentName = dragData.componentName || dragData.template || ''
+        // Extract component name from template (e.g., "Select", "Checkbox").
+        // Legacy callers occasionally set a flat `template` field instead of
+        // the typed `componentName`/`mirTemplate` shape — preserve that
+        // fallback explicitly via cast.
+        const legacy = dragData as { template?: string }
+        const componentName = dragData.componentName || legacy.template || ''
         // Use insertComponentWithDefinition for Zag components (adds definition if missing)
         insertComponentWithDefinition(view, code, position, componentName)
       },
@@ -711,8 +831,8 @@ const debouncedCompile = debounce(() => {
 }, 300)
 
 // Undo/Redo buttons
-const undoBtn = document.getElementById('undo-btn')
-const redoBtn = document.getElementById('redo-btn')
+const undoBtn = document.getElementById('undo-btn') as HTMLButtonElement | null
+const redoBtn = document.getElementById('redo-btn') as HTMLButtonElement | null
 
 undoBtn?.addEventListener('click', () => {
   if (editor) {
@@ -739,7 +859,8 @@ function updateUndoRedoButtons() {
 
 // Call on editor transactions
 const originalDispatch = editor.dispatch.bind(editor)
-editor.__originalDispatch = originalDispatch // Expose for testing
+;(editor as unknown as { __originalDispatch: typeof originalDispatch }).__originalDispatch =
+  originalDispatch // Expose for testing
 editor.dispatch = (...args) => {
   try {
     originalDispatch(...args)
@@ -802,7 +923,7 @@ function getComponentRenderer() {
 // Zag dependencies builder for Clean Code module
 function getZagDeps() {
   return {
-    getAst: () => studio.state?.ast,
+    getAst: () => (studio.state as unknown as { ast?: unknown })?.ast,
     getCurrentFile: () => currentFile,
     getFiles: () => window.desktopFiles?.getFiles?.() || files,
     parseCode: code => MirrorLang.parse(code),
@@ -894,7 +1015,7 @@ function getPreludeCode(excludeFile) {
 // Compile and render
 function compile(code) {
   const compileStart = performance.now()
-  const timings = {}
+  const timings: CompileTimings = {}
 
   // Skip compilation if preview is showing LLM-generated content
   // This preserves the generated HTML app in Spec Studio mode
@@ -2061,7 +2182,8 @@ document.addEventListener('keydown', e => {
   // Don't interfere with editor's own undo/redo
   if (getEditorHasFocus()) return
   // Don't interfere with input fields
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+  const target = e.target as HTMLElement | null
+  if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA') return
 
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
   const modifier = isMac ? e.metaKey : e.ctrlKey
