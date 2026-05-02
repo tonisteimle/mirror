@@ -23,7 +23,7 @@
 
   <!-- Tom Select CSS -->
   <link rel="stylesheet" href="https://esm.sh/tom-select@2.4.3/dist/css/tom-select.default.min.css">
-  <link rel="stylesheet" href="styles.css?v=221">
+  <link rel="stylesheet" href="styles.css?v=222">
   <!-- Mirror Default Styles (for preview) -->
   <link rel="stylesheet" href="dist/mirror-defaults.css?v=1">
 </head>
@@ -34,6 +34,7 @@
       <label class="view-menu-item" data-panel="files"><input type="checkbox" checked><span>Files</span></label>
       <label class="view-menu-item" data-panel="code"><input type="checkbox" checked><span>Code</span></label>
       <label class="view-menu-item" data-panel="components"><input type="checkbox" checked><span>Components</span></label>
+      <label class="view-menu-item" data-panel="design-system"><input type="checkbox" checked><span>Design System</span></label>
       <label class="view-menu-item" data-panel="preview"><input type="checkbox" checked><span>Preview</span></label>
       <label class="view-menu-item" data-panel="property"><input type="checkbox" checked><span>Property</span></label>
     </div>
@@ -67,6 +68,14 @@
     </div>
 
     <div class="divider" id="tokens-divider"></div>
+
+    <!-- Design System Panel (component preview in all states) -->
+    <div class="design-system-panel" id="design-system-panel">
+      <div class="design-system-panel-header">Design System</div>
+      <div id="design-system-panel-container"></div>
+    </div>
+
+    <div class="divider" id="design-system-divider"></div>
 
     <div class="panel editor-panel" style="position: relative;">
       <div class="editor-header">
@@ -133,6 +142,8 @@
       </div>
       <div id="preview"></div>
     </div>
+
+    <div class="divider" id="property-divider"></div>
 
     <!-- Property Panel -->
     <aside class="property-panel" id="property-panel"></aside>
@@ -225,6 +236,6 @@ App bg $canvas, pad $l, gap $m
   <script type="module" src="dist/dialog.js?v=2"></script>
   <script type="module" src="dist/tauri-bridge.js?v=2"></script>
   <script type="module" src="dist/desktop-files.js?v=2"></script>
-  <script type="module" src="dist/app.js?v=2"></script>
+  <script type="module" src="dist/app.js?v=3"></script>
 </body>
 </html>

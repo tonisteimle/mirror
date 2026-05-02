@@ -18,8 +18,10 @@ const warn = (...args: unknown[]): void => panelLog.warn(...(args as [unknown, .
 interface PanelSizes {
   sidebar: number
   components: number
+  tokens: number
   editor: number
   preview: number
+  property: number
 }
 
 interface MirrorStudioBridge {
@@ -42,11 +44,17 @@ export interface PanelDividerDeps {
   /** Component palette panel. May be null if hidden. */
   componentsPanel: HTMLElement | null
   componentsDivider: HTMLElement | null
+  /** Tokens sidebar panel. May be null if hidden. */
+  tokensPanel: HTMLElement | null
+  tokensDivider: HTMLElement | null
   /** Editor panel — required. */
   editorPanel: HTMLElement
   editorDivider: HTMLElement
   /** Preview panel — required. */
   previewPanel: HTMLElement
+  /** Property panel. May be null if hidden. */
+  propertyPanel: HTMLElement | null
+  propertyDivider: HTMLElement | null
   /**
    * Returns the global studio bridge for state/actions access. Called
    * lazily so the bridge can be installed after dividers are wired.
@@ -57,6 +65,8 @@ export interface PanelDividerDeps {
 const MIN_PANEL = 200
 const MIN_SIDEBAR = 150
 const MIN_COMPONENTS = 180
+const MIN_TOKENS = 200
+const MIN_PROPERTY = 220
 
 /**
  * Wire up the resizable dividers between studio panels.
@@ -68,9 +78,13 @@ export function initPanelDividers(deps: PanelDividerDeps): void {
     sidebarDivider,
     componentsPanel,
     componentsDivider,
+    tokensPanel,
+    tokensDivider,
     editorPanel,
     editorDivider,
     previewPanel,
+    propertyPanel,
+    propertyDivider,
     getStudio,
   } = deps
 
@@ -89,8 +103,14 @@ export function initPanelDividers(deps: PanelDividerDeps): void {
       if (componentsPanel && sizes.components) {
         componentsPanel.style.width = `${sizes.components}px`
       }
+      if (tokensPanel && sizes.tokens) {
+        tokensPanel.style.width = `${sizes.tokens}px`
+      }
       if (sizes.editor) editorPanel.style.width = `${sizes.editor}px`
       if (sizes.preview) previewPanel.style.width = `${sizes.preview}px`
+      if (propertyPanel && sizes.property) {
+        propertyPanel.style.width = `${sizes.property}px`
+      }
       log('Restored saved sizes:', sizes)
     } catch (e) {
       warn('Failed to load saved sizes:', e)
@@ -105,9 +125,11 @@ export function initPanelDividers(deps: PanelDividerDeps): void {
 
       const sizes: PanelSizes = {
         sidebar: sidebar ? sidebar.offsetWidth : 200,
-        components: componentsPanel ? componentsPanel.offsetWidth : 220,
+        components: componentsPanel ? componentsPanel.offsetWidth : 240,
+        tokens: tokensPanel ? tokensPanel.offsetWidth : 280,
         editor: editorPanel.offsetWidth,
         preview: previewPanel.offsetWidth,
+        property: propertyPanel ? propertyPanel.offsetWidth : 280,
       }
       setPanelSizes(sizes)
       log('Saved sizes:', sizes)
@@ -227,9 +249,84 @@ export function initPanelDividers(deps: PanelDividerDeps): void {
     studio?.actions?.invalidateLayoutInfo?.('resize')
     studio?.getPreviewController?.()?.getResizeManager?.()?.refresh?.()
   })
+  log('Editor/Preview divider ready')
+
+  // Tokens Panel Resizer
+  if (tokensPanel && tokensDivider) {
+    let isDragging = false
+    let startX = 0
+    let startWidth = 0
+
+    tokensDivider.addEventListener('mousedown', e => {
+      isDragging = true
+      startX = e.clientX
+      startWidth = tokensPanel.offsetWidth
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+      tokensDivider.classList.add('dragging')
+      e.preventDefault()
+    })
+
+    document.addEventListener('mousemove', e => {
+      if (!isDragging) return
+      const deltaX = e.clientX - startX
+      const newWidth = Math.max(MIN_TOKENS, startWidth + deltaX)
+      tokensPanel.style.width = `${newWidth}px`
+    })
+
+    document.addEventListener('mouseup', () => {
+      if (!isDragging) return
+      isDragging = false
+      tokensDivider.classList.remove('dragging')
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      saveSizes()
+    })
+
+    log('Tokens divider ready')
+  }
+
+  // Property Panel Resizer (drag-from-left → grow rightwards into preview)
+  if (propertyPanel && propertyDivider) {
+    let isDragging = false
+    let startX = 0
+    let startWidth = 0
+
+    propertyDivider.addEventListener('mousedown', e => {
+      isDragging = true
+      startX = e.clientX
+      startWidth = propertyPanel.offsetWidth
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+      propertyDivider.classList.add('dragging')
+      e.preventDefault()
+    })
+
+    document.addEventListener('mousemove', e => {
+      if (!isDragging) return
+      // Property-Panel sitzt rechts: Divider ziehen nach LINKS soll
+      // breiter machen → invertierte Delta-Richtung.
+      const deltaX = startX - e.clientX
+      const newWidth = Math.max(MIN_PROPERTY, startWidth + deltaX)
+      propertyPanel.style.width = `${newWidth}px`
+    })
+
+    document.addEventListener('mouseup', () => {
+      if (!isDragging) return
+      isDragging = false
+      propertyDivider.classList.remove('dragging')
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      saveSizes()
+      // Preview-Layout aktualisieren, da preview/property die Reihe teilen
+      const studio = getStudio()
+      studio?.actions?.invalidateLayoutInfo?.('resize')
+      studio?.getPreviewController?.()?.getResizeManager?.()?.refresh?.()
+    })
+
+    log('Property divider ready')
+  }
 
   // Load saved sizes after a short delay to ensure state is initialized
   setTimeout(loadSavedSizes, 100)
-
-  log('Editor/Preview divider ready')
 }

@@ -65,9 +65,11 @@ const defaultPanelVisibility: PanelVisibility = {
  */
 const defaultPanelSizes: PanelSizes = {
   sidebar: 200,
-  components: 220,
+  components: 240,
+  tokens: 280,
   editor: 400,
   preview: 400,
+  property: 280,
 }
 
 /**

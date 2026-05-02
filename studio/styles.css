@@ -90,6 +90,7 @@
 
     .property-panel {
       flex: 0 0 320px;
+      min-width: 220px;
     }
 
     /* Desktop app - no header, no status bar */
@@ -483,6 +484,39 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
+    }
+
+    /* Design System Panel (component preview in all states) */
+    .design-system-panel {
+      flex: 0 0 320px;
+      min-width: 240px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border-default);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .design-system-panel.panel-hidden {
+      display: none;
+    }
+
+    .design-system-panel-header {
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary, #71717a);
+      border-bottom: 1px solid var(--border-default);
+      background: var(--bg-panel);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    #design-system-panel-container {
+      padding: 12px;
     }
 
     .tokens-panel.panel-hidden {

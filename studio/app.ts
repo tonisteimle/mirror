@@ -962,6 +962,35 @@ function getComponentRenderer() {
   return componentRenderer
 }
 
+// Design System sidebar — reuses ComponentRenderer but targets the
+// dedicated #design-system-panel-container, and feeds it the entire
+// project source (tokens + .com files) so the panel always reflects
+// the project's component library, regardless of which file is open.
+let designSystemRenderer: ComponentRenderer | null = null
+function getDesignSystemRenderer(): ComponentRenderer | null {
+  if (designSystemRenderer) return designSystemRenderer
+  const target = document.getElementById('design-system-panel-container')
+  if (!target) return null
+  designSystemRenderer = new ComponentRenderer({
+    preview: target as HTMLElement,
+    MirrorLang: window.MirrorLang as unknown as import('./compile/types').MirrorLangAPI,
+    getTokensSource,
+    getCurrentFileSource: getAllProjectSource,
+  })
+  return designSystemRenderer
+}
+
+function refreshDesignSystemPanel(): void {
+  const r = getDesignSystemRenderer()
+  if (!r) return
+  try {
+    const ast = MirrorLang.parse(getAllProjectSource())
+    r.render(ast as unknown as import('./compile/types').AST)
+  } catch (err) {
+    log.warn('[design-system] refresh failed:', err)
+  }
+}
+
 // Zag dependencies builder for Clean Code module
 function getZagDeps() {
   return {
@@ -1275,6 +1304,11 @@ function compile(code: string) {
     // Clear preview and set appropriate class
     preview.innerHTML = ''
     preview.className = ''
+
+    // Refresh the Design System sidebar on every successful compile.
+    // It re-parses getAllProjectSource() so it always shows the full
+    // component library — independent of which file is currently open.
+    refreshDesignSystemPanel()
 
     // Render based on file type
     if (fileType === 'tokens') {
@@ -2363,9 +2397,13 @@ initPanelDividers({
   sidebarDivider: document.getElementById('sidebar-divider'),
   componentsPanel: document.getElementById('components-panel'),
   componentsDivider: document.getElementById('components-divider'),
+  tokensPanel: document.getElementById('tokens-panel'),
+  tokensDivider: document.getElementById('tokens-divider'),
   editorPanel: document.querySelector<HTMLElement>('.editor-panel')!,
   editorDivider: document.getElementById('editor-divider')!,
   previewPanel: document.querySelector<HTMLElement>('.preview-panel')!,
+  propertyPanel: document.getElementById('property-panel'),
+  propertyDivider: document.getElementById('property-divider'),
   // initPanelDividers wants the public MirrorStudioBridge shape; app.ts
   // sets window.MirrorStudio to the StudioInstance from bootstrap.
   // Both share the state/actions/events fields the dividers actually

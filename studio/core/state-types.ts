@@ -93,8 +93,10 @@ export interface PanelVisibility {
 export interface PanelSizes {
   sidebar: number
   components: number
+  tokens: number
   editor: number
   preview: number
+  property: number
 }
 
 /**
