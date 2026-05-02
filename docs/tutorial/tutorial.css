@@ -108,6 +108,20 @@ code {
 .subtitle { color: var(--text-dim); font-size: 16px; }
 .intro { color: var(--text); margin-bottom: 32px; }
 
+.studio-shot { margin: 32px 0; }
+.studio-shot img {
+  max-width: 100%;
+  display: block;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.studio-shot figcaption {
+  margin-top: 12px;
+  color: var(--text-dim);
+  font-size: 14px;
+  text-align: center;
+}
+
 /* Links */
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
