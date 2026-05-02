@@ -17,7 +17,9 @@ import { isDebug } from './debug'
 /**
  * Collect all style properties that can be changed by any state
  */
-function collectStateProperties(stateStyles: Record<string, Record<string, string>>): Set<string> {
+export function collectStateProperties(
+  stateStyles: Record<string, Record<string, string>>
+): Set<string> {
   const props = new Set<string>()
   for (const state of Object.values(stateStyles)) {
     for (const prop of Object.keys(state)) {
@@ -30,7 +32,7 @@ function collectStateProperties(stateStyles: Record<string, Record<string, strin
 /**
  * Store base styles for state properties
  */
-function storeBaseStyles(el: MirrorElement, props: Set<string>): void {
+export function storeBaseStyles(el: MirrorElement, props: Set<string>): void {
   el._baseStyles = {}
   for (const prop of props) {
     el._baseStyles[prop] = (el.style as unknown as Record<string, string>)[prop] || ''
@@ -40,7 +42,7 @@ function storeBaseStyles(el: MirrorElement, props: Set<string>): void {
 /**
  * Ensure element has base styles stored
  */
-function ensureBaseStyles(el: MirrorElement): void {
+export function ensureBaseStyles(el: MirrorElement): void {
   if (el._baseStyles || !el._stateStyles) return
   const props = collectStateProperties(el._stateStyles)
   storeBaseStyles(el, props)
@@ -555,7 +557,7 @@ const KNOWN_STATES = [
 /**
  * Build state context for condition evaluation
  */
-function buildStateContext(currentState: string | undefined): Record<string, boolean> {
+export function buildStateContext(currentState: string | undefined): Record<string, boolean> {
   const states: Record<string, boolean> = {}
 
   for (const name of KNOWN_STATES) {
@@ -572,7 +574,7 @@ function buildStateContext(currentState: string | undefined): Record<string, boo
 /**
  * Evaluate a single token in condition
  */
-function evaluateToken(
+export function evaluateToken(
   token: string,
   states: Record<string, boolean>,
   currentState: string | undefined
@@ -592,7 +594,7 @@ function evaluateToken(
 /**
  * Safe condition evaluator for visibility
  */
-function evaluateCondition(condition: string, currentState: string | undefined): boolean {
+export function evaluateCondition(condition: string, currentState: string | undefined): boolean {
   const states = buildStateContext(currentState)
   const tokens = condition.split(/(\s*&&\s*|\s*\|\|\s*)/).filter(t => t.trim())
 
@@ -625,14 +627,14 @@ function evaluateCondition(condition: string, currentState: string | undefined):
 /**
  * Check if condition contains logical operators
  */
-function hasLogicalOperators(condition: string): boolean {
+export function hasLogicalOperators(condition: string): boolean {
   return condition.includes('&&') || condition.includes('||') || condition.includes('!')
 }
 
 /**
  * Evaluate child visibility based on condition
  */
-function evaluateChildVisibility(condition: string, state: string | undefined): boolean {
+export function evaluateChildVisibility(condition: string, state: string | undefined): boolean {
   if (hasLogicalOperators(condition)) {
     try {
       return evaluateCondition(condition, state)

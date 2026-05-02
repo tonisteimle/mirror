@@ -45,9 +45,27 @@ import {
   setError as setErrorTyped,
   clearError as clearErrorTyped,
 } from '../../../runtime/input-control'
-import { show as showTyped, hide as hideTyped } from '../../../runtime/visibility'
+import {
+  show as showTyped,
+  hide as hideTyped,
+  toggle as toggleTyped,
+} from '../../../runtime/visibility'
 import { sanitizePageName } from '../../../runtime/component-navigation'
-import { applyState, removeState } from '../../../runtime/state-machine'
+import {
+  applyState,
+  removeState,
+  setState,
+  toggleState,
+  updateVisibility,
+  collectStateProperties,
+  storeBaseStyles,
+  ensureBaseStyles,
+  buildStateContext,
+  evaluateToken,
+  evaluateCondition,
+  hasLogicalOperators,
+  evaluateChildVisibility,
+} from '../../../runtime/state-machine'
 import {
   updateBoundElements,
   updateSelectionBinding,
@@ -111,20 +129,38 @@ const SELECT_TEXT_SRC = selectTextTyped.toString()
 const SET_ERROR_SRC = setErrorTyped.toString()
 const CLEAR_ERROR_SRC = clearErrorTyped.toString()
 
-// Stamp typed show/hide. Pure DOM ops via resolveElement, no
-// state-machine deps. toggle/close stay as inline _runtime methods
-// for now — they need state-machine helpers (this.setState etc.)
-// which are a separate consolidation target.
+// Stamp typed show/hide/toggle. close() stays inline because it has a
+// `this.transitionTo(el, 'default')` fast-path for state-machine
+// elements — and transitionTo isn't yet stamped.
 const SHOW_SRC = showTyped.toString()
 const HIDE_SRC = hideTyped.toString()
+const TOGGLE_SRC = toggleTyped.toString()
 
-// Stamp the two pure state-machine helpers (applyState, removeState).
-// They have no this-binding and no dependencies — selection.ts uses
-// only these two from state-machine. setState/toggleState/transitionTo
-// are NOT stamped here; they live as inline _runtime methods because
-// they touch shared helpers that aren't yet consolidated.
+// Stamp the state-machine cluster (no-animation half).
+// applyState / removeState — pure DOM ops.
+// setState / toggleState / updateVisibility — needed by selection +
+// visibility, depend on internal helpers (collectStateProperties,
+// storeBaseStyles, ensureBaseStyles, buildStateContext, evaluateToken,
+// evaluateCondition, hasLogicalOperators, evaluateChildVisibility) that
+// also get stamped, in dep order, so name lookups resolve at runtime.
+//
+// transitionTo / exclusiveTransition / stateMachineToggle / watchStates
+// are still inline _runtime methods because they pull in
+// playStateAnimation + batchInFrame from animations.ts/batching.ts —
+// that's a separate consolidation pass.
 const APPLY_STATE_SRC = applyState.toString()
 const REMOVE_STATE_SRC = removeState.toString()
+const COLLECT_STATE_PROPERTIES_SRC = collectStateProperties.toString()
+const STORE_BASE_STYLES_SRC = storeBaseStyles.toString()
+const ENSURE_BASE_STYLES_SRC = ensureBaseStyles.toString()
+const BUILD_STATE_CONTEXT_SRC = buildStateContext.toString()
+const EVALUATE_TOKEN_SRC = evaluateToken.toString()
+const HAS_LOGICAL_OPERATORS_SRC = hasLogicalOperators.toString()
+const EVALUATE_CONDITION_SRC = evaluateCondition.toString()
+const EVALUATE_CHILD_VISIBILITY_SRC = evaluateChildVisibility.toString()
+const UPDATE_VISIBILITY_SRC = updateVisibility.toString()
+const SET_STATE_SRC = setState.toString()
+const TOGGLE_STATE_SRC = toggleState.toString()
 
 // Stamp the full selection cluster from compiler/runtime/selection.ts.
 // Both helpers and the public API are exported from the typed module
@@ -194,19 +230,34 @@ ${SELECT_TEXT_SRC}
 ${SET_ERROR_SRC}
 ${CLEAR_ERROR_SRC}
 
-// Visibility helpers (stamped from compiler/runtime/visibility.ts)
-${SHOW_SRC}
-${HIDE_SRC}
-
 // Page-navigation security (stamped from compiler/runtime/component-navigation.ts)
 ${SANITIZE_PAGE_NAME_SRC}
 
-// State-machine pure ops (stamped from compiler/runtime/state-machine.ts).
-// applyState/removeState are referenced by name from the selection
-// cluster below; both must be at top-level for those references to
-// resolve.
+// State-machine cluster (stamped from compiler/runtime/state-machine.ts).
+// Helpers in dep order: collectStateProperties → storeBaseStyles →
+// ensureBaseStyles, buildStateContext → evaluateToken → evaluateCondition,
+// hasLogicalOperators → evaluateChildVisibility → updateVisibility, and
+// finally setState / toggleState which use the lot.
 ${APPLY_STATE_SRC}
 ${REMOVE_STATE_SRC}
+${COLLECT_STATE_PROPERTIES_SRC}
+${STORE_BASE_STYLES_SRC}
+${ENSURE_BASE_STYLES_SRC}
+${BUILD_STATE_CONTEXT_SRC}
+${EVALUATE_TOKEN_SRC}
+${HAS_LOGICAL_OPERATORS_SRC}
+${EVALUATE_CONDITION_SRC}
+${EVALUATE_CHILD_VISIBILITY_SRC}
+${UPDATE_VISIBILITY_SRC}
+${SET_STATE_SRC}
+${TOGGLE_STATE_SRC}
+
+// Visibility helpers (stamped from compiler/runtime/visibility.ts).
+// show/hide/toggle reference top-level applyState/setState (above).
+// close() stays as inline _runtime method (state-machine fast-path).
+${SHOW_SRC}
+${HIDE_SRC}
+${TOGGLE_SRC}
 
 // Selection / highlight cluster (stamped from compiler/runtime/selection.ts).
 // Helpers come first so the public API can reference them by name.

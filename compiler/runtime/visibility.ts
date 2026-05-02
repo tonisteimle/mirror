@@ -1,25 +1,24 @@
 /**
  * Visibility Control Functions
  *
- * Functions for showing, hiding, and toggling element visibility.
+ * show / hide / toggle / close. All accept string|element (Mirror
+ * data-mirror-name lookup), self-contained for runtime-template
+ * stamping. batchInFrame() was dropped to align with the template
+ * (which never batched). The stateMachineToggle fast-path was
+ * dropped from toggle for the same reason — the template's inline
+ * toggle never had it either, and stateMachineToggle pulls in
+ * transitionTo + animations which still live in the inline runtime.
  *
- * `show` and `hide` accept string|element (Mirror data-mirror-name
- * lookup) and are self-contained so they can be stamped into the
- * runtime template. The previous implementation wrapped DOM writes in
- * batchInFrame() — dropped here to align with the template, which
- * never batched. Re-introduce batching in a dedicated pass once the
- * batching module itself is stamped.
- *
- * `toggle` and `close` still depend on the state-machine helpers
- * (applyState, setState, stateMachineToggle). They're not yet stamped
- * — the template uses its own this.setState/applyState methods on
- * _runtime, which works but diverges from this typed implementation.
- * Consolidation of the state-machine cluster is a separate sprint.
+ * close() retains its setState-based state-pair handling but does
+ * NOT have the inline runtime's `this.transitionTo(el, 'default')`
+ * fast-path for state-machine elements (since transitionTo isn't
+ * stamped). Stamping close would lose the animated dialog/popover
+ * close, so it stays as an inline _runtime method (see runtime-template).
  */
 
 import type { MirrorElement } from './types'
 import { resolveElement } from './dom-lookup'
-import { applyState, setState, stateMachineToggle } from './state-machine'
+import { applyState, setState } from './state-machine'
 
 /**
  * Show an element by restoring its display value.
@@ -44,47 +43,50 @@ export function hide(el: MirrorElement | string | null): void {
   target.hidden = true
 }
 
-const STATE_PAIRS: Record<string, string> = {
-  closed: 'open',
-  open: 'closed',
-  collapsed: 'expanded',
-  expanded: 'collapsed',
-}
-
 /**
  * Toggle element visibility or paired state.
- * Priority: state-machine toggle → paired-state toggle → hidden flip.
+ * Priority: paired-state flip (open↔closed, expanded↔collapsed) →
+ * hidden flip with on/off state styles.
  */
-export function toggle(el: MirrorElement | null): void {
-  if (!el) return
-  if (el._stateMachine) {
-    stateMachineToggle(el)
-    return
+export function toggle(el: MirrorElement | string | null): void {
+  const target = resolveElement(el)
+  if (!target) return
+  const STATE_PAIRS: Record<string, string> = {
+    closed: 'open',
+    open: 'closed',
+    collapsed: 'expanded',
+    expanded: 'collapsed',
   }
-  const currentState = el.dataset.state || el._initialState
+  const currentState = target.dataset.state || target._initialState
   const newState = STATE_PAIRS[currentState as string]
   if (newState) {
-    setState(el, newState)
+    setState(target, newState)
     return
   }
-  el.hidden = !el.hidden
-  applyState(el, el.hidden ? 'off' : 'on')
+  target.hidden = !target.hidden
+  applyState(target, target.hidden ? 'off' : 'on')
 }
 
 /**
  * Close an element: prefer setState('closed') / setState('collapsed') if the
  * element uses those state pairs, otherwise fall back to hide().
+ *
+ * Not stamped into the runtime template (the template's close() has a
+ * `this.transitionTo(el, 'default')` fast-path for state-machine
+ * elements — animated dialog/popover close — and transitionTo isn't
+ * yet stamped).
  */
-export function close(el: MirrorElement | null): void {
-  if (!el) return
-  const states = [el._initialState, el.dataset.state]
+export function close(el: MirrorElement | string | null): void {
+  const target = resolveElement(el)
+  if (!target) return
+  const states = [target._initialState, target.dataset.state]
   if (states.some(s => s === 'open' || s === 'closed')) {
-    setState(el, 'closed')
+    setState(target, 'closed')
     return
   }
   if (states.some(s => s === 'expanded' || s === 'collapsed')) {
-    setState(el, 'collapsed')
+    setState(target, 'collapsed')
     return
   }
-  hide(el)
+  hide(target)
 }
