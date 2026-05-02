@@ -43,8 +43,9 @@ studio/                # Studio Runtime (TypeScript) - Modulare Architektur
 ├── panels/            # UI Panels
 │   ├── property/      # PropertyPanel
 │   ├── tree/          # AST Tree Navigation
-│   ├── files/         # File Management UI
-│   └── components/    # Components/Tokens Panels
+│   ├── components/    # Components/Tokens Panels
+│   ├── explorer/      # File-Explorer Panel
+│   └── settings/      # Settings Panel
 ├── preview/           # Preview Controller & Renderer
 ├── compile/           # YAML/Component/Token-Renderer für Preview
 ├── drop/              # Drag-Drop-Strategy-Handlers
@@ -90,7 +91,9 @@ dist/                  # Build Output
 | `studio/storage/`             | File Operations & User-Settings          |
 | `studio/modules/compiler/`    | Compiler Wrapper                         |
 | `studio/pickers/`             | Color, Token, Icon, Animation Picker     |
-| `studio/panels/`              | Property, Tree, Files, Components        |
+| `studio/panels/`              | Property, Tree, Components, Explorer     |
+| `studio/file-tree/`           | File-Tree-Controller (UI)                |
+| `studio/desktop-files.ts`     | Tauri Desktop File-Bridge                |
 | `studio/visual/`              | Drag/Resize/Snap, Smart-Guides           |
 | `studio/agent/`               | LLM-Edit-Flow                            |
 | `studio/test-api/`            | Browser Test Framework (separater Stack) |
