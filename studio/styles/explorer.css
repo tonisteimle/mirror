@@ -1,0 +1,155 @@
+    /* Activity Bar Container - Panel Toggle Bar */
+    .activity-bar-container {
+      display: flex;
+      flex-direction: column;
+      width: 40px;
+      background: var(--bg-base);
+      border-right: 1px solid var(--border-default);
+      flex-shrink: 0;
+    }
+
+    .activity-bar-container .activity-bar {
+      /* No padding - logo aligns with panel headers */
+    }
+
+    /* Inactive state for toggle bar - dimmed icon */
+    .activity-bar-container .activity-bar-item:not(.active) {
+      opacity: 0.4;
+    }
+
+    .activity-bar-container .activity-bar-item:not(.active):hover {
+      opacity: 0.7;
+    }
+
+    /* Panel flex sizes */
+    .chat-panel-left {
+      display: none; /* Removed in desktop app */
+    }
+
+    .sidebar {
+      flex: 0 0 auto; /* Size controlled by Splitter */
+      width: 220px; /* Default, overridden by Splitter */
+      min-width: 0;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border-default);
+      display: flex;
+      flex-direction: column;
+      font-size: var(--font-md);
+    }
+
+    /* ============================================
+       EXPLORER PANEL - Activity Bar + Content Views
+       ============================================ */
+
+    .explorer-panel {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .explorer-activity-bar {
+      display: flex;
+      flex-direction: column;
+      width: 40px;
+      background: var(--bg-base);
+      border-right: 1px solid var(--border-default);
+      flex-shrink: 0;
+    }
+
+    .activity-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      height: 100%;
+      padding-bottom: 12px;
+    }
+
+    .activity-bar-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: var(--panel-header-height);  /* Same height as panel headers (36px) */
+      margin-bottom: 4px;
+    }
+
+    .activity-bar-logo img {
+      /* Logo is 2x resolution (56x54), display at 24x23 */
+      width: 24px;
+      height: auto;
+    }
+
+    .activity-bar-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 32px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: color 0.15s, background 0.15s;
+      position: relative;
+    }
+
+    .activity-bar-item:hover {
+      color: var(--text-secondary);
+      background: var(--white-5);
+    }
+
+    .activity-bar-item.active {
+      color: var(--text-primary);
+    }
+
+    /* Blue indicator removed - selection shown by color only */
+
+    .activity-bar-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .activity-bar-icon svg {
+      width: var(--size-icon-xl);
+      height: var(--size-icon-xl);
+    }
+
+    .activity-bar-spacer {
+      flex: 1;
+    }
+
+    .activity-bar-bottom-item {
+      margin-top: auto;
+      padding: 10px;
+      color: #999;
+    }
+
+    .explorer-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .explorer-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .explorer-view:not(.active) {
+      display: none;
+    }
+
+    /* Components view inside explorer */
+    .explorer-view-components {
+      background: var(--bg-panel);
+    }
+
+    .explorer-view-components .component-panel {
+      height: 100%;
+    }
