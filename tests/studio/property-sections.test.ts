@@ -15,6 +15,8 @@ import {
   createSizingSection,
   SpacingSection,
   createSpacingSection,
+  MarginSection,
+  createMarginSection,
   BorderSection,
   createBorderSection,
   ColorSection,
@@ -239,6 +241,62 @@ describe('Property Panel Sections', () => {
       // a separate, pre-existing CSS hook so we only assert the wrapper classes.
       expect(html).not.toContain('class="section expanded"')
       expect(html).not.toContain('class="section-content expanded"')
+    })
+  })
+
+  describe('MarginSection', () => {
+    let section: MarginSection
+    let deps: SectionDependencies
+
+    beforeEach(() => {
+      deps = createMockDeps()
+      section = createMarginSection(deps)
+    })
+
+    it('should create a MarginSection instance', () => {
+      expect(section).toBeInstanceOf(MarginSection)
+    })
+
+    it('renders a Margin label', () => {
+      const cat = createMockCategory('spacing', [{ name: 'mar', value: '8' }])
+      const data = createMockSectionData({ category: cat })
+      const html = section.render(data)
+      expect(html).toContain('Margin')
+    })
+
+    it('parses shorthand margin values without throwing', () => {
+      const cat = createMockCategory('spacing', [{ name: 'mar', value: '10 20' }])
+      const data = createMockSectionData({ category: cat })
+      const html = section.render(data)
+      expect(html).toBeDefined()
+      expect(html).toContain('Margin')
+    })
+
+    it('renders empty when category is missing', () => {
+      const data = createMockSectionData({})
+      const html = section.render(data)
+      expect(html).toBe('')
+    })
+
+    it('respects expandedSections.has("margin")', () => {
+      const cat = createMockCategory('spacing', [{ name: 'mar', value: '8' }])
+      const dataExpanded: SectionData = {
+        ...createMockSectionData({ category: cat }),
+        expandedSections: new Set(['margin']),
+      }
+      const dataCollapsed: SectionData = {
+        ...createMockSectionData({ category: cat }),
+        expandedSections: new Set<string>(),
+      }
+      expect(section.render(dataExpanded)).toContain('class="section expanded"')
+      expect(section.render(dataCollapsed)).not.toContain('class="section expanded"')
+    })
+
+    it('uses __MAR_TOKEN__ / __MAR_INPUT__ sentinels (not __PAD_*)', () => {
+      const handlers = section.getHandlers()
+      // Sanity-check the selectors so we don't accidentally collide with padding's
+      expect(handlers).toHaveProperty('input[data-mar-dir]')
+      expect(handlers).not.toHaveProperty('input[data-pad-dir]')
     })
   })
 

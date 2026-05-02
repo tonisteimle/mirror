@@ -723,6 +723,30 @@ describe('PropertyPanel', () => {
       expect(spacingContainerAfter.classList.contains('expanded')).toBe(false)
     })
 
+    it('renders both Padding and Margin sections from the spacing category', () => {
+      setupFrameWithSpacingAndBorder()
+      // Padding chevron uses data-expand="spacing", Margin uses "margin"
+      expect(container.querySelector('[data-expand="spacing"]')).toBeTruthy()
+      expect(container.querySelector('[data-expand="margin"]')).toBeTruthy()
+      // And the human-readable section labels
+      expect(container.innerHTML).toContain('Padding')
+      expect(container.innerHTML).toContain('Margin')
+    })
+
+    it('Margin chevron toggles its own .expanded class', () => {
+      setupFrameWithSpacingAndBorder()
+      const marginContainer = () =>
+        container.querySelector('[data-expand-container="margin"]') as HTMLElement
+      // Default: 'margin' is in the default expanded set → starts expanded
+      expect(marginContainer().classList.contains('expanded')).toBe(true)
+
+      const marginChevron = container.querySelector(
+        '.section-expand-btn[data-expand="margin"]'
+      ) as HTMLButtonElement
+      marginChevron.click()
+      expect(marginContainer().classList.contains('expanded')).toBe(false)
+    })
+
     it('toggles each chevron independently', () => {
       setupFrameWithSpacingAndBorder()
 

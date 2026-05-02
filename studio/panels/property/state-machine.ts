@@ -376,8 +376,19 @@ function handleDefinitionSelected(state: PanelState, componentName: string): Tra
 // ============================================
 
 function getDefaultExpandedSections(): Set<string> {
-  // Alle Sections standardmäßig expanded
-  return new Set(['behavior', 'layout', 'sizing', 'spacing', 'border', 'color', 'typography'])
+  // Alle Sections standardmäßig expanded.
+  // 'spacing' is the chevron-key for Padding-detail and 'margin' for
+  // Margin-detail — symmetric.
+  return new Set([
+    'behavior',
+    'layout',
+    'sizing',
+    'spacing',
+    'margin',
+    'border',
+    'color',
+    'typography',
+  ])
 }
 
 // ============================================

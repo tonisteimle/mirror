@@ -17,6 +17,7 @@ import {
   createLayoutSection,
   createSizingSection,
   createSpacingSection,
+  createMarginSection,
   createBorderSection,
   createColorSection,
   createTypographySection,
@@ -379,6 +380,7 @@ export class PropertyPanelView {
     this.sections.set('layout', createLayoutSection(deps))
     this.sections.set('sizing', createSizingSection(deps))
     this.sections.set('spacing', createSpacingSection(deps))
+    this.sections.set('margin', createMarginSection(deps))
     this.sections.set('border', createBorderSection(deps))
     this.sections.set('color', createColorSection(deps))
     this.sections.set('typography', createTypographySection(deps))
@@ -605,12 +607,24 @@ export class PropertyPanelView {
       }
     }
 
-    // Spacing section
+    // Spacing section (Padding) — uses the `spacing` category, filters
+    // for padding-shaped properties internally.
     if (allowedSections.has('spacing') && spacingCat) {
       const section = this.sections.get('spacing')
       if (section) {
         const padTokens = this.ports.tokens.getSpacingTokens('pad')
         result += section.render({ ...sectionData, category: spacingCat, spacingTokens: padTokens })
+      }
+      // Margin section — same `spacing` category (padding + margin share
+      // a category in the schema), filters for margin properties.
+      const marginSection = this.sections.get('margin')
+      if (marginSection) {
+        const marTokens = this.ports.tokens.getSpacingTokens('mar')
+        result += marginSection.render({
+          ...sectionData,
+          category: spacingCat,
+          spacingTokens: marTokens,
+        })
       }
     }
 
@@ -737,6 +751,11 @@ export class PropertyPanelView {
       case '__PAD_TOKEN__':
       case '__PAD_INPUT__':
         this.handlePaddingChange(propName, value)
+        break
+
+      case '__MAR_TOKEN__':
+      case '__MAR_INPUT__':
+        this.handleMarginChange(propName, value)
         break
 
       case '__ALIGN__':
@@ -905,6 +924,25 @@ export class PropertyPanelView {
       }
     } catch (e) {
       log.error('Failed to parse padding change:', e)
+    }
+  }
+
+  private handleMarginChange(propName: string, jsonValue: string): void {
+    try {
+      const data = JSON.parse(jsonValue)
+      const { value, dir } = data
+
+      // Mirrors handlePaddingChange — naive single-property update.
+      // TODO: Per-side directional margin (mar-t / mar-r / …) — same
+      // shape as the padding TODO above; both will be addressed together
+      // when parseSpacingValue learns about per-side props.
+      if (dir === 'h' || dir === 'v') {
+        this.controller.changeProperty('mar', value)
+      } else {
+        this.controller.changeProperty('mar', value)
+      }
+    } catch (e) {
+      log.error('Failed to parse margin change:', e)
     }
   }
 
