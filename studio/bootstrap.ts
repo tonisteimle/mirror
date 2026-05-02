@@ -745,6 +745,7 @@ function initializePanelVisibility(): void {
   panelElements.code = document.querySelector('.editor-panel')
   panelElements.components = document.getElementById('components-panel')
   panelElements.tokens = document.getElementById('tokens-panel')
+  panelElements['design-system'] = document.getElementById('design-system-panel')
   panelElements.preview = document.querySelector('.preview-panel')
   panelElements.property = document.getElementById('property-panel')
 

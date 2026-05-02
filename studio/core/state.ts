@@ -56,6 +56,7 @@ const defaultPanelVisibility: PanelVisibility = {
   code: true,
   components: true, // Standalone components panel
   tokens: true, // Standalone tokens panel
+  'design-system': true, // Component preview in all states
   preview: true,
   property: true,
 }
