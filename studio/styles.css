@@ -4,6 +4,7 @@
 @import url('./styles/file-tree.css');
 @import url('./styles/components-panel.css');
 @import url('./styles/explorer.css');
+@import url('./styles/prompt-bar.css');
 
 
     * {
@@ -89,116 +90,6 @@
 
     .panel-header {
       display: none;
-    }
-
-    /* Prompt Bar */
-    .prompt-bar {
-      padding: var(--space-4) 12px;
-      background: var(--bg-panel);
-      border-top: 1px solid var(--border-default);
-    }
-
-    .prompt-input-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-      background: var(--bg-base);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-lg);
-      transition: border-color 0.15s;
-    }
-
-    .prompt-input-wrapper:focus-within {
-      border-color: var(--color-primary);
-    }
-
-    .prompt-input {
-      flex: 1;
-      padding: var(--space-5) 12px;
-      padding-right: 40px;
-      background: transparent;
-      border: none;
-      color: var(--text-primary);
-      font-size: var(--font-md);
-      outline: none;
-    }
-
-    .prompt-input::placeholder {
-      color: var(--text-disabled);
-    }
-
-    .btn-generate {
-      position: absolute;
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: var(--size-icon-2xl);
-      height: var(--size-icon-2xl);
-      padding: 0;
-      background: transparent;
-      color: var(--text-muted);
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: color 0.15s;
-    }
-
-    .btn-generate:hover {
-      color: var(--text-secondary);
-    }
-
-    .btn-generate:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .btn-generate .spinner {
-      width: var(--size-icon-xs);
-      height: var(--size-icon-xs);
-      border: 2px solid transparent;
-      border-top-color: var(--text-inverse);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .btn-generate .spin,
-    .btn-generate svg.spin {
-      animation: spin 1s linear infinite;
-    }
-
-    .btn-generate:disabled {
-      cursor: wait;
-    }
-
-    /* Progress Bar für Generation */
-    .generation-progress {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: var(--white-20);
-      border-radius: 0 0 6px 6px;
-      overflow: hidden;
-    }
-
-    .generation-progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, var(--color-success), var(--color-primary));
-      width: 0%;
-      transition: width 0.5s linear;
-    }
-
-    .generation-timer {
-      font-size: var(--font-xs);
-      opacity: 0.8;
-      margin-left: 4px;
     }
 
     /* Preview Panel */
