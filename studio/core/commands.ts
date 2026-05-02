@@ -1105,40 +1105,90 @@ export type CommandType =
   | 'SET_POSITION'
   | 'SET_TEXT_CONTENT'
 
-export function createCommand(type: CommandType, params: Record<string, any>): Command {
+/**
+ * Parameter shapes for createCommand(). Mirrors the constructor
+ * signatures of each Command class — keep in sync if either side
+ * changes.
+ */
+export interface CommandParamsMap {
+  SET_PROPERTY: { nodeId: string; property: string; value: string }
+  REMOVE_PROPERTY: { nodeId: string; property: string }
+  INSERT_COMPONENT: {
+    parentId: string
+    component: string
+    position?: 'first' | 'last' | number
+    properties?: string
+    textContent?: string
+  }
+  DELETE_NODE: { nodeId: string }
+  MOVE_NODE: {
+    nodeId: string
+    targetId: string
+    position: 'before' | 'after' | 'inside'
+  }
+  MOVE_NODE_WITH_LAYOUT: {
+    nodeId: string
+    targetId: string
+    position: 'before' | 'after' | 'inside'
+    layoutTransition?: {
+      from: 'flex' | 'absolute'
+      to: 'flex' | 'absolute'
+      absolutePosition?: { x: number; y: number }
+    }
+  }
+  UPDATE_SOURCE: { from: number; to: number; insert: string }
+  WRAP_NODES: { nodeIds: string[]; wrapperName?: string; wrapperProps?: string }
+  UNWRAP_NODE: { nodeId: string }
+  BATCH: { commands: Command[]; description?: string; alreadyExecuted?: boolean }
+  RESIZE: {
+    nodeId: string
+    width?: 'full' | 'hug' | number
+    height?: 'full' | 'hug' | number
+  }
+  SET_POSITION: { nodeId: string; x: number; y: number; description?: string }
+  SET_TEXT_CONTENT: { nodeId: string; text: string; description?: string }
+}
+
+export function createCommand<T extends CommandType>(
+  type: T,
+  params: CommandParamsMap[T]
+): Command {
   switch (type) {
     case 'SET_PROPERTY':
-      return new SetPropertyCommand(params as any)
+      return new SetPropertyCommand(params as CommandParamsMap['SET_PROPERTY'])
     case 'REMOVE_PROPERTY':
-      return new RemovePropertyCommand(params as any)
+      return new RemovePropertyCommand(params as CommandParamsMap['REMOVE_PROPERTY'])
     case 'INSERT_COMPONENT':
-      return new InsertComponentCommand(params as any)
+      return new InsertComponentCommand(params as CommandParamsMap['INSERT_COMPONENT'])
     case 'DELETE_NODE':
-      return new DeleteNodeCommand(params as any)
+      return new DeleteNodeCommand(params as CommandParamsMap['DELETE_NODE'])
     case 'MOVE_NODE':
-      return new MoveNodeCommand(params as any)
+      return new MoveNodeCommand(params as CommandParamsMap['MOVE_NODE'])
     case 'MOVE_NODE_WITH_LAYOUT':
-      return new MoveNodeWithLayoutCommand(params as any)
+      return new MoveNodeWithLayoutCommand(params as CommandParamsMap['MOVE_NODE_WITH_LAYOUT'])
     case 'UPDATE_SOURCE':
-      return new UpdateSourceCommand(params as any)
+      return new UpdateSourceCommand(params as CommandParamsMap['UPDATE_SOURCE'])
     case 'WRAP_NODES':
-      return new WrapNodesCommand(params as any)
+      return new WrapNodesCommand(params as CommandParamsMap['WRAP_NODES'])
     case 'UNWRAP_NODE':
-      return new UnwrapNodeCommand(params as any)
+      return new UnwrapNodeCommand(params as CommandParamsMap['UNWRAP_NODE'])
     case 'BATCH':
-      return new BatchCommand(params as any)
+      return new BatchCommand(params as CommandParamsMap['BATCH'])
     case 'RESIZE':
-      return new ResizeCommand(params as any)
+      return new ResizeCommand(params as CommandParamsMap['RESIZE'])
     case 'SET_POSITION':
-      return new SetPositionCommand(params as any)
+      return new SetPositionCommand(params as CommandParamsMap['SET_POSITION'])
     case 'SET_TEXT_CONTENT':
-      return new SetTextContentCommand(params as any)
+      return new SetTextContentCommand(params as CommandParamsMap['SET_TEXT_CONTENT'])
     default:
-      throw new Error(`Unknown command type: ${type}`)
+      throw new Error(`Unknown command type: ${type satisfies never}`)
   }
 }
 
-export function parseCommandFromLLM(commandData: { type: string; [key: string]: any }): Command {
+export function parseCommandFromLLM(commandData: {
+  type: string
+  [key: string]: unknown
+}): Command {
   const { type, ...params } = commandData
-  return createCommand(type as CommandType, params)
+  return createCommand(type as CommandType, params as CommandParamsMap[CommandType])
 }
