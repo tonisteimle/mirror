@@ -27,42 +27,9 @@
     </header>
 
     <section>
-      <p class="intro">Stell dir vor, du bist Designer in einem Team, das eine anspruchsvolle Anwendung baut. Deine Entwickler bieten dir zwei Wege an:</p>
-      <ul>
-        <li><strong>Weg eins:</strong> Du arbeitest direkt in Claude Design oder Claude Code. Du beschreibst, das LLM generiert.</li>
-        <li><strong>Weg zwei:</strong> Du lieferst eine UI-Spezifikation; die Entwickler setzen sie mit Claude Code in der Zieltechnologie um.</li>
-      </ul>
-      <p>Beides fühlt sich unbefriedigend an. Und beide Male verlierst du etwas anderes: bei Weg eins die Kontrolle, bei Weg zwei die Nähe.</p>
-      <p>Bei Weg eins trifft das LLM fast – aber nie ganz. Ein Button-Detail anpassen? Drei Prompts. Eine Farbe sauber durchziehen? Fünf. Am Ende stehst du vor Code, der nicht für dich geschrieben ist: tausend Zeilen, drei Bibliotheken, Logik in Frameworks, die du nicht beurteilen kannst. Eine <strong>Black Box</strong>, die irgendetwas tut.</p>
-      <p>Bei Weg zwei verlierst du die Kontrolle an die Übersetzung. Was du gemeint hast, kommt erst nach Tagen zurück – und nicht so, wie du es gemeint hast. Das saubere Design-System, das du eigentlich aufbauen wolltest, zerfällt in Tickets, Reviews und Kompromisse.</p>
-      <p>Beiden Wegen fehlt dasselbe: <strong>das Gefühl, dass das Ding gut wird, während du daran arbeitest.</strong></p>
-    </section>
-
-
-    <!-- ============================================================ -->
-    <section>
-      <h2>Mirror ist dafür gebaut</h2>
-      <p>Mirror hat zwei Teile: eine <strong>Sprache</strong> und ein <strong>Studio</strong>. Im Studio arbeitest du in dem Modus, der gerade passt:</p>
-      <ul>
-        <li><strong>Tippen.</strong> Du schreibst direkt Mirror-Code. Drei Zeichen statt drei Prompts.</li>
-        <li><strong>Greifen.</strong> Du selektierst ein Element im Preview und ziehst die Resize-Handles. Mit <code>P</code>, <code>M</code>, <code>G</code> werden Padding, Margin und Gap zu Schiebern, die du mit der Maus einstellst. Doppelklick auf Text öffnet den Inline-Editor. Smart-Guides helfen beim Ausrichten.</li>
-        <li><strong>Klicken.</strong> Im Property-Panel siehst du alles, was am selektierten Element hängt: Größen, Abstände, Layout, Typografie. Farben, Tokens, Icons und Animationen wählst du aus Pickern.</li>
-        <li><strong>Generieren.</strong> Das LLM erzeugt Mirror-Code – auf einen Prompt hin oder als Vorschlag. Du liest, verstehst, verfeinerst.</li>
-      </ul>
-
-      <figure class="studio-shot">
-        <img src="studio-screenshot.png" alt="Mirror Studio: Code-Editor links, Preview in der Mitte, Property-Panel rechts">
-        <figcaption>Code, Preview und Property-Panel sind drei Sichten auf dieselbe Datei.</figcaption>
-      </figure>
-
-      <p>Klick im Preview selektiert die Code-Zeile. Tippst du im Editor, wandert die Selektion mit. Ziehst du am Padding-Handle, schreibt sich genau die richtige <code>pad</code>-Zeile. Du wechselst zwischen den Sichten, wie es gerade passt – und verlierst dabei nie etwas.</p>
-    </section>
-
-
-    <!-- ============================================================ -->
-    <section>
-      <h2>Wie Mirror-Code aussieht</h2>
-      <p>Eine einzige Zeile reicht für einen kompletten Button:</p>
+      <p class="intro"><strong>AI generiert heute Code. Designer können ihn nicht mehr lesen.</strong></p>
+      <p>Wer mit AI ein UI baut, bekommt tausend Zeilen Framework-Logik zurück – drei Bibliotheken, Klassennamen, die niemand pflegt. Jede Anpassung wird zum Prompt. Der Designer ist im eigenen Produkt zum Beobachter geworden.</p>
+      <p>Mirror ist die Antwort darauf: eine Sprache, die für beide Leser gemacht ist – kurz genug, dass Designer sie schreiben und lesen, präzise genug, dass LLMs sie generieren.</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Button "Speichern", bg #2271C1, col white, pad 12 24, rad 6</textarea>
@@ -70,8 +37,29 @@
         <div class="playground-preview"></div>
       </div>
 
-      <p>Das ist ein blauer Button. Du siehst es, du verstehst es, du kannst es ändern. <code>bg #2271C1</code> → <code>bg #10b981</code> und der Button ist grün. <code>pad 12 24</code> → <code>pad 16 32</code> und er ist größer. Keine Magie, keine versteckten Dateien.</p>
-      <p>Aber es wird noch besser. Wenn du Komponenten definierst, wird die Verwendung komplett clean:</p>
+      <p>Das ist kein Implementierungsdetail eines Buttons. Das ist der Button. Ändere <code>#2271C1</code> auf <code>#10b981</code>, und er wird grün. Ändere <code>pad 12 24</code> auf <code>pad 16 32</code>, und er wird größer. Keine versteckten Dateien, keine Build-Schritte, keine Frameworks.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Drei Sichten, eine Datei</h2>
+      <p>Im Mirror Studio wird derselbe Code zu drei Sichten – Editor, Preview, Property-Panel –, die immer synchron bleiben. Tippst du eine Zeile, erscheint das Element. Ziehst du am Padding-Handle, ändert sich genau diese Zeile. Klickst du eine Farbe im Panel, steht sie im Code.</p>
+
+      <figure class="studio-shot">
+        <img src="studio-screenshot.png" alt="Mirror Studio: Code-Editor links, Preview in der Mitte, Property-Panel rechts">
+        <figcaption>Eine Datei, drei Zugriffe, dieselbe Wahrheit.</figcaption>
+      </figure>
+
+      <p>Mirror compiliert zu DOM oder React. Was du baust, läuft. Aber das Eigentliche an Mirror ist die Sprache selbst: ein Format, in dem Designer, AI und Entwickler am gleichen Artefakt arbeiten – direkt, ohne Übersetzung.</p>
+      <p><strong>AI, die mit Designern arbeitet – nicht für sie.</strong></p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Komponenten machen den Code zu einem Dokument</h2>
+      <p>Definiere ein Element einmal, und seine Verwendung wird zur Sache selbst:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>// Einmal definieren (mit Styling)
