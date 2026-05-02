@@ -110,7 +110,7 @@ code {
 
 .studio-shot { margin: 32px 0; }
 .studio-shot img {
-  max-width: 100%;
+  width: 100%;
   display: block;
   border-radius: 8px;
   border: 1px solid var(--border);
@@ -120,6 +120,22 @@ code {
   color: var(--text-dim);
   font-size: 14px;
   text-align: center;
+}
+
+/* Hero shot: break out of the 720px text column on wider viewports. */
+@media (min-width: 1024px) {
+  .studio-shot {
+    margin-left: -160px;
+    margin-right: -160px;
+  }
+}
+
+/* Sidebar mode (≥1100px): only break out to the right; sidebar pins the left. */
+@media (min-width: 1100px) {
+  body.has-sidebar .studio-shot {
+    margin-left: 0;
+    margin-right: -300px;
+  }
 }
 
 /* Links */

@@ -27,9 +27,9 @@
     </header>
 
     <section>
-      <p class="intro"><strong>AI generiert heute Code. Designer können ihn nicht mehr lesen.</strong></p>
-      <p>Wer mit AI ein UI baut, bekommt tausend Zeilen Framework-Logik zurück – drei Bibliotheken, Klassennamen, die niemand pflegt. Jede Anpassung wird zum Prompt. Der Designer ist im eigenen Produkt zum Beobachter geworden.</p>
-      <p>Mirror ist die Antwort darauf: eine Sprache, die für beide Leser gemacht ist – kurz genug, dass Designer sie schreiben und lesen, präzise genug, dass LLMs sie generieren.</p>
+      <p class="intro">Designer arbeiten mit Visuals. Programmierer mit Text. Diese Grenze war seit jeher das Bottleneck im UI-Design – überquert nur durch Übersetzung: Designer entwerfen, Entwickler implementieren.</p>
+      <p>AI sollte sie auflösen. Doch sie hat die Grenze nur verschoben. LLMs schreiben heute UI-Code in Sekunden – aber für sich selbst und für Programmierer. Designer können ihn nicht lesen, geschweige denn anpassen. Jede Korrektur wird zum nächsten Prompt.</p>
+      <p><strong>Mirror schließt die Lücke mit einer gemeinsamen Notation.</strong> Eine Sprache, kurz genug, dass Designer sie schreiben – präzise genug, dass LLMs sie generieren. Beide arbeiten am selben Text.</p>
       <div class="playground" data-playground>
         <div class="playground-code">
           <textarea>Button "Speichern", bg #2271C1, col white, pad 12 24, rad 6</textarea>
@@ -37,22 +37,22 @@
         <div class="playground-preview"></div>
       </div>
 
-      <p>Das ist kein Implementierungsdetail eines Buttons. Das ist der Button. Ändere <code>#2271C1</code> auf <code>#10b981</code>, und er wird grün. Ändere <code>pad 12 24</code> auf <code>pad 16 32</code>, und er wird größer. Keine versteckten Dateien, keine Build-Schritte, keine Frameworks.</p>
+      <p>Eine einzige Zeile beschreibt diesen Button vollständig: Hintergrund, Textfarbe, Padding, Radius. Lesbar wie ein Stilbeispiel, lauffähig wie Code. Ändere <code>#2271C1</code> auf <code>#10b981</code> – er wird grün. Drei Zeichen statt drei Prompts.</p>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
       <h2>Drei Sichten, eine Datei</h2>
-      <p>Im Mirror Studio wird derselbe Code zu drei Sichten – Editor, Preview, Property-Panel –, die immer synchron bleiben. Tippst du eine Zeile, erscheint das Element. Ziehst du am Padding-Handle, ändert sich genau diese Zeile. Klickst du eine Farbe im Panel, steht sie im Code.</p>
+      <p>Im Mirror Studio wird derselbe Code zu drei Sichten – Editor, Preview, Property-Panel –, die immer synchron sind. Tippst du eine Zeile, erscheint das Element. Ziehst du am Padding-Handle, ändert sich genau diese Zeile. Klickst du eine Farbe im Panel, steht sie im Code.</p>
 
       <figure class="studio-shot">
         <img src="studio-screenshot.png" alt="Mirror Studio: Code-Editor links, Preview in der Mitte, Property-Panel rechts">
-        <figcaption>Eine Datei, drei Zugriffe, dieselbe Wahrheit.</figcaption>
+        <figcaption>Editor, Preview, Property-Panel – drei Sichten auf dieselbe Datei.</figcaption>
       </figure>
 
-      <p>Mirror compiliert zu DOM oder React. Was du baust, läuft. Aber das Eigentliche an Mirror ist die Sprache selbst: ein Format, in dem Designer, AI und Entwickler am gleichen Artefakt arbeiten – direkt, ohne Übersetzung.</p>
-      <p><strong>AI, die mit Designern arbeitet – nicht für sie.</strong></p>
+      <p>Mirror compiliert zu DOM oder React – was du baust, läuft. Aber das eigentliche Konzept ist nicht die Compilation. Es ist die Notation selbst. Mirror-Code ist Entwurf, Prototyp und Spezifikation in einem. Designer schreiben ihn. AI schreibt ihn. Entwickler verwenden ihn weiter.</p>
+      <p><strong>Eine Datei. Drei Beteiligte. Keine Übersetzung.</strong></p>
     </section>
 
 
