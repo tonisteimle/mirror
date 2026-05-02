@@ -57,12 +57,22 @@ studio/                # Studio Runtime (TypeScript) - Modulare Architektur
 ├── sync/              # Editor ↔ Preview Synchronisation
 ├── editor/            # CodeMirror Controller
 ├── autocomplete/      # Completions
-├── file-tree/         # File-Tree-Controller
+├── file-tree/         # File-Tree-Controller (UI)
+├── file-types/        # File-Extension Registry (.mir/.com/.tok-Mapping)
 ├── inline-edit/       # Inline-Editing (Text-Slots)
+├── components/        # Generische UI-Primitives (Input, Select, Toggle, Slider, …)
+├── icons/             # Icon-Registry (Lucide + Custom-SVGs)
+├── init/              # Boot-Wiring (Notifications, Sync, Draw, Inline-Edit)
+├── keyboard/          # Globaler Keyboard-Handler
+├── zag/               # Zag-Component-Adapter (DatePicker)
+├── styles/            # Modulare CSS-Bundles (per @import in styles.css)
+├── types/             # Ambient Type Declarations (window-globals.d.ts)
+├── demo/              # In-Studio Demo-API
 ├── react-converter/   # Mirror → React Konverter
 ├── test-api/          # Browser-Test-Framework (separater Stack, nicht Runtime)
 ├── bootstrap.ts       # Architektur Entry Point (Kernel)
 ├── app.ts             # Legacy IIFE-Wrapper, ruft initializeStudio()
+├── desktop-files.ts   # Tauri Desktop File-Bridge
 ├── index.html         # Entry Point
 └── styles.css         # Styling (modularisiert via @import)
 
