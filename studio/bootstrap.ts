@@ -50,6 +50,8 @@ import {
   type ComponentChild,
 } from './panels/components'
 import { ActivityBar, createActivityBar, ACTIVITY_BAR_ICONS } from './panels/explorer'
+import { TokenRenderer } from './compile/token-renderer'
+import { parseTokensFromFiles } from './pickers/token/types'
 import type { DrawManager } from './visual/draw-manager'
 import type { InlineEditController } from './inline-edit'
 import { initDrawManager, initInlineEdit, initSync } from './init'
@@ -67,6 +69,7 @@ export interface BootstrapConfig {
   previewContainer: HTMLElement
   propertyPanelContainer?: HTMLElement
   componentPanelContainer?: HTMLElement
+  tokensPanelContainer?: HTMLElement
   userComponentsPanelContainer?: HTMLElement
   explorerPanelContainer?: HTMLElement
   fileTreeContainer?: HTMLElement
@@ -99,6 +102,7 @@ export interface StudioInstance {
   sync: SyncCoordinator | null
   propertyPanel: PropertyPanel | null
   componentPanel: ComponentPanel | null
+  tokensRenderer: TokenRenderer | null
   userComponentsPanel: UserComponentsPanel | null
   breadcrumb: PreviewBreadcrumb | null
   autocomplete: AutocompleteEngine
@@ -131,6 +135,7 @@ export const studio: StudioInstance = {
   sync: null,
   propertyPanel: null,
   componentPanel: null,
+  tokensRenderer: null,
   userComponentsPanel: null,
   breadcrumb: null,
   autocomplete: getAutocompleteEngine(),
@@ -175,6 +180,9 @@ let propertyPanelContainer: HTMLElement | null = null
 
 // Store component panel container for lazy initialization
 let componentPanelContainer: HTMLElement | null = null
+
+// Store tokens panel container for lazy initialization
+let tokensPanelContainer: HTMLElement | null = null
 
 // Store user components panel container for lazy initialization
 let userComponentsPanelContainer: HTMLElement | null = null
@@ -367,6 +375,47 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
       }
     )
     logBootstrap.info(' ComponentPanel initialized')
+  }
+
+  // Initialize Tokens sidebar by reusing the existing TokenRenderer that
+  // already powers the .tok-file preview. Pointed at the sidebar container,
+  // it re-renders on every `source:changed` event so edits to any tokens
+  // file update the swatches immediately.
+  if (config.tokensPanelContainer) {
+    tokensPanelContainer = config.tokensPanelContainer
+  }
+  if (tokensPanelContainer && config.getFiles) {
+    const container = tokensPanelContainer
+    const getFilesCallback = config.getFiles
+    container.classList.add('tokens-preview')
+
+    const buildFileMap = (): Record<string, string> => {
+      const map: Record<string, string> = {}
+      for (const f of getFilesCallback()) map[f.name] = f.code
+      return map
+    }
+    const renderer = new TokenRenderer({
+      preview: container,
+      getAllProjectSource: () => Object.values(buildFileMap()).filter(Boolean).join('\n'),
+    })
+    studio.tokensRenderer = renderer
+
+    const renderTokens = () => {
+      const defs = parseTokensFromFiles(buildFileMap())
+      // TokenRenderer.render expects an AST; only `tokens` is read.
+      renderer.render({
+        components: [],
+        instances: [],
+        // Strip the leading $ that parseTokens adds — TokenRenderer's
+        // category detection works on either form, but the parser AST
+        // stores names without $.
+        tokens: defs.map(d => ({ name: d.name.replace(/^\$/, ''), value: d.value })),
+      } as any)
+    }
+
+    renderTokens()
+    eventUnsubscribes.push(events.on('source:changed', () => renderTokens()))
+    logBootstrap.info(' Tokens sidebar initialized')
   }
 
   // Initialize User Components Panel if container and getFiles provided
@@ -678,6 +727,7 @@ function initializePanelVisibility(): void {
     document.getElementById('explorer-panel') || document.querySelector('.sidebar')
   panelElements.code = document.querySelector('.editor-panel')
   panelElements.components = document.getElementById('components-panel')
+  panelElements.tokens = document.getElementById('tokens-panel')
   panelElements.preview = document.querySelector('.preview-panel')
   panelElements.property = document.getElementById('property-panel')
 
@@ -793,6 +843,7 @@ function initializeActivityBar(): void {
   const items = [
     { id: 'files', icon: ACTIVITY_BAR_ICONS.files, tooltip: 'Files' },
     { id: 'components', icon: ACTIVITY_BAR_ICONS.components, tooltip: 'Components' },
+    { id: 'tokens', icon: ACTIVITY_BAR_ICONS.tokens, tooltip: 'Tokens' },
     { id: 'code', icon: ACTIVITY_BAR_ICONS.code, tooltip: 'Code Editor' },
     { id: 'preview', icon: ACTIVITY_BAR_ICONS.preview, tooltip: 'Preview' },
     { id: 'property', icon: ACTIVITY_BAR_ICONS.properties, tooltip: 'Properties' },
