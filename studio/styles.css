@@ -1,5 +1,6 @@
 @import url('./styles/tokens.css');
 @import url('./styles/dividers.css');
+@import url('./styles/editor.css');
 
 
     * {
@@ -817,111 +818,6 @@
 
     .panel-header {
       display: none;
-    }
-
-    .editor-panel {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      min-height: 0; /* Important for flex scroll */
-    }
-
-    #editor-container {
-      flex: 1;
-      overflow: hidden;
-      min-height: 0; /* Important for flex scroll */
-    }
-
-    /* Editor Header */
-    .editor-header {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding: var(--space-3) 12px;
-      background: var(--bg-panel);
-      border-bottom: 1px solid var(--border-default);
-      flex-shrink: 0;
-      height: var(--panel-header-height);
-      box-sizing: border-box;
-    }
-
-    .editor-title {
-      font-size: var(--font-sm);
-      font-weight: var(--weight-semibold);
-      text-transform: var(--text-uppercase);
-      letter-spacing: var(--tracking-wide);
-      color: var(--text-muted);
-    }
-
-    .editor-actions {
-      display: flex;
-      align-items: center;
-      gap: var(--space-1);
-    }
-
-    .editor-action-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: var(--size-icon-xl);
-      height: var(--size-icon-xl);
-      border: none;
-      background: transparent;
-      color: var(--text-secondary);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .editor-action-btn svg {
-      width: var(--size-icon-xs);
-      height: var(--size-icon-xs);
-    }
-
-    .editor-action-btn:hover:not(:disabled) {
-      background: var(--bg-hover);
-      color: var(--text-secondary);
-    }
-
-    .editor-action-btn:active:not(:disabled) {
-      background: var(--bg-active);
-    }
-
-    .editor-action-btn:disabled {
-      opacity: 0.3;
-      cursor: default;
-    }
-
-    .editor-action-btn svg {
-      width: var(--size-icon-sm);
-      height: var(--size-icon-sm);
-    }
-
-    .editor-action-divider {
-      width: 1px;
-      height: var(--size-icon-md);
-      background: var(--bg-active);
-      margin: 0 4px;
-    }
-
-    .editor-action-spacer {
-      flex: 1;
-    }
-
-    .tutorial-link {
-      display: flex;
-      align-items: center;
-      color: var(--text-secondary);
-      transition: color 0.15s;
-    }
-
-    .tutorial-link:hover {
-      color: #5BA8F5;
-    }
-
-    .tutorial-link svg {
-      width: 16px;
-      height: 16px;
     }
 
     /* Sidebar Content (File Tree) */
