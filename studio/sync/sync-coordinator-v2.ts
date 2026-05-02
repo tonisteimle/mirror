@@ -148,6 +148,14 @@ export class SyncCoordinator {
     // Clear pending sync as it references old sourceMap
     this.pendingSync = null
 
+    // Reset cursor-line dedup so a fresh source can re-sync the same line.
+    // Without this, a stale lastCursorLine from the previous source can
+    // suppress a legitimate cursor move (line N → setSelection) when the
+    // new source happens to land on the same line — caused suite-mode
+    // single-line selection to hold null because the test before it left
+    // lastCursorLine = 2.
+    this.lastCursorLine = -1
+
     // Update the SourceMap port if it supports setSourceMap
     if (this.ports.sourceMap && 'setSourceMap' in this.ports.sourceMap) {
       ;(this.ports.sourceMap as SourceMapPortWithSetter).setSourceMap(sourceMap as any)

@@ -1077,7 +1077,7 @@ function compile(code: string) {
     // Clear selection and update studio state for empty code
     if (studioSelectionManager) {
       studioSelectionManager.clearSelection()
-      studioSelectionManager.setBreadcrumb([{ id: 'node-1', name: 'App' }])
+      studioSelectionManager.setBreadcrumb([{ nodeId: 'node-1', name: 'App' }])
     }
     // Clear component palette user components
     const userComponentsList = document.querySelector('.user-components-list')
@@ -1467,10 +1467,14 @@ function getTokensSource() {
 // State for studio module
 // NOTE: AST and SourceMap are now managed by studio/core/state.ts
 // Access via: studio.state.get().ast, studio.state.get().sourceMap
+// Mirrors the surface of StateSelectionAdapter that app.ts actually uses;
+// keeping it as a small structural interface (rather than importing the
+// adapter type directly) lets the few legacy fallback paths still drop
+// in mock implementations.
 interface AppSelectionManager {
   clearSelection: () => void
-  setBreadcrumb: (items: { id: string; name: string }[]) => void
-  getSelection?: () => unknown
+  setBreadcrumb: (items: { nodeId: string; name: string }[]) => void
+  getSelection?: () => string | null
 }
 let studioSelectionManager: AppSelectionManager | null = null
 let studioPropertyPanel: PropertyPanel | null = null
@@ -1479,10 +1483,11 @@ let studioCodeModifier: CodeModifier | null = null
 let studioRobustModifier: ReturnType<typeof createRobustModifier> | null = null // Robust wrapper for atomic updates
 // Drag handler binding for preview elements — encapsulates cleanup + WeakSet
 const draggableElements = createDraggableElementsManager({
-  // The studio bootstrap object exposes more than the drag-drop bridge
-  // needs; cast through unknown to satisfy the narrower
-  // `StudioWithDragDrop` interface inside the manager.
-  getStudio: () => studio as unknown as { dragDrop?: unknown },
+  // The studio bootstrap object doesn't surface `dragDrop` in its public
+  // type — the bridge is patched in by other modules at runtime — so
+  // cast through unknown for the narrower interface the manager wants.
+  getStudio: () =>
+    studio as unknown as { dragDrop?: { makeElementDraggable: (el: Element) => () => void } },
 })
 // editorHasFocus is now managed by studio state (studio.state.get().editorHasFocus)
 // This getter provides backwards compatibility for existing code
@@ -2004,7 +2009,7 @@ function setupNotificationHandlers() {
         // those new nodes get silently rejected because their source-map
         // entries don't exist yet.
         try {
-          studio.events.emit('compile:requested')
+          studio.events.emit('compile:requested', {})
         } catch (_e) {
           /* ignore */
         }
@@ -2014,7 +2019,9 @@ function setupNotificationHandlers() {
 
     // Handle canvas element move (type: 'canvas')
     if (source?.type === 'canvas' && source.nodeId) {
-      const dropResult = {
+      // Object-literal `type: 'element'` widens to `string` without an
+      // explicit annotation; cast to the imported DropResult shape.
+      const dropResult: import('./drop/types').DropResult = {
         source: {
           type: 'element',
           nodeId: source.nodeId,
@@ -2038,19 +2045,23 @@ function setupNotificationHandlers() {
       return
     }
 
-    // Convert v3 format to DropResult format
-    const dropResult = {
+    // Convert v3 format to DropResult format. Cast through the typed
+    // shape — the dragData fields are a structural superset of DropSource,
+    // and `type: 'palette'` would otherwise widen to `string`.
+    const dropResult: import('./drop/types').DropResult = {
       source: {
         type: 'palette',
         componentId: dragData.componentId,
         componentName: dragData.componentName,
-        template: dragData.componentName,
+        // 'template' is a legacy alias kept for downstream consumers;
+        // the typed DropSource doesn't list it but extra fields are
+        // accepted via structural typing.
         properties: dragData.properties,
         textContent: dragData.textContent,
         children: dragData.children,
         mirTemplate: dragData.mirTemplate,
         dataBlock: dragData.dataBlock,
-      },
+      } as import('./drop/types').DropSource,
       targetNodeId: target.containerId,
       // Use 'absolute' placement for stacked containers with position
       placement: target.mode === 'absolute' && target.position ? 'absolute' : 'inside',
@@ -2178,11 +2189,16 @@ function updateStudio(ast: Program, ir: IR, sourceMap: SourceMap, source: string
 // Delegates the resolved-source → editor-source coordinate translation
 // to studio/core/wrap-utils.ts so this path and bootstrap.ts's
 // PropertyPanel onCodeChange callback can never drift apart.
+// Mirrors `ModificationResult` from studio/code-modifier (success boolean
+// + a CodeChange + optional error/noChange). Local copy keeps app.ts
+// independent of the code-modifier import path; the structural match is
+// enforced by the cast in the call site.
 interface StudioCodeChangeResult {
   success: boolean
-  change?: { from: number; to?: number; insert?: string }
-  error?: unknown
-  [k: string]: unknown
+  change: { from: number; to: number; insert: string }
+  newSource?: string
+  error?: string
+  noChange?: boolean
 }
 
 function handleStudioCodeChange(result: StudioCodeChangeResult) {

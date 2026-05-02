@@ -98,6 +98,12 @@ export class SyncCoordinator {
     }
     // Clear pending sync as it references old sourceMap
     this.pendingSync = null
+    // Reset cursor-line dedup so a fresh source can re-sync the same line.
+    // Otherwise the cache from the previous source can suppress a
+    // legitimate cursor-move (line N → setSelection) when the new source
+    // happens to land on the same line — caused a single-line-selection
+    // test to hold onto null after setCode in suite mode.
+    this.lastCursorLine = -1
     this.sourceMap = sourceMap
   }
 
