@@ -331,6 +331,28 @@ export class PropertyPanelView {
 
     // Create sections with shared dependencies
     this.initializeSections()
+
+    // Install panel-level delegated handlers ONCE — they survive re-renders
+    // because they delegate via closest(). Re-registering them per-render
+    // (as in earlier code) leaks listeners during back-to-back boot renders:
+    // the second click in a sequence then double-fires through stale handlers,
+    // making toggle appear stuck.
+    this.installGlobalDelegates()
+  }
+
+  /**
+   * Installs delegated handlers that are panel-level (not section-owned).
+   * Runs once in the constructor; re-renders don't re-register these.
+   */
+  private installGlobalDelegates(): void {
+    this.container.addEventListener('click', e => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('.section-expand-btn')
+      if (!btn || !this.container.contains(btn)) return
+      const name = btn.dataset.expand
+      if (!name) return
+      e.preventDefault()
+      this.controller.toggleSection(name)
+    })
   }
 
   // ============================================
@@ -703,21 +725,9 @@ export class PropertyPanelView {
       }
     }
 
-    // Section-expand chevron is a panel-level concern (the per-side detail
-    // toggle), not owned by any single section — wire it once here.
-    const expandListener = (e: Event) => {
-      const target = (e.target as HTMLElement).closest<HTMLElement>('.section-expand-btn')
-      if (!target || !this.container.contains(target)) return
-      const name = target.dataset.expand
-      if (name) {
-        e.preventDefault()
-        this.controller.toggleSection(name)
-      }
-    }
-    this.container.addEventListener('click', expandListener)
-    this.eventCleanups.push(() => {
-      this.container.removeEventListener('click', expandListener)
-    })
+    // Section-expand chevron is installed once via installGlobalDelegates
+    // (constructor) — registering it per-render leaks listeners during
+    // back-to-back boot renders, causing toggles to misfire.
   }
 
   private cleanupEventListeners(): void {

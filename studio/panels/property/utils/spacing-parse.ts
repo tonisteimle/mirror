@@ -70,18 +70,28 @@ export function extractSides(
   prefix: string,
   ultraShort: string
 ): Sides {
-  const shorthand = props.find(
+  // Only count properties the user has actually set — the extractor surfaces
+  // every schema-defined property (including all per-side aliases) as
+  // hasValue:false "available" entries with value="", which would otherwise
+  // overwrite parsed shorthand sides with empty strings.
+  const isSet = (p: ExtractedProperty | undefined): boolean => !!p && p.hasValue
+  const shorthandProp = props.find(
     p => p.name === baseName || p.name === prefix || p.name === ultraShort
   )
-  const sides = parseSidesValue(shorthand?.value || '')
+  const sides = parseSidesValue(
+    isSet(shorthandProp) ? (shorthandProp as ExtractedProperty).value : ''
+  )
 
-  const lookup = (name: string): string | undefined => props.find(p => p.name === name)?.value
+  const lookup = (name: string): string | undefined => {
+    const p = props.find(pr => pr.name === name)
+    return isSet(p) ? p!.value : undefined
+  }
 
   // Axis overrides (apply before per-side, so per-side wins)
   const axisX = lookup(`${prefix}-x`)
   const axisY = lookup(`${prefix}-y`)
-  if (axisY) sides.t = sides.b = axisY
-  if (axisX) sides.r = sides.l = axisX
+  if (axisY !== undefined) sides.t = sides.b = axisY
+  if (axisX !== undefined) sides.r = sides.l = axisX
 
   // Per-side overrides win last
   const sideT = lookup(`${prefix}-t`)

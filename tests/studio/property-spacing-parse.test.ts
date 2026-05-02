@@ -22,6 +22,20 @@ function prop(name: string, value: string): ExtractedProperty {
   } as ExtractedProperty
 }
 
+/**
+ * The PropertyExtractor surfaces every schema-defined property — even ones
+ * the user hasn't set — as `hasValue:false` "available" entries with `value:""`.
+ * extractSides must ignore those so the parsed shorthand isn't overwritten.
+ */
+function avail(name: string): ExtractedProperty {
+  return {
+    name,
+    value: '',
+    hasValue: false,
+    source: 'available' as const,
+  } as ExtractedProperty
+}
+
 describe('parseSidesValue', () => {
   it('returns empty sides for empty input', () => {
     expect(parseSidesValue('')).toEqual({ t: '', r: '', b: '', l: '' })
@@ -92,6 +106,50 @@ describe('extractSides', () => {
   it('falls back to ultra-short alias (`p`, `m`)', () => {
     const r = extractSides([prop('p', '8')], 'padding', 'pad', 'p')
     expect(r).toEqual({ t: '8', r: '8', b: '8', l: '8' })
+  })
+
+  it('ignores hasValue:false "available" props that would otherwise blank the shorthand', () => {
+    // Reproduces the live-studio bug: PropertyExtractor surfaces all schema
+    // properties — set ones (hasValue:true) and unset ones (hasValue:false,
+    // value:''). The unset per-side entries must not overwrite the parsed
+    // shorthand sides with empty strings.
+    const r = extractSides(
+      [
+        prop('pad', '8 16 12 24'),
+        avail('pad-x'),
+        avail('pad-y'),
+        avail('pad-t'),
+        avail('pad-r'),
+        avail('pad-b'),
+        avail('pad-l'),
+      ],
+      'padding',
+      'pad',
+      'p'
+    )
+    expect(r).toEqual({ t: '8', r: '16', b: '12', l: '24' })
+  })
+
+  it('still applies set per-side overrides even with available siblings present', () => {
+    const r = extractSides(
+      [prop('pad', '8'), prop('pad-t', '20'), avail('pad-r'), avail('pad-b'), avail('pad-l')],
+      'padding',
+      'pad',
+      'p'
+    )
+    expect(r).toEqual({ t: '20', r: '8', b: '8', l: '8' })
+  })
+
+  it('ignores hasValue:false shorthand even if a value somehow got attached', () => {
+    // Defense-in-depth: even if the extractor returned a "shorthand" entry
+    // with hasValue:false, we should treat it as absent.
+    const r = extractSides(
+      [{ ...prop('pad', '99'), hasValue: false } as ExtractedProperty, prop('pad-t', '4')],
+      'padding',
+      'pad',
+      'p'
+    )
+    expect(r).toEqual({ t: '4', r: '', b: '', l: '' })
   })
 })
 
