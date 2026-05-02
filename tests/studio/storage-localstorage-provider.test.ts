@@ -6,7 +6,10 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { LocalStorageProvider, isLocalStorageAvailable } from '../../studio/storage/providers/localstorage'
+import {
+  LocalStorageProvider,
+  isLocalStorageAvailable,
+} from '../../studio/storage/providers/localstorage'
 
 // =============================================================================
 // LOCALSTORAGE MOCK
@@ -107,14 +110,18 @@ describe('LocalStorageProvider Initialization', () => {
     expect(names).toContain('tokens.tok')
     expect(names).toContain('components.com')
     expect(names).toContain('data.yaml')
-    expect(names.length).toBe(4)
+    expect(names).toContain('data.data')
+    expect(names.length).toBe(5)
   })
 
   it('should load existing files from storage', async () => {
     // Pre-populate storage
-    mockStorage.setItem('mirror-files', JSON.stringify({
-      'custom.mir': 'Frame "Custom"',
-    }))
+    mockStorage.setItem(
+      'mirror-files',
+      JSON.stringify({
+        'custom.mir': 'Frame "Custom"',
+      })
+    )
 
     const provider = new LocalStorageProvider()
     const content = await provider.readFile('custom.mir')
@@ -274,9 +281,9 @@ describe('LocalStorageProvider File Operations', () => {
 
     it('should throw if source does not exist', async () => {
       const provider = new LocalStorageProvider()
-      await expect(
-        provider.renameFile('nonexistent.mir', 'new.mir')
-      ).rejects.toThrow('File not found: nonexistent.mir')
+      await expect(provider.renameFile('nonexistent.mir', 'new.mir')).rejects.toThrow(
+        'File not found: nonexistent.mir'
+      )
     })
 
     it('should throw if target already exists', async () => {
@@ -284,9 +291,9 @@ describe('LocalStorageProvider File Operations', () => {
       await provider.writeFile('source.mir', 'source')
       await provider.writeFile('target.mir', 'target')
 
-      await expect(
-        provider.renameFile('source.mir', 'target.mir')
-      ).rejects.toThrow('File already exists: target.mir')
+      await expect(provider.renameFile('source.mir', 'target.mir')).rejects.toThrow(
+        'File already exists: target.mir'
+      )
     })
 
     it('should persist rename to localStorage', async () => {
@@ -314,9 +321,9 @@ describe('LocalStorageProvider File Operations', () => {
 
     it('should throw if source does not exist', async () => {
       const provider = new LocalStorageProvider()
-      await expect(
-        provider.copyFile('nonexistent.mir', 'copy.mir')
-      ).rejects.toThrow('File not found: nonexistent.mir')
+      await expect(provider.copyFile('nonexistent.mir', 'copy.mir')).rejects.toThrow(
+        'File not found: nonexistent.mir'
+      )
     })
 
     it('should throw if target already exists', async () => {
@@ -324,9 +331,9 @@ describe('LocalStorageProvider File Operations', () => {
       await provider.writeFile('source.mir', 'source')
       await provider.writeFile('target.mir', 'target')
 
-      await expect(
-        provider.copyFile('source.mir', 'target.mir')
-      ).rejects.toThrow('File already exists: target.mir')
+      await expect(provider.copyFile('source.mir', 'target.mir')).rejects.toThrow(
+        'File already exists: target.mir'
+      )
     })
   })
 })
@@ -541,7 +548,9 @@ describe('isLocalStorageAvailable', () => {
 
     // Mock localStorage to throw
     global.localStorage = {
-      setItem: () => { throw new Error('Storage disabled') },
+      setItem: () => {
+        throw new Error('Storage disabled')
+      },
       getItem: () => null,
       removeItem: () => {},
       clear: () => {},

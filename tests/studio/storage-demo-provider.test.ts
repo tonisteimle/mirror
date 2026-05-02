@@ -75,13 +75,14 @@ describe('DemoProvider File Tree', () => {
   it('should return tree with default files', async () => {
     const tree = await provider.getTree()
 
-    expect(tree.length).toBe(4)
+    expect(tree.length).toBe(5)
 
     const fileNames = tree.map(item => item.name)
     expect(fileNames).toContain('index.mir')
     expect(fileNames).toContain('tokens.tok')
     expect(fileNames).toContain('components.com')
     expect(fileNames).toContain('data.yaml')
+    expect(fileNames).toContain('data.data')
   })
 
   it('should sort tree with folders first', async () => {
@@ -212,18 +213,18 @@ describe('DemoProvider File Operations', () => {
     })
 
     it('should throw if source does not exist', async () => {
-      await expect(
-        provider.renameFile('nonexistent.mir', 'new.mir')
-      ).rejects.toThrow('File not found: nonexistent.mir')
+      await expect(provider.renameFile('nonexistent.mir', 'new.mir')).rejects.toThrow(
+        'File not found: nonexistent.mir'
+      )
     })
 
     it('should throw if target already exists', async () => {
       await provider.writeFile('source.mir', 'source')
       await provider.writeFile('target.mir', 'target')
 
-      await expect(
-        provider.renameFile('source.mir', 'target.mir')
-      ).rejects.toThrow('File already exists: target.mir')
+      await expect(provider.renameFile('source.mir', 'target.mir')).rejects.toThrow(
+        'File already exists: target.mir'
+      )
     })
   })
 
@@ -240,18 +241,18 @@ describe('DemoProvider File Operations', () => {
     })
 
     it('should throw if source does not exist', async () => {
-      await expect(
-        provider.copyFile('nonexistent.mir', 'copy.mir')
-      ).rejects.toThrow('File not found: nonexistent.mir')
+      await expect(provider.copyFile('nonexistent.mir', 'copy.mir')).rejects.toThrow(
+        'File not found: nonexistent.mir'
+      )
     })
 
     it('should throw if target already exists', async () => {
       await provider.writeFile('source.mir', 'source')
       await provider.writeFile('target.mir', 'target')
 
-      await expect(
-        provider.copyFile('source.mir', 'target.mir')
-      ).rejects.toThrow('File already exists: target.mir')
+      await expect(provider.copyFile('source.mir', 'target.mir')).rejects.toThrow(
+        'File already exists: target.mir'
+      )
     })
   })
 })

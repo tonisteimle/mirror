@@ -127,9 +127,12 @@ describe('newProject', () => {
     const { newProject } = await getProjectActions()
 
     // Pre-populate with custom data
-    mockStorage.setItem('mirror-files', JSON.stringify({
-      'custom.mir': 'custom content',
-    }))
+    mockStorage.setItem(
+      'mirror-files',
+      JSON.stringify({
+        'custom.mir': 'custom content',
+      })
+    )
 
     await newProject() // defaults to 'empty'
 
@@ -181,10 +184,13 @@ describe('loadDemoProject', () => {
     const { loadDemoProject } = await getProjectActions()
 
     // Pre-populate with custom data
-    mockStorage.setItem('mirror-files', JSON.stringify({
-      'custom.mir': 'custom content',
-      'other.tok': 'tokens',
-    }))
+    mockStorage.setItem(
+      'mirror-files',
+      JSON.stringify({
+        'custom.mir': 'custom content',
+        'other.tok': 'tokens',
+      })
+    )
 
     await loadDemoProject()
 
@@ -260,16 +266,17 @@ describe('Empty Project (default)', () => {
 // =============================================================================
 
 describe('Demo Project Template', () => {
-  it('should have all four file types', async () => {
+  it('should have all five file types', async () => {
     const { newProject } = await getProjectActions()
     await newProject('demo')
 
     const stored = JSON.parse(mockStorage.getItem('mirror-files') || '{}')
-    expect(Object.keys(stored).length).toBe(4)
+    expect(Object.keys(stored).length).toBe(5)
     expect(stored['index.mir']).toBeDefined()
     expect(stored['tokens.tok']).toBeDefined()
     expect(stored['components.com']).toBeDefined()
     expect(stored['data.yaml']).toBeDefined()
+    expect(stored['data.data']).toBeDefined()
   })
 
   it('should have tokens that are used in components', async () => {
@@ -339,7 +346,9 @@ describe('exportProject', () => {
 
     await exportProject()
 
-    expect(alertMock).toHaveBeenCalledWith('Keine Dateien zum Exportieren.', { title: 'Export fehlgeschlagen' })
+    expect(alertMock).toHaveBeenCalledWith('Keine Dateien zum Exportieren.', {
+      title: 'Export fehlgeschlagen',
+    })
   })
 })
 
