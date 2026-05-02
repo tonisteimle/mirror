@@ -99,16 +99,28 @@ const PROP_MAP_LITERAL = JSON.stringify(PROP_MAP)
 const ALIGN_MAP_LITERAL = JSON.stringify(ALIGN_MAP)
 const FALLBACK_ICON_LITERAL = JSON.stringify(FALLBACK_ICON)
 
-// Vite SSR (Vitest dev mode) rewrites cross-module imports to
-// `__vite_ssr_import_N__.foo` lookups. When a function is later
-// stamped via .toString(), those rewritten references leak into the
-// emitted runtime string and blow up at execution time with
-// "ReferenceError: __vite_ssr_import_0__ is not defined". Production
-// builds (tsup/esbuild) inline cross-module references to bare names,
-// so this only bites the test runner — but the unhandled errors mask
-// real failures. Strip the SSR shim everywhere we stamp.
+// Vitest's dev-mode and tsx's tsc-on-the-fly each rewrite cross-module
+// imports to look like `(0, importNs.foo)(...)` (indirect call via the
+// comma operator). Two flavours show up in .toString() output:
+//   - Vite SSR (Vitest):    (0, __vite_ssr_import_0__.foo)(...)  / __vite_ssr_import_0__.foo
+//   - esbuild CJS (tsx):    (0, import_bar.foo)(...)             / import_bar.foo
+// Both reduce to the bare callee name in production builds; here we
+// strip both wrappers so the stamped runtime string references bare
+// names that match the top-level function declarations we also stamp.
+// Without this, the emitted runtime throws ReferenceError at execution
+// time on the SSR/CJS shim namespace.
 export function stamp(fn: { toString(): string }): string {
-  return fn.toString().replace(/__vite_ssr_import_\d+__\s*\.\s*([A-Za-z_$][\w$]*)/g, '$1')
+  return (
+    fn
+      .toString()
+      // (0, ns.foo) — indirect-call wrapper. Match first, before the bare
+      // ns.foo rewrites, so the parentheses go too.
+      .replace(/\(0,\s*__vite_ssr_import_\d+__\s*\.\s*([A-Za-z_$][\w$]*)\)/g, '$1')
+      .replace(/\(0,\s*import_[A-Za-z_$][\w$]*\s*\.\s*([A-Za-z_$][\w$]*)\)/g, '$1')
+      // Bare ns.foo — also rewritten when not in indirect-call position.
+      .replace(/__vite_ssr_import_\d+__\s*\.\s*([A-Za-z_$][\w$]*)/g, '$1')
+      .replace(/\bimport_[A-Za-z_$][\w$]*\s*\.\s*([A-Za-z_$][\w$]*)/g, '$1')
+  )
 }
 
 // Stamp the typed security functions verbatim. Both are self-contained
