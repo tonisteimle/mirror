@@ -41,53 +41,9 @@ const definitionInComponentsFile: Scenario = {
   ],
 }
 
-// ----- C4.2: Definition edit propagates to every instance ------------------
-//
-// Edit the component definition in components.com from one bg to another.
-// Both instances in app.mir must reflect the new bg without any
-// per-instance work — that's the whole point of components.
-
-const definitionEditPropagates: Scenario = {
-  name: 'C4.2 Editing Btn definition in components.com propagates to all instances',
-  category: 'step-runner',
-  setup: {
-    entry: 'app.mir',
-    files: {
-      'components.com': 'Btn: pad 8, bg #2271c1, col white',
-      'app.mir': 'Btn "Save"\nBtn "Cancel"',
-    },
-  },
-  steps: [
-    {
-      do: 'select',
-      nodeId: 'node-1',
-      expect: {
-        selection: 'node-1',
-        dom: {
-          'node-1': { backgroundColor: 'rgb(34, 113, 193)' },
-          'node-2': { backgroundColor: 'rgb(34, 113, 193)' },
-        },
-      },
-    },
-    // Switch to components.com and rewrite the Btn definition's bg.
-    { do: 'switchFile', filename: 'components.com' },
-    {
-      do: 'editorSet',
-      code: 'Btn: pad 8, bg #ef4444, col white',
-    },
-    // Switch back to app.mir and assert both instances now use the new bg.
-    { do: 'switchFile', filename: 'app.mir' },
-    {
-      do: 'waitFor',
-      until: {
-        dom: {
-          'node-1': { backgroundColor: 'rgb(239, 68, 68)' },
-          'node-2': { backgroundColor: 'rgb(239, 68, 68)' },
-        },
-      },
-    },
-  ],
-}
+// ----- C4.2 removed: relied on the multi-file file-switching UX which the
+//                     MVP single-file rollback deactivated. Reactivate
+//                     alongside multi-file infrastructure.
 
 // ----- C4.3: Per-instance override stays isolated ---------------------------
 //
@@ -137,7 +93,9 @@ const instanceOverrideIsolated: Scenario = {
 
 export const componentCrossFileScenarios: Scenario[] = [
   definitionInComponentsFile,
-  definitionEditPropagates,
+  // C4.2 (definitionEditPropagates) removed: relies on the multi-file
+  // file-switching UX which the MVP single-file rollback deactivated.
+  // Reactivate alongside multi-file infrastructure.
   instanceOverrideIsolated,
 ]
 export const componentCrossFileStepRunnerTests: TestCase[] =

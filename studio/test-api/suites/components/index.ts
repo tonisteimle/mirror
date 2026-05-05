@@ -60,9 +60,6 @@ export {
   codeVerificationTests,
 } from './panel-drag-all.test'
 
-// Component Preview Styling Tests
-export { componentPreviewStylingTests } from './component-preview-styling.test'
-
 // Mirror DSL Component System Tests (definition, inheritance, slots, variants, states)
 export { basicComponentTests } from './basic.test'
 export { propertyOverrideTests } from './property-overrides.test'

@@ -44,11 +44,10 @@ export const EMPTY_PROJECT: Record<string, string> = {
 // Default/Demo Project Template
 // =============================================================================
 
-// MVP single-file demo project — tokens, components and the canvas
-// live inline in a single .mir, in reading order: Tokens → Components
-// → Canvas / Screens. Multi-file demo (`tokens.tok` / `components.com`
-// / `data.yaml` / `data.data`) returns when multi-file infrastructure
-// is reactivated.
+// MVP single-file demo project — tokens, components, data and the canvas
+// live inline in a single .mir, in reading order: Tokens → Components →
+// Data → Canvas. Multi-file demo (`tokens.tok` / `components.com` /
+// `data.yaml`) returns when multi-file infrastructure is reactivated.
 export const DEFAULT_PROJECT: Record<string, string> = {
   'index.mir': `// Tokens
 primary.bg: #2271C1
@@ -68,6 +67,21 @@ Btn as Button: bg $primary, col white, pad 10 16, rad 6, cursor pointer
   hover:
     opacity 0.9
 
+// Data
+features:
+  home:
+    icon: "home"
+    title: "Willkommen"
+    desc: "Dies ist ein Demo-Projekt."
+  layers:
+    icon: "layers"
+    title: "Komponenten"
+    desc: "Baue wiederverwendbare UI-Bausteine."
+  eye:
+    icon: "eye"
+    title: "Live Preview"
+    desc: "Änderungen sofort sehen."
+
 // Canvas
 Frame bg $surface, col white, pad 24, gap $space, h full
 
@@ -75,26 +89,13 @@ Frame bg $surface, col white, pad 24, gap $space, h full
     Text "Demo App", fs 20, weight bold
     Icon "settings", ic $muted
 
-  Card
-    Frame hor, gap $space, ver-center
-      Icon "home", ic $primary, is 20
-      Text "Willkommen", fs 16, weight 500
-    Text "Dies ist ein Demo-Projekt.", col $muted, fs 14
-    Btn "Mehr"
-
-  Card
-    Frame hor, gap $space, ver-center
-      Icon "layers", ic $primary, is 20
-      Text "Komponenten", fs 16, weight 500
-    Text "Baue wiederverwendbare UI-Bausteine.", col $muted, fs 14
-    Btn "Mehr"
-
-  Card
-    Frame hor, gap $space, ver-center
-      Icon "eye", ic $primary, is 20
-      Text "Live Preview", fs 16, weight 500
-    Text "Änderungen sofort sehen.", col $muted, fs 14
-    Btn "Mehr"`,
+  each feature in $features
+    Card
+      Frame hor, gap $space, ver-center
+        Icon feature.icon, ic $primary, is 20
+        Text feature.title, fs 16, weight 500
+      Text feature.desc, col $muted, fs 14
+      Btn "Mehr"`,
 }
 
 // =============================================================================

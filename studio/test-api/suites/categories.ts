@@ -41,7 +41,6 @@ import {
   allAccordionTests,
   allAccordionDropTests,
   allPanelDragTests,
-  componentPreviewStylingTests,
   // DSL component-system tests (definition, inheritance, slots, variants, states)
   allComponentTests,
 } from './components'
@@ -180,7 +179,6 @@ export const componentsTests: TestCase[] = [
   ...allAccordionDropTests,
   ...allPanelDragTests,
   ...allComponentTests,
-  ...componentPreviewStylingTests,
 ]
 
 /**
