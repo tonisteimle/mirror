@@ -138,6 +138,14 @@ put index.html
 put styles.css
 put logo.png
 
+# Upload styles/ subdirectory (styles.css @imports 18 files from here)
+mkdir -f styles
+cd styles
+lcd "$STUDIO_DIR/styles"
+mput *.css
+cd ..
+lcd "$STUDIO_DIR"
+
 # Upload studio/dist (new architecture modules + chunks)
 mkdir -f dist
 cd dist
@@ -152,12 +160,13 @@ cd browser
 lcd "$DIST_DIR/browser"
 put index.global.js
 
-# Upload assets (CSS defaults)
+# Upload assets (CSS defaults + favicon referenced from studio/index.html)
 cd /mirror
 mkdir -f assets
 cd assets
 lcd "$ASSETS_DIR"
 put mirror-defaults.css
+put favicon.svg
 
 # Upload tutorial files (from temp with transformed paths)
 # First clean old tutorial files to remove stale content
