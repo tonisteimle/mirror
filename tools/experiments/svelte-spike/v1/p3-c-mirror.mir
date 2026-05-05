@@ -1,0 +1,125 @@
+canvas mobile, bg #0f0f0f, col white, font sans
+
+// Tokens
+surface.bg: #1a1a1a
+surface-raised.bg: #242424
+border.boc: #2e2e2e
+muted.col: #888
+accent.bg: #2271C1
+accent.col: #2271C1
+danger.bg: #ef4444
+success.bg: #10b981
+
+// Components
+TabBtn: pad 10 20, rad 6, col #888, fs 14, weight 500, cursor pointer, exclusive()
+  selected:
+    col white
+    bg #242424
+
+InputField: w full, bg #1a1a1a, bor 1, boc #2e2e2e, rad 8, pad 12 14, col white, fs 14
+  focus:
+    bor 1, boc #2271C1
+
+SaveBtn: w full, bg #2271C1, col white, pad 14, rad 8, fs 14, weight 600, cursor pointer
+  hover:
+    bg #1a5fa8
+  active:
+    scale 0.98
+
+RadioOpt: pad 16, bg #1a1a1a, bor 1, boc #2e2e2e, rad 10, hor, gap 12, ver-center, cursor pointer, exclusive()
+  selected:
+    bor 1, boc #2271C1
+    bg #17243a
+
+// App
+Frame w full, h full, bg #0f0f0f, pad 20, gap 0
+
+  // Header
+  Frame pad 0 0 20 0, gap 4
+    Text "Settings", fs 22, weight 700, col white
+    Text "Manage your account and preferences", fs 13, col #666
+
+  // Tab Bar
+  Frame hor, gap 4, pad 4, bg #141414, rad 10, bor 1, boc #1f1f1f, mar 0 0 20 0
+    TabBtn "Account", selected
+    TabBtn "Notifications"
+    TabBtn "Privacy"
+
+  // Account Tab
+  Frame gap 20, bg #1a1a1a, pad 20, rad 12, bor 1, boc #2e2e2e
+
+    // Section heading
+    Frame gap 4, mar 0 0 4 0
+      Text "Personal Information", fs 15, weight 600, col white
+      Text "Update your name and email address", fs 12, col #666
+
+    Divider boc #2e2e2e
+
+    // Name field
+    Frame gap 6, mar 0 0 0 0
+      Text "Full Name", fs 12, weight 500, col #aaa
+      InputField placeholder "Jane Doe"
+
+    // Email field
+    Frame gap 6
+      Text "Email Address", fs 12, weight 500, col #aaa
+      InputField placeholder "jane@example.com"
+
+    // Save
+    SaveBtn "Save Changes"
+
+  // Notifications Tab (hidden by default — shown when tab selected)
+  Frame gap 0, bg #1a1a1a, pad 20, rad 12, bor 1, boc #2e2e2e, hidden
+
+    Frame gap 4, mar 0 0 16 0
+      Text "Notification Channels", fs 15, weight 600, col white
+      Text "Choose how you want to be notified", fs 12, col #666
+
+    // Email toggle
+    Frame hor, spread, ver-center, pad 16 0, bor 0 0 1 0, boc #242424
+      Frame gap 2
+        Text "Email Notifications", fs 14, weight 500, col white
+        Text "Receive updates via email", fs 12, col #666
+      Switch "Email", checked
+
+    // Push toggle
+    Frame hor, spread, ver-center, pad 16 0, bor 0 0 1 0, boc #242424
+      Frame gap 2
+        Text "Push Notifications", fs 14, weight 500, col white
+        Text "Browser and mobile push alerts", fs 12, col #666
+      Switch "Push", checked
+
+    // SMS toggle
+    Frame hor, spread, ver-center, pad 16 0
+      Frame gap 2
+        Text "SMS Notifications", fs 14, weight 500, col white
+        Text "Text messages to your phone", fs 12, col #666
+      Switch "SMS"
+
+  // Privacy Tab (hidden by default — shown when tab selected)
+  Frame gap 16, bg #1a1a1a, pad 20, rad 12, bor 1, boc #2e2e2e, hidden
+
+    Frame gap 4, mar 0 0 4 0
+      Text "Profile Visibility", fs 15, weight 600, col white
+      Text "Control who can see your profile", fs 12, col #666
+
+    // Public option
+    RadioOpt selected
+      Frame w 20, h 20, rad 99, bor 2, boc #2271C1, center, shrink 0
+        Frame w 10, h 10, rad 99, bg #2271C1
+      Frame gap 2
+        Text "Public Profile", fs 14, weight 500, col white
+        Text "Anyone can view your profile and posts", fs 12, col #666
+
+    // Private option
+    RadioOpt
+      Frame w 20, h 20, rad 99, bor 2, boc #444, center, shrink 0
+        Frame w 10, h 10, rad 99, bg transparent
+      Frame gap 2
+        Text "Private Profile", fs 14, weight 500, col white
+        Text "Only approved followers can see your content", fs 12, col #666
+
+    // Info note
+    Frame hor, gap 8, ver-center, pad 12, bg #17243a, rad 8, bor 1, boc #1e3a5f, mar 4 0 0 0
+      Icon "info", ic #2271C1, is 14
+      Text "Changes to privacy settings take effect immediately", fs 12, col #6699cc

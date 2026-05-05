@@ -1,0 +1,92 @@
+forest.deep: #3a5742
+forest.mid: #4a6a4f
+forest.sage: #6a8c5e
+forest.mist: #b8c8a4
+forest.cream: #f3eedb
+text.primary: #2d3e2f
+text.muted: #6a7a68
+text.soft: #9ca896
+glass.bg: #fffdf5
+border.soft: #dde5d9
+divider.col: #c8d2bf
+
+field: bg #ffffff, bor 1, boc $border, rad 16, pad 12 16, hor, gap 12, ver-center
+glasscard: bg $glass, rad 28, pad 24, gap 16, shadow lg, bor 1, boc #ffffff
+
+SocialBtn as Button: bg #ffffff, bor 1, boc $border, rad 16, pad 10, hor, gap 8, center, w full, col $text, fs 13, weight 500, cursor pointer
+  hover:
+    bg #ffffff
+
+LinkText as Text: col $forest.mid, fs 12, weight 500, cursor pointer
+
+canvas mobile, bg grad-ver $forest.cream $forest.deep, font sans, col $text
+
+// Status bar
+Frame hor, spread, ver-center, pad 18 28 0 28, h 50
+  Text "9:41", fs 14, weight 600, col $text
+  Frame hor, gap 6, ver-center
+    Icon "signal", ic $text, is 16
+    Icon "wifi", ic $text, is 16
+    Icon "battery-full", ic $text, is 20
+
+// Notch
+Frame center, mar-t 12
+  Frame w 110, h 28, bg #1a1a1a, rad 18
+
+// Logo / Brand
+Frame center, gap 4, mar-t 22
+  Frame w 64, h 64, rad 18, bg grad-ver $forest.sage $forest.deep, center, shadow lg
+    Icon "trees", ic white, is 32
+  Text "Calm Forest", fs 22, weight 500, col $text, mar-t 12, font serif
+  Text "finde deine ruhe", fs 11, uppercase, col $forest.sage, mar-t 2
+
+Frame grow
+
+// Glass card with form
+Frame $glasscard, mar 0 20 20 20
+
+  // Greeting
+  Frame gap 4
+    Text "Willkommen zurück", fs 26, weight 500, col $text, font serif
+    Text "Atme tief ein. Schön, dass du da bist.", fs 13, col $muted, mar-t 4
+
+  // Email
+  Frame $field
+    Icon "mail", ic $forest.sage, is 16
+    Input type "email", placeholder "deine@email.de", bg transparent, bor 0, grow, col $text, fs 14
+
+  // Password
+  Frame $field
+    Icon "lock", ic $forest.sage, is 16
+    Input type "password", placeholder "Passwort", bg transparent, bor 0, grow, col $text, fs 14
+    Icon "eye-off", ic $soft, is 16
+
+  // Forgot password (right-aligned)
+  Frame hor, ver-center
+    Frame grow
+    LinkText "Passwort vergessen?"
+
+  // Login button
+  Button bg grad-ver $forest.sage $forest.mid, col white, pad 14, rad 16, w full, weight 600, fs 14, shadow md, hor, center, gap 8, cursor pointer
+    Text "Anmelden", col white, fs 14, weight 600
+    Icon "arrow-right", ic white, is 16
+
+  // Divider
+  Frame hor, gap 12, ver-center, mar-y 4
+    Frame grow, h 1, bg $divider
+    Text "oder", fs 11, uppercase, col $soft, weight 500
+    Frame grow, h 1, bg $divider
+
+  // Social buttons (2-column grid)
+  Frame hor, gap 10
+    SocialBtn
+      Icon "chrome", ic #4285F4, is 16
+      Text "Google", col $text, fs 13, weight 500
+    SocialBtn
+      Icon "apple", ic $text, is 16
+      Text "Apple", col $text, fs 13, weight 500
+
+  // Register footer
+  Frame hor, center, gap 4, ver-center, mar-t 8
+    Text "Noch keinen Account?", fs 12, col $muted
+    Link "Registrieren", col $forest.mid, fs 12, weight 600

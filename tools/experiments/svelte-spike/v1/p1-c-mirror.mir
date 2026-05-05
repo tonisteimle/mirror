@@ -1,0 +1,35 @@
+canvas mobile, bg #0f0f13, col #f1f1f3, font sans
+
+primary.bg: #6366f1
+primary.col: white
+surface.bg: #1c1c24
+border.col: #2e2e3a
+muted.col: #9090a0
+
+Frame w full, h full, center, bg #0f0f13
+  Frame w 340, gap 32, pad 40, bg $surface, rad 16, shadow lg, bor 1, boc $border
+    Frame gap 8, ver-center
+      Text "Welcome back", fs 24, weight bold, col white
+      Text "Sign in to continue", fs 14, col $muted
+
+    Frame gap 20
+      Frame gap 6
+        Text "Email", fs 13, weight 500, col #c0c0cc
+        Input placeholder "you@example.com", type "email", bg #141419, bor 1, boc $border, rad 8, pad 12 14, col white, fs 14, w full
+          focus:
+            boc $primary
+
+      Frame gap 6
+        Text "Password", fs 13, weight 500, col #c0c0cc
+        Input placeholder "••••••••", type "password", bg #141419, bor 1, boc $border, rad 8, pad 12 14, col white, fs 14, w full
+          focus:
+            boc $primary
+
+      Button "Sign in", bg $primary, col $primary, w full, pad 13, rad 8, fs 15, weight 600, center, cursor pointer
+        hover:
+          bg #4f52e0
+
+    Frame center
+      Link "Forgot password?", href "#", fs 13, col $muted, underline
+        hover:
+          col white

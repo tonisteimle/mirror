@@ -407,7 +407,10 @@ export function parseInstanceBody(
         U.skipNewlines(ctx)
         if (U.check(ctx, 'INDENT')) {
           U.advance(ctx)
-          while (!U.check(ctx, 'DEDENT') && !U.isAtEnd(ctx)) {
+          let stateBodyIter = 0
+          while (!U.check(ctx, 'DEDENT') && !U.isAtEnd(ctx) && stateBodyIter < MAX_ITERATIONS) {
+            stateBodyIter++
+            const iterStartPos = ctx.pos
             U.skipNewlines(ctx)
             if (U.check(ctx, 'DEDENT')) break
 
@@ -482,6 +485,12 @@ export function parseInstanceBody(
                 ) {
                   // This is a target state reference
                   state.targetState = U.advance(ctx).value
+                } else if (isStateBlockStart(ctx)) {
+                  // Nested state block (e.g. `hover:` inside `on:`) is not
+                  // supported. Skip the header so the body loop makes progress
+                  // instead of hanging in parseInlineProperties.
+                  U.advance(ctx)
+                  if (U.check(ctx, 'COLON')) U.advance(ctx)
                 } else {
                   // Regular property
                   callbacks.parseInlineProperties(state.properties)
@@ -495,6 +504,10 @@ export function parseInstanceBody(
               // Skip any other tokens to prevent infinite loops
               U.advance(ctx)
             }
+
+            // Belt-and-suspenders: if no branch advanced the cursor, force-advance
+            // so a malformed inner block can't hang the parser forever.
+            if (ctx.pos === iterStartPos) U.advance(ctx)
           }
           if (U.check(ctx, 'DEDENT')) U.advance(ctx)
         }
@@ -702,7 +715,10 @@ export function parseComponentBody(
       U.skipNewlines(ctx)
       if (U.check(ctx, 'INDENT')) {
         U.advance(ctx)
-        while (!U.check(ctx, 'DEDENT') && !U.isAtEnd(ctx)) {
+        let stateBodyIter = 0
+        while (!U.check(ctx, 'DEDENT') && !U.isAtEnd(ctx) && stateBodyIter < MAX_ITERATIONS) {
+          stateBodyIter++
+          const iterStartPos = ctx.pos
           U.skipNewlines(ctx)
           if (U.check(ctx, 'DEDENT')) break
 
@@ -740,12 +756,22 @@ export function parseComponentBody(
                 const childOverride = callbacks.parseStateChildOverride()
                 if (childOverride) state.childOverrides.push(childOverride)
               }
+            } else if (isStateBlockStart(ctx)) {
+              // Nested state block (e.g. `hover:` inside `on:`) is not
+              // supported. Skip the header so the body loop makes progress
+              // instead of hanging in parseInlineProperties.
+              U.advance(ctx)
+              if (U.check(ctx, 'COLON')) U.advance(ctx)
             } else {
               callbacks.parseInlineProperties(state.properties)
             }
           } else {
             U.advance(ctx)
           }
+
+          // Belt-and-suspenders: if no branch advanced the cursor, force-advance
+          // so a malformed inner block can't hang the parser forever.
+          if (ctx.pos === iterStartPos) U.advance(ctx)
         }
         if (U.check(ctx, 'DEDENT')) U.advance(ctx)
       }

@@ -1,0 +1,61 @@
+forest.bg: #f4f7f1
+surface.bg: #ffffff
+primary.bg: #4a7c4e
+primary.col: #ffffff
+muted.col: #6b7d6e
+text.col: #2d3a2e
+soft.col: #8aa28d
+border.col: #dde5d9
+accent.col: #7ba87f
+
+card: bg #ffffff, rad 16, pad 14 16, bor 1, boc #dde5d9
+field: bg #ffffff, rad 14, pad 14 16, bor 1, boc #dde5d9, hor, gap 12, ver-center
+
+SocialBtn as Button: bg #ffffff, col #2d3a2e, bor 1, boc #dde5d9, rad 14, pad 14, hor, gap 10, center, w full, weight 500
+
+canvas mobile, bg $forest, col $text, font sans
+
+Frame w full, h full, pad 28 24, gap 22
+  Frame center, gap 12, mar-t 12
+    Frame w 72, h 72, rad 99, bg #e3ecdf, center
+      Icon "trees", ic $primary, is 36
+    Text "Calm Forest", fs 22, weight 600, col $text
+    Text "Atme. Pause. Sei.", fs 13, col $soft, italic
+
+  Frame gap 6, mar-t 8
+    Text "Willkommen zurück", fs 24, weight 600, col $text
+    Text "Schön, dich wiederzusehen.", fs 14, col $muted
+
+  Frame gap 12
+    Frame $field
+      Icon "mail", ic $soft, is 18
+      Input placeholder "Email", bg transparent, bor 0, grow, col $text, fs 14
+    Frame $field
+      Icon "lock", ic $soft, is 18
+      Input type "password", placeholder "Passwort", bg transparent, bor 0, grow, col $text, fs 14
+      Icon "eye", ic $soft, is 18
+
+    Frame hor, spread, ver-center, mar-t 2
+      Frame hor, gap 8, ver-center
+        Frame w 16, h 16, rad 4, bor 1, boc $border, bg #ffffff
+        Text "Angemeldet bleiben", fs 12, col $muted
+      Link "Passwort vergessen?", col $accent, fs 12, weight 500
+
+  Button "Anmelden", bg $primary, col $primary.col, pad 16, rad 14, w full, weight 600, fs 15, shadow md
+
+  Frame hor, gap 12, ver-center, mar-y 4
+    Frame grow, h 1, bg $border
+    Text "oder", col $muted, fs 12
+    Frame grow, h 1, bg $border
+
+  Frame gap 10
+    SocialBtn
+      Icon "chrome", ic #ea4335, is 18
+      Text "Mit Google fortfahren"
+    SocialBtn
+      Icon "apple", ic $text, is 18
+      Text "Mit Apple fortfahren"
+
+  Frame center, hor, gap 6, mar-t 8
+    Text "Noch keinen Account?", col $muted, fs 13
+    Link "Registrieren", col $accent, fs 13, weight 600

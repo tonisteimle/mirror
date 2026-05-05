@@ -1,0 +1,262 @@
+canvas bg #0B0B0F, col #ECEAE3, font sans, w 1440, h 1100
+
+// ─── Tokens ──────────────────────────────────────────────
+bg.col: #0B0B0F
+bg2.col: #101017
+ink.col: #ECEAE3
+dim.col: #8A8A93
+line.col: #1E1E27
+accent.col: #C7F94B
+accent2.col: #FF6B3D
+card.bg: #131320
+cardBor.col: #1E1E27
+
+// ─── Components ──────────────────────────────────────────
+Pill: hor, ver-center, gap 8, pad 5 10, bor 1, boc $line, rad 99, fs 11, col $dim, uppercase
+
+PillAccent as Pill: bg $accent, col #0B0B0F, boc $accent
+
+NavLink: col $dim, fs 13
+  hover:
+    col white
+
+BtnPrimary as Button: hor, ver-center, gap 8, pad 11 16, rad 12, weight 500, fs 14, bg $accent, col #0B0B0F, cursor pointer
+  hover:
+    bg #D2FF63
+
+BtnGhost as Button: hor, ver-center, gap 8, pad 11 16, rad 12, weight 500, fs 14, bg transparent, col $ink, bor 1, boc $line, cursor pointer
+  hover:
+    bg #15151E
+    boc #34343F
+
+Check: w 18, h 18, rad 6, center, bg rgba(199,249,75,0.10), bor 1, boc rgba(199,249,75,0.18), shrink
+CheckMuted as Check: bg #1A1A24, boc #1F1F2A
+
+FeatureItem: hor, gap 12
+FeatureText: fs 13, col $ink, line 1.5
+
+Divider: h 1, w full, bg $line, mar-y 28
+
+Card: ver, pad 28, bg $card, bor 1, boc $cardBor, rad 22
+
+CardFeatured as Card: bg grad-ver #14141C #0D0D14, boc #2A2D1F, shadow lg
+
+PriceUnit: ml 8, fs 13, col $dim
+PriceMeta: mar-t 4, fs 12, col $dim, font mono
+
+SectionLabel: fs 11, col $dim, uppercase, mar-b 16
+
+TogglePill: pad 6 14, rad 99, fs 12, col $dim, cursor pointer
+TogglePillActive as TogglePill: bg #1C1C26, col $ink, bor 1, boc #25252F
+
+TrustItem: hor, ver-center, gap 8, fs 12, col $dim
+BrandWord: fs 14, col white, weight 500
+
+// ─── Page ────────────────────────────────────────────────
+Frame ver, w full, maxw 1200, mar-x auto, pad-x 40, pad-t 28, pad-b 56
+
+  // NAV
+  Frame hor, spread, ver-center
+    Frame hor, ver-center, gap 10
+      Frame w 28, h 28, rad 8, center, bg grad 135 #C7F94B #7DD400
+        Icon "triangle", ic #0B0B0F, is 14
+      Text "Stride", fs 19, col $ink, weight 600
+      Pill mar-l 12
+        Text "v3.2 · shipped"
+
+    Frame hor, ver-center, gap 28
+      NavLink "Product"
+      NavLink "Customers"
+      Text "Pricing", col white, fs 13
+      NavLink "Changelog"
+      NavLink "Docs"
+
+    Frame hor, ver-center, gap 8
+      BtnGhost "Sign in"
+      BtnPrimary
+        Text "Start free"
+        Icon "arrow-right", is 16
+
+  // HERO
+  Frame ver, ver-center, hor-center, mar-t 48
+    Pill
+      Frame w 6, h 6, rad 99, bg $accent
+      Text "Pricing · 2026"
+
+    Text "Pricing that gets out of your way.", fs 58, weight 600, col $ink, mar-t 20, line 1.05, text-align center, maxw 800
+
+    Text "One workspace for product, design and engineering. Start free, scale on your terms — no per-seat surprises, no contract gymnastics.", fs 15, col $dim, mar-t 16, line 1.6, maxw 580, text-align center
+
+    Frame hor, ver-center, hor-center, gap 12, mar-t 28
+      Frame hor, ver-center, gap 2, bg #11111A, bor 1, boc $line, rad 99, pad 4
+        TogglePillActive "Monthly"
+        TogglePill
+          Text "Yearly"
+          Text "−20%", fs 10, bg rgba(199,249,75,0.12), col $accent, pad 2 6, rad 6, mar-l 6, weight 600
+
+      Frame hor, ver-center, gap 6
+        Icon "globe", is 14, ic $dim
+        Text "EUR · Switzerland", fs 12, col $dim
+
+  // PRICING GRID
+  Frame ver, mar-t 48
+
+    Frame hor, gap 20, ver-center
+
+      // FREE
+      Card grow
+        Frame hor, spread, ver-center
+          Text "Free", fs 22, weight 600, col $ink
+          Pill
+            Text "Starter"
+
+        Text "For solo builders and weekend projects finding their footing.", fs 13, col $dim, mar-t 8, line 1.6
+
+        Frame hor, gap 8, mar-t 24
+          Text "€0", fs 52, col $ink, weight 600
+          PriceUnit "/ month"
+        PriceMeta "forever · no card required"
+
+        BtnGhost mar-t 28, w full
+          Text "Start with Free"
+
+        Divider
+
+        SectionLabel "Includes"
+
+        Frame ver, gap 14
+          FeatureItem
+            Check
+              Icon "check", is 12, ic $accent
+            FeatureText "Up to 3 members in one workspace"
+          FeatureItem
+            Check
+              Icon "check", is 12, ic $accent
+            FeatureText "1 active project with unlimited tasks"
+          FeatureItem
+            Check
+              Icon "check", is 12, ic $accent
+            FeatureText "Boards, lists & calendar views"
+          FeatureItem
+            Check
+              Icon "check", is 12, ic $accent
+            FeatureText "Slack, GitHub & Figma basics"
+          FeatureItem
+            CheckMuted
+              Icon "x", is 12, ic #6B6B75
+            Text "Community support only", fs 13, col $dim
+
+      // PRO (featured)
+      CardFeatured grow
+        Frame hor, hor-center
+          PillAccent mar-t -16
+            Icon "sparkles", is 12, ic #0B0B0F
+            Text "Most popular"
+
+        Frame hor, spread, ver-center, mar-t 8
+          Text "Pro", fs 22, weight 600, col $ink
+          Pill boc #2A2D1F
+            Text "Best balance", col #C7F94B
+
+        Text "For growing teams who ship weekly and live in their tools.", fs 13, col $dim, mar-t 8, line 1.6
+
+        Frame hor, gap 4, ver-center, mar-t 24
+          Text "€15", fs 18, col #4A4A55, font mono, mar-r 8
+          Text "€12", fs 52, col $ink, weight 600
+          PriceUnit "/ user / month"
+        PriceMeta "billed monthly · cancel anytime"
+
+        BtnPrimary mar-t 28, w full
+          Text "Start 14-day Pro trial"
+          Icon "arrow-right", is 16
+
+        Divider
+
+        SectionLabel "Everything in Free, plus"
+
+        Frame ver, gap 14
+          FeatureItem
+            Check
+              Icon "infinity", is 12, ic $accent
+            FeatureText "Unlimited projects & guests"
+          FeatureItem
+            Check
+              Icon "git-branch", is 12, ic $accent
+            FeatureText "Sprints, roadmaps & cycles"
+          FeatureItem
+            Check
+              Icon "zap", is 12, ic $accent
+            FeatureText "Automations & custom workflows"
+          FeatureItem
+            Check
+              Icon "bar-chart-2", is 12, ic $accent
+            FeatureText "Velocity & throughput insights"
+          FeatureItem
+            Check
+              Icon "life-buoy", is 12, ic $accent
+            FeatureText "Priority support · < 4h response"
+
+      // TEAM
+      Card grow
+        Frame hor, spread, ver-center
+          Text "Team", fs 22, weight 600, col $ink
+          Pill
+            Icon "shield", is 12, ic $dim
+            Text "Compliance-ready"
+
+        Text "For companies that need governance, control and a name to call.", fs 13, col $dim, mar-t 8, line 1.6
+
+        Frame hor, gap 8, mar-t 24
+          Text "€25", fs 52, col $ink, weight 600
+          PriceUnit "/ user / month"
+        PriceMeta "annual · invoice on request"
+
+        BtnGhost mar-t 28, w full
+          Text "Talk to sales"
+
+        Divider
+
+        SectionLabel "Everything in Pro, plus"
+
+        Frame ver, gap 14
+          FeatureItem
+            Check
+              Icon "key-round", is 12, ic $accent
+            FeatureText "SSO / SAML & SCIM provisioning"
+          FeatureItem
+            Check
+              Icon "file-text", is 12, ic $accent
+            FeatureText "Full audit logs & data residency"
+          FeatureItem
+            Check
+              Icon "users", is 12, ic $accent
+            FeatureText "Custom roles & permission scopes"
+          FeatureItem
+            Check
+              Icon "user-check", is 12, ic $accent
+            FeatureText "Dedicated CSM & onboarding"
+          FeatureItem
+            Check
+              Icon "file-signature", is 12, ic $accent
+            FeatureText "DPA, MSA & 99.9% uptime SLA"
+
+    // TRUST STRIP
+    Frame hor, spread, ver-center, mar-t 48
+      Frame hor, ver-center, gap 20
+        TrustItem
+          Icon "shield-check", is 16, ic $accent
+          Text "SOC 2 Type II", fs 12, col $dim
+        TrustItem
+          Icon "lock", is 16, ic $accent
+          Text "GDPR · EU-hosted", fs 12, col $dim
+        TrustItem
+          Icon "server", is 16, ic $accent
+          Text "99.98% last 90d", fs 12, col $dim
+
+      Frame hor, ver-center, gap 8
+        Text "Trusted by teams at", fs 12, col $dim
+        BrandWord "Linear-ish"
+        Text "·", col $dim
+        BrandWord "Northstack"
+        Text "·", col $dim
+        BrandWord "Helio"

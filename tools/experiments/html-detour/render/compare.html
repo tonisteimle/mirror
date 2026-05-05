@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HTML vs Mirror — Vergleichsansicht</title>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --bg2: #14141a;
+      --surface: #1a1a22;
+      --line: #2a2a35;
+      --ink: #e7e7ee;
+      --dim: #8a8a98;
+      --accent-html: #c7f94b;
+      --accent-pa: #6366f1;
+      --accent-pb: #f472b6;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+    }
+    header.page {
+      padding: 32px 40px 16px;
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      background: rgba(10, 10, 15, 0.92);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+    header.page h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+    }
+    header.page p {
+      color: var(--dim);
+      font-size: 13px;
+      margin: 0;
+    }
+    .legend {
+      display: flex;
+      gap: 24px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--dim);
+    }
+    .legend span::before {
+      content: '●';
+      margin-right: 6px;
+    }
+    .legend .l-html::before { color: var(--accent-html); }
+    .legend .l-pa::before { color: var(--accent-pa); }
+    .legend .l-pb::before { color: var(--accent-pb); }
+
+    .brief-section {
+      padding: 32px 40px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brief-section h2 {
+      font-size: 17px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+    }
+    .brief-section .desc {
+      color: var(--dim);
+      font-size: 13px;
+      margin: 0 0 24px 0;
+    }
+
+    .col-headers {
+      display: grid;
+      gap: 24px;
+      margin-bottom: 12px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 500;
+      color: var(--dim);
+    }
+    .col-headers .h-html { color: var(--accent-html); }
+    .col-headers .h-pa { color: var(--accent-pa); }
+    .col-headers .h-pb { color: var(--accent-pb); }
+
+    .sample-row {
+      display: grid;
+      gap: 24px;
+      margin-bottom: 20px;
+      align-items: start;
+    }
+    .sample-label {
+      grid-column: 1 / -1;
+      font-size: 11px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 8px;
+    }
+
+    /* Per-brief grid widths */
+    .b1 .col-headers, .b1 .sample-row {
+      grid-template-columns: 480px 480px 480px;
+    }
+    .b2 .col-headers, .b2 .sample-row {
+      grid-template-columns: 226px 226px 226px;
+    }
+    .b3 .col-headers, .b3 .sample-row {
+      grid-template-columns: 288px 288px 288px;
+    }
+
+    .cell {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .cell .frame-wrap {
+      position: relative;
+      overflow: hidden;
+      background: #050507;
+    }
+    .b1 .cell .frame-wrap { width: 480px; height: 320px; }
+    .b2 .cell .frame-wrap { width: 226px; height: 489px; }
+    .b3 .cell .frame-wrap { width: 288px; height: 432px; }
+
+    .cell iframe {
+      border: 0;
+      transform-origin: top left;
+      display: block;
+    }
+    .b1 .cell iframe {
+      width: 1200px;
+      height: 800px;
+      transform: scale(0.4);
+    }
+    .b2 .cell iframe {
+      width: 375px;
+      height: 812px;
+      transform: scale(0.6024);
+    }
+    .b3 .cell iframe {
+      width: 480px;
+      height: 720px;
+      transform: scale(0.6);
+    }
+
+    .cell .meta {
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      border-top: 1px solid var(--line);
+    }
+    .cell .meta .source-link {
+      color: var(--dim);
+      text-decoration: none;
+    }
+    .cell .meta .source-link:hover {
+      color: var(--ink);
+      text-decoration: underline;
+    }
+    .cell .meta .stripe {
+      width: 6px;
+      height: 6px;
+      border-radius: 99px;
+    }
+    .cell.html .stripe { background: var(--accent-html); }
+    .cell.pa .stripe { background: var(--accent-pa); }
+    .cell.pb .stripe { background: var(--accent-pb); }
+    .cell .meta .label {
+      color: var(--dim);
+    }
+
+    /* Wider screens: line up section content */
+    main {
+      max-width: 1700px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+
+<header class="page">
+  <h1>HTML vs Mirror — Vergleichsansicht</h1>
+  <p>Pilot-Experiment: 3 Briefs × 2 Samples × 3 Pfade. Native Canvas-Größen, skaliert zur Vergleichbarkeit.</p>
+  <div class="legend">
+    <span class="l-html">HTML (Pfad B Schritt 1) — kreative Quelle</span>
+    <span class="l-pa">Pfad A — Brief direkt zu Mirror</span>
+    <span class="l-pb">Pfad B Mirror — HTML-Übersetzung</span>
+  </div>
+</header>
+
+<main>
+
+  <section class="brief-section b1">
+    <h2>Brief 1: Pricing-Page „Stride"</h2>
+    <p class="desc">Desktop, 1200×800 — drei Tarife horizontal. Skaliert auf 40%.</p>
+    <div class="col-headers">
+      <div class="h-html">HTML</div>
+      <div class="h-pa">Pfad A: Direkt-Mirror</div>
+      <div class="h-pb">Pfad B: Mirror-Übersetzung</div>
+    </div>
+
+    <div class="sample-label">Sample 1</div>
+    <div class="sample-row">
+      <div class="cell html">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-detour/outputs/brief-1/path-b-html-sample-1.html"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> HTML s1</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-1/path-b-html-sample-1.html">source ↗</a></div>
+      </div>
+      <div class="cell pa">
+        <div class="frame-wrap"><iframe loading="lazy" src="viewer?file=/tools/experiments/html-detour/outputs/brief-1/path-a-sample-1.mir"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Pfad A s1</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-1/path-a-sample-1.mir">source ↗</a></div>
+      </div>
+      <div class="cell pb">
+        <div class="frame-wrap"><iframe loading="lazy" src="viewer?file=/tools/experiments/html-detour/outputs/brief-1/path-b-mirror-sample-1.mir"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Pfad B s1</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-1/path-b-mirror-sample-1.mir">source ↗</a></div>
+      </div>
+    </div>
+
+    <div class="sample-label">Sample 2</div>
+    <div class="sample-row">
+      <div class="cell html">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-detour/outputs/brief-1/path-b-html-sample-2.html"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> HTML s2</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-1/path-b-html-sample-2.html">source ↗</a></div>
+      </div>
+      <div class="cell pa">
+        <div class="frame-wrap"><iframe loading="lazy" src="viewer?file=/tools/experiments/html-detour/outputs/brief-1/path-a-sample-2.mir"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Pfad A s2</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-1/path-a-sample-2.mir">source ↗</a></div>
+      </div>
+      <div class="cell pb">
+        <div class="frame-wrap"><iframe loading="lazy" src="viewer?file=/tools/experiments/html-detour/outputs/brief-1/path-b-mirror-sample-2.mir"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Pfad B s2</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-1/path-b-mirror-sample-2.mir">source ↗</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="brief-section b2">
+    <h2>Brief 2: Mobile Login „Calm Forest"</h2>
+    <p class="desc">Mobile, 375×812 — Meditations-App, naturinspiriert. Skaliert auf 60%.</p>
+    <div class="col-headers">
+      <div class="h-html">HTML</div>
+      <div class="h-pa">Pfad A: Direkt-Mirror</div>
+      <div class="h-pb">Pfad B: Mirror-Übersetzung</div>
+    </div>
+
+    <div class="sample-label">Sample 1</div>
+    <div class="sample-row">
+      <div class="cell html">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-detour/outputs/brief-2/path-b-html-sample-1.html"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> HTML s1</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-2/path-b-html-sample-1.html">source ↗</a></div>
+      </div>
+      <div class="cell pa">
+        <div class="frame-wrap"><iframe loading="lazy" src="viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-a-sample-1.mir"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Pfad A s1</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-2/path-a-sample-1.mir">source ↗</a></div>
+      </div>
+      <div class="cell pb">
+        <div class="frame-wrap"><iframe loading="lazy" src="viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-b-mirror-sample-1.mir"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Pfad B s1</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-2/path-b-mirror-sample-1.mir">source ↗</a></div>
+      </div>
+    </div>
+
+    <div class="sample-label">Sample 2</div>
+    <div class="sample-row">
+      <div class="cell html">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-detour/outputs/brief-2/path-b-html-sample-2.html"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> HTML s2</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-2/path-b-html-sample-2.html">source ↗</a></div>
+      </div>
+      <div class="cell pa">
+        <div class="frame-wrap"><iframe loading="lazy" src="viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-a-sample-2.mir"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Pfad A s2</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-2/path-a-sample-2.mir">source ↗</a></div>
+      </div>
+      <div class="cell pb">
+        <div class="frame-wrap"><iframe loading="lazy" src="viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-b-mirror-sample-2.mir"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Pfad B s2</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-2/path-b-mirror-sample-2.mir">source ↗</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="brief-section b3">
+    <h2>Brief 3: Activity Feed</h2>
+    <p class="desc">Sidebar-Panel, 480×720 — 5 Notification-Typen. Skaliert auf 60%.</p>
+    <div class="col-headers">
+      <div class="h-html">HTML</div>
+      <div class="h-pa">Pfad A: Direkt-Mirror</div>
+      <div class="h-pb">Pfad B: Mirror-Übersetzung</div>
+    </div>
+
+    <div class="sample-label">Sample 1</div>
+    <div class="sample-row">
+      <div class="cell html">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-detour/outputs/brief-3/path-b-html-sample-1.html"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> HTML s1</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-3/path-b-html-sample-1.html">source ↗</a></div>
+      </div>
+      <div class="cell pa">
+        <div class="frame-wrap"><iframe loading="lazy" src="viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-a-sample-1.mir"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Pfad A s1</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-3/path-a-sample-1.mir">source ↗</a></div>
+      </div>
+      <div class="cell pb">
+        <div class="frame-wrap"><iframe loading="lazy" src="viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-b-mirror-sample-1.mir"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Pfad B s1</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-3/path-b-mirror-sample-1.mir">source ↗</a></div>
+      </div>
+    </div>
+
+    <div class="sample-label">Sample 2</div>
+    <div class="sample-row">
+      <div class="cell html">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-detour/outputs/brief-3/path-b-html-sample-2.html"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> HTML s2</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-3/path-b-html-sample-2.html">source ↗</a></div>
+      </div>
+      <div class="cell pa">
+        <div class="frame-wrap"><iframe loading="lazy" src="viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-a-sample-2.mir"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Pfad A s2</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-3/path-a-sample-2.mir">source ↗</a></div>
+      </div>
+      <div class="cell pb">
+        <div class="frame-wrap"><iframe loading="lazy" src="viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-b-mirror-sample-2.mir"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Pfad B s2</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-3/path-b-mirror-sample-2.mir">source ↗</a></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+</body>
+</html>

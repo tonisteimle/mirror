@@ -1,0 +1,73 @@
+forest.deep: #1a3329
+forest.mid: #2d5a3d
+forest.sage: #7ba585
+forest.mist: #c8d9c5
+forest.cream: #f5f1e8
+forest.warm: #e8dfc8
+text.primary: #1a3329
+text.muted: #5a6f5e
+text.soft: #8a9d8c
+accent.gold: #c9a961
+surface.card: #ffffff
+surface.bg: #f5f1e8
+border.soft: #d8d4c0
+
+screen: bg $surface, pad 24, gap 20
+field: bg $surface, bor 1, boc $border, rad 14, pad 14 16, fs 14, col $text, w full
+sociallabel: fs 14, weight 500, col $text
+
+PrimaryBtn as Button: bg $forest, col $forest, pad 16, rad 14, fs 15, weight 600, w full, shadow md, cursor pointer
+  hover:
+    bg $forest
+
+SocialBtn as Button: bg white, bor 1, boc $border, rad 14, pad 14, hor, gap 10, center, w full, cursor pointer
+  hover:
+    bg $forest
+
+LinkText as Text: col $forest, fs 13, weight 500, cursor pointer
+
+canvas mobile, bg $surface, font sans, col $text
+
+Frame w full, h full, pad 28 24, gap 24, bg grad-ver $surface $forest
+
+  Frame ver, center, gap 14, mar-t 24
+    Frame w 76, h 76, rad 99, bg $forest, center, shadow lg
+      Icon "trees", ic $forest, is 38
+    Text "Calm Forest", fs 24, weight 600, col $text, mar-t 4
+    Text "Atme. Entspanne. Sei.", fs 13, col $text, italic
+
+  Frame gap 6, mar-t 8
+    Text "Willkommen zurück", fs 22, weight 600, col $text
+    Text "Schön, dich wiederzusehen.", fs 14, col $text
+
+  Frame gap 12
+    Frame gap 6
+      Text "E-Mail", fs 12, weight 500, col $text, uppercase
+      Input placeholder "name@beispiel.de", $field
+
+    Frame gap 6
+      Frame hor, spread, ver-center
+        Text "Passwort", fs 12, weight 500, col $text, uppercase
+        LinkText "Vergessen?"
+      Input type "password", placeholder "********", $field
+
+  PrimaryBtn "Anmelden"
+
+  Frame hor, ver-center, gap 12, mar-y 4
+    Frame grow, h 1, bg $border
+    Text "oder", fs 12, col $text, uppercase, weight 500
+    Frame grow, h 1, bg $border
+
+  Frame gap 10
+    SocialBtn
+      Icon "chrome", ic $forest, is 18
+      Text "Mit Google fortfahren", $sociallabel
+    SocialBtn
+      Icon "apple", ic $text, is 18
+      Text "Mit Apple fortfahren", $sociallabel
+
+  Frame grow
+
+  Frame hor, center, gap 6, ver-center, mar-b 8
+    Text "Noch keinen Account?", fs 13, col $text
+    LinkText "Registrieren"

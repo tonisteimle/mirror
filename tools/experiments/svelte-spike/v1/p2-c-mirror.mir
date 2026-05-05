@@ -1,0 +1,129 @@
+canvas desktop, bg #0f0f13, col white, font sans
+
+// Tokens
+primary.bg: #6366f1
+primary.col: white
+surface.bg: #1a1a24
+surface-alt.bg: #22222f
+border.boc: #2e2e3f
+accent.col: #a5b4fc
+muted.col: #6b7280
+success.col: #34d399
+
+// Components
+FeatureRow: hor, gap 12, ver-center, pad 4 0
+CheckIcon: Icon "check-circle", ic #34d399, is 18
+MutedCheck: Icon "check-circle", ic #4b5563, is 18
+
+BadgePromo: bg #6366f1, col white, fs 11, weight 600, uppercase, pad 4 12, rad 99
+
+PlanCard: bg $surface, rad 16, pad 32, gap 24, w 320, bor 1, boc $border
+
+ProCard: bg #1c1c2e, rad 16, pad 32, gap 24, w 320, bor 2, boc #6366f1, shadow lg
+
+CtaBtn: pad 14 24, rad 10, fs 15, weight 600, cursor pointer, w full, center
+PrimaryBtn as CtaBtn: bg $primary, col white
+  hover:
+    bg #4f46e5
+  active:
+    scale 0.98
+GhostBtn as CtaBtn: bg transparent, col $accent, bor 1, boc #2e2e3f
+  hover:
+    bg #22222f
+  active:
+    scale 0.98
+OutlineBtn as CtaBtn: bg transparent, col $muted, bor 1, boc #2e2e3f
+  hover:
+    bg #1a1a24
+  active:
+    scale 0.98
+
+// Layout
+Frame w full, h full, center, bg #0f0f13
+  Frame gap 16, center, pad 80 24 64 24
+    // Header
+    Frame gap 8, center, pad 0 0 48 0
+      Text "Simple, transparent pricing", fs 40, weight 700, col white, text-align center
+      Text "Choose the plan that works best for your team.", fs 18, col #6b7280, text-align center
+
+    // Cards row
+    Frame hor, gap 24, ver-center
+
+      // Free Tier
+      PlanCard
+        Frame gap 4
+          Text "Free", fs 22, weight 700, col white
+          Text "For individuals getting started", fs 14, col #6b7280
+        Frame gap 0
+          Text "$0", fs 48, weight 800, col white
+          Text "per month", fs 13, col #6b7280
+        Divider, bor 1, boc #2e2e3f
+        Frame gap 12
+          FeatureRow
+            MutedCheck
+            Text "Up to 3 projects", fs 14, col #9ca3af
+          FeatureRow
+            MutedCheck
+            Text "1 GB storage", fs 14, col #9ca3af
+          FeatureRow
+            MutedCheck
+            Text "Community support", fs 14, col #9ca3af
+          FeatureRow
+            MutedCheck
+            Text "Basic analytics", fs 14, col #9ca3af
+        OutlineBtn "Get started free"
+
+      // Pro Tier (highlighted)
+      ProCard
+        Frame gap 4
+          Frame hor, spread, ver-center
+            Text "Pro", fs 22, weight 700, col white
+            BadgePromo "Recommended"
+          Text "For growing teams and professionals", fs 14, col #a5b4fc
+        Frame gap 0
+          Frame hor, ver-center, gap 2
+            Text "$19", fs 48, weight 800, col white
+          Text "per month, billed monthly", fs 13, col #a5b4fc
+        Divider, bor 1, boc #3730a3
+        Frame gap 12
+          FeatureRow
+            CheckIcon
+            Text "Unlimited projects", fs 14, col white
+          FeatureRow
+            CheckIcon
+            Text "50 GB storage", fs 14, col white
+          FeatureRow
+            CheckIcon
+            Text "Priority email support", fs 14, col white
+          FeatureRow
+            CheckIcon
+            Text "Advanced analytics", fs 14, col white
+        PrimaryBtn "Start free trial"
+        Text "No credit card required", fs 12, col #6366f1, text-align center
+
+      // Enterprise Tier
+      PlanCard
+        Frame gap 4
+          Text "Enterprise", fs 22, weight 700, col white
+          Text "For large-scale organizations", fs 14, col #6b7280
+        Frame gap 0
+          Text "$99", fs 48, weight 800, col white
+          Text "per month, billed annually", fs 13, col #6b7280
+        Divider, bor 1, boc #2e2e3f
+        Frame gap 12
+          FeatureRow
+            CheckIcon
+            Text "Unlimited projects", fs 14, col #e5e7eb
+          FeatureRow
+            CheckIcon
+            Text "1 TB storage", fs 14, col #e5e7eb
+          FeatureRow
+            CheckIcon
+            Text "Dedicated account manager", fs 14, col #e5e7eb
+          FeatureRow
+            CheckIcon
+            Text "Custom SLA & compliance", fs 14, col #e5e7eb
+        GhostBtn "Contact sales"
+
+    // Footer note
+    Text "All plans include a 14-day free trial. No setup fees.", fs 13, col #4b5563, text-align center, pad 32 0 0 0

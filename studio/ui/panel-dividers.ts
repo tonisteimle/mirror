@@ -18,7 +18,7 @@ const warn = (...args: unknown[]): void => panelLog.warn(...(args as [unknown, .
 interface PanelSizes {
   sidebar: number
   components: number
-  tokens: number
+  designSystem: number
   editor: number
   preview: number
   property: number
@@ -44,9 +44,9 @@ export interface PanelDividerDeps {
   /** Component palette panel. May be null if hidden. */
   componentsPanel: HTMLElement | null
   componentsDivider: HTMLElement | null
-  /** Tokens sidebar panel. May be null if hidden. */
-  tokensPanel: HTMLElement | null
-  tokensDivider: HTMLElement | null
+  /** Design System sidebar panel (tokens + components-with-states). May be null if hidden. */
+  designSystemPanel: HTMLElement | null
+  designSystemDivider: HTMLElement | null
   /** Editor panel — required. */
   editorPanel: HTMLElement
   editorDivider: HTMLElement
@@ -65,7 +65,7 @@ export interface PanelDividerDeps {
 const MIN_PANEL = 200
 const MIN_SIDEBAR = 150
 const MIN_COMPONENTS = 180
-const MIN_TOKENS = 200
+const MIN_DESIGN_SYSTEM = 240
 const MIN_PROPERTY = 220
 
 /**
@@ -78,8 +78,8 @@ export function initPanelDividers(deps: PanelDividerDeps): void {
     sidebarDivider,
     componentsPanel,
     componentsDivider,
-    tokensPanel,
-    tokensDivider,
+    designSystemPanel,
+    designSystemDivider,
     editorPanel,
     editorDivider,
     previewPanel,
@@ -103,8 +103,8 @@ export function initPanelDividers(deps: PanelDividerDeps): void {
       if (componentsPanel && sizes.components) {
         componentsPanel.style.width = `${sizes.components}px`
       }
-      if (tokensPanel && sizes.tokens) {
-        tokensPanel.style.width = `${sizes.tokens}px`
+      if (designSystemPanel && sizes.designSystem) {
+        designSystemPanel.style.width = `${sizes.designSystem}px`
       }
       if (sizes.editor) editorPanel.style.width = `${sizes.editor}px`
       if (sizes.preview) previewPanel.style.width = `${sizes.preview}px`
@@ -126,7 +126,7 @@ export function initPanelDividers(deps: PanelDividerDeps): void {
       const sizes: PanelSizes = {
         sidebar: sidebar ? sidebar.offsetWidth : 200,
         components: componentsPanel ? componentsPanel.offsetWidth : 240,
-        tokens: tokensPanel ? tokensPanel.offsetWidth : 280,
+        designSystem: designSystemPanel ? designSystemPanel.offsetWidth : 320,
         editor: editorPanel.offsetWidth,
         preview: previewPanel.offsetWidth,
         property: propertyPanel ? propertyPanel.offsetWidth : 280,
@@ -251,39 +251,39 @@ export function initPanelDividers(deps: PanelDividerDeps): void {
   })
   log('Editor/Preview divider ready')
 
-  // Tokens Panel Resizer
-  if (tokensPanel && tokensDivider) {
+  // Design System Panel Resizer
+  if (designSystemPanel && designSystemDivider) {
     let isDragging = false
     let startX = 0
     let startWidth = 0
 
-    tokensDivider.addEventListener('mousedown', e => {
+    designSystemDivider.addEventListener('mousedown', e => {
       isDragging = true
       startX = e.clientX
-      startWidth = tokensPanel.offsetWidth
+      startWidth = designSystemPanel.offsetWidth
       document.body.style.cursor = 'col-resize'
       document.body.style.userSelect = 'none'
-      tokensDivider.classList.add('dragging')
+      designSystemDivider.classList.add('dragging')
       e.preventDefault()
     })
 
     document.addEventListener('mousemove', e => {
       if (!isDragging) return
       const deltaX = e.clientX - startX
-      const newWidth = Math.max(MIN_TOKENS, startWidth + deltaX)
-      tokensPanel.style.width = `${newWidth}px`
+      const newWidth = Math.max(MIN_DESIGN_SYSTEM, startWidth + deltaX)
+      designSystemPanel.style.width = `${newWidth}px`
     })
 
     document.addEventListener('mouseup', () => {
       if (!isDragging) return
       isDragging = false
-      tokensDivider.classList.remove('dragging')
+      designSystemDivider.classList.remove('dragging')
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
       saveSizes()
     })
 
-    log('Tokens divider ready')
+    log('Design System divider ready')
   }
 
   // Property Panel Resizer (drag-from-left → grow rightwards into preview)

@@ -1,0 +1,2737 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Helix CRM — ARGOS Industriebau AG</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+              mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+            },
+            colors: {
+              app: {
+                bg: '#F6F7F9',
+                surface: '#FFFFFF',
+                hover: '#F9FAFB',
+                muted: '#F3F4F6',
+              },
+              line: {
+                DEFAULT: '#E5E7EB',
+                strong: '#D1D5DB',
+                soft: '#F0F1F4',
+              },
+              ink: {
+                DEFAULT: '#0F172A',
+                soft: '#334155',
+                muted: '#64748B',
+                faint: '#94A3B8',
+              },
+              brand: {
+                DEFAULT: '#2563EB',
+                deep: '#1D4ED8',
+                soft: '#EFF6FF',
+                ring: '#BFDBFE',
+              },
+              ok: { DEFAULT: '#16A34A', soft: '#DCFCE7', ink: '#14532D' },
+              warn: { DEFAULT: '#B45309', soft: '#FEF3C7', ink: '#78350F' },
+              bad: { DEFAULT: '#DC2626', soft: '#FEE2E2', ink: '#7F1D1D' },
+              violet: { DEFAULT: '#7C3AED', soft: '#F3E8FF', ink: '#4C1D95' },
+              teal: { DEFAULT: '#0D9488', soft: '#CCFBF1', ink: '#134E4A' },
+            },
+            boxShadow: {
+              card: '0 1px 2px rgba(15,23,42,0.04), 0 1px 0 rgba(15,23,42,0.02)',
+              pop: '0 8px 24px -8px rgba(15,23,42,0.16), 0 2px 4px rgba(15,23,42,0.04)',
+            },
+            fontSize: {
+              '2xs': ['11px', '14px'],
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <style>
+      html,
+      body {
+        background: #f6f7f9;
+        color: #0f172a;
+        font-feature-settings: 'cv11', 'ss01';
+      }
+      body {
+        font-family: 'Inter', system-ui, sans-serif;
+        font-size: 13.5px;
+      }
+      .mono {
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-feature-settings: 'zero';
+      }
+
+      /* Field input baseline (used inline so Tailwind forms plugin doesn't
+         override too much) */
+      .ipt {
+        width: 100%;
+        height: 32px;
+        padding: 0 10px;
+        font-size: 13px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        color: #0f172a;
+        transition:
+          border-color 100ms,
+          box-shadow 100ms;
+      }
+      .ipt:focus,
+      .ipt:focus-visible {
+        outline: 0;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+      }
+      textarea.ipt {
+        height: auto;
+        padding: 8px 10px;
+        line-height: 1.5;
+      }
+      select.ipt {
+        appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        padding-right: 28px;
+      }
+      .lbl {
+        font-size: 11.5px;
+        font-weight: 500;
+        color: #64748b;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .req {
+        color: #dc2626;
+      }
+      .help {
+        font-size: 11.5px;
+        color: #64748b;
+        margin-top: 4px;
+      }
+
+      /* pill */
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: 20px;
+        padding: 0 8px;
+        font-size: 11.5px;
+        font-weight: 500;
+        line-height: 1;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        white-space: nowrap;
+      }
+      .pill-blue {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border-color: #dbeafe;
+      }
+      .pill-green {
+        background: #dcfce7;
+        color: #14532d;
+        border-color: #bbf7d0;
+      }
+      .pill-amber {
+        background: #fef3c7;
+        color: #78350f;
+        border-color: #fde68a;
+      }
+      .pill-red {
+        background: #fee2e2;
+        color: #7f1d1d;
+        border-color: #fecaca;
+      }
+      .pill-violet {
+        background: #f3e8ff;
+        color: #4c1d95;
+        border-color: #e9d5ff;
+      }
+      .pill-teal {
+        background: #ccfbf1;
+        color: #134e4a;
+        border-color: #99f6e4;
+      }
+      .pill-gray {
+        background: #f1f5f9;
+        color: #334155;
+        border-color: #e2e8f0;
+      }
+      .pill-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        display: inline-block;
+      }
+
+      /* dot row separators in property list */
+      .prop {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        gap: 12px;
+        align-items: center;
+        min-height: 32px;
+        padding: 4px 0;
+      }
+      .prop-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12.5px;
+        color: #64748b;
+        font-weight: 500;
+      }
+      .prop-value {
+        font-size: 13px;
+        color: #0f172a;
+      }
+
+      /* tab */
+      .tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 4px 12px;
+        margin: 0 12px;
+        border-bottom: 2px solid transparent;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 500;
+      }
+      .tab[aria-selected='true'] {
+        color: #0f172a;
+        border-color: #2563eb;
+      }
+      .tab .count {
+        font-size: 11px;
+        font-weight: 500;
+        color: #64748b;
+        background: #f1f5f9;
+        border-radius: 999px;
+        padding: 1px 6px;
+        line-height: 1;
+      }
+      .tab[aria-selected='true'] .count {
+        color: #1d4ed8;
+        background: #dbeafe;
+      }
+
+      /* nav */
+      .nav-group-title {
+        padding: 10px 12px 4px;
+        font-size: 10.5px;
+        font-weight: 600;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 30px;
+        padding: 0 10px;
+        margin: 0 6px;
+        border-radius: 6px;
+        color: #334155;
+        font-size: 13px;
+        line-height: 1;
+      }
+      .nav-item:hover {
+        background: #f1f5f9;
+      }
+      .nav-item .count {
+        margin-left: auto;
+        font-size: 11px;
+        color: #94a3b8;
+        font-variant-numeric: tabular-nums;
+      }
+      .nav-item[aria-current='page'] {
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-weight: 500;
+      }
+      .nav-item[aria-current='page'] .count {
+        color: #2563eb;
+      }
+
+      /* card */
+      .card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        box-shadow:
+          0 1px 0 rgba(15, 23, 42, 0.02),
+          0 1px 2px rgba(15, 23, 42, 0.04);
+      }
+      .card-h {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 44px;
+        padding: 0 14px;
+        border-bottom: 1px solid #f0f1f4;
+      }
+      .card-h h3 {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: #0f172a;
+      }
+
+      /* button */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1;
+        border: 1px solid transparent;
+        white-space: nowrap;
+      }
+      .btn-primary {
+        background: #2563eb;
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: #1d4ed8;
+      }
+      .btn-secondary {
+        background: #fff;
+        color: #0f172a;
+        border-color: #e5e7eb;
+      }
+      .btn-secondary:hover {
+        background: #f9fafb;
+      }
+      .btn-ghost {
+        color: #334155;
+      }
+      .btn-ghost:hover {
+        background: #f1f5f9;
+      }
+      .btn-danger-ghost {
+        color: #b91c1c;
+      }
+      .btn-danger-ghost:hover {
+        background: #fee2e2;
+      }
+      .btn-sm {
+        height: 26px;
+        padding: 0 8px;
+        font-size: 12px;
+      }
+      .icon-btn {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        color: #475569;
+      }
+      .icon-btn:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+      }
+      .icon-btn-sm {
+        width: 26px;
+        height: 26px;
+      }
+
+      /* keyboard hint */
+      .kbd {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10.5px;
+        padding: 1px 5px;
+        border: 1px solid #e5e7eb;
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        background: #fff;
+        color: #475569;
+        line-height: 1.4;
+      }
+
+      /* avatar */
+      .av {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+        color: #fff;
+        flex-shrink: 0;
+      }
+      .av-sm {
+        width: 22px;
+        height: 22px;
+        font-size: 10px;
+      }
+      .av-lg {
+        width: 56px;
+        height: 56px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      .av-stack > * + * {
+        margin-left: -6px;
+      }
+      .av-stack > * {
+        border: 2px solid #fff;
+      }
+
+      /* property type icons (Attio-style) */
+      .pti {
+        width: 14px;
+        height: 14px;
+        color: #94a3b8;
+      }
+
+      /* table */
+      table.t {
+        width: 100%;
+        font-size: 13px;
+      }
+      table.t thead th {
+        font-size: 11px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        padding: 8px 12px;
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+      }
+      table.t tbody td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #f0f1f4;
+        vertical-align: middle;
+      }
+      table.t tbody tr:hover td {
+        background: #f9fafb;
+      }
+      table.t tbody tr:last-child td {
+        border-bottom: 0;
+      }
+
+      /* timeline */
+      .tl {
+        position: relative;
+        padding-left: 26px;
+      }
+      .tl::before {
+        content: '';
+        position: absolute;
+        left: 13px;
+        top: 8px;
+        bottom: 6px;
+        width: 1px;
+        background: #e5e7eb;
+      }
+      .tl-item {
+        position: relative;
+        padding-bottom: 16px;
+      }
+      .tl-item .tl-icon {
+        position: absolute;
+        left: -26px;
+        top: 0;
+        width: 26px;
+        height: 26px;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #475569;
+      }
+
+      /* progress bar */
+      .bar {
+        height: 6px;
+        background: #f1f5f9;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .bar > span {
+        display: block;
+        height: 100%;
+        background: #2563eb;
+        border-radius: 999px;
+      }
+
+      /* checkbox/radio coloring */
+      input[type='checkbox'],
+      input[type='radio'] {
+        accent-color: #2563eb;
+      }
+
+      /* draft alert banner gradient */
+      .alert-amber {
+        background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+      }
+
+      /* scroll bar */
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(15, 23, 42, 0.16);
+        border-radius: 999px;
+        border: 2px solid #f6f7f9;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(15, 23, 42, 0.28);
+      }
+
+      /* chip (interactive tag) */
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: 22px;
+        padding: 0 8px;
+        font-size: 11.5px;
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+      }
+      .chip-blue {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border-color: #dbeafe;
+      }
+      .chip-violet {
+        background: #f3e8ff;
+        color: #4c1d95;
+        border-color: #e9d5ff;
+      }
+      .chip-teal {
+        background: #ccfbf1;
+        color: #134e4a;
+        border-color: #99f6e4;
+      }
+      .chip-amber {
+        background: #fef3c7;
+        color: #78350f;
+        border-color: #fde68a;
+      }
+      .chip-rm {
+        opacity: 0;
+        margin-left: 2px;
+        margin-right: -2px;
+        color: #94a3b8;
+      }
+      .chip:hover .chip-rm {
+        opacity: 1;
+      }
+
+      /* segment control */
+      .seg {
+        display: inline-flex;
+        background: #f1f5f9;
+        border-radius: 6px;
+        padding: 2px;
+      }
+      .seg button {
+        height: 24px;
+        padding: 0 10px;
+        font-size: 12px;
+        color: #475569;
+        border-radius: 4px;
+        line-height: 1;
+        font-weight: 500;
+      }
+      .seg button[aria-selected='true'] {
+        background: #fff;
+        color: #0f172a;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+      }
+
+      /* gauge ring */
+      .gauge-track {
+        stroke: #f1f5f9;
+      }
+      .gauge-fill {
+        stroke: #2563eb;
+        stroke-linecap: round;
+        transform-origin: center;
+        transform: rotate(-90deg);
+      }
+
+      /* file row */
+      .file-ext {
+        width: 28px;
+        height: 28px;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9.5px;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.04em;
+      }
+
+      /* hover-edit indicator on properties */
+      .prop:hover .prop-edit-hint {
+        opacity: 1;
+      }
+      .prop-edit-hint {
+        opacity: 0;
+        color: #94a3b8;
+      }
+
+      /* divider */
+      .hr-soft {
+        border-color: #f0f1f4;
+      }
+
+      /* small focus indication on chips */
+      details > summary {
+        list-style: none;
+        cursor: pointer;
+      }
+      details > summary::-webkit-details-marker {
+        display: none;
+      }
+      details[open] .chev {
+        transform: rotate(180deg);
+      }
+      .chev {
+        transition: transform 200ms ease;
+      }
+
+      /* match score color stripe */
+      .stripe-amber {
+        box-shadow: inset 3px 0 0 #d97706;
+      }
+      .stripe-blue {
+        box-shadow: inset 3px 0 0 #2563eb;
+      }
+
+      /* assignment dropdown affordance */
+      .has-aff:hover {
+        background: #f9fafb;
+      }
+    </style>
+  </head>
+
+  <body class="min-h-screen">
+    <!-- ─────────────────────────── TOP BAR ─────────────────────────── -->
+    <header
+      class="sticky top-0 z-40 h-12 bg-white border-b border-line flex items-stretch"
+    >
+      <!-- brand / workspace -->
+      <div
+        class="w-[240px] shrink-0 flex items-center gap-2 px-3 border-r border-line"
+      >
+        <div
+          class="w-7 h-7 rounded-md bg-brand text-white grid place-items-center font-semibold text-[13px]"
+        >
+          H
+        </div>
+        <button
+          class="flex items-center gap-1.5 px-1.5 py-1 rounded hover:bg-app-muted flex-1 min-w-0"
+        >
+          <div class="text-left min-w-0">
+            <div class="text-[12.5px] font-semibold leading-none truncate">
+              Helix CRM
+            </div>
+            <div class="text-2xs text-ink-muted leading-none mt-1 truncate">
+              ARGOS Group · DACH
+            </div>
+          </div>
+          <i
+            data-lucide="chevrons-up-down"
+            class="w-3.5 h-3.5 text-ink-muted ml-auto"
+          ></i>
+        </button>
+      </div>
+
+      <!-- breadcrumb -->
+      <nav
+        class="flex items-center gap-1.5 px-4 text-[13px] text-ink-muted"
+        aria-label="Breadcrumb"
+      >
+        <a href="#" class="hover:text-ink">Sales</a>
+        <i data-lucide="chevron-right" class="w-3.5 h-3.5 opacity-60"></i>
+        <a href="#" class="hover:text-ink">Companies</a>
+        <i data-lucide="chevron-right" class="w-3.5 h-3.5 opacity-60"></i>
+        <span class="text-ink font-medium">ARGOS Industriebau AG</span>
+        <span class="pill pill-amber ml-2">
+          <span class="pill-dot" style="background: #b45309"></span>Entwurf
+        </span>
+      </nav>
+
+      <!-- search -->
+      <div class="flex-1 flex items-center justify-center px-4">
+        <button
+          class="flex items-center gap-2 w-full max-w-[420px] h-8 px-2.5 rounded-md border border-line text-ink-muted hover:bg-app-hover"
+        >
+          <i data-lucide="search" class="w-4 h-4"></i>
+          <span class="text-[12.5px] flex-1 text-left"
+            >Suchen oder Befehl ausführen…</span
+          >
+          <span class="kbd">⌘</span><span class="kbd">K</span>
+        </button>
+      </div>
+
+      <!-- right actions -->
+      <div class="flex items-center gap-1 px-2 border-l border-line">
+        <button
+          class="icon-btn"
+          title="Benachrichtigungen"
+          aria-label="Benachrichtigungen"
+        >
+          <i data-lucide="bell" class="w-4 h-4"></i>
+          <span
+            class="absolute -mt-3 ml-3 w-1.5 h-1.5 rounded-full bg-bad"
+          ></span>
+        </button>
+        <button class="icon-btn" title="Was gibt's Neues">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+        </button>
+        <button class="icon-btn" title="Hilfe">
+          <i data-lucide="circle-help" class="w-4 h-4"></i>
+        </button>
+        <div class="w-px h-6 bg-line mx-1.5"></div>
+        <button class="flex items-center gap-2 pl-1 pr-2 rounded-md hover:bg-app-muted">
+          <span class="av av-sm" style="background: #2563eb">TS</span>
+          <span class="text-[12.5px] hidden md:inline">Toni Steimle</span>
+          <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-ink-muted"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ─────────────────────────── SHELL ─────────────────────────── -->
+    <div class="flex">
+      <!-- ─── SIDEBAR ─── -->
+      <aside
+        class="w-[240px] shrink-0 bg-white border-r border-line min-h-[calc(100vh-3rem)] sticky top-12 self-start flex flex-col"
+      >
+        <!-- new + filter -->
+        <div class="p-3 flex items-center gap-2 border-b border-line">
+          <button class="btn btn-primary flex-1 justify-center">
+            <i data-lucide="plus" class="w-4 h-4"></i>Neu erstellen
+          </button>
+          <button class="icon-btn" title="Filter">
+            <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-1">
+          <div class="nav-group-title">Pinned</div>
+          <a class="nav-item" href="#"
+            ><i data-lucide="pin" class="w-4 h-4 text-ink-faint"></i>Schweizer
+            Bauunternehmen<span class="count">214</span></a
+          >
+          <a class="nav-item" href="#"
+            ><i data-lucide="pin" class="w-4 h-4 text-ink-faint"></i>Q2 —
+            Renewals<span class="count">38</span></a
+          >
+
+          <div class="nav-group-title">Sales</div>
+          <a class="nav-item" href="#"
+            ><i data-lucide="layout-dashboard" class="w-4 h-4"></i
+            >Dashboard</a
+          >
+          <a class="nav-item" href="#" aria-current="page"
+            ><i data-lucide="building-2" class="w-4 h-4"></i>Unternehmen<span
+              class="count"
+              >2 481</span
+            ></a
+          >
+          <a class="nav-item" href="#"
+            ><i data-lucide="users" class="w-4 h-4"></i>Kontakte<span
+              class="count"
+              >9 142</span
+            ></a
+          >
+          <a class="nav-item" href="#"
+            ><i data-lucide="trending-up" class="w-4 h-4"></i>Deals<span
+              class="count"
+              >184</span
+            ></a
+          >
+          <a class="nav-item" href="#"
+            ><i data-lucide="kanban" class="w-4 h-4"></i>Pipeline</a
+          >
+          <a class="nav-item" href="#"
+            ><i data-lucide="file-text" class="w-4 h-4"></i>Angebote</a
+          >
+
+          <div class="nav-group-title">Marketing</div>
+          <a class="nav-item" href="#"
+            ><i data-lucide="send" class="w-4 h-4"></i>Kampagnen</a
+          >
+          <a class="nav-item" href="#"
+            ><i data-lucide="list-checks" class="w-4 h-4"></i>Listen</a
+          >
+          <a class="nav-item" href="#"
+            ><i data-lucide="mail" class="w-4 h-4"></i>Sequenzen</a
+          >
+
+          <div class="nav-group-title">Service</div>
+          <a class="nav-item" href="#"
+            ><i data-lucide="life-buoy" class="w-4 h-4"></i>Tickets<span
+              class="count"
+              >12</span
+            ></a
+          >
+          <a class="nav-item" href="#"
+            ><i data-lucide="message-square" class="w-4 h-4"></i>Konversationen</a
+          >
+
+          <div class="nav-group-title">Auswertung</div>
+          <a class="nav-item" href="#"
+            ><i data-lucide="bar-chart-3" class="w-4 h-4"></i>Berichte</a
+          >
+          <a class="nav-item" href="#"
+            ><i data-lucide="target" class="w-4 h-4"></i>Forecast</a
+          >
+        </nav>
+
+        <div class="border-t border-line p-2">
+          <a
+            class="nav-item"
+            href="#"
+            style="margin: 0; padding: 0 10px; height: 30px"
+            ><i data-lucide="shield-check" class="w-4 h-4"></i>Compliance</a
+          >
+          <a
+            class="nav-item"
+            href="#"
+            style="margin: 0; padding: 0 10px; height: 30px"
+            ><i data-lucide="settings" class="w-4 h-4"></i>Einstellungen</a
+          >
+        </div>
+      </aside>
+
+      <!-- ─── MAIN ─── -->
+      <main class="flex-1 min-w-0 flex flex-col">
+        <!-- DRAFT BANNER -->
+        <div class="alert-amber border-b border-amber-200">
+          <div class="flex items-center gap-3 px-6 py-2.5">
+            <i
+              data-lucide="circle-alert"
+              class="w-4 h-4 text-warn shrink-0"
+            ></i>
+            <div class="text-[13px] text-warn-ink">
+              <span class="font-medium">Dieser Datensatz ist ein Entwurf.</span>
+              Erstellt am 03.05.2026 um 09:14 — sichtbar nur für dich, bis du
+              ihn speicherst oder zur Prüfung sendest.
+            </div>
+            <div class="ml-auto flex items-center gap-2">
+              <button class="text-[12px] font-medium text-warn-ink hover:underline">
+                Verlauf ansehen
+              </button>
+              <button
+                class="icon-btn icon-btn-sm text-warn-ink hover:bg-amber-100"
+                title="Schließen"
+              >
+                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECORD HEADER -->
+        <section class="bg-white border-b border-line">
+          <div class="px-6 pt-5 pb-4">
+            <div class="flex items-start gap-5">
+              <!-- logo monogram -->
+              <div class="relative shrink-0">
+                <div
+                  class="av av-lg"
+                  style="
+                    background:
+                      linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+                    border-radius: 12px;
+                  "
+                >
+                  AX
+                </div>
+                <button
+                  class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white border border-line flex items-center justify-center hover:bg-app-muted shadow-card"
+                  title="Logo bearbeiten"
+                >
+                  <i data-lucide="camera" class="w-3 h-3 text-ink-muted"></i>
+                </button>
+              </div>
+
+              <!-- title block -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 text-2xs text-ink-muted">
+                  <span class="mono">CO-002 481</span>
+                  <span class="opacity-50">·</span>
+                  <span>Erstellt vor 14 Min</span>
+                  <span class="opacity-50">·</span>
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-ok"></span>
+                    Auto-gespeichert
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-3 mt-1">
+                  <h1 class="text-[22px] font-semibold leading-tight">
+                    ARGOS Industriebau AG
+                  </h1>
+                  <i
+                    data-lucide="badge-check"
+                    class="w-4 h-4 text-brand"
+                    title="Verifiziert über ZEFIX"
+                  ></i>
+                  <button
+                    class="icon-btn icon-btn-sm text-ink-muted"
+                    title="Folgen"
+                  >
+                    <i data-lucide="star" class="w-4 h-4"></i>
+                  </button>
+                </div>
+
+                <div class="flex items-center gap-2 mt-2 flex-wrap">
+                  <span class="pill pill-blue">
+                    <i data-lucide="briefcase" class="w-3 h-3"></i>Kunde
+                  </span>
+                  <span class="pill pill-violet">Enterprise</span>
+                  <span class="pill pill-teal">A-Tier</span>
+                  <span class="pill pill-gray">
+                    <i data-lucide="map-pin" class="w-3 h-3"></i>Zürich, CH
+                  </span>
+                  <span class="pill pill-gray">
+                    <i data-lucide="users" class="w-3 h-3"></i>312 MA
+                  </span>
+                </div>
+              </div>
+
+              <!-- KPI strip -->
+              <div
+                class="flex items-stretch divide-x divide-line border border-line rounded-lg bg-white shrink-0"
+              >
+                <div class="px-4 py-2.5 text-right">
+                  <div class="text-2xs text-ink-muted">Gesamtumsatz</div>
+                  <div
+                    class="text-[15px] font-semibold mt-0.5 mono"
+                    style="font-feature-settings: 'tnum'"
+                  >
+                    CHF 2,4M
+                  </div>
+                  <div class="text-2xs text-ok flex items-center gap-1 justify-end mt-0.5">
+                    <i data-lucide="arrow-up-right" class="w-3 h-3"></i>+18 %
+                  </div>
+                </div>
+                <div class="px-4 py-2.5 text-right">
+                  <div class="text-2xs text-ink-muted">Offene Deals</div>
+                  <div class="text-[15px] font-semibold mt-0.5">2</div>
+                  <div class="text-2xs text-ink-muted mt-0.5">CHF 2,1M</div>
+                </div>
+                <div class="px-4 py-2.5 text-right">
+                  <div class="text-2xs text-ink-muted">Tickets</div>
+                  <div class="text-[15px] font-semibold mt-0.5">3</div>
+                  <div class="text-2xs text-warn mt-0.5">1 P1</div>
+                </div>
+                <div class="px-4 py-2.5 text-right">
+                  <div class="text-2xs text-ink-muted">Letzte Aktivität</div>
+                  <div class="text-[13px] font-medium mt-0.5">Vor 2 Tagen</div>
+                  <div class="text-2xs text-ink-muted mt-0.5">E-Mail · MK</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- action toolbar -->
+            <div class="flex items-center gap-2 mt-5">
+              <button class="btn btn-secondary">
+                <i data-lucide="mail" class="w-4 h-4"></i>E-Mail
+              </button>
+              <button class="btn btn-secondary">
+                <i data-lucide="phone" class="w-4 h-4"></i>Anrufen
+              </button>
+              <button class="btn btn-secondary">
+                <i data-lucide="calendar" class="w-4 h-4"></i>Termin planen
+              </button>
+              <button class="btn btn-secondary">
+                <i data-lucide="sticky-note" class="w-4 h-4"></i>Notiz
+              </button>
+              <button class="btn btn-secondary">
+                <i data-lucide="check-square" class="w-4 h-4"></i>Aufgabe
+              </button>
+              <div class="w-px h-6 bg-line mx-1"></div>
+              <button class="btn btn-secondary">
+                <i data-lucide="trending-up" class="w-4 h-4"></i>Deal anlegen
+              </button>
+              <button class="btn btn-secondary">
+                <i data-lucide="file-text" class="w-4 h-4"></i>Angebot
+              </button>
+              <div class="ml-auto flex items-center gap-2">
+                <button class="icon-btn" title="Mehr"
+                  ><i data-lucide="more-horizontal" class="w-4 h-4"></i
+                ></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TABS -->
+          <div class="px-4 flex items-center gap-0 -mb-px border-t border-line-soft overflow-x-auto">
+            <button class="tab" aria-selected="true">
+              <i data-lucide="info" class="w-3.5 h-3.5"></i>Übersicht
+            </button>
+            <button class="tab">
+              Aktivitäten<span class="count">28</span>
+            </button>
+            <button class="tab">Deals<span class="count">2</span></button>
+            <button class="tab">Kontakte<span class="count">4</span></button>
+            <button class="tab">Tickets<span class="count">3</span></button>
+            <button class="tab">Angebote<span class="count">1</span></button>
+            <button class="tab">Verträge</button>
+            <button class="tab">
+              Dateien<span class="count">12</span>
+            </button>
+            <button class="tab">Berichte</button>
+            <div class="ml-auto pb-2">
+              <button class="icon-btn icon-btn-sm text-ink-muted">
+                <i data-lucide="settings-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- BODY: 3 columns (left rail + center + right rail) -->
+        <div class="flex-1 min-h-0">
+          <div class="grid grid-cols-12 gap-4 px-6 py-5">
+            <!-- ─── LEFT RAIL: Properties ─── -->
+            <div class="col-span-3 space-y-4">
+              <!-- About -->
+              <section class="card">
+                <header class="card-h">
+                  <i
+                    data-lucide="info"
+                    class="w-4 h-4 text-ink-muted"
+                  ></i>
+                  <h3>Über</h3>
+                  <button
+                    class="icon-btn icon-btn-sm ml-auto"
+                    title="Bearbeiten"
+                  >
+                    <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                  </button>
+                </header>
+                <div class="px-4 py-3">
+                  <p class="text-[12.5px] leading-relaxed text-ink-soft">
+                    Generalunternehmer für Hochbauprojekte mit Schwerpunkt
+                    Holz-Hybrid und SIA-2050-zertifizierter Sanierung.
+                    Hauptsitz Zürich, Niederlassungen in Bern, Basel und
+                    München.
+                  </p>
+                  <div class="flex items-center gap-2 mt-3">
+                    <a href="#" class="text-[12.5px] text-brand hover:underline flex items-center gap-1">
+                      <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+                      argos-industriebau.ch
+                    </a>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Properties -->
+              <section class="card">
+                <header class="card-h">
+                  <i data-lucide="list" class="w-4 h-4 text-ink-muted"></i>
+                  <h3>Stammdaten</h3>
+                  <span class="pill pill-gray ml-auto">12/14</span>
+                </header>
+                <div class="px-4 py-2 divide-y divide-line-soft">
+                  <div class="prop">
+                    <span class="prop-label"
+                      ><i data-lucide="briefcase" class="pti"></i>Rechtsform</span
+                    >
+                    <span class="prop-value">AG</span>
+                  </div>
+                  <div class="prop">
+                    <span class="prop-label"
+                      ><i data-lucide="hash" class="pti"></i>UID-Nummer</span
+                    >
+                    <span class="prop-value mono text-[12px]"
+                      >CHE-247.591.103</span
+                    >
+                  </div>
+                  <div class="prop">
+                    <span class="prop-label"
+                      ><i data-lucide="hash" class="pti"></i>HR-Nummer</span
+                    >
+                    <span class="prop-value mono text-[12px]"
+                      >CH-020.3.917.482-1</span
+                    >
+                  </div>
+                  <div class="prop">
+                    <span class="prop-label"
+                      ><i data-lucide="calendar" class="pti"></i>Gegründet</span
+                    >
+                    <span class="prop-value">1987 · 38 Jahre</span>
+                  </div>
+                  <div class="prop">
+                    <span class="prop-label"
+                      ><i data-lucide="users" class="pti"></i>Mitarbeiter</span
+                    >
+                    <span class="prop-value flex items-center gap-1.5">
+                      312
+                      <span
+                        class="pill pill-violet"
+                        title="AI-geschätzt"
+                        style="height: 16px; padding: 0 5px; font-size: 10px"
+                      >
+                        <i data-lucide="sparkles" class="w-2.5 h-2.5"></i>AI
+                      </span>
+                    </span>
+                  </div>
+                  <div class="prop">
+                    <span class="prop-label"
+                      ><i data-lucide="banknote" class="pti"></i>Umsatz</span
+                    >
+                    <span class="prop-value mono text-[12px]"
+                      >CHF 148,2 M</span
+                    >
+                  </div>
+                  <div class="prop">
+                    <span class="prop-label"
+                      ><i data-lucide="building" class="pti"></i>Branche</span
+                    >
+                    <span class="prop-value">Bauwesen · Hochbau</span>
+                  </div>
+                  <div class="prop">
+                    <span class="prop-label"
+                      ><i data-lucide="hash" class="pti"></i>D-U-N-S</span
+                    >
+                    <span class="prop-value mono text-[12px]"
+                      >48-302-9871</span
+                    >
+                  </div>
+                  <div class="prop">
+                    <span class="prop-label"
+                      ><i data-lucide="languages" class="pti"></i>Sprache</span
+                    >
+                    <span class="prop-value">Deutsch (DE-CH)</span>
+                  </div>
+                  <div class="prop">
+                    <span class="prop-label"
+                      ><i data-lucide="map" class="pti"></i>Region</span
+                    >
+                    <span class="prop-value">DACH · Schweiz Nord</span>
+                  </div>
+                </div>
+                <button
+                  class="w-full text-[12px] text-brand py-2 hover:bg-brand-soft border-t border-line-soft rounded-b-[10px]"
+                >
+                  Alle Eigenschaften anzeigen
+                </button>
+              </section>
+
+              <!-- Klassifizierung -->
+              <section class="card">
+                <header class="card-h">
+                  <i data-lucide="tag" class="w-4 h-4 text-ink-muted"></i>
+                  <h3>Klassifizierung</h3>
+                </header>
+                <div class="px-4 py-3 space-y-3">
+                  <div>
+                    <div class="lbl mb-1.5">Lifecycle</div>
+                    <div class="flex items-center gap-1">
+                      <span
+                        class="pill pill-gray"
+                        style="background: #fff; border-color: #e5e7eb"
+                        >Lead</span
+                      >
+                      <i
+                        data-lucide="chevron-right"
+                        class="w-3 h-3 text-ink-faint"
+                      ></i>
+                      <span
+                        class="pill pill-gray"
+                        style="background: #fff; border-color: #e5e7eb"
+                        >MQL</span
+                      >
+                      <i
+                        data-lucide="chevron-right"
+                        class="w-3 h-3 text-ink-faint"
+                      ></i>
+                      <span
+                        class="pill pill-gray"
+                        style="background: #fff; border-color: #e5e7eb"
+                        >SQL</span
+                      >
+                      <i
+                        data-lucide="chevron-right"
+                        class="w-3 h-3 text-ink-faint"
+                      ></i>
+                      <span class="pill pill-blue">Kunde</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="lbl mb-1.5">Tags</div>
+                    <div class="flex flex-wrap gap-1.5">
+                      <span class="chip chip-blue"
+                        >Holz-Hybrid<i
+                          data-lucide="x"
+                          class="w-3 h-3 chip-rm"
+                        ></i
+                      ></span>
+                      <span class="chip chip-blue"
+                        >SIA-2050<i
+                          data-lucide="x"
+                          class="w-3 h-3 chip-rm"
+                        ></i
+                      ></span>
+                      <span class="chip chip-teal"
+                        >Net-Zero<i
+                          data-lucide="x"
+                          class="w-3 h-3 chip-rm"
+                        ></i
+                      ></span>
+                      <span class="chip"
+                        >BIM-Level-3<i
+                          data-lucide="x"
+                          class="w-3 h-3 chip-rm"
+                        ></i
+                      ></span>
+                      <span class="chip"
+                        >Inhabergeführt<i
+                          data-lucide="x"
+                          class="w-3 h-3 chip-rm"
+                        ></i
+                      ></span>
+                      <span class="chip chip-amber"
+                        >Auslandsbau<i
+                          data-lucide="x"
+                          class="w-3 h-3 chip-rm"
+                        ></i
+                      ></span>
+                      <button class="chip text-ink-muted">
+                        <i data-lucide="plus" class="w-3 h-3"></i>Tag
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Assignment -->
+              <section class="card">
+                <header class="card-h">
+                  <i data-lucide="user-cog" class="w-4 h-4 text-ink-muted"></i>
+                  <h3>Verantwortliche</h3>
+                </header>
+                <div class="py-1">
+                  <div class="prop has-aff px-4">
+                    <span class="prop-label"
+                      ><i data-lucide="user" class="pti"></i>Owner</span
+                    >
+                    <span class="flex items-center gap-2">
+                      <span class="av av-sm" style="background: #2563eb"
+                        >TS</span
+                      >
+                      <span class="text-[13px]">Toni Steimle</span>
+                    </span>
+                  </div>
+                  <div class="prop has-aff px-4">
+                    <span class="prop-label"
+                      ><i data-lucide="user-check" class="pti"></i>KAM</span
+                    >
+                    <span class="flex items-center gap-2">
+                      <span class="av av-sm" style="background: #7c3aed"
+                        >LF</span
+                      >
+                      <span class="text-[13px]">Lara Frei</span>
+                    </span>
+                  </div>
+                  <div class="prop has-aff px-4">
+                    <span class="prop-label"
+                      ><i data-lucide="heart-handshake" class="pti"></i
+                      >Customer Success</span
+                    >
+                    <span class="flex items-center gap-2">
+                      <span class="av av-sm" style="background: #0d9488"
+                        >NV</span
+                      >
+                      <span class="text-[13px]">Nadine Vogt</span>
+                    </span>
+                  </div>
+                  <div class="prop has-aff px-4">
+                    <span class="prop-label"
+                      ><i data-lucide="users-round" class="pti"></i>Team</span
+                    >
+                    <span class="text-[13px]">DACH-Nord</span>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- ─── CENTER: Form sections ─── -->
+            <div class="col-span-6 space-y-4">
+              <!-- DUPLICATE WARNING -->
+              <div
+                class="card border-warn-soft bg-warn-soft/40 stripe-amber"
+                style="border-color: #fde68a"
+              >
+                <div class="p-4 flex items-start gap-3">
+                  <div
+                    class="w-8 h-8 rounded-md bg-amber-100 grid place-items-center shrink-0"
+                  >
+                    <i
+                      data-lucide="copy"
+                      class="w-4 h-4 text-warn"
+                    ></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                      <h4 class="text-[13px] font-semibold text-warn-ink">
+                        Möglicher Duplikat erkannt
+                      </h4>
+                      <span class="pill pill-amber">91 % Match</span>
+                    </div>
+                    <p class="text-[12.5px] text-warn-ink/90 mt-1 leading-snug">
+                      Ein Datensatz mit identischer UID und ähnlichem Namen
+                      („ARGOS Industriebau &amp; Co.“, Genf) existiert bereits,
+                      verwaltet von M. Brun seit 2023.
+                    </p>
+                    <div class="flex items-center gap-2 mt-3">
+                      <button class="btn btn-sm btn-secondary">
+                        Vergleichen
+                      </button>
+                      <button class="btn btn-sm btn-secondary">
+                        Zusammenführen
+                      </button>
+                      <button
+                        class="btn btn-sm btn-ghost text-warn-ink hover:bg-amber-100"
+                      >
+                        Trotzdem fortfahren
+                      </button>
+                    </div>
+                  </div>
+                  <button
+                    class="icon-btn icon-btn-sm text-warn-ink"
+                    title="Schließen"
+                  >
+                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- COMPANY INFO -->
+              <section class="card">
+                <header class="card-h">
+                  <i
+                    data-lucide="building-2"
+                    class="w-4 h-4 text-ink-muted"
+                  ></i>
+                  <h3>Firmendaten</h3>
+                  <span
+                    class="pill pill-green ml-2 text-[10.5px]"
+                    style="height: 18px"
+                  >
+                    <i data-lucide="check" class="w-3 h-3"></i>verifiziert
+                  </span>
+                  <div class="ml-auto flex items-center gap-1">
+                    <button class="btn btn-sm btn-secondary">
+                      <i
+                        data-lucide="sparkles"
+                        class="w-3.5 h-3.5 text-violet"
+                      ></i
+                      >Aus ZEFIX laden
+                    </button>
+                    <button class="icon-btn icon-btn-sm">
+                      <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+                    </button>
+                  </div>
+                </header>
+                <div class="p-5 grid grid-cols-12 gap-x-4 gap-y-4">
+                  <div class="col-span-7">
+                    <label class="lbl"
+                      >Firmenname<span class="req">*</span></label
+                    >
+                    <input
+                      type="text"
+                      class="ipt"
+                      value="ARGOS Industriebau AG"
+                    />
+                  </div>
+                  <div class="col-span-5">
+                    <label class="lbl">Markenname / Alias</label>
+                    <input type="text" class="ipt" value="ARGOS Group" />
+                  </div>
+
+                  <div class="col-span-3">
+                    <label class="lbl"
+                      >Rechtsform<span class="req">*</span></label
+                    >
+                    <select class="ipt">
+                      <option>Aktiengesellschaft (AG)</option>
+                      <option>GmbH</option>
+                      <option>Kollektivgesellschaft</option>
+                      <option>Einzelunternehmen</option>
+                    </select>
+                  </div>
+                  <div class="col-span-3">
+                    <label class="lbl">Gründungsjahr</label>
+                    <input type="number" class="ipt mono" value="1987" />
+                  </div>
+                  <div class="col-span-3">
+                    <label class="lbl"
+                      >UID / MwSt-Nr.<span class="req">*</span>
+                      <i
+                        data-lucide="badge-check"
+                        class="w-3 h-3 text-brand ml-auto"
+                        title="verifiziert"
+                      ></i
+                    ></label>
+                    <input
+                      type="text"
+                      class="ipt mono"
+                      value="CHE-247.591.103"
+                    />
+                  </div>
+                  <div class="col-span-3">
+                    <label class="lbl">HR-Nummer</label>
+                    <input
+                      type="text"
+                      class="ipt mono"
+                      value="CH-020.3.917.482-1"
+                    />
+                  </div>
+
+                  <div class="col-span-4">
+                    <label class="lbl">Branche (NOGA-08)</label>
+                    <select class="ipt">
+                      <option>412001 — Bau von Wohngebäuden</option>
+                      <option>421100 — Bau von Strassen</option>
+                      <option>439100 — Dachdeckerei</option>
+                    </select>
+                  </div>
+                  <div class="col-span-4">
+                    <label class="lbl"
+                      >Mitarbeiter (FTE)
+                      <span
+                        class="pill pill-violet ml-auto"
+                        style="height: 16px; padding: 0 5px; font-size: 10px"
+                      >
+                        <i data-lucide="sparkles" class="w-2.5 h-2.5"></i>AI
+                      </span>
+                    </label>
+                    <input type="text" class="ipt mono" value="312" />
+                    <div class="help">
+                      Geschätzt aus LinkedIn &amp; Bisnode · Q1/2026
+                    </div>
+                  </div>
+                  <div class="col-span-4">
+                    <label class="lbl">Jahresumsatz</label>
+                    <div class="flex gap-2">
+                      <select class="ipt mono" style="width: 80px">
+                        <option>CHF</option>
+                        <option>EUR</option>
+                        <option>USD</option>
+                      </select>
+                      <input
+                        type="text"
+                        class="ipt mono flex-1"
+                        value="148'200'000"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="col-span-6">
+                    <label class="lbl">Webseite</label>
+                    <input
+                      type="url"
+                      class="ipt"
+                      value="https://argos-industriebau.ch"
+                    />
+                  </div>
+                  <div class="col-span-3">
+                    <label class="lbl">LinkedIn</label>
+                    <input
+                      type="text"
+                      class="ipt"
+                      value="argos-industriebau"
+                    />
+                  </div>
+                  <div class="col-span-3">
+                    <label class="lbl">D-U-N-S</label>
+                    <input
+                      type="text"
+                      class="ipt mono"
+                      value="48-302-9871"
+                    />
+                  </div>
+
+                  <div class="col-span-12">
+                    <label class="lbl"
+                      >Kurzbeschreibung
+                      <span class="ml-auto text-ink-faint mono text-[10.5px]"
+                        >238 / 500</span
+                      ></label
+                    >
+                    <textarea class="ipt" rows="3">
+ARGOS Industriebau AG ist ein integrierter Generalunternehmer für Hochbauprojekte im DACH-Raum mit Schwerpunkt auf nachhaltigem Bauen, Holz-Hybrid-Konstruktionen und SIA-zertifizierter Sanierung. Hauptsitz Zürich, Niederlassungen in Bern, Basel und München.</textarea
+                    >
+                  </div>
+                </div>
+              </section>
+
+              <!-- ADDRESSES -->
+              <section class="card">
+                <header class="card-h">
+                  <i
+                    data-lucide="map-pin"
+                    class="w-4 h-4 text-ink-muted"
+                  ></i>
+                  <h3>Adressen</h3>
+                  <span class="text-[12px] text-ink-muted ml-1">3</span>
+                  <div class="ml-auto flex items-center gap-1">
+                    <button class="btn btn-sm btn-secondary">
+                      <i data-lucide="plus" class="w-3.5 h-3.5"></i>Adresse
+                    </button>
+                    <button class="icon-btn icon-btn-sm">
+                      <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+                    </button>
+                  </div>
+                </header>
+                <div class="p-4 grid grid-cols-3 gap-3">
+                  <article
+                    class="border border-line rounded-lg p-3 hover:border-line-strong"
+                  >
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="pill pill-blue">
+                        <i data-lucide="building" class="w-3 h-3"></i>Hauptsitz
+                      </span>
+                      <button class="icon-btn icon-btn-sm">
+                        <i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i>
+                      </button>
+                    </div>
+                    <div class="text-[13px] font-medium leading-tight">
+                      Limmatstrasse 264
+                    </div>
+                    <div class="text-[12.5px] text-ink-soft">
+                      8005 Zürich · ZH
+                    </div>
+                    <div class="text-[12px] text-ink-muted">Schweiz</div>
+                    <div class="flex items-center gap-1 mt-2.5 flex-wrap">
+                      <span class="chip">
+                        <i data-lucide="receipt" class="w-3 h-3"></i>Rechnung
+                      </span>
+                      <span class="chip">
+                        <i data-lucide="truck" class="w-3 h-3"></i>Lieferung
+                      </span>
+                    </div>
+                  </article>
+
+                  <article
+                    class="border border-line rounded-lg p-3 hover:border-line-strong"
+                  >
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="pill pill-gray">
+                        <i data-lucide="map-pin" class="w-3 h-3"></i>Filiale
+                      </span>
+                      <button class="icon-btn icon-btn-sm">
+                        <i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i>
+                      </button>
+                    </div>
+                    <div class="text-[13px] font-medium leading-tight">
+                      Rosenheimer Straße 145
+                    </div>
+                    <div class="text-[12.5px] text-ink-soft">
+                      81671 München
+                    </div>
+                    <div class="text-[12px] text-ink-muted">Deutschland</div>
+                    <div class="flex items-center gap-1 mt-2.5 flex-wrap">
+                      <span class="chip">
+                        <i data-lucide="globe" class="w-3 h-3"></i>EU
+                      </span>
+                      <span class="chip mono text-[10.5px]"
+                        >DE 304 985 217</span
+                      >
+                    </div>
+                  </article>
+
+                  <article
+                    class="border border-line rounded-lg p-3 hover:border-line-strong"
+                  >
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="pill pill-amber">
+                        <i data-lucide="alert-circle" class="w-3 h-3"></i
+                        >Lieferung
+                      </span>
+                      <button class="icon-btn icon-btn-sm">
+                        <i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i>
+                      </button>
+                    </div>
+                    <div class="text-[13px] font-medium leading-tight">
+                      Lager Süd · Tor B
+                    </div>
+                    <div class="text-[12.5px] text-ink-soft">
+                      Industriestrasse 14, 6330 Cham
+                    </div>
+                    <div class="text-[12px] text-ink-muted">Schweiz</div>
+                    <div class="flex items-center gap-1 mt-2.5 flex-wrap">
+                      <span class="chip">24/7</span>
+                      <span class="chip">LKW max 18 t</span>
+                    </div>
+                  </article>
+                </div>
+              </section>
+
+              <!-- CONTACT PERSONS -->
+              <section class="card">
+                <header class="card-h">
+                  <i
+                    data-lucide="users"
+                    class="w-4 h-4 text-ink-muted"
+                  ></i>
+                  <h3>Kontaktpersonen</h3>
+                  <span class="text-[12px] text-ink-muted ml-1">4</span>
+                  <div class="ml-auto flex items-center gap-2">
+                    <div class="seg" role="tablist">
+                      <button aria-selected="true">Aktiv</button>
+                      <button>Alle</button>
+                    </div>
+                    <button class="btn btn-sm btn-primary">
+                      <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>Person
+                    </button>
+                  </div>
+                </header>
+                <table class="t">
+                  <thead>
+                    <tr>
+                      <th>Person</th>
+                      <th>Rolle</th>
+                      <th>Beziehung</th>
+                      <th>Letzter Kontakt</th>
+                      <th class="w-8"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>
+                        <div class="flex items-center gap-2.5">
+                          <span class="av av-sm" style="background: #2563eb"
+                            >EW</span
+                          >
+                          <div>
+                            <div class="text-[13px] font-medium leading-tight">
+                              Dr. Elena Wettstein
+                            </div>
+                            <div class="text-[11.5px] text-ink-muted">
+                              CFO · Geschäftsleitung
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="pill pill-blue">
+                          <i data-lucide="crown" class="w-3 h-3"></i>Entscheider
+                        </span>
+                      </td>
+                      <td>
+                        <div class="flex items-center gap-2">
+                          <div class="bar w-20">
+                            <span style="width: 78%"></span>
+                          </div>
+                          <span class="mono text-[11.5px] text-ink-muted"
+                            >7,8</span
+                          >
+                        </div>
+                      </td>
+                      <td class="text-ink-muted text-[12.5px] mono">
+                        21.04.2026
+                      </td>
+                      <td>
+                        <button class="icon-btn icon-btn-sm">
+                          <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="flex items-center gap-2.5">
+                          <span class="av av-sm" style="background: #7c3aed"
+                            >MK</span
+                          >
+                          <div>
+                            <div class="text-[13px] font-medium leading-tight">
+                              Marc Kunz
+                            </div>
+                            <div class="text-[11.5px] text-ink-muted">
+                              Leiter Beschaffung
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="pill pill-amber">
+                          <i data-lucide="key" class="w-3 h-3"></i>Käufer
+                        </span>
+                      </td>
+                      <td>
+                        <div class="flex items-center gap-2">
+                          <div class="bar w-20">
+                            <span
+                              style="width: 52%; background: #b45309"
+                            ></span>
+                          </div>
+                          <span class="mono text-[11.5px] text-ink-muted"
+                            >5,2</span
+                          >
+                        </div>
+                      </td>
+                      <td class="text-ink-muted text-[12.5px] mono">
+                        02.05.2026
+                      </td>
+                      <td>
+                        <button class="icon-btn icon-btn-sm">
+                          <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="flex items-center gap-2.5">
+                          <span class="av av-sm" style="background: #0d9488"
+                            >SR</span
+                          >
+                          <div>
+                            <div class="text-[13px] font-medium leading-tight">
+                              Sarah Räber
+                            </div>
+                            <div class="text-[11.5px] text-ink-muted">
+                              Head of Digital · IT
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="pill pill-teal">
+                          <i data-lucide="lightbulb" class="w-3 h-3"></i>
+                          Influencer
+                        </span>
+                      </td>
+                      <td>
+                        <div class="flex items-center gap-2">
+                          <div class="bar w-20">
+                            <span
+                              style="width: 88%; background: #16a34a"
+                            ></span>
+                          </div>
+                          <span class="mono text-[11.5px] text-ink-muted"
+                            >8,8</span
+                          >
+                        </div>
+                      </td>
+                      <td class="text-ink-muted text-[12.5px] mono">
+                        29.04.2026
+                      </td>
+                      <td>
+                        <button class="icon-btn icon-btn-sm">
+                          <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <div class="flex items-center gap-2.5">
+                          <span class="av av-sm" style="background: #64748b"
+                            >TB</span
+                          >
+                          <div>
+                            <div class="text-[13px] font-medium leading-tight flex items-center gap-1.5">
+                              Tobias Brunner
+                              <span class="pill pill-gray text-[10px]" style="height: 16px">ausgeschieden</span>
+                            </div>
+                            <div class="text-[11.5px] text-ink-muted">
+                              ehem. CEO · bis Q3/2025
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="pill pill-gray">Historisch</span>
+                      </td>
+                      <td class="text-ink-faint">—</td>
+                      <td class="text-ink-faint mono text-[12.5px]">
+                        14.08.2025
+                      </td>
+                      <td>
+                        <button class="icon-btn icon-btn-sm">
+                          <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+
+              <!-- COMMUNICATION PREFERENCES -->
+              <section class="card">
+                <header class="card-h">
+                  <i
+                    data-lucide="message-circle"
+                    class="w-4 h-4 text-ink-muted"
+                  ></i>
+                  <h3>Kommunikationspräferenzen</h3>
+                </header>
+                <div class="p-5 grid grid-cols-12 gap-x-5 gap-y-5">
+                  <div class="col-span-12">
+                    <label class="lbl mb-2">Kanäle pro Zweck</label>
+                    <div
+                      class="border border-line rounded-md overflow-hidden"
+                    >
+                      <table class="t">
+                        <thead>
+                          <tr>
+                            <th>Zweck</th>
+                            <th class="text-center">E-Mail</th>
+                            <th class="text-center">Telefon</th>
+                            <th class="text-center">Brief</th>
+                            <th class="text-center">Portal</th>
+                            <th class="text-center">SMS</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>Newsletter / Marketing</td>
+                            <td class="text-center">
+                              <input type="checkbox" checked />
+                            </td>
+                            <td class="text-center">
+                              <input type="checkbox" />
+                            </td>
+                            <td class="text-center">
+                              <input type="checkbox" />
+                            </td>
+                            <td class="text-center">
+                              <input type="checkbox" checked />
+                            </td>
+                            <td class="text-center">
+                              <input type="checkbox" />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Vertrag &amp; Rechnung</td>
+                            <td class="text-center">
+                              <input type="checkbox" checked />
+                            </td>
+                            <td class="text-center">
+                              <input type="checkbox" />
+                            </td>
+                            <td class="text-center">
+                              <input type="checkbox" checked />
+                            </td>
+                            <td class="text-center">
+                              <input type="checkbox" checked />
+                            </td>
+                            <td class="text-center">
+                              <input type="checkbox" />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Service / Tickets</td>
+                            <td class="text-center">
+                              <input type="checkbox" checked />
+                            </td>
+                            <td class="text-center">
+                              <input type="checkbox" checked />
+                            </td>
+                            <td class="text-center">
+                              <input type="checkbox" />
+                            </td>
+                            <td class="text-center">
+                              <input type="checkbox" checked />
+                            </td>
+                            <td class="text-center">
+                              <input type="checkbox" checked />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Eskalation P1</td>
+                            <td class="text-center">
+                              <input type="checkbox" checked />
+                            </td>
+                            <td class="text-center">
+                              <input type="checkbox" checked />
+                            </td>
+                            <td class="text-center">
+                              <input type="checkbox" />
+                            </td>
+                            <td class="text-center">
+                              <input type="checkbox" />
+                            </td>
+                            <td class="text-center">
+                              <input type="checkbox" checked />
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div class="col-span-4">
+                    <label class="lbl">Kommunikationssprache</label>
+                    <select class="ipt">
+                      <option>Deutsch (DE-CH)</option>
+                      <option>Deutsch (DE-DE)</option>
+                      <option>Englisch</option>
+                      <option>Französisch</option>
+                    </select>
+                  </div>
+                  <div class="col-span-4">
+                    <label class="lbl">Zeitzone</label>
+                    <select class="ipt">
+                      <option>Europe/Zurich (UTC+1)</option>
+                      <option>Europe/Berlin (UTC+1)</option>
+                    </select>
+                  </div>
+                  <div class="col-span-4">
+                    <label class="lbl">Empfangsfenster</label>
+                    <input
+                      type="text"
+                      class="ipt"
+                      value="Mo–Fr · 08:00–17:30"
+                    />
+                  </div>
+                </div>
+              </section>
+
+              <!-- COMPLIANCE -->
+              <section class="card">
+                <header class="card-h">
+                  <i
+                    data-lucide="shield-check"
+                    class="w-4 h-4 text-ink-muted"
+                  ></i>
+                  <h3>Compliance &amp; Datenschutz</h3>
+                  <span class="pill pill-red ml-2">1 offen</span>
+                  <button class="btn btn-sm btn-ghost ml-auto">
+                    <i data-lucide="file-search" class="w-3.5 h-3.5"></i
+                    >Audit-Log
+                  </button>
+                </header>
+                <div class="p-4 grid grid-cols-3 gap-3">
+                  <article class="border border-line rounded-lg p-3">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-[11.5px] text-ink-muted font-medium"
+                        >Rechtsgrundlage</span
+                      >
+                      <i
+                        data-lucide="circle-check"
+                        class="w-4 h-4 text-ok"
+                      ></i>
+                    </div>
+                    <div class="text-[13px] font-medium">
+                      Art. 6 Abs. 1 lit. b
+                    </div>
+                    <div class="text-[11.5px] text-ink-muted mt-0.5">
+                      Vertragserfüllung mit juristischer Person
+                    </div>
+                    <div
+                      class="text-[11.5px] text-ink-muted mt-2 pt-2 border-t border-line-soft"
+                    >
+                      AVV signiert ·
+                      <span class="mono">14.03.2026</span>
+                    </div>
+                  </article>
+
+                  <article class="border border-line rounded-lg p-3">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-[11.5px] text-ink-muted font-medium"
+                        >Sanktionen</span
+                      >
+                      <i
+                        data-lucide="circle-check"
+                        class="w-4 h-4 text-ok"
+                      ></i>
+                    </div>
+                    <div class="text-[13px] font-medium">Keine Treffer</div>
+                    <div class="text-[11.5px] text-ink-muted mt-0.5">
+                      EU · OFAC · SECO · UN
+                    </div>
+                    <div
+                      class="text-[11.5px] text-ink-muted mt-2 pt-2 border-t border-line-soft"
+                    >
+                      Geprüft ·
+                      <span class="mono">02.05.2026 04:12</span>
+                    </div>
+                  </article>
+
+                  <article class="border border-bad-soft rounded-lg p-3 stripe-amber" style="box-shadow: inset 3px 0 0 #dc2626;">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-[11.5px] text-ink-muted font-medium"
+                        >AML / KYC</span
+                      >
+                      <i
+                        data-lucide="circle-alert"
+                        class="w-4 h-4 text-bad"
+                      ></i>
+                    </div>
+                    <div class="text-[13px] font-medium text-bad-ink">
+                      UBO-Nachweis fehlt
+                    </div>
+                    <div class="text-[11.5px] text-ink-muted mt-0.5">
+                      1 Person mit &gt; 25 % Beteiligung
+                    </div>
+                    <button
+                      class="btn btn-sm btn-secondary mt-2 w-full justify-center"
+                    >
+                      <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                      Dokument hochladen
+                    </button>
+                  </article>
+
+                  <div class="col-span-3">
+                    <label class="lbl">Einwilligungen</label>
+                    <div
+                      class="border border-line rounded-md overflow-hidden"
+                    >
+                      <table class="t">
+                        <thead>
+                          <tr>
+                            <th>Zweck</th>
+                            <th>Status</th>
+                            <th>Quelle</th>
+                            <th>Gültig bis</th>
+                            <th>Version</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>Marketing-E-Mail (Double-Opt-In)</td>
+                            <td>
+                              <span class="pill pill-green"
+                                ><i data-lucide="check" class="w-3 h-3"></i
+                                >Erteilt</span
+                              >
+                            </td>
+                            <td class="text-ink-muted text-[12px]">
+                              Webformular
+                            </td>
+                            <td class="mono text-[12px]">31.12.2027</td>
+                            <td class="mono text-[12px] text-ink-muted">
+                              v2026-01
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Telefonische Werbung</td>
+                            <td>
+                              <span class="pill pill-gray"
+                                ><i data-lucide="ban" class="w-3 h-3"></i
+                                >Verweigert</span
+                              >
+                            </td>
+                            <td class="text-ink-muted text-[12px]">
+                              mündlich · 14.03.2026
+                            </td>
+                            <td class="text-ink-muted">—</td>
+                            <td class="text-ink-muted">—</td>
+                          </tr>
+                          <tr>
+                            <td>Profiling für Bedarfsanalyse</td>
+                            <td>
+                              <span class="pill pill-green"
+                                ><i data-lucide="check" class="w-3 h-3"></i
+                                >Erteilt</span
+                              >
+                            </td>
+                            <td class="text-ink-muted text-[12px]">
+                              AVV-Anhang B
+                            </td>
+                            <td class="mono text-[12px]">14.03.2028</td>
+                            <td class="mono text-[12px] text-ink-muted">
+                              v2026-01
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Sub-Prozessor-Weitergabe (DE)</td>
+                            <td>
+                              <span class="pill pill-amber"
+                                ><i
+                                  data-lucide="clock"
+                                  class="w-3 h-3"
+                                ></i
+                                >Ausstehend</span
+                              >
+                            </td>
+                            <td class="text-ink-muted">—</td>
+                            <td class="text-ink-muted">—</td>
+                            <td class="text-ink-muted">—</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- FINANCE -->
+              <section class="card">
+                <header class="card-h">
+                  <i
+                    data-lucide="banknote"
+                    class="w-4 h-4 text-ink-muted"
+                  ></i>
+                  <h3>Finanzen &amp; Bonität</h3>
+                </header>
+                <div class="p-5 grid grid-cols-12 gap-x-4 gap-y-4">
+                  <div class="col-span-3">
+                    <label class="lbl">Währung</label>
+                    <select class="ipt">
+                      <option>CHF — Schweizer Franken</option>
+                      <option>EUR</option>
+                      <option>USD</option>
+                    </select>
+                  </div>
+                  <div class="col-span-3">
+                    <label class="lbl">Zahlungsziel</label>
+                    <input type="text" class="ipt" value="30 Tage netto" />
+                  </div>
+                  <div class="col-span-3">
+                    <label class="lbl">Skonto</label>
+                    <input type="text" class="ipt" value="2 % bei 10 Tagen" />
+                  </div>
+                  <div class="col-span-3">
+                    <label class="lbl">Kreditlimit</label>
+                    <input type="text" class="ipt mono" value="800'000" />
+                    <div class="help">Genehmigt 14.03.2026 · M. Brun</div>
+                  </div>
+
+                  <div class="col-span-5">
+                    <label class="lbl">Bankverbindung</label>
+                    <input
+                      type="text"
+                      class="ipt"
+                      value="Zürcher Kantonalbank, 8001 Zürich"
+                    />
+                  </div>
+                  <div class="col-span-4">
+                    <label class="lbl">IBAN</label>
+                    <input
+                      type="text"
+                      class="ipt mono"
+                      value="CH56 0070 0110 0030 1234 5"
+                    />
+                  </div>
+                  <div class="col-span-3">
+                    <label class="lbl">SWIFT/BIC</label>
+                    <input
+                      type="text"
+                      class="ipt mono"
+                      value="ZKBKCHZZ80A"
+                    />
+                  </div>
+
+                  <div class="col-span-12 grid grid-cols-3 gap-3 pt-2">
+                    <div class="border border-line rounded-lg p-3">
+                      <div class="text-[11.5px] text-ink-muted font-medium">
+                        Bonitäts-Score
+                      </div>
+                      <div class="flex items-baseline gap-2 mt-1">
+                        <span class="text-[20px] font-semibold mono">228</span>
+                        <span class="text-[11.5px] text-ink-muted"
+                          >/ 600 · Creditreform</span
+                        >
+                      </div>
+                      <div class="bar mt-2"><span style="width: 38%"></span></div>
+                      <div class="text-[11.5px] text-ink-muted mt-1.5">
+                        Klasse <span class="font-medium text-ink">B+</span> ·
+                        moderates Risiko
+                      </div>
+                    </div>
+                    <div class="border border-line rounded-lg p-3">
+                      <div class="text-[11.5px] text-ink-muted font-medium">
+                        Limit-Auslastung
+                      </div>
+                      <div class="flex items-baseline gap-2 mt-1">
+                        <span class="text-[20px] font-semibold mono">41 %</span>
+                      </div>
+                      <div class="bar mt-2"><span style="width: 41%"></span></div>
+                      <div class="text-[11.5px] text-ink-muted mt-1.5">
+                        <span class="mono">CHF 327 400</span> von 800 000
+                      </div>
+                    </div>
+                    <div class="border border-line rounded-lg p-3">
+                      <div class="text-[11.5px] text-ink-muted font-medium">
+                        Zahlungsmoral
+                      </div>
+                      <div class="flex items-baseline gap-2 mt-1">
+                        <span class="text-[20px] font-semibold mono text-ok"
+                          >+3,2</span
+                        >
+                        <span class="text-[11.5px] text-ink-muted"
+                          >Tage Ø verspätet</span
+                        >
+                      </div>
+                      <div class="flex items-end gap-0.5 mt-2 h-6">
+                        <span
+                          style="
+                            height: 30%;
+                            width: 6px;
+                            background: #16a34a;
+                            border-radius: 1px;
+                          "
+                        ></span>
+                        <span
+                          style="
+                            height: 50%;
+                            width: 6px;
+                            background: #16a34a;
+                            border-radius: 1px;
+                          "
+                        ></span>
+                        <span
+                          style="
+                            height: 40%;
+                            width: 6px;
+                            background: #16a34a;
+                            border-radius: 1px;
+                          "
+                        ></span>
+                        <span
+                          style="
+                            height: 70%;
+                            width: 6px;
+                            background: #16a34a;
+                            border-radius: 1px;
+                          "
+                        ></span>
+                        <span
+                          style="
+                            height: 55%;
+                            width: 6px;
+                            background: #16a34a;
+                            border-radius: 1px;
+                          "
+                        ></span>
+                        <span
+                          style="
+                            height: 65%;
+                            width: 6px;
+                            background: #16a34a;
+                            border-radius: 1px;
+                          "
+                        ></span>
+                        <span
+                          style="
+                            height: 35%;
+                            width: 6px;
+                            background: #16a34a;
+                            border-radius: 1px;
+                          "
+                        ></span>
+                        <span
+                          style="
+                            height: 80%;
+                            width: 6px;
+                            background: #16a34a;
+                            border-radius: 1px;
+                          "
+                        ></span>
+                        <span
+                          style="
+                            height: 60%;
+                            width: 6px;
+                            background: #16a34a;
+                            border-radius: 1px;
+                          "
+                        ></span>
+                        <span
+                          style="
+                            height: 45%;
+                            width: 6px;
+                            background: #16a34a;
+                            border-radius: 1px;
+                          "
+                        ></span>
+                        <span
+                          style="
+                            height: 55%;
+                            width: 6px;
+                            background: #16a34a;
+                            border-radius: 1px;
+                          "
+                        ></span>
+                        <span
+                          style="
+                            height: 50%;
+                            width: 6px;
+                            background: #16a34a;
+                            border-radius: 1px;
+                          "
+                        ></span>
+                      </div>
+                      <div class="text-[11.5px] text-ink-muted mt-1.5">
+                        Letzte 12 Rechnungen · alle bezahlt
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <!-- ─── RIGHT RAIL ─── -->
+            <div class="col-span-3 space-y-4">
+              <!-- Completion -->
+              <section class="card">
+                <header class="card-h">
+                  <i
+                    data-lucide="check-circle-2"
+                    class="w-4 h-4 text-ink-muted"
+                  ></i>
+                  <h3>Fortschritt</h3>
+                </header>
+                <div class="p-4">
+                  <div class="flex items-center gap-4">
+                    <div class="relative w-[72px] h-[72px] shrink-0">
+                      <svg viewBox="0 0 80 80" class="w-full h-full">
+                        <circle
+                          class="gauge-track"
+                          cx="40"
+                          cy="40"
+                          r="34"
+                          fill="none"
+                          stroke-width="6"
+                        />
+                        <circle
+                          class="gauge-fill"
+                          cx="40"
+                          cy="40"
+                          r="34"
+                          fill="none"
+                          stroke-width="6"
+                          stroke-dasharray="213.6"
+                          stroke-dashoffset="51.3"
+                        />
+                      </svg>
+                      <div
+                        class="absolute inset-0 flex items-center justify-center"
+                      >
+                        <div class="text-center">
+                          <div class="text-[16px] font-semibold leading-none">
+                            76%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex-1 min-w-0 space-y-1.5">
+                      <div class="flex items-center gap-2 text-[12.5px]">
+                        <i
+                          data-lucide="check-circle-2"
+                          class="w-3.5 h-3.5 text-ok"
+                        ></i>
+                        <span>12/14 Pflichtfelder</span>
+                      </div>
+                      <div class="flex items-center gap-2 text-[12.5px]">
+                        <i
+                          data-lucide="alert-triangle"
+                          class="w-3.5 h-3.5 text-warn"
+                        ></i>
+                        <span>2 Hinweise</span>
+                      </div>
+                      <div class="flex items-center gap-2 text-[12.5px]">
+                        <i
+                          data-lucide="copy"
+                          class="w-3.5 h-3.5 text-bad"
+                        ></i>
+                        <span>1 Duplikat</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-3 pt-3 border-t border-line-soft text-[12px] text-ink-muted">
+                    Noch erforderlich:
+                    <a class="text-brand hover:underline" href="#"
+                      >UBO-Nachweis</a
+                    >,
+                    <a class="text-brand hover:underline" href="#"
+                      >Lieferadresse-Empfänger</a
+                    >.
+                  </div>
+                </div>
+              </section>
+
+              <!-- AI Co-Pilot -->
+              <section class="card">
+                <header class="card-h">
+                  <i
+                    data-lucide="sparkles"
+                    class="w-4 h-4 text-violet"
+                  ></i>
+                  <h3>Co-Pilot</h3>
+                  <span
+                    class="pill pill-violet ml-2"
+                    style="font-size: 10px; height: 16px"
+                    >Beta</span
+                  >
+                </header>
+                <div class="p-3 space-y-2.5">
+                  <div
+                    class="border border-line rounded-md p-3 hover:border-line-strong"
+                  >
+                    <div class="flex items-center gap-1.5 text-[11px] text-violet font-medium uppercase tracking-wide">
+                      <i data-lucide="zap" class="w-3 h-3"></i>Vorschlag
+                    </div>
+                    <p class="text-[12.5px] leading-snug mt-1">
+                      Mitarbeiterzahl <strong>312</strong> aus LinkedIn
+                      übernehmen?
+                    </p>
+                    <div class="flex items-center gap-1.5 mt-2.5">
+                      <button class="btn btn-sm btn-primary">
+                        Übernehmen
+                      </button>
+                      <button class="btn btn-sm btn-ghost">Verwerfen</button>
+                    </div>
+                  </div>
+
+                  <div
+                    class="border border-line rounded-md p-3 hover:border-line-strong"
+                  >
+                    <div class="flex items-center gap-1.5 text-[11px] text-warn font-medium uppercase tracking-wide">
+                      <i data-lucide="alert-triangle" class="w-3 h-3"></i>Hinweis
+                    </div>
+                    <p class="text-[12.5px] leading-snug mt-1">
+                      Lieferadresse Cham fehlt der Empfängername am Tor B —
+                      Sendungen werden ggf. zurückgewiesen.
+                    </p>
+                    <button class="text-[12px] text-brand hover:underline mt-1.5">
+                      Beheben
+                    </button>
+                  </div>
+
+                  <div
+                    class="border border-line rounded-md p-3 hover:border-line-strong"
+                  >
+                    <div class="flex items-center gap-1.5 text-[11px] text-ink-muted font-medium uppercase tracking-wide">
+                      <i data-lucide="lightbulb" class="w-3 h-3"></i>Insight
+                    </div>
+                    <p class="text-[12.5px] leading-snug mt-1">
+                      Ähnliche A-Tier-Kunden im Bauwesen schliessen ø nach
+                      <strong>17 Tagen</strong> den ersten Vertrag ab.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Activity feed -->
+              <section class="card">
+                <header class="card-h">
+                  <i
+                    data-lucide="activity"
+                    class="w-4 h-4 text-ink-muted"
+                  ></i>
+                  <h3>Aktivität</h3>
+                  <button class="btn btn-sm btn-ghost ml-auto"
+                    ><i data-lucide="filter" class="w-3.5 h-3.5"></i></button
+                  >
+                </header>
+                <div class="p-4">
+                  <div class="tl">
+                    <div class="tl-item">
+                      <div class="tl-icon" style="background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8">
+                        <i data-lucide="mail" class="w-3.5 h-3.5"></i>
+                      </div>
+                      <div class="text-[12.5px] leading-snug">
+                        <strong>E-Mail</strong> an
+                        <span class="text-brand">Marc Kunz</span>
+                        — „Angebotsstruktur Q3"
+                      </div>
+                      <div class="text-2xs text-ink-muted mt-0.5">
+                        Vor 2 Tagen · TS
+                      </div>
+                    </div>
+                    <div class="tl-item">
+                      <div class="tl-icon" style="background: #f3e8ff; border-color: #e9d5ff; color: #7c3aed">
+                        <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                      </div>
+                      <div class="text-[12.5px] leading-snug">
+                        <strong>Anruf</strong> mit
+                        <span class="text-brand">Dr. E. Wettstein</span>
+                        · 14 Min
+                      </div>
+                      <div class="text-2xs text-ink-muted mt-0.5">
+                        21.04.2026 · TS
+                      </div>
+                    </div>
+                    <div class="tl-item">
+                      <div class="tl-icon" style="background: #ccfbf1; border-color: #99f6e4; color: #0d9488">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                      </div>
+                      <div class="text-[12.5px] leading-snug">
+                        <strong>Termin</strong> — Erstgespräch Limmatstrasse
+                      </div>
+                      <div class="text-2xs text-ink-muted mt-0.5">
+                        28.04.2026 · 09:00
+                      </div>
+                    </div>
+                    <div class="tl-item">
+                      <div class="tl-icon" style="background: #f1f5f9; border-color: #e2e8f0; color: #475569">
+                        <i data-lucide="file-check-2" class="w-3.5 h-3.5"></i>
+                      </div>
+                      <div class="text-[12.5px] leading-snug">
+                        AVV v3.2 signiert
+                      </div>
+                      <div class="text-2xs text-ink-muted mt-0.5">
+                        14.03.2026 · System
+                      </div>
+                    </div>
+                    <div class="tl-item">
+                      <div class="tl-icon" style="background: #f1f5f9; border-color: #e2e8f0; color: #475569">
+                        <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                      </div>
+                      <div class="text-[12.5px] leading-snug">
+                        Datensatz angelegt
+                      </div>
+                      <div class="text-2xs text-ink-muted mt-0.5">
+                        21.04.2026 · TS
+                      </div>
+                    </div>
+                  </div>
+                  <button class="btn btn-sm btn-ghost w-full justify-center mt-2">
+                    Alle 28 Aktivitäten ansehen
+                  </button>
+                </div>
+              </section>
+
+              <!-- Open deals -->
+              <section class="card">
+                <header class="card-h">
+                  <i
+                    data-lucide="trending-up"
+                    class="w-4 h-4 text-ink-muted"
+                  ></i>
+                  <h3>Offene Deals</h3>
+                  <span class="text-[12px] text-ink-muted ml-1">2</span>
+                  <button class="btn btn-sm btn-ghost ml-auto">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                  </button>
+                </header>
+                <div class="p-3 space-y-2">
+                  <article
+                    class="border border-line rounded-md p-3 hover:border-line-strong stripe-blue"
+                  >
+                    <div class="flex items-center justify-between">
+                      <div class="text-[13px] font-medium leading-tight">
+                        ERP-Modernisierung — Phase I
+                      </div>
+                      <span class="pill pill-blue">Proposal</span>
+                    </div>
+                    <div class="flex items-center justify-between mt-2">
+                      <span class="text-[12.5px] mono">CHF 1 820 000</span>
+                      <span class="text-[11.5px] text-ink-muted">70 %</span>
+                    </div>
+                    <div class="bar mt-1.5">
+                      <span style="width: 70%"></span>
+                    </div>
+                    <div
+                      class="flex items-center justify-between mt-2 text-2xs text-ink-muted"
+                    >
+                      <span>Close: Q3/2026</span>
+                      <span class="av-stack flex items-center">
+                        <span
+                          class="av av-sm"
+                          style="background: #2563eb; width: 18px; height: 18px; font-size: 8.5px"
+                          >TS</span
+                        >
+                        <span
+                          class="av av-sm"
+                          style="background: #7c3aed; width: 18px; height: 18px; font-size: 8.5px"
+                          >LF</span
+                        >
+                      </span>
+                    </div>
+                  </article>
+                  <article
+                    class="border border-line rounded-md p-3 hover:border-line-strong"
+                    style="box-shadow: inset 3px 0 0 #b45309"
+                  >
+                    <div class="flex items-center justify-between">
+                      <div class="text-[13px] font-medium leading-tight">
+                        BIM-Cloud Anbindung
+                      </div>
+                      <span class="pill pill-amber">Discovery</span>
+                    </div>
+                    <div class="flex items-center justify-between mt-2">
+                      <span class="text-[12.5px] mono">CHF 320 000</span>
+                      <span class="text-[11.5px] text-ink-muted">25 %</span>
+                    </div>
+                    <div class="bar mt-1.5">
+                      <span style="width: 25%; background: #b45309"></span>
+                    </div>
+                    <div
+                      class="flex items-center justify-between mt-2 text-2xs text-ink-muted"
+                    >
+                      <span>Close: Q4/2026</span>
+                      <span class="av av-sm" style="background: #2563eb; width: 18px; height: 18px; font-size: 8.5px"
+                        >TS</span
+                      >
+                    </div>
+                  </article>
+                </div>
+              </section>
+
+              <!-- Files -->
+              <section class="card">
+                <header class="card-h">
+                  <i
+                    data-lucide="paperclip"
+                    class="w-4 h-4 text-ink-muted"
+                  ></i>
+                  <h3>Dateien</h3>
+                  <span class="text-[12px] text-ink-muted ml-1">12</span>
+                  <button class="btn btn-sm btn-ghost ml-auto">
+                    <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                  </button>
+                </header>
+                <div class="p-2">
+                  <div
+                    class="flex items-center gap-2.5 px-2 py-1.5 rounded hover:bg-app-hover"
+                  >
+                    <span class="file-ext" style="background: #dc2626"
+                      >PDF</span
+                    >
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[12.5px] truncate">
+                        AVV_v3.2_signiert.pdf
+                      </div>
+                      <div class="text-2xs text-ink-muted mono">412 KB</div>
+                    </div>
+                    <button class="icon-btn icon-btn-sm">
+                      <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
+                  <div
+                    class="flex items-center gap-2.5 px-2 py-1.5 rounded hover:bg-app-hover"
+                  >
+                    <span class="file-ext" style="background: #16a34a"
+                      >XLS</span
+                    >
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[12.5px] truncate">
+                        Bonität_Q1_2026.xlsx
+                      </div>
+                      <div class="text-2xs text-ink-muted mono">88 KB</div>
+                    </div>
+                    <button class="icon-btn icon-btn-sm">
+                      <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
+                  <div
+                    class="flex items-center gap-2.5 px-2 py-1.5 rounded hover:bg-app-hover"
+                  >
+                    <span class="file-ext" style="background: #2563eb"
+                      >DOC</span
+                    >
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[12.5px] truncate">
+                        Rahmenvertrag_v0.4.docx
+                      </div>
+                      <div class="text-2xs text-ink-muted mono">236 KB</div>
+                    </div>
+                    <button class="icon-btn icon-btn-sm">
+                      <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
+                  <button class="btn btn-sm btn-ghost w-full justify-center mt-1">
+                    9 weitere anzeigen
+                  </button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        <!-- STICKY FOOTER -->
+        <footer
+          class="sticky bottom-0 z-30 bg-white/95 backdrop-blur border-t border-line"
+          style="box-shadow: 0 -1px 0 rgba(15, 23, 42, 0.04)"
+        >
+          <div class="flex items-center gap-3 px-6 h-14">
+            <div class="flex items-center gap-2 text-[12.5px] text-ink-muted">
+              <span class="w-1.5 h-1.5 rounded-full bg-ok"></span>
+              <span>Entwurf · v42 · gespeichert vor 14 s</span>
+              <a class="text-brand hover:underline ml-1" href="#"
+                >Verlauf</a
+              >
+            </div>
+
+            <div class="ml-6 flex items-center gap-4 text-[12.5px] text-ink-muted">
+              <span class="flex items-center gap-1.5">
+                <i
+                  data-lucide="check-circle-2"
+                  class="w-3.5 h-3.5 text-ok"
+                ></i>
+                12/14 Pflichtfelder
+              </span>
+              <span class="flex items-center gap-1.5">
+                <i
+                  data-lucide="alert-triangle"
+                  class="w-3.5 h-3.5 text-warn"
+                ></i>
+                2 Hinweise
+              </span>
+              <span class="flex items-center gap-1.5">
+                <i data-lucide="copy" class="w-3.5 h-3.5 text-bad"></i>
+                1 Duplikat
+              </span>
+            </div>
+
+            <div class="flex-1"></div>
+
+            <div class="flex items-center gap-2">
+              <button class="btn btn-ghost btn-danger-ghost">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>Verwerfen
+              </button>
+              <button class="btn btn-secondary">
+                <i data-lucide="eye" class="w-4 h-4"></i>Vorschau
+              </button>
+              <button class="btn btn-secondary">
+                <i data-lucide="send" class="w-4 h-4"></i>Zur Prüfung senden
+              </button>
+              <button class="btn btn-primary">
+                <i data-lucide="check" class="w-4 h-4"></i>Kunden anlegen
+                <span class="kbd ml-1" style="background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.24); color: #fff">⌘ ⏎</span>
+              </button>
+            </div>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <script>
+      lucide.createIcons();
+    </script>
+  </body>
+</html>

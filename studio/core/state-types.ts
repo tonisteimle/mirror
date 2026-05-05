@@ -82,7 +82,6 @@ export interface PanelVisibility {
   files: boolean
   code: boolean
   components: boolean
-  tokens: boolean
   'design-system': boolean
   preview: boolean
   property: boolean
@@ -94,7 +93,7 @@ export interface PanelVisibility {
 export interface PanelSizes {
   sidebar: number
   components: number
-  tokens: number
+  designSystem: number
   editor: number
   preview: number
   property: number

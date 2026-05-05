@@ -1,0 +1,128 @@
+brand.bg: #6366f1
+brand.col: #818cf8
+ink.bg: #0a0a0f
+ink.col: white
+surface.bg: #15151f
+surface-hi.bg: #1c1c2a
+muted.col: #8b8b9e
+faint.col: #5a5a6e
+line.boc: #26263a
+line-hi.boc: #6366f1
+ok.col: #34d399
+chip.bg: #6366f120
+chip.col: #a5b4fc
+
+card-pad: pad 32
+card-rad: rad 16
+card-gap: gap 24
+
+heading: weight 600, col white
+eyebrow: fs 12, weight 500, uppercase, col $chip
+muted: col $muted, fs 14, line 1.5
+
+CtaPrimary as Button: bg $brand, col white, pad 12 20, rad 8, weight 500, fs 14, w full, cursor pointer
+CtaGhost as Button: bg transparent, col white, bor 1, boc $line, pad 12 20, rad 8, weight 500, fs 14, w full, cursor pointer
+
+FeatureRow: hor, gap 10, ver-center
+  Icon "check", ic $ok, is 16
+  Text col #d4d4dc, fs 14
+
+PricingCard: $card-pad, $card-gap, bg $surface, rad 16, bor 1, boc $line, w full, grow
+
+canvas bg $ink, w 1200, h 800, col white, font sans
+
+Frame pad 56 64, gap 40, h full
+  Frame hor, spread, ver-center
+    Frame hor, gap 10, ver-center
+      Frame w 28, h 28, bg $brand, rad 8, center
+        Icon "zap", ic white, is 16, fill
+      Text "Stride", fs 18, weight 600, col white
+    Frame hor, gap 32, ver-center
+      Text "Product", col $muted, fs 14
+      Text "Customers", col $muted, fs 14
+      Text "Pricing", col white, fs 14, weight 500
+      Text "Docs", col $muted, fs 14
+      Button "Sign in", bg transparent, col white, pad 8 16, rad 6, bor 1, boc $line, fs 14
+
+  Frame gap 12, center
+    Frame bg $chip, pad 6 12, rad 99
+      Text "Pricing", $eyebrow
+    Text "Pricing that scales with you", fs 36, weight 600, col white, text-align center
+    Text "Start free. Upgrade when your team is ready. No hidden fees.", col $muted, fs 15, text-align center
+
+  Frame hor, gap 20, grow
+    PricingCard
+      Frame gap 6
+        Text "Free", fs 14, weight 500, col $muted, uppercase
+        Frame hor, gap 4, ver-center
+          Text "€0", fs 40, weight 700, col white
+          Text "/month", col $faint, fs 14
+        Text "For solo builders getting started.", $muted
+
+      Frame bg $line, h 1, w full
+
+      Frame gap 12
+        FeatureRow
+          Text "Up to 3 users"
+        FeatureRow
+          Text "1 active project"
+        FeatureRow
+          Text "Kanban & list views"
+        FeatureRow
+          Text "Community support"
+        FeatureRow
+          Text "Basic integrations"
+
+      CtaGhost "Start for free"
+
+    Frame $card-pad, $card-gap, bg $surface-hi, rad 16, bor 1, boc $line-hi, w full, grow, stacked
+      Frame x 24, y -12
+        Frame bg $brand, pad 6 12, rad 99
+          Text "Most popular", fs 11, weight 600, col white, uppercase
+      Frame gap 24, w full
+        Frame gap 6
+          Text "Pro", fs 14, weight 500, col $brand, uppercase
+          Frame hor, gap 4, ver-center
+            Text "€12", fs 40, weight 700, col white
+            Text "/user/month", col $faint, fs 14
+          Text "For growing teams that ship.", $muted
+
+        Frame bg $line, h 1, w full
+
+        Frame gap 12
+          FeatureRow
+            Text "Unlimited projects"
+          FeatureRow
+            Text "Advanced roadmaps"
+          FeatureRow
+            Text "Custom workflows"
+          FeatureRow
+            Text "Time tracking"
+          FeatureRow
+            Text "Priority support"
+
+        CtaPrimary "Start 14-day trial"
+
+    PricingCard
+      Frame gap 6
+        Text "Team", fs 14, weight 500, col $muted, uppercase
+        Frame hor, gap 4, ver-center
+          Text "€25", fs 40, weight 700, col white
+          Text "/user/month", col $faint, fs 14
+        Text "For organizations that need control.", $muted
+
+      Frame bg $line, h 1, w full
+
+      Frame gap 12
+        FeatureRow
+          Text "Everything in Pro"
+        FeatureRow
+          Text "SSO & SAML"
+        FeatureRow
+          Text "Audit logs"
+        FeatureRow
+          Text "Advanced permissions"
+        FeatureRow
+          Text "Dedicated support"
+
+      CtaGhost "Contact sales"

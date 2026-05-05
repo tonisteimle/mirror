@@ -85,12 +85,15 @@ export const emptyProjectConstantTests: TestCase[] = describe('Empty Project - C
   }),
 
   test('DEFAULT_PROJECT is different from EMPTY_PROJECT', async (api: TestAPI) => {
-    const emptyFileCount = Object.keys(EMPTY_PROJECT).length
-    const defaultFileCount = Object.keys(DEFAULT_PROJECT).length
+    // MVP single-file mode: both projects now have one file (`index.mir`).
+    // The demo project differs in *content* (tokens + components + canvas
+    // inline) rather than in file count.
+    const emptyContent = EMPTY_PROJECT['index.mir'] ?? ''
+    const defaultContent = DEFAULT_PROJECT['index.mir'] ?? ''
 
     api.assert.ok(
-      defaultFileCount > emptyFileCount,
-      `Default project (${defaultFileCount} files) should have more files than empty project (${emptyFileCount} files)`
+      defaultContent.length > emptyContent.length,
+      `Default project index.mir (${defaultContent.length} chars) should have more content than empty project (${emptyContent.length} chars)`
     )
   }),
 ])

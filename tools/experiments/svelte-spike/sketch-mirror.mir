@@ -1,0 +1,19 @@
+// Tokens
+surface.bg: #ffffff
+border.boc: #e4e4e7
+muted.col: #71717a
+foreground.col: #09090b
+positive.col: #16a34a
+positive-bg.bg: #f0fdf4
+
+// Component
+StatCard: pad 24, gap 12, bg $surface, rad 12, w 280, bor 1, boc $border
+
+StatCard
+  Text "Monthly revenue", fs 11, weight 500, uppercase, col $muted
+  Text "$48,217", fs 36, weight bold, col $foreground
+  Frame hor, gap 6, ver-center, mar-t 4
+    Frame hor, gap 6, ver-center, bg $positive-bg, rad 6, pad 3 8 3 4
+      Icon "arrow-up", ic $positive, is 14
+      Text "+12%", fs 13, weight 500, col $positive
+    Text "vs last month", fs 13, col $muted

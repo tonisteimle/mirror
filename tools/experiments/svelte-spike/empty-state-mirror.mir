@@ -1,0 +1,41 @@
+// Tokens
+accent.bg: #2563eb
+accent-hover.bg: #1d4ed8
+text-primary.col: #0f0f0f
+text-muted.col: #6b7280
+icon-muted.ic: #d1d5db
+border.boc: #e5e7eb
+
+// Components
+Btn: hor, ver-center, center, gap 7, rad 6, pad 10 20, w full, fs 14, weight 500, cursor pointer
+
+PrimaryBtn as Btn: bg $accent, col white
+  hover:
+    bg $accent-hover
+  active:
+    bg #1e40af
+  focus:
+    bor 2, boc $accent
+
+SecondaryLink as Button: bg transparent, col $text-muted, fs 13, weight 500, pad 4 0, cursor pointer
+  hover:
+    col $text-primary
+
+// Layout
+canvas bg #f8f8f8, font sans
+
+Frame w full, h full, center
+  Frame w 400, bg white, bor 1, boc $border, rad 10, pad 48 32, gap 32, ver-center
+
+    Frame w 72, h 72, center
+      Icon "inbox", is 64, ic $icon-muted
+
+    Frame gap 8, ver-center
+      Text "No messages yet", fs 17, weight 600, col $text-primary
+      Text "Messages you send and receive will appear here. Start a conversation to get things moving.", fs 14, line 1.57, col $text-muted, maxw 280, text-align center
+
+    Frame gap 12, ver-center, w full
+      PrimaryBtn
+        Icon "plus", is 15
+        Text "Compose first message"
+      SecondaryLink "Browse contacts"

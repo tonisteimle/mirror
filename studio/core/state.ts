@@ -52,11 +52,15 @@ const PANEL_SETTINGS_KEY = 'mirror-panel-settings'
  */
 const defaultPanelVisibility: PanelVisibility = {
   prompt: true,
-  files: true,
+  // MVP single-file mode: file-explorer + design-system panels are
+  // removed from the DOM. Defaults flipped to false so persisted
+  // localStorage values for users who never had them visible match
+  // the current UI; existing users with `true` still no-op since
+  // the DOM lookups return null.
+  files: false,
   code: true,
   components: true, // Standalone components panel
-  tokens: true, // Standalone tokens panel
-  'design-system': true, // Component preview in all states
+  'design-system': false,
   preview: true,
   property: true,
 }
@@ -67,7 +71,7 @@ const defaultPanelVisibility: PanelVisibility = {
 const defaultPanelSizes: PanelSizes = {
   sidebar: 200,
   components: 240,
-  tokens: 280,
+  designSystem: 320,
   editor: 400,
   preview: 400,
   property: 280,

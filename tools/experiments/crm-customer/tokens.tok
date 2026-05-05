@@ -1,0 +1,144 @@
+// =====================================================
+// HELIX CRM · DESIGN TOKENS
+// Single source of truth für Farben, Radien, Typo,
+// und Style-Bundles. Verwendet von components.com und app.mir.
+// =====================================================
+
+// -----------------------------------------------------
+// SURFACES (bg)
+// -----------------------------------------------------
+app.bg: #F6F7F9
+surface.bg: #FFFFFF
+hover.bg: #F9FAFB
+muted.bg: #F3F4F6
+panel.bg: #F9FAFB
+
+// -----------------------------------------------------
+// BORDERS (boc)
+// -----------------------------------------------------
+line.boc: #E5E7EB
+line-soft.boc: #F0F1F4
+line-strong.boc: #D1D5DB
+
+// -----------------------------------------------------
+// INK / TEXT (col)
+// -----------------------------------------------------
+ink.col: #0F172A
+ink-soft.col: #334155
+ink-muted.col: #64748B
+ink-faint.col: #94A3B8
+
+// -----------------------------------------------------
+// BRAND — Blue
+// -----------------------------------------------------
+brand.bg: #2563EB
+brand.col: #2563EB
+brand.boc: #2563EB
+brand-deep.bg: #1D4ED8
+brand-soft.bg: #EFF6FF
+brand-soft-ink.col: #1D4ED8
+brand-ring.boc: #DBEAFE
+
+// -----------------------------------------------------
+// STATUS — Green / OK
+// -----------------------------------------------------
+ok.bg: #16A34A
+ok.col: #16A34A
+ok-soft.bg: #DCFCE7
+ok-ink.col: #14532D
+ok-ring.boc: #BBF7D0
+
+// -----------------------------------------------------
+// STATUS — Amber / Warning
+// -----------------------------------------------------
+warn.bg: #B45309
+warn.col: #B45309
+warn-soft.bg: #FEF3C7
+warn-ink.col: #78350F
+warn-ring.boc: #FDE68A
+warn-tint.bg: #FFFBEB
+
+// -----------------------------------------------------
+// STATUS — Red / Bad
+// -----------------------------------------------------
+bad.bg: #DC2626
+bad.col: #DC2626
+bad-soft.bg: #FEE2E2
+bad-ink.col: #7F1D1D
+bad-ring.boc: #FECACA
+
+// -----------------------------------------------------
+// ACCENT — Violet (AI / Co-Pilot)
+// -----------------------------------------------------
+violet.bg: #7C3AED
+violet.col: #7C3AED
+violet-soft.bg: #F3E8FF
+violet-ink.col: #4C1D95
+violet-ring.boc: #E9D5FF
+
+// -----------------------------------------------------
+// ACCENT — Teal (Customer Success)
+// -----------------------------------------------------
+teal.bg: #0D9488
+teal.col: #0D9488
+teal-soft.bg: #CCFBF1
+teal-ink.col: #134E4A
+teal-ring.boc: #99F6E4
+
+// -----------------------------------------------------
+// NEUTRAL CHIP / PILL GRAY
+// -----------------------------------------------------
+gray-soft.bg: #F1F5F9
+gray-ink.col: #334155
+gray-ring.boc: #E2E8F0
+
+// -----------------------------------------------------
+// RADII (rad)
+// -----------------------------------------------------
+rad-sm.rad: 4
+rad-md.rad: 6
+rad-lg.rad: 10
+rad-pill.rad: 999
+
+// -----------------------------------------------------
+// FONT SIZES (fs)
+// -----------------------------------------------------
+fs-2xs.fs: 11
+fs-xs.fs: 12
+fs-sm.fs: 13
+fs-base.fs: 14
+fs-md.fs: 15
+fs-lg.fs: 16
+fs-xl.fs: 18
+fs-2xl.fs: 22
+
+// -----------------------------------------------------
+// STYLE BUNDLES (no suffix → mehrere Properties)
+// Werden mit `$bundle-name` aufgerufen.
+// -----------------------------------------------------
+
+// Card-Wrapper (weiße Box mit Border + Radius)
+card-style: bg #FFFFFF, bor 1, boc #E5E7EB, rad 10
+
+// Card-Header-Bar (44px Höhe, Bottom-Border)
+card-head-style: hor, gap 10, ver-center, h 44, pad 0 14, bor 0 0 1 0, boc #F0F1F4
+
+// Field-Label (klein, uppercase-ish, muted)
+field-label-style: hor, gap 6, ver-center, fs 11, weight 500, col #64748B, mar 0 0 6 0
+
+// Input-Baseline
+input-base-style: w full, h 32, pad 0 10, fs 13, bg #FFFFFF, bor 1, boc #E5E7EB, rad 6, col #0F172A
+
+// Property-Row (Sidebar Key/Value)
+prop-row-style: hor, gap 12, ver-center, pad 4 0
+
+// Helper-Text
+help-style: fs 11, col #64748B, mar 4 0 0 0
+
+// Section-Titel (Card-Header)
+section-title-style: fs 13, weight 600, col #0F172A
+
+// Stripe-Akzent (linker farbiger Border)
+stripe-blue-style: bor 0 0 0 3, boc #2563EB
+stripe-amber-style: bor 0 0 0 3, boc #B45309
+stripe-red-style: bor 0 0 0 3, boc #DC2626

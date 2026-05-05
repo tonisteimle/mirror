@@ -1,0 +1,310 @@
+// --- Tokens ----------------------------------------------------
+page.bg: #0B0B10
+surface.bg: #0F0F16
+ink.col: #E7E7EE
+inkdim.col: #9A9AA8
+line.boc: #1f1f26
+line2.boc: #2a2a33
+accent.bg: #B6F09C
+accent.col: #B6F09C
+mint.col: #7CE0B3
+violet.col: #9A8CFF
+
+cardpop.bg: #14171a
+cardpop.boc: #4a5d3e
+
+darkInk.col: #0A0A0F
+
+// --- Components ------------------------------------------------
+Eyebrow as Text: col #9A9AA8, fs 11, weight 500, uppercase
+
+NavLink as Text: col #9A9AA8, fs 13, cursor pointer
+  hover:
+    col #E7E7EE
+
+Chip as Frame: hor, gap 6, ver-center, pad 0 10, h 26, rad 99, bg #14141a, bor 1, boc #2a2a33
+
+Dot as Frame: w 6, h 6, rad 99, bg #B6F09C
+
+CheckPill as Frame: w 18, h 18, rad 99, center, bg #16161c, bor 1, boc #2a2a33
+  Icon "check", ic #9A9AA8, is 12
+
+CheckPillAccent as Frame: w 18, h 18, rad 99, center, bg #1e2818, bor 1, boc #4a5d3e
+  Icon "check", ic #B6F09C, is 12
+
+Hairline as Frame: h 1, w full, bg #1f1f26
+
+GhostBtn as Button: hor, gap 8, ver-center, h 40, pad 0 16, rad 10, bg #14141a, bor 1, boc #2a2a33, col #E7E7EE, fs 13, weight 500, cursor pointer
+  hover:
+    bg #1a1a22
+
+OutlineBtn as Button: hor, gap 8, ver-center, h 40, pad 0 16, rad 10, bor 1, boc #2a2a33, col #E7E7EE, fs 13, weight 500, cursor pointer
+  hover:
+    bg #14141a
+
+PrimaryBtn as Button: hor, gap 8, ver-center, h 40, pad 0 16, rad 10, bg #B6F09C, col #0A0A0F, fs 13, weight 600, cursor pointer, shadow md
+  hover:
+    bg #c9f5b5
+
+PriceNum as Text: fs 52, weight 500, col #E7E7EE
+
+PriceUnit as Text: fs 12, col #9A9AA8
+
+CardBody as Frame: pad 28, gap 0, bor 1, boc #1f1f26, rad 18, bg #101015
+
+PopularCardBody as Frame: pad 28, gap 0, bor 1, boc #4a5d3e, rad 18, bg #14171a, shadow lg
+
+PlanIcon as Frame: w 28, h 28, rad 8, center, bg #14141a, bor 1, boc #2a2a33
+
+PlanIconAccent as Frame: w 28, h 28, rad 8, center, bg #1e2818, bor 1, boc #4a5d3e
+
+PlanIconViolet as Frame: w 28, h 28, rad 8, center, bg #1e1b3a, bor 1, boc #3a3568
+
+StepNum as Text: col #9A9AA8, fs 11, font mono
+
+PlanTitle as Text: col #E7E7EE, fs 15, weight 500
+
+PlanDesc as Text: col #9A9AA8, fs 13, line 1.5
+
+SectionLabel as Text: col #9A9AA8, fs 11, weight 500, uppercase
+
+FeatureText as Text: col #d6d6dd, fs 13
+
+CenterNote as Text: col #9A9AA8, fs 11, text-align center
+
+PopularBadge as Frame: hor, gap 6, ver-center, h 24, pad 0 12, rad 99, bg #B6F09C, shadow md
+
+// --- Canvas ----------------------------------------------------
+canvas bg #0B0B10, w 1200, h 800, col #E7E7EE, font sans, fs 14
+
+// --- App -------------------------------------------------------
+Frame w full, h full, bg #0B0B10, clip
+
+  // Top Nav
+  Frame hor, spread, ver-center, pad 28 40 0 40
+    // Brand
+    Frame hor, gap 10, ver-center
+      Frame w 28, h 28, rad 8, center, bg #B6F09C, shadow md
+        Icon "trending-up", ic #0A0A0F, is 14
+      Text "Stride", col #E7E7EE, fs 15, weight 600
+      Frame mar-l 12
+        Chip
+          Dot
+          Text "v3.1 · Roadmaps shipped", col #9A9AA8, fs 11
+
+    // Nav links
+    Frame hor, gap 28, ver-center
+      NavLink "Product"
+      NavLink "Customers"
+      NavLink "Changelog"
+      Text "Pricing", col #E7E7EE, fs 13, cursor pointer
+      NavLink "Docs"
+
+    // Right actions
+    Frame hor, gap 8, ver-center
+      Button "Sign in", h 36, pad 0 12, rad 10, bg #14141a, bor 1, boc #2a2a33, col #E7E7EE, fs 13, weight 500, cursor pointer
+      Frame hor, gap 6, ver-center, h 36, pad 0 14, rad 10, bg #B6F09C, cursor pointer, shadow md
+        Text "Get Stride", col #0A0A0F, fs 13, weight 600
+        Icon "arrow-right", ic #0A0A0F, is 14
+
+  // Hero
+  Frame hor, spread, pad 40 40 0 40
+    Frame gap 0, maxw 640
+      Frame hor, gap 8, ver-center, mar-b 12
+        Dot
+        Eyebrow "Pricing — May 2026"
+      Text "Pricing built for teams", col #E7E7EE, fs 46, weight 500, line 1.02
+      Frame hor, gap 8, ver-center
+        Text "that", col #E7E7EE, fs 46, weight 500, line 1.02
+        Text "actually ship.", col #7CE0B3, fs 46, weight 500, italic, font serif, line 1.02
+      Spacer h 16
+      Text "Start free. Scale as your roadmap grows. No seat games, no surprise add-ons — just three plans that match how product teams really work.", col #9A9AA8, fs 14, line 1.6, maxw 520
+
+    // Toggle
+    Frame hor, gap 12, ver-center, pad-b 4
+      Frame hor, gap 4, ver-center, pad 4, rad 99, bor 1, boc #2a2a33, bg #14141a
+        Frame pad 0 16, h 28, center, rad 99, cursor pointer
+          Text "Monthly", col #9A9AA8, fs 12
+        Frame hor, gap 6, ver-center, pad 0 16, h 28, rad 99, bg white, cursor pointer
+          Text "Annual", col #0A0A0F, fs 12, weight 500
+          Text "−20%", col #3a7a44, fs 10
+      Text "EUR · VAT excl.", col #9A9AA8, fs 12
+
+  // Pricing Cards
+  Frame hor, gap 20, pad 0 40, mar-t 36
+    // FREE
+    CardBody w full, grow
+      Frame hor, spread, ver-center
+        Frame hor, gap 8, ver-center
+          PlanIcon
+            Icon "sparkles", ic #9A9AA8, is 14
+          PlanTitle "Free"
+        StepNum "01 / 03"
+
+      Spacer h 12
+      PlanDesc "For solo builders and side projects. Everything you need to take an idea from sketch to shipped."
+
+      Spacer h 24
+      Frame hor, gap 6, ver-center
+        PriceNum "€0"
+        Frame pad-b 8
+          PriceUnit "/ month, forever"
+
+      Spacer h 16
+      Hairline
+
+      Spacer h 20
+      Frame gap 10
+        Frame hor, gap 10
+          CheckPill
+          Frame hor, gap 4, ver-center, wrap
+            FeatureText "Up to"
+            Text "3 members", col #E7E7EE, fs 13, weight 600
+        Frame hor, gap 10, ver-center
+          CheckPill
+          FeatureText "1 active project"
+        Frame hor, gap 10, ver-center
+          CheckPill
+          FeatureText "Issues, sprints & cycles"
+        Frame hor, gap 10, ver-center
+          CheckPill
+          FeatureText "Slack & GitHub integrations"
+        Frame hor, gap 10, ver-center
+          CheckPill
+          FeatureText "Community support"
+
+      Spacer h 28
+      Frame hor, gap 8, ver-center, h 40, center, w full, rad 10, bor 1, boc #2a2a33, cursor pointer
+        Text "Start for free", col #E7E7EE, fs 13, weight 500
+      Spacer h 10
+      CenterNote "No credit card required"
+
+    // PRO (Popular)
+    Frame w full, grow, relative
+      // Popular badge (positioned at top via stacked frame)
+      Frame stacked, w full
+        PopularCardBody w full
+          Frame hor, spread, ver-center
+            Frame hor, gap 8, ver-center
+              PlanIconAccent
+                Icon "zap", ic #B6F09C, is 14
+              PlanTitle "Pro"
+            StepNum "02 / 03"
+
+          Spacer h 12
+          PlanDesc "For growing teams shipping in tight cycles. Power features, deeper insights, priority humans."
+
+          Spacer h 24
+          Frame hor, gap 6, ver-center
+            PriceNum "€12"
+            Frame pad-b 8
+              PriceUnit "/ user / month"
+
+          Spacer h 16
+          Frame h 1, w full, bg #4a5d3e, opacity 0.5
+
+          Spacer h 16
+          SectionLabel "Everything in Free, plus"
+          Spacer h 12
+          Frame gap 10
+            Frame hor, gap 10, ver-center
+              CheckPillAccent
+              Frame hor, gap 4, ver-center
+                Text "Unlimited projects", col #E7E7EE, fs 13, weight 600
+                FeatureText "& cycles"
+            Frame hor, gap 10, ver-center
+              CheckPillAccent
+              FeatureText "Roadmaps, milestones & goals"
+            Frame hor, gap 10, ver-center
+              CheckPillAccent
+              FeatureText "Custom views & saved filters"
+            Frame hor, gap 10, ver-center
+              CheckPillAccent
+              FeatureText "Automations & API access"
+            Frame hor, gap 10, ver-center
+              CheckPillAccent
+              Frame hor, gap 4, ver-center
+                Text "Priority support", col #E7E7EE, fs 13, weight 600
+                FeatureText "· 8h response"
+
+          Spacer h 28
+          Frame hor, gap 8, ver-center, h 40, center, w full, rad 10, bg #B6F09C, cursor pointer, shadow md
+            Text "Start 14-day trial", col #0A0A0F, fs 13, weight 600
+            Icon "arrow-right", ic #0A0A0F, is 14
+          Spacer h 10
+          CenterNote "Cancel anytime · billed annually"
+
+        // Floating popular tag
+        Frame x 0, y -12, w full, hor, center
+          PopularBadge
+            Icon "star", ic #0A0A0F, is 10, fill
+            Text "MOST POPULAR", col #0A0A0F, fs 11, weight 600
+
+    // TEAM
+    CardBody w full, grow
+      Frame hor, spread, ver-center
+        Frame hor, gap 8, ver-center
+          PlanIconViolet
+            Icon "shield-check", ic #9A8CFF, is 14
+          PlanTitle "Team"
+        StepNum "03 / 03"
+
+      Spacer h 12
+      PlanDesc "For organizations with security, compliance and scale needs. Built for the long-haul roadmap."
+
+      Spacer h 24
+      Frame hor, gap 6, ver-center
+        PriceNum "€25"
+        Frame pad-b 8
+          PriceUnit "/ user / month"
+
+      Spacer h 16
+      Hairline
+
+      Spacer h 16
+      SectionLabel "Everything in Pro, plus"
+      Spacer h 12
+      Frame gap 10
+        Frame hor, gap 10, ver-center
+          CheckPill
+          Frame hor, gap 4, ver-center
+            Text "SSO & SCIM", col #E7E7EE, fs 13, weight 600
+            FeatureText "provisioning"
+        Frame hor, gap 10, ver-center
+          CheckPill
+          FeatureText "Audit logs & data residency (EU)"
+        Frame hor, gap 10, ver-center
+          CheckPill
+          FeatureText "Advanced permissions & roles"
+        Frame hor, gap 10, ver-center
+          CheckPill
+          FeatureText "Custom DPA & security review"
+        Frame hor, gap 10, ver-center
+          CheckPill
+          Frame hor, gap 4, ver-center
+            Text "Dedicated CSM", col #E7E7EE, fs 13, weight 600
+            FeatureText "· 1h SLA"
+
+      Spacer h 28
+      Frame hor, gap 8, ver-center, h 40, center, w full, rad 10, bor 1, boc #2a2a33, cursor pointer
+        Text "Contact sales", col #E7E7EE, fs 13, weight 500
+        Icon "arrow-right", ic #E7E7EE, is 14
+      Spacer h 10
+      CenterNote "Annual contract · invoice billing"
+
+  // Footer
+  Frame hor, spread, ver-center, pad 18 40, bor-t 1, boc #1f1f26, bg #07070a, mar-t 28
+    Frame hor, gap 20, ver-center
+      Frame hor, gap 6, ver-center
+        Icon "lock", ic #9A9AA8, is 14
+        Text "SOC 2 Type II", col #9A9AA8, fs 12
+      Frame hor, gap 6, ver-center
+        Icon "globe", ic #9A9AA8, is 14
+        Text "EU data residency", col #9A9AA8, fs 12
+      Frame hor, gap 6, ver-center
+        Icon "message-circle", ic #9A9AA8, is 14
+        Text "24/7 status:", col #9A9AA8, fs 12
+        Text "All systems normal", col #7CE0B3, fs 12
+    Frame hor, gap 20, ver-center
+      Text "Trusted by 12,400+ teams", col #9A9AA8, fs 12
+      Text "Linear · Loom · Pitch · Vercel · Raycast", col #9A9AA8, fs 12, font mono, opacity 0.7

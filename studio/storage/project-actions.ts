@@ -44,11 +44,13 @@ export const EMPTY_PROJECT: Record<string, string> = {
 // Default/Demo Project Template
 // =============================================================================
 
-// Simple demo project - shows all file types working together
-// Exported for testing
+// MVP single-file demo project — tokens, components and the canvas
+// live inline in a single .mir, in reading order: Tokens → Components
+// → Canvas / Screens. Multi-file demo (`tokens.tok` / `components.com`
+// / `data.yaml` / `data.data`) returns when multi-file infrastructure
+// is reactivated.
 export const DEFAULT_PROJECT: Record<string, string> = {
-  // Tokens - Farben und Abstände
-  'tokens.tok': `// Design Tokens
+  'index.mir': `// Tokens
 primary.bg: #2271C1
 primary.ic: #2271C1
 surface.bg: #1a1a1a
@@ -57,81 +59,42 @@ muted.col: #888
 muted.ic: #888
 space.pad: 16
 space.gap: 12
-radius.rad: 8`,
+radius.rad: 8
 
-  // Components - Wiederverwendbare Bausteine
-  'components.com': `// Komponenten
+// Components
 Card: bg $card, pad $space, rad $radius, gap 8
 
 Btn as Button: bg $primary, col white, pad 10 16, rad 6, cursor pointer
   hover:
-    opacity 0.9`,
+    opacity 0.9
 
-  // Data - Strukturierte Daten
-  'data.yaml': `// Karten-Daten
-cards:
-  welcome:
-    title: "Willkommen"
-    text: "Dies ist ein Demo-Projekt."
-    icon: home
-  components:
-    title: "Komponenten"
-    text: "Baue wiederverwendbare UI-Bausteine."
-    icon: layers
-  preview:
-    title: "Live Preview"
-    text: "Änderungen sofort sehen."
-    icon: eye`,
-
-  // Main Layout - nutzt alles
-  'index.mir': `// Demo - zeigt Tokens, Components und Data
+// Canvas
 Frame bg $surface, col white, pad 24, gap $space, h full
 
-  // Header
   Frame hor, spread, ver-center
     Text "Demo App", fs 20, weight bold
     Icon "settings", ic $muted
 
-  // Karten aus Daten
-  each card in $cards
-    Card
-      Frame hor, gap $space, ver-center
-        Icon card.icon, ic $primary, is 20
-        Text card.title, fs 16, weight 500
-      Text card.text, col $muted, fs 14
-      Btn "Mehr"`,
+  Card
+    Frame hor, gap $space, ver-center
+      Icon "home", ic $primary, is 20
+      Text "Willkommen", fs 16, weight 500
+    Text "Dies ist ein Demo-Projekt.", col $muted, fs 14
+    Btn "Mehr"
 
-  // Chart demo data - kept alongside data.yaml so the chart-data tests
-  // and any built-in chart examples have something to bind to.
-  'data.data': `// Demo Daten für Charts
+  Card
+    Frame hor, gap $space, ver-center
+      Icon "layers", ic $primary, is 20
+      Text "Komponenten", fs 16, weight 500
+    Text "Baue wiederverwendbare UI-Bausteine.", col $muted, fs 14
+    Btn "Mehr"
 
-sales:
-  Jan: 120
-  Feb: 180
-  Mar: 240
-  Apr: 200
-  May: 280
-  Jun: 320
-
-products:
-  Widget A: 450
-  Widget B: 320
-  Widget C: 180
-  Service X: 520
-
-categories:
-  Design: 35
-  Development: 45
-  Marketing: 20
-
-traffic:
-  Mon: 1200
-  Tue: 1450
-  Wed: 1380
-  Thu: 1520
-  Fri: 1100
-  Sat: 650
-  Sun: 480`,
+  Card
+    Frame hor, gap $space, ver-center
+      Icon "eye", ic $primary, is 20
+      Text "Live Preview", fs 16, weight 500
+    Text "Änderungen sofort sehen.", col $muted, fs 14
+    Btn "Mehr"`,
 }
 
 // =============================================================================

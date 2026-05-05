@@ -72,9 +72,11 @@ import {
   generateComponentCodeFromDragData,
   // Property Panel
   PropertyPanel,
-  // Preview Renderers (Clean Code modules)
-  TokenRenderer,
-  ComponentRenderer,
+  // Preview Renderers (Clean Code modules) — MVP single-file mode no
+  // longer constructs these. Imports retained as no-ops to keep barrel
+  // shape stable.
+  // TokenRenderer,
+  // ComponentRenderer,
   // Drop Service: handleStudioDropNew now consumed only by
   // studio/init/init-notifications.ts (Phase D extraction).
   // Zag Helpers (Clean Code module)
@@ -932,64 +934,11 @@ const preview = ((): HTMLElement => {
   return el
 })()
 
-// Preview Renderers (Clean Code modules) - lazy initialized
-let tokenRenderer: TokenRenderer | null = null
-let componentRenderer: ComponentRenderer | null = null
-
-function getTokenRenderer() {
-  if (!tokenRenderer) {
-    tokenRenderer = new TokenRenderer({
-      preview,
-      getAllProjectSource,
-    })
-  }
-  return tokenRenderer
-}
-
-function getComponentRenderer() {
-  if (!componentRenderer) {
-    componentRenderer = new ComponentRenderer({
-      preview,
-      // window.MirrorLang and the MirrorLangAPI used by ComponentRenderer
-      // share parse/toIR/generateDOM, but the runtime global is
-      // optionally undefined and structurally typed against the compiler
-      // export rather than studio/compile/types — bridge with a cast.
-      MirrorLang: window.MirrorLang as unknown as import('./compile/types').MirrorLangAPI,
-      getTokensSource,
-      getCurrentFileSource: () => files[currentFile] || '',
-    })
-  }
-  return componentRenderer
-}
-
-// Design System sidebar — reuses ComponentRenderer but targets the
-// dedicated #design-system-panel-container, and feeds it the entire
-// project source (tokens + .com files) so the panel always reflects
-// the project's component library, regardless of which file is open.
-let designSystemRenderer: ComponentRenderer | null = null
-function getDesignSystemRenderer(): ComponentRenderer | null {
-  if (designSystemRenderer) return designSystemRenderer
-  const target = document.getElementById('design-system-panel-container')
-  if (!target) return null
-  designSystemRenderer = new ComponentRenderer({
-    preview: target as HTMLElement,
-    MirrorLang: window.MirrorLang as unknown as import('./compile/types').MirrorLangAPI,
-    getTokensSource,
-    getCurrentFileSource: getAllProjectSource,
-  })
-  return designSystemRenderer
-}
-
-function refreshDesignSystemPanel(): void {
-  const r = getDesignSystemRenderer()
-  if (!r) return
-  try {
-    const ast = MirrorLang.parse(getAllProjectSource())
-    r.render(ast as unknown as import('./compile/types').AST)
-  } catch (err) {
-    log.warn('[design-system] refresh failed:', err)
-  }
-}
+// MVP single-file mode: TokenRenderer / ComponentRenderer lazy preview
+// renderers and the design-system sidebar (getDesignSystemTokenRenderer
+// / getDesignSystemComponentRenderer / refreshDesignSystemPanel) are
+// removed. Only the layout (.mir) DOM render path runs. Re-introduce
+// when multi-file + design-system panel return.
 
 // Zag dependencies builder for Clean Code module
 function getZagDeps() {
@@ -1305,27 +1254,13 @@ function compile(code: string) {
     preview.innerHTML = ''
     preview.className = ''
 
-    // Refresh the Design System sidebar on every successful compile.
-    // It re-parses getAllProjectSource() so it always shows the full
-    // component library — independent of which file is currently open.
-    refreshDesignSystemPanel()
-
-    // Render based on file type
-    if (fileType === 'tokens') {
-      preview.className = 'tokens-preview'
-      // TokenRenderer/ComponentRenderer's `render(ast)` is typed against
-      // studio/compile/types.AST (a narrower view of the parser AST).
-      // Pass the parser Program through unchanged — the renderers only
-      // touch the shared shape (components/instances/tokens/errors).
-      getTokenRenderer().render(ast as unknown as import('./compile/types').AST)
-      // Update studio module with AST, IR and source map for tokens too
-      updateStudio(ast, irResult.ir, sourceMap, resolvedCode)
-    } else if (fileType === 'component') {
-      preview.className = 'components-preview'
-      getComponentRenderer().render(ast as unknown as import('./compile/types').AST)
-      // Update studio module with AST, IR and source map for component definitions
-      updateStudio(ast, irResult.ir, sourceMap, resolvedCode)
-    } else {
+    // MVP single-file mode: design-system sidebar + tokens/component
+    // preview branches removed. Only the layout (.mir) DOM render path
+    // is active. fileType is always 'layout' in single-file mode; if a
+    // legacy multi-file project still loads, .tok / .com files fall
+    // through to the same DOM-render path (they will render as empty UI
+    // rather than a swatch / component-states grid).
+    {
       // Layout or other: render UI
       // Also render local component definitions (not from prelude)
       let codeToCompile = resolvedCode
@@ -1929,21 +1864,13 @@ function initStudio() {
     return
   }
 
-  // Explorer Panel containers
-  const explorerPanelContainer = document.getElementById('explorer-panel')
-  const fileTreeContainer = document.getElementById('file-tree-container')
+  // MVP single-file mode: explorerPanelContainer / fileTreeContainer /
+  // tokensPanelContainer no longer exist in the DOM. Re-introduce when
+  // multi-file + design-system panel return.
 
   // Components Panel containers (separate from explorer)
   const componentsPanelContainer = document.getElementById('components-panel-container')
   const userComponentsPanelContainer = document.getElementById('user-components-panel-container')
-
-  // Tokens sidebar container — rendered via the existing TokenRenderer
-  const tokensPanelContainer = document.getElementById('tokens-panel-container')
-
-  // Hide explorer panel in playground mode
-  if (isPlaygroundMode && explorerPanelContainer) {
-    explorerPanelContainer.style.display = 'none'
-  }
 
   // ============================================
   // NEW ARCHITECTURE: Initialize new studio
@@ -1953,9 +1880,6 @@ function initStudio() {
       editor: editor,
       previewContainer: previewContainer,
       propertyPanelContainer: propertyPanelContainer ?? undefined,
-      // Don't pass explorer containers in playground mode
-      explorerPanelContainer: isPlaygroundMode ? undefined : (explorerPanelContainer ?? undefined),
-      fileTreeContainer: isPlaygroundMode ? undefined : (fileTreeContainer ?? undefined),
       // Components Panel containers (separate from explorer)
       componentPanelContainer: isPlaygroundMode
         ? undefined
@@ -1963,7 +1887,6 @@ function initStudio() {
       userComponentsPanelContainer: isPlaygroundMode
         ? undefined
         : (userComponentsPanelContainer ?? undefined),
-      tokensPanelContainer: isPlaygroundMode ? undefined : (tokensPanelContainer ?? undefined),
       initialSource: files[currentFile] || '',
       currentFile: currentFile,
       getAllSource: getAllProjectSource,
@@ -2393,12 +2316,14 @@ window.generateComponentCodeFromDragData = generateComponentCodeFromDragData as 
 // enforced by the studio template; non-null assertions document
 // that contract while keeping the boot path uncluttered.
 initPanelDividers({
-  sidebar: document.getElementById('explorer-panel'),
-  sidebarDivider: document.getElementById('sidebar-divider'),
+  // MVP single-file mode: file-explorer + design-system panels removed.
+  // panel-dividers.ts already accepts `null` for these slots.
+  sidebar: null,
+  sidebarDivider: null,
   componentsPanel: document.getElementById('components-panel'),
   componentsDivider: document.getElementById('components-divider'),
-  tokensPanel: document.getElementById('tokens-panel'),
-  tokensDivider: document.getElementById('tokens-divider'),
+  designSystemPanel: null,
+  designSystemDivider: null,
   editorPanel: document.querySelector<HTMLElement>('.editor-panel')!,
   editorDivider: document.getElementById('editor-divider')!,
   previewPanel: document.querySelector<HTMLElement>('.preview-panel')!,

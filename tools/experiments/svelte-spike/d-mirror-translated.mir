@@ -1,0 +1,95 @@
+// Tokens
+surface.bg: #1e1a16
+accent.col: #c8924a
+muted.col: #7a6e63
+dim.col: #5a504a
+bright.col: #f0e8dc
+border.boc: #2e2720
+divider.boc: #26211c
+
+// Custom icons
+$icons:
+  skip-back: "M19 20 9 12 19 4 19 20|M5 19 5 5"
+  skip-fwd: "M5 4 15 12 5 20 5 4|M19 5 19 19"
+  list: "M8 6 21 6|M8 12 21 12|M8 18 21 18|M3 6 3.01 6|M3 12 3.01 12|M3 18 3.01 18"
+
+// Components
+CtrlBtn: bg transparent, bor 0, cursor pointer, pad 10 14, center, col #7a6e63, rad 2
+  hover:
+    col #c8924a
+  active:
+    scale 0.92
+
+PlayBtn as CtrlBtn: col #f0e8dc, pad 10 20
+  hover:
+    col white
+
+ActionBtn: bg transparent, bor 0, cursor pointer, pad 7 16, hor, gap 5, col #4a4038, rad 2, font mono, fs 9, uppercase
+  hover:
+    col #8a7a6e
+  active:
+    scale 0.96
+
+// Canvas
+canvas bg #1a1612, center
+
+// Player card
+Frame w 320, bg #1e1a16, rad 4, clip, shadow lg, bor 1, boc #2e2720
+  // Album art area
+  Frame w 320, h 320, bg #0d0b09, cursor pointer, relative, clip
+    // Generative artwork placeholder (warm dark gradient as stand-in for canvas)
+    Frame w full, h full, bg grad-ver #2a1f14 #0a0605
+    // Overlay gradient
+    Frame w full, h full, absolute, x 0, y 0
+      Frame w full, h full, bg grad-ver rgba(0,0,0,0) rgba(30,26,22,0.85)
+
+  // Track info
+  Frame pad-t 20, pad-x 24
+    Text "Saudade do Nordeste", font serif, italic, fs 22, col #f0e8dc, line 1.15, truncate
+    Text "Maria Bethânia  ·  1978", font mono, fs 10, weight 300, col #7a6e63, uppercase, mar-t 5
+
+  // Progress section
+  Frame pad-t 20, pad-x 24
+    // Progress track
+    Frame w full, h 2, bg #2e2720, rad 1, cursor pointer, relative
+      // Progress fill (35%)
+      Frame w 35, h full, bg #c8924a, rad 1
+
+    // Time row
+    Frame hor, spread, mar-t 9
+      Text "1:24", font mono, fs 10, weight 300, col #8a7a6e
+      Text "−2:13", font mono, fs 10, weight 300, col #5a504a
+
+  // Playback controls
+  Frame hor, center, pad-t 18, pad-x 24, pad-b 4
+    CtrlBtn
+      Icon "skip-back", is 18, ic #7a6e63
+
+    PlayBtn toggle()
+      Icon "play", is 26, ic #f0e8dc, fill
+      on:
+        Icon "pause", is 26, ic #f0e8dc, fill
+
+    CtrlBtn
+      Icon "skip-fwd", is 18, ic #7a6e63
+
+  // Action row
+  Frame hor, center, gap 4, pad 14 24 22, bor-t 1, boc #26211c, mar-t 12
+    ActionBtn toggle()
+      Icon "heart", is 11, ic #4a4038
+      Text "Fave"
+      on:
+        col #c8924a
+        Icon "heart", is 11, ic #c8924a, fill
+
+    Frame w 2, h 2, rad 99, bg #2e2720
+
+    ActionBtn
+      Icon "list", is 11, ic #4a4038
+      Text "Queue"
+
+    Frame w 2, h 2, rad 99, bg #2e2720
+
+    ActionBtn
+      Icon "share-2", is 11, ic #4a4038
+      Text "Share"

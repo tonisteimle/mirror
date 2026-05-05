@@ -1,0 +1,69 @@
+// Tokens
+accent.bg: #2563eb
+accent.col: #ffffff
+accent-muted.bg: #dbeafe
+accent-muted.col: #2563eb
+surface.bg: #ffffff
+surface-subtle.bg: #f8f8f8
+border.boc: #e5e5e5
+text-primary.col: #0a0a0a
+text-secondary.col: #6b6b6b
+avatar.bg: #1e293b
+avatar.col: #ffffff
+
+space.xs: 4
+space.sm: 8
+space.md: 16
+space.lg: 24
+space.xl: 32
+
+// Button base
+Btn: hor, center, ver-center, gap 6, rad 6, fs 13, weight 600, cursor pointer, pad 9 0, grow
+
+FollowBtn as Btn: bg $accent, col $accent, bor 1, boc #2563eb, toggle()
+  hover:
+    bg #1d4ed8
+    boc #1d4ed8
+  active:
+    bg #1e40af
+    boc #1e40af
+  on:
+    bg $accent-muted
+    col $accent-muted
+    boc #bfdbfe
+  on hover:
+    bg #bfdbfe
+    boc #93c5fd
+
+MessageBtn as Btn: bg $surface-subtle, col $text-primary, bor 1, boc $border
+  hover:
+    bg #ebebeb
+    boc #d4d4d4
+  active:
+    bg #e0e0e0
+
+// Card
+canvas bg #f0f0f0, font sans
+
+Frame center, w full, h full
+  Frame bg $surface, bor 1, boc $border, rad 12, w 296, pad 32 24, gap 0, center
+    Frame w 72, h 72, rad 99, bg $avatar, col $avatar, center, fs 22, weight 600
+      Text "MK"
+    Frame gap 4, mar-t 16, center
+      Text "Maya Kovalenko", fs 17, weight 700, col $text-primary
+      Text "Product Designer · Figma", fs 13, col $text-secondary
+    Frame hor, gap 4, mar-t 16, ver-center
+      Text "234 followers", fs 12, col $text-secondary
+      Frame w 3, h 3, rad 99, bg $text-secondary
+      Text "joined 2024", fs 12, col $text-secondary
+    Divider mar-t 24, w full
+    Frame hor, gap 8, mar-t 24, w full
+      FollowBtn
+        Icon "user-plus", is 14
+        Text "Follow"
+        on:
+          Icon "user-check", is 14
+          Text "Following"
+      MessageBtn
+        Icon "message-circle", is 14
+        Text "Message"

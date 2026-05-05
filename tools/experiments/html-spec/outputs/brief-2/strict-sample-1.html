@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Calm Forest — Anmelden</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body class="w-[375px] h-[812px] bg-gradient-to-b from-[#f3f7ee] via-[#e8f1e0] to-[#d6e7c8] font-sans antialiased overflow-hidden relative">
+
+  <div class="absolute -top-20 -right-16 w-72 h-72 rounded-full bg-[#a3c293]/40 blur-3xl"></div>
+  <div class="absolute top-40 -left-24 w-64 h-64 rounded-full bg-[#c8dba8]/50 blur-3xl"></div>
+  <div class="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-[#9bbf86]/30 to-transparent"></div>
+
+  <main class="relative z-10 flex flex-col h-full px-7 pt-14 pb-6">
+
+    <header class="flex flex-col items-center gap-3 mb-10">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#5a8a4a] to-[#3d6b30] flex items-center justify-center shadow-lg shadow-[#5a8a4a]/30">
+        <i data-lucide="trees" class="w-8 h-8 text-[#f3f7ee]"></i>
+      </div>
+      <h1 class="text-[22px] font-semibold tracking-tight text-[#2d4a25]">Calm Forest</h1>
+      <p class="text-xs uppercase tracking-[0.25em] text-[#5a8a4a]/70 -mt-1">Atme. Pause. Sei.</p>
+    </header>
+
+    <section class="mb-7">
+      <h2 class="text-[26px] leading-tight font-semibold text-[#1f3818]">Willkommen<br/>zurück.</h2>
+      <p class="text-sm text-[#5a6e4f] mt-2">Schön, dass du wieder da bist.</p>
+    </section>
+
+    <section class="flex flex-col gap-3 mb-5">
+      <label class="relative block">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[#7a9a6a]">
+          <i data-lucide="mail" class="w-[18px] h-[18px]"></i>
+        </span>
+        <input type="email" placeholder="E-Mail-Adresse"
+          class="w-full h-12 pl-11 pr-4 rounded-2xl bg-white/70 backdrop-blur-sm border border-[#cfdcc0] text-sm text-[#2d4a25] placeholder:text-[#8aa57c] focus:outline-none focus:border-[#5a8a4a] focus:bg-white shadow-sm shadow-[#5a8a4a]/5" />
+      </label>
+
+      <label class="relative block">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-[#7a9a6a]">
+          <i data-lucide="lock" class="w-[18px] h-[18px]"></i>
+        </span>
+        <input type="password" placeholder="Passwort"
+          class="w-full h-12 pl-11 pr-11 rounded-2xl bg-white/70 backdrop-blur-sm border border-[#cfdcc0] text-sm text-[#2d4a25] placeholder:text-[#8aa57c] focus:outline-none focus:border-[#5a8a4a] focus:bg-white shadow-sm shadow-[#5a8a4a]/5" />
+        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[#7a9a6a]">
+          <i data-lucide="eye" class="w-[18px] h-[18px]"></i>
+        </span>
+      </label>
+    </section>
+
+    <div class="flex justify-end mb-5">
+      <a href="#" class="text-xs text-[#5a8a4a] hover:text-[#3d6b30] underline-offset-4 hover:underline">Passwort vergessen?</a>
+    </div>
+
+    <button class="w-full h-12 rounded-2xl bg-gradient-to-b from-[#5a8a4a] to-[#3d6b30] text-white text-sm font-medium tracking-wide shadow-lg shadow-[#3d6b30]/30 hover:shadow-xl hover:shadow-[#3d6b30]/40 active:scale-[0.99] flex items-center justify-center gap-2">
+      <span>Anmelden</span>
+      <i data-lucide="arrow-right" class="w-4 h-4"></i>
+    </button>
+
+    <div class="flex items-center gap-3 my-6">
+      <div class="flex-1 h-px bg-[#cfdcc0]"></div>
+      <span class="text-xs text-[#7a9a6a] uppercase tracking-widest">oder</span>
+      <div class="flex-1 h-px bg-[#cfdcc0]"></div>
+    </div>
+
+    <div class="flex flex-col gap-3 mb-6">
+      <button class="w-full h-12 rounded-2xl bg-white/80 backdrop-blur-sm border border-[#cfdcc0] flex items-center justify-center gap-3 text-sm font-medium text-[#2d4a25] hover:bg-white active:scale-[0.99]">
+        <i data-lucide="chrome" class="w-[18px] h-[18px] text-[#5a8a4a]"></i>
+        <span>Mit Google fortfahren</span>
+      </button>
+      <button class="w-full h-12 rounded-2xl bg-[#1f3818] text-white flex items-center justify-center gap-3 text-sm font-medium hover:bg-[#2d4a25] active:scale-[0.99]">
+        <i data-lucide="apple" class="w-[18px] h-[18px]"></i>
+        <span>Mit Apple fortfahren</span>
+      </button>
+    </div>
+
+    <footer class="mt-auto text-center">
+      <p class="text-sm text-[#5a6e4f]">
+        Noch keinen Account?
+        <a href="#" class="text-[#3d6b30] font-semibold hover:underline underline-offset-4">Registrieren</a>
+      </p>
+    </footer>
+
+  </main>
+
+  <i data-lucide="leaf" class="hidden"></i>
+</body>
+</html>

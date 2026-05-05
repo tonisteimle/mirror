@@ -29,6 +29,12 @@ export interface LlmEditKeymapConfig {
   handleEditFlow: (view: EditorView) => boolean
   /** Mod-Shift-Enter handler: opens the inline prompt-field. */
   openPromptField: (view: EditorView) => boolean
+  /**
+   * Mod-Alt-Enter handler: starts the two-stage generation pipeline
+   * (user-prompt → HTML → Mirror). Opens the inline prompt-field for
+   * the user-instruction; pipeline replaces the whole file via ghost-diff.
+   */
+  generateFromPrompt: (view: EditorView) => boolean
   /** Tab handler when a ghost diff is active: accept proposed source. */
   acceptGhost: (view: EditorView) => boolean
   /** Escape handler when a ghost diff is active: dismiss proposed source. */
@@ -55,6 +61,10 @@ export function llmEditKeymap(config: LlmEditKeymapConfig): readonly KeyBinding[
     {
       key: 'Mod-Shift-Enter',
       run: view => config.openPromptField(view),
+    },
+    {
+      key: 'Mod-Alt-Enter',
+      run: view => config.generateFromPrompt(view),
     },
     {
       key: 'Tab',

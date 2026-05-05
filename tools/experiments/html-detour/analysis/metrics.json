@@ -1,0 +1,122 @@
+[
+  {
+    "file": "brief-1/path-a-sample-1.mir",
+    "loc": 118,
+    "locNonBlank": 104,
+    "tokenDefs": 13,
+    "componentDefs": 6,
+    "tokenRefs": 0,
+    "propertyRepetitionScore": 0.77,
+    "compileOk": true
+  },
+  {
+    "file": "brief-1/path-b-mirror-sample-1.mir",
+    "loc": 311,
+    "locNonBlank": 240,
+    "tokenDefs": 13,
+    "componentDefs": 24,
+    "tokenRefs": 0,
+    "propertyRepetitionScore": 0.74,
+    "compileOk": true
+  },
+  {
+    "file": "brief-1/path-a-sample-2.mir",
+    "loc": 129,
+    "locNonBlank": 108,
+    "tokenDefs": 19,
+    "componentDefs": 4,
+    "tokenRefs": 35,
+    "propertyRepetitionScore": 0.83,
+    "compileOk": true
+  },
+  {
+    "file": "brief-1/path-b-mirror-sample-2.mir",
+    "loc": 263,
+    "locNonBlank": 202,
+    "tokenDefs": 0,
+    "componentDefs": 19,
+    "tokenRefs": 60,
+    "propertyRepetitionScore": 0.58,
+    "compileOk": true
+  },
+  {
+    "file": "brief-2/path-a-sample-1.mir",
+    "loc": 74,
+    "locNonBlank": 58,
+    "tokenDefs": 16,
+    "componentDefs": 3,
+    "tokenRefs": 33,
+    "propertyRepetitionScore": 0.95,
+    "compileOk": true
+  },
+  {
+    "file": "brief-2/path-b-mirror-sample-1.mir",
+    "loc": 158,
+    "locNonBlank": 103,
+    "tokenDefs": 17,
+    "componentDefs": 7,
+    "tokenRefs": 2,
+    "propertyRepetitionScore": 0.62,
+    "compileOk": true
+  },
+  {
+    "file": "brief-2/path-a-sample-2.mir",
+    "loc": 62,
+    "locNonBlank": 50,
+    "tokenDefs": 11,
+    "componentDefs": 1,
+    "tokenRefs": 25,
+    "propertyRepetitionScore": 1.1,
+    "compileOk": true
+  },
+  {
+    "file": "brief-2/path-b-mirror-sample-2.mir",
+    "loc": 93,
+    "locNonBlank": 63,
+    "tokenDefs": 13,
+    "componentDefs": 2,
+    "tokenRefs": 36,
+    "propertyRepetitionScore": 1.11,
+    "compileOk": true
+  },
+  {
+    "file": "brief-3/path-a-sample-1.mir",
+    "loc": 210,
+    "locNonBlank": 170,
+    "tokenDefs": 18,
+    "componentDefs": 6,
+    "tokenRefs": 93,
+    "propertyRepetitionScore": 0.98,
+    "compileOk": true
+  },
+  {
+    "file": "brief-3/path-b-mirror-sample-1.mir",
+    "loc": 337,
+    "locNonBlank": 248,
+    "tokenDefs": 36,
+    "componentDefs": 11,
+    "tokenRefs": 103,
+    "propertyRepetitionScore": 0.94,
+    "compileOk": true
+  },
+  {
+    "file": "brief-3/path-a-sample-2.mir",
+    "loc": 223,
+    "locNonBlank": 186,
+    "tokenDefs": 26,
+    "componentDefs": 6,
+    "tokenRefs": 114,
+    "propertyRepetitionScore": 1.34,
+    "compileOk": true
+  },
+  {
+    "file": "brief-3/path-b-mirror-sample-2.mir",
+    "loc": 366,
+    "locNonBlank": 293,
+    "tokenDefs": 26,
+    "componentDefs": 19,
+    "tokenRefs": 62,
+    "propertyRepetitionScore": 0.84,
+    "compileOk": true
+  }
+]

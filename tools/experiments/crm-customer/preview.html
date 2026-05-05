@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Helix CRM · Mirror — Kundenerfassung</title>
+    <link rel="stylesheet" href="../../../assets/mirror-defaults.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      /* Override mirror-defaults dark theme — wir wollen hell */
+      :root {
+        --m-bg: #f6f7f9;
+        --m-surface: #ffffff;
+        --m-text: #0f172a;
+        --m-text-muted: #64748b;
+        --m-border: #e5e7eb;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        background: #f6f7f9;
+        color: #0f172a;
+        font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+      }
+      #app { width: 100%; min-height: 100vh; background: #f6f7f9; }
+      .mirror-root { background: #f6f7f9 !important; min-height: 100vh; }
+      .mirror-root, .mirror-root * { box-sizing: border-box; }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script type="module">
+      import { createUI } from './app.js';
+      const ui = createUI();
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+      if (ui && ui.root) {
+        app.appendChild(ui.root);
+      } else if (ui instanceof HTMLElement) {
+        app.appendChild(ui);
+      }
+      // Lucide-Icons aktivieren
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    </script>
+  </body>
+</html>

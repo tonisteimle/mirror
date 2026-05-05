@@ -6500,6 +6500,10 @@ function __name(fn, _name) { return fn }
 // Security helpers (stamped from compiler/runtime/icons.ts via .toString())
 function sanitizeIconName(name) {
 	if (!name || typeof name !== "string") return null;
+	// Silent skip for unresolved compiler markers — see jsdoc above.
+	if (name.startsWith("__loopVar:") || name.startsWith("__conditional:")) {
+		return null;
+	};
 	if (!/^[a-z0-9\-]+$/.test(name)) {
 		console.warn("[Security] Invalid icon name rejected:", name);
 		return null;

@@ -1,0 +1,117 @@
+bg.page: #0a0b14
+bg.card: #12141f
+bg.cardHi: #161a2b
+bg.accent: #6366f1
+bg.accentSoft: #1e1b4b
+border.col: #232742
+border.hi: #6366f1
+text.primary: #f5f6fa
+text.secondary: #9ba1b8
+text.muted: #6b7280
+text.accent: #a5b4fc
+
+heading: col #f5f6fa, weight bold
+muted: col #9ba1b8
+
+CheckRow as Frame: hor, gap 10, ver-center
+  Icon "check", ic #a5b4fc, is 16
+  Text col #d1d5db, fs 14
+
+Card as Frame: bg #12141f, bor 1, boc #232742, rad 16, pad 32, gap 20, w 320
+  hover:
+    boc #383d5e
+
+PopularCard as Frame: bg #161a2b, bor 2, boc #6366f1, rad 16, pad 32, gap 20, w 340, shadow lg
+
+CTA as Button: pad 14 24, rad 10, bg #1f2235, col #f5f6fa, weight 500, cursor pointer, fs 14
+  hover:
+    bg #2a2e48
+
+CTAPrimary as Button: pad 14 24, rad 10, bg #6366f1, col white, weight 600, cursor pointer, fs 14
+  hover:
+    bg #7c7ff5
+
+Badge as Frame: bg #6366f1, col white, pad 4 12, rad 99, fs 11, weight 600, uppercase
+
+canvas bg #0a0b14, w 1200, h 800, col #f5f6fa, font sans
+
+Frame pad 56 64, gap 40, h full
+  Frame gap 12, center
+    Frame hor, gap 8, ver-center
+      Frame w 28, h 28, bg #6366f1, rad 8, center
+        Text "S", col white, weight bold, fs 16
+      Text "Stride", col #f5f6fa, weight bold, fs 18
+    Spacer h 8
+    Text "Plans that scale with your team", col #f5f6fa, fs 36, weight bold, text-align center
+    Text "Start free. Upgrade when you need power. No hidden fees.", col #9ba1b8, fs 16, text-align center
+
+  Frame hor, gap 20, center, ver-center
+    Card
+      Frame gap 4
+        Text "Free", col #f5f6fa, fs 18, weight semibold
+        Text "For solo makers getting started", col #9ba1b8, fs 13
+      Frame hor, gap 4, ver-center
+        Text "€0", col #f5f6fa, fs 44, weight bold
+        Text "/month", col #9ba1b8, fs 14
+      Divider
+      Frame gap 12
+        CheckRow
+          Text "Up to 3 users"
+        CheckRow
+          Text "1 active project"
+        CheckRow
+          Text "Kanban + list views"
+        CheckRow
+          Text "Community support"
+      Spacer h 4
+      CTA "Get started"
+
+    PopularCard
+      Frame hor, spread, ver-center
+        Frame gap 4
+          Text "Pro", col #f5f6fa, fs 18, weight semibold
+          Text "For growing teams shipping fast", col #9ba1b8, fs 13
+        Badge "Most Popular"
+      Frame hor, gap 4, ver-center
+        Text "€12", col #f5f6fa, fs 44, weight bold
+        Text "/user/mo", col #9ba1b8, fs 14
+      Divider
+      Frame gap 12
+        CheckRow
+          Text "Unlimited projects"
+        CheckRow
+          Text "Timeline & roadmap views"
+        CheckRow
+          Text "Custom workflows"
+        CheckRow
+          Text "Integrations (Slack, GitHub)"
+        CheckRow
+          Text "Priority support"
+      Spacer h 4
+      CTAPrimary "Start free trial"
+
+    Card
+      Frame gap 4
+        Text "Team", col #f5f6fa, fs 18, weight semibold
+        Text "For organizations that need control", col #9ba1b8, fs 13
+      Frame hor, gap 4, ver-center
+        Text "€25", col #f5f6fa, fs 44, weight bold
+        Text "/user/mo", col #9ba1b8, fs 14
+      Divider
+      Frame gap 12
+        CheckRow
+          Text "Everything in Pro"
+        CheckRow
+          Text "SSO & SAML"
+        CheckRow
+          Text "Audit logs"
+        CheckRow
+          Text "Advanced permissions"
+        CheckRow
+          Text "Dedicated support"
+      Spacer h 4
+      CTA "Contact sales"
+
+  Frame hor, gap 8, center, ver-center
+    Icon "shield-check", ic #6b7280, is 14
+    Text "30-day money-back guarantee  ·  Cancel anytime", col #6b7280, fs 13

@@ -1,0 +1,1325 @@
+// =====================================================
+// HELIX CRM · KUNDENERFASSUNG
+// Recreation des HTML-Mockups in Mirror DSL.
+// Atomic-Aufbau: tokens → components → app
+// =====================================================
+
+use tokens
+use components
+
+// Hinweis: canvas wird hier bewusst weggelassen — der Mirror-Parser
+// interpretiert `canvas bg <hex>` als Preset-Namen und produziert eine
+// leere Box. Page-BG + Font kommen stattdessen aus preview.html.
+
+// =====================================================
+// TOPBAR (h 48)
+// =====================================================
+Frame hor, w full, h 48, bg white, bor 0 0 1 0, boc $line, ver-center
+
+  // Brand block
+  Frame hor, gap 10, ver-center, w 240, h full, pad 0 12, bor 0 1 0 0, boc $line
+    Frame w 28, h 28, rad 6, bg $brand, center
+      Text "H", col white, fs 13, weight 600
+    Frame ver, gap 2, grow
+      Text "Helix CRM", fs 13, weight 600, col $ink
+      Text "ARGOS Group · DACH", fs 11, col $ink-muted
+    Icon "chevrons-up-down", is 14, ic $ink-muted
+
+  // Breadcrumb
+  Frame hor, gap 6, ver-center, pad 0 16
+    Text "Sales", fs 13, col $ink-muted
+    Icon "chevron-right", is 14, ic $ink-faint
+    Text "Companies", fs 13, col $ink-muted
+    Icon "chevron-right", is 14, ic $ink-faint
+    Text "ARGOS Industriebau AG", fs 13, weight 500, col $ink
+    PillAmber, mar 0 0 0 6
+      Frame w 6, h 6, rad 999, bg $warn
+      Text "Entwurf"
+
+  // Search (centered, grow)
+  Frame grow, hor, ver-center, center
+    Frame hor, gap 8, ver-center, w 420, h 32, pad 0 10, bor 1, boc $line, rad 6
+      Icon "search", is 16, ic $ink-muted
+      Text "Suchen oder Befehl ausführen…", grow, fs 12, col $ink-muted
+      Kbd
+        Text "⌘"
+      Kbd
+        Text "K"
+
+  // Right actions
+  Frame hor, gap 4, ver-center, pad 0 8, h full, bor 0 0 0 1, boc $line
+    IconBtn
+      Icon "bell", is 16
+    IconBtn
+      Icon "sparkles", is 16
+    IconBtn
+      Icon "circle-help", is 16
+    Frame w 1, h 24, bg $line, mar 0 6
+    Frame hor, gap 8, ver-center, pad 4 8, rad 6, cursor pointer
+      AvatarSm
+        Text "TS"
+      Text "Toni Steimle", fs 12, col $ink
+      Icon "chevron-down", is 14, ic $ink-muted
+
+// =====================================================
+// MAIN SHELL — Sidebar + Main Content (hor)
+// =====================================================
+Frame hor, w full
+
+  // ---------------------------------------------------
+  // SIDEBAR (w 240)
+  // ---------------------------------------------------
+  Frame ver, w 240, bg white, bor 0 1 0 0, boc $line
+
+    // New + filter
+    Frame hor, gap 8, ver-center, pad 12, bor 0 0 1 0, boc $line
+      BtnPrimary, grow, center
+        Icon "plus", is 16
+        Text "Neu erstellen"
+      IconBtn
+        Icon "sliders-horizontal", is 16
+
+    // Nav
+    Frame ver, pad 4 0
+      NavGroupTitle
+        Text "Pinned"
+
+      NavItem
+        Icon "pin", is 16, ic $ink-faint
+        Text "Schweizer Bauunternehmen", grow
+        Text "214", fs 11, col $ink-faint
+
+      NavItem
+        Icon "pin", is 16, ic $ink-faint
+        Text "Q2 — Renewals", grow
+        Text "38", fs 11, col $ink-faint
+
+      NavGroupTitle
+        Text "Sales"
+
+      NavItem
+        Icon "layout-dashboard", is 16, ic $ink-soft
+        Text "Dashboard", grow
+
+      NavItemActive
+        Icon "building-2", is 16, ic $brand
+        Text "Unternehmen", grow
+        Text "2 481", fs 11, col $brand-soft-ink
+
+      NavItem
+        Icon "users", is 16, ic $ink-soft
+        Text "Kontakte", grow
+        Text "9 142", fs 11, col $ink-faint
+
+      NavItem
+        Icon "trending-up", is 16, ic $ink-soft
+        Text "Deals", grow
+        Text "184", fs 11, col $ink-faint
+
+      NavItem
+        Icon "kanban", is 16, ic $ink-soft
+        Text "Pipeline", grow
+
+      NavItem
+        Icon "file-text", is 16, ic $ink-soft
+        Text "Angebote", grow
+
+      NavGroupTitle
+        Text "Marketing"
+
+      NavItem
+        Icon "send", is 16, ic $ink-soft
+        Text "Kampagnen", grow
+
+      NavItem
+        Icon "list-checks", is 16, ic $ink-soft
+        Text "Listen", grow
+
+      NavItem
+        Icon "mail", is 16, ic $ink-soft
+        Text "Sequenzen", grow
+
+      NavGroupTitle
+        Text "Service"
+
+      NavItem
+        Icon "life-buoy", is 16, ic $ink-soft
+        Text "Tickets", grow
+        Text "12", fs 11, col $ink-faint
+
+      NavItem
+        Icon "message-square", is 16, ic $ink-soft
+        Text "Konversationen", grow
+
+      NavGroupTitle
+        Text "Auswertung"
+
+      NavItem
+        Icon "bar-chart-3", is 16, ic $ink-soft
+        Text "Berichte", grow
+
+      NavItem
+        Icon "target", is 16, ic $ink-soft
+        Text "Forecast", grow
+
+  // ---------------------------------------------------
+  // MAIN CONTENT
+  // ---------------------------------------------------
+  Frame ver, grow
+
+    // ===== Draft Banner =====
+    Frame hor, gap 12, ver-center, w full, pad 10 24, bg $warn-soft, bor 0 0 1 0, boc $warn-ring
+      Icon "circle-alert", is 16, ic $warn
+      Text "Dieser Datensatz ist ein Entwurf. Erstellt am 03.05.2026 um 09:14 — sichtbar nur für dich, bis du ihn speicherst oder zur Prüfung sendest.", fs 13, col $warn-ink, grow
+      Text "Verlauf ansehen", fs 12, col $warn-ink, weight 500
+      IconBtnSm
+        Icon "x", is 14, ic $warn-ink
+
+    // ===== Record Header =====
+    Frame ver, w full, bg white, bor 0 0 1 0, boc $line
+
+      // top row: logo + title + KPI strip
+      Frame hor, gap 20, pad 20 24
+
+        // logo monogram
+        Frame w 56, h 56, rad 12, bg #1E3A8A, center
+          Text "AX", col white, fs 18, weight 600
+
+        // title + meta + pills
+        Frame ver, grow, gap 6
+          // meta row
+          Frame hor, gap 8, ver-center
+            Text "CO-002 481", font mono, fs 11, col $ink-muted
+            Text "·", fs 11, col $ink-faint
+            Text "Erstellt vor 14 Min", fs 11, col $ink-muted
+            Text "·", fs 11, col $ink-faint
+            Frame hor, gap 6, ver-center
+              Frame w 6, h 6, rad 999, bg $ok
+              Text "Auto-gespeichert", fs 11, col $ink-muted
+
+          // title
+          Frame hor, gap 12, ver-center
+            Text "ARGOS Industriebau AG", fs 22, weight 600, col $ink
+            Icon "badge-check", is 16, ic $brand
+            IconBtnSm
+              Icon "star", is 16
+
+          // pill row
+          Frame hor, gap 6, wrap, ver-center
+            PillBlue
+              Icon "briefcase", is 12
+              Text "Kunde"
+            PillViolet
+              Text "Enterprise"
+            PillTeal
+              Text "A-Tier"
+            PillGray
+              Icon "map-pin", is 12
+              Text "Zürich, CH"
+            PillGray
+              Icon "users", is 12
+              Text "312 MA"
+
+        // KPI strip
+        Frame hor, bor 1, boc $line, rad 8, bg white
+          Frame ver, gap 2, pad 10 16, ver-center
+            Text "Gesamtumsatz", fs 11, col $ink-muted, text-align right
+            Text "CHF 2,4M", fs 15, weight 600, font mono, col $ink, text-align right
+            Frame hor, gap 4, ver-center, mar 2 0 0 0
+              Icon "arrow-up-right", is 12, ic $ok
+              Text "+18 %", fs 11, col $ok
+          Frame w 1, bg $line
+          Frame ver, gap 2, pad 10 16, ver-center
+            Text "Offene Deals", fs 11, col $ink-muted, text-align right
+            Text "2", fs 15, weight 600, col $ink, text-align right
+            Text "CHF 2,1M", fs 11, col $ink-muted, text-align right
+          Frame w 1, bg $line
+          Frame ver, gap 2, pad 10 16, ver-center
+            Text "Tickets", fs 11, col $ink-muted, text-align right
+            Text "3", fs 15, weight 600, col $ink, text-align right
+            Text "1 P1", fs 11, col $warn, text-align right
+          Frame w 1, bg $line
+          Frame ver, gap 2, pad 10 16, ver-center
+            Text "Letzte Aktivität", fs 11, col $ink-muted, text-align right
+            Text "Vor 2 Tagen", fs 13, weight 500, col $ink, text-align right
+            Text "E-Mail · MK", fs 11, col $ink-muted, text-align right
+
+      // action toolbar
+      Frame hor, gap 8, pad 0 24 16 24, ver-center
+        BtnSecondary
+          Icon "mail", is 16
+          Text "E-Mail"
+        BtnSecondary
+          Icon "phone", is 16
+          Text "Anrufen"
+        BtnSecondary
+          Icon "calendar", is 16
+          Text "Termin planen"
+        BtnSecondary
+          Icon "sticky-note", is 16
+          Text "Notiz"
+        BtnSecondary
+          Icon "check-square", is 16
+          Text "Aufgabe"
+        Frame w 1, h 24, bg $line, mar 0 4
+        BtnSecondary
+          Icon "trending-up", is 16
+          Text "Deal anlegen"
+        BtnSecondary
+          Icon "file-text", is 16
+          Text "Angebot"
+        Frame grow
+        IconBtn
+          Icon "more-horizontal", is 16
+
+      // tabs
+      Frame hor, ver-center, pad 0 16, bor 1 0 0 0, boc $line-soft
+        TabItemActive
+          Icon "info", is 14, ic $ink
+          Text "Übersicht"
+        TabItem
+          Text "Aktivitäten"
+          TabCount
+            Text "28"
+        TabItem
+          Text "Deals"
+          TabCount
+            Text "2"
+        TabItem
+          Text "Kontakte"
+          TabCount
+            Text "4"
+        TabItem
+          Text "Tickets"
+          TabCount
+            Text "3"
+        TabItem
+          Text "Angebote"
+          TabCount
+            Text "1"
+        TabItem
+          Text "Verträge"
+        TabItem
+          Text "Dateien"
+          TabCount
+            Text "12"
+        TabItem
+          Text "Berichte"
+        Frame grow
+        IconBtnSm
+          Icon "settings-2", is 14
+
+    // ===== BODY: 3-column =====
+    Frame hor, gap 16, pad 20 24, w full
+
+      // ─── LEFT RAIL (w 320)
+      Frame ver, w 320, gap 16
+
+        // Über-Card
+        Card
+          Head
+            Icon "info", is 16, ic $ink-muted
+            CardTitle
+              Text "Über"
+            Frame grow
+            IconBtnSm
+              Icon "pencil", is 14
+          Body
+            Text "Generalunternehmer für Hochbauprojekte mit Schwerpunkt Holz-Hybrid und SIA-2050-zertifizierter Sanierung. Hauptsitz Zürich, Niederlassungen in Bern, Basel und München.", fs 12, col $ink-soft, line 1.5
+            Frame hor, gap 6, ver-center
+              Icon "globe", is 14, ic $brand
+              Text "argos-industriebau.ch", fs 12, col $brand
+
+        // Stammdaten-Card
+        Card
+          Head
+            Icon "list", is 16, ic $ink-muted
+            CardTitle
+              Text "Stammdaten"
+            Frame grow
+            PillGray
+              Text "12/14"
+          Body
+            PropRow
+              PropLbl
+                Icon "briefcase", is 14, ic $ink-faint
+                Text "Rechtsform"
+              PropVal
+                Text "AG"
+            PropRow
+              PropLbl
+                Icon "hash", is 14, ic $ink-faint
+                Text "UID-Nummer"
+              PropVal
+                Text "CHE-247.591.103", font mono, fs 12
+            PropRow
+              PropLbl
+                Icon "hash", is 14, ic $ink-faint
+                Text "HR-Nummer"
+              PropVal
+                Text "CH-020.3.917.482-1", font mono, fs 12
+            PropRow
+              PropLbl
+                Icon "calendar", is 14, ic $ink-faint
+                Text "Gegründet"
+              PropVal
+                Text "1987 · 38 Jahre"
+            PropRow
+              PropLbl
+                Icon "users", is 14, ic $ink-faint
+                Text "Mitarbeiter"
+              PropVal
+                Frame hor, gap 6, ver-center
+                  Text "312"
+                  PillViolet
+                    Icon "sparkles", is 11
+                    Text "AI"
+            PropRow
+              PropLbl
+                Icon "banknote", is 14, ic $ink-faint
+                Text "Umsatz"
+              PropVal
+                Text "CHF 148,2 M", font mono, fs 12
+            PropRow
+              PropLbl
+                Icon "building", is 14, ic $ink-faint
+                Text "Branche"
+              PropVal
+                Text "Bauwesen · Hochbau"
+            PropRow
+              PropLbl
+                Icon "hash", is 14, ic $ink-faint
+                Text "D-U-N-S"
+              PropVal
+                Text "48-302-9871", font mono, fs 12
+            PropRow
+              PropLbl
+                Icon "languages", is 14, ic $ink-faint
+                Text "Sprache"
+              PropVal
+                Text "Deutsch (DE-CH)"
+            PropRow
+              PropLbl
+                Icon "map", is 14, ic $ink-faint
+                Text "Region"
+              PropVal
+                Text "DACH · Schweiz Nord"
+            Frame w full, h 1, bg $line-soft, mar 4 0 0 0
+            Frame center, pad 6 0
+              Text "Alle Eigenschaften anzeigen", fs 12, col $brand, weight 500
+
+        // Klassifizierung-Card
+        Card
+          Head
+            Icon "tag", is 16, ic $ink-muted
+            CardTitle
+              Text "Klassifizierung"
+          Body
+            Frame ver, gap 4
+              Text "Lifecycle", fs 11, weight 500, col $ink-muted, uppercase
+              Frame hor, gap 4, ver-center, wrap
+                PillGray
+                  Text "Lead"
+                Icon "chevron-right", is 12, ic $ink-faint
+                PillGray
+                  Text "MQL"
+                Icon "chevron-right", is 12, ic $ink-faint
+                PillGray
+                  Text "SQL"
+                Icon "chevron-right", is 12, ic $ink-faint
+                PillBlue
+                  Text "Kunde"
+            Frame ver, gap 4
+              Text "Tags", fs 11, weight 500, col $ink-muted, uppercase
+              Frame hor, gap 6, wrap, ver-center
+                ChipBlue
+                  Text "Holz-Hybrid"
+                ChipBlue
+                  Text "SIA-2050"
+                ChipTeal
+                  Text "Net-Zero"
+                Chip
+                  Text "BIM-Level-3"
+                Chip
+                  Text "Inhabergeführt"
+                ChipAmber
+                  Text "Auslandsbau"
+                Chip
+                  Icon "plus", is 12
+                  Text "Tag"
+
+        // Verantwortliche-Card
+        Card
+          Head
+            Icon "user-cog", is 16, ic $ink-muted
+            CardTitle
+              Text "Verantwortliche"
+          Body
+            PropRow
+              PropLbl
+                Icon "user", is 14, ic $ink-faint
+                Text "Owner"
+              PropVal
+                Frame hor, gap 8, ver-center
+                  AvatarSm
+                    Text "TS"
+                  Text "Toni Steimle"
+            PropRow
+              PropLbl
+                Icon "user-check", is 14, ic $ink-faint
+                Text "KAM"
+              PropVal
+                Frame hor, gap 8, ver-center
+                  AvatarSm bg $violet
+                    Text "LF"
+                  Text "Lara Frei"
+            PropRow
+              PropLbl
+                Icon "heart-handshake", is 14, ic $ink-faint
+                Text "Customer Success"
+              PropVal
+                Frame hor, gap 8, ver-center
+                  AvatarSm bg $teal
+                    Text "NV"
+                  Text "Nadine Vogt"
+            PropRow
+              PropLbl
+                Icon "users-round", is 14, ic $ink-faint
+                Text "Team"
+              PropVal
+                Text "DACH-Nord"
+
+      // ─── CENTER (grow)
+      Frame ver, grow, gap 16
+
+        // Duplicate Warning
+        Frame ver, bg $warn-soft, bor 1, boc $warn-ring, rad 10, $stripe-amber-style
+          Frame hor, gap 12, pad 16
+            Frame w 32, h 32, rad 6, bg $warn-tint, center
+              Icon "copy", is 16, ic $warn
+            Frame ver, gap 4, grow
+              Frame hor, gap 8, ver-center
+                Text "Möglicher Duplikat erkannt", fs 13, weight 600, col $warn-ink
+                PillAmber
+                  Text "91 % Match"
+              Text "Ein Datensatz mit identischer UID und ähnlichem Namen („ARGOS Industriebau & Co.“, Genf) existiert bereits, verwaltet von M. Brun seit 2023.", fs 12, col $warn-ink, line 1.5
+              Frame hor, gap 6, mar 4 0 0 0
+                BtnSm bg white, boc $line
+                  Text "Vergleichen"
+                BtnSm bg white, boc $line
+                  Text "Zusammenführen"
+                BtnSm bg transparent, col $warn-ink
+                  Text "Trotzdem fortfahren"
+            IconBtnSm
+              Icon "x", is 14, ic $warn-ink
+
+        // Firmendaten-Card
+        Card
+          Head
+            Icon "building-2", is 16, ic $ink-muted
+            CardTitle
+              Text "Firmendaten"
+            PillGreen
+              Icon "check", is 12
+              Text "verifiziert"
+            Frame grow
+            BtnSm bg white, boc $line, col $ink
+              Icon "sparkles", is 14, ic $violet
+              Text "Aus ZEFIX laden"
+            IconBtnSm
+              Icon "more-horizontal", is 14
+          Body
+            // row 1
+            Frame hor, gap 16
+              Frame ver, gap 0, w 420
+                Lbl
+                  Text "Firmenname"
+                  Req
+                    Text "*"
+                Inp value "ARGOS Industriebau AG"
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "Markenname / Alias"
+                Inp value "ARGOS Group"
+
+            // row 2
+            Frame hor, gap 16
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "Rechtsform"
+                  Req
+                    Text "*"
+                FakeSelect
+                  Text "Aktiengesellschaft (AG)", grow, fs 13, col $ink
+                  Icon "chevron-down", is 14, ic $ink-muted, mar 0 8
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "Gründungsjahr"
+                Inp value "1987", font mono
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "UID / MwSt-Nr."
+                  Req
+                    Text "*"
+                  Frame grow
+                  Icon "badge-check", is 12, ic $brand
+                Inp value "CHE-247.591.103", font mono
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "HR-Nummer"
+                Inp value "CH-020.3.917.482-1", font mono
+
+            // row 3
+            Frame hor, gap 16
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "Branche (NOGA-08)"
+                FakeSelect
+                  Text "412001 — Bau von Wohngebäuden", grow, fs 13, col $ink
+                  Icon "chevron-down", is 14, ic $ink-muted, mar 0 8
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "Mitarbeiter (FTE)"
+                  Frame grow
+                  PillViolet
+                    Icon "sparkles", is 11
+                    Text "AI"
+                Inp value "312", font mono
+                Hlp
+                  Text "Geschätzt aus LinkedIn & Bisnode · Q1/2026"
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "Jahresumsatz"
+                Frame hor, gap 6
+                  FakeSelect w 80
+                    Text "CHF", grow, fs 13, col $ink, font mono
+                    Icon "chevron-down", is 14, ic $ink-muted, mar 0 8
+                  Inp value "148'200'000", font mono, grow
+
+            // row 4
+            Frame hor, gap 16
+              Frame ver, gap 0, w 420
+                Lbl
+                  Text "Webseite"
+                Inp value "https://argos-industriebau.ch"
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "LinkedIn"
+                Inp value "argos-industriebau"
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "D-U-N-S"
+                Inp value "48-302-9871", font mono
+
+            // row 5: textarea
+            Frame ver, gap 0
+              Lbl
+                Text "Kurzbeschreibung"
+                Frame grow
+                Text "238 / 500", fs 11, col $ink-faint, font mono
+              Txa value "ARGOS Industriebau AG ist ein integrierter Generalunternehmer für Hochbauprojekte im DACH-Raum mit Schwerpunkt auf nachhaltigem Bauen, Holz-Hybrid-Konstruktionen und SIA-zertifizierter Sanierung. Hauptsitz Zürich, Niederlassungen in Bern, Basel und München.", h 72
+
+        // Adressen-Card
+        Card
+          Head
+            Icon "map-pin", is 16, ic $ink-muted
+            CardTitle
+              Text "Adressen"
+            Text "3", fs 12, col $ink-muted
+            Frame grow
+            BtnSm bg white, boc $line, col $ink
+              Icon "plus", is 14
+              Text "Adresse"
+            IconBtnSm
+              Icon "more-horizontal", is 14
+          Body
+            Frame hor, gap 12
+
+              // Address 1 — Hauptsitz
+              Frame ver, gap 0, grow, bor 1, boc $line, rad 8, pad 12
+                Frame hor, ver-center
+                  PillBlue
+                    Icon "building", is 12
+                    Text "Hauptsitz"
+                  Frame grow
+                  IconBtnSm
+                    Icon "more-horizontal", is 14
+                Text "Limmatstrasse 264", fs 13, weight 500, col $ink, mar 8 0 0 0
+                Text "8005 Zürich · ZH", fs 12, col $ink-soft
+                Text "Schweiz", fs 11, col $ink-muted
+                Frame hor, gap 6, mar 10 0 0 0, wrap
+                  Chip
+                    Icon "receipt", is 12
+                    Text "Rechnung"
+                  Chip
+                    Icon "truck", is 12
+                    Text "Lieferung"
+
+              // Address 2 — Niederlassung
+              Frame ver, gap 0, grow, bor 1, boc $line, rad 8, pad 12
+                Frame hor, ver-center
+                  PillGray
+                    Icon "map-pin", is 12
+                    Text "Filiale"
+                  Frame grow
+                  IconBtnSm
+                    Icon "more-horizontal", is 14
+                Text "Rosenheimer Straße 145", fs 13, weight 500, col $ink, mar 8 0 0 0
+                Text "81671 München", fs 12, col $ink-soft
+                Text "Deutschland", fs 11, col $ink-muted
+                Frame hor, gap 6, mar 10 0 0 0, wrap
+                  Chip
+                    Icon "globe", is 12
+                    Text "EU"
+                  Chip
+                    Text "DE 304 985 217", font mono, fs 11
+
+              // Address 3 — Lieferadresse
+              Frame ver, gap 0, grow, bor 1, boc $line, rad 8, pad 12
+                Frame hor, ver-center
+                  PillAmber
+                    Icon "circle-alert", is 12
+                    Text "Lieferung"
+                  Frame grow
+                  IconBtnSm
+                    Icon "more-horizontal", is 14
+                Text "Lager Süd · Tor B", fs 13, weight 500, col $ink, mar 8 0 0 0
+                Text "Industriestrasse 14, 6330 Cham", fs 12, col $ink-soft
+                Text "Schweiz", fs 11, col $ink-muted
+                Frame hor, gap 6, mar 10 0 0 0, wrap
+                  Chip
+                    Text "24/7"
+                  Chip
+                    Text "LKW max 18 t"
+
+        // Kontaktpersonen-Card
+        Card
+          Head
+            Icon "users", is 16, ic $ink-muted
+            CardTitle
+              Text "Kontaktpersonen"
+            Text "4", fs 12, col $ink-muted
+            Frame grow
+            Seg
+              SegBtnActive
+                Text "Aktiv"
+              SegBtn
+                Text "Alle"
+            BtnSm bg $brand, col white
+              Icon "user-plus", is 14, ic white
+              Text "Person"
+
+          // Tabelle
+          Frame ver, w full, pad 0
+            // header row
+            Frame hor, ver-center, pad 8 14, bg $hover, bor 0 0 1 0, boc $line
+              Text "Person", w 240, fs 11, weight 500, col $ink-muted, uppercase
+              Text "Rolle", w 180, fs 11, weight 500, col $ink-muted, uppercase
+              Text "Beziehung", w 180, fs 11, weight 500, col $ink-muted, uppercase
+              Text "Letzter Kontakt", grow, fs 11, weight 500, col $ink-muted, uppercase
+              Frame w 32
+
+            // row 1 — Elena Wettstein
+            Frame hor, ver-center, pad 10 14, bor 0 0 1 0, boc $line-soft
+              Frame hor, gap 10, ver-center, w 240
+                AvatarMd bg $brand
+                  Text "EW"
+                Frame ver, gap 2
+                  Text "Dr. Elena Wettstein", fs 13, weight 500, col $ink
+                  Text "CFO · Geschäftsleitung", fs 11, col $ink-muted
+              Frame w 180
+                PillBlue
+                  Icon "crown", is 12
+                  Text "Entscheider"
+              Frame hor, gap 8, ver-center, w 180
+                Bar w 80
+                  Fill w 62, bg $brand
+                Text "7,8", fs 11, font mono, col $ink-muted
+              Text "21.04.2026", grow, fs 12, col $ink-muted, font mono
+              IconBtnSm
+                Icon "more-horizontal", is 14
+
+            // row 2 — Marc Kunz
+            Frame hor, ver-center, pad 10 14, bor 0 0 1 0, boc $line-soft
+              Frame hor, gap 10, ver-center, w 240
+                AvatarMd bg $violet
+                  Text "MK"
+                Frame ver, gap 2
+                  Text "Marc Kunz", fs 13, weight 500, col $ink
+                  Text "Leiter Beschaffung", fs 11, col $ink-muted
+              Frame w 180
+                PillAmber
+                  Icon "key", is 12
+                  Text "Käufer"
+              Frame hor, gap 8, ver-center, w 180
+                Bar w 80
+                  Fill w 42, bg $warn
+                Text "5,2", fs 11, font mono, col $ink-muted
+              Text "02.05.2026", grow, fs 12, col $ink-muted, font mono
+              IconBtnSm
+                Icon "more-horizontal", is 14
+
+            // row 3 — Sarah Räber
+            Frame hor, ver-center, pad 10 14, bor 0 0 1 0, boc $line-soft
+              Frame hor, gap 10, ver-center, w 240
+                AvatarMd bg $teal
+                  Text "SR"
+                Frame ver, gap 2
+                  Text "Sarah Räber", fs 13, weight 500, col $ink
+                  Text "Head of Digital · IT", fs 11, col $ink-muted
+              Frame w 180
+                PillTeal
+                  Icon "lightbulb", is 12
+                  Text "Influencer"
+              Frame hor, gap 8, ver-center, w 180
+                Bar w 80
+                  Fill w 70, bg $ok
+                Text "8,8", fs 11, font mono, col $ink-muted
+              Text "29.04.2026", grow, fs 12, col $ink-muted, font mono
+              IconBtnSm
+                Icon "more-horizontal", is 14
+
+            // row 4 — Tobias Brunner (ausgeschieden)
+            Frame hor, ver-center, pad 10 14
+              Frame hor, gap 10, ver-center, w 240
+                AvatarMd bg $ink-muted
+                  Text "TB"
+                Frame ver, gap 2
+                  Frame hor, gap 6, ver-center
+                    Text "Tobias Brunner", fs 13, weight 500, col $ink
+                    PillGray
+                      Text "ausgeschieden"
+                  Text "ehem. CEO · bis Q3/2025", fs 11, col $ink-muted
+              Frame w 180
+                PillGray
+                  Text "Historisch"
+              Text "—", w 180, col $ink-faint
+              Text "14.08.2025", grow, fs 12, col $ink-faint, font mono
+              IconBtnSm
+                Icon "more-horizontal", is 14
+
+        // Kommunikationspräferenzen-Card
+        Card
+          Head
+            Icon "message-circle", is 16, ic $ink-muted
+            CardTitle
+              Text "Kommunikationspräferenzen"
+
+          Body
+            // Channel Matrix
+            Frame ver, gap 8
+              Lbl
+                Text "Kanäle pro Zweck"
+
+              Frame ver, w full, bor 1, boc $line, rad 6, clip
+                // header
+                Frame hor, ver-center, pad 8 12, bg $hover, bor 0 0 1 0, boc $line
+                  Text "Zweck", grow, fs 11, weight 500, col $ink-muted, uppercase
+                  Text "E-Mail", w 80, fs 11, weight 500, col $ink-muted, uppercase, text-align center
+                  Text "Telefon", w 80, fs 11, weight 500, col $ink-muted, uppercase, text-align center
+                  Text "Brief", w 80, fs 11, weight 500, col $ink-muted, uppercase, text-align center
+                  Text "Portal", w 80, fs 11, weight 500, col $ink-muted, uppercase, text-align center
+                  Text "SMS", w 80, fs 11, weight 500, col $ink-muted, uppercase, text-align center
+
+                // row 1
+                Frame hor, ver-center, pad 10 12, bor 0 0 1 0, boc $line-soft
+                  Text "Newsletter / Marketing", grow, fs 13, col $ink
+                  Frame w 80, center
+                    Icon "check-square", is 16, ic $brand
+                  Frame w 80, center
+                    Icon "square", is 16, ic $line-strong
+                  Frame w 80, center
+                    Icon "square", is 16, ic $line-strong
+                  Frame w 80, center
+                    Icon "check-square", is 16, ic $brand
+                  Frame w 80, center
+                    Icon "square", is 16, ic $line-strong
+
+                // row 2
+                Frame hor, ver-center, pad 10 12, bor 0 0 1 0, boc $line-soft
+                  Text "Vertrag & Rechnung", grow, fs 13, col $ink
+                  Frame w 80, center
+                    Icon "check-square", is 16, ic $brand
+                  Frame w 80, center
+                    Icon "square", is 16, ic $line-strong
+                  Frame w 80, center
+                    Icon "check-square", is 16, ic $brand
+                  Frame w 80, center
+                    Icon "check-square", is 16, ic $brand
+                  Frame w 80, center
+                    Icon "square", is 16, ic $line-strong
+
+                // row 3
+                Frame hor, ver-center, pad 10 12, bor 0 0 1 0, boc $line-soft
+                  Text "Service / Tickets", grow, fs 13, col $ink
+                  Frame w 80, center
+                    Icon "check-square", is 16, ic $brand
+                  Frame w 80, center
+                    Icon "check-square", is 16, ic $brand
+                  Frame w 80, center
+                    Icon "square", is 16, ic $line-strong
+                  Frame w 80, center
+                    Icon "check-square", is 16, ic $brand
+                  Frame w 80, center
+                    Icon "check-square", is 16, ic $brand
+
+                // row 4
+                Frame hor, ver-center, pad 10 12
+                  Text "Eskalation P1", grow, fs 13, col $ink
+                  Frame w 80, center
+                    Icon "check-square", is 16, ic $brand
+                  Frame w 80, center
+                    Icon "check-square", is 16, ic $brand
+                  Frame w 80, center
+                    Icon "square", is 16, ic $line-strong
+                  Frame w 80, center
+                    Icon "square", is 16, ic $line-strong
+                  Frame w 80, center
+                    Icon "check-square", is 16, ic $brand
+
+            // Sprache / Zeitzone / Empfangsfenster
+            Frame hor, gap 16, mar 4 0 0 0
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "Kommunikationssprache"
+                FakeSelect
+                  Text "Deutsch (DE-CH)", grow, fs 13, col $ink
+                  Icon "chevron-down", is 14, ic $ink-muted, mar 0 8
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "Zeitzone"
+                FakeSelect
+                  Text "Europe/Zurich (UTC+1)", grow, fs 13, col $ink
+                  Icon "chevron-down", is 14, ic $ink-muted, mar 0 8
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "Empfangsfenster"
+                Inp value "Mo–Fr · 08:00–17:30"
+
+        // Compliance-Card
+        Card
+          Head
+            Icon "shield-check", is 16, ic $ink-muted
+            CardTitle
+              Text "Compliance & Datenschutz"
+            PillRed
+              Text "1 offen"
+            Frame grow
+            BtnGhost
+              Icon "file-search", is 14
+              Text "Audit-Log"
+
+          Body
+            // 3 status boxes
+            Frame hor, gap 12
+
+              // Rechtsgrundlage — OK
+              Frame ver, gap 4, grow, bor 1, boc $line, rad 8, pad 12
+                Frame hor, ver-center
+                  Text "Rechtsgrundlage", fs 11, weight 500, col $ink-muted, grow
+                  Icon "circle-check", is 16, ic $ok
+                Text "Art. 6 Abs. 1 lit. b", fs 13, weight 500, col $ink, mar 4 0 0 0
+                Text "Vertragserfüllung mit juristischer Person", fs 11, col $ink-muted
+                Frame w full, h 1, bg $line-soft, mar 8 0 8 0
+                Text "AVV signiert · 14.03.2026", fs 11, col $ink-muted, font mono
+
+              // Sanktionen — OK
+              Frame ver, gap 4, grow, bor 1, boc $line, rad 8, pad 12
+                Frame hor, ver-center
+                  Text "Sanktionen", fs 11, weight 500, col $ink-muted, grow
+                  Icon "circle-check", is 16, ic $ok
+                Text "Keine Treffer", fs 13, weight 500, col $ink, mar 4 0 0 0
+                Text "EU · OFAC · SECO · UN", fs 11, col $ink-muted
+                Frame w full, h 1, bg $line-soft, mar 8 0 8 0
+                Text "Geprüft · 02.05.2026 04:12", fs 11, col $ink-muted, font mono
+
+              // AML/KYC — open
+              Frame ver, gap 4, grow, bor 1, boc $bad-ring, rad 8, pad 12, bg $bad-soft
+                Frame hor, ver-center
+                  Text "AML / KYC", fs 11, weight 500, col $ink-muted, grow
+                  Icon "circle-alert", is 16, ic $bad
+                Text "UBO-Nachweis fehlt", fs 13, weight 500, col $bad-ink, mar 4 0 0 0
+                Text "1 Person mit > 25 % Beteiligung", fs 11, col $ink-muted
+                BtnSm bg white, boc $line, mar 8 0 0 0, w full, center
+                  Icon "upload", is 14
+                  Text "Dokument hochladen"
+
+            // Consent-Tabelle
+            Frame ver, gap 8, mar 4 0 0 0
+              Lbl
+                Text "Einwilligungen"
+
+              Frame ver, w full, bor 1, boc $line, rad 6, clip
+                // header
+                Frame hor, ver-center, pad 8 12, bg $hover, bor 0 0 1 0, boc $line
+                  Text "Zweck", grow, fs 11, weight 500, col $ink-muted, uppercase
+                  Text "Status", w 140, fs 11, weight 500, col $ink-muted, uppercase
+                  Text "Quelle", w 180, fs 11, weight 500, col $ink-muted, uppercase
+                  Text "Gültig bis", w 110, fs 11, weight 500, col $ink-muted, uppercase
+                  Text "Version", w 100, fs 11, weight 500, col $ink-muted, uppercase
+
+                // row 1
+                Frame hor, ver-center, pad 10 12, bor 0 0 1 0, boc $line-soft
+                  Text "Marketing-E-Mail (Double-Opt-In)", grow, fs 13, col $ink
+                  Frame w 140
+                    PillGreen
+                      Icon "check", is 12
+                      Text "Erteilt"
+                  Text "Webformular", w 180, fs 12, col $ink-muted
+                  Text "31.12.2027", w 110, fs 12, font mono, col $ink
+                  Text "v2026-01", w 100, fs 12, font mono, col $ink-muted
+
+                // row 2
+                Frame hor, ver-center, pad 10 12, bor 0 0 1 0, boc $line-soft
+                  Text "Telefonische Werbung", grow, fs 13, col $ink
+                  Frame w 140
+                    PillGray
+                      Icon "ban", is 12
+                      Text "Verweigert"
+                  Text "mündlich · 14.03.2026", w 180, fs 12, col $ink-muted
+                  Text "—", w 110, col $ink-faint
+                  Text "—", w 100, col $ink-faint
+
+                // row 3
+                Frame hor, ver-center, pad 10 12, bor 0 0 1 0, boc $line-soft
+                  Text "Profiling für Bedarfsanalyse", grow, fs 13, col $ink
+                  Frame w 140
+                    PillGreen
+                      Icon "check", is 12
+                      Text "Erteilt"
+                  Text "AVV-Anhang B", w 180, fs 12, col $ink-muted
+                  Text "14.03.2028", w 110, fs 12, font mono, col $ink
+                  Text "v2026-01", w 100, fs 12, font mono, col $ink-muted
+
+                // row 4
+                Frame hor, ver-center, pad 10 12
+                  Text "Sub-Prozessor-Weitergabe (DE)", grow, fs 13, col $ink
+                  Frame w 140
+                    PillAmber
+                      Icon "clock", is 12
+                      Text "Ausstehend"
+                  Text "—", w 180, col $ink-faint
+                  Text "—", w 110, col $ink-faint
+                  Text "—", w 100, col $ink-faint
+
+        // Finanzen-Card
+        Card
+          Head
+            Icon "banknote", is 16, ic $ink-muted
+            CardTitle
+              Text "Finanzen & Bonität"
+
+          Body
+            // row 1
+            Frame hor, gap 16
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "Währung"
+                FakeSelect
+                  Text "CHF — Schweizer Franken", grow, fs 13, col $ink
+                  Icon "chevron-down", is 14, ic $ink-muted, mar 0 8
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "Zahlungsziel"
+                Inp value "30 Tage netto"
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "Skonto"
+                Inp value "2 % bei 10 Tagen"
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "Kreditlimit"
+                Inp value "800'000", font mono
+                Hlp
+                  Text "Genehmigt 14.03.2026 · M. Brun"
+
+            // row 2
+            Frame hor, gap 16
+              Frame ver, gap 0, w 360
+                Lbl
+                  Text "Bankverbindung"
+                Inp value "Zürcher Kantonalbank, 8001 Zürich"
+              Frame ver, gap 0, grow
+                Lbl
+                  Text "IBAN"
+                Inp value "CH56 0070 0110 0030 1234 5", font mono
+              Frame ver, gap 0, w 160
+                Lbl
+                  Text "SWIFT/BIC"
+                Inp value "ZKBKCHZZ80A", font mono
+
+            // 3 stat boxes
+            Frame hor, gap 12, mar 8 0 0 0
+              Frame ver, gap 4, grow, bor 1, boc $line, rad 8, pad 12
+                Text "Bonitäts-Score", fs 11, weight 500, col $ink-muted
+                Frame hor, gap 6, ver-center, mar 4 0 0 0
+                  Text "228", fs 20, weight 600, font mono, col $ink
+                  Text "/ 600 · Creditreform", fs 11, col $ink-muted
+                Bar w full, mar 8 0 6 0
+                  Fill w 110, bg $brand
+                Text "Klasse B+ · moderates Risiko", fs 11, col $ink-muted
+
+              Frame ver, gap 4, grow, bor 1, boc $line, rad 8, pad 12
+                Text "Limit-Auslastung", fs 11, weight 500, col $ink-muted
+                Text "41 %", fs 20, weight 600, font mono, col $ink, mar 4 0 0 0
+                Bar w full, mar 8 0 6 0
+                  Fill w 120, bg $brand
+                Text "CHF 327 400 von 800 000", fs 11, col $ink-muted, font mono
+
+              Frame ver, gap 4, grow, bor 1, boc $line, rad 8, pad 12
+                Text "Zahlungsmoral", fs 11, weight 500, col $ink-muted
+                Frame hor, gap 6, ver-center, mar 4 0 0 0
+                  Text "+3,2", fs 20, weight 600, font mono, col $ok
+                  Text "Tage Ø verspätet", fs 11, col $ink-muted
+                // mini bar chart
+                Frame hor, gap 2, ver, align bottom, h 32, mar 8 0 4 0
+                  Frame w 6, h 8, bg $ok, rad 1
+                  Frame w 6, h 14, bg $ok, rad 1
+                  Frame w 6, h 11, bg $ok, rad 1
+                  Frame w 6, h 20, bg $ok, rad 1
+                  Frame w 6, h 16, bg $ok, rad 1
+                  Frame w 6, h 19, bg $ok, rad 1
+                  Frame w 6, h 10, bg $ok, rad 1
+                  Frame w 6, h 24, bg $ok, rad 1
+                  Frame w 6, h 18, bg $ok, rad 1
+                  Frame w 6, h 13, bg $ok, rad 1
+                  Frame w 6, h 16, bg $ok, rad 1
+                  Frame w 6, h 14, bg $ok, rad 1
+                Text "Letzte 12 Rechnungen · alle bezahlt", fs 11, col $ink-muted
+
+      // ─── RIGHT RAIL (w 360)
+      Frame ver, w 360, gap 16
+
+        // Fortschritt-Card
+        Card
+          Head
+            Icon "check-circle-2", is 16, ic $ink-muted
+            CardTitle
+              Text "Fortschritt"
+          Body
+            Frame hor, gap 16, ver-center
+              // ring placeholder (using nested Frames)
+              Frame w 72, h 72, rad 999, bor 6, boc $brand-ring, center
+                Frame w 64, h 64, rad 999, center
+                  Text "76%", fs 16, weight 600, col $ink
+              Frame ver, gap 6, grow
+                Frame hor, gap 8, ver-center
+                  Icon "check-circle-2", is 14, ic $ok
+                  Text "12/14 Pflichtfelder", fs 12, col $ink
+                Frame hor, gap 8, ver-center
+                  Icon "alert-triangle", is 14, ic $warn
+                  Text "2 Hinweise", fs 12, col $ink
+                Frame hor, gap 8, ver-center
+                  Icon "copy", is 14, ic $bad
+                  Text "1 Duplikat", fs 12, col $ink
+            Frame w full, h 1, bg $line-soft, mar 8 0 0 0
+            Text "Noch erforderlich: UBO-Nachweis, Lieferadresse-Empfänger.", fs 11, col $ink-muted, line 1.5
+
+        // Co-Pilot-Card
+        Card
+          Head
+            Icon "sparkles", is 16, ic $violet
+            CardTitle
+              Text "Co-Pilot"
+            PillViolet
+              Text "Beta"
+          Body
+            // Vorschlag
+            AICard
+              Frame hor, gap 4, ver-center
+                Icon "zap", is 12, ic $violet
+                Text "VORSCHLAG", fs 10, weight 600, col $violet, uppercase
+              Text "Mitarbeiterzahl 312 aus LinkedIn übernehmen?", fs 12, col $ink, line 1.5, mar 4 0 0 0
+              Frame hor, gap 6, mar 8 0 0 0
+                BtnSm bg $brand, col white
+                  Text "Übernehmen"
+                BtnSm bg transparent, col $ink-soft
+                  Text "Verwerfen"
+
+            // Hinweis
+            AICard
+              Frame hor, gap 4, ver-center
+                Icon "alert-triangle", is 12, ic $warn
+                Text "HINWEIS", fs 10, weight 600, col $warn, uppercase
+              Text "Lieferadresse Cham fehlt der Empfängername am Tor B — Sendungen werden ggf. zurückgewiesen.", fs 12, col $ink, line 1.5, mar 4 0 0 0
+              Text "Beheben", fs 12, col $brand, weight 500, mar 6 0 0 0
+
+            // Insight
+            AICard
+              Frame hor, gap 4, ver-center
+                Icon "lightbulb", is 12, ic $ink-muted
+                Text "INSIGHT", fs 10, weight 600, col $ink-muted, uppercase
+              Text "Ähnliche A-Tier-Kunden im Bauwesen schliessen ø nach 17 Tagen den ersten Vertrag ab.", fs 12, col $ink, line 1.5, mar 4 0 0 0
+
+        // Aktivität-Card
+        Card
+          Head
+            Icon "activity", is 16, ic $ink-muted
+            CardTitle
+              Text "Aktivität"
+            Frame grow
+            IconBtnSm
+              Icon "filter", is 14
+          Body
+            // Timeline items
+            Frame ver, gap 0
+              TimelineItem
+                TLIcon bg $brand-soft, boc $brand-ring, col $brand-soft-ink
+                  Icon "mail", is 14
+                Frame ver, gap 2, grow
+                  Text "E-Mail an Marc Kunz — „Angebotsstruktur Q3“", fs 12, col $ink, line 1.5
+                  Text "Vor 2 Tagen · TS", fs 11, col $ink-muted
+
+              TimelineItem
+                TLIcon bg $violet-soft, boc $violet-ring, col $violet
+                  Icon "phone", is 14
+                Frame ver, gap 2, grow
+                  Text "Anruf mit Dr. E. Wettstein · 14 Min", fs 12, col $ink, line 1.5
+                  Text "21.04.2026 · TS", fs 11, col $ink-muted
+
+              TimelineItem
+                TLIcon bg $teal-soft, boc $teal-ring, col $teal
+                  Icon "calendar", is 14
+                Frame ver, gap 2, grow
+                  Text "Termin — Erstgespräch Limmatstrasse", fs 12, col $ink, line 1.5
+                  Text "28.04.2026 · 09:00", fs 11, col $ink-muted
+
+              TimelineItem
+                TLIcon
+                  Icon "file-check-2", is 14
+                Frame ver, gap 2, grow
+                  Text "AVV v3.2 signiert", fs 12, col $ink, line 1.5
+                  Text "14.03.2026 · System", fs 11, col $ink-muted
+
+              TimelineItem
+                TLIcon
+                  Icon "user-plus", is 14
+                Frame ver, gap 2, grow
+                  Text "Datensatz angelegt", fs 12, col $ink, line 1.5
+                  Text "21.04.2026 · TS", fs 11, col $ink-muted
+
+            BtnGhost w full, center, mar 4 0 0 0
+              Text "Alle 28 Aktivitäten ansehen"
+
+        // Offene Deals
+        Card
+          Head
+            Icon "trending-up", is 16, ic $ink-muted
+            CardTitle
+              Text "Offene Deals"
+            Text "2", fs 12, col $ink-muted
+            Frame grow
+            IconBtnSm
+              Icon "plus", is 14
+          Body
+            // Deal 1
+            DealCard $stripe-blue-style
+              Frame hor, ver-center
+                Text "ERP-Modernisierung — Phase I", fs 13, weight 500, col $ink, grow
+                PillBlue
+                  Text "Proposal"
+              Frame hor, ver-center, mar 6 0 0 0
+                Text "CHF 1 820 000", fs 12, font mono, col $ink, grow
+                Text "70 %", fs 11, col $ink-muted
+              Bar w full, mar 4 0 0 0
+                Fill w 224, bg $brand
+              Frame hor, ver-center, mar 6 0 0 0
+                Text "Close: Q3/2026", fs 11, col $ink-muted, grow
+                Frame hor, gap 0, ver-center
+                  AvatarXs bg $brand
+                    Text "TS"
+                  AvatarXs bg $violet, mar 0 0 0 -4
+                    Text "LF"
+
+            // Deal 2
+            DealCard $stripe-amber-style
+              Frame hor, ver-center
+                Text "BIM-Cloud Anbindung", fs 13, weight 500, col $ink, grow
+                PillAmber
+                  Text "Discovery"
+              Frame hor, ver-center, mar 6 0 0 0
+                Text "CHF 320 000", fs 12, font mono, col $ink, grow
+                Text "25 %", fs 11, col $ink-muted
+              Bar w full, mar 4 0 0 0
+                Fill w 80, bg $warn
+              Frame hor, ver-center, mar 6 0 0 0
+                Text "Close: Q4/2026", fs 11, col $ink-muted, grow
+                AvatarXs bg $brand
+                  Text "TS"
+
+        // Dateien
+        Card
+          Head
+            Icon "paperclip", is 16, ic $ink-muted
+            CardTitle
+              Text "Dateien"
+            Text "12", fs 12, col $ink-muted
+            Frame grow
+            IconBtnSm
+              Icon "upload", is 14
+          Body
+            FileRow
+              FileExt bg $bad
+                Text "PDF"
+              Frame ver, gap 2, grow
+                Text "AVV_v3.2_signiert.pdf", fs 12, col $ink
+                Text "412 KB", fs 11, font mono, col $ink-muted
+              IconBtnSm
+                Icon "download", is 14
+
+            FileRow
+              FileExt bg $ok
+                Text "XLS"
+              Frame ver, gap 2, grow
+                Text "Bonität_Q1_2026.xlsx", fs 12, col $ink
+                Text "88 KB", fs 11, font mono, col $ink-muted
+              IconBtnSm
+                Icon "download", is 14
+
+            FileRow
+              FileExt bg $brand
+                Text "DOC"
+              Frame ver, gap 2, grow
+                Text "Rahmenvertrag_v0.4.docx", fs 12, col $ink
+                Text "236 KB", fs 11, font mono, col $ink-muted
+              IconBtnSm
+                Icon "download", is 14
+
+            BtnGhost w full, center, mar 2 0 0 0
+              Text "9 weitere anzeigen"
+
+    // ===== Sticky Footer =====
+    Frame hor, gap 12, ver-center, w full, h 56, pad 0 24, bg white, bor 1 0 0 0, boc $line
+
+      Frame hor, gap 8, ver-center
+        Frame w 6, h 6, rad 999, bg $ok
+        Text "Entwurf · v42 · gespeichert vor 14 s", fs 12, col $ink-muted
+        Text "Verlauf", fs 12, col $brand, mar 0 0 0 4
+
+      Frame hor, gap 16, ver-center, mar 0 0 0 24
+        Frame hor, gap 6, ver-center
+          Icon "check-circle-2", is 14, ic $ok
+          Text "12/14 Pflichtfelder", fs 12, col $ink-muted
+        Frame hor, gap 6, ver-center
+          Icon "alert-triangle", is 14, ic $warn
+          Text "2 Hinweise", fs 12, col $ink-muted
+        Frame hor, gap 6, ver-center
+          Icon "copy", is 14, ic $bad
+          Text "1 Duplikat", fs 12, col $ink-muted
+
+      Frame grow
+
+      BtnDangerGhost
+        Icon "trash-2", is 16
+        Text "Verwerfen"
+      BtnSecondary
+        Icon "eye", is 16
+        Text "Vorschau"
+      BtnSecondary
+        Icon "send", is 16
+        Text "Zur Prüfung senden"
+      BtnPrimary
+        Icon "check", is 16
+        Text "Kunden anlegen"
+        Kbd
+          Text "⌘ ⏎"

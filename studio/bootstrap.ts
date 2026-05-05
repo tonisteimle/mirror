@@ -50,8 +50,11 @@ import {
   type ComponentChild,
 } from './panels/components'
 import { ActivityBar, createActivityBar, ACTIVITY_BAR_ICONS } from './panels/explorer'
-import { TokenRenderer } from './compile/token-renderer'
-import { parseTokensFromFiles } from './pickers/token/types'
+// MVP single-file mode: TokenRenderer + parseTokensFromFiles powered the
+// design-system sidebar (deactivated). Type-only import keeps the
+// StudioInstance.tokensRenderer field shape; the runtime is no longer
+// constructed here.
+import type { TokenRenderer } from './compile/token-renderer'
 import type { DrawManager } from './visual/draw-manager'
 import type { InlineEditController } from './inline-edit'
 import { initDrawManager, initInlineEdit, initSync } from './init'
@@ -196,7 +199,7 @@ let propertyPanelContainer: HTMLElement | null = null
 let componentPanelContainer: HTMLElement | null = null
 
 // Store tokens panel container for lazy initialization
-let tokensPanelContainer: HTMLElement | null = null
+const tokensPanelContainer: HTMLElement | null = null
 
 // Store user components panel container for lazy initialization
 let userComponentsPanelContainer: HTMLElement | null = null
@@ -391,49 +394,10 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     logBootstrap.info(' ComponentPanel initialized')
   }
 
-  // Initialize Tokens sidebar by reusing the existing TokenRenderer that
-  // already powers the .tok-file preview. Pointed at the sidebar container,
-  // it re-renders on every `source:changed` event so edits to any tokens
-  // file update the swatches immediately.
-  if (config.tokensPanelContainer) {
-    tokensPanelContainer = config.tokensPanelContainer
-  }
-  if (tokensPanelContainer && config.getFiles) {
-    const container = tokensPanelContainer
-    const getFilesCallback = config.getFiles
-    container.classList.add('tokens-preview')
-
-    const buildFileMap = (): Record<string, string> => {
-      const map: Record<string, string> = {}
-      for (const f of getFilesCallback()) map[f.name] = f.code
-      return map
-    }
-    const renderer = new TokenRenderer({
-      preview: container,
-      getAllProjectSource: () => Object.values(buildFileMap()).filter(Boolean).join('\n'),
-    })
-    studio.tokensRenderer = renderer
-
-    const renderTokens = () => {
-      const defs = parseTokensFromFiles(buildFileMap())
-      // TokenRenderer.render expects an AST; only `tokens` is read.
-      renderer.render({
-        components: [],
-        instances: [],
-        // Strip the leading $ that parseTokens adds — TokenRenderer's
-        // category detection works on either form, but the parser AST
-        // stores names without $.
-        tokens: defs.map(d => ({ name: d.name.replace(/^\$/, ''), value: d.value })),
-      } as any)
-    }
-
-    renderTokens()
-    // compile:completed fires after every successful compile (regardless
-    // of which file is currently in the editor), so swatches stay in sync
-    // even when the user is editing index.mir while tokens.tok changes.
-    eventUnsubscribes.push(events.on('compile:completed', () => renderTokens()))
-    logBootstrap.info(' Tokens sidebar initialized')
-  }
+  // MVP single-file mode: design-system tokens sidebar deactivated. The
+  // TokenRenderer / parseTokensFromFiles wiring previously rendered swatches
+  // for the multi-file project; reactivate together with the explorer panel
+  // when multi-file returns.
 
   // Initialize User Components Panel if container and getFiles provided
   if (config.userComponentsPanelContainer) {
@@ -744,7 +708,6 @@ function initializePanelVisibility(): void {
     document.getElementById('explorer-panel') || document.querySelector('.sidebar')
   panelElements.code = document.querySelector('.editor-panel')
   panelElements.components = document.getElementById('components-panel')
-  panelElements.tokens = document.getElementById('tokens-panel')
   panelElements['design-system'] = document.getElementById('design-system-panel')
   panelElements.preview = document.querySelector('.preview-panel')
   panelElements.property = document.getElementById('property-panel')
@@ -858,10 +821,10 @@ function initializeActivityBar(): void {
   }
 
   // Activity Bar items for all panels
+  // MVP single-file mode: 'files' (file-explorer) and 'design-system'
+  // (tokens + components-with-states) toggles removed.
   const items = [
-    { id: 'files', icon: ACTIVITY_BAR_ICONS.files, tooltip: 'Files' },
     { id: 'components', icon: ACTIVITY_BAR_ICONS.components, tooltip: 'Components' },
-    { id: 'tokens', icon: ACTIVITY_BAR_ICONS.tokens, tooltip: 'Tokens' },
     { id: 'code', icon: ACTIVITY_BAR_ICONS.code, tooltip: 'Code Editor' },
     { id: 'preview', icon: ACTIVITY_BAR_ICONS.preview, tooltip: 'Preview' },
     { id: 'property', icon: ACTIVITY_BAR_ICONS.properties, tooltip: 'Properties' },

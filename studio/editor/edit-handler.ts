@@ -32,6 +32,11 @@ import {
 } from '../agent/edit-flow'
 import type { EditCaptureCtx } from '../agent/edit-prompts'
 import { createChangeTracker, type ChangeTracker } from '../agent/change-tracker'
+import {
+  runGenerationPipeline as defaultRunGenerationPipeline,
+  type GenerationPipelineResult,
+  type GenerationPipelineStepEvent,
+} from '../agent/generation-pipeline'
 
 export interface EditHandlerConfig {
   /** Returns the project's tokens + components for prompt injection. */
@@ -55,11 +60,20 @@ export interface EditHandlerConfig {
   openPromptField?: (view: EditorView, options: PromptFieldOptions) => PromptFieldHandle
   /** Test seam — defaults to a fresh tracker per handler instance. */
   changeTracker?: ChangeTracker
+  /** Test seam — defaults to the production runGenerationPipeline. */
+  runGenerationPipeline?: typeof defaultRunGenerationPipeline
 }
 
 export interface EditHandlerHandlers {
   handleEditFlow: (view: EditorView) => boolean
   openPromptField: (view: EditorView) => boolean
+  /**
+   * Two-stage generation pipeline (Mod-Alt-Enter): user-prompt → HTML →
+   * Mirror. Opens the inline prompt-field for instruction; replaces the
+   * whole file via ghost-diff. If the editor is non-empty, its content
+   * is passed to the pipeline as a sketch to interpret-and-polish.
+   */
+  generateFromPrompt: (view: EditorView) => boolean
   acceptGhost: (view: EditorView) => boolean
   dismissGhost: (view: EditorView) => boolean
   /**
@@ -74,6 +88,7 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
   const tracker = config.changeTracker ?? createChangeTracker()
   const runEditFlow = config.runEditFlow ?? defaultRunEditFlow
   const openPromptField = config.openPromptField ?? defaultOpenPromptField
+  const runGenerationPipeline = config.runGenerationPipeline ?? defaultRunGenerationPipeline
   const qualityRetry = config.qualityRetry ?? true
 
   let currentAbort: AbortController | null = null
@@ -159,6 +174,88 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
     }
   }
 
+  const runGenerationFlow = async (view: EditorView, instruction: string) => {
+    if (currentAbort) currentAbort.abort()
+    const ctrl = new AbortController()
+    currentAbort = ctrl
+
+    const baseSource = view.state.doc.toString()
+
+    setEditStatus('thinking', 'AI denkt nach…')
+
+    let result: GenerationPipelineResult
+    try {
+      result = await runGenerationPipeline(
+        {
+          userPrompt: instruction,
+          // If the editor already has Mirror content, treat it as a sketch
+          // for the pipeline to interpret and polish. Empty editor → pure
+          // prompt-driven generation.
+          sketch: baseSource.trim() === '' ? undefined : baseSource,
+        },
+        {
+          signal: ctrl.signal,
+          onStep: (event: GenerationPipelineStepEvent) => {
+            // Suppress phase updates if we've been superseded — otherwise
+            // a stale call's progress message could overwrite the new
+            // call's status.
+            if (currentAbort !== ctrl) return
+            switch (event.kind) {
+              case 'html-start':
+                setEditStatus('thinking', 'HTML wird generiert…')
+                break
+              case 'html-done':
+                setEditStatus('thinking', 'Übersetze HTML zu Mirror…')
+                break
+              case 'translate-done':
+                setEditStatus('thinking', 'Validiere…')
+                break
+              case 'validate':
+                if (!event.valid) {
+                  setEditStatus(
+                    'thinking',
+                    `Validator-Fehler — Retry (Versuch ${event.attempt + 2})…`
+                  )
+                }
+                break
+            }
+          },
+        }
+      )
+    } catch (err) {
+      if (currentAbort !== ctrl) return
+      currentAbort = null
+      setEditStatus('error', errorMessage(err))
+      return
+    }
+
+    if (currentAbort !== ctrl) return // superseded
+    currentAbort = null
+
+    if (result.status === 'error') {
+      setEditStatus('error', result.error ?? 'Generation fehlgeschlagen')
+      return
+    }
+
+    if (!result.mirror) {
+      setEditStatus('error', 'Pipeline lieferte keinen Mirror-Output')
+      return
+    }
+
+    setGhostDiff(view, baseSource, result.mirror)
+    if (result.status === 'warning') {
+      const errorCount = result.validationErrors?.length ?? 0
+      setEditStatus(
+        'warning',
+        `Tab akzeptieren · Esc verwerfen · ⚠ ${errorCount} Validator-${
+          errorCount === 1 ? 'Issue' : 'Issues'
+        }`
+      )
+    } else {
+      setEditStatus('ready')
+    }
+  }
+
   return {
     handleEditFlow(view) {
       const ctx = captureCtx(view, null)
@@ -171,6 +268,20 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
         onSubmit: instruction => {
           const ctx = captureCtx(view, instruction)
           void runFlow(view, ctx)
+        },
+        onCancel: () => {
+          // No-op; the widget already removed itself.
+        },
+      })
+      return true
+    },
+
+    generateFromPrompt(view) {
+      openPromptField(view, {
+        placeholder:
+          'Was soll generiert werden? (Pipeline: Prompt → HTML → Mirror; Enter senden, Esc abbrechen)',
+        onSubmit: instruction => {
+          void runGenerationFlow(view, instruction)
         },
         onCancel: () => {
           // No-op; the widget already removed itself.

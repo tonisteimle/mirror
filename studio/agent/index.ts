@@ -36,6 +36,23 @@ export {
 
 export { buildEditPrompt, type EditCaptureCtx } from './edit-prompts'
 
+export {
+  runGenerationPipeline,
+  type GenerationPipelineInput,
+  type GenerationPipelineResult,
+  type GenerationPipelineStatus,
+  type GenerationPipelineStepEvent,
+  type RunGenerationPipelineOptions,
+} from './generation-pipeline'
+
+export {
+  buildHtmlGenerationPrompt,
+  buildTranslationPrompt,
+  type HtmlGenerationPromptInput,
+  type TranslationContext,
+  type TranslationPromptInput,
+} from './generation-prompts'
+
 export { parsePatchResponse, type Patch, type ParsedPatchResponse } from './patch-format'
 
 export { applyPatches, type ApplyResult, type RetryHint } from './patch-applier'

@@ -50,7 +50,9 @@ export const allProjectTests: TestSuite = [
   ...screenNavigationTests,
   ...complexLayoutTests,
   ...fileSwitchingTests,
-  ...tokensSidebarTests,
+  // MVP single-file mode: tokens sidebar (design-system panel) is
+  // deactivated. Re-include when the panel returns.
+  // ...tokensSidebarTests,
 ]
 
 export default allProjectTests

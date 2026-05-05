@@ -70,15 +70,7 @@ export interface StudioEvents {
   'panel:property-removed': { nodeId: string; property: string }
   'panel:update-requested': { nodeId: string }
   'panel:visibility-changed': {
-    panel:
-      | 'prompt'
-      | 'files'
-      | 'code'
-      | 'components'
-      | 'tokens'
-      | 'design-system'
-      | 'preview'
-      | 'property'
+    panel: 'prompt' | 'files' | 'code' | 'components' | 'design-system' | 'preview' | 'property'
     visible: boolean
   }
   'panel:sizes-changed': { sizes: { sidebar: number; editor: number; preview: number } }

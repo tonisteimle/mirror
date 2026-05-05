@@ -1,0 +1,49 @@
+// Tokens
+accent.col: #16a34a
+accent-subtle.bg: #dcfce7
+surface.bg: #ffffff
+surface-raised.bg: #f9fafb
+text-primary.col: #111827
+text-secondary.col: #6b7280
+text-action.col: #374151
+border.boc: #e5e7eb
+dismiss.col: #9ca3af
+dismiss-hover.col: #374151
+
+// Components
+UndoBtn as Button: bg transparent, bor 0, pad 4 8, rad 6, fs 13, weight 500, col $accent, cursor pointer
+  hover:
+    bg $accent-subtle
+  active:
+    opacity 0.75
+
+DismissBtn as Button: bg transparent, bor 0, w 24, h 24, rad 6, cursor pointer, ic $dismiss, center
+  hover:
+    ic $dismiss-hover
+    bg $surface-raised
+  active:
+    opacity 0.6
+
+// Canvas
+canvas bg #f3f4f6, font sans, center
+
+// Toast (visible state)
+Frame name Toast, hor, w 420, bg $surface, bor 1, boc $border, rad 12, pad 16, gap 12, ver-center shadow sm
+  Icon "check-circle", is 20, ic $accent, shrink
+  Frame grow, gap 4
+    Text "Changes saved", fs 14, weight 600, col $text-primary
+    Text "Your workspace was updated successfully.", fs 13, col $text-secondary
+  Frame hor, gap 8, shrink, ver-center
+    UndoBtn "Undo"
+    DismissBtn onclick hide(Toast), show(RestoreHint)
+      Icon "x", is 14
+
+// Restore hint (shown after dismiss)
+Frame name RestoreHint, hor, gap 8, ver-center, fs 13, col $text-secondary, hidden
+  Toast.hidden:
+    visible
+  Text "Toast dismissed."
+  Button "Show again", bg transparent, bor 0, pad 0, fs 13, weight 500, col $text-action, cursor pointer, underline
+    hover:
+      col $text-primary
+    onclick show(Toast), hide(RestoreHint)

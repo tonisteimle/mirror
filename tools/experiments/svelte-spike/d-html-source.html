@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Player</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=DM+Mono:wght@300;400&display=swap');
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: #1a1612;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .player {
+    width: 320px;
+    background: #1e1a16;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    /* Subtle noise texture via SVG data URI */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    border: 1px solid #2e2720;
+    box-shadow: 0 32px 64px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4);
+  }
+
+  /* Album Art */
+  .album-art {
+    width: 320px;
+    height: 320px;
+    position: relative;
+    overflow: hidden;
+    background: #0d0b09;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .album-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .album-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent 55%,
+      rgba(30, 26, 22, 0.3) 75%,
+      rgba(30, 26, 22, 0.85) 100%
+    );
+    pointer-events: none;
+  }
+
+  /* Meta Section */
+  .meta {
+    padding: 20px 24px 0;
+  }
+
+  .track-title {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 22px;
+    color: #f0e8dc;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .track-artist {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 300;
+    color: #7a6e63;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 5px;
+  }
+
+  /* Progress */
+  .progress-section {
+    padding: 20px 24px 0;
+  }
+
+  .progress-track {
+    position: relative;
+    height: 2px;
+    background: #2e2720;
+    border-radius: 1px;
+    cursor: pointer;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: #c8924a;
+    border-radius: 1px;
+    width: 35%;
+    position: relative;
+    transition: width 0.1s linear;
+  }
+
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    right: -3px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #c8924a;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .progress-track:hover .progress-fill::after {
+    opacity: 1;
+  }
+
+  .time-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 9px;
+  }
+
+  .time-label {
+    font-size: 9.5px;
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    color: #5a504a;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .time-label.current {
+    color: #8a7a6e;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 18px 24px 4px;
+  }
+
+  .ctrl-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7a6e63;
+    border-radius: 2px;
+    transition: color 0.12s, transform 0.08s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ctrl-btn:hover {
+    color: #c8924a;
+  }
+
+  .ctrl-btn:active {
+    transform: scale(0.92);
+  }
+
+  .ctrl-btn.play {
+    color: #f0e8dc;
+    padding: 10px 20px;
+  }
+
+  .ctrl-btn.play:hover {
+    color: #ffffff;
+  }
+
+  .ctrl-btn svg {
+    display: block;
+  }
+
+  /* Action Row */
+  .actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 2px 24px 22px;
+    border-top: 1px solid transparent;
+    margin-top: 12px;
+    border-top-color: #26211c;
+    padding-top: 14px;
+  }
+
+  .action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 7px 16px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #4a4038;
+    border-radius: 2px;
+    transition: color 0.12s;
+    font-family: 'DM Mono', monospace;
+    font-size: 8.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .action-btn:hover {
+    color: #8a7a6e;
+  }
+
+  .action-btn:active {
+    transform: scale(0.96);
+  }
+
+  .action-btn.favorited {
+    color: #c8924a;
+  }
+
+  .action-btn svg {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  /* Separator dots */
+  .action-sep {
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: #2e2720;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="player" id="player">
+  <!-- Album Art -->
+  <div class="album-art" id="albumArt">
+    <canvas class="album-canvas" id="albumCanvas" width="320" height="320"></canvas>
+    <div class="album-overlay"></div>
+  </div>
+
+  <!-- Track Info -->
+  <div class="meta">
+    <div class="track-title" id="trackTitle">Saudade do Nordeste</div>
+    <div class="track-artist" id="trackArtist">Maria Bethânia &nbsp;·&nbsp; 1978</div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-section">
+    <div class="progress-track" id="progressTrack">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div class="time-row">
+      <span class="time-label current" id="timeCurrent">1:24</span>
+      <span class="time-label" id="timeRemaining">−2:13</span>
+    </div>
+  </div>
+
+  <!-- Playback Controls -->
+  <div class="controls">
+    <!-- Previous -->
+    <button class="ctrl-btn" id="prevBtn" aria-label="Previous">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="19 20 9 12 19 4 19 20"></polygon>
+        <line x1="5" y1="19" x2="5" y2="5"></line>
+      </svg>
+    </button>
+
+    <!-- Play/Pause -->
+    <button class="ctrl-btn play" id="playBtn" aria-label="Play">
+      <svg id="playIcon" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+      </svg>
+      <svg id="pauseIcon" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="display:none">
+        <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+        <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+      </svg>
+    </button>
+
+    <!-- Next -->
+    <button class="ctrl-btn" id="nextBtn" aria-label="Next">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="5 4 15 12 5 20 5 4"></polygon>
+        <line x1="19" y1="5" x2="19" y2="19"></line>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Action Row -->
+  <div class="actions">
+    <button class="action-btn" id="favoriteBtn" aria-label="Favorite">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+      </svg>
+      Fave
+    </button>
+
+    <div class="action-sep"></div>
+
+    <button class="action-btn" id="queueBtn" aria-label="Add to queue">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+      Queue
+    </button>
+
+    <div class="action-sep"></div>
+
+    <button class="action-btn" id="shareBtn" aria-label="Share">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="18" cy="5" r="3"></circle>
+        <circle cx="6" cy="12" r="3"></circle>
+        <circle cx="18" cy="19" r="3"></circle>
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+      </svg>
+      Share
+    </button>
+  </div>
+</div>
+
+<script>
+(function() {
+  // --- Album Art: Generative warm-toned artwork ---
+  const canvas = document.getElementById('albumCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = 320, H = 320;
+
+  function drawAlbum(seed) {
+    // Seeded pseudo-random
+    let s = seed;
+    function rand() {
+      s = (s * 16807 + 0) % 2147483647;
+      return (s - 1) / 2147483646;
+    }
+
+    // Deep background gradient
+    const bg = ctx.createRadialGradient(W/2, H/2, 10, W/2, H/2, W * 0.8);
+    bg.addColorStop(0, '#2a1f14');
+    bg.addColorStop(0.5, '#160e08');
+    bg.addColorStop(1, '#0a0605');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Warm layered circles (like vinyl grooves / abstract art)
+    const cx = W / 2 + (rand() - 0.5) * 40;
+    const cy = H / 2 + (rand() - 0.5) * 40;
+
+    for (let i = 0; i < 8; i++) {
+      const r = 20 + i * 22 + rand() * 8;
+      const alpha = 0.04 + rand() * 0.06;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(200, 146, 74, ${alpha})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Abstract warm patches
+    const patches = [
+      ['#c8924a', 0.12], ['#8b5e3c', 0.15], ['#f0c88a', 0.07],
+      ['#5c3920', 0.18], ['#e8a060', 0.09], ['#3a2010', 0.20]
+    ];
+
+    for (let p = 0; p < 14; p++) {
+      const [col, alpha] = patches[p % patches.length];
+      const x = rand() * W;
+      const y = rand() * H;
+      const r = 30 + rand() * 90;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, col + Math.round(alpha * 255).toString(16).padStart(2,'0'));
+      g.addColorStop(1, col + '00');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Fine diagonal grain lines
+    ctx.save();
+    ctx.globalAlpha = 0.03;
+    ctx.strokeStyle = '#f0e8dc';
+    ctx.lineWidth = 0.5;
+    for (let i = -H; i < W + H; i += 3) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i + H, H);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Central soft glow
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 80);
+    glow.addColorStop(0, 'rgba(200, 146, 74, 0.18)');
+    glow.addColorStop(1, 'rgba(200, 146, 74, 0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+
+    // Vignette
+    const vig = ctx.createRadialGradient(W/2, H/2, W*0.3, W/2, H/2, W*0.75);
+    vig.addColorStop(0, 'rgba(0,0,0,0)');
+    vig.addColorStop(1, 'rgba(0,0,0,0.55)');
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  drawAlbum(8473921);
+
+  // --- Track Data ---
+  const tracks = [
+    { title: 'Saudade do Nordeste', artist: 'Maria Bethânia · 1978', duration: 217, seed: 8473921 },
+    { title: 'Waters of March', artist: 'Elis Regina · 1974', duration: 183, seed: 3829164 },
+    { title: "Corcovado", artist: 'João Gilberto · 1960', duration: 198, seed: 5927341 },
+    { title: 'Garota de Ipanema', artist: 'Tom Jobim · 1962', duration: 204, seed: 7162938 },
+  ];
+
+  let currentTrack = 0;
+  let isPlaying = false;
+  let currentTime = 84; // 1:24
+  let rafId = null;
+  let lastTimestamp = null;
+
+  const progressFill = document.getElementById('progressFill');
+  const timeCurrent = document.getElementById('timeCurrent');
+  const timeRemaining = document.getElementById('timeRemaining');
+  const trackTitle = document.getElementById('trackTitle');
+  const trackArtist = document.getElementById('trackArtist');
+  const playIcon = document.getElementById('playIcon');
+  const pauseIcon = document.getElementById('pauseIcon');
+  const progressTrack = document.getElementById('progressTrack');
+  const favoriteBtn = document.getElementById('favoriteBtn');
+
+  function formatTime(s) {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  }
+
+  function updateUI() {
+    const track = tracks[currentTrack];
+    const pct = (currentTime / track.duration) * 100;
+    progressFill.style.width = pct + '%';
+    timeCurrent.textContent = formatTime(currentTime);
+    timeRemaining.textContent = '−' + formatTime(track.duration - currentTime);
+  }
+
+  function loadTrack(idx) {
+    currentTrack = idx;
+    currentTime = 0;
+    drawAlbum(tracks[idx].seed);
+    trackTitle.textContent = tracks[idx].title;
+    trackArtist.textContent = tracks[idx].artist;
+    updateUI();
+  }
+
+  function tick(ts) {
+    if (!lastTimestamp) lastTimestamp = ts;
+    const delta = (ts - lastTimestamp) / 1000;
+    lastTimestamp = ts;
+
+    const track = tracks[currentTrack];
+    currentTime = Math.min(currentTime + delta, track.duration);
+
+    if (currentTime >= track.duration) {
+      // Auto-next
+      const next = (currentTrack + 1) % tracks.length;
+      loadTrack(next);
+      lastTimestamp = null;
+      if (isPlaying) rafId = requestAnimationFrame(tick);
+      return;
+    }
+
+    updateUI();
+    if (isPlaying) rafId = requestAnimationFrame(tick);
+  }
+
+  function togglePlay() {
+    isPlaying = !isPlaying;
+    playIcon.style.display = isPlaying ? 'none' : 'block';
+    pauseIcon.style.display = isPlaying ? 'block' : 'none';
+
+    if (isPlaying) {
+      lastTimestamp = null;
+      rafId = requestAnimationFrame(tick);
+    } else {
+      if (rafId) cancelAnimationFrame(rafId);
+    }
+  }
+
+  document.getElementById('playBtn').addEventListener('click', togglePlay);
+
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    if (currentTime > 3) {
+      currentTime = 0;
+    } else {
+      const prev = (currentTrack - 1 + tracks.length) % tracks.length;
+      loadTrack(prev);
+    }
+    updateUI();
+    lastTimestamp = null;
+  });
+
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    const next = (currentTrack + 1) % tracks.length;
+    loadTrack(next);
+    lastTimestamp = null;
+  });
+
+  // Progress scrubbing
+  let scrubbing = false;
+
+  function scrubTo(e) {
+    const rect = progressTrack.getBoundingClientRect();
+    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    const pct = x / rect.width;
+    currentTime = pct * tracks[currentTrack].duration;
+    updateUI();
+  }
+
+  progressTrack.addEventListener('mousedown', (e) => {
+    scrubbing = true;
+    scrubTo(e);
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (scrubbing) scrubTo(e);
+  });
+
+  window.addEventListener('mouseup', () => {
+    scrubbing = false;
+    lastTimestamp = null;
+  });
+
+  // Favorite toggle
+  let favorited = false;
+  const favHeart = favoriteBtn.querySelector('svg');
+  favoriteBtn.addEventListener('click', () => {
+    favorited = !favorited;
+    favoriteBtn.classList.toggle('favorited', favorited);
+    favHeart.setAttribute('fill', favorited ? 'currentColor' : 'none');
+  });
+
+  // Queue: subtle visual feedback
+  document.getElementById('queueBtn').addEventListener('click', function() {
+    this.style.color = '#c8924a';
+    setTimeout(() => this.style.color = '', 600);
+  });
+
+  // Share: copy URL feedback
+  document.getElementById('shareBtn').addEventListener('click', function() {
+    const orig = this.textContent.trim();
+    this.querySelector('svg').insertAdjacentText ? null : null;
+    this.style.color = '#c8924a';
+    setTimeout(() => this.style.color = '', 600);
+  });
+
+  // Init
+  updateUI();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>Activity Feed</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    body { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+    .scroll-area::-webkit-scrollbar { width: 6px; }
+    .scroll-area::-webkit-scrollbar-track { background: transparent; }
+    .scroll-area::-webkit-scrollbar-thumb { background: rgba(15,23,42,.12); border-radius: 999px; }
+    .scroll-area::-webkit-scrollbar-thumb:hover { background: rgba(15,23,42,.2); }
+
+    /* Subtle entry hover lift */
+    .item { transition: background-color .15s ease, transform .15s ease; }
+    .item:hover { background-color: rgba(248, 250, 252, 1); }
+
+    /* Type-rail accents */
+    .rail { width: 3px; border-radius: 999px; }
+  </style>
+</head>
+<body class="bg-slate-200/60 min-h-screen flex items-center justify-center p-6">
+
+  <!-- Sidebar Panel: 480 × 720 -->
+  <section
+    class="bg-white shadow-xl ring-1 ring-slate-900/5 rounded-2xl overflow-hidden flex flex-col"
+    style="width:480px; height:720px;"
+    aria-label="Activity feed"
+  >
+
+    <!-- Header -->
+    <header class="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100">
+      <div class="flex items-center gap-2.5">
+        <div class="relative">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white">
+            <i data-lucide="bell" class="w-4 h-4"></i>
+          </div>
+          <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-rose-500 rounded-full ring-2 ring-white"></span>
+        </div>
+        <div>
+          <h1 class="text-[15px] font-semibold text-slate-900 leading-tight">Aktivität</h1>
+          <p class="text-[11px] text-slate-500">5 neue Updates · heute</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-1">
+        <button class="p-1.5 rounded-md hover:bg-slate-100 text-slate-500" aria-label="Filter">
+          <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+        </button>
+        <button class="p-1.5 rounded-md hover:bg-slate-100 text-slate-500" aria-label="Mark all read">
+          <i data-lucide="check-check" class="w-4 h-4"></i>
+        </button>
+        <button class="p-1.5 rounded-md hover:bg-slate-100 text-slate-500" aria-label="More">
+          <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Filter Tabs -->
+    <div class="flex items-center gap-1 px-4 py-2 border-b border-slate-100 bg-slate-50/40">
+      <button class="px-2.5 py-1 text-[11.5px] font-medium rounded-full bg-slate-900 text-white">Alle <span class="ml-1 text-slate-400">12</span></button>
+      <button class="px-2.5 py-1 text-[11.5px] font-medium rounded-full text-slate-600 hover:bg-white">Erwähnungen</button>
+      <button class="px-2.5 py-1 text-[11.5px] font-medium rounded-full text-slate-600 hover:bg-white">Aufgaben</button>
+      <button class="px-2.5 py-1 text-[11.5px] font-medium rounded-full text-slate-600 hover:bg-white">Dateien</button>
+    </div>
+
+    <!-- Feed -->
+    <div class="scroll-area flex-1 overflow-y-auto">
+
+      <!-- Section header: TODAY -->
+      <div class="px-5 pt-4 pb-1.5 flex items-center gap-2">
+        <span class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Heute</span>
+        <div class="flex-1 h-px bg-slate-100"></div>
+      </div>
+
+      <!-- 1. MENTION -->
+      <article class="item relative pl-5 pr-4 py-3.5 flex gap-3 border-b border-slate-50 cursor-pointer">
+        <span class="absolute left-0 top-3.5 bottom-3.5 rail bg-amber-400"></span>
+        <span class="absolute left-2 top-5 w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+
+        <!-- Avatar -->
+        <div class="relative flex-none">
+          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-rose-400 to-fuchsia-500 text-white flex items-center justify-center text-[12px] font-semibold ring-2 ring-white shadow-sm">LK</div>
+          <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-amber-100 border border-white flex items-center justify-center">
+            <i data-lucide="at-sign" class="w-2.5 h-2.5 text-amber-700"></i>
+          </div>
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <p class="text-[13px] text-slate-700 leading-snug">
+            <span class="font-semibold text-slate-900">Lisa Köhler</span>
+            hat dich erwähnt in
+            <span class="font-medium text-slate-900">Sprint Planning</span>
+          </p>
+
+          <div class="mt-2 flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-amber-50 border border-amber-100 text-[12px]">
+            <i data-lucide="hash" class="w-3.5 h-3.5 text-amber-700"></i>
+            <span class="text-amber-900 font-medium">#sprint-23-planning</span>
+            <span class="text-amber-700/70">· Design</span>
+          </div>
+
+          <p class="mt-1.5 text-[12px] text-slate-600 italic line-clamp-1">
+            "<span class="bg-amber-100 text-amber-900 px-1 rounded">@du</span> kannst du die Tickets für die Onboarding-Flow priorisieren?"
+          </p>
+
+          <div class="mt-1.5 flex items-center gap-3 text-[11px] text-slate-400">
+            <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> vor 5 Min</span>
+            <button class="text-amber-600 font-medium hover:text-amber-700">Antworten</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- 2. TASK ASSIGNED -->
+      <article class="item relative pl-5 pr-4 py-3.5 flex gap-3 border-b border-slate-50 cursor-pointer">
+        <span class="absolute left-0 top-3.5 bottom-3.5 rail bg-blue-500"></span>
+        <span class="absolute left-2 top-5 w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+
+        <div class="relative flex-none">
+          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 text-white flex items-center justify-center text-[12px] font-semibold ring-2 ring-white shadow-sm">TM</div>
+          <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-blue-100 border border-white flex items-center justify-center">
+            <i data-lucide="check-square" class="w-2.5 h-2.5 text-blue-700"></i>
+          </div>
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <p class="text-[13px] text-slate-700 leading-snug">
+            <span class="font-semibold text-slate-900">Tom Meier</span>
+            hat dir eine Aufgabe zugewiesen
+          </p>
+
+          <div class="mt-2 rounded-lg border border-slate-200 bg-slate-50/60 p-2.5">
+            <div class="flex items-start gap-2">
+              <div class="mt-0.5 w-4 h-4 rounded border-2 border-slate-300 flex-none"></div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[12.5px] font-medium text-slate-900 leading-snug">API-Spezifikation reviewen</p>
+                <div class="mt-1.5 flex items-center gap-2 flex-wrap">
+                  <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10.5px] font-medium bg-rose-50 text-rose-700 border border-rose-100">
+                    <i data-lucide="flag" class="w-2.5 h-2.5"></i> Hoch
+                  </span>
+                  <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10.5px] font-medium bg-amber-50 text-amber-800 border border-amber-100">
+                    <i data-lucide="calendar-clock" class="w-2.5 h-2.5"></i> Fällig morgen, 17:00
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-1.5 flex items-center gap-3 text-[11px] text-slate-400">
+            <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> vor 18 Min</span>
+            <button class="text-blue-600 font-medium hover:text-blue-700">Annehmen</button>
+            <button class="hover:text-slate-600">Verschieben</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- 3. COMMENT REPLY -->
+      <article class="item relative pl-5 pr-4 py-3.5 flex gap-3 border-b border-slate-50 cursor-pointer">
+        <span class="absolute left-0 top-3.5 bottom-3.5 rail bg-violet-500"></span>
+        <span class="absolute left-2 top-5 w-1.5 h-1.5 rounded-full bg-violet-500"></span>
+
+        <div class="relative flex-none">
+          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 text-white flex items-center justify-center text-[12px] font-semibold ring-2 ring-white shadow-sm">MA</div>
+          <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-violet-100 border border-white flex items-center justify-center">
+            <i data-lucide="message-circle-reply" class="w-2.5 h-2.5 text-violet-700"></i>
+          </div>
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <p class="text-[13px] text-slate-700 leading-snug">
+            <span class="font-semibold text-slate-900">Maya Aydın</span>
+            hat auf deinen Kommentar in
+            <span class="font-medium text-slate-900">Q2 Roadmap</span> geantwortet
+          </p>
+
+          <!-- Thread preview -->
+          <div class="mt-2 space-y-1.5">
+            <div class="flex items-start gap-2 opacity-60">
+              <div class="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-semibold text-slate-600 flex-none">DU</div>
+              <div class="flex-1 text-[11.5px] text-slate-500 italic line-clamp-1">"Sollten wir die Mobile-Milestones nach hinten ziehen?"</div>
+            </div>
+            <div class="flex items-start gap-2 pl-4 border-l-2 border-violet-200 ml-1.5">
+              <div class="w-5 h-5 rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 text-white flex items-center justify-center text-[9px] font-semibold flex-none">MA</div>
+              <div class="flex-1 text-[12px] text-slate-700 line-clamp-2">Ja, lass uns Mobile auf KW 28 schieben — Web-Auth ist eh blockiert.</div>
+            </div>
+          </div>
+
+          <div class="mt-1.5 flex items-center gap-3 text-[11px] text-slate-400">
+            <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> vor 42 Min</span>
+            <button class="text-violet-600 font-medium hover:text-violet-700">Im Thread öffnen</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- 4. PROJECT UPDATE -->
+      <article class="item relative pl-5 pr-4 py-3.5 flex gap-3 border-b border-slate-50 cursor-pointer">
+        <span class="absolute left-0 top-3.5 bottom-3.5 rail bg-emerald-500"></span>
+
+        <div class="relative flex-none">
+          <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-500 text-white flex items-center justify-center ring-2 ring-white shadow-sm">
+            <i data-lucide="git-branch" class="w-4 h-4"></i>
+          </div>
+          <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-100 border border-white flex items-center justify-center">
+            <i data-lucide="zap" class="w-2.5 h-2.5 text-emerald-700"></i>
+          </div>
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <p class="text-[13px] text-slate-700 leading-snug">
+            Status von <span class="font-semibold text-slate-900">Onboarding-Redesign</span> geändert
+          </p>
+
+          <!-- Status transition -->
+          <div class="mt-2 flex items-center gap-2 text-[11.5px]">
+            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-100 text-slate-500 line-through decoration-slate-300">
+              <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+              In Progress
+            </span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-400"></i>
+            <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-50 text-emerald-800 font-medium border border-emerald-200">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              In Review
+            </span>
+          </div>
+
+          <!-- Progress bar -->
+          <div class="mt-2 flex items-center gap-2">
+            <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-emerald-400 to-teal-500" style="width:78%"></div>
+            </div>
+            <span class="text-[10.5px] font-medium text-slate-500">78%</span>
+          </div>
+
+          <div class="mt-1.5 flex items-center gap-3 text-[11px] text-slate-400">
+            <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> vor 2 Std</span>
+            <span class="flex items-center gap-1"><i data-lucide="users" class="w-3 h-3"></i> 4 Reviewer</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Section header: EARLIER -->
+      <div class="px-5 pt-4 pb-1.5 flex items-center gap-2">
+        <span class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Früher</span>
+        <div class="flex-1 h-px bg-slate-100"></div>
+      </div>
+
+      <!-- 5. FILE SHARED -->
+      <article class="item relative pl-5 pr-4 py-3.5 flex gap-3 border-b border-slate-50 cursor-pointer">
+        <span class="absolute left-0 top-3.5 bottom-3.5 rail bg-pink-400"></span>
+
+        <div class="relative flex-none">
+          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 text-white flex items-center justify-center text-[12px] font-semibold ring-2 ring-white shadow-sm">AS</div>
+          <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-pink-100 border border-white flex items-center justify-center">
+            <i data-lucide="paperclip" class="w-2.5 h-2.5 text-pink-700"></i>
+          </div>
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <p class="text-[13px] text-slate-700 leading-snug">
+            <span class="font-semibold text-slate-900">Anna Schäfer</span>
+            hat eine Datei mit dir geteilt
+          </p>
+
+          <!-- File card -->
+          <div class="mt-2 flex items-center gap-2.5 p-2 rounded-lg border border-slate-200 bg-white hover:border-pink-200 hover:bg-pink-50/30 transition">
+            <div class="w-9 h-9 rounded-md bg-gradient-to-br from-fuchsia-500 via-rose-500 to-orange-400 flex items-center justify-center flex-none">
+              <span class="text-white text-[10px] font-black tracking-tight">FIG</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[12.5px] font-medium text-slate-900 truncate">design-mockups-v3.fig</p>
+              <div class="flex items-center gap-1.5 text-[10.5px] text-slate-500 mt-0.5">
+                <span>4.2 MB</span>
+                <span class="w-0.5 h-0.5 rounded-full bg-slate-300"></span>
+                <span>24 Frames</span>
+                <span class="w-0.5 h-0.5 rounded-full bg-slate-300"></span>
+                <span class="text-emerald-600 font-medium">v3</span>
+              </div>
+            </div>
+            <button class="p-1.5 rounded-md hover:bg-slate-100 text-slate-500 flex-none">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <div class="mt-1.5 flex items-center gap-3 text-[11px] text-slate-400">
+            <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> vor 5 Std</span>
+            <span class="flex items-center gap-1"><i data-lucide="folder" class="w-3 h-3"></i> Brand · Mobile</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Footer / Load more -->
+      <div class="px-5 py-4 flex items-center justify-center">
+        <button class="inline-flex items-center gap-1.5 text-[12px] font-medium text-slate-500 hover:text-slate-900 px-3 py-1.5 rounded-full hover:bg-slate-100">
+          <i data-lucide="chevrons-down" class="w-3.5 h-3.5"></i>
+          Ältere Aktivitäten laden
+        </button>
+      </div>
+    </div>
+
+    <!-- Bottom status bar -->
+    <footer class="border-t border-slate-100 px-4 py-2.5 flex items-center justify-between bg-slate-50/40">
+      <div class="flex items-center gap-1.5 text-[11px] text-slate-500">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        Live verbunden
+      </div>
+      <button class="text-[11px] font-medium text-slate-600 hover:text-slate-900 inline-flex items-center gap-1">
+        Einstellungen <i data-lucide="chevron-right" class="w-3 h-3"></i>
+      </button>
+    </footer>
+  </section>
+
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>

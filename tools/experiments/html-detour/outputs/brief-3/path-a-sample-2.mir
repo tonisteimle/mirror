@@ -1,0 +1,222 @@
+// Tokens — Surface
+bg.app: #0b0d12
+bg.panel: #11141b
+bg.card: #161a23
+bg.cardHover: #1c2130
+bg.preview: #0d1017
+bor.subtle: #232838
+bor.strong: #2c3344
+
+// Tokens — Text
+col.text: #e7eaf2
+col.muted: #8a92a6
+col.dim: #5b6275
+col.accent: #ffffff
+
+// Tokens — Type-Akzente (eine Farbe pro Notification-Typ)
+comment.bg: #2a2140
+comment.col: #b794f6
+task.bg: #1f2e3d
+task.col: #60a5fa
+file.bg: #1d3329
+file.col: #4ade80
+mention.bg: #3d2a1a
+mention.col: #fbbf24
+update.bg: #3a1f2c
+update.col: #f472b6
+
+// Tokens — Avatar-Farben
+av.maya: #b794f6
+av.tom: #60a5fa
+av.anna: #4ade80
+av.lisa: #fbbf24
+av.ben: #f472b6
+
+// Components
+Avatar: w 36, h 36, rad 99, center, shrink
+  AvText: fs 13, weight bold, col white
+
+TypeIcon: w 20, h 20, rad 99, center, shrink, abs, x 22, y 22, bor 2, boc #11141b
+
+Dot: w 6, h 6, rad 99, bg $col, shrink
+
+FeedItem: hor, gap 12, pad 14, bg $bg, rad 10, bor 1, boc $bor
+  hover:
+    bg $bg
+
+Pill: hor, gap 6, ver-center, pad 4 8, rad 99, bg $bg
+
+Chip: hor, gap 6, ver-center, pad 4 8, rad 6, bor 1, boc $bor
+
+canvas bg $bg, w 480, h 720, col $col, font sans, fs 13
+
+Frame w full, h full, ver
+
+  // Header
+  Frame hor, spread, ver-center, pad 16 18, bor 0 0 1 0, boc $bor, bg $bg
+    Frame hor, gap 10, ver-center
+      Icon "bell", ic $col, is 18
+      Text "Aktivität", fs 15, weight 600, col $col
+      Frame pad 2 7, rad 99, bg $update, ver-center
+        Text "5", fs 11, weight 600, col $update
+    Frame hor, gap 6, ver-center
+      Icon "filter", ic $col, is 16
+      Icon "more-horizontal", ic $col, is 16
+
+  // Tabs
+  Frame hor, gap 4, pad 10 14 6 14, bor 0 0 1 0, boc $bor
+    Frame pad 6 10, rad 6, bg $bg
+      Text "Alle", fs 12, weight 600, col $col
+    Frame pad 6 10, rad 6
+      Text "Erwähnungen", fs 12, col $col
+    Frame pad 6 10, rad 6
+      Text "Aufgaben", fs 12, col $col
+
+  // Feed
+  Frame ver, gap 10, pad 12 14 16 14, scroll, grow
+
+    // ── 1 · COMMENT ─────────────────────────────────
+    Frame hor, gap 4, ver-center, pad 4 2
+      Dot
+      Text "HEUTE", fs 10, weight 600, col $col, uppercase
+
+    FeedItem
+      Frame stacked
+        Avatar bg $av
+          AvText "M"
+        TypeIcon bg $comment
+          Icon "message-circle", ic white, is 11, fill
+      Frame ver, gap 6, grow
+        Frame ver, gap 2
+          Frame hor, gap 0, wrap
+            Text "Maya Brunner ", fs 13, weight 600, col $col
+            Text "hat auf deinen Kommentar in ", fs 13, col $col
+            Text "Q2 Roadmap", fs 13, weight 600, col $comment
+            Text " geantwortet", fs 13, col $col
+          Text "vor 5 Min", fs 11, col $col
+        Frame ver, pad 10 12, bg $bg, rad 6, bor 0 0 0 2, boc $comment, gap 4
+          Text "\"Können wir den Launch um 2 Wochen verschieben? Das gibt uns mehr", fs 12, col $col, italic
+          Text "Puffer für QA und das Onboarding-Material...\"", fs 12, col $col, italic
+        Frame hor, gap 8, mar 2 0 0 0
+          Pill bg $comment
+            Icon "corner-up-left", ic $comment, is 12
+            Text "Antworten", fs 11, weight 500, col $comment
+          Pill bg $bg
+            Icon "check", ic $col, is 12
+            Text "Erledigt", fs 11, weight 500, col $col
+
+    // ── 2 · TASK ASSIGNED ───────────────────────────
+    FeedItem
+      Frame stacked
+        Avatar bg $av
+          AvText "T"
+        TypeIcon bg $task
+          Icon "check-square", ic white, is 11
+      Frame ver, gap 6, grow
+        Frame ver, gap 2
+          Frame hor, gap 0, wrap
+            Text "Tom Keller ", fs 13, weight 600, col $col
+            Text "hat dir die Aufgabe ", fs 13, col $col
+            Text "API-Spezifikation reviewen", fs 13, weight 600, col $task
+            Text " zugewiesen", fs 13, col $col
+          Text "vor 18 Min", fs 11, col $col
+        Frame hor, gap 8, ver-center, mar 2 0 0 0
+          Chip bg $task, boc $task
+            Icon "calendar", ic $task, is 12
+            Text "Fällig: Fr · 7. Mai", fs 11, weight 600, col $task
+          Chip bg $bg, boc $bor
+            Icon "flag", ic $col, is 12
+            Text "Hoch", fs 11, weight 500, col $col
+        Frame hor, gap 8
+          Pill bg $task
+            Icon "play", ic $task, is 12, fill
+            Text "Starten", fs 11, weight 500, col $task
+          Pill bg $bg
+            Icon "eye", ic $col, is 12
+            Text "Ansehen", fs 11, weight 500, col $col
+
+    // ── 3 · FILE SHARED ─────────────────────────────
+    FeedItem
+      Frame stacked
+        Avatar bg $av
+          AvText "A"
+        TypeIcon bg $file
+          Icon "paperclip", ic white, is 11
+      Frame ver, gap 6, grow
+        Frame ver, gap 2
+          Frame hor, gap 0, wrap
+            Text "Anna Weber ", fs 13, weight 600, col $col
+            Text "hat ", fs 13, col $col
+            Text "design-mockups-v3.fig", fs 13, weight 600, col $file
+            Text " mit dir geteilt", fs 13, col $col
+          Text "vor 1 Std", fs 11, col $col
+        Frame hor, gap 10, ver-center, pad 10, bg $bg, rad 8, bor 1, boc $bor, mar 2 0 0 0
+          Frame w 38, h 38, rad 6, bg $file, center, shrink
+            Icon "figma", ic white, is 18
+          Frame ver, gap 2, grow
+            Text "design-mockups-v3.fig", fs 12, weight 600, col $col, truncate
+            Frame hor, gap 6, ver-center
+              Text "4.2 MB", fs 11, col $col
+              Dot bg $col
+              Text "Figma · 12 Frames", fs 11, col $col
+          Icon "download", ic $file, is 16
+
+    // ── 4 · MENTION ─────────────────────────────────
+    Frame hor, gap 4, ver-center, pad 4 2, mar 6 0 0 0
+      Dot bg $col
+      Text "GESTERN", fs 10, weight 600, col $col, uppercase
+
+    FeedItem
+      Frame stacked
+        Avatar bg $av
+          AvText "L"
+        TypeIcon bg $mention
+          Text "@", fs 11, weight bold, col white
+      Frame ver, gap 6, grow
+        Frame ver, gap 2
+          Frame hor, gap 0, wrap
+            Frame pad 1 6, rad 4, bg $mention
+              Text "@Du", fs 12, weight 700, col $mention
+            Text "  wurdest erwähnt von ", fs 13, col $col
+            Text "Lisa Vogt", fs 13, weight 600, col $col
+          Text "gestern · 16:42", fs 11, col $col
+        Frame hor, gap 6, ver-center, mar 2 0 0 0
+          Icon "hash", ic $mention, is 13
+          Text "sprint-planning", fs 12, weight 500, col $mention
+          Dot bg $col
+          Text "Design-Team", fs 12, col $col
+        Frame ver, pad 10 12, bg $bg, rad 6, bor 0 0 0 2, boc $mention
+          Text "...kannst du da kurz drüberschauen? @Du hast die letzte Iteration", fs 12, col $col
+          Text "gemacht und kennst die Edge-Cases am besten.", fs 12, col $col
+
+    // ── 5 · PROJECT UPDATE ──────────────────────────
+    FeedItem
+      Frame stacked
+        Avatar bg $av
+          AvText "B"
+        TypeIcon bg $update
+          Icon "refresh-cw", ic white, is 11
+      Frame ver, gap 6, grow
+        Frame ver, gap 2
+          Frame hor, gap 0, wrap
+            Text "Ben Frei ", fs 13, weight 600, col $col
+            Text "hat den Status von ", fs 13, col $col
+            Text "Onboarding-Redesign", fs 13, weight 600, col $update
+            Text " geändert", fs 13, col $col
+          Text "gestern · 09:15", fs 11, col $col
+        Frame hor, gap 8, ver-center, pad 8 10, bg $bg, rad 8, bor 1, boc $bor, mar 2 0 0 0
+          Chip bg $bg, boc $bor
+            Dot bg $col
+            Text "In Progress", fs 11, weight 500, col $col
+          Icon "arrow-right", ic $col, is 14
+          Chip bg $update, boc $update
+            Dot bg $update
+            Text "In Review", fs 11, weight 600, col $update
+        Frame hor, gap 8
+          Pill bg $update
+            Icon "external-link", ic $update, is 12
+            Text "Projekt öffnen", fs 11, weight 500, col $update
+
+    // Footer marker
+    Frame hor, center, pad 8 0 4 0
+      Text "Älteres anzeigen", fs 11, weight 500, col $col, underline

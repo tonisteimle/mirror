@@ -1,0 +1,336 @@
+// =================================================================
+// Activity Feed — Sidebar Panel 480 × 720
+// =================================================================
+
+// Tokens — Surface & Text
+page.bg: #e2e8f0
+panel.bg: white
+border.col: #f1f5f9
+border-strong.col: #e2e8f0
+divider.col: #f1f5f9
+
+text.col: #334155
+text-strong.col: #0f172a
+muted.col: #64748b
+subtle.col: #94a3b8
+faint.col: #cbd5e1
+
+// Tokens — Type Accents (one per feed-item kind)
+mention.col: #f59e0b
+mention.bg: #fffbeb
+mention-strong.col: #b45309
+mention-tint.bg: #fef3c7
+
+task.col: #3b82f6
+task-strong.col: #1d4ed8
+task.bg: #eff6ff
+
+comment.col: #8b5cf6
+comment-strong.col: #6d28d9
+comment.bg: #f5f3ff
+comment-line.col: #ddd6fe
+
+status.col: #10b981
+status-strong.col: #047857
+status.bg: #ecfdf5
+
+file.col: #ec4899
+file-strong.col: #be185d
+file.bg: #fdf2f8
+
+// Tokens — Type-specific badge tints (rund hinter dem Mini-Icon)
+mention-badge.bg: #fef3c7
+task-badge.bg: #dbeafe
+comment-badge.bg: #ede9fe
+status-badge.bg: #d1fae5
+file-badge.bg: #fce7f3
+
+// Tokens — Priority chip
+prio-high.bg: #fff1f2
+prio-high.col: #be123c
+prio-high.boc: #ffe4e6
+
+// Tokens — Sizes
+item.pad: 14
+
+// =================================================================
+// Components
+// =================================================================
+
+// Avatar (initials oder icon, 36×36)
+Avatar: w 36, h 36, rad 99, center, shrink, col white, fs 12, weight semibold, bor 2, boc white, shadow sm
+
+// Squared variant (für system/branch icons)
+AvatarSquare as Frame: w 36, h 36, rad 8, center, shrink, col white, bor 2, boc white, shadow sm
+
+// Type-Badge: kleines rundes Icon unten-rechts am Avatar
+TypeBadge: w 16, h 16, rad 99, center, bor 1, boc white, abs, x 22, y 22
+
+// Color-Rail links am Eintrag (3px)
+Rail: w 3, rad 99, abs, x 0, y 14
+
+// Pulse-Dot neben dem Rail
+PulseDot: w 6, h 6, rad 99, abs, x 8, y 20
+
+// Meta-Zeile unten (clock + actions)
+MetaRow: hor, gap 12, ver-center, mar-t 6
+
+// Chip (kleine pill mit icon + text)
+Chip: hor, gap 4, ver-center, pad 2 6, rad 4, fs 10, weight medium, bor 1
+
+// Section-Header "Heute" / "Früher"
+SectionHeader: hor, gap 8, ver-center, pad 16 20 6 20
+
+// Header-Icon-Button (Filter, MarkRead, More)
+IconBtn as Button: pad 6, rad 6, bg transparent, col $muted, cursor pointer
+  hover:
+    bg #f1f5f9
+
+// Filter-Tab pill
+TabPill as Button: pad 4 10, rad 99, fs 11, weight medium, col $text, bg transparent, cursor pointer
+  hover:
+    bg white
+TabPillActive as Button: pad 4 10, rad 99, fs 11, weight medium, col white, bg #0f172a, cursor pointer
+
+// =================================================================
+// Canvas
+// =================================================================
+
+canvas bg $page, w 480, h 720, col $text, font sans, fs 13
+
+Frame ver, w full, h full, bg $panel, rad 16, clip, shadow lg
+
+  // ---------------- Header ----------------
+  Frame hor, spread, ver-center, pad 20 20 12 20, bor 0 0 1 0, boc $border
+    Frame hor, gap 10, ver-center
+      Frame stacked, w 32, h 32, shrink
+        Frame w 32, h 32, rad 8, bg grad 135 #6366f1 #7c3aed, center
+          Icon "bell", ic white, is 16
+        Frame x 22, y -2, w 10, h 10, rad 99, bg #f43f5e, bor 2, boc white
+      Frame ver, gap 2
+        Text "Aktivität", fs 15, weight semibold, col $text-strong
+        Text "5 neue Updates · heute", fs 11, col $muted
+    Frame hor, gap 4, ver-center
+      IconBtn
+        Icon "sliders-horizontal", ic $muted, is 16
+      IconBtn
+        Icon "check-check", ic $muted, is 16
+      IconBtn
+        Icon "more-horizontal", ic $muted, is 16
+
+  // ---------------- Filter Tabs ----------------
+  Frame hor, gap 4, ver-center, pad 8 16, bor 0 0 1 0, boc $border, bg #f8fafc
+    TabPillActive
+      Frame hor, gap 4, ver-center
+        Text "Alle"
+        Text "12", col $faint
+    TabPill "Erwähnungen"
+    TabPill "Aufgaben"
+    TabPill "Dateien"
+
+  // ---------------- Feed (scrollable) ----------------
+  Frame ver, grow, scroll
+
+    // ===== Section: Heute =====
+    SectionHeader
+      Text "Heute", fs 10, weight semibold, uppercase, col $subtle
+      Frame grow, h 1, bg $border
+
+    // ===== 1. MENTION =====
+    Frame stacked, w full, bor 0 0 1 0, boc #f8fafc, cursor pointer
+      Rail bg $mention
+      PulseDot bg $mention
+      Frame hor, gap 12, pad 14 16 14 20
+        // Avatar + type-badge
+        Frame stacked, shrink
+          Avatar bg grad 135 #fb7185 #d946ef
+            Text "LK"
+          TypeBadge bg $mention-badge
+            Icon "at-sign", ic $mention-strong, is 10
+        // Body
+        Frame ver, gap 6, grow
+          Text fs 13, line 1.4
+            Text "Lisa Köhler ", weight semibold, col $text-strong
+            Text "hat dich erwähnt in "
+            Text "Sprint Planning", weight medium, col $text-strong
+          // Channel chip
+          Frame hor, gap 6, ver-center, pad 6 10, rad 6, bg $mention.bg, bor 1, boc $mention-tint
+            Icon "hash", ic $mention-strong, is 12
+            Text "#sprint-23-planning", col $mention-strong, fs 12, weight medium
+            Text "· Design", col $mention, fs 12
+          // Quote with @-highlight
+          Frame hor, gap 4, ver-center
+            Text "\"", col $muted, fs 12, italic
+            Frame pad 0 4, rad 3, bg $mention-tint
+              Text "@du", col $mention-strong, fs 12
+            Text " kannst du die Tickets für die Onboarding-Flow priorisieren?\"", col $muted, fs 12, italic, truncate, grow
+          // Meta
+          MetaRow
+            Frame hor, gap 4, ver-center
+              Icon "clock", ic $subtle, is 11
+              Text "vor 5 Min", col $subtle, fs 11
+            Text "Antworten", col $mention-strong, fs 11, weight medium, cursor pointer
+
+    // ===== 2. TASK ASSIGNED =====
+    Frame stacked, w full, bor 0 0 1 0, boc #f8fafc, cursor pointer
+      Rail bg $task
+      PulseDot bg $task
+      Frame hor, gap 12, pad 14 16 14 20
+        Frame stacked, shrink
+          Avatar bg grad 135 #34d399 #14b8a6
+            Text "TM"
+          TypeBadge bg $task-badge
+            Icon "check-square", ic $task-strong, is 10
+        Frame ver, gap 6, grow
+          Text fs 13, line 1.4
+            Text "Tom Meier ", weight semibold, col $text-strong
+            Text "hat dir eine Aufgabe zugewiesen"
+          // Task card
+          Frame hor, gap 8, pad 10, rad 8, bg #f8fafc, bor 1, boc $border-strong
+            Frame w 16, h 16, rad 4, bor 2, boc #cbd5e1, shrink, mar-t 2
+            Frame ver, gap 6, grow
+              Text "API-Spezifikation reviewen", fs 12, weight medium, col $text-strong, line 1.4
+              Frame hor, gap 6, wrap, ver-center
+                Chip bg $prio-high.bg, boc $prio-high.boc
+                  Icon "flag", ic $prio-high.col, is 10
+                  Text "Hoch", col $prio-high.col
+                Chip bg $mention.bg, boc $mention-tint
+                  Icon "calendar-clock", ic $mention-strong, is 10
+                  Text "Fällig morgen, 17:00", col $mention-strong
+          // Meta
+          MetaRow
+            Frame hor, gap 4, ver-center
+              Icon "clock", ic $subtle, is 11
+              Text "vor 18 Min", col $subtle, fs 11
+            Text "Annehmen", col $task-strong, fs 11, weight medium, cursor pointer
+            Text "Verschieben", col $subtle, fs 11, cursor pointer
+
+    // ===== 3. COMMENT REPLY =====
+    Frame stacked, w full, bor 0 0 1 0, boc #f8fafc, cursor pointer
+      Rail bg $comment
+      PulseDot bg $comment
+      Frame hor, gap 12, pad 14 16 14 20
+        Frame stacked, shrink
+          Avatar bg grad 135 #a78bfa #6366f1
+            Text "MA"
+          TypeBadge bg $comment-badge
+            Icon "message-circle-reply", ic $comment-strong, is 10
+        Frame ver, gap 6, grow
+          Text fs 13, line 1.4
+            Text "Maya Aydın ", weight semibold, col $text-strong
+            Text "hat auf deinen Kommentar in "
+            Text "Q2 Roadmap", weight medium, col $text-strong
+            Text " geantwortet"
+          // Thread preview
+          Frame ver, gap 6, mar-t 2
+            // Original (faded)
+            Frame hor, gap 8, opacity 0.6
+              Frame w 20, h 20, rad 99, bg #e2e8f0, center, shrink
+                Text "DU", fs 9, weight semibold, col $muted
+              Text "\"Sollten wir die Mobile-Milestones nach hinten ziehen?\"", fs 11, col $muted, italic, truncate, grow
+            // Reply (with left border)
+            Frame hor, gap 8, mar-l 6, pad 0 0 0 12, bor 0 0 0 2, boc $comment-line
+              Frame w 20, h 20, rad 99, bg grad 135 #a78bfa #6366f1, center, shrink
+                Text "MA", fs 9, weight semibold, col white
+              Text "Ja, lass uns Mobile auf KW 28 schieben — Web-Auth ist eh blockiert.", fs 12, col $text, line 1.4, grow
+          // Meta
+          MetaRow
+            Frame hor, gap 4, ver-center
+              Icon "clock", ic $subtle, is 11
+              Text "vor 42 Min", col $subtle, fs 11
+            Text "Im Thread öffnen", col $comment-strong, fs 11, weight medium, cursor pointer
+
+    // ===== 4. PROJECT UPDATE (status change) =====
+    Frame stacked, w full, bor 0 0 1 0, boc #f8fafc, cursor pointer
+      Rail bg $status
+      Frame hor, gap 12, pad 14 16 14 20
+        Frame stacked, shrink
+          AvatarSquare bg grad 135 #34d399 #14b8a6
+            Icon "git-branch", ic white, is 16
+          TypeBadge bg $status-badge
+            Icon "zap", ic $status-strong, is 10
+        Frame ver, gap 6, grow
+          Text fs 13, line 1.4
+            Text "Status von "
+            Text "Onboarding-Redesign", weight semibold, col $text-strong
+            Text " geändert"
+          // Status transition
+          Frame hor, gap 8, ver-center
+            Frame hor, gap 6, ver-center, pad 4 8, rad 6, bg #f1f5f9
+              Frame w 6, h 6, rad 99, bg #94a3b8
+              Text "In Progress", col $muted, fs 11
+            Icon "arrow-right", ic $subtle, is 12
+            Frame hor, gap 6, ver-center, pad 4 8, rad 6, bg $status.bg, bor 1, boc #a7f3d0
+              Frame w 6, h 6, rad 99, bg $status
+              Text "In Review", col $status-strong, fs 11, weight medium
+          // Progress bar
+          Frame hor, gap 8, ver-center
+            Frame stacked, grow, h 6, rad 99, bg #f1f5f9, clip
+              Frame w 78%, h 6, bg grad 90 #34d399 #14b8a6, rad 99
+            Text "78%", col $muted, fs 10, weight medium
+          // Meta
+          MetaRow
+            Frame hor, gap 4, ver-center
+              Icon "clock", ic $subtle, is 11
+              Text "vor 2 Std", col $subtle, fs 11
+            Frame hor, gap 4, ver-center
+              Icon "users", ic $subtle, is 11
+              Text "4 Reviewer", col $subtle, fs 11
+
+    // ===== Section: Früher =====
+    SectionHeader
+      Text "Früher", fs 10, weight semibold, uppercase, col $subtle
+      Frame grow, h 1, bg $border
+
+    // ===== 5. FILE SHARED =====
+    Frame stacked, w full, bor 0 0 1 0, boc #f8fafc, cursor pointer
+      Rail bg #f9a8d4
+      Frame hor, gap 12, pad 14 16 14 20
+        Frame stacked, shrink
+          Avatar bg grad 135 #f472b6 #f43f5e
+            Text "AS"
+          TypeBadge bg $file-badge
+            Icon "paperclip", ic $file-strong, is 10
+        Frame ver, gap 6, grow
+          Text fs 13, line 1.4
+            Text "Anna Schäfer ", weight semibold, col $text-strong
+            Text "hat eine Datei mit dir geteilt"
+          // File card
+          Frame hor, gap 10, ver-center, pad 8, rad 8, bg white, bor 1, boc $border-strong
+            Frame w 36, h 36, rad 6, bg grad 135 #d946ef #fb923c, center, shrink
+              Text "FIG", fs 10, weight bold, col white
+            Frame ver, gap 2, grow
+              Text "design-mockups-v3.fig", fs 12, weight medium, col $text-strong, truncate
+              Frame hor, gap 6, ver-center
+                Text "4.2 MB", fs 10, col $muted
+                Frame w 2, h 2, rad 99, bg $faint
+                Text "24 Frames", fs 10, col $muted
+                Frame w 2, h 2, rad 99, bg $faint
+                Text "v3", fs 10, col $status, weight medium
+            IconBtn
+              Icon "download", ic $muted, is 14
+          // Meta
+          MetaRow
+            Frame hor, gap 4, ver-center
+              Icon "clock", ic $subtle, is 11
+              Text "vor 5 Std", col $subtle, fs 11
+            Frame hor, gap 4, ver-center
+              Icon "folder", ic $subtle, is 11
+              Text "Brand · Mobile", col $subtle, fs 11
+
+    // ===== Load more =====
+    Frame center, pad 16 20
+      Frame hor, gap 6, ver-center, pad 6 12, rad 99, cursor pointer
+        Icon "chevrons-down", ic $muted, is 14
+        Text "Ältere Aktivitäten laden", fs 12, weight medium, col $muted
+
+  // ---------------- Footer / Status bar ----------------
+  Frame hor, spread, ver-center, pad 10 16, bor 1 0 0 0, boc $border, bg #f8fafc
+    Frame hor, gap 8, ver-center
+      Frame stacked, w 8, h 8
+        Frame w 8, h 8, rad 99, bg #34d399, opacity 0.75, anim pulse
+        Frame w 8, h 8, rad 99, bg $status
+      Text "Live verbunden", fs 11, col $muted
+    Frame hor, gap 4, ver-center, cursor pointer
+      Text "Einstellungen", fs 11, weight medium, col $text
+      Icon "chevron-right", ic $text, is 12

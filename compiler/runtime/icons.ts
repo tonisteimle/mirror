@@ -175,9 +175,18 @@ function applyFillMode(svg: SVGElement, isFilled: boolean, strokeWidth: string):
  * Validate an icon name before using it in URL construction or DOM
  * manipulation. Self-contained (no external deps) so it can be stamped
  * verbatim into the runtime template.
+ *
+ * Compiler-internal loop-variable markers (`__loopVar:foo.bar`) that
+ * leak through unresolved are silently skipped instead of warned —
+ * they're a known upstream bug, not a security concern, and the
+ * warning spam was drowning out real issues.
  */
 export function sanitizeIconName(name: string): string | null {
   if (!name || typeof name !== 'string') return null
+  // Silent skip for unresolved compiler markers — see jsdoc above.
+  if (name.startsWith('__loopVar:') || name.startsWith('__conditional:')) {
+    return null
+  }
   if (!/^[a-z0-9\-]+$/.test(name)) {
     console.warn('[Security] Invalid icon name rejected:', name)
     return null

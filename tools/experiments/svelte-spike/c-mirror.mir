@@ -1,0 +1,96 @@
+canvas bg #0a0a0a, col white, font sans
+
+// Tokens
+surface.bg: #111111
+surface-raised.bg: #1a1a1a
+accent.col: #e8ff47
+accent.bg: #e8ff47
+muted.col: #555555
+subtle.col: #888888
+track.bg: #222222
+fill.bg: #e8ff47
+
+// Components
+ActionBtn: w 32, h 32, center, rad 6, cursor pointer
+  hover:
+    bg #1a1a1a
+
+CtrlBtn: w 40, h 40, center, rad 99, cursor pointer
+
+PlayBtn: w 48, h 48, center, rad 99, bg $accent, cursor pointer
+  hover:
+    opacity 0.88
+
+// Player Widget
+Frame w 280, bg $surface, rad 16, clip, pad 0
+  // Album Art
+  Frame w 280, h 280, stacked, bg #1a1a1a
+    Image src "cover.jpg", w full, h full
+    // Subtle dark gradient overlay at bottom
+    Frame w full, h 80, abs, y 200, bg grad-ver rgba(0,0,0,0) rgba(0,0,0,0.6)
+
+  // Track Info + Controls
+  Frame pad 20, gap 16
+    // Track info
+    Frame gap 4
+      Text "Midnight City", fs 15, weight 600, col white, truncate
+      Text "M83 · Hurry Up, We're Dreaming", fs 12, col $subtle, truncate
+
+    // Progress Bar
+    Frame gap 6
+      Frame w full, h 3, bg $track, rad 99, stacked
+        Frame w 148, h full, bg $fill, rad 99
+
+      Frame hor, spread, ver-center
+        Text "2:12", fs 10, col $muted
+        Text "-3:01", fs 10, col $muted
+
+    // Playback Controls
+    Frame hor, ver-center, spread, pad-y 4
+      CtrlBtn
+        Icon "skip-back", ic $subtle, is 18
+        hover:
+          Icon "skip-back", ic white, is 18
+
+      CtrlBtn
+        Icon "chevrons-left", ic $subtle, is 16
+        hover:
+          Icon "chevrons-left", ic white, is 16
+
+      PlayBtn
+        Icon "pause", ic #0a0a0a, is 20
+
+      CtrlBtn
+        Icon "chevrons-right", ic $subtle, is 16
+        hover:
+          Icon "chevrons-right", ic white, is 16
+
+      CtrlBtn
+        Icon "skip-forward", ic $subtle, is 18
+        hover:
+          Icon "skip-forward", ic white, is 18
+
+    // Divider
+    Divider boc #1e1e1e
+
+    // Action row
+    Frame hor, ver-center, spread, pad-t 2
+      ActionBtn, toggle()
+        Icon "heart", ic $muted, is 16
+        on:
+          Icon "heart", ic $accent, is 16, fill
+
+      ActionBtn
+        Icon "list-music", ic $muted, is 16
+        hover:
+          Icon "list-music", ic white, is 16
+
+      Frame hor, gap 4, ver-center
+        Frame w 20, h 2, bg $track, rad 99, stacked
+          Frame w 14, h full, bg $subtle, rad 99
+        Icon "volume-2", ic $muted, is 14
+
+      ActionBtn
+        Icon "share-2", ic $muted, is 16
+        hover:
+          Icon "share-2", ic white, is 16

@@ -1,0 +1,365 @@
+// Tokens — Panel & Surface
+panel.bg: #0e1118
+shell.bg: #0b0d12
+border.col: #1a1d25
+divider.col: #16191f
+inset.bg: #14171f
+
+// Tokens — Text
+text.col: #ffffff
+soft.col: #e2e4ec
+muted.col: #8a8f9e
+subtle.col: #5f6577
+faint.col: #44495a
+
+// Tokens — Type-Akzente (per Event-Typ)
+mention.col: #d946ef
+mention-soft.bg: #2a1530
+mention-bor.col: #4a1d56
+comment.col: #38bdf8
+comment-soft.bg: #0f2333
+task.col: #8b5cf6
+task-soft.bg: #1a1530
+file.col: #34d399
+status.col: #f59e0b
+danger.col: #fb7185
+danger-soft.bg: #2a1015
+
+// Tokens — Avatare
+avatar-lisa.bg: grad-br #d946ef #f43f5e
+avatar-maya.bg: grad-br #fbbf24 #f97316
+avatar-tom.bg: grad-br #8b5cf6 #4f46e5
+avatar-anna.bg: grad-br #34d399 #0d9488
+avatar-jonas.bg: grad-br #38bdf8 #2563eb
+
+// Components — Avatar
+Avatar: w 36, h 36, rad 99, center, shrink, fs 12, weight bold, col white
+
+// Components — Type-Badge (kleiner Icon-Kreis unten rechts am Avatar)
+TypeBadge: w 16, h 16, rad 99, center, bor 2, boc $panel, abs, x 26, y 22
+
+// Components — Avatar-Stack (Avatar + Badge übereinander)
+AvatarStack: stacked, w 36, h 36, shrink
+
+// Components — Group Header (Heute / Gestern)
+GroupHeader: hor, gap 8, ver-center, pad 12 20 6 20, bg $panel
+  Label: fs 10, weight bold, uppercase, col $faint
+  Rule: grow, h 1, bg $border
+  Count: fs 10, weight medium, col $subtle
+
+// Components — Pill Tab (Header-Filter)
+TabPill: pad 0 10, h 24, rad 99, fs 11, weight medium, col $muted, ver-center, hor, gap 4, cursor pointer
+  hover:
+    bg #ffffff10
+    col white
+
+ActiveTab: pad 0 10, h 24, rad 99, fs 11, weight bold, bg white, col #0b0d12, ver-center, hor, gap 4
+
+// Components — Header Icon-Button
+HdrBtn: w 28, h 28, rad 6, center, col $muted, cursor pointer
+  hover:
+    bg #ffffff0d
+    col white
+
+HdrTextBtn: h 28, pad 0 8, rad 6, hor, gap 4, ver-center, fs 11, weight medium, col $muted, cursor pointer
+  hover:
+    bg #ffffff0d
+    col white
+
+// Components — Action Button (in Items)
+ActionBtn: h 24, pad 0 8, rad 6, hor, gap 4, ver-center, fs 11, weight medium, bg #ffffff0d, col $soft, cursor pointer
+  hover:
+    bg #ffffff1a
+
+GhostBtn: h 24, pad 0 8, rad 6, fs 11, weight medium, col $subtle, ver-center, cursor pointer
+  hover:
+    bg #ffffff0d
+    col white
+
+// Components — Meta-Zeile unter dem Titel
+Meta: hor, gap 4, ver-center, fs 11, col $muted, mar-t 2
+
+Sep: col $faint
+
+// Components — Inhalts-Spalte rechts vom Avatar
+ItemBody: ver, gap 0, grow, mar-l 12
+
+// Components — Kopfzeile (User + Action)
+ItemHead: hor, spread, ver-center, gap 8
+
+// Components — Eintragsstruktur
+FeedItem: hor, pad 12 0, gap 0, ver
+
+// Components — Kontextkarte (Vorschau / Task / File / Status)
+Ctx: pad 10, rad 8, bor 1, boc #ffffff12, bg #ffffff06, mar-t 8
+
+// Components — Status-Chip
+StatusChip: h 26, pad 0 10, rad 6, hor, gap 6, ver-center, fs 11, weight bold
+
+Dot: w 6, h 6, rad 99
+
+// Components — Tag/Badge in Task
+TagChip: h 20, pad 0 6, rad 4, hor, gap 4, ver-center, fs 10, weight bold
+
+canvas bg #0a0c10, w 480, h 720, col $text, font sans, fs 13
+
+// Outer panel
+Frame ver, w 480, h 720, bg $panel, rad 16, clip, bor 1, boc #ffffff0d
+
+  // ===== Header =====
+  Frame ver, pad 12 20 12 20, bor 0 0 1 0, boc $border, bg $panel
+    Frame hor, spread, ver-center
+      Frame hor, gap 8, ver-center
+        Frame stacked, w 8, h 8
+          Frame w 8, h 8, rad 99, bg #34d399, anim pulse
+        Text "Activity", fs 15, weight semibold, col white
+        Text "· Pulse", fs 11, weight medium, col $faint, mar-l 2
+      Frame hor, gap 4, ver-center
+        HdrTextBtn
+          Icon "filter", is 12, ic $muted
+          Text "Alle"
+        HdrBtn
+          Icon "check-check", is 14
+        HdrBtn
+          Icon "settings-2", is 14
+    Frame hor, gap 4, mar-t 12
+      ActiveTab
+        Text "Inbox"
+        Text "12", col #0b0d1299, weight medium, mar-l 4
+      TabPill
+        Text "@Dich"
+      TabPill
+        Text "Folge ich"
+      TabPill
+        Text "Archiv"
+
+  // ===== Feed =====
+  Frame ver, grow, scroll, bg $panel
+
+    // ----- Group: Heute -----
+    GroupHeader
+      Label "Heute"
+      Rule
+      Count "5 Events"
+
+    Frame ver, pad 0 20 8 20
+
+      // 1. Mention — Lisa
+      FeedItem
+        AvatarStack
+          Avatar bg grad-br #d946ef #f43f5e
+            Text "LK"
+          TypeBadge bg $mention
+            Icon "at-sign", is 10, ic white
+        ItemBody
+          ItemHead
+            Frame ver, gap 0, grow
+              Frame hor, gap 4, ver-center, wrap
+                Text "Lisa Krämer", fs 13, weight semibold, col white
+                Text "hat dich erwähnt", fs 13, col $soft
+              Meta
+                Icon "hash", is 12, ic $muted
+                Text "sprint-planning"
+                Sep "·"
+                Text "vor 5 Min"
+            HdrBtn
+              Icon "more-horizontal", is 14
+          Ctx bor 1, boc #4a1d5640, bg #2a153066
+            Frame hor, gap 6, ver-center, wrap
+              Frame hor, gap 2, ver-center, pad 2 6, rad 4, bg #d946ef33
+                Text "@du", fs 11, weight semibold, col #f0abfc
+              Text "kannst du bitte die Capacity für die nächste Sprint-Iteration vor unserem Standup einschätzen?", fs 12, col $soft, line 1.4, grow
+          Frame hor, gap 4, mar-t 8
+            ActionBtn
+              Icon "reply", is 12, ic $soft
+              Text "Antworten"
+            GhostBtn
+              Text "Springe zu Thread"
+
+      // 2. Comment-Reply — Maya
+      FeedItem
+        AvatarStack
+          Avatar bg grad-br #fbbf24 #f97316
+            Text "MA"
+          TypeBadge bg $comment
+            Icon "message-circle", is 10, ic white
+        ItemBody
+          Frame ver, gap 0
+            Frame hor, gap 4, ver-center, wrap
+              Text "Maya Aldrin", fs 13, weight semibold, col white
+              Text "hat auf deinen Kommentar geantwortet", fs 13, col $soft
+            Meta
+              Icon "file-text", is 12, ic $muted
+              Text "Q2 Roadmap"
+              Sep "·"
+              Text "vor 18 Min"
+          Frame ver, gap 6, mar-t 8
+            // Quote: eigener alter Kommentar
+            Frame pad 6 8, rad 6, bg #ffffff08, bor 0 0 0 2, boc #ffffff1a
+              Text "DU · VOR 1 STD", fs 10, weight semibold, uppercase, col $faint
+              Text "Sollten wir Onboarding-Refactor wirklich vor das Billing-Epic ziehen?", fs 11, col $subtle, truncate, mar-t 2
+            // Antwort von Maya
+            Frame pad 6 8, rad 6, bg #0f233380, bor 0 0 0 2, boc $comment
+              Text "MAYA · ANTWORT", fs 10, weight semibold, uppercase, col #7dd3fc
+              Text "Ja — Onboarding hat 3× höhere Conversion-Hebel laut letzter Auswertung. Billing kann in Q3 rutschen.", fs 12, col $soft, line 1.4, mar-t 2
+
+      // 3. Task — Tom
+      FeedItem
+        AvatarStack
+          Avatar bg grad-br #8b5cf6 #4f46e5
+            Text "TR"
+          TypeBadge bg $task
+            Icon "check-square", is 10, ic white
+        ItemBody
+          Frame hor, gap 4, ver-center, wrap
+            Text "Tom Rieger", fs 13, weight semibold, col white
+            Text "hat dir eine Aufgabe zugewiesen", fs 13, col $soft
+          Meta
+            Text "vor 42 Min"
+          Ctx pad 12, bg #1a153066, bor 1, boc #ffffff12
+            Frame hor, gap 10
+              Frame w 16, h 16, rad 4, bor 2, boc #a78bfa99, bg #8b5cf61a, shrink, mar-t 2
+              Frame ver, gap 0, grow
+                Text "API-Spezifikation reviewen", fs 13, weight semibold, col white, line 1.3
+                Text "Backend-Endpoints für die neue Notification-Engine", fs 11, col $subtle, line 1.4, mar-t 2
+                Frame hor, gap 6, wrap, mar-t 8
+                  TagChip bg #f4317526, col #fda4af
+                    Icon "flame", is 10, ic #fda4af
+                    Text "HIGH"
+                  TagChip bg #f59e0b26, col #fcd34d
+                    Icon "calendar-clock", is 10, ic #fcd34d
+                    Text "Fr · 09. Mai"
+                  TagChip bg #ffffff0d, col $muted
+                    Icon "folder", is 10, ic $muted
+                    Text "Platform"
+            Frame hor, gap 6, mar-t 10, pad-t 10, bor 1 0 0 0, boc $border
+              Frame grow, h 28, rad 6, bg #8b5cf6, center, cursor pointer
+                Text "Annehmen", fs 11, weight semibold, col white
+              Frame h 28, pad 0 12, rad 6, bg #ffffff0d, center, cursor pointer
+                Text "Später", fs 11, weight semibold, col $soft
+
+      // 4. File — Anna
+      FeedItem
+        AvatarStack
+          Avatar bg grad-br #34d399 #0d9488
+            Text "AB"
+          TypeBadge bg $file
+            Icon "paperclip", is 10, ic white
+        ItemBody
+          Frame hor, gap 4, ver-center, wrap
+            Text "Anna Baier", fs 13, weight semibold, col white
+            Text "hat eine Datei geteilt", fs 13, col $soft
+          Meta
+            Text "vor 1 Std"
+          Ctx hor, gap 12, ver-center, pad 10, bg #ffffff06, bor 1, boc #ffffff12
+            // File-Thumb (Figma)
+            Frame stacked, w 40, h 48, rad 6, clip, shrink
+              Frame w 40, h 48, bg grad-br #f43f5e #d946ef
+              Frame x 0, y 12, w full, center
+                Icon "figma", is 16, ic white
+              Frame x 0, y 30, w full, center
+                Text "FIG", fs 7, weight bold, col #ffffffe6
+            Frame ver, gap 0, grow
+              Text "design-mockups-v3.fig", fs 12, weight semibold, col white, truncate
+              Frame hor, gap 6, ver-center, mar-t 2, fs 11, col $muted
+                Text "4.7 MB", weight medium
+                Sep "·"
+                Text "14 Frames"
+                Sep "·"
+                Frame hor, gap 2, ver-center
+                  Icon "users", is 10, ic $muted
+                  Text "3"
+            Frame w 32, h 32, rad 6, bg #ffffff0d, center, cursor pointer, shrink
+              Icon "external-link", is 14, ic $soft
+            Frame w 32, h 32, rad 6, bg #ffffff0d, center, cursor pointer, shrink
+              Icon "download", is 14, ic $soft
+
+      // 5. Status — Jonas
+      FeedItem
+        AvatarStack
+          Avatar bg grad-br #38bdf8 #2563eb
+            Text "JF"
+          TypeBadge bg $status
+            Icon "git-branch", is 10, ic white
+        ItemBody
+          Frame hor, gap 4, ver-center, wrap
+            Text "Jonas Frey", fs 13, weight semibold, col white
+            Text "hat Status geändert", fs 13, col $soft
+          Meta
+            Icon "folder-kanban", is 12, ic $muted
+            Text "Onboarding-Redesign"
+            Sep "·"
+            Text "vor 2 Std"
+          Ctx pad 12
+            Frame hor, gap 8, ver-center
+              StatusChip bg #38bdf826, col #7dd3fc
+                Dot bg #38bdf8
+                Text "In Arbeit", col #7dd3fc
+              Icon "arrow-right", is 12, ic $faint
+              StatusChip bg #f59e0b33, col #fcd34d, bor 1, boc #fbbf2466
+                Dot bg #fbbf24, anim pulse
+                Text "In Review", col #fcd34d
+              Frame grow
+              Text "Step 3 / 5", fs 10, weight medium, col $muted
+            Frame hor, gap 4, mar-t 12
+              Frame grow, h 4, rad 99, bg #34d399
+              Frame grow, h 4, rad 99, bg #34d399
+              Frame grow, h 4, rad 99, bg #fbbf24
+              Frame grow, h 4, rad 99, bg #ffffff14
+              Frame grow, h 4, rad 99, bg #ffffff14
+            Frame hor, spread, mar-t 8, fs 10, weight medium, col $muted
+              Text "Backlog"
+              Text "Spec"
+              Text "Review", col #fcd34d
+              Text "QA"
+              Text "Live"
+
+    // ----- Group: Gestern -----
+    GroupHeader
+      Label "Gestern"
+      Rule
+      Count "2 Events"
+
+    Frame ver, pad 0 20 24 20
+
+      // Compact comment — Maya
+      FeedItem opacity 0.8
+        AvatarStack
+          Avatar bg grad-br #fbbf24 #f97316
+            Text "MA"
+          TypeBadge bg $comment
+            Icon "message-circle", is 10, ic white
+        ItemBody
+          Frame hor, gap 4, ver-center, wrap
+            Text "Maya", fs 13, weight semibold, col white
+            Text "kommentierte", fs 13, col $soft
+            Text "'Push-Notification-Specs'", fs 13, col $muted
+          Meta
+            Text "vor 19 Std · 2 Replies"
+
+      // Compact file — Anna
+      FeedItem opacity 0.8
+        AvatarStack
+          Avatar bg grad-br #34d399 #0d9488
+            Text "AB"
+          TypeBadge bg $file
+            Icon "paperclip", is 10, ic white
+        ItemBody
+          Frame hor, gap 4, ver-center, wrap
+            Text "Anna", fs 13, weight semibold, col white
+            Text "teilte", fs 13, col $soft
+            Text "'research-summary.pdf'", fs 13, col $muted
+            Text "· 1.2 MB", fs 13, col $faint
+          Meta
+            Text "vor 22 Std"
+
+  // ===== Footer =====
+  Frame hor, spread, ver-center, pad 10 20, bor 1 0 0 0, boc $border, bg $shell
+    Frame hor, gap 6, ver-center, fs 11, col $muted
+      Icon "bell-dot", is 14, ic #34d399
+      Text "Live", weight medium
+      Sep "·"
+      Text "synct gerade eben"
+    Frame hor, gap 4, ver-center, cursor pointer
+      Text "Alle anzeigen", fs 11, weight semibold, col $soft
+      Icon "arrow-right", is 12, ic $soft

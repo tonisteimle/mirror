@@ -1,0 +1,209 @@
+// Tokens — Panel & Surface
+panel.bg: #0f1115
+surface.bg: #171a21
+surface-hover.bg: #1d2129
+border.col: #232734
+divider.col: #1a1d25
+
+// Tokens — Text
+text.col: #e6e8ee
+muted.col: #8b91a1
+subtle.col: #5f6577
+
+// Tokens — Type Accents
+comment.col: #2271C1
+task.col: #f59e0b
+file.col: #10b981
+mention.col: #a855f7
+status.col: #ec4899
+
+// Tokens — Avatars
+avatar-maya.bg: #2271C1
+avatar-tom.bg: #f59e0b
+avatar-anna.bg: #10b981
+avatar-lisa.bg: #a855f7
+avatar-sys.bg: #ec4899
+
+// Components — Avatar
+Avatar: w 36, h 36, rad 99, center, shrink
+
+// Components — Type Badge (kleines Icon-Quadrat unten rechts am Avatar)
+TypeBadge: w 16, h 16, rad 99, center, bor 2, boc #171a21
+
+// Components — Feed Item Container
+FeedItem: hor, gap 12, pad 14 14, bg $surface, rad 10, bor 1, boc $border
+  hover:
+    bg $surface-hover
+
+// Components — Inhalts-Spalte rechts vom Avatar
+ItemBody: ver, gap 6, grow
+
+// Components — Kopfzeile (User + Action + Timestamp)
+ItemHead: hor, gap 6, ver-center, wrap
+
+// Components — Kontext-Karte (Vorschau, File-Chip, Status-Chip)
+Ctx: pad 10 12, rad 8, bg #0f1115, bor 1, boc $border, gap 8
+
+canvas bg #0a0c10, w 480, h 720, col $text, font sans, fs 13
+
+Frame ver, w full, h full, bg $panel
+
+  // Header
+  Frame hor, spread, ver-center, pad 16 18, bor 0 0 1 0, boc $divider
+    Frame hor, gap 10, ver-center
+      Icon "activity", ic $text, is 18
+      Text "Activity", col $text, fs 15, weight 600
+      Frame pad 2 8, rad 99, bg $comment
+        Text "5", col white, fs 11, weight 600
+    Frame hor, gap 8, ver-center
+      Icon "filter", ic $muted, is 16
+      Icon "more-horizontal", ic $muted, is 16
+
+  // Filter-Tabs
+  Frame hor, gap 6, pad 10 14, bor 0 0 1 0, boc $divider
+    Frame pad 5 10, rad 99, bg $surface, bor 1, boc $border
+      Text "All", col $text, fs 12, weight 500
+    Frame pad 5 10, rad 99
+      Text "Mentions", col $muted, fs 12
+    Frame pad 5 10, rad 99
+      Text "Tasks", col $muted, fs 12
+    Frame pad 5 10, rad 99
+      Text "Files", col $muted, fs 12
+
+  // Scrollbarer Feed
+  Frame ver, gap 8, pad 12, scroll, grow
+
+    // 1) COMMENT
+    FeedItem
+      Frame stacked
+        Avatar bg $avatar-maya
+          Text "M", col white, fs 14, weight 600
+        Frame x 22, y 22
+          TypeBadge bg $comment
+            Icon "message-circle", ic white, is 9, fill
+      ItemBody
+        ItemHead
+          Text "Maya Schneider", col $text, weight 600
+          Text "antwortete auf deinen Kommentar in", col $muted
+          Text "Q2 Roadmap", col $comment, weight 500
+        Ctx bor-l 3, boc $comment
+          Frame hor, gap 6, ver-center
+            Icon "corner-down-right", ic $subtle, is 12
+            Text "Du:", col $subtle, fs 11, weight 500
+            Text "Können wir Q2-Scope nochmal durchgehen?", col $muted, fs 11, truncate, grow
+          Text "Guter Punkt — lass uns am Donnerstag synchronisieren. Ich bringe die Prio-Liste mit.", col $text, fs 12, line 1.45
+        Frame hor, gap 12, ver-center
+          Text "vor 5 Min", col $subtle, fs 11
+          Frame hor, gap 4, ver-center
+            Icon "message-circle", ic $subtle, is 11
+            Text "Antworten", col $subtle, fs 11
+
+    // 2) TASK ASSIGNED
+    FeedItem
+      Frame stacked
+        Avatar bg $avatar-tom
+          Text "T", col white, fs 14, weight 600
+        Frame x 22, y 22
+          TypeBadge bg $task
+            Icon "check-square", ic white, is 9
+      ItemBody
+        ItemHead
+          Text "Tom Becker", col $text, weight 600
+          Text "hat dir eine Aufgabe zugewiesen", col $muted
+        Ctx bor-l 3, boc $task
+          Frame hor, gap 8, ver-center
+            Frame w 18, h 18, rad 4, bor 1.5, boc $task, center, shrink
+            Text "API-Spezifikation reviewen", col $text, fs 12, weight 500, grow
+          Frame hor, gap 12, ver-center
+            Frame hor, gap 5, ver-center
+              Icon "calendar", ic $task, is 12
+              Text "Fällig: 7. Mai", col $task, fs 11, weight 500
+            Frame hor, gap 5, ver-center
+              Icon "flag", ic $muted, is 12
+              Text "High", col $muted, fs 11
+        Frame hor, gap 12, ver-center
+          Text "vor 18 Min", col $subtle, fs 11
+          Text "Annehmen", col $task, fs 11, weight 600
+
+    // 3) FILE SHARED
+    FeedItem
+      Frame stacked
+        Avatar bg $avatar-anna
+          Text "A", col white, fs 14, weight 600
+        Frame x 22, y 22
+          TypeBadge bg $file
+            Icon "paperclip", ic white, is 9
+      ItemBody
+        ItemHead
+          Text "Anna Lehmann", col $text, weight 600
+          Text "hat eine Datei geteilt", col $muted
+        Ctx bor-l 3, boc $file, hor, gap 10, ver-center
+          Frame w 40, h 48, rad 6, bg #0a0c10, bor 1, boc $border, center, shrink
+            Icon "figma", ic $file, is 20
+          Frame ver, gap 3, grow
+            Text "design-mockups-v3.fig", col $text, fs 12, weight 500, truncate
+            Frame hor, gap 8, ver-center
+              Text "4.2 MB", col $muted, fs 11
+              Frame w 3, h 3, rad 99, bg $subtle
+              Text "Figma", col $muted, fs 11
+              Frame w 3, h 3, rad 99, bg $subtle
+              Text "12 Frames", col $muted, fs 11
+          Icon "download", ic $muted, is 16
+        Text "vor 1 Std", col $subtle, fs 11
+
+    // 4) MENTION
+    FeedItem
+      Frame stacked
+        Avatar bg $avatar-lisa
+          Text "L", col white, fs 14, weight 600
+        Frame x 22, y 22
+          TypeBadge bg $mention
+            Icon "at-sign", ic white, is 9
+      ItemBody
+        ItemHead
+          Text "Lisa Vogt", col $text, weight 600
+          Text "hat dich erwähnt in", col $muted
+        Ctx bor-l 3, boc $mention
+          Frame hor, gap 6, ver-center
+            Icon "hash", ic $mention, is 12
+            Text "sprint-planning", col $mention, fs 11, weight 600
+            Frame w 3, h 3, rad 99, bg $subtle
+            Text "12 Teilnehmer", col $muted, fs 11
+          Text "@toni können wir die Onboarding-Flow-Specs noch in diesen Sprint nehmen? Wäre wichtig für den Launch.", col $text, fs 12, line 1.45
+        Frame hor, gap 12, ver-center
+          Text "vor 2 Std", col $subtle, fs 11
+          Text "Antworten", col $mention, fs 11, weight 600
+
+    // 5) PROJECT UPDATE
+    FeedItem
+      Frame stacked
+        Avatar bg $avatar-sys
+          Icon "git-branch", ic white, is 16
+        Frame x 22, y 22
+          TypeBadge bg $status
+            Icon "refresh-cw", ic white, is 9
+      ItemBody
+        ItemHead
+          Text "Status-Update", col $text, weight 600
+          Text "auf", col $muted
+          Text "Onboarding-Redesign", col $status, weight 500
+        Ctx bor-l 3, boc $status, hor, gap 10, ver-center
+          Frame hor, gap 5, ver-center, pad 4 9, rad 99, bg #1d2129, bor 1, boc $border
+            Frame w 6, h 6, rad 99, bg $task
+            Text "In Progress", col $muted, fs 11, weight 500
+          Icon "arrow-right", ic $subtle, is 14
+          Frame hor, gap 5, ver-center, pad 4 9, rad 99, bg $status, opacity 0.18, bor 1, boc $status
+            Frame w 6, h 6, rad 99, bg $status
+            Text "In Review", col $status, fs 11, weight 600
+        Frame hor, gap 12, ver-center
+          Text "vor 4 Std", col $subtle, fs 11
+          Frame hor, gap 4, ver-center
+            Icon "users", ic $subtle, is 11
+            Text "8 Beteiligte", col $subtle, fs 11
+
+  // Footer
+  Frame hor, spread, ver-center, pad 12 16, bor 1 0 0 0, boc $divider
+    Frame hor, gap 6, ver-center
+      Icon "check-check", ic $muted, is 14
+      Text "Alle als gelesen markieren", col $muted, fs 12
+    Text "Verlauf", col $comment, fs 12, weight 500

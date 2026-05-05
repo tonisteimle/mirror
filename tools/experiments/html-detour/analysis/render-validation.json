@@ -1,0 +1,191 @@
+[
+  {
+    "label": "brief-1 path-a s1",
+    "file": "tools/experiments/html-detour/outputs/brief-1/path-a-sample-1.mir",
+    "status": "OK",
+    "consoleErrors": [],
+    "exceptions": [],
+    "appHtmlSnippet": "<div class=\"mirror-root\" data-mirror-root=\"true\"><style>\n  /* User Tokens */\n  :host, :root {\n    --bg-page: #0a0b14;\n    --bg-card: #12141f;\n    --bg-cardHi: #161a2b;\n    --bg-accent: #6366f1;\n    --bg-accentSoft: #1e1b4b;\n    --border-col: #232742;\n    --border-hi: #6366f1;\n    --text-primary: #f5",
+    "screenshot": "brief-1-brief-1-path-a-s1.png",
+    "width": 1280,
+    "height": 1648,
+    "allDescendants": 123,
+    "textLen": 3877,
+    "pixelDiversity": 0.08197222222222222
+  },
+  {
+    "label": "brief-1 path-b s1",
+    "file": "tools/experiments/html-detour/outputs/brief-1/path-b-mirror-sample-1.mir",
+    "status": "OK",
+    "consoleErrors": [],
+    "exceptions": [],
+    "appHtmlSnippet": "<div class=\"mirror-root\" data-mirror-root=\"true\"><style>\n/* Mirror Theme Tokens (auto-generated) */\n:root {\n  /* color */\n  --accent-bg: #B6F09C;\n  --accent-hover-bg: #95e970;\n  --accent-active-bg: #85e65a;\n  --accent-col: #B6F09C;\n  --surface-bg: #0F0F16;\n  --surface-hover-bg: #191925;\n  --surface-",
+    "screenshot": "brief-1-brief-1-path-b-s1.png",
+    "width": 1280,
+    "height": 1605,
+    "allDescendants": 272,
+    "textLen": 5663,
+    "pixelDiversity": 0.14546267361111112
+  },
+  {
+    "label": "brief-1 path-a s2",
+    "file": "tools/experiments/html-detour/outputs/brief-1/path-a-sample-2.mir",
+    "status": "OK",
+    "consoleErrors": [],
+    "exceptions": [],
+    "appHtmlSnippet": "<div class=\"mirror-root\" data-mirror-root=\"true\"><style>\n/* Mirror Theme Tokens (auto-generated) */\n:root {\n  /* color */\n  --accent-bg: #5BA8F5;\n  --accent-hover-bg: #2b8ef2;\n  --accent-active-bg: #1382f1;\n  --accent-col: #ffffff;\n  --surface-bg: #15151f;\n  --surface-hover-bg: #1f1f2e;\n  --surface-",
+    "screenshot": "brief-1-brief-1-path-a-s2.png",
+    "width": 1280,
+    "height": 1618,
+    "allDescendants": 131,
+    "textLen": 4331,
+    "pixelDiversity": 0.07563975694444444
+  },
+  {
+    "label": "brief-1 path-b s2",
+    "file": "tools/experiments/html-detour/outputs/brief-1/path-b-mirror-sample-2.mir",
+    "status": "OK",
+    "consoleErrors": [],
+    "exceptions": [],
+    "appHtmlSnippet": "<div class=\"mirror-root\" data-mirror-root=\"true\" style=\"background: rgb(11, 11, 15); color: rgb(236, 234, 227); font-family: system-ui, sans-serif; width: 1440px; height: 1100px; --mirror-color: #ECEAE3; --mirror-font-family: system-ui, sans-serif;\"><style>\n/* Mirror Theme Tokens (auto-generated) */",
+    "screenshot": "brief-1-brief-1-path-b-s2.png",
+    "width": 1440,
+    "height": 1100,
+    "allDescendants": 250,
+    "textLen": 6356,
+    "pixelDiversity": 0.15372222222222223
+  },
+  {
+    "label": "brief-2 path-a s1",
+    "file": "tools/experiments/html-detour/outputs/brief-2/path-a-sample-1.mir",
+    "status": "OK",
+    "consoleErrors": [
+      "[warning] Failed to load icon \"chrome\": TypeError: Failed to fetch\n    at Object._fetchIcon (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-a-sample-1.mir:17:20), <anonymous>:4011:25)\n    at Object.loadIcon (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-a-sample-1.mir:17:20), <anonymous>:3977:24)\n    at createUI (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-a-sample-1.mir:17:20), <anonymous>:782:12)\n    at eval (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-a-sample-1.mir:17:20), <anonymous>:4750:8)\n    at http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-a-sample-1.mir:67:20",
+      "[warning] Icon \"chrome\" not found, using fallback"
+    ],
+    "exceptions": [],
+    "appHtmlSnippet": "<div class=\"mirror-root\" data-mirror-root=\"true\"><style>\n/* Mirror Theme Tokens (auto-generated) */\n:root {\n  /* color */\n  --accent-bg: #5BA8F5;\n  --accent-hover-bg: #2b8ef2;\n  --accent-active-bg: #1382f1;\n  --accent-col: #ffffff;\n  --surface-bg: #f5f1e8;\n  --surface-hover-bg: #fdfcfa;\n  --surface-",
+    "screenshot": "brief-2-brief-2-path-a-s1.png",
+    "width": 1280,
+    "height": 785,
+    "allDescendants": 48,
+    "textLen": 4340,
+    "pixelDiversity": 0.030427951388888888
+  },
+  {
+    "label": "brief-2 path-b s1",
+    "file": "tools/experiments/html-detour/outputs/brief-2/path-b-mirror-sample-1.mir",
+    "status": "OK",
+    "consoleErrors": [
+      "[warning] Failed to load icon \"chrome\": TypeError: Failed to fetch\n    at Object._fetchIcon (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-b-mirror-sample-1.mir:17:20), <anonymous>:4752:25)\n    at Object.loadIcon (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-b-mirror-sample-1.mir:17:20), <anonymous>:4718:24)\n    at createUI (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-b-mirror-sample-1.mir:17:20), <anonymous>:1376:12)\n    at eval (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-b-mirror-sample-1.mir:17:20), <anonymous>:5517:8)\n    at http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-b-mirror-sample-1.mir:67:20",
+      "[warning] Icon \"chrome\" not found, using fallback"
+    ],
+    "exceptions": [],
+    "appHtmlSnippet": "<div class=\"mirror-root\" data-mirror-root=\"true\"><style>\n  /* User Tokens */\n  :host, :root {\n    --mist-bg: #f3f7f1;\n    --sage-soft-bg: #e3ede0;\n    --sage-bg: #c8dcc2;\n    --sage-mid-bg: #a3c399;\n    --moss-light-bg: #7aa472;\n    --moss-bg: #5a8a52;\n    --moss-deep-bg: #456e3f;\n    --pine-bg: #36",
+    "screenshot": "brief-2-brief-2-path-b-s1.png",
+    "width": 1280,
+    "height": 812,
+    "allDescendants": 112,
+    "textLen": 4262,
+    "pixelDiversity": 0.06261892361111111
+  },
+  {
+    "label": "brief-2 path-a s2",
+    "file": "tools/experiments/html-detour/outputs/brief-2/path-a-sample-2.mir",
+    "status": "OK",
+    "consoleErrors": [
+      "[warning] Failed to load icon \"chrome\": TypeError: Failed to fetch\n    at Object._fetchIcon (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-a-sample-2.mir:17:20), <anonymous>:4082:25)\n    at Object.loadIcon (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-a-sample-2.mir:17:20), <anonymous>:4048:24)\n    at createUI (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-a-sample-2.mir:17:20), <anonymous>:874:12)\n    at eval (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-a-sample-2.mir:17:20), <anonymous>:4817:8)\n    at http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-a-sample-2.mir:67:20",
+      "[warning] Icon \"chrome\" not found, using fallback"
+    ],
+    "exceptions": [],
+    "appHtmlSnippet": "<div class=\"mirror-root\" data-mirror-root=\"true\"><style>\n/* Mirror Theme Tokens (auto-generated) */\n:root {\n  /* color */\n  --accent-bg: #5BA8F5;\n  --accent-hover-bg: #2b8ef2;\n  --accent-active-bg: #1382f1;\n  --accent-col: #7ba87f;\n  --surface-bg: #ffffff;\n  --surface-hover-bg: #ffffff;\n  --surface-",
+    "screenshot": "brief-2-brief-2-path-a-s2.png",
+    "width": 1280,
+    "height": 767,
+    "allDescendants": 60,
+    "textLen": 3781,
+    "pixelDiversity": 0.031535590277777775
+  },
+  {
+    "label": "brief-2 path-b s2",
+    "file": "tools/experiments/html-detour/outputs/brief-2/path-b-mirror-sample-2.mir",
+    "status": "OK",
+    "consoleErrors": [
+      "[warning] Failed to load icon \"chrome\": TypeError: Failed to fetch\n    at Object._fetchIcon (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-b-mirror-sample-2.mir:17:20), <anonymous>:4251:25)\n    at Object.loadIcon (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-b-mirror-sample-2.mir:17:20), <anonymous>:4217:24)\n    at createUI (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-b-mirror-sample-2.mir:17:20), <anonymous>:1033:12)\n    at eval (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-b-mirror-sample-2.mir:17:20), <anonymous>:4988:8)\n    at http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-2/path-b-mirror-sample-2.mir:67:20",
+      "[warning] Icon \"chrome\" not found, using fallback"
+    ],
+    "exceptions": [],
+    "appHtmlSnippet": "<div class=\"mirror-root\" data-mirror-root=\"true\"><style>\n  /* User Tokens */\n  :host, :root {\n    --forest-deep: #3a5742;\n    --forest-mid: #4a6a4f;\n    --forest-sage: #6a8c5e;\n    --forest-mist: #b8c8a4;\n    --forest-cream: #f3eedb;\n    --text-primary: #2d3e2f;\n    --text-muted: #6a7a68;\n    --text",
+    "screenshot": "brief-2-brief-2-path-b-s2.png",
+    "width": 1280,
+    "height": 741,
+    "allDescendants": 90,
+    "textLen": 3116,
+    "pixelDiversity": 0.030657118055555557
+  },
+  {
+    "label": "brief-3 path-a s1",
+    "file": "tools/experiments/html-detour/outputs/brief-3/path-a-sample-1.mir",
+    "status": "OK",
+    "consoleErrors": [
+      "[warning] Failed to load icon \"figma\": TypeError: Failed to fetch\n    at Object._fetchIcon (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-a-sample-1.mir:17:20), <anonymous>:6088:25)\n    at Object.loadIcon (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-a-sample-1.mir:17:20), <anonymous>:6054:24)\n    at createUI (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-a-sample-1.mir:17:20), <anonymous>:1860:12)\n    at eval (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-a-sample-1.mir:17:20), <anonymous>:6832:8)\n    at http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-a-sample-1.mir:67:20",
+      "[warning] Icon \"figma\" not found, using fallback"
+    ],
+    "exceptions": [],
+    "appHtmlSnippet": "<div class=\"mirror-root\" data-mirror-root=\"true\"><style>\n/* Mirror Theme Tokens (auto-generated) */\n:root {\n  /* color */\n  --accent-bg: #5BA8F5;\n  --accent-hover-bg: #2b8ef2;\n  --accent-active-bg: #1382f1;\n  --accent-col: #ffffff;\n  --surface-bg: #171a21;\n  --surface-hover-bg: #1d2129;\n  --surface-",
+    "screenshot": "brief-3-brief-3-path-a-s1.png",
+    "width": 1280,
+    "height": 1626,
+    "allDescendants": 208,
+    "textLen": 5355,
+    "pixelDiversity": 0.07622048611111111
+  },
+  {
+    "label": "brief-3 path-b s1",
+    "file": "tools/experiments/html-detour/outputs/brief-3/path-b-mirror-sample-1.mir",
+    "status": "OK",
+    "consoleErrors": [],
+    "exceptions": [],
+    "appHtmlSnippet": "<div class=\"mirror-root\" data-mirror-root=\"true\"><style>\n/* Mirror Theme Tokens (auto-generated) */\n:root {\n  /* color */\n  --accent-bg: #5BA8F5;\n  --accent-hover-bg: #2b8ef2;\n  --accent-active-bg: #1382f1;\n  --accent-col: #ffffff;\n  --surface-bg: #27272a;\n  --surface-hover-bg: #333337;\n  --surface-",
+    "screenshot": "brief-3-brief-3-path-b-s1.png",
+    "width": 1280,
+    "height": 1026,
+    "allDescendants": 284,
+    "textLen": 6287,
+    "pixelDiversity": 0.03501909722222222
+  },
+  {
+    "label": "brief-3 path-a s2",
+    "file": "tools/experiments/html-detour/outputs/brief-3/path-a-sample-2.mir",
+    "status": "OK",
+    "consoleErrors": [
+      "[warning] Failed to load icon \"figma\": TypeError: Failed to fetch\n    at Object._fetchIcon (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-a-sample-2.mir:17:20), <anonymous>:6224:25)\n    at Object.loadIcon (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-a-sample-2.mir:17:20), <anonymous>:6190:24)\n    at createUI (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-a-sample-2.mir:17:20), <anonymous>:2020:12)\n    at eval (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-a-sample-2.mir:17:20), <anonymous>:6976:8)\n    at http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-a-sample-2.mir:67:20",
+      "[warning] Icon \"figma\" not found, using fallback"
+    ],
+    "exceptions": [],
+    "appHtmlSnippet": "<div class=\"mirror-root\" data-mirror-root=\"true\"><style>\n  /* User Tokens */\n  :host, :root {\n    --bg-app: #0b0d12;\n    --bg-panel: #11141b;\n    --bg-card: #161a23;\n    --bg-cardHover: #1c2130;\n    --bg-preview: #0d1017;\n    --bor-subtle: #232838;\n    --bor-strong: #2c3344;\n    --col-text: #e7eaf2;",
+    "screenshot": "brief-3-brief-3-path-a-s2.png",
+    "width": 1280,
+    "height": 1744,
+    "allDescendants": 210,
+    "textLen": 4491,
+    "pixelDiversity": 0.07768055555555556
+  },
+  {
+    "label": "brief-3 path-b s2",
+    "file": "tools/experiments/html-detour/outputs/brief-3/path-b-mirror-sample-2.mir",
+    "status": "OK",
+    "consoleErrors": [
+      "[warning] Failed to load icon \"figma\": TypeError: Failed to fetch\n    at Object._fetchIcon (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-b-mirror-sample-2.mir:17:20), <anonymous>:7755:25)\n    at Object.loadIcon (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-b-mirror-sample-2.mir:17:20), <anonymous>:7721:24)\n    at createUI (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-b-mirror-sample-2.mir:17:20), <anonymous>:2924:12)\n    at eval (eval at <anonymous> (http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-b-mirror-sample-2.mir:17:20), <anonymous>:8507:8)\n    at http://localhost:5173/tools/experiments/html-detour/render/viewer?file=/tools/experiments/html-detour/outputs/brief-3/path-b-mirror-sample-2.mir:67:20",
+      "[warning] Icon \"figma\" not found, using fallback"
+    ],
+    "exceptions": [],
+    "appHtmlSnippet": "<div class=\"mirror-root\" data-mirror-root=\"true\"><style>\n/* Mirror Theme Tokens (auto-generated) */\n:root {\n  /* color */\n  --accent-bg: #5BA8F5;\n  --accent-hover-bg: #2b8ef2;\n  --accent-active-bg: #1382f1;\n  --accent-col: #ffffff;\n  --surface-bg: #27272a;\n  --surface-hover-bg: #333337;\n  --surface-",
+    "screenshot": "brief-3-brief-3-path-b-s2.png",
+    "width": 1280,
+    "height": 1440,
+    "allDescendants": 321,
+    "textLen": 6710,
+    "pixelDiversity": 0.06282378472222222
+  }
+]

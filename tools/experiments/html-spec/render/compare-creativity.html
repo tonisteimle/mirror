@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kreativitäts-Test: Free HTML vs Strict-Spec HTML</title>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --bg2: #14141a;
+      --surface: #1a1a22;
+      --line: #2a2a35;
+      --ink: #e7e7ee;
+      --dim: #8a8a98;
+      --accent-free: #c7f94b;
+      --accent-strict: #60a5fa;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+    }
+    header.page {
+      padding: 32px 40px 16px;
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      background: rgba(10, 10, 15, 0.92);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+    header.page h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+    }
+    header.page p {
+      color: var(--dim);
+      font-size: 13px;
+      margin: 0;
+      max-width: 800px;
+    }
+    .legend {
+      display: flex;
+      gap: 24px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--dim);
+    }
+    .legend span::before {
+      content: '●';
+      margin-right: 6px;
+    }
+    .legend .l-free::before { color: var(--accent-free); }
+    .legend .l-strict::before { color: var(--accent-strict); }
+
+    .brief-section {
+      padding: 32px 40px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brief-section h2 {
+      font-size: 17px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+    }
+    .brief-section .desc {
+      color: var(--dim);
+      font-size: 13px;
+      margin: 0 0 24px 0;
+    }
+
+    .row-label {
+      font-size: 11px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 500;
+      margin: 16px 0 12px 0;
+      padding-left: 12px;
+      border-left: 3px solid;
+    }
+    .row-label.free { border-color: var(--accent-free); color: var(--accent-free); }
+    .row-label.strict { border-color: var(--accent-strict); color: var(--accent-strict); }
+
+    .sample-row {
+      display: grid;
+      gap: 24px;
+      margin-bottom: 20px;
+      align-items: start;
+    }
+
+    .b1 .sample-row { grid-template-columns: 540px 540px; }
+    .b2 .sample-row { grid-template-columns: 280px 280px; }
+    .b3 .sample-row { grid-template-columns: 360px 360px; }
+
+    .cell {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .cell .frame-wrap {
+      position: relative;
+      overflow: hidden;
+      background: #050507;
+    }
+    .b1 .cell .frame-wrap { width: 540px; height: 360px; }
+    .b2 .cell .frame-wrap { width: 280px; height: 606px; }
+    .b3 .cell .frame-wrap { width: 360px; height: 540px; }
+
+    .cell iframe {
+      border: 0;
+      transform-origin: top left;
+      display: block;
+    }
+    .b1 .cell iframe {
+      width: 1200px;
+      height: 800px;
+      transform: scale(0.45);
+    }
+    .b2 .cell iframe {
+      width: 375px;
+      height: 812px;
+      transform: scale(0.7466);
+    }
+    .b3 .cell iframe {
+      width: 480px;
+      height: 720px;
+      transform: scale(0.75);
+    }
+
+    .cell .meta {
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      border-top: 1px solid var(--line);
+    }
+    .cell .meta .label {
+      color: var(--dim);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .cell .meta .stripe {
+      width: 6px;
+      height: 6px;
+      border-radius: 99px;
+    }
+    .cell.free .stripe { background: var(--accent-free); }
+    .cell.strict .stripe { background: var(--accent-strict); }
+    .cell .meta .source-link {
+      color: var(--dim);
+      text-decoration: none;
+    }
+    .cell .meta .source-link:hover {
+      color: var(--ink);
+      text-decoration: underline;
+    }
+
+    main {
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .ask {
+      background: #1a1a22;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 0 40px 24px;
+      max-width: 1200px;
+      color: var(--dim);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .ask strong { color: var(--ink); }
+  </style>
+</head>
+<body>
+
+<header class="page">
+  <h1>Kreativitäts-Test: Free HTML vs Strict-Spec HTML</h1>
+  <p>Phase 0 des HTML-Spec-Experiments. Selber LLM (Claude Opus 4.7), selbe Briefs, identische Sub-Agent-Architektur. <strong>Frage:</strong> bleibt das LLM kreativ, wenn es nur Tailwind-Utility-Klassen verwenden darf (kein <code>&lt;style&gt;</code>, kein <code>style=&quot;&quot;</code>, keine custom CSS, keine Custom-Fonts)?</p>
+  <div class="legend">
+    <span class="l-free">Free — unconstrained HTML (vorheriges Experiment)</span>
+    <span class="l-strict">Strict — Tailwind-Utility-only nach SPEC-v0</span>
+  </div>
+</header>
+
+<div class="ask">
+  <strong>Worauf schauen:</strong> ist die Strict-Variante noch interessant/divers, oder fühlt sie sich gestutzt an? Welche kreativen Mittel sind erhalten? Welche fehlen merklich? Vor allem: variieren die zwei Strict-Samples pro Brief stärker als die zwei Pfad-A-Mirror-Samples (die ja beide derselbe Default-Style waren), oder kollabieren sie zu einem einheitlichen "shadcn-Look"?
+</div>
+
+<main>
+
+  <section class="brief-section b1">
+    <h2>Brief 1: Pricing-Page „Stride"</h2>
+    <p class="desc">Desktop, 1200×800. Skaliert auf 45%.</p>
+
+    <div class="row-label free">FREE — unconstrained HTML</div>
+    <div class="sample-row">
+      <div class="cell free">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-detour/outputs/brief-1/path-b-html-sample-1"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Free s1</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-1/path-b-html-sample-1.html">source ↗</a></div>
+      </div>
+      <div class="cell free">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-detour/outputs/brief-1/path-b-html-sample-2"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Free s2</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-1/path-b-html-sample-2.html">source ↗</a></div>
+      </div>
+    </div>
+
+    <div class="row-label strict">STRICT — Tailwind-only HTML (SPEC-v0)</div>
+    <div class="sample-row">
+      <div class="cell strict">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-spec/outputs/brief-1/strict-sample-1"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Strict s1</span><a class="source-link" target="_blank" href="/tools/experiments/html-spec/outputs/brief-1/strict-sample-1.html">source ↗</a></div>
+      </div>
+      <div class="cell strict">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-spec/outputs/brief-1/strict-sample-2"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Strict s2</span><a class="source-link" target="_blank" href="/tools/experiments/html-spec/outputs/brief-1/strict-sample-2.html">source ↗</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="brief-section b2">
+    <h2>Brief 2: Mobile Login „Calm Forest"</h2>
+    <p class="desc">Mobile, 375×812. Skaliert auf 75%.</p>
+
+    <div class="row-label free">FREE</div>
+    <div class="sample-row">
+      <div class="cell free">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-detour/outputs/brief-2/path-b-html-sample-1"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Free s1</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-2/path-b-html-sample-1.html">source ↗</a></div>
+      </div>
+      <div class="cell free">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-detour/outputs/brief-2/path-b-html-sample-2"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Free s2</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-2/path-b-html-sample-2.html">source ↗</a></div>
+      </div>
+    </div>
+
+    <div class="row-label strict">STRICT</div>
+    <div class="sample-row">
+      <div class="cell strict">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-spec/outputs/brief-2/strict-sample-1"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Strict s1</span><a class="source-link" target="_blank" href="/tools/experiments/html-spec/outputs/brief-2/strict-sample-1.html">source ↗</a></div>
+      </div>
+      <div class="cell strict">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-spec/outputs/brief-2/strict-sample-2"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Strict s2</span><a class="source-link" target="_blank" href="/tools/experiments/html-spec/outputs/brief-2/strict-sample-2.html">source ↗</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="brief-section b3">
+    <h2>Brief 3: Activity Feed</h2>
+    <p class="desc">Sidebar 480×720. Skaliert auf 75%.</p>
+
+    <div class="row-label free">FREE</div>
+    <div class="sample-row">
+      <div class="cell free">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-detour/outputs/brief-3/path-b-html-sample-1"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Free s1</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-3/path-b-html-sample-1.html">source ↗</a></div>
+      </div>
+      <div class="cell free">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-detour/outputs/brief-3/path-b-html-sample-2"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Free s2</span><a class="source-link" target="_blank" href="/tools/experiments/html-detour/outputs/brief-3/path-b-html-sample-2.html">source ↗</a></div>
+      </div>
+    </div>
+
+    <div class="row-label strict">STRICT</div>
+    <div class="sample-row">
+      <div class="cell strict">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-spec/outputs/brief-3/strict-sample-1"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Strict s1</span><a class="source-link" target="_blank" href="/tools/experiments/html-spec/outputs/brief-3/strict-sample-1.html">source ↗</a></div>
+      </div>
+      <div class="cell strict">
+        <div class="frame-wrap"><iframe loading="lazy" src="/tools/experiments/html-spec/outputs/brief-3/strict-sample-2"></iframe></div>
+        <div class="meta"><span class="label"><span class="stripe"></span> Strict s2</span><a class="source-link" target="_blank" href="/tools/experiments/html-spec/outputs/brief-3/strict-sample-2.html">source ↗</a></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+</body>
+</html>

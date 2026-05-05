@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toast Notification</title>
+  <style>
+    :root {
+      --accent: #16a34a;
+      --accent-subtle: #dcfce7;
+      --surface: #ffffff;
+      --surface-raised: #f9fafb;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --text-action: #374151;
+      --border: #e5e7eb;
+      --dismiss: #9ca3af;
+      --dismiss-hover: #374151;
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 12px;
+      --space-lg: 16px;
+      --space-xl: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 300px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+
+    /* toast: success notification */
+    .toast {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-lg);
+      gap: var(--space-md);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .toast.toast-hidden {
+      display: none;
+    }
+
+    /* toast status icon */
+    .toast-icon {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      margin-top: 1px;
+      color: var(--accent);
+    }
+
+    .icon {
+      display: block;
+    }
+
+    /* toast body: title + message */
+    .toast-body {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      flex: 1;
+    }
+
+    .toast-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+      line-height: 20px;
+    }
+
+    .toast-message {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 18px;
+      font-weight: 400;
+    }
+
+    /* toast actions row */
+    .toast-actions {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-sm);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* action button: undo */
+    .btn-undo {
+      display: flex;
+      align-items: center;
+      background: none;
+      border: none;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent);
+      cursor: pointer;
+      letter-spacing: -0.01em;
+      line-height: 20px;
+    }
+
+    .btn-undo:hover {
+      background: var(--accent-subtle);
+    }
+
+    .btn-undo:active {
+      opacity: 0.75;
+    }
+
+    /* dismiss button: X icon */
+    .btn-dismiss {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--dismiss);
+      padding: 0;
+    }
+
+    .btn-dismiss:hover {
+      color: var(--dismiss-hover);
+      background: var(--surface-raised);
+    }
+
+    .btn-dismiss:active {
+      opacity: 0.6;
+    }
+
+    /* restore hint (shown after dismiss) */
+    .toast-restore {
+      display: none;
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-sm);
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .toast-restore.restore-visible {
+      display: flex;
+    }
+
+    .btn-restore {
+      background: none;
+      border: none;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-action);
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .btn-restore:hover {
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+
+  <div>
+
+    <!-- toast: success notification -->
+    <div class="toast" id="toast">
+
+      <!-- status icon: check-circle -->
+      <span class="toast-icon">
+        <svg class="icon icon-check-circle" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+      </span>
+
+      <!-- toast body -->
+      <div class="toast-body">
+        <span class="toast-title">Changes saved</span>
+        <span class="toast-message">Your workspace was updated successfully.</span>
+      </div>
+
+      <!-- toast actions -->
+      <div class="toast-actions">
+
+        <!-- action button: undo -->
+        <button class="btn-undo" onclick="undoAction()" type="button">Undo</button>
+
+        <!-- dismiss button -->
+        <button class="btn-dismiss" onclick="dismissToast()" type="button" aria-label="Dismiss">
+          <svg class="icon icon-x" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- restore hint (shown after dismiss) -->
+    <div class="toast-restore" id="restoreHint">
+      <span>Toast dismissed.</span>
+      <button class="btn-restore" onclick="restoreToast()" type="button">Show again</button>
+    </div>
+
+  </div>
+
+  <script>
+    function dismissToast() {
+      var toast = document.getElementById('toast');
+      var hint = document.getElementById('restoreHint');
+      toast.classList.add('toast-hidden');
+      hint.classList.add('restore-visible');
+    }
+
+    function restoreToast() {
+      var toast = document.getElementById('toast');
+      var hint = document.getElementById('restoreHint');
+      toast.classList.remove('toast-hidden');
+      hint.classList.remove('restore-visible');
+    }
+
+    function undoAction() {
+      var title = document.querySelector('.toast-title');
+      var message = document.querySelector('.toast-message');
+      title.textContent = 'Changes reverted';
+      message.textContent = 'Your workspace was restored to the previous state.';
+    }
+  </script>
+
+</body>
+</html>

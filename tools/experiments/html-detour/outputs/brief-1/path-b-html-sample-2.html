@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stride — Pricing</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root {
+    --bg: #0B0B0F;
+    --bg-2: #101017;
+    --ink: #ECEAE3;
+    --ink-dim: #8A8A93;
+    --line: #1E1E27;
+    --accent: #C7F94B;
+    --accent-2: #FF6B3D;
+  }
+  html, body { background: var(--bg); color: var(--ink); }
+  body {
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-feature-settings: "ss01","cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+  .font-display {
+    font-family: 'Fraunces', 'Times New Roman', serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "SOFT" 50, "WONK" 0;
+    letter-spacing: -0.02em;
+  }
+  .font-mono { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  /* subtle dotted grid */
+  .grid-bg {
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.045) 1px, transparent 0);
+    background-size: 28px 28px;
+    background-position: -1px -1px;
+  }
+
+  /* ambient glow behind featured card */
+  .glow {
+    background:
+      radial-gradient(60% 60% at 50% 0%, rgba(199,249,75,0.18) 0%, rgba(199,249,75,0) 60%),
+      radial-gradient(50% 50% at 100% 100%, rgba(255,107,61,0.12) 0%, rgba(255,107,61,0) 60%);
+    filter: blur(18px);
+  }
+
+  .card {
+    background: linear-gradient(180deg, #131320 0%, #0E0E16 100%);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    transition: transform .35s ease, border-color .35s ease;
+  }
+  .card:hover { transform: translateY(-2px); border-color: #2A2A36; }
+
+  .card-featured {
+    background:
+      radial-gradient(120% 90% at 50% -10%, rgba(199,249,75,0.10) 0%, rgba(199,249,75,0) 55%),
+      linear-gradient(180deg, #14141C 0%, #0D0D14 100%);
+    border: 1px solid #2A2D1F;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.04) inset,
+      0 30px 80px -30px rgba(199,249,75,0.18),
+      0 10px 40px -10px rgba(0,0,0,0.6);
+  }
+
+  .ring-accent {
+    box-shadow: 0 0 0 1px rgba(199,249,75,0.35), 0 0 0 6px rgba(199,249,75,0.06);
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 11px 16px;
+    border-radius: 12px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: transform .15s ease, background .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #0B0B0F;
+  }
+  .btn-primary:hover { transform: translateY(-1px); background: #D2FF63; }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .btn-ghost:hover { border-color: #34343F; background: #15151E; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 5px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--ink-dim);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .pill-accent {
+    color: #0B0B0F;
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .check {
+    width: 18px; height: 18px; flex: none;
+    border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(199,249,75,0.10);
+    color: var(--accent);
+    border: 1px solid rgba(199,249,75,0.18);
+  }
+  .check-muted {
+    background: #1A1A24;
+    color: #6B6B75;
+    border: 1px solid #1F1F2A;
+  }
+
+  .divider { height: 1px; background: linear-gradient(90deg, transparent, #1E1E27 20%, #1E1E27 80%, transparent); }
+
+  .toggle {
+    display: inline-flex; align-items: center;
+    background: #11111A;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px;
+    gap: 2px;
+  }
+  .toggle button {
+    font-size: 12.5px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    color: var(--ink-dim);
+    transition: all .2s ease;
+  }
+  .toggle button.active {
+    background: #1C1C26;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 1px #25252F;
+  }
+  .save-tag {
+    font-size: 10.5px;
+    background: rgba(199,249,75,0.12);
+    color: var(--accent);
+    padding: 2px 6px;
+    border-radius: 6px;
+    margin-left: 6px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .num-strike { color: #4A4A55; text-decoration: line-through; font-size: 18px; margin-right: 8px; }
+
+  .logo-mark {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent) 0%, #7DD400 100%);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #0B0B0F;
+    font-weight: 700;
+  }
+
+  /* faint top vignette */
+  .vignette::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(80% 50% at 50% -10%, rgba(199,249,75,0.06) 0%, rgba(199,249,75,0) 60%);
+    pointer-events: none;
+  }
+</style>
+</head>
+<body class="min-h-screen relative">
+
+  <div class="absolute inset-0 grid-bg pointer-events-none opacity-70"></div>
+  <div class="vignette absolute inset-0 pointer-events-none"></div>
+
+  <div class="relative max-w-[1200px] mx-auto px-10 pt-7 pb-14">
+
+    <!-- NAV -->
+    <header class="flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <span class="logo-mark">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19 L12 5 L19 19"/><path d="M8.5 13 H15.5"/></svg>
+        </span>
+        <span class="font-display text-[19px] tracking-tight">Stride</span>
+        <span class="pill ml-3 hidden sm:inline-flex">v3.2 · shipped</span>
+      </div>
+      <nav class="hidden md:flex items-center gap-7 text-[13.5px] text-[var(--ink-dim)]">
+        <a class="hover:text-white" href="#">Product</a>
+        <a class="hover:text-white" href="#">Customers</a>
+        <a class="text-white" href="#">Pricing</a>
+        <a class="hover:text-white" href="#">Changelog</a>
+        <a class="hover:text-white" href="#">Docs</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <a href="#" class="btn btn-ghost">Sign in</a>
+        <a href="#" class="btn btn-primary">Start free <i data-lucide="arrow-right" class="w-4 h-4"></i></a>
+      </div>
+    </header>
+
+    <!-- HERO -->
+    <section class="mt-12 text-center">
+      <span class="pill mx-auto">
+        <span class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse"></span>
+        Pricing · 2026
+      </span>
+      <h1 class="font-display mt-5 text-[58px] leading-[1.02] tracking-tight">
+        Pricing that gets out of <span class="italic text-[var(--accent)]">your way.</span>
+      </h1>
+      <p class="mt-4 text-[15px] text-[var(--ink-dim)] max-w-xl mx-auto leading-relaxed">
+        One workspace for product, design and engineering. Start free, scale on your terms — no per-seat surprises, no contract gymnastics.
+      </p>
+
+      <div class="mt-7 flex items-center justify-center gap-3">
+        <div class="toggle" role="tablist">
+          <button class="active" role="tab">Monthly</button>
+          <button role="tab">Yearly <span class="save-tag">−20%</span></button>
+        </div>
+        <span class="text-[12px] text-[var(--ink-dim)] hidden sm:inline-flex items-center gap-1.5">
+          <i data-lucide="globe" class="w-3.5 h-3.5"></i> EUR · Switzerland
+        </span>
+      </div>
+    </section>
+
+    <!-- PRICING GRID -->
+    <section class="relative mt-12">
+      <div class="absolute -inset-x-10 -top-10 h-64 glow pointer-events-none"></div>
+
+      <div class="relative grid grid-cols-3 gap-5">
+
+        <!-- FREE -->
+        <article class="card p-7 flex flex-col">
+          <div class="flex items-center justify-between">
+            <h3 class="font-display text-[22px] tracking-tight">Free</h3>
+            <span class="pill">Starter</span>
+          </div>
+          <p class="mt-2 text-[13px] text-[var(--ink-dim)] leading-relaxed">For solo builders and weekend projects finding their footing.</p>
+
+          <div class="mt-6 flex items-baseline">
+            <span class="font-display text-[52px] leading-none">€0</span>
+            <span class="ml-2 text-[13px] text-[var(--ink-dim)]">/ month</span>
+          </div>
+          <p class="mt-1 text-[12px] text-[var(--ink-dim)] font-mono">forever · no card required</p>
+
+          <a href="#" class="btn btn-ghost mt-7 w-full">Start with Free</a>
+
+          <div class="divider my-7"></div>
+
+          <p class="text-[11px] uppercase tracking-[0.12em] text-[var(--ink-dim)] mb-4">Includes</p>
+          <ul class="space-y-3.5 text-[13.5px]">
+            <li class="flex gap-3"><span class="check"><i data-lucide="check" class="w-3 h-3"></i></span><span>Up to <b class="text-white">3 members</b> in one workspace</span></li>
+            <li class="flex gap-3"><span class="check"><i data-lucide="check" class="w-3 h-3"></i></span><span><b class="text-white">1 active project</b> with unlimited tasks</span></li>
+            <li class="flex gap-3"><span class="check"><i data-lucide="check" class="w-3 h-3"></i></span><span>Boards, lists & calendar views</span></li>
+            <li class="flex gap-3"><span class="check"><i data-lucide="check" class="w-3 h-3"></i></span><span>Slack, GitHub & Figma basics</span></li>
+            <li class="flex gap-3"><span class="check check-muted"><i data-lucide="x" class="w-3 h-3"></i></span><span class="text-[var(--ink-dim)]">Community support only</span></li>
+          </ul>
+        </article>
+
+        <!-- PRO (featured) -->
+        <article class="card card-featured p-7 flex flex-col relative">
+          <span class="absolute -top-3 left-1/2 -translate-x-1/2 pill pill-accent">
+            <i data-lucide="sparkles" class="w-3 h-3"></i> Most popular
+          </span>
+
+          <div class="flex items-center justify-between">
+            <h3 class="font-display text-[22px] tracking-tight">Pro</h3>
+            <span class="pill" style="border-color:#2A2D1F;color:#C7F94B">Best balance</span>
+          </div>
+          <p class="mt-2 text-[13px] text-[var(--ink-dim)] leading-relaxed">For growing teams who ship weekly and live in their tools.</p>
+
+          <div class="mt-6 flex items-baseline">
+            <span class="num-strike font-mono">€15</span>
+            <span class="font-display text-[52px] leading-none">€12</span>
+            <span class="ml-2 text-[13px] text-[var(--ink-dim)]">/ user / month</span>
+          </div>
+          <p class="mt-1 text-[12px] text-[var(--ink-dim)] font-mono">billed monthly · cancel anytime</p>
+
+          <a href="#" class="btn btn-primary mt-7 w-full">
+            Start 14-day Pro trial
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </a>
+
+          <div class="divider my-7"></div>
+
+          <p class="text-[11px] uppercase tracking-[0.12em] text-[var(--ink-dim)] mb-4">Everything in Free, plus</p>
+          <ul class="space-y-3.5 text-[13.5px]">
+            <li class="flex gap-3"><span class="check"><i data-lucide="infinity" class="w-3 h-3"></i></span><span><b class="text-white">Unlimited projects</b> & guests</span></li>
+            <li class="flex gap-3"><span class="check"><i data-lucide="git-branch" class="w-3 h-3"></i></span><span>Sprints, roadmaps & cycles</span></li>
+            <li class="flex gap-3"><span class="check"><i data-lucide="zap" class="w-3 h-3"></i></span><span>Automations & custom workflows</span></li>
+            <li class="flex gap-3"><span class="check"><i data-lucide="bar-chart-2" class="w-3 h-3"></i></span><span>Velocity & throughput insights</span></li>
+            <li class="flex gap-3"><span class="check"><i data-lucide="life-buoy" class="w-3 h-3"></i></span><span><b class="text-white">Priority support</b> · &lt; 4h response</span></li>
+          </ul>
+        </article>
+
+        <!-- TEAM -->
+        <article class="card p-7 flex flex-col">
+          <div class="flex items-center justify-between">
+            <h3 class="font-display text-[22px] tracking-tight">Team</h3>
+            <span class="pill"><i data-lucide="shield" class="w-3 h-3"></i> Compliance-ready</span>
+          </div>
+          <p class="mt-2 text-[13px] text-[var(--ink-dim)] leading-relaxed">For companies that need governance, control and a name to call.</p>
+
+          <div class="mt-6 flex items-baseline">
+            <span class="font-display text-[52px] leading-none">€25</span>
+            <span class="ml-2 text-[13px] text-[var(--ink-dim)]">/ user / month</span>
+          </div>
+          <p class="mt-1 text-[12px] text-[var(--ink-dim)] font-mono">annual · invoice on request</p>
+
+          <a href="#" class="btn btn-ghost mt-7 w-full">Talk to sales</a>
+
+          <div class="divider my-7"></div>
+
+          <p class="text-[11px] uppercase tracking-[0.12em] text-[var(--ink-dim)] mb-4">Everything in Pro, plus</p>
+          <ul class="space-y-3.5 text-[13.5px]">
+            <li class="flex gap-3"><span class="check"><i data-lucide="key-round" class="w-3 h-3"></i></span><span><b class="text-white">SSO / SAML</b> & SCIM provisioning</span></li>
+            <li class="flex gap-3"><span class="check"><i data-lucide="file-text" class="w-3 h-3"></i></span><span>Full <b class="text-white">audit logs</b> & data residency</span></li>
+            <li class="flex gap-3"><span class="check"><i data-lucide="users" class="w-3 h-3"></i></span><span>Custom roles & permission scopes</span></li>
+            <li class="flex gap-3"><span class="check"><i data-lucide="user-check" class="w-3 h-3"></i></span><span><b class="text-white">Dedicated CSM</b> & onboarding</span></li>
+            <li class="flex gap-3"><span class="check"><i data-lucide="file-signature" class="w-3 h-3"></i></span><span>DPA, MSA & 99.9% uptime SLA</span></li>
+          </ul>
+        </article>
+      </div>
+
+      <!-- TRUST STRIP -->
+      <div class="mt-12 flex items-center justify-between text-[12px] text-[var(--ink-dim)]">
+        <div class="flex items-center gap-5">
+          <span class="flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-[var(--accent)]"></i> SOC 2 Type II</span>
+          <span class="flex items-center gap-2"><i data-lucide="lock" class="w-4 h-4 text-[var(--accent)]"></i> GDPR · EU-hosted</span>
+          <span class="flex items-center gap-2"><i data-lucide="server" class="w-4 h-4 text-[var(--accent)]"></i> 99.98% last 90d</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span>Trusted by teams at</span>
+          <span class="font-display text-white text-[14px]">Linear-ish</span>
+          <span>·</span>
+          <span class="font-display text-white text-[14px]">Northstack</span>
+          <span>·</span>
+          <span class="font-display text-white text-[14px]">Helio</span>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <script>
+    if (window.lucide) lucide.createIcons();
+    // toggle interactivity
+    document.querySelectorAll('.toggle button').forEach(b => {
+      b.addEventListener('click', () => {
+        b.parentElement.querySelectorAll('button').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

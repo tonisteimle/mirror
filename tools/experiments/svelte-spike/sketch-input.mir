@@ -1,0 +1,7 @@
+StatCard pad 24, gap 12, bg surface, rad 12, w 280, bor 1
+  Text "Monthly revenue", small muted, uppercase
+  Text "$48,217", huge, bold
+  hor, gap 6, ver-center, mar-t 4
+    Icon "arrow-up", green, 14
+    Text "+12%", green, weight 500
+    Text "vs last month", muted, small

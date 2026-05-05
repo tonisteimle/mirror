@@ -1,0 +1,182 @@
+// Calm Forest — Login (path-b sample 1)
+// Translated from a Tailwind/HTML mockup. Atmospheric forest login screen.
+
+// --- Tokens (jeder mit Property-Suffix!) -----------------------------------
+
+// Forest-Palette — sprechende Namen statt numerischer Skala
+mist.bg:    #f3f7f1
+sage-soft.bg: #e3ede0
+sage.bg:    #c8dcc2
+sage-mid.bg: #a3c399
+moss-light.bg: #7aa472
+moss.bg:    #5a8a52
+moss-deep.bg: #456e3f
+pine.bg:    #365632
+forest-deep.bg: #2a4327
+forest-night.bg: #1f3120
+
+// Bordertöne (für Inputs/Cards)
+sage.boc:   #c8dcc2
+moss-light.boc: #7aa472
+
+// Textfarben
+ink.col:        #1f3120
+moss.col:       #365632
+moss-soft.col:  #5a7d50
+moss-deep.col:  #456e3f
+forest-deep.col: #2a4327
+
+// Atmosphäre / Hintergrund
+sky.bg:     #eaf1e3
+fog.bg:     #d9e6cf
+canopy.bg:  #b6cba6
+cream.bg:   #f7f4ec
+sand.bg:    #e9e1cf
+device-bg.bg: #ece7da
+
+// Typo-Tokens
+label.fs:       11
+label.weight:   500
+label.col:      #5a7d50
+
+heading.col:    #2a4327
+body.fs:        13
+body.col:       #2a4327
+caption.fs:     11
+caption.col:    #365632
+
+// Größen / Radius
+field.rad:      12
+field.h:        44
+card.rad:       24
+btn.rad:        12
+btn.h:          48
+
+// --- Custom Icons (Apple-Logo als Lucide-Ergänzung) ------------------------
+
+$icons:
+  apple: "M16 12.5c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2.1-.9-3.4-.9-1.8 0-3.4 1-4.3 2.6-1.8 3.2-.5 7.9 1.3 10.5.9 1.3 1.9 2.7 3.3 2.6 1.3 0 1.8-.8 3.4-.8s2 .8 3.4.8c1.4 0 2.3-1.3 3.2-2.6 1-1.5 1.4-2.9 1.4-3-.1 0-2.7-1-2.7-4.2zM13.5 4.6c.7-.9 1.2-2.1 1-3.3-1 0-2.3.7-3 1.5-.6.8-1.2 2-1 3.2 1.1.1 2.3-.5 3-1.4z"
+
+// --- Components -------------------------------------------------------------
+
+Field: hor, ver-center, gap 8, bg rgba(255,255,255,0.7), bor 1, boc #c8dcc2, rad 12, pad-x 14, h 44
+
+FieldLabel as Text: fs 11, weight 500, col #5a7d50, uppercase
+
+PrimaryBtn as Button: w full, h 48, rad 12, bg grad-ver #5a8a52 #456e3f, col white, fs 14, weight 500, hor, center, ver-center, gap 8, shadow md, cursor pointer
+  hover:
+    bg grad-ver #6a9a62 #4f7a48
+
+SocialBtn as Button: h 44, rad 12, bg rgba(255,255,255,0.85), bor 1, boc #c8dcc2, hor, center, ver-center, gap 8, fs 13, weight 500, col #1f3120, cursor pointer
+  hover:
+    bg white
+
+LinkText as Text: fs 11, weight 500, col #365632, cursor pointer
+  hover:
+    col #1f3120
+    underline
+
+DividerLine: grow, h 1, bg grad 90 transparent rgba(54,86,50,0.25)
+
+// --- Canvas + Layout -------------------------------------------------------
+
+canvas mobile, bg #ece7da, font sans, col #1f3120
+
+// Phone-Frame mit explicit Pixel-Dimensionen (375x812) — KEIN w full, h full
+// auf einem stacked Frame, sonst kollabiert die Höhe
+Frame stacked, w 375, h 812, rad 44, clip, bg grad-ver #eaf1e3 #b6cba6, shadow lg
+
+  // Hintergrund: warmer Sonnenglow oben (radial-similar via gradient overlay)
+  Frame x 0, y 0, w 375, h 280, bg grad-ver rgba(255,240,200,0.55) rgba(255,240,200,0)
+
+  // Distant tree silhouette band (mid-distance)
+  Frame x 0, y 410, w 375, h 90, bg grad-ver rgba(106,140,94,0) rgba(79,113,70,0.55), opacity 0.85
+
+  // Closer tree silhouette band (foreground)
+  Frame x 0, y 480, w 375, h 70, bg grad-ver rgba(47,74,44,0) rgba(44,69,40,0.85)
+
+  // Fireflies (statisch — kleine warm-leuchtende Punkte)
+  Frame x 82, y 114, w 4, h 4, rad 99, bg rgba(255,246,200,0.85)
+  Frame x 292, y 146, w 4, h 4, rad 99, bg rgba(255,246,200,0.85)
+  Frame x 225, y 211, w 4, h 4, rad 99, bg rgba(255,246,200,0.85)
+  Frame x 187, y 73, w 4, h 4, rad 99, bg rgba(255,246,200,0.85)
+
+  // Vordergrund-Inhalt (alles über den Hintergründen)
+  Frame x 0, y 0, w 375, h 812, ver, pad-t 16
+
+    // Status bar
+    Frame hor, spread, ver-center, pad-x 28
+      Text "9:41", fs 12, weight 500, col rgba(31,49,32,0.7)
+      Frame hor, gap 4, ver-center
+        Icon "signal", ic rgba(31,49,32,0.7), is 14
+        Icon "wifi", ic rgba(31,49,32,0.7), is 14
+        Icon "battery-full", ic rgba(31,49,32,0.7), is 16
+
+    // Logo block
+    Frame ver, center, gap 12, mar-t 24
+      Frame w 64, h 64, rad 20, bg grad-ver #e3ede0 #a3c399, center, ver-center, shadow md, bor 1, boc rgba(255,255,255,0.6)
+        Icon "trees", ic #365632, is 32, anim pulse
+      Frame ver, center, gap 4
+        Text "Calm Forest", font serif, fs 22, col #2a4327
+        Text "BREATHE · REST · RETURN", fs 11, col rgba(54,86,50,0.7), uppercase
+
+    // Glass card
+    Frame mar-x 20, mar-t 20, pad 24, gap 16, bg rgba(247,244,236,0.78), backdrop-blur 14, rad 24, bor 1, boc rgba(255,255,255,0.6), shadow lg
+      // Greeting
+      Frame gap 6
+        Text "Willkommen", font serif, fs 24, col #1f3120
+        Text "zurück.", font serif, fs 24, italic, col #365632
+        Text "Atme ein. Setz dich. Die Lichtung wartet.", fs 13, col rgba(42,67,39,0.7), mar-t 4
+
+      // Email field
+      Frame gap 6
+        FieldLabel "EMAIL"
+        Field
+          Icon "mail", ic #456e3f, is 16
+          Input placeholder "du@calmforest.app", grow, bg transparent, fs 14, col #1f3120
+
+      // Password field
+      Frame gap 6
+        Frame hor, spread, ver-center
+          FieldLabel "PASSWORT"
+          LinkText "Vergessen?"
+        Field
+          Icon "lock", ic #456e3f, is 16
+          Input type "password", placeholder "••••••••••", grow, bg transparent, fs 14, col #1f3120
+          Icon "eye", ic #456e3f, is 16, cursor pointer
+
+      // Primary button
+      PrimaryBtn
+        Text "Anmelden"
+        Icon "arrow-right", ic white, is 16
+
+      // Divider
+      Frame hor, ver-center, gap 12, mar-y 4
+        DividerLine
+        Text "ODER", fs 11, col rgba(54,86,50,0.6), uppercase
+        DividerLine
+
+      // Social buttons
+      Frame hor, gap 10
+        SocialBtn grow
+          Icon "chrome", ic #ea4335, is 16
+          Text "Google"
+        SocialBtn grow
+          Icon "apple", ic #1f3120, is 16
+          Text "Apple"
+
+    Frame grow
+
+    // Footer
+    Frame ver, center, gap 6, mar-b 28
+      Frame hor, center, gap 4, ver-center
+        Text "Noch keinen Account?", fs 13, col rgba(42,67,39,0.8)
+        LinkText "Registrieren", fs 13, weight 600
+      Frame hor, center, gap 6, ver-center
+        Icon "leaf", ic rgba(54,86,50,0.5), is 12
+        Text "SINCE THE QUIET YEARS", fs 10, col rgba(54,86,50,0.5), uppercase
+        Icon "leaf", ic rgba(54,86,50,0.5), is 12
+
+    // Home indicator
+    Frame center
+      Frame w 128, h 4, rad 99, bg rgba(31,49,32,0.3), mar-b 6

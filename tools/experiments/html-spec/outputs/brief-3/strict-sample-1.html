@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Activity Feed</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body class="w-[480px] h-[720px] bg-[#0c0d11] text-slate-100 font-sans antialiased flex flex-col overflow-hidden">
+
+  <!-- Header -->
+  <header class="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/5">
+    <div class="flex items-center gap-2.5">
+      <div class="relative">
+        <i data-lucide="activity" class="w-5 h-5 text-violet-400"></i>
+        <span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#0c0d11]"></span>
+      </div>
+      <h1 class="text-[15px] font-semibold tracking-tight">Aktivität</h1>
+      <span class="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-violet-500/15 text-violet-300 tabular-nums">12 NEU</span>
+    </div>
+    <div class="flex items-center gap-1">
+      <button class="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:text-slate-100 hover:bg-white/5">
+        <i data-lucide="filter" class="w-4 h-4"></i>
+      </button>
+      <button class="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:text-slate-100 hover:bg-white/5">
+        <i data-lucide="check-check" class="w-4 h-4"></i>
+      </button>
+      <button class="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:text-slate-100 hover:bg-white/5">
+        <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Filter chips -->
+  <nav class="flex items-center gap-1.5 px-5 py-3 border-b border-white/5 overflow-x-auto">
+    <button class="px-2.5 py-1 rounded-full text-[11px] font-medium bg-white/10 text-white border border-white/10">Alle</button>
+    <button class="px-2.5 py-1 rounded-full text-[11px] font-medium text-slate-400 hover:text-slate-100 hover:bg-white/5">Erwähnungen</button>
+    <button class="px-2.5 py-1 rounded-full text-[11px] font-medium text-slate-400 hover:text-slate-100 hover:bg-white/5">Aufgaben</button>
+    <button class="px-2.5 py-1 rounded-full text-[11px] font-medium text-slate-400 hover:text-slate-100 hover:bg-white/5">Dateien</button>
+    <button class="px-2.5 py-1 rounded-full text-[11px] font-medium text-slate-400 hover:text-slate-100 hover:bg-white/5">Kommentare</button>
+  </nav>
+
+  <!-- Feed -->
+  <main class="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+
+    <!-- Today section label -->
+    <div class="flex items-center gap-2 px-2 pt-2 pb-1">
+      <span class="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Heute</span>
+      <span class="flex-1 h-px bg-white/5"></span>
+    </div>
+
+    <!-- 1. COMMENT -->
+    <article class="group relative flex gap-3 p-3 rounded-xl hover:bg-white/[0.03] cursor-pointer">
+      <span class="absolute left-1 top-4 w-1 h-1 rounded-full bg-violet-400"></span>
+      <div class="relative flex-shrink-0">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-rose-400 to-orange-400 grid place-items-center text-[12px] font-semibold text-white">MY</div>
+        <span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-violet-500 grid place-items-center ring-2 ring-[#0c0d11]">
+          <i data-lucide="message-circle" class="w-2.5 h-2.5 text-white"></i>
+        </span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-[13px] leading-snug text-slate-200">
+          <strong class="font-semibold text-white">Maya Lindqvist</strong>
+          <span class="text-slate-400">hat auf deinen Kommentar in</span>
+          <span class="text-violet-300 font-medium">Q2 Roadmap</span>
+          <span class="text-slate-400">geantwortet.</span>
+        </p>
+        <blockquote class="mt-2 pl-3 border-l-2 border-violet-500/40 text-[12px] text-slate-300 leading-relaxed italic">
+          "Stimme zu — wenn wir Discovery noch in Sprint 14 ziehen, ist Launch im Juni realistisch. Lass uns das Mittwoch durchgehen?"
+        </blockquote>
+        <div class="mt-2 flex items-center gap-3 text-[11px] text-slate-500">
+          <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> vor 5 Min</span>
+          <span class="text-slate-600">·</span>
+          <button class="hover:text-violet-300 font-medium">Antworten</button>
+          <button class="hover:text-violet-300 font-medium">Öffnen</button>
+        </div>
+      </div>
+    </article>
+
+    <!-- 2. TASK ASSIGNED -->
+    <article class="group relative flex gap-3 p-3 rounded-xl hover:bg-white/[0.03] cursor-pointer">
+      <span class="absolute left-1 top-4 w-1 h-1 rounded-full bg-amber-400"></span>
+      <div class="relative flex-shrink-0">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 grid place-items-center text-[12px] font-semibold text-white">TS</div>
+        <span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-amber-500 grid place-items-center ring-2 ring-[#0c0d11]">
+          <i data-lucide="check-square" class="w-2.5 h-2.5 text-white"></i>
+        </span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-[13px] leading-snug text-slate-200">
+          <strong class="font-semibold text-white">Tom Schäfer</strong>
+          <span class="text-slate-400">hat dir eine Aufgabe zugewiesen.</span>
+        </p>
+        <div class="mt-2 p-3 rounded-lg bg-amber-500/[0.06] border border-amber-500/20">
+          <div class="flex items-start gap-2.5">
+            <div class="mt-0.5 w-7 h-7 rounded-md bg-amber-500/20 grid place-items-center flex-shrink-0">
+              <i data-lucide="clipboard-list" class="w-4 h-4 text-amber-300"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[13px] font-medium text-slate-100 truncate">API-Spezifikation reviewen</p>
+              <div class="mt-1 flex items-center gap-2 text-[11px]">
+                <span class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300 font-medium">
+                  <i data-lucide="calendar-clock" class="w-3 h-3"></i>
+                  Fällig: Freitag, 9. Mai
+                </span>
+                <span class="text-slate-500">High Prio</span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-2.5 flex items-center gap-1.5">
+            <button class="flex-1 py-1.5 rounded-md text-[11px] font-semibold bg-amber-500 text-amber-950 hover:bg-amber-400">Annehmen</button>
+            <button class="px-3 py-1.5 rounded-md text-[11px] font-medium text-slate-300 hover:bg-white/5 border border-white/10">Später</button>
+          </div>
+        </div>
+        <div class="mt-2 flex items-center gap-3 text-[11px] text-slate-500">
+          <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> vor 23 Min</span>
+          <span class="text-slate-600">·</span>
+          <span>Projekt: Platform Core</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- 3. FILE SHARED -->
+    <article class="group relative flex gap-3 p-3 rounded-xl hover:bg-white/[0.03] cursor-pointer">
+      <span class="absolute left-1 top-4 w-1 h-1 rounded-full bg-emerald-400"></span>
+      <div class="relative flex-shrink-0">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 grid place-items-center text-[12px] font-semibold text-white">AN</div>
+        <span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-500 grid place-items-center ring-2 ring-[#0c0d11]">
+          <i data-lucide="share-2" class="w-2.5 h-2.5 text-white"></i>
+        </span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-[13px] leading-snug text-slate-200">
+          <strong class="font-semibold text-white">Anna Bergström</strong>
+          <span class="text-slate-400">hat eine Datei mit dir geteilt.</span>
+        </p>
+        <div class="mt-2 flex items-center gap-3 p-2.5 rounded-lg bg-white/[0.03] border border-white/5 hover:border-white/10">
+          <div class="w-10 h-12 rounded-md bg-gradient-to-br from-fuchsia-500 to-rose-500 grid place-items-center flex-shrink-0 shadow-lg shadow-fuchsia-500/20">
+            <span class="text-[9px] font-bold text-white tracking-tight">FIG</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-[12.5px] font-medium text-slate-100 truncate">design-mockups-v3.fig</p>
+            <div class="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500">
+              <span>4.2 MB</span>
+              <span class="w-1 h-1 rounded-full bg-slate-600"></span>
+              <span>32 Frames</span>
+              <span class="w-1 h-1 rounded-full bg-slate-600"></span>
+              <span class="text-emerald-400">Figma</span>
+            </div>
+          </div>
+          <button class="w-8 h-8 grid place-items-center rounded-md text-slate-400 hover:text-slate-100 hover:bg-white/5">
+            <i data-lucide="download" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <div class="mt-2 flex items-center gap-3 text-[11px] text-slate-500">
+          <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> vor 1 Std</span>
+          <span class="text-slate-600">·</span>
+          <span class="flex items-center gap-1"><i data-lucide="users" class="w-3 h-3"></i> 4 Personen haben Zugriff</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- 4. MENTION -->
+    <article class="group relative flex gap-3 p-3 rounded-xl bg-violet-500/[0.04] border border-violet-500/15 hover:bg-violet-500/[0.07] cursor-pointer">
+      <span class="absolute left-1 top-4 w-1 h-1 rounded-full bg-violet-300"></span>
+      <div class="relative flex-shrink-0">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 grid place-items-center text-[12px] font-semibold text-white">LK</div>
+        <span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-fuchsia-500 grid place-items-center ring-2 ring-[#0c0d11]">
+          <i data-lucide="at-sign" class="w-2.5 h-2.5 text-white"></i>
+        </span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-[13px] leading-snug text-slate-200">
+          <strong class="font-semibold text-white">Lisa Kovač</strong>
+          <span class="text-slate-400">hat dich erwähnt.</span>
+        </p>
+        <div class="mt-1.5 flex items-center gap-1.5 text-[11px]">
+          <span class="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 text-slate-300 font-mono">
+            <i data-lucide="hash" class="w-3 h-3 text-slate-500"></i>sprint-planning
+          </span>
+          <i data-lucide="chevron-right" class="w-3 h-3 text-slate-600"></i>
+          <span class="text-slate-400">Thread</span>
+        </div>
+        <p class="mt-2 text-[12.5px] text-slate-300 leading-relaxed">
+          "<span class="bg-violet-500/20 text-violet-200 px-1 py-0.5 rounded font-medium">@toni</span> kannst du die Story-Points für FE-241 nochmal challengen? Fühlt sich für mich nach 5 statt 8 an."
+        </p>
+        <div class="mt-2 flex items-center gap-3 text-[11px] text-slate-500">
+          <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> vor 2 Std</span>
+          <span class="text-slate-600">·</span>
+          <button class="hover:text-violet-300 font-medium">Springen</button>
+        </div>
+      </div>
+    </article>
+
+    <!-- Yesterday section -->
+    <div class="flex items-center gap-2 px-2 pt-4 pb-1">
+      <span class="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">Gestern</span>
+      <span class="flex-1 h-px bg-white/5"></span>
+    </div>
+
+    <!-- 5. PROJECT UPDATE -->
+    <article class="group relative flex gap-3 p-3 rounded-xl hover:bg-white/[0.03] cursor-pointer">
+      <div class="relative flex-shrink-0">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 grid place-items-center text-[12px] font-semibold text-white">JR</div>
+        <span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-blue-500 grid place-items-center ring-2 ring-[#0c0d11]">
+          <i data-lucide="git-branch" class="w-2.5 h-2.5 text-white"></i>
+        </span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-[13px] leading-snug text-slate-200">
+          <strong class="font-semibold text-white">Jonas Rieger</strong>
+          <span class="text-slate-400">hat den Status von</span>
+          <span class="text-blue-300 font-medium">Onboarding-Redesign</span>
+          <span class="text-slate-400">geändert.</span>
+        </p>
+        <div class="mt-2.5 flex items-center gap-2">
+          <span class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-700/40 border border-slate-600/40 text-[11px] font-medium text-slate-300">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+            In Progress
+          </span>
+          <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-500"></i>
+          <span class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-500/15 border border-blue-500/30 text-[11px] font-semibold text-blue-300">
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+            In Review
+          </span>
+        </div>
+        <div class="mt-2.5 flex items-center gap-3">
+          <div class="flex -space-x-1.5">
+            <div class="w-5 h-5 rounded-full bg-rose-400 ring-2 ring-[#0c0d11] grid place-items-center text-[8px] font-bold text-white">M</div>
+            <div class="w-5 h-5 rounded-full bg-emerald-400 ring-2 ring-[#0c0d11] grid place-items-center text-[8px] font-bold text-white">A</div>
+            <div class="w-5 h-5 rounded-full bg-amber-400 ring-2 ring-[#0c0d11] grid place-items-center text-[8px] font-bold text-white">T</div>
+            <div class="w-5 h-5 rounded-full bg-slate-700 ring-2 ring-[#0c0d11] grid place-items-center text-[8px] font-bold text-slate-300">+2</div>
+          </div>
+          <div class="flex-1 h-1 rounded-full bg-white/5 overflow-hidden">
+            <div class="h-full w-[68%] bg-gradient-to-r from-blue-400 to-cyan-400"></div>
+          </div>
+          <span class="text-[10px] font-mono text-slate-500 tabular-nums">68%</span>
+        </div>
+        <div class="mt-2 flex items-center gap-3 text-[11px] text-slate-500">
+          <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> vor 18 Std</span>
+          <span class="text-slate-600">·</span>
+          <span>14 von 21 Tasks erledigt</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- Subtle ghost item to suggest scrollable content -->
+    <article class="flex gap-3 p-3 rounded-xl opacity-60">
+      <div class="w-9 h-9 rounded-full bg-slate-700"></div>
+      <div class="flex-1 space-y-1.5 pt-1">
+        <div class="h-2.5 w-3/4 rounded bg-white/5"></div>
+        <div class="h-2 w-1/2 rounded bg-white/5"></div>
+      </div>
+    </article>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="px-5 py-3 border-t border-white/5 flex items-center justify-between bg-[#0a0b0e]">
+    <span class="text-[11px] text-slate-500">Synchronisiert · gerade eben</span>
+    <a class="text-[11px] font-semibold text-violet-400 hover:text-violet-300 flex items-center gap-1 cursor-pointer">
+      Alle anzeigen
+      <i data-lucide="arrow-up-right" class="w-3 h-3"></i>
+    </a>
+  </footer>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>

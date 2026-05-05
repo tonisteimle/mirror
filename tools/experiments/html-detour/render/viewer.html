@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mirror Viewer</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/assets/mirror-defaults.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0a0f;
+      min-height: 100vh;
+    }
+    #app {
+      width: 100%;
+      min-height: 100vh;
+    }
+    .error {
+      color: #ef4444;
+      padding: 16px;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      background: #1a0d0d;
+      border: 1px solid #3a1515;
+      border-radius: 6px;
+      margin: 12px;
+    }
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 60vh;
+      color: #555;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <div class="loading">Lade…</div>
+</div>
+
+<script src="/dist/browser/index.global.js"></script>
+<script>
+  const params = new URLSearchParams(location.search);
+  const file = params.get('file');
+
+  if (!file) {
+    document.getElementById('app').innerHTML =
+      '<div class="error">Kein ?file= Query-Parameter gesetzt.</div>';
+  } else {
+    fetch(file)
+      .then((r) => {
+        if (!r.ok) throw new Error('HTTP ' + r.status + ' beim Laden von ' + file);
+        return r.text();
+      })
+      .then((mirrorCode) => {
+        const compiled = MirrorLang.compile(mirrorCode);
+        const execCode = compiled.replace('export function createUI', 'function createUI');
+        const fn = new Function(execCode + '\nreturn createUI();');
+        const ui = fn();
+
+        // createUI() returns the DOM node directly (current API).
+        // Older API returned { root, update, ... } — fall back to that.
+        const root = ui instanceof Node ? ui : (ui && ui.root) ? ui.root : null;
+        if (!root) {
+          throw new Error('createUI() returned ' + (typeof ui) + ', no DOM node');
+        }
+
+        const app = document.getElementById('app');
+        app.innerHTML = '';
+        app.appendChild(root);
+        setTimeout(() => {
+          try { lucide.createIcons(); } catch (e) {}
+        }, 50);
+      })
+      .catch((e) => {
+        console.error('Mirror viewer error:', e);
+        document.getElementById('app').innerHTML =
+          '<div class="error">' +
+          (e.message || 'Unbekannter Fehler') +
+          (e.stack ? '\n\n' + e.stack : '') +
+          '</div>';
+      });
+  }
+</script>
+
+</body>
+</html>
