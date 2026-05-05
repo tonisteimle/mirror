@@ -24,6 +24,21 @@ TEMP_DIR="$PROJECT_DIR/.deploy-temp"
 # Funktionen
 #######################################
 
+prepare_studio_index() {
+    echo ""
+    echo "📝 Preparing studio index.html..."
+
+    mkdir -p "$TEMP_DIR/studio"
+    cp "$STUDIO_DIR/index.html" "$TEMP_DIR/studio/index.html"
+
+    # Local dev serves studio/ as root, so ../assets/ resolves to /assets/.
+    # On deploy, studio lives at /mirror/, so ../assets/ would resolve to
+    # /assets/ (one level too high). Rewrite to assets/ for /mirror/assets/.
+    sed -i '' 's|\.\./assets/|assets/|g' "$TEMP_DIR/studio/index.html"
+
+    echo "✅ Studio index.html prepared"
+}
+
 prepare_tutorial() {
     echo ""
     echo "📝 Preparing tutorial files..."
@@ -113,7 +128,8 @@ deploy_studio() {
     # Build first
     build_compiler
 
-    # Prepare tutorial files with transformed paths
+    # Prepare files with transformed paths
+    prepare_studio_index
     prepare_tutorial
 
     lftp <<EOF
@@ -133,8 +149,9 @@ mkdir -f mirror/assets
 # nach der TS-Migration in studio/dist/ und werden weiter unten über
 # mput aus dem dist-Block hochgeladen.
 cd mirror
-lcd "$STUDIO_DIR"
+lcd "$TEMP_DIR/studio"
 put index.html
+lcd "$STUDIO_DIR"
 put styles.css
 put logo.png
 
