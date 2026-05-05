@@ -146,6 +146,8 @@ import {
   CodeModifier,
   PropertyExtractor,
   createRobustModifier,
+  // First-visit demo content
+  DEFAULT_PROJECT,
 } from '.'
 
 // =============================================================================
@@ -311,6 +313,30 @@ if (playgroundCode) {
     log.debug('[App] Playground mode activated')
   } catch (e) {
     log.error('[App] Failed to decode playground code:', e)
+  }
+}
+
+// Hydrate `files` from localStorage on fresh boot, fall back to demo project.
+// Skipped in playground mode (URL ?code= takes precedence).
+//
+// Why: After the MVP-Rollback there is no longer a storage-provider boot path
+// that populates `files`. Without this, a first-visit user sees an empty
+// editor instead of the demo, and `window.files` stays empty (test API
+// reads it directly).
+if (!isPlaygroundMode) {
+  try {
+    const stored = localStorage.getItem('mirror-files')
+    if (stored) {
+      const parsed = JSON.parse(stored) as Record<string, string>
+      if (parsed && typeof parsed === 'object') {
+        Object.assign(files, parsed)
+      }
+    }
+  } catch (e) {
+    log.warn('[App] Failed to read mirror-files from localStorage, using demo:', e)
+  }
+  if (Object.keys(files).length === 0) {
+    Object.assign(files, DEFAULT_PROJECT)
   }
 }
 
