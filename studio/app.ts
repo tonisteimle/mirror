@@ -148,7 +148,15 @@ import {
   createRobustModifier,
   // First-visit demo content
   DEFAULT_PROJECT,
+  // Project lifecycle actions (new / demo / import / export)
+  projectActions,
 } from '.'
+
+// MirrorDialog is loaded as a sibling module (studio/dialog.ts) and
+// attached to window. Declare locally so TS can resolve the call below.
+declare const MirrorDialog: {
+  confirm: (message: string, options?: { title?: string }) => Promise<boolean>
+}
 
 // =============================================================================
 // Global / Window-augmentation declarations
@@ -907,6 +915,20 @@ redoBtn?.addEventListener('click', () => {
   if (editor) {
     redo(editor)
     editor.focus()
+  }
+})
+
+// Reset to demo project (with confirmation — destructive, wipes editor + storage)
+const resetDemoBtn = document.getElementById('reset-demo-btn') as HTMLButtonElement | null
+resetDemoBtn?.addEventListener('click', async () => {
+  try {
+    const ok = await MirrorDialog.confirm('Alle aktuellen Änderungen gehen verloren.', {
+      title: 'Demo-Projekt laden?',
+    })
+    if (!ok) return
+    await projectActions.demo()
+  } catch (e) {
+    log.error('Failed to load demo project:', e)
   }
 })
 
