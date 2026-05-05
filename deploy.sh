@@ -43,8 +43,9 @@ prepare_tutorial() {
     echo ""
     echo "📝 Preparing tutorial files..."
 
-    # Clean and create temp directory
-    rm -rf "$TEMP_DIR"
+    # Clean only this subdir — sibling prep functions (e.g. prepare_studio_index)
+    # also live under $TEMP_DIR. cleanup_temp() handles the parent at the end.
+    rm -rf "$TEMP_DIR/tutorial"
     mkdir -p "$TEMP_DIR/tutorial"
 
     # Copy tutorial files
