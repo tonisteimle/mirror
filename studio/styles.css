@@ -1,9 +1,11 @@
 @import url('./styles/tokens.css');
 @import url('./styles/dividers.css');
+@import url('./styles/activity-bar.css');
 @import url('./styles/editor.css');
 /* MVP single-file mode: file-tree + explorer styles deactivated. */
 /* @import url('./styles/file-tree.css'); */
 @import url('./styles/components-panel.css');
+/* explorer.css disabled — .activity-bar* rules extracted to activity-bar.css */
 /* @import url('./styles/explorer.css'); */
 @import url('./styles/prompt-bar.css');
 @import url('./styles/preview-content.css');

@@ -1,0 +1,84 @@
+/* Activity Bar Container - Panel Toggle Bar */
+.activity-bar-container {
+  display: flex;
+  flex-direction: column;
+  width: 40px;
+  background: var(--bg-base);
+  border-right: 1px solid var(--border-default);
+  flex-shrink: 0;
+}
+
+/* Inactive state for toggle bar - dimmed icon */
+.activity-bar-container .activity-bar-item:not(.active) {
+  opacity: 0.4;
+}
+
+.activity-bar-container .activity-bar-item:not(.active):hover {
+  opacity: 0.7;
+}
+
+.activity-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+  padding-bottom: 12px;
+}
+
+.activity-bar-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: var(--panel-header-height);
+  margin-bottom: 4px;
+}
+
+.activity-bar-logo img {
+  width: 24px;
+  height: auto;
+}
+
+.activity-bar-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.15s, background 0.15s;
+  position: relative;
+}
+
+.activity-bar-item:hover {
+  color: var(--text-secondary);
+  background: var(--white-5);
+}
+
+.activity-bar-item.active {
+  color: var(--text-primary);
+}
+
+.activity-bar-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activity-bar-icon svg {
+  width: var(--size-icon-xl);
+  height: var(--size-icon-xl);
+}
+
+.activity-bar-spacer {
+  flex: 1;
+}
+
+.activity-bar-bottom-item {
+  margin-top: auto;
+  padding: 10px;
+  color: #999;
+}
