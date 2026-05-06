@@ -70,3 +70,6 @@ export {
   multipleChildrenNoAlignmentTests,
   alignmentMoveEdgeCases,
 } from './alignment-from-move.test'
+
+// Each-template guard: blocks reorder of each-rendered nodes
+export { eachTemplateGuardTests } from './each-template-guard.test'

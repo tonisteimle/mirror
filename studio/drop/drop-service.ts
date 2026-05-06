@@ -37,6 +37,23 @@ export class DropService {
   }
 
   async handleDrop(result: DropResult, context: DropContext): Promise<ModificationResult | null> {
+    // Block move/reorder of each-rendered nodes. The source for such a node
+    // is a single template that gets cloned per data row — moving one of the
+    // cloned cards has no clean source-side semantics (mutate the data list?
+    // unroll the loop?), so we refuse the drop and tell the user where to
+    // change ordering instead.
+    if (
+      result.source.type === 'element' &&
+      result.source.nodeId &&
+      context.isInEachTemplate?.(result.source.nodeId)
+    ) {
+      context.emitNotification(
+        'info',
+        'Aus Daten generiert. Reihenfolge im `each`-Datenblock ändern.'
+      )
+      return { success: false, error: 'each-template move blocked' }
+    }
+
     // Try each handler in order until one succeeds
     for (const handler of this.handlers) {
       if (!handler.canHandle(result)) continue

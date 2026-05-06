@@ -75,6 +75,13 @@ export interface DropContext {
   addZagDefinitionToComponentsFile: (code: string, file: string) => Promise<boolean>
   isZagComponent: (children: unknown[]) => boolean
   emitNotification: (type: 'info' | 'success' | 'error', message: string) => void
+  /**
+   * True if `nodeId` is rendered inside an `each` loop (i.e. its source is a
+   * template that gets cloned per data row). Reordering / moving such a node
+   * is semantically ambiguous — the source has only the template, not the
+   * iterated copies — so the drop service blocks it with a hint.
+   */
+  isInEachTemplate?: (nodeId: string) => boolean
 }
 
 // === External Dependencies (simplified interfaces) ===

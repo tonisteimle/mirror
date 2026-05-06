@@ -32,6 +32,10 @@ export function createDropContext(globals: AppGlobals): DropContext {
         { message, duration: 2000 }
       )
     },
+    isInEachTemplate: nodeId => {
+      const sourceMap = globals.studio.state?.get()?.sourceMap
+      return sourceMap?.getNodeById(nodeId)?.isEachTemplate === true
+    },
   }
 }
 
@@ -107,7 +111,17 @@ export interface AppGlobals {
   isWrappedWithApp?: boolean
   executor: unknown
   events: unknown
-  studio: { preview?: { hideDropZone: () => void }; events: unknown }
+  studio: {
+    preview?: { hideDropZone: () => void }
+    events: unknown
+    state?: {
+      get: () => {
+        sourceMap?: {
+          getNodeById: (id: string) => { isEachTemplate?: boolean } | null
+        } | null
+      }
+    }
+  }
   studioActions: { setPendingSelection: (sel: unknown) => void }
   compile: (code: string) => void
   debouncedSave: (code: string) => void
