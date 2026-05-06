@@ -111,6 +111,20 @@ export function parseDataObject(ctx: ParserContext, section?: string): TokenDefi
       continue
     }
 
+    // Anonymous row: `key value, key value, ...` on a line with no colon.
+    // Used for compact list syntax — saves the synthetic outer key:
+    //   features:
+    //     icon "home",   title "Willkommen"
+    //     icon "layers", title "Komponenten"
+    // Each row becomes a DataAttribute with an auto-generated positional key
+    // (_0, _1, ...). Downstream IR/codegen are unchanged because the shape
+    // matches a normal nested attribute object.
+    if (checkIsIdentifierOrKeyword(ctx) && !U.checkNext(ctx, 'COLON')) {
+      const row = parseAnonymousRow(ctx, attributes.length)
+      if (row) attributes.push(row)
+      continue
+    }
+
     // Unknown content — skip one token.
     U.advance(ctx)
   }
@@ -126,6 +140,37 @@ export function parseDataObject(ctx: ParserContext, section?: string): TokenDefi
     line: nameToken.line,
     column: nameToken.column,
   }
+}
+
+/* ------------------------------------------------ anonymous row (compact form) */
+
+/**
+ * Parse a single compact-form data row: `key value, key value, ...` until NEWLINE.
+ * Wraps the row in a DataAttribute with a positional auto-key `_<index>` so
+ * downstream IR/codegen treat it identically to a normal nested object.
+ *
+ * `value` reuses parseAttributeValue so quoted strings, numbers, booleans,
+ * `$collection.entry` references and `@external` references all work the
+ * same as in the keyed form.
+ */
+function parseAnonymousRow(ctx: ParserContext, index: number): DataAttribute | null {
+  const startLine = U.current(ctx).line
+  const children: DataAttribute[] = []
+
+  for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
+    if (U.isAtEnd(ctx) || U.check(ctx, 'NEWLINE') || U.check(ctx, 'DEDENT')) break
+    if (!checkIsIdentifierOrKeyword(ctx)) break
+
+    const key = advanceIdentifierOrKeyword(ctx)
+    const line = ctx.tokens[ctx.pos - 1].line
+    const value = parseAttributeValue(ctx)
+    children.push({ key, value, line })
+
+    if (U.check(ctx, 'COMMA')) U.advance(ctx)
+  }
+
+  if (children.length === 0) return null
+  return { key: `_${index}`, children, line: startLine }
 }
 
 /* ------------------------------------------------------- attribute (recursive) */

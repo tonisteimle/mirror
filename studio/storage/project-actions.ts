@@ -51,18 +51,9 @@ export const EMPTY_PROJECT: Record<string, string> = {
 export const DEFAULT_PROJECT: Record<string, string> = {
   'index.mir': `// Data
 features:
-  home:
-    icon: "home"
-    title: "Willkommen"
-    desc: "Dies ist ein Demo-Projekt."
-  layers:
-    icon: "layers"
-    title: "Komponenten"
-    desc: "Baue wiederverwendbare UI-Bausteine."
-  eye:
-    icon: "eye"
-    title: "Live Preview"
-    desc: "Änderungen sofort sehen."
+  icon "home",   title "Willkommen",    desc "Dies ist ein Demo-Projekt."
+  icon "layers", title "Komponenten",   desc "Baue wiederverwendbare UI-Bausteine."
+  icon "eye",    title "Live Preview",  desc "Änderungen sofort sehen."
 
 // Tokens
 primary.bg: #2271C1
