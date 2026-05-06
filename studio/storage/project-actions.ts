@@ -84,8 +84,12 @@ count: 0
 Frame name HomeView, pad 24, gap $m, h full
   Text "Demo App", fs 20, weight bold
 
-  Tabs defaultValue "data"
-    Tab "Daten"
+  Tabs
+    TabList hor
+      TabTrigger "Daten"
+      TabTrigger "Navigation"
+
+    TabContent
       each feature in $features
         Card
           Frame hor, gap $m, ver-center
@@ -93,7 +97,7 @@ Frame name HomeView, pad 24, gap $m, h full
             Text feature.title, fs 16, weight 500
           Text feature.desc, col $muted, fs 14
 
-    Tab "Navigation"
+    TabContent
       Card
         Frame hor, gap $m, ver-center
           Icon "home", ic $primary, is 20
