@@ -51,13 +51,6 @@ export const EMPTY_PROJECT: Record<string, string> = {
 export const DEFAULT_PROJECT: Record<string, string> = {
   'index.mir': `canvas mobile, bg $surface, col white
 
-// Data
-features:
-  icon    title           desc
-  home    Willkommen      Dies ist ein Demo-Projekt.
-  layers  Komponenten     Baue wiederverwendbare UI-Bausteine.
-  eye     Live Preview    Änderungen sofort sehen.
-
 // Tokens
 primary.bg: #2271C1
 primary.ic: #2271C1
@@ -76,27 +69,79 @@ Btn as Button: bg $primary, col white, pad 10 16, rad 6, cursor pointer
   hover:
     opacity 0.9
 
+// State (used by InteractiveDetail)
+count: 0
+
 // Home view
 Frame name HomeView, pad 24, gap $m, h full
   Text "Demo App", fs 20, weight bold
 
-  each feature in $features
-    Card
-      Frame hor, gap $m, ver-center
-        Icon feature.icon, ic $primary, is 20
-        Text feature.title, fs 16, weight 500
-      Text feature.desc, col $muted, fs 14
-      Btn "Mehr", navigate(DetailView)
-
-// Detail view (opens when "Mehr" is tapped)
-Frame name DetailView, pad 24, gap $m, h full, hidden
-  Frame hor, gap $m, ver-center
-    Btn "← Zurück", back()
-    Text "Details", fs 20, weight bold
+  Card
+    Frame hor, gap $m, ver-center
+      Icon "home", ic $primary, is 20
+      Text "Willkommen", fs 16, weight 500
+    Text "Dies ist ein Demo-Projekt.", col $muted, fs 14
+    Btn "Mehr", navigate(WelcomeDetail)
 
   Card
-    Text "Mehr Informationen", fs 16, weight 500
-    Text "Hier kommt der Detail-Inhalt für das gewählte Feature.", col $muted, fs 14`,
+    Frame hor, gap $m, ver-center
+      Icon "layers", ic $primary, is 20
+      Text "Komponenten", fs 16, weight 500
+    Text "Baue wiederverwendbare UI-Bausteine.", col $muted, fs 14
+    Btn "Mehr", navigate(ComponentsDetail)
+
+  Card
+    Frame hor, gap $m, ver-center
+      Icon "eye", ic $primary, is 20
+      Text "Live Preview", fs 16, weight 500
+    Text "Änderungen sofort sehen.", col $muted, fs 14
+    Btn "Mehr", navigate(InteractiveDetail)
+
+// Detail: Welcome
+Frame name WelcomeDetail, pad 24, gap $m, h full, hidden
+  Frame hor, gap $m, ver-center
+    Btn "← Zurück", back()
+    Text "Willkommen", fs 20, weight bold
+
+  Frame center, gap $m, grow
+    Icon "home", ic $primary, is 64
+    Text "Schön, dass du da bist!", fs 18, weight 500
+    Text "Mirror ist eine DSL für AI-unterstütztes UI-Design.", col $muted, fs 14
+
+// Detail: Komponenten
+Frame name ComponentsDetail, pad 24, gap $m, h full, hidden
+  Frame hor, gap $m, ver-center
+    Btn "← Zurück", back()
+    Text "Komponenten", fs 20, weight bold
+
+  Card
+    Text "Button", fs 12, col $muted
+    Btn "Aktion auslösen"
+
+  Card
+    Text "Switch", fs 12, col $muted
+    Switch "Benachrichtigungen"
+
+  Card
+    Text "Input", fs 12, col $muted
+    Input placeholder "Dein Name…"
+
+// Detail: Interaktiv (Counter + Toast)
+Frame name InteractiveDetail, pad 24, gap $m, h full, hidden
+  Frame hor, gap $m, ver-center
+    Btn "← Zurück", back()
+    Text "Live Preview", fs 20, weight bold
+
+  Card
+    Text "Counter", fs 12, col $muted
+    Frame hor, gap $m, ver-center
+      Btn "−", decrement(count)
+      Text "$count", fs 24, w 60, center
+      Btn "+", increment(count)
+
+  Card
+    Text "Toast", fs 12, col $muted
+    Btn "Anzeigen", toast("Hallo aus Mirror!", "success")`,
 }
 
 // =============================================================================
@@ -154,21 +199,30 @@ export async function exportProject(): Promise<void> {
 // Browser Implementation
 // =============================================================================
 
+// Force a server-fresh reload (bypasses cached index.html so the browser
+// picks up new cache-buster query params on its next render). Plain
+// window.location.reload() may serve cached HTML, in which case the user
+// keeps loading the OLD app.js — which after a reset writes the OLD demo
+// content into localStorage and the screen ends up blank.
+function reloadFresh(): void {
+  const u = new URL(window.location.href)
+  u.searchParams.set('_r', String(Date.now()))
+  window.location.replace(u.toString())
+}
+
 async function browserNewProject(type: ProjectType): Promise<void> {
   // Projekt-Template basierend auf Typ wählen
   const projectFiles = type === 'empty' ? EMPTY_PROJECT : DEFAULT_PROJECT
   localStorage.setItem('mirror-files', JSON.stringify(projectFiles))
 
-  // Seite neu laden um sauberen State zu haben
-  window.location.reload()
+  reloadFresh()
 }
 
 async function browserLoadDemo(): Promise<void> {
   // Demo = Default Project (same thing now)
   localStorage.setItem('mirror-files', JSON.stringify(DEFAULT_PROJECT))
 
-  // Seite neu laden
-  window.location.reload()
+  reloadFresh()
 }
 
 async function browserImportProject(): Promise<boolean> {
