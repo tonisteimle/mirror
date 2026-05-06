@@ -194,13 +194,13 @@ function emitIconDefaultStyles(ctx: NodeEmitterContext, varName: string): void {
 
 function emitIconLoading(ctx: NodeEmitterContext, varName: string, iconName: string): void {
   ctx.emit(`// Load Lucide icon`)
-  // Handle conditional icon names
-  if (iconName.includes('__conditional:')) {
-    const resolvedName = ctx.resolveContentValue(iconName)
-    ctx.emit(`_runtime.loadIcon(${varName}, ${resolvedName})`)
-  } else {
-    ctx.emit(`_runtime.loadIcon(${varName}, "${ctx.escapeString(iconName)}")`)
-  }
+  // resolveContentValue wraps literals in quotes, leaves __loopVar: /
+  // __conditional: / $-vars as JS expressions. Routing every shape
+  // through it fixes `Icon feature.icon` inside `each` loops, where the
+  // old else-branch quoted the marker literal and the runtime sanitizer
+  // then dropped it.
+  const resolvedName = ctx.resolveContentValue(iconName)
+  ctx.emit(`_runtime.loadIcon(${varName}, ${resolvedName})`)
 }
 
 // ============================================

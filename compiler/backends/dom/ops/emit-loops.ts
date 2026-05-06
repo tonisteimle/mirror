@@ -142,7 +142,10 @@ export function emitConditionalTemplateNode(
       this.emit(`${varName}.dataset.iconSize = '${String(iconSize).replace('px', '')}'`)
       this.emit(`${varName}.dataset.iconColor = '${iconColor}'`)
       this.emit(`${varName}.dataset.iconWeight = '${iconWeight}'`)
-      this.emit(`_runtime.loadIcon(${varName}, '${iconName}')`)
+      // Route through resolveContentValue so __loopVar:feature.icon becomes
+      // the unquoted JS reference `feature.icon` (loop closure var) instead
+      // of a literal string the runtime sanitizer would drop.
+      this.emit(`_runtime.loadIcon(${varName}, ${this.resolveContentValue(iconName)})`)
     }
   }
 
@@ -316,7 +319,9 @@ export function emitEachTemplateNodeContent(
       this.emit(`${varName}.dataset.iconSize = '${String(iconSize).replace('px', '')}'`)
       this.emit(`${varName}.dataset.iconColor = '${iconColor}'`)
       this.emit(`${varName}.dataset.iconWeight = '${iconWeight}'`)
-      this.emit(`_runtime.loadIcon(${varName}, '${iconName}')`)
+      // See note above: route through resolveContentValue so loop-var icons
+      // resolve to the closure variable instead of a literal marker string.
+      this.emit(`_runtime.loadIcon(${varName}, ${this.resolveContentValue(iconName)})`)
     }
   }
 
