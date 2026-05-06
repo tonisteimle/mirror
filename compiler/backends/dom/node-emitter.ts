@@ -130,7 +130,10 @@ function emitTextContentAssignment(
   varName: string
 ): void {
   const value = ctx.resolveContentValue(prop.value)
-  ctx.emit(`${varName}.textContent = ${value}`)
+  // innerHTML + formatInlineMarkdown gives `**bold**` / `*italic*` inside
+  // Text content as <strong>/<em>. The formatter HTML-escapes its input
+  // first, so this stays XSS-safe even when value is interpolated data.
+  ctx.emit(`${varName}.innerHTML = formatInlineMarkdown(${value})`)
   emitTextBindings(ctx, value, varName)
 }
 

@@ -17,6 +17,7 @@ import type { TestCase } from '../types'
 
 // Core (Primitives)
 import { allPrimitivesTests } from './primitives'
+import { inlineMarkdownTests } from './core/inline-markdown.test'
 
 // Layout
 import { allLayoutTests } from './layout'
@@ -141,7 +142,7 @@ import { allStepRunnerExampleTests } from './step-runner-examples'
 /**
  * 1. CORE - Basic primitives (Frame, Text, Button, Icon, etc.)
  */
-export const coreTests: TestCase[] = [...allPrimitivesTests]
+export const coreTests: TestCase[] = [...allPrimitivesTests, ...inlineMarkdownTests]
 
 /**
  * 2. LAYOUT - All layout properties (direction, gap, grid, stacked, wrap, flex)

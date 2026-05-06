@@ -29,6 +29,7 @@ import { ZAG_RUNTIME } from './parts/zag-runtime'
 import { PROP_MAP } from '../../../runtime/dom-runtime'
 import { ALIGN_MAP } from '../../../runtime/alignment'
 import { FALLBACK_ICON, LUCIDE_CDN, sanitizeIconName, sanitizeSVG } from '../../../runtime/icons'
+import { formatInlineMarkdown } from '../../../runtime/inline-markdown'
 import {
   resolveElement,
   scrollTo as scrollToTyped,
@@ -134,6 +135,7 @@ export function stamp(fn: { toString(): string }): string {
 // as the typed module that has dedicated unit tests.
 const SANITIZE_ICON_NAME_SRC = stamp(sanitizeIconName)
 const SANITIZE_SVG_SRC = stamp(sanitizeSVG)
+const FORMAT_INLINE_MARKDOWN_SRC = stamp(formatInlineMarkdown)
 
 // Stamp the typed scroll helpers. resolveElement is the shared lookup;
 // the four scroll functions reference it by name. They become top-level
@@ -264,6 +266,11 @@ function __name(fn, _name) { return fn }
 // Security helpers (stamped from compiler/runtime/icons.ts via .toString())
 ${SANITIZE_ICON_NAME_SRC}
 ${SANITIZE_SVG_SRC}
+
+// Inline-markdown formatter (stamped from compiler/runtime/inline-markdown.ts).
+// Converts \`**bold**\` and \`*italic*\` inside Text content to <strong>/<em>.
+// HTML-escapes input first, so user data can never inject tags.
+${FORMAT_INLINE_MARKDOWN_SRC}
 
 // Scroll helpers (stamped from compiler/runtime/scroll.ts via .toString())
 ${RESOLVE_ELEMENT_SRC}
@@ -1422,12 +1429,12 @@ const _runtime = {
             // Re-evaluate expression template with new data
             try {
               const result = el._textTemplate()
-              el.textContent = result ?? ''
+              el.innerHTML = formatInlineMarkdown(result ?? '')
             } catch (e) {
-              el.textContent = value ?? ''
+              el.innerHTML = formatInlineMarkdown(value ?? '')
             }
           } else {
-            el.textContent = value ?? ''
+            el.innerHTML = formatInlineMarkdown(value ?? '')
           }
         }
       }
