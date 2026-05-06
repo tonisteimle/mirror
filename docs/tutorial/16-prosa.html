@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <title>Mirror – Prosa-Mode</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>Prosa-Mode</h1>
+      <p class="subtitle">Textlastige Inhalte ohne Wrapper-Rauschen</p>
+    </header>
+
+    <p class="intro">Wenn ein Mirror-Dokument viel <strong>echten Fliesstext</strong> enthält — Personas, Briefings, Strategiepapiere, Tutorials, Landingpages — wird die normale Syntax dicht: jeder Absatz braucht <code>BodyTxt "..."</code>, jede Bullet-Liste einen verschachtelten Container. Der Inhalt verschwindet hinter dem Markup. Prosa-Mode ist die Antwort: ein Frame mit <code>, prose</code> erlaubt in seinem Body eine Markdown-Untermenge, und der Parser übersetzt sie in normale Mirror-Komponenten.</p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Das Problem</h2>
+      <p>So sieht eine Bullet-Liste mit Intro heute ohne Prosa-Mode aus:</p>
+      <div class="code-block">
+        <pre>BodyTxt as Text: fs 16, line 1.5
+DashItem: hor, gap 16
+  DashMarker as Text: w 12
+  DashMarker "—"
+
+ProseBody as Frame: gap 12
+
+ProseBody
+  DashItem
+    BodyTxt "Erster Punkt — wichtige Aussage."
+  DashItem
+    BodyTxt "Zweiter Punkt — Begründung dazu."
+  DashItem
+    BodyTxt "Dritter Punkt — Schlussfolgerung."</pre>
+      </div>
+
+      <p>Sechs Wrapper-Zeilen für drei Inhaltszeilen. In einer UI ist das richtig — Struktur <em>ist</em> Bedeutung. In einem Persona-Dokument ist die Struktur sekundär; der Text ist Bedeutung. Genau hier hilft Prosa-Mode.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Die Idee: ein Frame, eine Property</h2>
+      <p><code>prose</code> ist eine Frame-Property wie <code>hor</code>, <code>gap</code> oder <code>wrap</code>. Sie schaltet den Body des Frames auf Markdown-Untermenge um:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>BodyTxt as Text: fs 16, line 1.5, col #ddd
+DashItem: hor, gap 16
+  DashMarker as Text: w 12, col #888
+  DashMarker "—"
+BodyTxtCompact as Text: fs 16, line 1.4, col #ddd
+
+ProseBody as Frame: bg #1a1a1a, pad 24, rad 8, gap 12, prose
+
+ProseBody
+  Erster Absatz aus normalem Fliesstext, ohne Quotes, ohne Wrapper.
+
+  - Erster Punkt — wichtige Aussage.
+  - Zweiter Punkt — Begründung dazu.
+  - Dritter Punkt — Schlussfolgerung.
+
+  Zweiter Absatz nach den Bullets.</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Drei neue Regeln im Prosa-Body:</p>
+      <ul>
+        <li><strong>Bare Strings</strong> — Zeilen ohne Komponentennamen werden zu Absätzen (<code>BodyTxt</code>).</li>
+        <li><strong>Leerzeile = neuer Absatz</strong> — einzelne Zeilenumbrüche bleiben im selben Absatz (Markdown-Konvention).</li>
+        <li><strong>- Marker</strong> am Zeilenanfang wird zu einer Bullet (<code>DashItem</code> mit Text-Inhalt).</li>
+      </ul>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Headings: # / ## / ###</h2>
+      <p>Markdown-Headings im Prosa-Body werden zu <code>H2</code>, <code>H3</code> bzw. <code>H4</code>:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>BodyTxt as Text: fs 16, line 1.5, col #ddd
+H2 as Text: fs 32, weight bold, col white, mar-b 8
+H3 as Text: fs 22, weight bold, col white, mar-b 6
+H4 as Text: fs 16, weight bold, col white
+
+Article as Frame: bg #1a1a1a, pad 24, rad 8, gap 12, prose
+
+Article
+  # Hauptüberschrift
+
+  Einleitender Absatz, der den Leser ins Thema holt.
+
+  ## Unterabschnitt
+
+  Eine Erklärung dazu, was hier behandelt wird.
+
+  ### Detail
+
+  Noch tiefer: spezifischer Text mit weiterer Erklärung.</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Mirror erwartet, dass du <code>H2</code>, <code>H3</code>, <code>H4</code> als Komponenten definierst (typischerweise <code>as Text</code> mit Schriftgröße + Gewicht). Ohne Definition fallen sie auf neutrale Defaults zurück.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Numerierte Listen: 1. / 2. / 3.</h2>
+      <p>Eine Zeile, die mit <code>Ziffer + Punkt + Leerzeichen</code> beginnt, wird zu einem <code>OffenePunkt</code> mit zweistellig-gepaddter Nummer:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>BodyTxtCompact as Text: fs 16, line 1.4, col #ddd
+OffenePunkt as Frame: hor, gap 16
+OffeneNum as Text: fs 14, weight bold, col #888, w 32
+
+OffeneList as Frame: gap 16, bg #1a1a1a, pad 24, rad 8, prose
+
+OffeneList
+  1. Erster Schritt mit kurzer Erklärung.
+  2. Zweiter Schritt — Begründung dazu.
+  3. Dritter Schritt — Schlussfolgerung.</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Die Zahl wird automatisch auf zwei Stellen gepaddet (<code>01</code>, <code>02</code> …). Ab 10 wird die Zahl unverändert ausgegeben (<code>10</code>).</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Verschachtelte Bullets via Einrückung</h2>
+      <p>Standard-Markdown-Regel: tiefere Einrückung unter einem <code>-</code> macht das Sub-Bullet zum Kind:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>BodyTxtCompact as Text: fs 16, line 1.4, col #ddd
+DashItem: hor, gap 16
+  DashMarker as Text: w 12, col #888
+  DashMarker "—"
+
+ProseBody as Frame: bg #1a1a1a, pad 24, rad 8, gap 12, prose
+
+ProseBody
+  - Top-Level-Bullet
+    - Sub-Bullet eins
+    - Sub-Bullet zwei
+  - Anderer Top-Level-Bullet
+    - Mit eigenem Sub-Bullet</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Im Prosa-Body ist das die <strong>einzige</strong> Stelle, an der Einrückung Hierarchie bedeutet. Sonst sind alle Konstrukte Geschwister: <code># Heading</code> "besitzt" nicht die folgenden Absätze, sie stehen flach nebeneinander.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Vererbung über Komponenten-Definition</h2>
+      <p>Wenn du <code>prose</code> auf eine <strong>Komponenten-Definition</strong> setzt, ist jeder Use-Site automatisch Prosa-Mode — kein <code>, prose</code> mehr nötig:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>BodyTxt as Text: fs 16, line 1.5, col #ddd
+H3 as Text: fs 20, weight bold, col white
+
+// Definition trägt prose
+Article as Frame: bg #1a1a1a, pad 24, rad 8, gap 12, prose
+
+// Use-Site braucht es nicht — vererbt sich
+Article
+  ## Erste Sektion
+
+  Erster Absatz im Prosa-Mode. Funktioniert ohne `, prose` an dieser Stelle.
+
+Article
+  ## Zweite Sektion
+
+  Auch hier: implizit Prosa, weil Article so definiert ist.</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Das ist der typische Pattern für textlastige Dokumente: eine <code>Article</code>, <code>WarumBlock</code>, <code>ProseBody</code> Komponente einmal mit <code>prose</code> definieren, dann beliebig oft handgeschrieben verwenden — ohne Markup-Wiederholung.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Mischung mit normalem Mirror</h2>
+      <p>Geschwister eines Prosa-Blocks bleiben unverändert. Du kannst Prosa-Inseln in einem ansonsten klassischen Mirror-Layout haben:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>BodyTxt as Text: fs 16, line 1.5, col #ddd
+BodyTxtCompact as Text: fs 16, line 1.4, col #ddd
+H3 as Text: fs 20, weight bold, col white
+DashItem: hor, gap 16
+  DashMarker as Text: w 12, col #888
+  DashMarker "—"
+
+Card as Frame: bg #1a1a1a, pad 24, rad 8, gap 16
+ProseBody as Frame: gap 12, prose
+
+// Card ist normales Mirror, ProseBody darin ist Prosa
+Card
+  H3 "Persona: Lukas"
+  ProseBody
+    Lukas verkörpert das Segment der **hochkompetenten** Maturanden.
+
+    - 18 Jahre, Gymi
+    - Programmiert seit der Sek
+    - GitHub aktiv
+
+  Frame hor, gap 8
+    Button "Bearbeiten", bg #2271C1, col white, pad 8 16, rad 4
+    Button "Löschen", bg #ef4444, col white, pad 8 16, rad 4</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p>Drei Ebenen sind nebeneinander: das <code>Card</code>-Layout (normales Mirror), der <code>ProseBody</code> (Prosa) und die <code>Frame hor</code> mit Buttons (wieder normales Mirror).</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Was im Prosa-Mode <em>weiterläuft</em></h2>
+      <ul>
+        <li><strong>Inline-Markdown</strong> — <code>**bold**</code> und <code>*italic*</code> funktionieren in jedem Prosa-Text wie sonst auch in Mirror-Strings.</li>
+        <li><strong>Variablen-Interpolation</strong> — <code>$user.name</code> in einem Prosa-Absatz wird zur Laufzeit aufgelöst.</li>
+        <li><strong>Sonderzeichen</strong> — Umlaute, Em-Dashes (<code>—</code>), Guillemets (<code>«»</code>), Smart Quotes funktionieren als normaler Text. Der Lexer würde sie ausserhalb von Prosa als Fehler markieren; im Prosa-Body werden diese Fehler unterdrückt.</li>
+        <li><strong>Komponenten-Definitionen</strong> — die Mappings (<code>BodyTxt</code> = Absatz, <code>DashItem</code> = Bullet, <code>H2/H3/H4</code> = Headings, <code>OffenePunkt</code> = numerierter Eintrag) sind ganz normale Mirror-Komponenten. Du definierst sie wie immer.</li>
+      </ul>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Wann Prosa-Mode <em>nicht</em> passt</h2>
+      <p>Prosa-Mode ist für textlastige Bereiche da. Bei UI-lastigen Strukturen (Dashboards, Forms, Toolbars) ist die heutige Mirror-Form besser, weil dort die Struktur die Bedeutung trägt. Faustregel:</p>
+      <p class="note"><strong>Wenn der Text länger ist als die Komponente, prose an. Wenn die Komponente länger ist als der Text, prose aus.</strong></p>
+
+      <p>Konkret: ein Persona-Block mit drei Absätzen Prosa und zwei Bullet-Listen — Prosa-Mode. Eine Statistik-Card mit Zahl, Label und Icon — kein Prosa-Mode.</p>
+    </section>
+
+
+    <div class="summary">
+      <h2>Das Wichtigste</h2>
+
+      <table class="ref-table">
+        <tr><th>Konstrukt</th><th>Markdown-Schreibweise</th><th>Synthetisiert zu</th></tr>
+        <tr><td>Absatz</td><td>bare String, mehrere Zeilen joinen</td><td><code>BodyTxt "..."</code></td></tr>
+        <tr><td>Absatz-Trennung</td><td>Leerzeile</td><td>neuer <code>BodyTxt</code></td></tr>
+        <tr><td>Bullet</td><td><code>- Text</code></td><td><code>DashItem &gt; BodyTxtCompact</code></td></tr>
+        <tr><td>Sub-Bullet</td><td>Bullet mit 2 Spaces tiefer eingerückt</td><td>verschachteltes <code>DashItem</code></td></tr>
+        <tr><td>Heading 1</td><td><code># Titel</code></td><td><code>H2 "Titel"</code></td></tr>
+        <tr><td>Heading 2</td><td><code>## Titel</code></td><td><code>H3 "Titel"</code></td></tr>
+        <tr><td>Heading 3</td><td><code>### Titel</code></td><td><code>H4 "Titel"</code></td></tr>
+        <tr><td>Numeriert</td><td><code>1. Text</code></td><td><code>OffenePunkt &gt; OffeneNum + BodyTxtCompact</code></td></tr>
+        <tr><td>Aktivieren</td><td><code>, prose</code> als Frame-Property</td><td>Body wird als Markdown gelesen</td></tr>
+        <tr><td>Vererben</td><td><code>prose</code> auf Komponenten-Definition</td><td>jeder Use-Site ist Prosa-Mode</td></tr>
+      </table>
+
+      <p><strong>Das Prinzip:</strong> Prosa-Mode ist <em>kein</em> neuer Compiler — es ist eine Schreib-Abkürzung, die der Parser auf bestehende Mirror-Komponenten abbildet. Der AST nach dem Parsen sieht aus, als hättest du jeden Absatz, jede Bullet, jeden Heading von Hand getippt.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="15-charts.html">&larr; Charts</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <span class="next disabled">Ende</span>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

@@ -147,7 +147,7 @@ function initializePlaygrounds() {
  */
 
 // Tutorial Navigation Structure
-// Die Sprache (00-10) + Komponenten-Bibliothek (11-15)
+// Die Sprache (00-10, 16) + Komponenten-Bibliothek (11-15)
 const tutorialNavigation = [
   // Die Sprache
   { num: '00', file: 'index.html', title: 'Intro', section: 'Sprache' },
@@ -161,6 +161,7 @@ const tutorialNavigation = [
   { num: '08', file: '08-functions.html', title: 'Functions' },
   { num: '09', file: '09-daten.html', title: 'Daten' },
   { num: '10', file: '10-seiten.html', title: 'Seiten' },
+  { num: '16', file: '16-prosa.html', title: 'Prosa-Mode' },
   // Komponenten-Bibliothek
   { num: '11', file: '11-eingabe.html', title: 'Eingabe', section: 'Komponenten' },
   { num: '12', file: '12-navigation.html', title: 'Navigation' },
