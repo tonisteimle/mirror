@@ -160,18 +160,23 @@
       <h2>Das Slot-Muster</h2>
       <p>Beide Komponenten folgen dem gleichen Muster mit benannten Slots (<code>Name:</code>):</p>
 
+      <p><strong>Dialog-Muster</strong> – Trigger, Backdrop, Content, CloseTrigger:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Dialog-Muster
-Dialog
+          <textarea>Dialog
   Trigger: Button "Öffnen"
   Backdrop: bg rgba(0,0,0,0.5)
   Content: pad 24, bg #1a1a1a, rad 12
     Text "Inhalt", col white
-    CloseTrigger: Button "OK"
+    CloseTrigger: Button "OK"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
 
-// Tooltip-Muster
-Tooltip positioning "bottom"
+      <p><strong>Tooltip-Muster</strong> – Trigger, Content:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tooltip positioning "bottom"
   Trigger: Icon "info", ic #888, is 20
   Content: Text "Hilfetext", fs 12</textarea>
         </div>

@@ -190,16 +190,17 @@ H3 as Text: fs 20, weight bold, col white
 // Definition trägt prose
 Article as Frame: bg #1a1a1a, pad 24, rad 8, gap 12, prose
 
-// Use-Site braucht es nicht — vererbt sich
-Article
-  ## Erste Sektion
+Frame gap 16, w hug
+  // Use-Site braucht es nicht — vererbt sich
+  Article
+    ## Erste Sektion
 
-  Erster Absatz im Prosa-Mode. Funktioniert ohne `, prose` an dieser Stelle.
+    Erster Absatz im Prosa-Mode. Funktioniert ohne `, prose` an dieser Stelle.
 
-Article
-  ## Zweite Sektion
+  Article
+    ## Zweite Sektion
 
-  Auch hier: implizit Prosa, weil Article so definiert ist.</textarea>
+    Auch hier: implizit Prosa, weil Article so definiert ist.</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>

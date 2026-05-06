@@ -174,13 +174,14 @@ Frame bg #1a1a1a, pad 20, rad 8, gap 12
       <p>Für einfache Strukturen kannst du Kinder auch in <strong>einer Zeile</strong> schreiben. Trenne sie mit Semikolon:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Mit Einrückung (3 Zeilen)
-Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6
-  Icon "check", ic #10b981, is 20
-  Text "Erfolgreich gespeichert", col white
+          <textarea>Frame gap 16, w hug
+  // Mit Einrückung (3 Zeilen)
+  Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6
+    Icon "check", ic #10b981, is 20
+    Text "Erfolgreich gespeichert", col white
 
-// Gleiche Struktur in einer Zeile
-Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6; Icon "check", ic #10b981, is 20; Text "Erfolgreich gespeichert", col white</textarea>
+  // Gleiche Struktur in einer Zeile
+  Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6; Icon "check", ic #10b981, is 20; Text "Erfolgreich gespeichert", col white</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -220,13 +221,14 @@ Frame; Icon "star", ic #f59e0b, is 20; Text "Favorit", col white</textarea>
       </ul>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Lang
-Frame w 100, h 50, bg #2271C1
-Button "Speichern", w hug, h 32, bg #2271C1, col white, rad 6
+          <textarea>Frame gap 16, w hug
+  // Lang
+  Frame w 100, h 50, bg #2271C1
+  Button "Speichern", w hug, h 32, bg #2271C1, col white, rad 6
 
-// Kurz – identische Wirkung
-Frame 100, 50, #2271C1
-Button "Speichern", hug, 32, #2271C1, col white, rad 6</textarea>
+  // Kurz – identische Wirkung
+  Frame 100, 50, #2271C1
+  Button "Speichern", hug, 32, #2271C1, col white, rad 6</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -242,14 +244,15 @@ Button "Speichern", hug, 32, #2271C1, col white, rad 6</textarea>
 
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Text: Farbe → col (Textfarbe), nicht bg
-Text "Hallo", #2271C1, fs 18
+          <textarea>Frame gap 16, w hug
+  // Text: Farbe → col (Textfarbe), nicht bg
+  Text "Hallo", #2271C1, fs 18
 
-// Icon: Farbe → ic (Icon-Farbe), Zahl → is (Icon-Größe)
-Icon "check", #10b981, 24
+  // Icon: Farbe → ic (Icon-Farbe), Zahl → is (Icon-Größe)
+  Icon "check", #10b981, 24
 
-// Image: nur Größen, keine Farbe
-Image src "https://picsum.photos/200/100", 200, 100</textarea>
+  // Image: nur Größen, keine Farbe
+  Image src "https://picsum.photos/200/100", 200, 100</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
@@ -257,12 +260,13 @@ Image src "https://picsum.photos/200/100", 200, 100</textarea>
       <p><strong>Mischen von Kurz- und Langschreibweise ist erlaubt</strong> – Mirror füllt die freien Slots intelligent:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
-          <textarea>// Du kannst einzelne Properties explizit lassen, andere positional
-Frame w 100, 50, #2271C1
-//    explizit  positional positional
+          <textarea>Frame gap 16, w hug
+  // Du kannst einzelne Properties explizit lassen, andere positional
+  Frame w 100, 50, #2271C1
+  //    explizit  positional positional
 
-// Auch in dieser Reihenfolge:
-Frame 100, 50, bg #2271C1, gap 12, pad 16</textarea>
+  // Auch in dieser Reihenfolge:
+  Frame 100, 50, bg #2271C1, gap 12, pad 16</textarea>
         </div>
         <div class="playground-preview"></div>
       </div>
