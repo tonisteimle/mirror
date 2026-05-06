@@ -1,43 +1,29 @@
 /**
  * Empty Project Tests
  *
- * Tests to verify that a new empty project is truly empty:
- * - Only contains index.mir
- * - index.mir has no content
- * - No tokens, components, or data files
+ * The empty-project template has four files (one per editor tab):
+ *   data.data / tokens.tok / components.com / app.mir
+ * All start as empty strings — content lives in DEFAULT_PROJECT (the
+ * demo). These tests assert that EMPTY_PROJECT actually has those four
+ * empty slots and that the runtime state matches when the editor is
+ * cleared.
  */
 
 import { test, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 import { EMPTY_PROJECT, DEFAULT_PROJECT } from '../../../storage/project-actions'
 
+const EXPECTED_FILES = ['data.data', 'tokens.tok', 'components.com', 'app.mir'] as const
+
 // =============================================================================
 // Helper Functions
 // =============================================================================
 
-/**
- * Simulate creating an empty project by clearing localStorage
- * and setting the EMPTY_PROJECT structure
- */
 function simulateEmptyProject(): void {
   localStorage.setItem('mirror-files', JSON.stringify(EMPTY_PROJECT))
 }
 
-/**
- * Clear all files except index.mir to simulate empty state
- */
-async function clearToEmptyState(api: TestAPI): Promise<void> {
-  const files = api.panel.files
-  const fileList = files.list()
-
-  // Delete all files except index.mir
-  for (const file of fileList) {
-    if (file !== 'index.mir') {
-      await files.delete(file)
-    }
-  }
-
-  // Set index.mir to empty
+async function clearEditor(api: TestAPI): Promise<void> {
   await api.editor.setCode('')
   await api.utils.delay(100)
 }
@@ -47,53 +33,40 @@ async function clearToEmptyState(api: TestAPI): Promise<void> {
 // =============================================================================
 
 export const emptyProjectConstantTests: TestCase[] = describe('Empty Project - Constants', [
-  test('EMPTY_PROJECT only contains index.mir', async (api: TestAPI) => {
-    const fileNames = Object.keys(EMPTY_PROJECT)
-
-    api.assert.equals(fileNames.length, 1, 'Should only have one file')
-    api.assert.equals(fileNames[0], 'index.mir', 'File should be index.mir')
-  }),
-
-  test('EMPTY_PROJECT index.mir is empty string', async (api: TestAPI) => {
-    const content = EMPTY_PROJECT['index.mir']
-
-    api.assert.equals(content, '', 'index.mir content should be empty string')
-  }),
-
-  test('EMPTY_PROJECT has no tokens', async (api: TestAPI) => {
-    const hasTokenFile = Object.keys(EMPTY_PROJECT).some(
-      f => f.endsWith('.tok') || f.endsWith('.tokens')
+  test('EMPTY_PROJECT contains the four canonical files', async (api: TestAPI) => {
+    const fileNames = Object.keys(EMPTY_PROJECT).sort()
+    const expected = [...EXPECTED_FILES].sort()
+    api.assert.equals(
+      JSON.stringify(fileNames),
+      JSON.stringify(expected),
+      `EMPTY_PROJECT should be exactly ${expected.join(',')}`
     )
-
-    api.assert.ok(!hasTokenFile, 'Empty project should have no token files')
   }),
 
-  test('EMPTY_PROJECT has no components', async (api: TestAPI) => {
-    const hasComponentFile = Object.keys(EMPTY_PROJECT).some(
-      f => f.endsWith('.com') || f.endsWith('.components')
-    )
-
-    api.assert.ok(!hasComponentFile, 'Empty project should have no component files')
+  test('EMPTY_PROJECT files are all empty strings', async (api: TestAPI) => {
+    for (const file of EXPECTED_FILES) {
+      api.assert.equals(EMPTY_PROJECT[file], '', `${file} should be empty`)
+    }
   }),
 
-  test('EMPTY_PROJECT has no data files', async (api: TestAPI) => {
-    const hasDataFile = Object.keys(EMPTY_PROJECT).some(
-      f => f.endsWith('.data') || f.endsWith('.yaml') || f.endsWith('.yml')
-    )
-
-    api.assert.ok(!hasDataFile, 'Empty project should have no data files')
+  test('EMPTY_PROJECT exposes a tokens slot', async (api: TestAPI) => {
+    api.assert.ok('tokens.tok' in EMPTY_PROJECT, 'tokens.tok slot must exist')
   }),
 
-  test('DEFAULT_PROJECT is different from EMPTY_PROJECT', async (api: TestAPI) => {
-    // MVP single-file mode: both projects now have one file (`index.mir`).
-    // The demo project differs in *content* (tokens + components + canvas
-    // inline) rather than in file count.
-    const emptyContent = EMPTY_PROJECT['index.mir'] ?? ''
-    const defaultContent = DEFAULT_PROJECT['index.mir'] ?? ''
+  test('EMPTY_PROJECT exposes a components slot', async (api: TestAPI) => {
+    api.assert.ok('components.com' in EMPTY_PROJECT, 'components.com slot must exist')
+  }),
 
+  test('EMPTY_PROJECT exposes a data slot', async (api: TestAPI) => {
+    api.assert.ok('data.data' in EMPTY_PROJECT, 'data.data slot must exist')
+  }),
+
+  test('DEFAULT_PROJECT app.mir has more content than EMPTY_PROJECT', async (api: TestAPI) => {
+    const emptyApp = EMPTY_PROJECT['app.mir'] ?? ''
+    const defaultApp = DEFAULT_PROJECT['app.mir'] ?? ''
     api.assert.ok(
-      defaultContent.length > emptyContent.length,
-      `Default project index.mir (${defaultContent.length} chars) should have more content than empty project (${emptyContent.length} chars)`
+      defaultApp.length > emptyApp.length,
+      `Default app.mir (${defaultApp.length} chars) must exceed empty (${emptyApp.length})`
     )
   }),
 ])
@@ -103,67 +76,10 @@ export const emptyProjectConstantTests: TestCase[] = describe('Empty Project - C
 // =============================================================================
 
 export const emptyProjectStateTests: TestCase[] = describe('Empty Project - Runtime State', [
-  test('Empty state has only index.mir in file list', async (api: TestAPI) => {
-    await clearToEmptyState(api)
-
-    const files = api.panel.files.list()
-
-    // Allow for index.mir to be the only .mir file
-    const mirFiles = files.filter(f => f.endsWith('.mir'))
-    api.assert.equals(
-      mirFiles.length,
-      1,
-      `Should only have one .mir file, got: ${mirFiles.join(', ')}`
-    )
-    api.assert.ok(mirFiles.includes('index.mir'), 'Should include index.mir')
-  }),
-
-  test('Empty state has no token files', async (api: TestAPI) => {
-    await clearToEmptyState(api)
-
-    const files = api.panel.files.list()
-    const tokenFiles = files.filter(f => f.endsWith('.tok') || f.endsWith('.tokens'))
-
-    api.assert.equals(
-      tokenFiles.length,
-      0,
-      `Should have no token files, got: ${tokenFiles.join(', ')}`
-    )
-  }),
-
-  test('Empty state has no component files', async (api: TestAPI) => {
-    await clearToEmptyState(api)
-
-    const files = api.panel.files.list()
-    const componentFiles = files.filter(f => f.endsWith('.com') || f.endsWith('.components'))
-
-    api.assert.equals(
-      componentFiles.length,
-      0,
-      `Should have no component files, got: ${componentFiles.join(', ')}`
-    )
-  }),
-
-  test('Empty state has no data files', async (api: TestAPI) => {
-    await clearToEmptyState(api)
-
-    const files = api.panel.files.list()
-    const dataFiles = files.filter(
-      f => f.endsWith('.data') || f.endsWith('.yaml') || f.endsWith('.yml')
-    )
-
-    api.assert.equals(
-      dataFiles.length,
-      0,
-      `Should have no data files, got: ${dataFiles.join(', ')}`
-    )
-  }),
-
-  test('Empty state editor has no content', async (api: TestAPI) => {
-    await clearToEmptyState(api)
+  test('Empty editor compiles cleanly', async (api: TestAPI) => {
+    await clearEditor(api)
 
     const code = api.editor.getCode()
-
     api.assert.equals(code.trim(), '', 'Editor should be empty')
   }),
 ])
@@ -203,38 +119,43 @@ export const emptyProjectPreviewTests: TestCase[] = describe('Empty Project - Pr
 // =============================================================================
 
 export const emptyProjectStorageTests: TestCase[] = describe('Empty Project - Storage', [
-  test('simulateEmptyProject sets correct localStorage', async (api: TestAPI) => {
-    // Save current state
+  test('simulateEmptyProject writes the four-file structure to localStorage', async (api: TestAPI) => {
     const originalState = localStorage.getItem('mirror-files')
 
-    // Simulate empty project
     simulateEmptyProject()
 
-    // Check localStorage
     const stored = localStorage.getItem('mirror-files')
     api.assert.ok(stored !== null, 'localStorage should have mirror-files')
 
     const parsed = JSON.parse(stored!)
-    const files = Object.keys(parsed)
+    const files = Object.keys(parsed).sort()
+    const expected = [...EXPECTED_FILES].sort()
 
-    api.assert.equals(files.length, 1, `Should have 1 file, got ${files.length}`)
-    api.assert.ok(files.includes('index.mir'), 'Should have index.mir')
-    api.assert.equals(parsed['index.mir'], '', 'index.mir should be empty')
+    api.assert.equals(
+      JSON.stringify(files),
+      JSON.stringify(expected),
+      `Should have ${expected.join(',')}, got ${files.join(',')}`
+    )
+    for (const file of EXPECTED_FILES) {
+      api.assert.equals(parsed[file], '', `${file} should be empty in storage`)
+    }
 
-    // Restore original state
     if (originalState) {
       localStorage.setItem('mirror-files', originalState)
     }
   }),
 
-  test('EMPTY_PROJECT matches expected structure', async (api: TestAPI) => {
-    const expected = { 'index.mir': '' }
-    const actual = EMPTY_PROJECT
-
+  test('EMPTY_PROJECT matches the four-file empty structure', async (api: TestAPI) => {
+    const expected: Record<string, string> = {
+      'data.data': '',
+      'tokens.tok': '',
+      'components.com': '',
+      'app.mir': '',
+    }
     api.assert.equals(
-      JSON.stringify(actual),
+      JSON.stringify(EMPTY_PROJECT),
       JSON.stringify(expected),
-      'EMPTY_PROJECT should match expected structure'
+      'EMPTY_PROJECT should match the four-file empty structure'
     )
   }),
 ])

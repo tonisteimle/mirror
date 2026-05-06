@@ -102,6 +102,7 @@ import { allAutocompleteTests } from './autocomplete'
 import { allIndentationTests } from './editor/indentation.test'
 import { allEditorDropTests } from './editor/editor-drop.test'
 import { allLinterTests } from './editor/linter.test'
+import { editorFileTabsTests } from './editor/file-tabs.test'
 
 // Data (Data Binding, Actions, Events, Responsive, Charts)
 import { allDataBindingTests } from './data-binding'
@@ -258,6 +259,7 @@ export const editorTests: TestCase[] = [
   ...allIndentationTests,
   ...allEditorDropTests,
   ...allLinterTests,
+  ...editorFileTabsTests,
 ]
 
 /**

@@ -15,7 +15,20 @@ import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 import { DEFAULT_PROJECT } from '../../../storage/project-actions'
 
-const DEMO = DEFAULT_PROJECT['index.mir']
+// DEFAULT_PROJECT now ships as four files (data.data / tokens.tok /
+// components.com / app.mir) — re-flatten to a single string for the
+// testWithSetup harness, in the same order the compiler prelude
+// concatenates them at runtime. This keeps these tests anchored to the
+// real demo source without having to spin up multi-file storage in
+// every fixture.
+const DEMO = [
+  DEFAULT_PROJECT['data.data'],
+  DEFAULT_PROJECT['tokens.tok'],
+  DEFAULT_PROJECT['components.com'],
+  DEFAULT_PROJECT['app.mir'],
+]
+  .filter(Boolean)
+  .join('\n\n')
 
 // =============================================================================
 // HELPERS — find live elements by their visible text or by mirror-name attrs.

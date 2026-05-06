@@ -60,3 +60,6 @@ export {
   lintUITests,
   lintEdgeCases,
 } from './linter.test'
+
+// Editor file-tabs (Daten / Tokens / Komponenten / Anwendung)
+export { editorFileTabsTests } from './file-tabs.test'
