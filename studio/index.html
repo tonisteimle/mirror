@@ -23,7 +23,7 @@
 
   <!-- Tom Select CSS -->
   <link rel="stylesheet" href="https://esm.sh/tom-select@2.4.3/dist/css/tom-select.default.min.css">
-  <link rel="stylesheet" href="styles.css?v=228">
+  <link rel="stylesheet" href="styles.css?v=229">
   <!-- Mirror Default Styles (for preview) -->
   <link rel="stylesheet" href="dist/mirror-defaults.css?v=1">
 </head>
@@ -54,6 +54,12 @@
 
     <div class="panel editor-panel" style="position: relative;">
       <div class="editor-header">
+        <div class="editor-file-tabs" id="editor-file-tabs">
+          <button class="editor-file-tab" data-file="data.data">Daten</button>
+          <button class="editor-file-tab" data-file="tokens.tok">Tokens</button>
+          <button class="editor-file-tab" data-file="components.com">Komponenten</button>
+          <button class="editor-file-tab active" data-file="app.mir">Anwendung</button>
+        </div>
         <div class="editor-actions">
           <a href="https://ux-strategy.ch/mirror/tutorial/" target="_blank" class="tutorial-link" title="Mirror Tutorial öffnen">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -153,6 +159,6 @@
   <script type="module" src="dist/dialog.js?v=2"></script>
   <script type="module" src="dist/tauri-bridge.js?v=2"></script>
   <script type="module" src="dist/desktop-files.js?v=2"></script>
-  <script type="module" src="dist/app.js?v=17"></script>
+  <script type="module" src="dist/app.js?v=18"></script>
 </body>
 </html>

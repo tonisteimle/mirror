@@ -35,60 +35,82 @@ export type ProjectType = 'empty' | 'demo'
 // Empty Project Template
 // =============================================================================
 
-// Minimal project with just an empty index.mir
+// Minimal project: four empty files matching the editor's four tabs.
+// Order is fixed (data → tokens → components → app) so the prelude
+// concatenation stays correct on compile.
 export const EMPTY_PROJECT: Record<string, string> = {
-  'index.mir': '',
+  'data.data': '',
+  'tokens.tok': '',
+  'components.com': '',
+  'app.mir': '',
 }
 
 // =============================================================================
 // Default/Demo Project Template
 // =============================================================================
 
-// MVP single-file demo project — data, tokens, components and the canvas
-// live inline in a single .mir, in reading order: Data → Tokens → Components
-// → Canvas. Multi-file demo (`tokens.tok` / `components.com` / `data.yaml`)
-// returns when multi-file infrastructure is reactivated.
+// Multi-file demo project: each file maps 1:1 to one editor tab.
+// Order matters for the compiler prelude: data → tokens → components are
+// concatenated in front of the layout (app.mir) at compile time. The
+// 4-tab UI is just a switcher over these four files; on a Tauri desktop
+// install they live as four real files in the project folder.
 export const DEFAULT_PROJECT: Record<string, string> = {
-  'index.mir': `canvas mobile, bg $surface, col white
-
-// Data
+  'data.data': `// Cards for the Daten tab — table form: header row + data rows.
+// Position-based parsing means values can be unquoted identifiers
+// (home, layers, eye) or multi-word strings (Live Preview).
 features:
   icon    title           desc
   home    Willkommen      Dies ist ein Demo-Projekt.
   layers  Komponenten     Baue wiederverwendbare UI-Bausteine.
   eye     Live Preview    Änderungen sofort sehen.
 
-// Tokens
+// Counter state used by the Interactive detail view.
+count: 0`,
+
+  'tokens.tok': `// Design Tokens
+
+// Background Colors
 primary.bg: #2271C1
-primary.ic: #2271C1
 surface.bg: #1a1a1a
 card.bg: #27272a
-muted.col: #888
+
+// Icon Colors
+primary.ic: #2271C1
 muted.ic: #888
+
+// Text Colors
+muted.col: #888
+
+// Spacing
 m.pad: 16
 m.gap: 12
-radius.rad: 8
 
-// Components
+// Radius
+radius.rad: 8`,
+
+  'components.com': `// Reusable component definitions.
+
+// Card — surface for grouped content.
 Card: bg $card, pad $m, rad $radius, gap 8
 
+// Btn — primary button on top of the Button primitive.
 Btn as Button: bg $primary, col white, pad 10 16, rad 6, cursor pointer
   hover:
     opacity 0.9
 
-// Tab switcher — exclusive() keeps only one TabBtn selected at a time.
+// TabBtn — exclusive() keeps only one TabBtn selected at a time.
 TabBtn: pad 8 14, rad 6, bg transparent, col $muted, cursor pointer, weight 500, exclusive()
   hover:
     col white
   selected:
-    bg $card, col white
+    bg $card, col white`,
 
-// State (used by InteractiveDetail)
-count: 0
+  'app.mir': `canvas mobile, bg $surface, col white
 
-// Home view: TabBtns above two stacked frames; show()/hide() switches them.
-// Tab "Daten"      = three cards rendered from \$features via each-loop.
-// Tab "Navigation" = three hardcoded cards with distinct nav targets.
+// Home view: two tabs (Daten / Navigation) above two stacked frames;
+// show()/hide() flips between them.
+//   Daten      = three cards rendered from \$features via each-loop.
+//   Navigation = three hardcoded cards with distinct nav targets.
 Frame name HomeView, pad 24, gap $m, h full
   Text "Demo App", fs 20, weight bold
 

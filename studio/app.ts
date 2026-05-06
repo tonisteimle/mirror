@@ -304,7 +304,7 @@ const fileSwitchAnnotation = Annotation.define()
 // ============================================
 
 const files: Record<string, string> = {}
-let currentFile = 'index.mir'
+let currentFile = 'app.mir'
 
 // ============================================
 // Playground Mode (URL parameter ?code=)
@@ -343,6 +343,16 @@ if (!isPlaygroundMode) {
   } catch (e) {
     log.warn('[App] Failed to read mirror-files from localStorage, using demo:', e)
   }
+
+  // Legacy migration: pre-multi-file projects stored everything in a single
+  // 'index.mir'. Move it under 'app.mir' so the layout tab finds it on first
+  // multi-file boot. Tokens and components inside the migrated file still
+  // resolve because Mirror lets all four kinds live in any layout.
+  if (files['index.mir'] !== undefined && files['app.mir'] === undefined) {
+    files['app.mir'] = files['index.mir']
+    delete files['index.mir']
+  }
+
   if (Object.keys(files).length === 0) {
     Object.assign(files, DEFAULT_PROJECT)
   }
@@ -931,6 +941,37 @@ resetDemoBtn?.addEventListener('click', async () => {
     log.error('Failed to load demo project:', e)
   }
 })
+
+// Editor file tabs (Daten / Tokens / Komponenten / Anwendung).
+// Each .editor-file-tab carries a data-file attribute that maps 1:1 to
+// a file in the four-file project. Clicking calls switchFile (which
+// already handles save-old + load-new + recompile) and we mirror the
+// active state on the tab strip. Initial active state from the markup
+// stays in sync because switchFile updates [data-file] active on
+// .file elements (legacy file-tree); we manage .editor-file-tab here.
+function syncEditorFileTabs(activeFilename: string): void {
+  document.querySelectorAll('.editor-file-tab').forEach(el => {
+    const isActive = (el as HTMLElement).dataset.file === activeFilename
+    el.classList.toggle('active', isActive)
+  })
+}
+
+document.querySelectorAll<HTMLButtonElement>('.editor-file-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.file
+    if (!target || target === currentFile) return
+    if (typeof window.switchFile === 'function') {
+      window.switchFile(target)
+    } else {
+      // Direct path (in case switchFile isn't on window yet during boot)
+      switchFile(target)
+    }
+    syncEditorFileTabs(target)
+  })
+})
+
+// Initial tab state must match currentFile that the editor actually loaded.
+syncEditorFileTabs(currentFile)
 
 // Update undo/redo button states based on history
 function updateUndoRedoButtons() {
