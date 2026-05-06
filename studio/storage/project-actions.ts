@@ -44,30 +44,12 @@ export const EMPTY_PROJECT: Record<string, string> = {
 // Default/Demo Project Template
 // =============================================================================
 
-// MVP single-file demo project — tokens, components, data and the canvas
-// live inline in a single .mir, in reading order: Tokens → Components →
-// Data → Canvas. Multi-file demo (`tokens.tok` / `components.com` /
-// `data.yaml`) returns when multi-file infrastructure is reactivated.
+// MVP single-file demo project — data, tokens, components and the canvas
+// live inline in a single .mir, in reading order: Data → Tokens → Components
+// → Canvas. Multi-file demo (`tokens.tok` / `components.com` / `data.yaml`)
+// returns when multi-file infrastructure is reactivated.
 export const DEFAULT_PROJECT: Record<string, string> = {
-  'index.mir': `// Tokens
-primary.bg: #2271C1
-primary.ic: #2271C1
-surface.bg: #1a1a1a
-card.bg: #27272a
-muted.col: #888
-muted.ic: #888
-space.pad: 16
-space.gap: 12
-radius.rad: 8
-
-// Components
-Card: bg $card, pad $space, rad $radius, gap 8
-
-Btn as Button: bg $primary, col white, pad 10 16, rad 6, cursor pointer
-  hover:
-    opacity 0.9
-
-// Data
+  'index.mir': `// Data
 features:
   home:
     icon: "home"
@@ -82,8 +64,26 @@ features:
     title: "Live Preview"
     desc: "Änderungen sofort sehen."
 
+// Tokens
+primary.bg: #2271C1
+primary.ic: #2271C1
+surface.bg: #1a1a1a
+card.bg: #27272a
+muted.col: #888
+muted.ic: #888
+m.pad: 16
+m.gap: 12
+radius.rad: 8
+
+// Components
+Card: bg $card, pad $m, rad $radius, gap 8
+
+Btn as Button: bg $primary, col white, pad 10 16, rad 6, cursor pointer
+  hover:
+    opacity 0.9
+
 // Canvas
-Frame bg $surface, col white, pad 24, gap $space, h full
+Frame bg $surface, col white, pad 24, gap $m, h full
 
   Frame hor, spread, ver-center
     Text "Demo App", fs 20, weight bold
@@ -91,7 +91,7 @@ Frame bg $surface, col white, pad 24, gap $space, h full
 
   each feature in $features
     Card
-      Frame hor, gap $space, ver-center
+      Frame hor, gap $m, ver-center
         Icon feature.icon, ic $primary, is 20
         Text feature.title, fs 16, weight 500
       Text feature.desc, col $muted, fs 14
