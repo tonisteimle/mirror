@@ -86,6 +86,33 @@ async function bounceSeedAndLoad(api: TestAPI, target: string): Promise<void> {
   await api.utils.waitForCompile()
 }
 
+/**
+ * Restore single-file test conditions for downstream tests. The shared
+ * test runner doesn't reset window.files / currentFile / previewFile
+ * between tests, so leaving the editor on a non-layout file (or with
+ * previewFile pointing at app.mir) breaks any subsequent test that
+ * relies on the default editor-tracks-compile invariant.
+ *
+ * Call this in a finally{} after every multi-file test body — even when
+ * an assertion fails — so the failure stays scoped to its own test.
+ */
+async function restoreSingleFileState(api: TestAPI): Promise<void> {
+  const w = window as unknown as MirrorWindow
+  // Land back on app.mir so currentFile == compile target == layout.
+  if (activeEditorTab() !== 'app.mir') {
+    clickEditorTab('app.mir')
+    await api.utils.waitUntil(() => activeEditorTab() === 'app.mir', 2000)
+  }
+  // Drop the sibling file slots so subsequent testWithSetup tests run as
+  // if there's only one file in the project (their original assumption).
+  for (const file of TAB_FILES) {
+    if (file !== 'app.mir' && w.files) {
+      delete w.files[file]
+    }
+  }
+  await api.utils.delay(50)
+}
+
 // =============================================================================
 // EDITOR → PREVIEW (cursor drives selection)
 // =============================================================================
@@ -336,101 +363,104 @@ export const editPreservesSelectionTests: TestCase[] = describe('Sync: Edits Pre
 
 export const multiFileSyncTests: TestCase[] = describe('Sync: Multi-File', [
   test('Cursor on app.mir line selects the matching node (with prelude active)', async (api: TestAPI) => {
-    await bounceSeedAndLoad(api, 'app.mir')
-    await api.utils.delay(SYNC_SETTLE_MS)
+    try {
+      await bounceSeedAndLoad(api, 'app.mir')
+      await api.utils.delay(SYNC_SETTLE_MS)
 
-    // Demo app.mir starts with `canvas mobile, ...` then `Frame name HomeView`.
-    // Find the first Frame line in the actual editor source (the prelude
-    // is folded under-the-hood via the lineOffset service).
-    const code = api.editor.getCode()
-    const lines = code.split('\n')
-    const frameLineIndex = lines.findIndex(l => /^Frame\b/.test(l.trim()))
-    api.assert.ok(frameLineIndex >= 0, 'app.mir must contain a Frame line')
+      const code = api.editor.getCode()
+      const lines = code.split('\n')
+      const frameLineIndex = lines.findIndex(l => /^Frame\b/.test(l.trim()))
+      api.assert.ok(frameLineIndex >= 0, 'app.mir must contain a Frame line')
 
-    api.editor.setCursor(frameLineIndex + 1, 1)
-    await api.utils.delay(SYNC_SETTLE_MS)
+      api.editor.setCursor(frameLineIndex + 1, 1)
+      await api.utils.delay(SYNC_SETTLE_MS)
 
-    const sel = api.state.getSelection()
-    api.assert.ok(
-      sel !== null && sel.startsWith('node-'),
-      `Cursor on Frame line must select a node, got ${sel}`
-    )
+      const sel = api.state.getSelection()
+      api.assert.ok(
+        sel !== null && sel.startsWith('node-'),
+        `Cursor on Frame line must select a node, got ${sel}`
+      )
+    } finally {
+      await restoreSingleFileState(api)
+    }
   }),
 
   test('Switching from app.mir to tokens.tok clears or reanchors selection cleanly', async (api: TestAPI) => {
-    await bounceSeedAndLoad(api, 'app.mir')
-    await api.utils.delay(SYNC_SETTLE_MS)
-
-    // Park the cursor on a real Frame line in app.mir → selects something.
-    const code = api.editor.getCode()
-    const frameLineIndex = code.split('\n').findIndex(l => /^Frame\b/.test(l.trim()))
-    if (frameLineIndex >= 0) {
-      api.editor.setCursor(frameLineIndex + 1, 1)
+    try {
+      await bounceSeedAndLoad(api, 'app.mir')
       await api.utils.delay(SYNC_SETTLE_MS)
+
+      const code = api.editor.getCode()
+      const frameLineIndex = code.split('\n').findIndex(l => /^Frame\b/.test(l.trim()))
+      if (frameLineIndex >= 0) {
+        api.editor.setCursor(frameLineIndex + 1, 1)
+        await api.utils.delay(SYNC_SETTLE_MS)
+      }
+
+      clickEditorTab('tokens.tok')
+      await api.utils.waitUntil(() => activeEditorTab() === 'tokens.tok', 2000)
+      await api.utils.waitForCompile()
+      await api.utils.delay(SYNC_SETTLE_MS)
+
+      const sel = api.state.getSelection()
+      const cur = api.editor.getCursor()
+      const editorLineCount = api.editor.getCode().split('\n').length
+      api.assert.ok(
+        cur.line >= 1 && cur.line <= editorLineCount,
+        `Cursor must remain inside tokens.tok bounds [1..${editorLineCount}], got line ${cur.line} (sel=${sel})`
+      )
+    } finally {
+      await restoreSingleFileState(api)
     }
-
-    // Switch to tokens.tok. The editor source no longer contains layout
-    // nodes — selection must NOT point at a node sourced from app.mir
-    // and mapped onto a tokens-line that doesn't exist there.
-    clickEditorTab('tokens.tok')
-    await api.utils.waitUntil(() => activeEditorTab() === 'tokens.tok', 2000)
-    await api.utils.waitForCompile()
-    await api.utils.delay(SYNC_SETTLE_MS)
-
-    const sel = api.state.getSelection()
-    const cur = api.editor.getCursor()
-    const editorLineCount = api.editor.getCode().split('\n').length
-    api.assert.ok(
-      cur.line >= 1 && cur.line <= editorLineCount,
-      `Cursor must remain inside tokens.tok bounds [1..${editorLineCount}], got line ${cur.line} (sel=${sel})`
-    )
   }),
 
   test('Editor on tokens.tok: cursor moves on tokens lines must NOT highlight a layout node', async (api: TestAPI) => {
-    await bounceSeedAndLoad(api, 'tokens.tok')
-    await api.utils.delay(SYNC_SETTLE_MS)
+    try {
+      await bounceSeedAndLoad(api, 'tokens.tok')
+      await api.utils.delay(SYNC_SETTLE_MS)
 
-    // Find a real token line in tokens.tok (e.g. `primary.bg: #...`).
-    const code = api.editor.getCode()
-    const tokenLineIndex = code.split('\n').findIndex(l => /^[a-z][\w.-]*\.\w+:/i.test(l.trim()))
-    api.assert.ok(tokenLineIndex >= 0, 'tokens.tok must contain at least one token line')
+      const code = api.editor.getCode()
+      const tokenLineIndex = code.split('\n').findIndex(l => /^[a-z][\w.-]*\.\w+:/i.test(l.trim()))
+      api.assert.ok(tokenLineIndex >= 0, 'tokens.tok must contain at least one token line')
 
-    api.editor.setCursor(tokenLineIndex + 1, 1)
-    await api.utils.delay(SYNC_SETTLE_MS)
+      api.editor.setCursor(tokenLineIndex + 1, 1)
+      await api.utils.delay(SYNC_SETTLE_MS)
 
-    const sel = api.state.getSelection()
-    // A token definition line has no DOM node — selection must be null,
-    // NOT a stale layout node from app.mir.
-    api.assert.ok(
-      sel === null,
-      `Cursor on a token-definition line must produce no selection, got ${sel}`
-    )
+      const sel = api.state.getSelection()
+      api.assert.ok(
+        sel === null,
+        `Cursor on a token-definition line must produce no selection, got ${sel}`
+      )
+    } finally {
+      await restoreSingleFileState(api)
+    }
   }),
 
   test("Switching tabs does not leak the previous tab's cursor line", async (api: TestAPI) => {
-    await bounceSeedAndLoad(api, 'app.mir')
-    await api.utils.delay(SYNC_SETTLE_MS)
-    const appLineCount = api.editor.getCode().split('\n').length
+    try {
+      await bounceSeedAndLoad(api, 'app.mir')
+      await api.utils.delay(SYNC_SETTLE_MS)
+      const appLineCount = api.editor.getCode().split('\n').length
 
-    // Move cursor near the end of app.mir, far past where any other file
-    // would have content.
-    api.editor.setCursor(appLineCount, 1)
-    await api.utils.delay(SYNC_SETTLE_MS)
-    const cursorBefore = api.editor.getCursor().line
-    api.assert.equals(cursorBefore, appLineCount, 'cursor parked at end of app.mir')
+      api.editor.setCursor(appLineCount, 1)
+      await api.utils.delay(SYNC_SETTLE_MS)
+      const cursorBefore = api.editor.getCursor().line
+      api.assert.equals(cursorBefore, appLineCount, 'cursor parked at end of app.mir')
 
-    // Switch to tokens.tok (typically much shorter).
-    clickEditorTab('tokens.tok')
-    await api.utils.waitUntil(() => activeEditorTab() === 'tokens.tok', 2000)
-    await api.utils.delay(SYNC_SETTLE_MS)
+      clickEditorTab('tokens.tok')
+      await api.utils.waitUntil(() => activeEditorTab() === 'tokens.tok', 2000)
+      await api.utils.delay(SYNC_SETTLE_MS)
 
-    const tokensLineCount = api.editor.getCode().split('\n').length
-    const cursorAfter = api.editor.getCursor().line
+      const tokensLineCount = api.editor.getCode().split('\n').length
+      const cursorAfter = api.editor.getCursor().line
 
-    api.assert.ok(
-      cursorAfter <= tokensLineCount,
-      `Cursor (line ${cursorAfter}) must be inside tokens.tok (max ${tokensLineCount}). ` +
-        `If this fails the previous tab's cursor leaked across the file switch.`
-    )
+      api.assert.ok(
+        cursorAfter <= tokensLineCount,
+        `Cursor (line ${cursorAfter}) must be inside tokens.tok (max ${tokensLineCount}). ` +
+          `If this fails the previous tab's cursor leaked across the file switch.`
+      )
+    } finally {
+      await restoreSingleFileState(api)
+    }
   }),
 ])

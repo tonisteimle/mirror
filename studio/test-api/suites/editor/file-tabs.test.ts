@@ -1,8 +1,8 @@
 /**
  * Editor File Tabs Tests
  *
- * Validates the four-tab switcher above the editor (Daten / Tokens /
- * Komponenten / Anwendung). The tabs are 1:1 mapped to four files
+ * Validates the four-tab switcher above the editor (Data / Tokens /
+ * Components / Site). The tabs are 1:1 mapped to four files
  * (data.data / tokens.tok / components.com / app.mir) and clicking one
  * triggers the existing switchFile() flow: save current file, swap to
  * the target file, recompile.
@@ -22,7 +22,7 @@ import { DEFAULT_PROJECT } from '../../../storage/project-actions'
 // =============================================================================
 
 const TAB_FILES = ['data.data', 'tokens.tok', 'components.com', 'app.mir'] as const
-const TAB_LABELS = ['Daten', 'Tokens', 'Komponenten', 'Anwendung'] as const
+const TAB_LABELS = ['Data', 'Tokens', 'Components', 'Site'] as const
 
 interface MirrorWindow extends Window {
   files: Record<string, string>

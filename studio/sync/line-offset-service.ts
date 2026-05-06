@@ -8,6 +8,13 @@
 
 export class LineOffsetService {
   private offset = 0
+  // True when editor source == compile source (single-file or layout-on-layout).
+  // False when the preview is redirected to a sibling layout (e.g. editor on
+  // tokens.tok but preview compiles app.mir). In the redirected case
+  // `editorLine + offset` does NOT land in app.mir's source — the editor
+  // shows tokens, while `offset` was computed for app.mir's content. Cursor
+  // sync MUST bail out instead of resolving phantom nodes via getNodeAtLine.
+  private editorTracksCompile = true
 
   /**
    * Set the line offset (number of prelude + separator lines)
@@ -21,6 +28,19 @@ export class LineOffsetService {
    */
   getOffset(): number {
     return this.offset
+  }
+
+  /**
+   * Mark whether the editor's source corresponds 1:1 to the compile target.
+   * False when preview-redirect is active (editor on a non-layout file while
+   * preview compiles a sibling layout); cursor sync must skip in that case.
+   */
+  setEditorTracksCompileSource(tracks: boolean): void {
+    this.editorTracksCompile = tracks
+  }
+
+  isEditorTrackingCompileSource(): boolean {
+    return this.editorTracksCompile
   }
 
   /**

@@ -267,6 +267,15 @@ export class SyncCoordinator {
    * Finds all nodeIds in the line range and sets multiSelection.
    */
   handleEditorSelection(fromEditorLine: number, toEditorLine: number): void {
+    // Same redirect guard as executeCursorSync — when the editor doesn't
+    // track the compile source, line math is meaningless and would
+    // phantom-highlight a layout node from app.mir.
+    if (!this.lineOffset.isEditorTrackingCompileSource()) {
+      this.ports.stateStore.clearMultiSelection()
+      this.ports.stateStore.setSelection(null, 'editor')
+      return
+    }
+
     // Convert editor lines to SourceMap lines
     const fromLine = this.lineOffset.editorToSourceMap(fromEditorLine)
     const toLine = this.lineOffset.editorToSourceMap(toEditorLine)
@@ -504,6 +513,16 @@ export class SyncCoordinator {
 
     // Single cursor position (not multi-line selection) clears multiselection
     this.ports.stateStore.clearMultiSelection()
+
+    // When the editor doesn't track the compile source (preview-redirect:
+    // editor on tokens.tok / data.data while preview compiles app.mir),
+    // editorLine→sourceMapLine math lands inside app.mir's range and
+    // getNodeAtLine returns the layout root as a phantom selection. Clear
+    // selection instead — there's no real node under the cursor.
+    if (!this.lineOffset.isEditorTrackingCompileSource()) {
+      this.ports.stateStore.setSelection(null, 'editor')
+      return
+    }
 
     // First try to find an instance node
     const node = this.ports.sourceMap.getNodeAtLine(sourceMapLine)

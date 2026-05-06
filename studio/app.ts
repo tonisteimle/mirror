@@ -1162,6 +1162,14 @@ function compile(code: string) {
       compileCode = files[previewFile] ?? ''
     }
   }
+  // Tell the sync layer whether editor lines correspond to the compile
+  // source. When redirected (editor on tokens.tok, compile target app.mir)
+  // any editorLine + offset math points into app.mir, NOT the editor's
+  // tokens — the cursor sync must bail out instead of phantom-selecting
+  // an app.mir node when the user is just typing tokens.
+  if (studio?.sync?.lineOffset) {
+    studio.sync.lineOffset.setEditorTracksCompileSource(compileFile === currentFile)
+  }
 
   if (!compileCode.trim()) {
     // Render empty App container for drop target support
@@ -1655,6 +1663,11 @@ if (typeof window !== 'undefined') {
         compileFile = previewFile
         compileCode = files[previewFile] ?? ''
       }
+    }
+    // See sibling comment in compile(): cursor sync needs to know whether
+    // editor lines map into the compile source.
+    if (studio?.sync?.lineOffset) {
+      studio.sync.lineOffset.setEditorTracksCompileSource(compileFile === currentFile)
     }
 
     // Build prelude for layout files; tokens/component files compile alone.
