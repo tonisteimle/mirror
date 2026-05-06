@@ -76,48 +76,55 @@ Btn as Button: bg $primary, col white, pad 10 16, rad 6, cursor pointer
   hover:
     opacity 0.9
 
+// Tab switcher — exclusive() keeps only one TabBtn selected at a time.
+TabBtn: pad 8 14, rad 6, bg transparent, col $muted, cursor pointer, weight 500, exclusive()
+  hover:
+    col white
+  selected:
+    bg $card, col white
+
 // State (used by InteractiveDetail)
 count: 0
 
-// Home view: Tab 1 = data-driven cards (each-loop over $features),
-// Tab 2 = hardcoded cards with navigation to distinct detail views.
+// Home view: TabBtns above two stacked frames; show()/hide() switches them.
+// Tab "Daten"      = three cards rendered from \$features via each-loop.
+// Tab "Navigation" = three hardcoded cards with distinct nav targets.
 Frame name HomeView, pad 24, gap $m, h full
   Text "Demo App", fs 20, weight bold
 
-  Tabs
-    TabList hor
-      TabTrigger "Daten"
-      TabTrigger "Navigation"
+  Frame hor, gap 4, bg #1a1a1a, pad 4, rad 8
+    TabBtn "Daten", show(DataView), hide(NavView), selected
+    TabBtn "Navigation", show(NavView), hide(DataView)
 
-    TabContent
-      each feature in $features
-        Card
-          Frame hor, gap $m, ver-center
-            Icon feature.icon, ic $primary, is 20
-            Text feature.title, fs 16, weight 500
-          Text feature.desc, col $muted, fs 14
-
-    TabContent
+  Frame name DataView, gap $m
+    each feature in $features
       Card
         Frame hor, gap $m, ver-center
-          Icon "home", ic $primary, is 20
-          Text "Willkommen", fs 16, weight 500
-        Text "Mehr Informationen anzeigen.", col $muted, fs 14
-        Btn "Mehr", navigate(WelcomeDetail)
+          Icon feature.icon, ic $primary, is 20
+          Text feature.title, fs 16, weight 500
+        Text feature.desc, col $muted, fs 14
 
-      Card
-        Frame hor, gap $m, ver-center
-          Icon "layers", ic $primary, is 20
-          Text "Komponenten", fs 16, weight 500
-        Text "Komponenten ansehen.", col $muted, fs 14
-        Btn "Mehr", navigate(ComponentsDetail)
+  Frame name NavView, gap $m, hidden
+    Card
+      Frame hor, gap $m, ver-center
+        Icon "home", ic $primary, is 20
+        Text "Willkommen", fs 16, weight 500
+      Text "Mehr Informationen anzeigen.", col $muted, fs 14
+      Btn "Mehr", navigate(WelcomeDetail)
 
-      Card
-        Frame hor, gap $m, ver-center
-          Icon "eye", ic $primary, is 20
-          Text "Live Preview", fs 16, weight 500
-        Text "Interaktive Demo.", col $muted, fs 14
-        Btn "Mehr", navigate(InteractiveDetail)
+    Card
+      Frame hor, gap $m, ver-center
+        Icon "layers", ic $primary, is 20
+        Text "Komponenten", fs 16, weight 500
+      Text "Komponenten ansehen.", col $muted, fs 14
+      Btn "Mehr", navigate(ComponentsDetail)
+
+    Card
+      Frame hor, gap $m, ver-center
+        Icon "eye", ic $primary, is 20
+        Text "Live Preview", fs 16, weight 500
+      Text "Interaktive Demo.", col $muted, fs 14
+      Btn "Mehr", navigate(InteractiveDetail)
 
 // Detail: Welcome
 Frame name WelcomeDetail, pad 24, gap $m, h full, hidden
