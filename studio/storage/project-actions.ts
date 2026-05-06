@@ -129,7 +129,7 @@ Frame name HomeView, pad 24, gap $m, h full
 // Detail: Welcome
 Frame name WelcomeDetail, pad 24, gap $m, h full, hidden
   Frame hor, gap $m, ver-center
-    Btn "← Zurück", back()
+    Btn "← Zurück", navigate(HomeView)
     Text "Willkommen", fs 20, weight bold
 
   Frame center, gap $m, grow
@@ -140,7 +140,7 @@ Frame name WelcomeDetail, pad 24, gap $m, h full, hidden
 // Detail: Komponenten
 Frame name ComponentsDetail, pad 24, gap $m, h full, hidden
   Frame hor, gap $m, ver-center
-    Btn "← Zurück", back()
+    Btn "← Zurück", navigate(HomeView)
     Text "Komponenten", fs 20, weight bold
 
   Card
@@ -158,7 +158,7 @@ Frame name ComponentsDetail, pad 24, gap $m, h full, hidden
 // Detail: Interaktiv (Counter + Toast)
 Frame name InteractiveDetail, pad 24, gap $m, h full, hidden
   Frame hor, gap $m, ver-center
-    Btn "← Zurück", back()
+    Btn "← Zurück", navigate(HomeView)
     Text "Live Preview", fs 20, weight bold
 
   Card

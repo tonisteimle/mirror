@@ -11,7 +11,7 @@
  * the source is imported, not duplicated.
  */
 
-import { testWithSetup, testWithSetupSkip, describe, type TestCase } from '../../test-runner'
+import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 import { DEFAULT_PROJECT } from '../../../storage/project-actions'
 
@@ -260,14 +260,8 @@ export const demoTabsTests: TestCase[] = describe('Demo Tabs + Navigation', [
   // back() returns to HomeView with the Navigation tab still selected
   // ---------------------------------------------------------------------------
 
-  // Skipped under the CDP runner: Mirror's `back()` action invokes the real
-  // window.history.back(), which navigates the test page away and severs
-  // the CDP connection ("Inspected target navigated or closed"). The
-  // behavior itself is verified manually + via the headed Playwright spike
-  // in /tmp; revisit when back() gains a non-history mode or the runner
-  // gains a navigation guard.
-  testWithSetupSkip(
-    'back() from a detail view returns to HomeView and preserves the Navigation tab',
+  testWithSetup(
+    'Zurück from a detail view returns to HomeView and preserves the Navigation tab',
     DEMO,
     async (api: TestAPI) => {
       await clickByText(api, 'Navigation')
