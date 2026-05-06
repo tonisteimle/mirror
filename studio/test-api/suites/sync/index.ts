@@ -16,6 +16,13 @@ export { rapidChangeTests } from './rapid-changes.test'
 export { edgeCaseTests } from './edge-cases.test'
 export { selectionPersistenceTests } from './selection-persistence.test'
 export { complexScenarioTests } from './complex-scenarios.test'
+export {
+  cursorToSelectionTests,
+  selectionToCursorTests,
+  roundTripSyncTests,
+  editPreservesSelectionTests,
+  multiFileSyncTests,
+} from './cursor-selection-sync.test'
 
 import { editorToPreviewTests } from './editor-to-preview.test'
 import { previewToEditorTests } from './preview-to-editor.test'
@@ -26,6 +33,13 @@ import { rapidChangeTests } from './rapid-changes.test'
 import { edgeCaseTests } from './edge-cases.test'
 import { selectionPersistenceTests } from './selection-persistence.test'
 import { complexScenarioTests } from './complex-scenarios.test'
+import {
+  cursorToSelectionTests,
+  selectionToCursorTests,
+  roundTripSyncTests,
+  editPreservesSelectionTests,
+  multiFileSyncTests,
+} from './cursor-selection-sync.test'
 
 export const allSyncTests: TestCase[] = [
   ...editorToPreviewTests,
@@ -37,4 +51,9 @@ export const allSyncTests: TestCase[] = [
   ...edgeCaseTests,
   ...selectionPersistenceTests,
   ...complexScenarioTests,
+  ...cursorToSelectionTests,
+  ...selectionToCursorTests,
+  ...roundTripSyncTests,
+  ...editPreservesSelectionTests,
+  ...multiFileSyncTests,
 ]
