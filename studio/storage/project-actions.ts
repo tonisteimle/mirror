@@ -51,6 +51,13 @@ export const EMPTY_PROJECT: Record<string, string> = {
 export const DEFAULT_PROJECT: Record<string, string> = {
   'index.mir': `canvas mobile, bg $surface, col white
 
+// Data
+features:
+  icon    title           desc
+  home    Willkommen      Dies ist ein Demo-Projekt.
+  layers  Komponenten     Baue wiederverwendbare UI-Bausteine.
+  eye     Live Preview    Änderungen sofort sehen.
+
 // Tokens
 primary.bg: #2271C1
 primary.ic: #2271C1
@@ -72,30 +79,41 @@ Btn as Button: bg $primary, col white, pad 10 16, rad 6, cursor pointer
 // State (used by InteractiveDetail)
 count: 0
 
-// Home view
+// Home view: Tab 1 = data-driven cards (each-loop over $features),
+// Tab 2 = hardcoded cards with navigation to distinct detail views.
 Frame name HomeView, pad 24, gap $m, h full
   Text "Demo App", fs 20, weight bold
 
-  Card
-    Frame hor, gap $m, ver-center
-      Icon "home", ic $primary, is 20
-      Text "Willkommen", fs 16, weight 500
-    Text "Dies ist ein Demo-Projekt.", col $muted, fs 14
-    Btn "Mehr", navigate(WelcomeDetail)
+  Tabs defaultValue "data"
+    Tab "Daten"
+      each feature in $features
+        Card
+          Frame hor, gap $m, ver-center
+            Icon feature.icon, ic $primary, is 20
+            Text feature.title, fs 16, weight 500
+          Text feature.desc, col $muted, fs 14
 
-  Card
-    Frame hor, gap $m, ver-center
-      Icon "layers", ic $primary, is 20
-      Text "Komponenten", fs 16, weight 500
-    Text "Baue wiederverwendbare UI-Bausteine.", col $muted, fs 14
-    Btn "Mehr", navigate(ComponentsDetail)
+    Tab "Navigation"
+      Card
+        Frame hor, gap $m, ver-center
+          Icon "home", ic $primary, is 20
+          Text "Willkommen", fs 16, weight 500
+        Text "Mehr Informationen anzeigen.", col $muted, fs 14
+        Btn "Mehr", navigate(WelcomeDetail)
 
-  Card
-    Frame hor, gap $m, ver-center
-      Icon "eye", ic $primary, is 20
-      Text "Live Preview", fs 16, weight 500
-    Text "Änderungen sofort sehen.", col $muted, fs 14
-    Btn "Mehr", navigate(InteractiveDetail)
+      Card
+        Frame hor, gap $m, ver-center
+          Icon "layers", ic $primary, is 20
+          Text "Komponenten", fs 16, weight 500
+        Text "Komponenten ansehen.", col $muted, fs 14
+        Btn "Mehr", navigate(ComponentsDetail)
+
+      Card
+        Frame hor, gap $m, ver-center
+          Icon "eye", ic $primary, is 20
+          Text "Live Preview", fs 16, weight 500
+        Text "Interaktive Demo.", col $muted, fs 14
+        Btn "Mehr", navigate(InteractiveDetail)
 
 // Detail: Welcome
 Frame name WelcomeDetail, pad 24, gap $m, h full, hidden
