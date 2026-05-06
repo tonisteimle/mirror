@@ -49,11 +49,14 @@ export const EMPTY_PROJECT: Record<string, string> = {
 // → Canvas. Multi-file demo (`tokens.tok` / `components.com` / `data.yaml`)
 // returns when multi-file infrastructure is reactivated.
 export const DEFAULT_PROJECT: Record<string, string> = {
-  'index.mir': `// Data
+  'index.mir': `canvas mobile, bg $surface, col white
+
+// Data
 features:
-  icon "home",   title "Willkommen",    desc "Dies ist ein Demo-Projekt."
-  icon "layers", title "Komponenten",   desc "Baue wiederverwendbare UI-Bausteine."
-  icon "eye",    title "Live Preview",  desc "Änderungen sofort sehen."
+  icon    title           desc
+  home    Willkommen      Dies ist ein Demo-Projekt.
+  layers  Komponenten     Baue wiederverwendbare UI-Bausteine.
+  eye     Live Preview    Änderungen sofort sehen.
 
 // Tokens
 primary.bg: #2271C1
@@ -73,12 +76,9 @@ Btn as Button: bg $primary, col white, pad 10 16, rad 6, cursor pointer
   hover:
     opacity 0.9
 
-// Canvas
-Frame bg $surface, col white, pad 24, gap $m, h full
-
-  Frame hor, spread, ver-center
-    Text "Demo App", fs 20, weight bold
-    Icon "settings", ic $muted
+// Home view
+Frame name HomeView, pad 24, gap $m, h full
+  Text "Demo App", fs 20, weight bold
 
   each feature in $features
     Card
@@ -86,7 +86,17 @@ Frame bg $surface, col white, pad 24, gap $m, h full
         Icon feature.icon, ic $primary, is 20
         Text feature.title, fs 16, weight 500
       Text feature.desc, col $muted, fs 14
-      Btn "Mehr"`,
+      Btn "Mehr", navigate(DetailView)
+
+// Detail view (opens when "Mehr" is tapped)
+Frame name DetailView, pad 24, gap $m, h full, hidden
+  Frame hor, gap $m, ver-center
+    Btn "← Zurück", back()
+    Text "Details", fs 20, weight bold
+
+  Card
+    Text "Mehr Informationen", fs 16, weight 500
+    Text "Hier kommt der Detail-Inhalt für das gewählte Feature.", col $muted, fs 14`,
 }
 
 // =============================================================================
