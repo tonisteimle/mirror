@@ -51,7 +51,18 @@ const patterns: TokenPattern[] = [
     regex: /\b(show|hide|toggle|select|highlight|activate|deactivate|call|open|close|page)\b/g,
     class: 'mir-action',
   },
-  { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, class: 'mir-component' },
+  // Component identifiers only in valid component positions, NOT every
+  // capitalized word — otherwise data values like `Willkommen` or
+  // `Live Preview` inside a table-data block paint blue and look like
+  // component calls. Four narrow patterns cover the real call sites:
+  //   - Start of an (indented) line: `Frame ...`, `Card`, `Btn "Save"`
+  //   - After `as ` (inheritance): `Btn as Button`
+  //   - After `name ` (Frame naming): `Frame name HomeView`
+  //   - Inside parens (function args): `navigate(WelcomeDetail)`
+  { regex: /(?<=^[ \t]*)[A-Z][a-zA-Z0-9_]*/gm, class: 'mir-component' },
+  { regex: /(?<=\bas )[A-Z][a-zA-Z0-9_]*/g, class: 'mir-component' },
+  { regex: /(?<=\bname )[A-Z][a-zA-Z0-9_]*/g, class: 'mir-component' },
+  { regex: /(?<=\()[A-Z][a-zA-Z0-9_]*/g, class: 'mir-component' },
   { regex: /\$[a-zA-Z][a-zA-Z0-9.-]*/g, class: 'mir-binding' },
 ]
 
