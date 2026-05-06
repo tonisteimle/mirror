@@ -11,12 +11,14 @@ export { collectionTests } from './collections.test'
 export { conditionalTests } from './conditionals.test'
 export { tokenTests } from './tokens.test'
 export { inputBindingTests } from './input-binding.test'
+export { tableSyntaxTests } from './table-syntax.test'
 
 import { variableTests } from './variables.test'
 import { collectionTests } from './collections.test'
 import { conditionalTests } from './conditionals.test'
 import { tokenTests } from './tokens.test'
 import { inputBindingTests } from './input-binding.test'
+import { tableSyntaxTests } from './table-syntax.test'
 
 export const allDataBindingTests: TestCase[] = [
   ...variableTests,
@@ -24,4 +26,5 @@ export const allDataBindingTests: TestCase[] = [
   ...conditionalTests,
   ...tokenTests,
   ...inputBindingTests,
+  ...tableSyntaxTests,
 ]

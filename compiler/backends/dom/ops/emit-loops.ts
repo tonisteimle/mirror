@@ -139,12 +139,20 @@ export function emitConditionalTemplateNode(
         'currentColor'
       const iconWeight =
         iconWeightProp?.value || node.styles.find(s => s.property === 'strokeWidth')?.value || '2'
-      this.emit(`${varName}.dataset.iconSize = '${String(iconSize).replace('px', '')}'`)
-      this.emit(`${varName}.dataset.iconColor = '${iconColor}'`)
-      this.emit(`${varName}.dataset.iconWeight = '${iconWeight}'`)
-      // Route through resolveContentValue so __loopVar:feature.icon becomes
-      // the unquoted JS reference `feature.icon` (loop closure var) instead
-      // of a literal string the runtime sanitizer would drop.
+      // resolveContentValue handles both literals (quoted) and loop-var
+      // markers (unquoted JS reference). Without it, `ic feature.accent`
+      // would emit dataset.iconColor = '__loopVar:feature.accent' as a
+      // literal — same bug class as the icon-name issue, on a different
+      // property. Strip the trailing 'px' from numeric sizes before
+      // resolving so 16/16px round-trips don't introduce stray characters.
+      const sizeStr = String(iconSize).replace('px', '')
+      this.emit(`${varName}.dataset.iconSize = String(${this.resolveContentValue(sizeStr)})`)
+      this.emit(
+        `${varName}.dataset.iconColor = String(${this.resolveContentValue(String(iconColor))})`
+      )
+      this.emit(
+        `${varName}.dataset.iconWeight = String(${this.resolveContentValue(String(iconWeight))})`
+      )
       this.emit(`_runtime.loadIcon(${varName}, ${this.resolveContentValue(iconName)})`)
     }
   }
@@ -316,11 +324,18 @@ export function emitEachTemplateNodeContent(
         'currentColor'
       const iconWeight =
         iconWeightProp?.value || node.styles.find(s => s.property === 'strokeWidth')?.value || '2'
-      this.emit(`${varName}.dataset.iconSize = '${String(iconSize).replace('px', '')}'`)
-      this.emit(`${varName}.dataset.iconColor = '${iconColor}'`)
-      this.emit(`${varName}.dataset.iconWeight = '${iconWeight}'`)
-      // See note above: route through resolveContentValue so loop-var icons
-      // resolve to the closure variable instead of a literal marker string.
+      // See note in the first emit-loops icon block above — same fix for the
+      // template-clone path: route every icon-* dataset write through
+      // resolveContentValue so loop-var bindings (`is f.size`, `ic f.color`,
+      // `Icon f.icon`) resolve to closure refs instead of literal markers.
+      const sizeStr = String(iconSize).replace('px', '')
+      this.emit(`${varName}.dataset.iconSize = String(${this.resolveContentValue(sizeStr)})`)
+      this.emit(
+        `${varName}.dataset.iconColor = String(${this.resolveContentValue(String(iconColor))})`
+      )
+      this.emit(
+        `${varName}.dataset.iconWeight = String(${this.resolveContentValue(String(iconWeight))})`
+      )
       this.emit(`_runtime.loadIcon(${varName}, ${this.resolveContentValue(iconName)})`)
     }
   }

@@ -28,6 +28,7 @@ import { screenNavigationTests } from './screen-navigation.test'
 import { complexLayoutTests } from './complex-layout.test'
 import { fileSwitchingTests } from './file-switching.test'
 import { tokensSidebarTests } from './tokens-sidebar.test'
+import { demoTabsTests } from './demo-tabs.test'
 
 export {
   allEmptyProjectTests,
@@ -41,6 +42,7 @@ export {
   complexLayoutTests,
   fileSwitchingTests,
   tokensSidebarTests,
+  demoTabsTests,
 }
 
 export const allProjectTests: TestSuite = [
@@ -50,6 +52,7 @@ export const allProjectTests: TestSuite = [
   ...screenNavigationTests,
   ...complexLayoutTests,
   ...fileSwitchingTests,
+  ...demoTabsTests,
   // MVP single-file mode: tokens sidebar (design-system panel) is
   // deactivated. Re-include when the panel returns.
   // ...tokensSidebarTests,
