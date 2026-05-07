@@ -23,7 +23,7 @@
 
   <!-- Tom Select CSS -->
   <link rel="stylesheet" href="https://esm.sh/tom-select@2.4.3/dist/css/tom-select.default.min.css">
-  <link rel="stylesheet" href="styles.css?v=229">
+  <link rel="stylesheet" href="styles.css?v=230">
   <!-- Mirror Default Styles (for preview) -->
   <link rel="stylesheet" href="dist/mirror-defaults.css?v=1">
 </head>
@@ -55,9 +55,9 @@
     <div class="panel editor-panel" style="position: relative;">
       <div class="editor-header">
         <div class="editor-file-tabs" id="editor-file-tabs">
-          <button class="editor-file-tab" data-file="data.data">Daten</button>
-          <button class="editor-file-tab" data-file="tokens.tok">Tokens</button>
-          <button class="editor-file-tab" data-file="components.com">Komponenten</button>
+          <button class="editor-file-tab" data-file="data.mir">Daten</button>
+          <button class="editor-file-tab" data-file="tokens.mir">Tokens</button>
+          <button class="editor-file-tab" data-file="components.mir">Komponenten</button>
           <button class="editor-file-tab active" data-file="app.mir">Anwendung</button>
         </div>
         <div class="editor-actions">
@@ -126,6 +126,13 @@
               <polygon points="5,3 19,12 5,21"></polygon>
             </svg>
           </button>
+          <button class="export-toolbar-btn" id="export-btn" title="Export → React/Vue/Svelte/Vanilla via AI">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </button>
         </div>
       </div>
       <div id="preview"></div>
@@ -159,6 +166,6 @@
   <script type="module" src="dist/dialog.js?v=2"></script>
   <script type="module" src="dist/tauri-bridge.js?v=2"></script>
   <script type="module" src="dist/desktop-files.js?v=2"></script>
-  <script type="module" src="dist/app.js?v=18"></script>
+  <script type="module" src="dist/app.js?v=19"></script>
 </body>
 </html>

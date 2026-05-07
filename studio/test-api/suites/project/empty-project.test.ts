@@ -13,7 +13,7 @@ import { test, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 import { EMPTY_PROJECT, DEFAULT_PROJECT } from '../../../storage/project-actions'
 
-const EXPECTED_FILES = ['data.data', 'tokens.tok', 'components.com', 'app.mir'] as const
+const EXPECTED_FILES = ['data.mir', 'tokens.mir', 'components.mir', 'app.mir'] as const
 
 // =============================================================================
 // Helper Functions
@@ -50,15 +50,15 @@ export const emptyProjectConstantTests: TestCase[] = describe('Empty Project - C
   }),
 
   test('EMPTY_PROJECT exposes a tokens slot', async (api: TestAPI) => {
-    api.assert.ok('tokens.tok' in EMPTY_PROJECT, 'tokens.tok slot must exist')
+    api.assert.ok('tokens.mir' in EMPTY_PROJECT, 'tokens.mir slot must exist')
   }),
 
   test('EMPTY_PROJECT exposes a components slot', async (api: TestAPI) => {
-    api.assert.ok('components.com' in EMPTY_PROJECT, 'components.com slot must exist')
+    api.assert.ok('components.mir' in EMPTY_PROJECT, 'components.mir slot must exist')
   }),
 
   test('EMPTY_PROJECT exposes a data slot', async (api: TestAPI) => {
-    api.assert.ok('data.data' in EMPTY_PROJECT, 'data.data slot must exist')
+    api.assert.ok('data.mir' in EMPTY_PROJECT, 'data.mir slot must exist')
   }),
 
   test('DEFAULT_PROJECT app.mir has more content than EMPTY_PROJECT', async (api: TestAPI) => {
@@ -147,9 +147,9 @@ export const emptyProjectStorageTests: TestCase[] = describe('Empty Project - St
 
   test('EMPTY_PROJECT matches the four-file empty structure', async (api: TestAPI) => {
     const expected: Record<string, string> = {
-      'data.data': '',
-      'tokens.tok': '',
-      'components.com': '',
+      'data.mir': '',
+      'tokens.mir': '',
+      'components.mir': '',
       'app.mir': '',
     }
     api.assert.equals(

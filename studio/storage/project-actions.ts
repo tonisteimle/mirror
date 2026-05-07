@@ -36,12 +36,14 @@ export type ProjectType = 'empty' | 'demo'
 // =============================================================================
 
 // Minimal project: four empty files matching the editor's four tabs.
-// Order is fixed (data → tokens → components → app) so the prelude
-// concatenation stays correct on compile.
+// Multi-File-Roadmap: all files use the unified `.mir` extension. The
+// compiler classifies content (not filenames), so naming is purely
+// convention. The four canonical names are preserved as a familiar
+// starting structure — the user can rename or add files freely.
 export const EMPTY_PROJECT: Record<string, string> = {
-  'data.data': '',
-  'tokens.tok': '',
-  'components.com': '',
+  'data.mir': '',
+  'tokens.mir': '',
+  'components.mir': '',
   'app.mir': '',
 }
 
@@ -50,12 +52,14 @@ export const EMPTY_PROJECT: Record<string, string> = {
 // =============================================================================
 
 // Multi-file demo project: each file maps 1:1 to one editor tab.
-// Order matters for the compiler prelude: data → tokens → components are
-// concatenated in front of the layout (app.mir) at compile time. The
-// 4-tab UI is just a switcher over these four files; on a Tauri desktop
-// install they live as four real files in the project folder.
+// Multi-File-Roadmap: all files use the unified `.mir` extension; the
+// compiler classifies definitions by content (token-suffix, capitalized
+// component definition, lowercase data object, element instance) and
+// loads them in the canonical phase order (data → tokens → components →
+// layouts). The four canonical names are convention; users can rename or
+// add files freely.
 export const DEFAULT_PROJECT: Record<string, string> = {
-  'data.data': `// Cards for the Daten tab — table form: header row + data rows.
+  'data.mir': `// Cards for the Daten tab — table form: header row + data rows.
 // Position-based parsing means values can be unquoted identifiers
 // (home, layers, eye) or multi-word strings (Live Preview).
 features:
@@ -67,7 +71,7 @@ features:
 // Counter state used by the Interactive detail view.
 count: 0`,
 
-  'tokens.tok': `// Design Tokens
+  'tokens.mir': `// Design Tokens
 
 // Background Colors
 primary.bg: #2271C1
@@ -88,7 +92,7 @@ m.gap: 12
 // Radius
 radius.rad: 8`,
 
-  'components.com': `// Reusable component definitions.
+  'components.mir': `// Reusable component definitions.
 
 // Card — surface for grouped content.
 Card: bg $card, pad $m, rad $radius, gap 8

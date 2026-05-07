@@ -3,14 +3,14 @@
  *
  * Validates the four-tab switcher above the editor (Data / Tokens /
  * Components / Site). The tabs are 1:1 mapped to four files
- * (data.data / tokens.tok / components.com / app.mir) and clicking one
+ * (data.mir / tokens.mir / components.mir / app.mir) and clicking one
  * triggers the existing switchFile() flow: save current file, swap to
  * the target file, recompile.
  *
  * Multi-file setup pattern (cf. project/file-switching.test.ts):
  * each test seeds window.files directly and uses the bare test() form
  * — testWithSetup() only loads ONE file into the editor and would
- * leave data.data / tokens.tok / components.com empty.
+ * leave data.mir / tokens.mir / components.mir empty.
  */
 
 import { test, describe, type TestCase } from '../../test-runner'
@@ -21,8 +21,9 @@ import { DEFAULT_PROJECT } from '../../../storage/project-actions'
 // HELPERS
 // =============================================================================
 
-const TAB_FILES = ['data.data', 'tokens.tok', 'components.com', 'app.mir'] as const
-const TAB_LABELS = ['Data', 'Tokens', 'Components', 'Site'] as const
+const TAB_FILES = ['data.mir', 'tokens.mir', 'components.mir', 'app.mir'] as const
+// Labels are German because the studio UI is German.
+const TAB_LABELS = ['Daten', 'Tokens', 'Komponenten', 'Anwendung'] as const
 
 interface MirrorWindow extends Window {
   files: Record<string, string>
@@ -64,16 +65,29 @@ function getEditorText(): string {
 /**
  * Seed all four files in window.files (and the desktop-files cache,
  * which the prelude collector also reads) so the tab-switcher has real
- * content to swap between. Mirrors the seeding pattern in
- * project/file-switching.test.ts so multi-file behavior is exercised.
+ * content to swap between.
+ *
+ * Critical: also load the *currently active file*'s content into the
+ * editor. switchFile() saves the current editor buffer back into
+ * `files[currentFile]` before swapping — if the editor is empty (e.g.
+ * after a fresh resetTestState wipe), the first clickTab() would
+ * overwrite the just-seeded content with the empty buffer and the round-
+ * trip test would observe missing content on its way back.
  */
 function seedAllFour(): void {
-  const w = window as unknown as MirrorWindow
+  const w = window as unknown as MirrorWindow & { getCurrentFile?: () => string }
   for (const file of TAB_FILES) {
     const content = (DEFAULT_PROJECT as Record<string, string>)[file] ?? ''
     w.files[file] = content
     w.desktopFiles?.updateFileCache?.(file, content)
   }
+  // Sync editor with the active file so switchFile's pre-swap save doesn't
+  // clobber that file's seeded content.
+  const active = w.getCurrentFile?.() ?? 'app.mir'
+  const activeContent = w.files[active] ?? ''
+  w.editor.dispatch({
+    changes: { from: 0, to: w.editor.state.doc.length, insert: activeContent },
+  })
 }
 
 // =============================================================================
@@ -114,10 +128,10 @@ export const editorFileTabsTests: TestCase[] = describe('Editor File Tabs', [
   // Click round-trip: each tab swaps active state + editor content
   // ---------------------------------------------------------------------------
 
-  test('clicking the Tokens tab loads tokens.tok into the editor', async (api: TestAPI) => {
+  test('clicking the Tokens tab loads tokens.mir into the editor', async (api: TestAPI) => {
     seedAllFour()
-    clickTab('tokens.tok')
-    await api.utils.waitUntil(() => activeTab() === 'tokens.tok', 2000)
+    clickTab('tokens.mir')
+    await api.utils.waitUntil(() => activeTab() === 'tokens.mir', 2000)
 
     const text = getEditorText()
     if (!text.includes('primary.bg')) {
@@ -128,10 +142,10 @@ export const editorFileTabsTests: TestCase[] = describe('Editor File Tabs', [
     }
   }),
 
-  test('clicking the Daten tab loads data.data into the editor', async (api: TestAPI) => {
+  test('clicking the Daten tab loads data.mir into the editor', async (api: TestAPI) => {
     seedAllFour()
-    clickTab('data.data')
-    await api.utils.waitUntil(() => activeTab() === 'data.data', 2000)
+    clickTab('data.mir')
+    await api.utils.waitUntil(() => activeTab() === 'data.mir', 2000)
 
     const text = getEditorText()
     if (!text.includes('features:')) {
@@ -139,10 +153,10 @@ export const editorFileTabsTests: TestCase[] = describe('Editor File Tabs', [
     }
   }),
 
-  test('clicking the Komponenten tab loads components.com into the editor', async (api: TestAPI) => {
+  test('clicking the Komponenten tab loads components.mir into the editor', async (api: TestAPI) => {
     seedAllFour()
-    clickTab('components.com')
-    await api.utils.waitUntil(() => activeTab() === 'components.com', 2000)
+    clickTab('components.mir')
+    await api.utils.waitUntil(() => activeTab() === 'components.mir', 2000)
 
     const text = getEditorText()
     if (!text.includes('Card:') && !text.includes('Btn ')) {
@@ -153,19 +167,28 @@ export const editorFileTabsTests: TestCase[] = describe('Editor File Tabs', [
   test('switching Daten → Anwendung → Daten preserves the round-trip content', async (api: TestAPI) => {
     seedAllFour()
 
-    clickTab('data.data')
-    await api.utils.waitUntil(() => activeTab() === 'data.data', 2000)
+    clickTab('data.mir')
+    await api.utils.waitUntil(
+      () => activeTab() === 'data.mir' && getEditorText().includes('features:'),
+      2000
+    )
     const dataBefore = getEditorText().replace(/\s+/g, '')
 
     clickTab('app.mir')
-    await api.utils.waitUntil(() => activeTab() === 'app.mir', 2000)
+    await api.utils.waitUntil(
+      () => activeTab() === 'app.mir' && getEditorText().includes('HomeView'),
+      2000
+    )
     const appText = getEditorText()
     if (!appText.includes('HomeView')) {
       throw new Error(`app.mir should contain HomeView; got: "${appText.slice(0, 120)}"`)
     }
 
-    clickTab('data.data')
-    await api.utils.waitUntil(() => activeTab() === 'data.data', 2000)
+    clickTab('data.mir')
+    await api.utils.waitUntil(
+      () => activeTab() === 'data.mir' && getEditorText().includes('features:'),
+      2000
+    )
     const dataAfter = getEditorText().replace(/\s+/g, '')
     if (dataAfter !== dataBefore) {
       throw new Error(
@@ -181,8 +204,8 @@ export const editorFileTabsTests: TestCase[] = describe('Editor File Tabs', [
   test('editing on Tokens tab + switching to Anwendung + back preserves the edit', async (api: TestAPI) => {
     seedAllFour()
 
-    clickTab('tokens.tok')
-    await api.utils.waitUntil(() => activeTab() === 'tokens.tok', 2000)
+    clickTab('tokens.mir')
+    await api.utils.waitUntil(() => activeTab() === 'tokens.mir', 2000)
 
     // Append a fresh token line via setCode so the change goes through
     // the same path as a real edit.
@@ -199,8 +222,8 @@ export const editorFileTabsTests: TestCase[] = describe('Editor File Tabs', [
       throw new Error('Tokens edit leaked into app.mir editor view')
     }
 
-    clickTab('tokens.tok')
-    await api.utils.waitUntil(() => activeTab() === 'tokens.tok', 2000)
+    clickTab('tokens.mir')
+    await api.utils.waitUntil(() => activeTab() === 'tokens.mir', 2000)
     const reloaded = getEditorText()
     if (!reloaded.includes('edit-marker.col')) {
       throw new Error(

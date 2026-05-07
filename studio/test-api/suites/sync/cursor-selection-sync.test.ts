@@ -30,7 +30,7 @@ const SYNC_SETTLE_MS = 200
 // HELPERS — multi-file seeding (cf. editor/file-tabs.test.ts)
 // =============================================================================
 
-const TAB_FILES = ['data.data', 'tokens.tok', 'components.com', 'app.mir'] as const
+const TAB_FILES = ['data.mir', 'tokens.mir', 'components.mir', 'app.mir'] as const
 
 interface MirrorWindow extends Window {
   files: Record<string, string>
@@ -351,7 +351,7 @@ export const editPreservesSelectionTests: TestCase[] = describe('Sync: Edits Pre
 // MULTI-FILE: preview-redirect + tab-switch sync edge-cases
 //
 // In the four-file project the preview shows app.mir while the editor can
-// sit on data.data / tokens.tok / components.com. Selection sync must:
+// sit on data.mir / tokens.mir / components.mir. Selection sync must:
 //   - clicking a preview node while editor is on a NON-app file should
 //     either jump to app.mir + cursor, or no-op cleanly (never throw).
 //   - switching tabs must NOT leave a stale selection pointing at a node
@@ -385,7 +385,7 @@ export const multiFileSyncTests: TestCase[] = describe('Sync: Multi-File', [
     }
   }),
 
-  test('Switching from app.mir to tokens.tok clears or reanchors selection cleanly', async (api: TestAPI) => {
+  test('Switching from app.mir to tokens.mir clears or reanchors selection cleanly', async (api: TestAPI) => {
     try {
       await bounceSeedAndLoad(api, 'app.mir')
       await api.utils.delay(SYNC_SETTLE_MS)
@@ -397,8 +397,8 @@ export const multiFileSyncTests: TestCase[] = describe('Sync: Multi-File', [
         await api.utils.delay(SYNC_SETTLE_MS)
       }
 
-      clickEditorTab('tokens.tok')
-      await api.utils.waitUntil(() => activeEditorTab() === 'tokens.tok', 2000)
+      clickEditorTab('tokens.mir')
+      await api.utils.waitUntil(() => activeEditorTab() === 'tokens.mir', 2000)
       await api.utils.waitForCompile()
       await api.utils.delay(SYNC_SETTLE_MS)
 
@@ -407,21 +407,21 @@ export const multiFileSyncTests: TestCase[] = describe('Sync: Multi-File', [
       const editorLineCount = api.editor.getCode().split('\n').length
       api.assert.ok(
         cur.line >= 1 && cur.line <= editorLineCount,
-        `Cursor must remain inside tokens.tok bounds [1..${editorLineCount}], got line ${cur.line} (sel=${sel})`
+        `Cursor must remain inside tokens.mir bounds [1..${editorLineCount}], got line ${cur.line} (sel=${sel})`
       )
     } finally {
       await restoreSingleFileState(api)
     }
   }),
 
-  test('Editor on tokens.tok: cursor moves on tokens lines must NOT highlight a layout node', async (api: TestAPI) => {
+  test('Editor on tokens.mir: cursor moves on tokens lines must NOT highlight a layout node', async (api: TestAPI) => {
     try {
-      await bounceSeedAndLoad(api, 'tokens.tok')
+      await bounceSeedAndLoad(api, 'tokens.mir')
       await api.utils.delay(SYNC_SETTLE_MS)
 
       const code = api.editor.getCode()
       const tokenLineIndex = code.split('\n').findIndex(l => /^[a-z][\w.-]*\.\w+:/i.test(l.trim()))
-      api.assert.ok(tokenLineIndex >= 0, 'tokens.tok must contain at least one token line')
+      api.assert.ok(tokenLineIndex >= 0, 'tokens.mir must contain at least one token line')
 
       api.editor.setCursor(tokenLineIndex + 1, 1)
       await api.utils.delay(SYNC_SETTLE_MS)
@@ -447,8 +447,8 @@ export const multiFileSyncTests: TestCase[] = describe('Sync: Multi-File', [
       const cursorBefore = api.editor.getCursor().line
       api.assert.equals(cursorBefore, appLineCount, 'cursor parked at end of app.mir')
 
-      clickEditorTab('tokens.tok')
-      await api.utils.waitUntil(() => activeEditorTab() === 'tokens.tok', 2000)
+      clickEditorTab('tokens.mir')
+      await api.utils.waitUntil(() => activeEditorTab() === 'tokens.mir', 2000)
       await api.utils.delay(SYNC_SETTLE_MS)
 
       const tokensLineCount = api.editor.getCode().split('\n').length
@@ -456,7 +456,7 @@ export const multiFileSyncTests: TestCase[] = describe('Sync: Multi-File', [
 
       api.assert.ok(
         cursorAfter <= tokensLineCount,
-        `Cursor (line ${cursorAfter}) must be inside tokens.tok (max ${tokensLineCount}). ` +
+        `Cursor (line ${cursorAfter}) must be inside tokens.mir (max ${tokensLineCount}). ` +
           `If this fails the previous tab's cursor leaked across the file switch.`
       )
     } finally {
