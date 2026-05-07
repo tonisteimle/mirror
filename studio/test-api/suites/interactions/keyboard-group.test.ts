@@ -147,4 +147,57 @@ export const keyboardGroupTests: TestCase[] = describe('Cmd+G grouping', [
       )
     }
   ),
+
+  testWithSetup(
+    'Cmd+G then Cmd+Z reverts to original source',
+    'Frame ver, gap 8\n  Text "A"\n  Text "B"\n  Text "C"',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      const codeBefore = api.editor.getCode()
+
+      await multiSelect(api, ['node-2', 'node-3'])
+      await api.interact.pressKey('g', { meta: true })
+      await api.utils.waitForCompile()
+
+      // Source is now grouped — sanity check.
+      api.assert.ok(
+        api.editor.getCode().includes('Box ver'),
+        'Cmd+G should have produced a Box wrapper'
+      )
+
+      // Undo via Cmd+Z.
+      await api.interact.pressKey('z', { meta: true })
+      await api.utils.waitForCompile()
+
+      const codeAfter = api.editor.getCode()
+      api.assert.ok(
+        codeAfter === codeBefore,
+        `Cmd+Z should restore the pre-group source.\n--- Expected ---\n${codeBefore}\n--- Actual ---\n${codeAfter}`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'Cmd+G clears the multi-selection after grouping',
+    'Frame ver, gap 8\n  Text "A"\n  Text "B"',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      await multiSelect(api, ['node-2', 'node-3'])
+
+      const multiBefore = api.studio.getMultiSelection?.() || []
+      api.assert.ok(
+        multiBefore.length === 2,
+        `Setup: should have 2 in multi, got ${multiBefore.length}`
+      )
+
+      await api.interact.pressKey('g', { meta: true })
+      await api.utils.waitForCompile()
+
+      const multiAfter = api.studio.getMultiSelection?.() || []
+      api.assert.ok(
+        multiAfter.length === 0,
+        `Multi-selection should be cleared after group, got ${multiAfter.length} items`
+      )
+    }
+  ),
 ])
