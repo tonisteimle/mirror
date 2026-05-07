@@ -29,13 +29,8 @@ import {
   actions,
   events,
   executor,
-  getLayoutService,
-  handleSnapSettings,
-  SetPositionCommand,
-  SetPropertyCommand,
   InsertComponentCommand,
   type CommandContext,
-  type HandleMode,
 } from '../core'
 import {
   executeGroup,
@@ -46,8 +41,15 @@ import {
   executeSetFullDimension,
   executeWrapWithLayout,
   executeToggleSpread,
+  type ActionResult,
 } from './shared-actions'
-import { isAbsoluteLayoutContainer } from '../code-modifier/utils/layout-detection'
+import {
+  isArrowKey,
+  isInAbsoluteContainer,
+  handleArrowMove,
+  type PositionArrowContext,
+} from './keyboard/position-arrow'
+import { handleSpacingArrow } from './keyboard/spacing-arrow'
 import { createLogger } from '../../compiler/utils/logger'
 
 const log = createLogger('KeyboardHandler')
@@ -276,16 +278,16 @@ export class KeyboardHandler {
 
     // Arrow keys: in spacing mode → adjust spacing. Otherwise: move element
     // (when in an absolute container).
-    if (this.isArrowKey(e.key)) {
+    if (isArrowKey(e.key)) {
       const nodeId = state.get().selection?.nodeId
       if (nodeId && isSpacingMode) {
         e.preventDefault()
-        this.handleSpacingArrow(e, handleMode, nodeId)
+        handleSpacingArrow(this.spacingCtx(), e, handleMode, nodeId)
         return
       }
-      if (nodeId && this.isInAbsoluteContainer(nodeId)) {
+      if (nodeId && isInAbsoluteContainer(this.positionCtx(), nodeId)) {
         e.preventDefault()
-        this.handleArrowMove(e, nodeId)
+        handleArrowMove(this.positionCtx(), e, nodeId)
         return
       }
     }
@@ -365,196 +367,21 @@ export class KeyboardHandler {
   }
 
   /**
-   * Check if a key is an arrow key
+   * Build the position-arrow context bag. Carries the things the
+   * extracted module needs (container ref, node-id attribute name,
+   * command-context accessor) without exposing the rest of the class.
    */
-  private isArrowKey(key: string): boolean {
-    return ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)
-  }
-
-  /**
-   * Check if an element is in an absolute container (pos/stacked layout)
-   * Uses LayoutService for cached lookups, with DOM fallback.
-   */
-  private isInAbsoluteContainer(nodeId: string): boolean {
-    // Try LayoutService first (cached, O(1))
-    const layoutService = getLayoutService()
-    if (layoutService) {
-      const layout = layoutService.getLayout(nodeId)
-      if (layout) {
-        // Element itself is absolutely positioned
-        if (layout.isAbsolute) {
-          return true
-        }
-        // Check parent's layout
-        if (layout.parentId) {
-          const parentLayout = layoutService.getLayout(layout.parentId)
-          if (parentLayout && parentLayout.isAbsolute) {
-            return true
-          }
-        }
-      }
-    }
-
-    // Fallback to DOM reads
-    const element = this.container.querySelector(
-      `[${this.nodeIdAttribute}="${nodeId}"]`
-    ) as HTMLElement | null
-    if (!element) return false
-
-    const parent = element.parentElement
-    if (!parent) return false
-
-    // Use centralized layout detection
-    if (isAbsoluteLayoutContainer(parent)) {
-      return true
-    }
-
-    // Also check if element itself has absolute positioning
-    const style = window.getComputedStyle(element)
-    if (style.position === 'absolute') {
-      return true
-    }
-
-    return false
-  }
-
-  /**
-   * Get current position of an element
-   *
-   * Priority:
-   * 1. LayoutService cache (fast, already computed)
-   * 2. data-x/data-y attributes (from DSL, most accurate)
-   * 3. computed left/top (for CSS-positioned elements)
-   * 4. getBoundingClientRect relative to parent (fallback for any layout)
-   *
-   * IMPORTANT: Never default to (0,0) as this can cause unexpected jumps
-   */
-  private getCurrentPosition(nodeId: string): { x: number; y: number } | null {
-    // Priority 1: Try LayoutService cache first (fastest, O(1))
-    const layoutService = getLayoutService()
-    if (layoutService) {
-      const layout = layoutService.getLayout(nodeId)
-      if (layout) {
-        return { x: Math.round(layout.x), y: Math.round(layout.y) }
-      }
-    }
-
-    // Fallback to DOM reads
-    const element = this.container.querySelector(
-      `[${this.nodeIdAttribute}="${nodeId}"]`
-    ) as HTMLElement | null
-    if (!element) return null
-
-    // Priority 2: Try to read from data attributes (set by DSL)
-    const dataX = element.dataset.x
-    const dataY = element.dataset.y
-    if (dataX !== undefined && dataY !== undefined) {
-      const x = parseInt(dataX, 10)
-      const y = parseInt(dataY, 10)
-      // Only use data attributes if they're valid numbers
-      if (!isNaN(x) && !isNaN(y)) {
-        return { x, y }
-      }
-    }
-
-    // Priority 3: Try computed style left/top
-    const style = window.getComputedStyle(element)
-    const computedLeft = style.left
-    const computedTop = style.top
-
-    // Check if left/top are set (not 'auto' or empty)
-    if (computedLeft && computedLeft !== 'auto' && computedTop && computedTop !== 'auto') {
-      const x = parseFloat(computedLeft)
-      const y = parseFloat(computedTop)
-      if (!isNaN(x) && !isNaN(y)) {
-        return { x: Math.round(x), y: Math.round(y) }
-      }
-    }
-
-    // Priority 4: Fall back to getBoundingClientRect relative to parent
-    // This works for any layout, including elements without explicit positioning
-    const parent = element.parentElement
-    if (parent) {
-      const elementRect = element.getBoundingClientRect()
-      const parentRect = parent.getBoundingClientRect()
-      return {
-        x: Math.round(elementRect.left - parentRect.left),
-        y: Math.round(elementRect.top - parentRect.top),
-      }
-    }
-
-    // Final fallback: relative to container
-    const elementRect = element.getBoundingClientRect()
-    const containerRect = this.container.getBoundingClientRect()
+  private positionCtx(): PositionArrowContext {
     return {
-      x: Math.round(elementRect.left - containerRect.left),
-      y: Math.round(elementRect.top - containerRect.top),
+      container: this.container,
+      nodeIdAttribute: this.nodeIdAttribute,
+      getCommandContext: this.getCommandContext,
     }
   }
 
-  /**
-   * Handle arrow key movement
-   */
-  private handleArrowMove(e: KeyboardEvent, nodeId: string): void {
-    const step = e.shiftKey ? 10 : 1
-
-    let dx = 0
-    let dy = 0
-    switch (e.key) {
-      case 'ArrowUp':
-        dy = -step
-        break
-      case 'ArrowDown':
-        dy = step
-        break
-      case 'ArrowLeft':
-        dx = -step
-        break
-      case 'ArrowRight':
-        dx = step
-        break
-    }
-
-    const currentPos = this.getCurrentPosition(nodeId)
-    if (!currentPos) {
-      log.warn('Cannot determine position for element:', nodeId)
-      events.emit('notification:warning', {
-        message: 'Element-Position konnte nicht ermittelt werden',
-        duration: 2000,
-      })
-      return
-    }
-
-    const newX = currentPos.x + dx
-    const newY = currentPos.y + dy
-
-    // Execute position command
-    const ctx = this.getCommandContext()
-    if (!ctx) {
-      log.warn('No command context available for position update')
-      // PREV-013: Provide user feedback instead of silent failure
-      events.emit('notification:warning', {
-        message: 'Aktion nicht verfügbar - bitte erneut versuchen',
-        duration: 2000,
-      })
-      return
-    }
-
-    const command = new SetPositionCommand({
-      nodeId,
-      x: newX,
-      y: newY,
-      description: `Move ${e.key}`,
-    })
-
-    const result = command.execute(ctx)
-    if (result.success) {
-      // Trigger recompile
-      ctx.compile()
-      events.emit('notification:success', { message: `Moved to (${newX}, ${newY})` })
-    } else {
-      events.emit('notification:warning', { message: result.error || 'Failed to move element' })
-    }
+  /** Same idea for the spacing module. */
+  private spacingCtx(): { container: HTMLElement; nodeIdAttribute: string } {
+    return { container: this.container, nodeIdAttribute: this.nodeIdAttribute }
   }
 
   /**
@@ -626,248 +453,45 @@ export class KeyboardHandler {
   }
 
   /**
-   * Handle arrow-key in spacing mode (P/M/G handles active). Plain ↑/↓ adjusts
-   * all sides; Option+arrow targets a single side; Shift inverts the sign on
-   * Option-variants.
-   *
-   * The arrow direction *is* the side: Option+↑ = top, Option+↓ = bottom,
-   * Option+← = left, Option+→ = right. Without Option, ↑ = increase all,
-   * ↓ = decrease all.
-   *
-   * Step size comes from `handleSnapSettings.gridSize` — same source the
-   * visual handles use, so mouse-drag and keyboard land on the same grid.
+   * Notify success/failure for any ActionResult-returning shared-action.
+   * `successDuration` is optional (some actions like delete don't auto-
+   * dismiss). Replaces 7 near-identical private wrappers.
    */
-  private handleSpacingArrow(e: KeyboardEvent, mode: HandleMode, nodeId: string): void {
-    if (mode !== 'padding' && mode !== 'margin' && mode !== 'gap') return
-
-    const gridSize = handleSnapSettings.get().gridSize
-    if (gridSize <= 0) return
-
-    const useSide = e.altKey
-    const isVerticalKey = e.key === 'ArrowUp' || e.key === 'ArrowDown'
-    const isHorizontalKey = e.key === 'ArrowLeft' || e.key === 'ArrowRight'
-
-    // Gap has no sides — only plain ↑/↓ is meaningful.
-    if (mode === 'gap' && (useSide || isHorizontalKey)) {
-      return
-    }
-
-    // Determine direction (+1 / -1) and target side.
-    let direction: 1 | -1
-    let side: 'top' | 'right' | 'bottom' | 'left' | null
-
-    if (useSide) {
-      // Option+arrow: arrow direction selects the side. Shift inverts sign.
-      direction = e.shiftKey ? -1 : 1
-      switch (e.key) {
-        case 'ArrowUp':
-          side = 'top'
-          break
-        case 'ArrowDown':
-          side = 'bottom'
-          break
-        case 'ArrowLeft':
-          side = 'left'
-          break
-        case 'ArrowRight':
-          side = 'right'
-          break
-        default:
-          return
-      }
-    } else {
-      // Plain ↑/↓: all sides ± step. Horizontal keys are ignored without Option.
-      if (!isVerticalKey) return
-      direction = e.key === 'ArrowUp' ? 1 : -1
-      side = null
-    }
-
-    const property = this.getSpacingProperty(mode, side)
-    const current = this.getCurrentSpacingValue(nodeId, mode, side)
-    if (current === null) return
-
-    const next = this.computeNextSnapValue(current, direction, gridSize)
-    if (next === current) return
-
-    // Session coalescing: many arrow presses in one mode collapse to one
-    // undo entry. Begin lazily on the first press; end is triggered by the
-    // handleMode:changed listener in attach() when the user leaves the mode.
-    if (!executor.isInSession()) {
-      executor.beginSession(`Adjust ${mode} via keyboard`)
-    }
-    executor.executeInSession(
-      new SetPropertyCommand({
-        nodeId,
-        property,
-        value: String(next),
+  private notify(result: ActionResult, successDuration?: number): void {
+    if (result.success) {
+      events.emit('notification:success', {
+        message: result.message!,
+        ...(successDuration !== undefined && { duration: successDuration }),
       })
-    )
-    events.emit('selection:refresh', { nodeId })
-  }
-
-  /**
-   * Map (mode, side) to the Mirror property name that SetPropertyCommand
-   * expects. side=null means "all sides" (or just `gap` for gap mode).
-   */
-  private getSpacingProperty(
-    mode: 'padding' | 'margin' | 'gap',
-    side: 'top' | 'right' | 'bottom' | 'left' | null
-  ): string {
-    if (mode === 'gap') return 'gap'
-    const prefix = mode === 'padding' ? 'pad' : 'mar'
-    if (side === null) return prefix
-    const sideMap: Record<'top' | 'right' | 'bottom' | 'left', string> = {
-      top: '-t',
-      right: '-r',
-      bottom: '-b',
-      left: '-l',
-    }
-    return `${prefix}${sideMap[side]}`
-  }
-
-  /**
-   * Read the current spacing value (in pixels) from the rendered element's
-   * computed style. For "all sides" mode we use the top side as a
-   * representative — this matches what the visual "all" handle does on drag.
-   */
-  private getCurrentSpacingValue(
-    nodeId: string,
-    mode: 'padding' | 'margin' | 'gap',
-    side: 'top' | 'right' | 'bottom' | 'left' | null
-  ): number | null {
-    const el = this.container.querySelector(
-      `[${this.nodeIdAttribute}="${nodeId}"]`
-    ) as HTMLElement | null
-    if (!el) return null
-
-    const style = window.getComputedStyle(el)
-    if (mode === 'gap') {
-      return parseInt(style.gap || '0', 10) || 0
-    }
-
-    const sideForRead = side ?? 'top'
-    if (mode === 'padding') {
-      switch (sideForRead) {
-        case 'top':
-          return parseInt(style.paddingTop || '0', 10) || 0
-        case 'right':
-          return parseInt(style.paddingRight || '0', 10) || 0
-        case 'bottom':
-          return parseInt(style.paddingBottom || '0', 10) || 0
-        case 'left':
-          return parseInt(style.paddingLeft || '0', 10) || 0
-      }
     } else {
-      switch (sideForRead) {
-        case 'top':
-          return parseInt(style.marginTop || '0', 10) || 0
-        case 'right':
-          return parseInt(style.marginRight || '0', 10) || 0
-        case 'bottom':
-          return parseInt(style.marginBottom || '0', 10) || 0
-        case 'left':
-          return parseInt(style.marginLeft || '0', 10) || 0
-      }
+      events.emit('notification:warning', { message: result.error! })
     }
-    return null
-  }
-
-  /**
-   * Compute the next snap value in the given direction.
-   * - On-grid value: just step ± gridSize
-   * - Off-grid value: snap to next/prev grid multiple (the first press
-   *   "rescues" off-grid values back onto the grid, then subsequent presses
-   *   step normally)
-   * Negative results are clamped to 0.
-   */
-  private computeNextSnapValue(current: number, direction: 1 | -1, gridSize: number): number {
-    if (current % gridSize === 0) {
-      return Math.max(0, current + direction * gridSize)
-    }
-    if (direction > 0) {
-      return Math.ceil(current / gridSize) * gridSize
-    }
-    return Math.max(0, Math.floor(current / gridSize) * gridSize)
   }
 
   private handleGroup(): void {
-    const result = executeGroup(this.container)
-
-    if (result.success) {
-      events.emit('notification:success', { message: result.message! })
-    } else {
-      events.emit('notification:warning', { message: result.error! })
-    }
+    this.notify(executeGroup(this.container))
   }
-
   private handleUngroup(): void {
-    const result = executeUngroup()
-
-    if (result.success) {
-      events.emit('notification:success', { message: result.message! })
-    } else {
-      events.emit('notification:warning', { message: result.error! })
-    }
+    this.notify(executeUngroup())
   }
-
   private handleDelete(): void {
-    const result = executeDelete()
-
-    if (result.success) {
-      events.emit('notification:success', { message: result.message! })
-    } else {
-      events.emit('notification:warning', { message: result.error! })
-    }
+    this.notify(executeDelete())
   }
-
   private handleDuplicate(): void {
-    const result = executeDuplicate()
-
-    if (result.success) {
-      events.emit('notification:success', { message: result.message! })
-    } else {
-      events.emit('notification:warning', { message: result.error! })
-    }
+    this.notify(executeDuplicate())
   }
-
   private handleSetLayoutDirection(direction: 'horizontal' | 'vertical'): void {
-    const result = executeSetLayoutDirection(direction)
-
-    if (result.success) {
-      events.emit('notification:success', { message: result.message!, duration: 1500 })
-    } else {
-      events.emit('notification:warning', { message: result.error! })
-    }
+    this.notify(executeSetLayoutDirection(direction), 1500)
   }
 
   private handleWrapWithLayout(direction: 'hor' | 'ver'): void {
-    const result = executeWrapWithLayout(this.container, direction)
-
-    if (result.success) {
-      events.emit('notification:success', { message: result.message!, duration: 1500 })
-    } else {
-      events.emit('notification:warning', { message: result.error! })
-    }
+    this.notify(executeWrapWithLayout(this.container, direction), 1500)
   }
-
   private handleSetFullDimension(): void {
-    const result = executeSetFullDimension(this.container)
-
-    if (result.success) {
-      events.emit('notification:success', { message: result.message!, duration: 1500 })
-    } else {
-      events.emit('notification:warning', { message: result.error! })
-    }
+    this.notify(executeSetFullDimension(this.container), 1500)
   }
-
   private handleToggleSpread(): void {
-    const result = executeToggleSpread()
-
-    if (result.success) {
-      events.emit('notification:success', { message: result.message!, duration: 1500 })
-    } else {
-      events.emit('notification:warning', { message: result.error! })
-    }
+    this.notify(executeToggleSpread(), 1500)
   }
 
   dispose(): void {
