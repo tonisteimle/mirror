@@ -280,18 +280,6 @@ export class SyncCoordinator {
     const fromLine = this.lineOffset.editorToSourceMap(fromEditorLine)
     const toLine = this.lineOffset.editorToSourceMap(toEditorLine)
 
-    // DEBUG: Store debug info globally for tests
-    if (!(window as any).__handleEditorSelectionDebug) {
-      ;(window as any).__handleEditorSelectionDebug = []
-    }
-    const debugEntry: any = {
-      fromEditorLine,
-      toEditorLine,
-      fromLine,
-      toLine,
-      nodesFound: [] as string[],
-    }
-
     if (this.config.debug) {
       logSync.debug(' handleEditorSelection', {
         fromEditorLine,
@@ -306,17 +294,10 @@ export class SyncCoordinator {
 
     for (let line = fromLine; line <= toLine; line++) {
       const node = this.ports.sourceMap.getNodeAtLine(line)
-      debugEntry.nodesFound.push(`L${line}:${node?.nodeId ?? 'null'}`)
-      if (node?.nodeId) {
-        // Only add if not already in the list
-        if (!nodeIds.includes(node.nodeId)) {
-          nodeIds.push(node.nodeId)
-        }
+      if (node?.nodeId && !nodeIds.includes(node.nodeId)) {
+        nodeIds.push(node.nodeId)
       }
     }
-
-    debugEntry.nodeIds = [...nodeIds]
-    ;(window as any).__handleEditorSelectionDebug.push(debugEntry)
 
     // Filter to only root elements (no children of already-selected parents)
     // This prevents selecting both parent and child when parent's lines are selected
