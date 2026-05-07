@@ -75,14 +75,13 @@ describe('DemoProvider File Tree', () => {
   it('should return tree with default files', async () => {
     const tree = await provider.getTree()
 
-    expect(tree.length).toBe(5)
+    expect(tree.length).toBe(4)
 
     const fileNames = tree.map(item => item.name)
-    expect(fileNames).toContain('index.mir')
-    expect(fileNames).toContain('tokens.tok')
-    expect(fileNames).toContain('components.com')
-    expect(fileNames).toContain('data.yaml')
-    expect(fileNames).toContain('data.data')
+    expect(fileNames).toContain('app.mir')
+    expect(fileNames).toContain('tokens.mir')
+    expect(fileNames).toContain('components.mir')
+    expect(fileNames).toContain('data.mir')
   })
 
   it('should sort tree with folders first', async () => {
@@ -145,7 +144,7 @@ describe('DemoProvider File Tree', () => {
 describe('DemoProvider File Operations', () => {
   describe('readFile', () => {
     it('should read existing file', async () => {
-      const content = await provider.readFile('index.mir')
+      const content = await provider.readFile('app.mir')
 
       expect(content).toContain('Frame')
     })
@@ -166,8 +165,8 @@ describe('DemoProvider File Operations', () => {
     })
 
     it('should overwrite existing file', async () => {
-      await provider.writeFile('index.mir', 'Updated content')
-      const content = await provider.readFile('index.mir')
+      await provider.writeFile('app.mir', 'Updated content')
+      const content = await provider.readFile('app.mir')
 
       expect(content).toBe('Updated content')
     })
@@ -378,7 +377,7 @@ describe('DemoProvider State', () => {
 
   it('should reset to defaults', async () => {
     await provider.writeFile('custom.mir', 'custom')
-    await provider.deleteFile('index.mir')
+    await provider.deleteFile('app.mir')
 
     provider.resetToDefaults()
 
@@ -386,7 +385,7 @@ describe('DemoProvider State', () => {
     await expect(provider.readFile('custom.mir')).rejects.toThrow()
 
     // Default file should be back
-    const content = await provider.readFile('index.mir')
+    const content = await provider.readFile('app.mir')
     expect(content).toContain('Frame')
 
     // Modifications flag should be reset

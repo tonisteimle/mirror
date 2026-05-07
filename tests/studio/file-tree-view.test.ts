@@ -39,7 +39,7 @@ beforeEach(async () => {
   view = new FileTreeView(controller)
 
   controller.init({
-    onTreeChange: () => view.render()
+    onTreeChange: () => view.render(),
   })
 
   view.mount('file-tree')
@@ -63,16 +63,16 @@ describe('FileTreeView Rendering', () => {
   })
 
   it('should render file names', () => {
-    const indexFile = container.querySelector('[data-path="index.mir"]')
+    const indexFile = container.querySelector('[data-path="app.mir"]')
     expect(indexFile).not.toBeNull()
-    expect(indexFile?.textContent).toContain('index.mir')
+    expect(indexFile?.textContent).toContain('app.mir')
   })
 
   it('should show active file', async () => {
-    await controller.selectFile('index.mir')
+    await controller.selectFile('app.mir')
     view.render()
 
-    const indexFile = container.querySelector('[data-path="index.mir"]')
+    const indexFile = container.querySelector('[data-path="app.mir"]')
     expect(indexFile?.classList.contains('active')).toBe(true)
   })
 
@@ -111,7 +111,7 @@ describe('FileTreeView Rendering', () => {
 
 describe('FileTreeView File Selection', () => {
   it('should select file on click', async () => {
-    const indexFile = container.querySelector('[data-path="index.mir"]') as HTMLElement
+    const indexFile = container.querySelector('[data-path="app.mir"]') as HTMLElement
     expect(indexFile).not.toBeNull()
 
     indexFile.click()
@@ -119,17 +119,17 @@ describe('FileTreeView File Selection', () => {
     // Wait for async operation
     await new Promise(resolve => setTimeout(resolve, 50))
 
-    expect(controller.currentFile).toBe('index.mir')
+    expect(controller.currentFile).toBe('app.mir')
   })
 
   it('should update active class on selection', async () => {
-    await controller.selectFile('tokens.tok')
+    await controller.selectFile('tokens.mir')
     view.render()
 
-    const tokensFile = container.querySelector('[data-path="tokens.tok"]')
+    const tokensFile = container.querySelector('[data-path="tokens.mir"]')
     expect(tokensFile?.classList.contains('active')).toBe(true)
 
-    const indexFile = container.querySelector('[data-path="index.mir"]')
+    const indexFile = container.querySelector('[data-path="app.mir"]')
     expect(indexFile?.classList.contains('active')).toBe(false)
   })
 })
@@ -145,7 +145,9 @@ describe('FileTreeView Folder Expansion', () => {
     await storage.writeFile('testfolder/test.mir', 'content')
     view.render()
 
-    const folderHeader = container.querySelector('[data-path="testfolder"] .file-tree-folder-header') as HTMLElement
+    const folderHeader = container.querySelector(
+      '[data-path="testfolder"] .file-tree-folder-header'
+    ) as HTMLElement
     expect(folderHeader).not.toBeNull()
 
     // Click to expand
@@ -183,12 +185,12 @@ describe('FileTreeView Folder Expansion', () => {
 
 describe('FileTreeView Context Menu', () => {
   it('should show context menu on right click', () => {
-    const indexFile = container.querySelector('[data-path="index.mir"]') as HTMLElement
+    const indexFile = container.querySelector('[data-path="app.mir"]') as HTMLElement
 
     const event = new MouseEvent('contextmenu', {
       bubbles: true,
       clientX: 100,
-      clientY: 100
+      clientY: 100,
     })
     indexFile.dispatchEvent(event)
 
@@ -197,12 +199,12 @@ describe('FileTreeView Context Menu', () => {
   })
 
   it('should show file actions for file', () => {
-    const indexFile = container.querySelector('[data-path="index.mir"]') as HTMLElement
+    const indexFile = container.querySelector('[data-path="app.mir"]') as HTMLElement
 
     const event = new MouseEvent('contextmenu', {
       bubbles: true,
       clientX: 100,
-      clientY: 100
+      clientY: 100,
     })
     indexFile.dispatchEvent(event)
 
@@ -213,13 +215,13 @@ describe('FileTreeView Context Menu', () => {
   })
 
   it('should close context menu on click outside', () => {
-    const indexFile = container.querySelector('[data-path="index.mir"]') as HTMLElement
+    const indexFile = container.querySelector('[data-path="app.mir"]') as HTMLElement
 
     // Open menu
     const contextEvent = new MouseEvent('contextmenu', {
       bubbles: true,
       clientX: 100,
-      clientY: 100
+      clientY: 100,
     })
     indexFile.dispatchEvent(contextEvent)
 
@@ -260,19 +262,26 @@ describe('FileTreeView Drag and Drop', () => {
 
 describe('FileTreeView File Icons', () => {
   it('should show correct icon color for .mir files', () => {
-    const mirFile = container.querySelector('[data-path="index.mir"] .file-icon') as HTMLElement
+    const mirFile = container.querySelector('[data-path="app.mir"] .file-icon') as HTMLElement
     expect(mirFile).not.toBeNull()
     expect(mirFile.style.color).toBe('rgb(91, 168, 245)') // #5BA8F5
   })
 
-  it('should show correct icon color for .tok files', () => {
-    const tokFile = container.querySelector('[data-path="tokens.tok"] .file-icon') as HTMLElement
+  // Icon-color routing for legacy `.tok` / `.com` extensions must still
+  // work — Tauri projects on disk may still use them. The demo provider
+  // no longer seeds those, so we create the files explicitly here.
+  it('should show correct icon color for .tok files', async () => {
+    await storage.writeFile('legacy.tok', 'primary.bg: #2271C1')
+    view.render()
+    const tokFile = container.querySelector('[data-path="legacy.tok"] .file-icon') as HTMLElement
     expect(tokFile).not.toBeNull()
     expect(tokFile.style.color).toBe('rgb(245, 158, 11)') // #F59E0B
   })
 
-  it('should show correct icon color for .com files', () => {
-    const comFile = container.querySelector('[data-path="components.com"] .file-icon') as HTMLElement
+  it('should show correct icon color for .com files', async () => {
+    await storage.writeFile('legacy.com', 'PrimaryBtn: bg blue')
+    view.render()
+    const comFile = container.querySelector('[data-path="legacy.com"] .file-icon') as HTMLElement
     expect(comFile).not.toBeNull()
     expect(comFile.style.color).toBe('rgb(139, 92, 246)') // #8B5CF6
   })
@@ -294,7 +303,7 @@ describe('FileTreeView Sorting', () => {
     // First item should be a folder (could be root children)
     expect(
       firstItem?.classList.contains('file-tree-folder') ||
-      firstItem?.querySelector('.file-tree-folder')
+        firstItem?.querySelector('.file-tree-folder')
     ).toBeTruthy()
   })
 

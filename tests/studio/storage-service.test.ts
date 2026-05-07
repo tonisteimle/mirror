@@ -38,9 +38,7 @@ describe('StorageService Initialization', () => {
 
   it('should throw if not initialized', () => {
     const uninitializedService = new StorageService()
-    expect(() => uninitializedService.providerType).toThrow(
-      'StorageService not initialized'
-    )
+    expect(() => uninitializedService.providerType).toThrow('StorageService not initialized')
   })
 
   it('should clear cache on setProvider', async () => {
@@ -65,19 +63,19 @@ describe('StorageService Initialization', () => {
 describe('StorageService File Operations', () => {
   describe('readFile', () => {
     it('should read file from provider', async () => {
-      const content = await service.readFile('index.mir')
+      const content = await service.readFile('app.mir')
       expect(content).toContain('Frame')
     })
 
     it('should cache file content', async () => {
       // First read
-      await service.readFile('index.mir')
+      await service.readFile('app.mir')
 
       // Spy on provider
       const readSpy = vi.spyOn(provider, 'readFile')
 
       // Second read should use cache
-      await service.readFile('index.mir')
+      await service.readFile('app.mir')
 
       expect(readSpy).not.toHaveBeenCalled()
     })
@@ -85,7 +83,7 @@ describe('StorageService File Operations', () => {
     it('should refresh cache after TTL', async () => {
       // This test verifies cache behavior conceptually
       // In production, cache expires after 5 seconds
-      const content = await service.readFile('index.mir')
+      const content = await service.readFile('app.mir')
       expect(content).toBeDefined()
     })
 
@@ -114,10 +112,10 @@ describe('StorageService File Operations', () => {
       const callback = vi.fn()
       service.events.on('file:changed', callback)
 
-      await service.writeFile('index.mir', 'updated')
+      await service.writeFile('app.mir', 'updated')
 
       expect(callback).toHaveBeenCalledWith({
-        path: 'index.mir',
+        path: 'app.mir',
         content: 'updated',
       })
     })
@@ -369,8 +367,8 @@ describe('StorageService Prelude', () => {
 
   it('should handle missing prelude files gracefully', async () => {
     // Delete all prelude files
-    await service.deleteFile('tokens.tok')
-    await service.deleteFile('components.com')
+    await service.deleteFile('tokens.mir')
+    await service.deleteFile('components.mir')
 
     // Should not throw
     const prelude = await service.buildPrelude()

@@ -531,6 +531,136 @@ describe('EditFlow — runEditFlow', () => {
     })
   })
 
+  describe('Cross-file patches (Multi-File-Roadmap 6b)', () => {
+    test('routes through multi-file applier when any patch has @@FILE', async () => {
+      bridge.setMockRawOutput(
+        [
+          '@@FILE tokens.mir',
+          '@@FIND',
+          'primary.bg: #2271C1',
+          '@@REPLACE',
+          'primary.bg: #2271C1',
+          'accent.bg: #f59e0b',
+          '@@END',
+          '@@FIND',
+          '  Text "Hello"',
+          '@@REPLACE',
+          '  Text "Hi", col $accent',
+          '@@END',
+        ].join('\n')
+      )
+      const result = await runEditFlow(
+        baseCtx({
+          siblings: { 'tokens.mir': 'primary.bg: #2271C1' },
+        })
+      )
+      expect(result.status).toBe('ready')
+      expect(result.proposedSource).toBe('Frame gap 12\n  Text "Hi", col $accent')
+      expect(result.otherFileChanges).toEqual({
+        'tokens.mir': 'primary.bg: #2271C1\naccent.bg: #f59e0b',
+      })
+    })
+
+    test('omits otherFileChanges when only the active file is patched (single-file path)', async () => {
+      bridge.setMockRawOutput('@@FIND\n  Text "Hello"\n@@REPLACE\n  Text "Hi"\n@@END')
+      const result = await runEditFlow(
+        baseCtx({ siblings: { 'tokens.mir': 'primary.bg: #2271C1' } })
+      )
+      expect(result.status).toBe('ready')
+      expect(result.otherFileChanges).toBeUndefined()
+    })
+
+    test('cross-file patch that touches ONLY siblings keeps active source unchanged', async () => {
+      bridge.setMockRawOutput(
+        [
+          '@@FILE tokens.mir',
+          '@@FIND',
+          'primary.bg: #2271C1',
+          '@@REPLACE',
+          'primary.bg: #1E5BA8',
+          '@@END',
+        ].join('\n')
+      )
+      const ctx = baseCtx({ siblings: { 'tokens.mir': 'primary.bg: #2271C1' } })
+      const result = await runEditFlow(ctx)
+      expect(result.status).toBe('ready')
+      expect(result.proposedSource).toBe(ctx.source) // unchanged
+      expect(result.otherFileChanges).toEqual({ 'tokens.mir': 'primary.bg: #1E5BA8' })
+    })
+
+    test('rejects @@FILE pointing at a non-existent file as a hard error (no retry)', async () => {
+      bridge.setMockRawOutput(
+        ['@@FILE phantom.mir', '@@FIND', 'foo', '@@REPLACE', 'bar', '@@END'].join('\n')
+      )
+      const events: EditFlowAttemptEvent[] = []
+      const result = await runEditFlow(baseCtx(), {
+        onAttempt: e => events.push(e),
+        maxRetries: 3, // would normally retry, but unknown-file shouldn't
+      })
+      expect(result.status).toBe('error')
+      expect(result.error).toMatch(/phantom\.mir/)
+      expect(result.error).toMatch(/nicht im Projekt/i)
+      expect(events).toHaveLength(1)
+      expect(events[0].kind).toBe('unknown-file')
+      expect(result.retries).toBe(0)
+    })
+
+    test('all-or-nothing: if ANY @@FILE patch misses its anchor, no other-file changes leak through', async () => {
+      // First patch valid (tokens.mir), second patch broken (active file).
+      // Multi-file applier returns NO updatedFiles → result must be error,
+      // tokens.mir must NOT be in any side-effect.
+      bridge.setMockRawOutput(
+        [
+          '@@FILE tokens.mir',
+          '@@FIND',
+          'primary.bg: #2271C1',
+          '@@REPLACE',
+          'primary.bg: #1E5BA8',
+          '@@END',
+          '@@FIND',
+          'NotInActiveSource',
+          '@@REPLACE',
+          'foo',
+          '@@END',
+        ].join('\n')
+      )
+      const result = await runEditFlow(
+        baseCtx({ siblings: { 'tokens.mir': 'primary.bg: #2271C1' } }),
+        { maxRetries: 0 }
+      )
+      expect(result.status).toBe('error')
+      expect(result.otherFileChanges).toBeUndefined()
+      expect(result.proposedSource).toBeUndefined()
+    })
+
+    test('retry hint surfaces the targetFile so the LLM knows where to look', async () => {
+      // First call: cross-file with bad anchor.
+      // Second call: a valid single-file patch (LLM "fixed" it).
+      const responses = [
+        ['@@FILE tokens.mir', '@@FIND', 'BogusAnchor', '@@REPLACE', 'foo', '@@END'].join('\n'),
+        '@@FIND\n  Text "Hello"\n@@REPLACE\n  Text "Hi"\n@@END',
+      ]
+      let call = 0
+      bridge.runAgent = async (_p, _t, _path, sessionId) => ({
+        session_id: sessionId || 'mock',
+        success: true,
+        output: responses[call++] ?? '',
+        error: null,
+      })
+      const events: EditFlowAttemptEvent[] = []
+      const result = await runEditFlow(
+        baseCtx({ siblings: { 'tokens.mir': 'primary.bg: #2271C1' } }),
+        { maxRetries: 1, onAttempt: e => events.push(e) }
+      )
+      expect(result.status).toBe('ready')
+      expect(events[0].kind).toBe('apply-failed')
+      // Hint must carry targetFile so the retry prompt mentions it.
+      const failed = events[0] as Extract<EditFlowAttemptEvent, { kind: 'apply-failed' }>
+      const hint = failed.hints[0] as { targetFile?: string }
+      expect(hint.targetFile).toBe('tokens.mir')
+    })
+  })
+
   describe('Cancellation', () => {
     test('rejects with AbortError when signal is pre-aborted', async () => {
       const ctrl = new AbortController()

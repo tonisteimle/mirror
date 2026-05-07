@@ -791,6 +791,16 @@ const editHandler = createEditHandler({
     return siblings
   },
   getCurrentFileName: () => currentFile,
+  // Multi-File-Roadmap Komponente 6b: cross-file patches commit sibling
+  // writes through the same saveFile() that Tab/manual save uses. The
+  // active file is committed via the editor doc; siblings need this
+  // out-of-band path because they're not currently open in CodeMirror.
+  // saveFile() updates the in-memory `files` cache + persists via the
+  // appropriate backend (Tauri disk write or desktopFiles browser cache),
+  // so a switchFile() back to the sibling will pick up the new content.
+  saveSiblingFile: async (filename, content) => {
+    await saveFile(filename, content)
+  },
 })
 
 let editor: EditorView

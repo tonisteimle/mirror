@@ -61,30 +61,30 @@ describe('FileTreeController Initialization', () => {
 
 describe('FileTreeController File Selection', () => {
   it('should select a file', async () => {
-    await controller.selectFile('index.mir')
-    expect(controller.currentFile).toBe('index.mir')
+    await controller.selectFile('app.mir')
+    expect(controller.currentFile).toBe('app.mir')
   })
 
   it('should cache file content on selection', async () => {
-    await controller.selectFile('index.mir')
-    expect(controller.filesCache['index.mir']).toBeDefined()
-    expect(controller.filesCache['index.mir']).toContain('Frame')
+    await controller.selectFile('app.mir')
+    expect(controller.filesCache['app.mir']).toBeDefined()
+    expect(controller.filesCache['app.mir']).toContain('Frame')
   })
 
   it('should call onFileSelect callback', async () => {
     const onFileSelect = vi.fn()
     controller.init({ onFileSelect })
 
-    await controller.selectFile('index.mir')
+    await controller.selectFile('app.mir')
 
-    expect(onFileSelect).toHaveBeenCalledWith('index.mir', expect.any(String))
+    expect(onFileSelect).toHaveBeenCalledWith('app.mir', expect.any(String))
   })
 
   it('should call onTreeChange callback', async () => {
     const onTreeChange = vi.fn()
     controller.init({ onTreeChange })
 
-    await controller.selectFile('index.mir')
+    await controller.selectFile('app.mir')
 
     expect(onTreeChange).toHaveBeenCalled()
   })
@@ -199,13 +199,13 @@ describe('FileTreeController File Operations', () => {
     })
 
     it('should update currentFile on rename', async () => {
-      await controller.selectFile('index.mir')
-      await controller.renameItem('index.mir', 'main.mir')
+      await controller.selectFile('app.mir')
+      await controller.renameItem('app.mir', 'main.mir')
       expect(controller.currentFile).toBe('main.mir')
     })
 
     it('should reject invalid names', async () => {
-      const result = await controller.renameItem('index.mir', 'bad name.mir')
+      const result = await controller.renameItem('app.mir', 'bad name.mir')
       expect(result).toBe(false)
     })
   })
@@ -251,20 +251,20 @@ describe('FileTreeController File Operations', () => {
     })
 
     it('should clear currentFile if deleted', async () => {
-      await controller.selectFile('index.mir')
-      expect(controller.currentFile).toBe('index.mir')
+      await controller.selectFile('app.mir')
+      expect(controller.currentFile).toBe('app.mir')
 
-      await controller.deleteItem('index.mir', false)
+      await controller.deleteItem('app.mir', false)
       // Should auto-select another file
-      expect(controller.currentFile).not.toBe('index.mir')
+      expect(controller.currentFile).not.toBe('app.mir')
     })
 
     it('should remove from cache', async () => {
-      await controller.selectFile('index.mir')
-      expect(controller.filesCache['index.mir']).toBeDefined()
+      await controller.selectFile('app.mir')
+      expect(controller.filesCache['app.mir']).toBeDefined()
 
-      await controller.deleteItem('index.mir', false)
-      expect(controller.filesCache['index.mir']).toBeUndefined()
+      await controller.deleteItem('app.mir', false)
+      expect(controller.filesCache['app.mir']).toBeUndefined()
     })
   })
 
@@ -342,8 +342,8 @@ describe('FileTreeController Folder Expansion', () => {
 
 describe('FileTreeController File Cache', () => {
   it('should get file content from cache', async () => {
-    await controller.selectFile('index.mir')
-    const content = controller.getFileContent('index.mir')
+    await controller.selectFile('app.mir')
+    const content = controller.getFileContent('app.mir')
     expect(content).toBeDefined()
     expect(content).toContain('Frame')
   })
@@ -356,9 +356,9 @@ describe('FileTreeController File Cache', () => {
   it('should preload all files', async () => {
     await controller.preloadAllFiles()
 
-    expect(controller.getFileContent('index.mir')).toBeDefined()
-    expect(controller.getFileContent('tokens.tok')).toBeDefined()
-    expect(controller.getFileContent('components.com')).toBeDefined()
+    expect(controller.getFileContent('app.mir')).toBeDefined()
+    expect(controller.getFileContent('tokens.mir')).toBeDefined()
+    expect(controller.getFileContent('components.mir')).toBeDefined()
   })
 })
 
@@ -369,10 +369,10 @@ describe('FileTreeController File Cache', () => {
 describe('FileTreeController Context Menu', () => {
   it('should return file actions', () => {
     const actions = controller.getContextMenuActions({
-      path: 'index.mir',
+      path: 'app.mir',
       isFile: true,
       isFolder: false,
-      isRoot: false
+      isRoot: false,
     })
 
     expect(actions).toContain('rename')
@@ -386,7 +386,7 @@ describe('FileTreeController Context Menu', () => {
       path: 'components',
       isFile: false,
       isFolder: true,
-      isRoot: false
+      isRoot: false,
     })
 
     expect(actions).toContain('new-file')
@@ -400,7 +400,7 @@ describe('FileTreeController Context Menu', () => {
       path: '.',
       isFile: false,
       isFolder: true,
-      isRoot: true
+      isRoot: true,
     })
 
     expect(actions).toContain('new-file')
@@ -414,7 +414,7 @@ describe('FileTreeController Context Menu', () => {
       path: null,
       isFile: false,
       isFolder: false,
-      isRoot: false
+      isRoot: false,
     })
 
     expect(actions).toContain('new-file')
@@ -432,32 +432,32 @@ describe('FileTreeController Event Handling', () => {
     controller.init({ onFileChange })
 
     // Trigger file change via storage
-    await storage.writeFile('index.mir', 'updated content')
+    await storage.writeFile('app.mir', 'updated content')
 
-    expect(onFileChange).toHaveBeenCalledWith('index.mir', 'updated content')
-    expect(controller.filesCache['index.mir']).toBe('updated content')
+    expect(onFileChange).toHaveBeenCalledWith('app.mir', 'updated content')
+    expect(controller.filesCache['app.mir']).toBe('updated content')
   })
 
   it('should handle file:deleted event', async () => {
     const onTreeChange = vi.fn()
     controller.init({ onTreeChange })
 
-    await controller.selectFile('index.mir')
-    await storage.deleteFile('index.mir')
+    await controller.selectFile('app.mir')
+    await storage.deleteFile('app.mir')
 
-    expect(controller.filesCache['index.mir']).toBeUndefined()
+    expect(controller.filesCache['app.mir']).toBeUndefined()
     expect(onTreeChange).toHaveBeenCalled()
   })
 
   it('should handle file:renamed event', async () => {
-    await controller.selectFile('index.mir')
-    const originalContent = controller.filesCache['index.mir']
+    await controller.selectFile('app.mir')
+    const originalContent = controller.filesCache['app.mir']
 
-    await storage.renameFile('index.mir', 'main.mir')
+    await storage.renameFile('app.mir', 'main.mir')
 
     expect(controller.currentFile).toBe('main.mir')
     expect(controller.filesCache['main.mir']).toBe(originalContent)
-    expect(controller.filesCache['index.mir']).toBeUndefined()
+    expect(controller.filesCache['app.mir']).toBeUndefined()
   })
 
   it('should reset state on project close', () => {
@@ -478,7 +478,7 @@ describe('FileTreeController Event Handling', () => {
 
 describe('FileTreeController Reset', () => {
   it('should reset all state', async () => {
-    await controller.selectFile('index.mir')
+    await controller.selectFile('app.mir')
     controller.expandFolder('components')
 
     controller.resetState()

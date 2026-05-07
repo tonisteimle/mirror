@@ -106,12 +106,11 @@ describe('LocalStorageProvider Initialization', () => {
     const tree = await provider.getTree()
 
     const names = tree.map(i => i.name)
-    expect(names).toContain('index.mir')
-    expect(names).toContain('tokens.tok')
-    expect(names).toContain('components.com')
-    expect(names).toContain('data.yaml')
-    expect(names).toContain('data.data')
-    expect(names.length).toBe(5)
+    expect(names).toContain('app.mir')
+    expect(names).toContain('tokens.mir')
+    expect(names).toContain('components.mir')
+    expect(names).toContain('data.mir')
+    expect(names.length).toBe(4)
   })
 
   it('should load existing files from storage', async () => {
@@ -192,7 +191,7 @@ describe('LocalStorageProvider File Operations', () => {
   describe('readFile', () => {
     it('should read existing file', async () => {
       const provider = new LocalStorageProvider()
-      const content = await provider.readFile('index.mir')
+      const content = await provider.readFile('app.mir')
 
       expect(content).toContain('Frame')
     })
@@ -216,9 +215,9 @@ describe('LocalStorageProvider File Operations', () => {
 
     it('should overwrite existing file', async () => {
       const provider = new LocalStorageProvider()
-      await provider.writeFile('index.mir', 'Updated content')
+      await provider.writeFile('app.mir', 'Updated content')
 
-      const content = await provider.readFile('index.mir')
+      const content = await provider.readFile('app.mir')
       expect(content).toBe('Updated content')
     })
 
@@ -506,13 +505,13 @@ describe('LocalStorageProvider Utilities', () => {
 
       // Modify
       await provider.writeFile('custom.mir', 'custom')
-      await provider.deleteFile('index.mir')
+      await provider.deleteFile('app.mir')
 
       // Reset
       provider.reset()
 
       // Verify demo files are back
-      const content = await provider.readFile('index.mir')
+      const content = await provider.readFile('app.mir')
       expect(content).toContain('Frame')
       await expect(provider.readFile('custom.mir')).rejects.toThrow()
     })

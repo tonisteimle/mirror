@@ -17,7 +17,12 @@
 import { buildEditPrompt, type EditCaptureCtx } from './edit-prompts'
 import { runEdit } from './fixer'
 import { parsePatchResponse } from './patch-format'
-import { applyPatches, type RetryHint } from './patch-applier'
+import {
+  applyPatches,
+  applyPatchesMultiFile,
+  type RetryHint,
+  type MultiFileRetryHint,
+} from './patch-applier'
 import {
   checkComponentCompliance,
   checkRedundancyCompliance,
@@ -99,6 +104,12 @@ export type EditFlowAttemptEvent =
       hints: RetryHint[]
       willRetry: boolean
     }
+  | {
+      attempt: number
+      kind: 'unknown-file'
+      unknownFiles: string[]
+      willRetry: false
+    }
   | { attempt: number; kind: 'bridge-error'; error: string; willRetry: false }
   | {
       attempt: number
@@ -117,6 +128,17 @@ export interface EditResult {
   status: EditResultStatus
   /** Vorgeschlagener Source nach Patch-Applikation (nur bei `ready`). */
   proposedSource?: string
+  /**
+   * Cross-File-Änderungen (nur bei `ready` und nur wenn der LLM
+   * `@@FILE`-Header benutzt hat). Map: filename → neuer Content. Files,
+   * die der LLM NICHT angefasst hat, fehlen in der Map. Die aktive Datei
+   * steht IMMER unter `proposedSource`, nicht hier.
+   *
+   * Multi-File-Roadmap Komponente 6b: All-or-Nothing-Semantik. Entweder
+   * alle Files erfolgreich gepatcht oder gar keine — bei Teilversagen
+   * wird der ganze Result zu `error`.
+   */
+  otherFileChanges?: Record<string, string>
   /** Menschenlesbare Fehler-Beschreibung (nur bei `error`). */
   error?: string
   /** Anzahl tatsächlich durchgeführter Retries (0 = direkt geklappt). */
@@ -192,9 +214,18 @@ export async function runEditFlow(
       ? firstResult.proposedSource
       : ctx.source
 
+  // Multi-File-Roadmap 6b: wenn der erste Pass Sibling-Files mit-
+  // gepatcht hat, müssen die für den Retry sichtbar sein (sonst sieht
+  // der LLM noch den alten Stand und denkt "fehlt noch"). Siblings
+  // werden überlagert.
+  const retrySiblings: Record<string, string> = firstResult.otherFileChanges
+    ? { ...ctx.siblings, ...firstResult.otherFileChanges }
+    : ctx.siblings
+
   const retryCtx: EditCaptureCtx = {
     ...ctx,
     source: retrySource,
+    siblings: retrySiblings,
     instruction: buildQualityRetryInstruction(
       firstResult.qualityViolations as QualityViolations,
       ctx.instruction
@@ -210,6 +241,15 @@ export async function runEditFlow(
     return { ...firstResult, qualityRetried: true }
   }
 
+  // Multi-File: kombiniere otherFileChanges aus beiden Pässen. Retry-
+  // Änderungen überschreiben First-Pass-Änderungen für dasselbe File
+  // (Retry sah ja bereits den gepatchten Stand → seine Antwort ist
+  // semantisch der Endstand).
+  const mergedOtherFileChanges = mergeOtherFileChanges(
+    firstResult.otherFileChanges,
+    retryResult.otherFileChanges
+  )
+
   // Wenn der Retry sauber läuft, übernehmen wir sein Ergebnis. Ein
   // `no-change` im Retry bedeutet: der LLM weiss keine Verbesserung
   // → Violations bleiben, aber der erste Patch (falls einer war) ist
@@ -220,6 +260,7 @@ export async function runEditFlow(
     merged = {
       status: 'ready',
       proposedSource: retrySource,
+      otherFileChanges: mergedOtherFileChanges,
       retries: (firstResult.retries ?? 0) + (retryResult.retries ?? 0),
       qualityViolations: retryResult.qualityViolations,
       qualityRetried: true,
@@ -227,6 +268,7 @@ export async function runEditFlow(
   } else {
     merged = {
       ...retryResult,
+      otherFileChanges: mergedOtherFileChanges,
       retries: (firstResult.retries ?? 0) + (retryResult.retries ?? 0),
       qualityRetried: true,
     }
@@ -295,6 +337,76 @@ async function runEditFlowCore(
       }
     }
 
+    // Multi-File-Roadmap Komponente 6b: wenn IRGENDEIN Patch ein
+    // `@@FILE`-Target hat, routen wir die ganze Antwort durch den
+    // Multi-File-Applier (all-or-nothing über alle betroffenen Files).
+    // Patches ohne `@@FILE` zielen auf `ctx.fileName` (Default).
+    const isCrossFile = parsed.patches.some(p => p.targetFile !== undefined)
+
+    if (isCrossFile) {
+      const filesMap = buildFilesMap(ctx)
+      const multiResult = applyPatchesMultiFile(filesMap, parsed.patches, {
+        defaultFile: ctx.fileName,
+      })
+
+      if (multiResult.success) {
+        onAttempt?.({ attempt, kind: 'success' })
+        const updated = multiResult.updatedFiles ?? {}
+        // Active file: prefer the updated version, fall back to the
+        // original (when patches only touched siblings).
+        const proposed = updated[ctx.fileName] ?? ctx.source
+        const otherFileChanges: Record<string, string> = {}
+        for (const [name, content] of Object.entries(updated)) {
+          if (name !== ctx.fileName) otherFileChanges[name] = content
+        }
+        return {
+          status: 'ready',
+          proposedSource: proposed,
+          otherFileChanges: Object.keys(otherFileChanges).length > 0 ? otherFileChanges : undefined,
+          retries,
+          qualityViolations: runQualityChecks(proposed, ctx),
+        }
+      }
+
+      // Unknown-file is a hard fail (LLM tried to create a new file).
+      // Don't retry — the LLM can't infer that intent from a hint loop.
+      if (multiResult.unknownFiles && multiResult.unknownFiles.length > 0) {
+        onAttempt?.({
+          attempt,
+          kind: 'unknown-file',
+          unknownFiles: multiResult.unknownFiles,
+          willRetry: false,
+        })
+        return {
+          status: 'error',
+          error:
+            `Patch referenziert Files die nicht im Projekt existieren: ` +
+            multiResult.unknownFiles.join(', ') +
+            `. Die LLM darf nur in existierende Files patchen.`,
+          retries,
+        }
+      }
+
+      // Anker-Mismatch in irgendeinem File → Retry-Hints inkl. targetFile.
+      const multiHints = (multiResult.retryHints ?? []) as MultiFileRetryHint[]
+      const willRetry = retries < maxRetries
+      // Surface as the same `apply-failed` event shape (telemetry stays
+      // backward-compatible); the multi-file targetFile lives on the hint.
+      onAttempt?.({ attempt, kind: 'apply-failed', hints: multiHints, willRetry })
+
+      if (!willRetry) {
+        return {
+          status: 'error',
+          error: formatRetryHints(multiHints),
+          retries,
+        }
+      }
+
+      prompt = basePrompt + '\n\n' + buildHintMessage(multiHints)
+      retries++
+      continue
+    }
+
     const applyResult = applyPatches(ctx.source, parsed.patches)
 
     if (applyResult.success) {
@@ -326,9 +438,29 @@ async function runEditFlowCore(
   }
 }
 
+/**
+ * Bauen der Files-Map für den Multi-File-Applier: aktive Datei + alle
+ * Sibling-Files. Wir bauen das im Edit-Flow, weil die LLM-Antwort darüber
+ * entscheidet, ob multi-file gerouted wird — der Caller müsste sonst die
+ * Map vorher übergeben, ohne zu wissen ob sie gebraucht wird.
+ */
+function buildFilesMap(ctx: EditCaptureCtx): Record<string, string> {
+  const map: Record<string, string> = { ...ctx.siblings }
+  map[ctx.fileName] = ctx.source
+  return map
+}
+
 function countQualityIssues(v: QualityViolations | undefined): number {
   if (!v) return 0
   return v.token.length + v.component.length + v.redundancy.length
+}
+
+function mergeOtherFileChanges(
+  first: Record<string, string> | undefined,
+  second: Record<string, string> | undefined
+): Record<string, string> | undefined {
+  if (!first && !second) return undefined
+  return { ...(first ?? {}), ...(second ?? {}) }
 }
 
 function buildQualityRetryInstruction(
@@ -380,7 +512,7 @@ function buildQualityRetryInstruction(
   return lines.join('\n')
 }
 
-function buildHintMessage(hints: RetryHint[]): string {
+function buildHintMessage(hints: Array<RetryHint | MultiFileRetryHint>): string {
   const lines = ['## Retry — Anker-Probleme im vorherigen Patch']
   lines.push('')
   lines.push(
@@ -389,13 +521,14 @@ function buildHintMessage(hints: RetryHint[]): string {
   lines.push('')
 
   for (const hint of hints) {
+    const inFile = 'targetFile' in hint && hint.targetFile ? ` (in \`${hint.targetFile}\`)` : ''
     if (hint.reason === 'no-match') {
       lines.push(
-        `- Der \`@@FIND\`-Anker wurde **0×** im Source gefunden. Lies den Source nochmal byte-genau und nimm einen Anker, der EXAKT so vorkommt:`
+        `- Der \`@@FIND\`-Anker wurde **0×** im Source gefunden${inFile}. Lies den Source nochmal byte-genau und nimm einen Anker, der EXAKT so vorkommt:`
       )
     } else {
       lines.push(
-        `- Der \`@@FIND\`-Anker kam **${hint.matchCount}×** im Source vor — er muss aber EINDEUTIG sein. Nimm mehr Kontext-Zeilen drumherum, bis er nur noch 1× passt:`
+        `- Der \`@@FIND\`-Anker kam **${hint.matchCount}×** im Source vor${inFile} — er muss aber EINDEUTIG sein. Nimm mehr Kontext-Zeilen drumherum, bis er nur noch 1× passt:`
       )
     }
     lines.push('  ```')
@@ -408,14 +541,17 @@ function buildHintMessage(hints: RetryHint[]): string {
   return lines.join('\n')
 }
 
-function formatRetryHints(hints: RetryHint[]): string {
+function formatRetryHints(hints: Array<RetryHint | MultiFileRetryHint>): string {
   // applyPatches liefert immer mindestens einen Hint bei success=false.
   const parts: string[] = []
   for (const hint of hints) {
+    const inFile = 'targetFile' in hint && hint.targetFile ? ` [${hint.targetFile}]` : ''
     if (hint.reason === 'no-match') {
-      parts.push(`Anker nicht gefunden (no-match): "${preview(hint.patch.find)}"`)
+      parts.push(`Anker nicht gefunden (no-match)${inFile}: "${preview(hint.patch.find)}"`)
     } else {
-      parts.push(`Anker mehrdeutig (${hint.matchCount}× gefunden): "${preview(hint.patch.find)}"`)
+      parts.push(
+        `Anker mehrdeutig (${hint.matchCount}× gefunden)${inFile}: "${preview(hint.patch.find)}"`
+      )
     }
   }
   return parts.join('; ')

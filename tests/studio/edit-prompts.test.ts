@@ -54,7 +54,7 @@ describe('EditPrompts — buildEditPrompt', () => {
         @@END
         \`\`\`
 
-        ### Beispiel — eine Änderung
+        ### Beispiel — eine Änderung in der aktiven Datei (kein @@FILE nötig)
 
         \`\`\`
         @@FIND
@@ -77,6 +77,25 @@ describe('EditPrompts — buildEditPrompt', () => {
         @@REPLACE
         @@END
         \`\`\`
+
+        ### Beispiel — Cross-File-Patch (Token in tokens.mir + Use-Site in der aktiven Datei)
+
+        \`\`\`
+        @@FILE tokens.mir
+        @@FIND
+        primary.bg: #2271C1
+        @@REPLACE
+        primary.bg: #2271C1
+        accent.bg: #f59e0b
+        @@END
+        @@FIND
+        Button "Hervorheben", bg red
+        @@REPLACE
+        Button "Hervorheben", bg $accent
+        @@END
+        \`\`\`
+
+        \`@@FILE name.mir\` vor einem \`@@FIND\`-Block leitet den Patch in eine andere Datei. Ohne \`@@FILE\` zielt der Patch auf die aktuell aktive Datei (Default). Du darfst nur in EXISTIERENDE Files patchen — neue Files anzulegen ist nicht erlaubt (das macht der User selbst über das Explorer-Panel).
 
         ### Regeln (kritisch)
 

@@ -10,9 +10,10 @@ import type {
   StorageProject,
   StorageItem,
   ProviderType,
-  PreludeFile
+  PreludeFile,
 } from './types'
 import { getFileType } from './types'
+import { detectFileType } from '../file-types'
 import { StorageEventEmitter } from './events'
 import { detectProvider } from './providers'
 import { createLogger } from '../../compiler/utils/logger'
@@ -200,7 +201,7 @@ export class StorageService {
       const projects = await this.provider!.listProjects()
       this.currentProject = projects.find(p => p.id === id) ?? {
         id,
-        name: id.split('/').pop() ?? id
+        name: id.split('/').pop() ?? id,
       }
 
       // Baum laden
@@ -452,18 +453,18 @@ export class StorageService {
   /**
    * Gibt alle Token- und Component-Dateien zurück
    * Fehlerhafte Dateien werden übersprungen (mit Warnung)
+   *
+   * Multi-File-Roadmap: Mirror unifies all source files under `.mir`.
+   * The cheap extension-only check (legacy `.tok`/`.com`) is kept first,
+   * but `.mir` files are now classified by content via `detectFileType`.
    */
   async getPreludeFiles(): Promise<PreludeFile[]> {
-    const preludeFiles: { path: string; type: 'tokens' | 'component' }[] = []
+    const candidates: { path: string; name: string }[] = []
 
-    // Rekursiv alle .tok und .com Dateien sammeln
     const collect = (items: StorageItem[]) => {
       for (const item of items) {
         if (item.type === 'file') {
-          const fileType = getFileType(item.name)
-          if (fileType === 'tokens' || fileType === 'component') {
-            preludeFiles.push({ path: item.path, type: fileType })
-          }
+          candidates.push({ path: item.path, name: item.name })
         } else if (item.type === 'folder') {
           collect(item.children)
         }
@@ -472,31 +473,56 @@ export class StorageService {
 
     collect(this.treeCache)
 
-    // Tokens zuerst, dann Components, dann alphabetisch
-    preludeFiles.sort((a, b) => {
+    // Inhalte laden + classifizieren. Lazy-load: lese nur Files die als
+    // Mirror-Source in Frage kommen. Andere Files (.json, .png, …) skip.
+    const results: PreludeFile[] = []
+
+    for (const c of candidates) {
+      // Cheap extension-only check first.
+      const extType = getFileType(c.name)
+      if (extType === 'tokens' || extType === 'component') {
+        try {
+          const content = await this.readFile(c.path)
+          results.push({ path: c.path, type: extType, content })
+        } catch (error) {
+          log.warn(`Failed to load prelude file ${c.path}:`, error)
+          this.events.emit('error', {
+            error: error as Error,
+            operation: 'getPreludeFiles',
+            path: c.path,
+            recoverable: true,
+          })
+        }
+        continue
+      }
+
+      // For `.mir` (or unknown), read content and let the content-detector
+      // decide. Skip everything that turns out to be 'layout' / 'data' /
+      // 'javascript'.
+      if (extType !== 'layout' && extType !== 'unknown') continue
+      try {
+        const content = await this.readFile(c.path)
+        const detected = detectFileType(c.name, content)
+        if (detected === 'tokens' || detected === 'component') {
+          results.push({ path: c.path, type: detected, content })
+        }
+      } catch (error) {
+        log.warn(`Failed to load prelude file ${c.path}:`, error)
+        this.events.emit('error', {
+          error: error as Error,
+          operation: 'getPreludeFiles',
+          path: c.path,
+          recoverable: true,
+        })
+      }
+    }
+
+    // Tokens zuerst, dann Components, dann alphabetisch.
+    results.sort((a, b) => {
       if (a.type === 'tokens' && b.type !== 'tokens') return -1
       if (a.type !== 'tokens' && b.type === 'tokens') return 1
       return a.path.localeCompare(b.path)
     })
-
-    // Inhalte laden - mit Fehlertoleranz pro Datei
-    const results: PreludeFile[] = []
-
-    for (const f of preludeFiles) {
-      try {
-        const content = await this.readFile(f.path)
-        results.push({ ...f, content })
-      } catch (error) {
-        // Log warning but continue with other files
-        log.warn(`Failed to load prelude file ${f.path}:`, error)
-        this.events.emit('error', {
-          error: error as Error,
-          operation: 'getPreludeFiles',
-          path: f.path,
-          recoverable: true
-        })
-      }
-    }
 
     return results
   }
@@ -569,7 +595,12 @@ export class StorageService {
     return find(this.treeCache)
   }
 
-  private emitError(error: Error, operation: string, path: string | undefined, recoverable: boolean): void {
+  private emitError(
+    error: Error,
+    operation: string,
+    path: string | undefined,
+    recoverable: boolean
+  ): void {
     this.events.emit('error', { error, operation, path, recoverable })
   }
 }

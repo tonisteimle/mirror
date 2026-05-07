@@ -453,6 +453,116 @@ describe('EditHandler — acceptGhost', () => {
     const handler = createEditHandler(baseConfig())
     expect(handler.acceptGhost(view)).toBe(false)
   })
+
+  // Multi-File-Roadmap Komponente 6b: cross-file accept commits sibling
+  // writes through the saveSiblingFile callback before clearing state.
+  it('commits otherFileChanges via saveSiblingFile on accept', async () => {
+    const saved: Array<{ name: string; content: string }> = []
+    const runEditFlow = vi.fn(
+      async (): Promise<EditResult> => ({
+        status: 'ready',
+        proposedSource: 'NEW ACTIVE',
+        otherFileChanges: {
+          'tokens.mir': 'primary.bg: #1E5BA8',
+          'components.mir': 'PrimaryBtn: bg $primary',
+        },
+        retries: 0,
+      })
+    )
+    const handler = createEditHandler(
+      baseConfig({
+        runEditFlow,
+        saveSiblingFile: (name, content) => {
+          saved.push({ name, content })
+        },
+      })
+    )
+
+    handler.handleEditFlow(view)
+    await flush()
+    handler.acceptGhost(view)
+    await flush()
+
+    expect(view.state.doc.toString()).toBe('NEW ACTIVE')
+    expect(saved).toEqual([
+      { name: 'tokens.mir', content: 'primary.bg: #1E5BA8' },
+      { name: 'components.mir', content: 'PrimaryBtn: bg $primary' },
+    ])
+  })
+
+  it('does not call saveSiblingFile when otherFileChanges is empty', async () => {
+    const save = vi.fn()
+    const runEditFlow = vi.fn(async () => ready('REPLACED'))
+    const handler = createEditHandler(baseConfig({ runEditFlow, saveSiblingFile: save }))
+
+    handler.handleEditFlow(view)
+    await flush()
+    handler.acceptGhost(view)
+
+    expect(save).not.toHaveBeenCalled()
+  })
+
+  it('drops pending sibling changes on dismiss (no save fired)', async () => {
+    const save = vi.fn()
+    const runEditFlow = vi.fn(
+      async (): Promise<EditResult> => ({
+        status: 'ready',
+        proposedSource: 'NEW',
+        otherFileChanges: { 'tokens.mir': 'x' },
+        retries: 0,
+      })
+    )
+    const handler = createEditHandler(baseConfig({ runEditFlow, saveSiblingFile: save }))
+
+    handler.handleEditFlow(view)
+    await flush()
+    handler.dismissGhost(view)
+
+    expect(save).not.toHaveBeenCalled()
+  })
+
+  it('superseding flow drops the prior pending sibling changes', async () => {
+    const save = vi.fn()
+    let nextResult: EditResult = {
+      status: 'ready',
+      proposedSource: 'FIRST',
+      otherFileChanges: { 'tokens.mir': 'first-version' },
+      retries: 0,
+    }
+    const runEditFlow = vi.fn(async () => nextResult)
+    const handler = createEditHandler(baseConfig({ runEditFlow, saveSiblingFile: save }))
+
+    handler.handleEditFlow(view)
+    await flush()
+
+    // New flow without otherFileChanges supersedes the first.
+    nextResult = { status: 'ready', proposedSource: 'SECOND', retries: 0 }
+    handler.handleEditFlow(view)
+    await flush()
+
+    handler.acceptGhost(view)
+    expect(save).not.toHaveBeenCalled()
+    expect(view.state.doc.toString()).toBe('SECOND')
+  })
+
+  it('shows + N andere Dateien hint in the status indicator on cross-file ready', async () => {
+    const runEditFlow = vi.fn(
+      async (): Promise<EditResult> => ({
+        status: 'ready',
+        proposedSource: 'NEW',
+        otherFileChanges: { 'tokens.mir': 'x', 'components.mir': 'y' },
+        retries: 0,
+      })
+    )
+    const handler = createEditHandler(baseConfig({ runEditFlow }))
+
+    handler.handleEditFlow(view)
+    await flush()
+
+    const el = getEditStatusElement()
+    expect(el).not.toBeNull()
+    expect(el!.textContent).toMatch(/2.*andere Dateien/)
+  })
 })
 
 describe('EditHandler — dismissGhost', () => {

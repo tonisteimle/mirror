@@ -231,4 +231,103 @@ describe('PatchFormat — parsePatchResponse', () => {
       expect(result.parseErrors.length).toBeGreaterThanOrEqual(1)
     })
   })
+
+  // Multi-File-Roadmap Komponente 6b: @@FILE marker for cross-file patches.
+  describe('@@FILE marker (multi-file targeting)', () => {
+    it('attaches targetFile when @@FILE precedes @@FIND', () => {
+      const input = [
+        '@@FILE tokens.mir',
+        '@@FIND',
+        'primary.bg: #2271C1',
+        '@@REPLACE',
+        'primary.bg: #1E5BA8',
+        '@@END',
+      ].join('\n')
+      const result = parsePatchResponse(input)
+      expect(result.parseErrors).toEqual([])
+      expect(result.patches).toEqual([
+        {
+          find: 'primary.bg: #2271C1',
+          replace: 'primary.bg: #1E5BA8',
+          targetFile: 'tokens.mir',
+        },
+      ])
+    })
+
+    it('omits targetFile when no @@FILE marker is present (back-compat)', () => {
+      const input = [
+        '@@FIND',
+        'Button "Save"',
+        '@@REPLACE',
+        'Button "Save", bg blue',
+        '@@END',
+      ].join('\n')
+      const result = parsePatchResponse(input)
+      expect(result.parseErrors).toEqual([])
+      expect(result.patches[0]).not.toHaveProperty('targetFile')
+    })
+
+    it('parses two patches with different @@FILE targets', () => {
+      const input = [
+        '@@FILE tokens.mir',
+        '@@FIND',
+        'primary.bg: #2271C1',
+        '@@REPLACE',
+        'primary.bg: #2271C1',
+        'accent.bg: #f59e0b',
+        '@@END',
+        '@@FILE app.mir',
+        '@@FIND',
+        'Button "Save"',
+        '@@REPLACE',
+        'Button "Save", bg $accent',
+        '@@END',
+      ].join('\n')
+      const result = parsePatchResponse(input)
+      expect(result.parseErrors).toEqual([])
+      expect(result.patches).toHaveLength(2)
+      expect(result.patches[0].targetFile).toBe('tokens.mir')
+      expect(result.patches[1].targetFile).toBe('app.mir')
+    })
+
+    it('@@FILE only applies to the immediately following @@FIND, not subsequent blocks', () => {
+      const input = [
+        '@@FILE tokens.mir',
+        '@@FIND',
+        'a',
+        '@@REPLACE',
+        'b',
+        '@@END',
+        // No @@FILE here — second patch falls back to default (no targetFile).
+        '@@FIND',
+        'c',
+        '@@REPLACE',
+        'd',
+        '@@END',
+      ].join('\n')
+      const result = parsePatchResponse(input)
+      expect(result.parseErrors).toEqual([])
+      expect(result.patches[0].targetFile).toBe('tokens.mir')
+      expect(result.patches[1]).not.toHaveProperty('targetFile')
+    })
+
+    it('reports an error when @@FILE appears mid-block', () => {
+      const input = [
+        '@@FIND',
+        '@@FILE tokens.mir',
+        'Button "Save"',
+        '@@REPLACE',
+        'Button "Save", bg blue',
+        '@@END',
+      ].join('\n')
+      const result = parsePatchResponse(input)
+      // The @@FILE inside @@FIND is recognized as the marker (not content)
+      // and emits an error since it's only valid in idle state. The block
+      // continues parsing the remaining content normally.
+      expect(result.parseErrors.length).toBeGreaterThanOrEqual(1)
+      expect(result.parseErrors[0]).toMatch(/@@FILE inside an open block/i)
+      expect(result.patches).toHaveLength(1)
+      expect(result.patches[0].find).toBe('Button "Save"')
+    })
+  })
 })

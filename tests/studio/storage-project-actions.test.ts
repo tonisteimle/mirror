@@ -55,13 +55,14 @@ beforeEach(() => {
   mockStorage = new MockLocalStorage()
   global.localStorage = mockStorage as unknown as Storage
 
-  // Mock window.location.reload
+  // Mock window.location.reload AND .replace — project-actions calls
+  // reloadFresh() which uses location.replace() to bypass cached HTML.
   reloadMock = vi.fn()
   originalLocation = global.window?.location
 
-  // Create a mock location
   const mockLocation = {
     reload: reloadMock,
+    replace: reloadMock,
     href: 'http://localhost:3000',
     origin: 'http://localhost:3000',
     protocol: 'http:',
@@ -137,8 +138,8 @@ describe('newProject', () => {
     await newProject() // defaults to 'empty'
 
     const stored = JSON.parse(mockStorage.getItem('mirror-files') || '{}')
-    expect(stored['index.mir']).toBeDefined()
-    expect(stored['index.mir']).toBe('')
+    expect(stored['app.mir']).toBeDefined()
+    expect(stored['app.mir']).toBe('')
     expect(stored['custom.mir']).toBeUndefined()
   })
 
@@ -156,7 +157,7 @@ describe('newProject', () => {
     await newProject('demo')
 
     const stored = JSON.parse(mockStorage.getItem('mirror-files') || '{}')
-    expect(stored['index.mir']).toContain('Frame')
+    expect(stored['app.mir']).toContain('Frame')
   })
 })
 
@@ -174,10 +175,10 @@ describe('loadDemoProject', () => {
     await loadDemoProject()
 
     const stored = JSON.parse(mockStorage.getItem('mirror-files') || '{}')
-    expect(stored['index.mir']).toBeDefined()
-    expect(stored['tokens.tok']).toBeDefined()
-    expect(stored['components.com']).toBeDefined()
-    expect(stored['data.yaml']).toBeDefined()
+    expect(stored['app.mir']).toBeDefined()
+    expect(stored['tokens.mir']).toBeDefined()
+    expect(stored['components.mir']).toBeDefined()
+    expect(stored['data.mir']).toBeDefined()
   })
 
   it('should replace existing files', async () => {
@@ -239,25 +240,22 @@ describe('projectActions object', () => {
 // =============================================================================
 
 describe('Empty Project (default)', () => {
-  it('should create empty index.mir by default', async () => {
+  it('should create empty app.mir by default', async () => {
     const { newProject } = await getProjectActions()
     await newProject() // defaults to 'empty'
 
     const stored = JSON.parse(mockStorage.getItem('mirror-files') || '{}')
-    const indexContent = stored['index.mir']
-
-    // Empty project has just an empty index.mir
-    expect(indexContent).toBe('')
+    expect(stored['app.mir']).toBe('')
   })
 
-  it('should only have index.mir file', async () => {
+  it('should seed the four-file project layout', async () => {
     const { newProject } = await getProjectActions()
     await newProject()
 
     const stored = JSON.parse(mockStorage.getItem('mirror-files') || '{}')
-    const files = Object.keys(stored)
+    const files = Object.keys(stored).sort()
 
-    expect(files).toEqual(['index.mir'])
+    expect(files).toEqual(['app.mir', 'components.mir', 'data.mir', 'tokens.mir'])
   })
 })
 
@@ -266,17 +264,16 @@ describe('Empty Project (default)', () => {
 // =============================================================================
 
 describe('Demo Project Template', () => {
-  it('should have all five file types', async () => {
+  it('should have all four file types', async () => {
     const { newProject } = await getProjectActions()
     await newProject('demo')
 
     const stored = JSON.parse(mockStorage.getItem('mirror-files') || '{}')
-    expect(Object.keys(stored).length).toBe(5)
-    expect(stored['index.mir']).toBeDefined()
-    expect(stored['tokens.tok']).toBeDefined()
-    expect(stored['components.com']).toBeDefined()
-    expect(stored['data.yaml']).toBeDefined()
-    expect(stored['data.data']).toBeDefined()
+    expect(Object.keys(stored).length).toBe(4)
+    expect(stored['app.mir']).toBeDefined()
+    expect(stored['tokens.mir']).toBeDefined()
+    expect(stored['components.mir']).toBeDefined()
+    expect(stored['data.mir']).toBeDefined()
   })
 
   it('should have tokens that are used in components', async () => {
@@ -286,26 +283,23 @@ describe('Demo Project Template', () => {
     const stored = JSON.parse(mockStorage.getItem('mirror-files') || '{}')
 
     // Tokens should define values
-    expect(stored['tokens.tok']).toContain('primary')
-    expect(stored['tokens.tok']).toContain('#')
+    expect(stored['tokens.mir']).toContain('primary')
+    expect(stored['tokens.mir']).toContain('#')
 
     // Components should use tokens
-    expect(stored['components.com']).toContain('$')
+    expect(stored['components.mir']).toContain('$')
   })
 
-  it('should have index.mir that uses components and data', async () => {
+  it('should have app.mir that uses components and data', async () => {
     const { newProject } = await getProjectActions()
     await newProject('demo')
 
     const stored = JSON.parse(mockStorage.getItem('mirror-files') || '{}')
-    const indexContent = stored['index.mir']
+    const appContent = stored['app.mir']
 
-    // Should use tokens
-    expect(indexContent).toContain('$')
-    // Should use components
-    expect(indexContent).toContain('Card')
-    // Should use data with each loop
-    expect(indexContent).toContain('each')
+    expect(appContent).toContain('$')
+    expect(appContent).toContain('Card')
+    expect(appContent).toContain('each')
   })
 })
 

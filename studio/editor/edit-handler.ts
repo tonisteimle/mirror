@@ -49,6 +49,16 @@ export interface EditHandlerConfig {
   /** Returns the file name of the currently active file (used as tracker key). */
   getCurrentFileName: () => string
   /**
+   * Multi-File-Roadmap 6b: writes a sibling file's new content. Called
+   * when the user accepts a ghost-diff that originated from a cross-file
+   * patch (the active file is committed via the editor doc; siblings need
+   * an out-of-band write). Optional — if missing, cross-file patches
+   * still ghost-diff the active file but sibling changes are silently
+   * dropped. Wire to whatever your storage layer uses (Tauri save,
+   * localStorage, etc.).
+   */
+  saveSiblingFile?: (filename: string, content: string) => void | Promise<void>
+  /**
    * Wenn true, hängt der Handler an Edit-Flows mit Quality-Violations einen
    * 2. LLM-Call dran (siehe `RunEditFlowOptions.qualityRetry`). Das verbessert
    * Idiom-Compliance, kostet aber Latenz wenn der Erstpass Violations
@@ -94,6 +104,11 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
   const qualityRetry = config.qualityRetry ?? true
 
   let currentAbort: AbortController | null = null
+  // Multi-File-Roadmap 6b: holds the other-file changes from the most
+  // recent successful edit-flow until the user accepts (commit via
+  // saveSiblingFile) or dismisses (drop). Cleared on every new flow,
+  // accept, dismiss, or auto-discard.
+  let pendingOtherFileChanges: Record<string, string> | null = null
 
   const captureCtx = (view: EditorView, instruction: string | null): EditCaptureCtx => {
     const state = view.state
@@ -123,6 +138,9 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
     if (currentAbort) currentAbort.abort()
     const ctrl = new AbortController()
     currentAbort = ctrl
+    // A new flow invalidates any prior pending sibling changes — those
+    // belonged to a ghost-diff that the user is now superseding.
+    pendingOtherFileChanges = null
 
     setEditStatus('thinking')
 
@@ -151,13 +169,14 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
   const handleResult = (view: EditorView, baseSource: string, result: EditResult) => {
     if (result.status === 'ready' && result.proposedSource !== undefined) {
       setGhostDiff(view, baseSource, result.proposedSource)
+      // Multi-File-Roadmap 6b: stash sibling writes to commit on accept.
+      pendingOtherFileChanges =
+        result.otherFileChanges && Object.keys(result.otherFileChanges).length > 0
+          ? result.otherFileChanges
+          : null
       const issues = countQualityIssues(result.qualityViolations)
-      setEditStatus(
-        'ready',
-        issues > 0
-          ? `Tab akzeptieren · Esc verwerfen · ⚠ ${issues} Quality-${issues === 1 ? 'Issue' : 'Issues'}`
-          : undefined
-      )
+      const otherCount = pendingOtherFileChanges ? Object.keys(pendingOtherFileChanges).length : 0
+      setEditStatus('ready', buildReadyHint(issues, otherCount))
     } else if (result.status === 'no-change') {
       const issues = countQualityIssues(result.qualityViolations)
       if (issues > 0) {
@@ -299,6 +318,22 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
         changes: { from: 0, to: view.state.doc.length, insert: ghost.newSource },
         effects: clearGhostDiffEffect.of(undefined),
       })
+      // Multi-File-Roadmap 6b: commit sibling-file writes if any. We
+      // fire-and-forget the saves (no await): the user expects the same
+      // snappy accept response as a single-file edit. Errors surface in
+      // the storage layer's own logging — failing here would leave the
+      // active file accepted but siblings in limbo, which is worse than
+      // a logged error.
+      if (pendingOtherFileChanges && config.saveSiblingFile) {
+        for (const [filename, content] of Object.entries(pendingOtherFileChanges)) {
+          try {
+            void config.saveSiblingFile(filename, content)
+          } catch {
+            // swallow — see comment above
+          }
+        }
+      }
+      pendingOtherFileChanges = null
       hideEditStatus()
       return true
     },
@@ -314,6 +349,7 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
       if (ghost.active) {
         view.dispatch({ effects: clearGhostDiffEffect.of(undefined) })
       }
+      pendingOtherFileChanges = null
       hideEditStatus()
       return true
     },
@@ -332,10 +368,24 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
       const wasActive = update.startState.field(ghostDiffField).active
       const isActive = update.state.field(ghostDiffField).active
       if (wasActive && !isActive) {
+        // Auto-discard: typing invalidates pending sibling changes too.
+        pendingOtherFileChanges = null
         hideEditStatus()
       }
     }),
   }
+}
+
+function buildReadyHint(qualityIssues: number, otherFiles: number): string | undefined {
+  if (qualityIssues === 0 && otherFiles === 0) return undefined
+  const parts: string[] = ['Tab akzeptieren · Esc verwerfen']
+  if (otherFiles > 0) {
+    parts.push(`+ ${otherFiles} ${otherFiles === 1 ? 'andere Datei' : 'andere Dateien'}`)
+  }
+  if (qualityIssues > 0) {
+    parts.push(`⚠ ${qualityIssues} Quality-${qualityIssues === 1 ? 'Issue' : 'Issues'}`)
+  }
+  return parts.join(' · ')
 }
 
 function errorMessage(err: unknown): string {
