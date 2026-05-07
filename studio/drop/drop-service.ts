@@ -64,6 +64,15 @@ export class DropService {
     console.warn('[DropService] No handler succeeded for drop:', result.source.type)
     return null
   }
+
+  /**
+   * @internal Test-only: read-only handler list, in dispatch order.
+   * Used by handler-routing tests to verify Pure-before-Zag and similar
+   * order-sensitive invariants without re-encoding the order in the test.
+   */
+  __getHandlersForTest(): readonly DropHandler[] {
+    return this.handlers
+  }
 }
 
 // Singleton instance
