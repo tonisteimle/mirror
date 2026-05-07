@@ -524,6 +524,23 @@ export const SCHEMA: Record<string, PropertyDef> = {
     },
   },
 
+  prose: {
+    name: 'prose',
+    aliases: [],
+    category: 'layout',
+    description:
+      'Enable prose-mode body parsing — bare strings become paragraphs, `-` lines become bullets, `## ` headings, blank lines separate paragraphs. Parser-only hint, no CSS emitted.',
+
+    keywords: {
+      _standalone: {
+        description:
+          'Body of this Frame is parsed as Markdown-subset prose; lines map to components via the prose-style declaration (or hardcoded defaults).',
+        css: [],
+        example: 'Article as Frame: gap 18, prose',
+      },
+    },
+  },
+
   stacked: {
     name: 'stacked',
     aliases: [],
@@ -1266,6 +1283,22 @@ export const SCHEMA: Record<string, PropertyDef> = {
       description: 'Line height (unitless or pixels)',
       css: n => [{ property: 'line-height', value: n > 10 ? `${n}px` : String(n) }],
       example: 'Text line 1.5',
+    },
+
+    token: true,
+  },
+
+  'letter-spacing': {
+    name: 'letter-spacing',
+    aliases: ['ls', 'tracking'],
+    category: 'typography',
+    description: 'Letter spacing (tracking). Negative values tighten.',
+
+    numeric: {
+      description: 'Letter spacing in em (e.g. -0.02 for tight headlines)',
+      unit: 'em',
+      css: n => [{ property: 'letter-spacing', value: `${n}em` }],
+      example: 'Text ls -0.025',
     },
 
     token: true,

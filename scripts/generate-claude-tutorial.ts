@@ -31,6 +31,7 @@ const TUTORIAL_FILES = [
   '13-overlays.html',
   '14-tabellen.html',
   '15-charts.html',
+  '16-prosa.html',
 ]
 
 function extractContent(html: string): string {
@@ -117,8 +118,9 @@ function extractParagraphsAndCode(content: string): string[] {
   // Process in order: paragraphs, code blocks, tables, lists
   const elements: { index: number; type: string; content: string }[] = []
 
-  // Find paragraphs
-  const pRegex = /<p[^>]*>([\s\S]*?)<\/p>/g
+  // Find paragraphs. Important: `<p` alone matched `<pre>` too — require
+  // either `<p>` or `<p ` (whitespace before attrs) so `<pre>` is excluded.
+  const pRegex = /<p(?:\s[^>]*)?>([\s\S]*?)<\/p>/g
   let match
   while ((match = pRegex.exec(content)) !== null) {
     // Skip if it's inside a playground

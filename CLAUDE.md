@@ -133,14 +133,144 @@ npm run test:browser -- --headed  # Browser Tests (sichtbar)
 
 # Sonstiges
 npm run validate       # Code validieren (z.B. npm run validate app.mirror)
+npm run export         # Mirror-Projekt → Spec-Bundle für AI-Code-Generierung
 ./deploy.sh            # Production Deploy
 ```
 
-## Compiler CLI
+## Export für AI-Code-Generierung
 
-Das CLI kompiliert Mirror-Projekte zu JavaScript (DOM oder React).
+`npm run export -- <project-dir>` erzeugt ein **Spec-Bundle** — ein
+selbsterhaltender Ordner mit Mirror-Source + DSL-Brief + Pipeline-
+Instructions + Target-Settings. Das Bundle wird an einen LLM-Agent
+(Claude Code) übergeben, der daraus produktionsreifen Framework-Code baut.
 
-### Installation & Aufruf
+**Validierte Targets** (alle Pipeline-Gates first-try grün):
+
+| Target    | Stack                                | Output                 |
+| --------- | ------------------------------------ | ---------------------- |
+| `react`   | React 18 + TS strict + Tailwind      | Vite-Projekt           |
+| `vue`     | Vue 3 (script-setup) + TS + Tailwind | Vite-Projekt           |
+| `svelte`  | Svelte 5 (runes) + TS + Tailwind     | Vite-Projekt           |
+| `vanilla` | Plain HTML + CSS-Custom-Properties   | statisches Verzeichnis |
+
+**Validierte Projekt-Klassen:**
+
+- Statisches Dokument (Personas, 1 Layout, 80 Components, 4 Targets ✓)
+- Multi-Page-App (task-app, 5 Screens, 11 Files, Routing, Daten, Conditionals — React ✓ in 14 min)
+- Single-File `.mirror` (`hotel-checkin.mirror`, ohne Project-Dir ✓)
+
+```bash
+# Bundle bauen (Source + Brief + Instructions + Target-Settings)
+npm run export -- examples/personas-informatik --target react \
+  --visual examples/personas-informatik/preview.html \
+  --out ./mirror-export
+
+# Mit Render-Snapshot (computed-styles JSON + Screenshots
+# aus headless Chrome — Ground-Truth für den Agent, ~10 s)
+npm run export -- examples/personas-informatik --snapshot
+
+# Bundle bauen + sofort claude darauf loslassen
+npm run export -- examples/personas-informatik --snapshot --run
+
+# Render-Snapshot standalone (ohne Bundle)
+npm run snapshot -- examples/personas-informatik --out ./snap
+
+# Generated-Output gegen Mirror-Snapshot pixel-diffen (Verify-Loop)
+npm run verify -- ./mirror-export
+
+# Inkrementelles Re-Export: nur geänderte Sources → CHANGES.md im Bundle
+npm run export -- examples/personas-informatik --incremental --out ./mirror-export
+```
+
+**Studio-Integration (Toolbar-Button):**
+
+Der Studio-Toolbar hat einen Export-Button (📤 Pfeil-Down-Icon). Klick öffnet
+einen Dialog mit Target-Auswahl, Snapshot-Toggle und Live-Stream der
+Pipeline-Phasen. Voraussetzung: AI-Bridge-Server läuft (`npm run ai-bridge`).
+Nach Erfolg: "Claude jetzt ausführen"-Knopf für direkten Agent-Lauf via
+`/agent/run`.
+
+**Inkrementelles Re-Export:**
+
+`source-hashes.json` im Bundle trackt sha256 jedes Mirror-Source-Files.
+Mit `--incremental` vergleicht das CLI gegen die alten Hashes, schreibt
+`CHANGES.md` (Added/Modified/Removed), und nutzt
+`instructions-incremental.md` statt der vollen Pipeline. Der Agent
+ändert nur betroffene Files in `./generated/`, lässt User-Edits an
+unbeteiligten Files in Ruhe.
+
+**Architektur:** `tools/export.ts` (CLI), `tools/export/templates/` (Brief +
+Pro-Target-Pipeline-Instructions). Validierter Spike:
+`tools/experiments/personas-react-spike/`. Der Bundle-Inhalt ist der
+Vertrag — Iteration passiert an den Templates, nicht am Output.
+
+## CLI
+
+Mirror liefert drei CLIs aus, die alle ohne Studio funktionieren. Sie sind im
+`mirror-lang` NPM-Paket als `bin`-Einträge registriert (`package.json:17-21`):
+
+| CLI               | Zweck                                           | Entry                       |
+| ----------------- | ----------------------------------------------- | --------------------------- |
+| `mirror-build`    | **Mirror → deploybare HTML-Datei** (eine Datei) | `compiler/build-cli.ts`     |
+| `mirror-compile`  | Mirror → JS/React-Output (zum Einbetten)        | `compiler/cli.ts`           |
+| `mirror-validate` | Mirror-Code gegen DSL-Schema validieren         | `compiler/validator/cli.ts` |
+
+### `mirror-build` — eine Datei zum Hochladen
+
+Der einfachste Weg von `.mir` zu einer fertigen HTML-Datei. Self-contained
+(JS und CSS inline), keine Build-Tools im User-Projekt nötig.
+
+```bash
+# Einzelne Datei
+mirror-build app.mir                      # → dist/app.html
+
+# Projekt (auto-discovers data/tokens/components/layouts)
+mirror-build my-project/                  # → dist/index.html
+
+# Output explizit
+mirror-build app.mir --out custom.html
+mirror-build app.mir --out public/        # → public/app.html
+
+# Watch
+mirror-build app.mir --watch
+```
+
+**Defaults:** `dist/<name>.html`, `lang="en"`, Title aus Filename/Dir-Namen,
+`mirror-defaults.css` inline.
+
+| Flag                  | Beschreibung                                    |
+| --------------------- | ----------------------------------------------- |
+| `-o, --out <path>`    | Output (Datei oder Verzeichnis)                 |
+| `-d, --out-dir <dir>` | Output-Dir wenn `--out` unset (default: `dist`) |
+| `--title <text>`      | HTML `<title>` (default: aus Filename)          |
+| `--lang <code>`       | HTML `lang` (default: `en`)                     |
+| `--no-defaults-css`   | `mirror-defaults.css` weglassen                 |
+| `--external-css`      | CSS als sibling `<name>.css` statt inline       |
+| `--external-js`       | JS als sibling `<name>.js` statt inline         |
+| `--minify`            | JS minifizieren via esbuild                     |
+| `-w, --watch`         | Rebuild bei File-Änderung                       |
+| `-v, --verbose`       | Verbose Output                                  |
+| `-q, --quiet`         | Success-Messages unterdrücken                   |
+
+**Output-Modi (Größenvergleich `examples/hotel-checkin.mirror`):**
+
+| Modus                                   | HTML   | JS     | CSS   | Total  |
+| --------------------------------------- | ------ | ------ | ----- | ------ |
+| Default (self-contained)                | 230 KB | -      | -     | 230 KB |
+| `--minify`                              | 100 KB | -      | -     | 100 KB |
+| `--external-css --external-js`          | <1 KB  | 170 KB | 60 KB | 230 KB |
+| `--external-css --external-js --minify` | <1 KB  | 70 KB  | 60 KB | 130 KB |
+
+**Architektur:**
+
+- `compiler/build-cli.ts` — Entry, Arg-Parsing, Watch
+- `compiler/cli/build.ts` — Orchestrator (Pipeline: Input → Compile → Wrap → Write)
+- `compiler/cli/html-template.ts` — `buildHtmlDocument()` mit Optionen für Title/Lang/CSS
+- `compiler/cli/defaults-css.ts` — Loader für `mirror-defaults.css` (Fallback-Pfade dist/source)
+
+### `mirror-compile` — JS/React-Output
+
+Für Leute, die das Compile-Resultat selbst einbetten oder weiter prozessieren wollen.
 
 ```bash
 # Nach npm install / npm link
@@ -203,6 +333,33 @@ mirror-compile --project my-app -v -o dist/app.js
 4. `layouts/` → Layouts
 5. `screens/` → Screens
 6. Root-Dateien → App Entry Points
+
+### `mirror-validate` — DSL-Schema-Validierung
+
+Akzeptiert alle Mirror-Code-Extensions (`.mir`/`.mirror`/`.tok`/`.tokens`/`.com`/`.components`).
+
+```bash
+mirror-validate app.mir
+mirror-validate "src/*.mir"
+mirror-validate tokens.tok components.com app.mir
+mirror-validate src/*.mir --json   # für CI
+```
+
+### Wichtige Dateien (CLI)
+
+| Datei                           | Beschreibung                              |
+| ------------------------------- | ----------------------------------------- |
+| `compiler/build-cli.ts`         | `mirror-build` Entry                      |
+| `compiler/cli.ts`               | `mirror-compile` Entry                    |
+| `compiler/validator/cli.ts`     | `mirror-validate` Entry                   |
+| `compiler/cli/build.ts`         | Build-Orchestrator                        |
+| `compiler/cli/html-template.ts` | HTML-Document-Wrap (parametrisiert)       |
+| `compiler/cli/defaults-css.ts`  | Loader für `mirror-defaults.css`          |
+| `compiler/cli/compile.ts`       | `compileFiles` / `compileProject`         |
+| `compiler/cli/watch.ts`         | Watch-Mode (debounced fs.watch)           |
+| `compiler/cli/types.ts`         | `FILE_EXTENSIONS`, File-Type-Detection    |
+| `tests/cli/`                    | CLI-Tests (html-template, build)          |
+| `assets/mirror-defaults.css`    | Default-Stylesheet (wird inline embedded) |
 
 ## Architektur
 
@@ -925,12 +1082,35 @@ Icon check                     Icon "check"                 // Quotes fehlen
 Icon "x", is #ef4444           Icon "x", ic #ef4444         // ic für Farbe, is für Größe
 ```
 
+### Prosa-Mode (textlastige Inhalte)
+
+Frames mit `, prose` lesen ihren Body als Markdown-Untermenge. Wird zu normalen Mirror-Komponenten geparst — kein neues IR, keine zweite Sprache.
+
+```mirror
+// Definition trägt prose → jeder Use-Site ist Prosa-Mode
+Article as Frame: gap 18, prose
+
+Article
+  ## Sektion
+
+  Bare-String-Absätze, **bold** und *italic* funktionieren wie sonst.
+  Mehrzeilige Absätze joinen sich zu einer Zeile (Leerzeile = neuer Absatz).
+
+  - Bullets via `- ` werden zu DashItem
+    - Sub-Bullets via tieferer Einrückung
+
+  1. Numerierte Listen via `1. ` werden zu OffenePunkt
+  2. Mit zweistellig-gepaddter Nummer (01, 02 …)
+```
+
+Mappings (hardcoded v1): bare → `BodyTxt`, `-` → `DashItem` + `BodyTxtCompact`, `# / ## / ###` → `H2 / H3 / H4`, `1.` → `OffenePunkt` + `OffeneNum`. Diese Komponenten muss man im Projekt definieren (typisch `as Text` mit Schriftgrösse). Sonderzeichen (`«»—öäü`) im Prosa-Body werden vom Lex-Error-Filter unterdrückt. Faustregel: **Text länger als Komponente → prose. Komponente länger als Text → kein prose.** Vollständige Regeln in `docs/MIRROR-TUTORIAL-FULL.md` Kapitel „Prosa-Mode".
+
 ### Quick Reference
 
 | Kategorie       | Properties                                                                                        |
 | --------------- | ------------------------------------------------------------------------------------------------- |
 | **Canvas**      | `canvas mobile/tablet/desktop`, `canvas bg #hex, w N, h N, col #hex, font sans, fs N`             |
-| **Layout**      | `hor`, `ver`, `gap N`, `center`, `spread`, `wrap`, `grid N`, `stacked`                            |
+| **Layout**      | `hor`, `ver`, `gap N`, `center`, `spread`, `wrap`, `grid N`, `stacked`, `prose`                   |
 | **Position**    | `tl`, `tc`, `tr`, `cl`, `cr`, `bl`, `bc`, `br`, `x N`, `y N`                                      |
 | **Größe**       | `w N`, `h N`, `w full`, `w hug`, `device mobile/tablet/desktop`, `grow`, `shrink`, `minw`, `maxw` |
 | **Farbe**       | `bg #hex`, `col #hex`, `boc #hex`, `ic #hex`, `grad #a #b`                                        |
@@ -1349,28 +1529,120 @@ Headless Browser-Tests via Chrome DevTools Protocol. Modularer, sauberer Code in
 npm run studio
 
 # Tests ausführen (Terminal 2)
-npm run test:browser:progress     # Alle Tests mit Fortschrittsanzeige (empfohlen)
+npm run test:browser:parallel     # ALLE Tests parallel (4 Worker, ~9 min)
+npm run test:browser:progress     # Alle Tests sequentiell mit Fortschritt
 npm run test:browser:drag         # Nur Drag Tests
 npm run test:browser:mirror       # Nur Mirror Tests
 npm run test:browser:headed       # Mit sichtbarem Browser
 
-# Erweiterte Optionen (via npx)
-npx tsx tools/test.ts --progress --category=layout  # Kategorie mit Fortschritt
-npx tsx tools/test.ts --progress --all              # Alle Tests mit Fortschritt
-npx tsx tools/test.ts --filter="token"              # Nach Name filtern
-npx tsx tools/test.ts --junit=results.xml           # JUnit Report
-npx tsx tools/test.ts --html=report.html            # HTML Report
-npx tsx tools/test.ts --retries=2                   # Retry bei Failures
+# Parallel-Runner Optionen
+npx tsx tools/test-parallel.ts                              # 4 Worker default
+npx tsx tools/test-parallel.ts --workers=8                  # Mehr Parallelität
+npx tsx tools/test-parallel.ts --categories=core,layout     # Subset
+
+# Erweiterte Sequential-Optionen
+npx tsx tools/test.ts --progress --category=layout
+npx tsx tools/test.ts --filter="token"
+npx tsx tools/test.ts --junit=results.xml
+npx tsx tools/test.ts --html=report.html
 ```
 
 **NPM Scripts:**
 
 | Script                          | Beschreibung                                |
 | ------------------------------- | ------------------------------------------- |
-| `npm run test:browser:progress` | Alle Tests mit Live-Fortschritt (empfohlen) |
+| `npm run test:browser:parallel` | **Empfohlen**: Alle Tests parallel (~9 min) |
+| `npm run test:browser:progress` | Alle Tests sequentiell mit Fortschritt      |
 | `npm run test:browser:drag`     | Nur Drag & Drop Tests                       |
 | `npm run test:browser:mirror`   | Nur Mirror Tests                            |
 | `npm run test:browser:headed`   | Mit sichtbarem Browser                      |
+
+### Test-Runner-Performance (siehe `tools/test-parallel.ts`)
+
+- **Parallel-Runner** (`tools/test-parallel.ts`): N Chrome-Instanzen,
+  Work-Stealing Queue über Kategorien. Default 4 Worker.
+- **`__compileTestCode`-Hook in `studio/app.ts`**: synchroner Test-Compile
+  ohne Debounce/Prelude-Setup. Nach Compile: rAF + Microtask flush
+  (~32ms) statt früher 150ms blanket sleep.
+- **Test-Mode-Debounce** (`studio/core/debounce.ts`): wenn
+  `window.__testMode === true`, fired alle debounced Compiles auf
+  setTimeout(fn, 0) statt nach 300ms.
+- **Compile-Generation-Counter** (`window.__compileGeneration`): wird
+  nach jedem Compile inkrementiert. `waitForCompile()` snapshotet vor
+  Aktion und wartet auf Advance — deterministisch ohne Polling-Buffer.
+- **Icon-Wait gated** (`compiler/runtime/icons.ts:waitForPendingIcons`):
+  `flushAfterCompile` wartet nur, wenn das Test-DOM Icon-Elemente ohne
+  SVG-Children enthält. Tests ohne Icons zahlen 0ms statt 250ms Bonus.
+
+**Performance-Profil pro Test (post-optimization):**
+
+| Test-Profil     | Pre    | Post   | Speedup |
+| --------------- | ------ | ------ | ------- |
+| Pure DSL-render | 153ms  | 33ms   | ~5×     |
+| Mit Icon-Fetch  | 153ms  | 200ms  | (gated) |
+| Mit Drag-Op     | 600ms  | 522ms  | 1.15×   |
+| Mit Panel-UI    | 1300ms | 1300ms | 1×      |
+
+**Klassifizierung der 414 Test-Files** (`docs/test-classification.md`):
+
+| Bucket | Count | Beschreibung                                              |
+| ------ | ----- | --------------------------------------------------------- |
+| A      | 243   | Brauchen echten Browser (Drag, Keyboard, Computed-Style)  |
+| B      | 101   | Migrierbar nach Vitest+jsdom (DSL-rein, Output-Assertion) |
+| C      | 23    | Borderline                                                |
+
+**Browser→Vitest Migration** (`tests/utils/mirror-mount.ts`,
+`tests/utils/mirror-test-adapter.ts`, `tools/migrate-browser-tests-to-vitest.ts`):
+
+10 Kategorien wurden 1:1 von Browser-Tests auf Vitest+jsdom umgestellt
+durch Import-Rewriting. Die existierenden `TestCase[]`-Arrays werden
+unverändert per `runTestCases()` adapter unter `it()` repliziert.
+
+| Kategorie             | Files   | Tests    | Browser     | Vitest    |
+| --------------------- | ------- | -------- | ----------- | --------- |
+| tutorial              | 15      | 181      | ~30 s       | ~4 s      |
+| compiler-verification | 29      | 124      | ~4 min      | ~6 s      |
+| styling               | 7       | ~70      | ~3 min      | ~2 s      |
+| compiler-browser      | 4       | ~30      | ~1 min      | ~1 s      |
+| data-binding          | 6       | ~50      | ~2 min      | ~2 s      |
+| components            | 10      | ~100     | ~3 min      | ~3 s      |
+| charts                | 4       | ~25      | ~1 min      | ~1 s      |
+| responsive            | 7       | ~70      | ~2 min      | ~2 s      |
+| primitives            | 2       | ~15      | ~30 s       | ~1 s      |
+| integration           | 4       | ~30      | ~2 min      | ~1 s      |
+| **Total**             | **107** | **~700** | **~18 min** | **~19 s** |
+
+→ ~60× speedup, 94% pass rate. ~30 Files brauchen weiterhin Runtime-
+Interaktion (`api.interact.click/focus/type/drag`) und bleiben im
+Browser-Stack — der Migrator erkennt das automatisch via `needsRuntime()`
+und überspringt sie.
+
+**Migration-Tools:**
+
+- `npm run tutorial:vitest` — wired tutorial tests per Import-Replace
+- `npx tsx tools/migrate-browser-tests-to-vitest.ts <category>` —
+  generischer Migrator für jede `studio/test-api/suites/<dir>/`-Quelle.
+- `tests/utils/mirror-mount.ts` — `mountMirror(dsl)` mountet DSL in jsdom,
+  liefert `getNodeIds()`, `inspect(id)`, `byId(id)`, `unmount()`.
+  `inspect()` returns ElementInfo-shaped data (styles, attributes,
+  dataAttributes, fullText) matching browser inspector.
+- `tests/utils/mirror-test-adapter.ts` — `runTestCases(suite, cases)`
+  läuft existierende `TestCase[]`-Arrays. Adapter maps:
+  - `api.preview.*` → `mountMirror.inspect/byId/findByText`
+  - `api.assert.*` → Vitest `expect()`
+  - `api.dom.expect/verify` → structured DOM-shape assertions
+  - `api.utils.waitForCompile/Idle` → no-op (mount is synchronous)
+- `readStyle(el, prop)` → getComputedStyle mit Color-Normalisierung
+  (`white` → `rgb(255,255,255)`).
+
+**Was bleibt im Browser-Stack:**
+
+- Tests die `api.interact.click/focus/type/keydown/drag/hover` benutzen —
+  brauchen echten Browser-Event-Loop und State-Machine-Runtime.
+- Computed-Layout-Reads (`offsetWidth`, `getBoundingClientRect` mit
+  echten Werten — jsdom returnt 0).
+- Drag-and-Drop, Property-Panel, Editor, Selection (Hauptmasse von ~243 A-
+  Files).
 
 **CLI Optionen:**
 

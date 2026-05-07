@@ -418,6 +418,14 @@ export const properties: PropertyDefinition[] = [
     description: 'Line height',
   },
   {
+    name: 'letter-spacing',
+    aliases: ['ls', 'tracking'],
+    type: 'number',
+    category: 'typography',
+    description: 'Letter spacing (tracking). Negative values tighten.',
+    unit: 'em',
+  },
+  {
     name: 'font',
     aliases: [],
     type: 'string',

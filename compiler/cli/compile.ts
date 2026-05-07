@@ -27,6 +27,29 @@ import {
   listDataFiles,
 } from './files'
 
+/**
+ * Pull a `canvas …` line off the top of a file's content (skipping blanks
+ * and `//` comments). Returns the canvas line + the file content with that
+ * line removed; if no canvas is present, `canvas` is undefined and `rest`
+ * equals the input.
+ */
+function extractCanvasLine(content: string): { canvas?: string; rest: string } {
+  const lines = content.split('\n')
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const trimmed = line.trim()
+    if (trimmed === '' || trimmed.startsWith('//')) continue
+    if (trimmed.startsWith('canvas ') || trimmed === 'canvas') {
+      const before = lines.slice(0, i).join('\n')
+      const after = lines.slice(i + 1).join('\n')
+      const rest = before + (before && after ? '\n' : '') + after
+      return { canvas: line, rest }
+    }
+    return { rest: content }
+  }
+  return { rest: content }
+}
+
 export function compileFiles(
   files: string[],
   backend: 'dom' | 'react',
@@ -37,6 +60,7 @@ export function compileFiles(
 
   try {
     let combinedCode = ''
+    let canvasLine: string | undefined
     let totalLines = 0
     const dataFiles: DataFile[] = []
 
@@ -54,11 +78,21 @@ export function compileFiles(
         const name = basename.slice(0, -ext.length)
         dataFiles.push(parseDataFile(content, name))
       } else if (isMirrorCodeFile(file)) {
+        // Hoist a canvas declaration from any file to the top of the
+        // combined source. The Mirror parser only accepts `canvas …` as
+        // the first non-empty line — in project mode this is otherwise
+        // shadowed by tokens.tok / components.com that get concatenated
+        // before the layout file.
+        const { canvas, rest } = extractCanvasLine(content)
+        if (canvas && !canvasLine) canvasLine = canvas
+
         if (combinedCode) combinedCode += '\n\n'
         combinedCode += `// === ${path.basename(file)} ===\n`
-        combinedCode += content
+        combinedCode += rest
       }
     }
+
+    if (canvasLine) combinedCode = canvasLine + '\n\n' + combinedCode
 
     if (!combinedCode.trim()) {
       return {

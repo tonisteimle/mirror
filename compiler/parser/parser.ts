@@ -44,6 +44,22 @@ export class Parser {
    */
   loopVariables: Set<string> = new Set()
 
+  /**
+   * Registry of component definitions seen so far during this parse.
+   * Used for prose-mode propagation: when a use-site of `Article` is
+   * parsed, body-parser checks whether the registered definition has
+   * `prose` and switches to prose-body parsing if so.
+   */
+  componentDefs: Map<string, import('./ast').ComponentDefinition> = new Map()
+
+  /**
+   * Source-line ranges of prose bodies parsed so far. Lexer errors that
+   * fall inside these ranges are noise (umlauts, em-dashes, guillemets
+   * are valid prose but invalid Mirror tokens) and are filtered out by
+   * `parseWithDiagnostics`.
+   */
+  proseRanges: Array<{ startLine: number; endLine: number }> = []
+
   constructor(tokens: Token[], source: string = '') {
     this.tokens = tokens
     this.source = source
@@ -521,6 +537,17 @@ export function parse(source: string): AST {
 export function parseWithDiagnostics(source: string): { ast: AST; lexerErrors: LexerError[] } {
   const expanded = resolvePositionalArgs(source)
   const lexerResult = tokenizeWithErrors(expanded)
-  const ast = new Parser(lexerResult.tokens, expanded).parse()
-  return { ast, lexerErrors: lexerResult.errors }
+  const parser = new Parser(lexerResult.tokens, expanded)
+  const ast = parser.parse()
+  // Prose bodies legitimately contain characters the Mirror lexer can't
+  // tokenize (umlauts, em-dashes, guillemets). The lexer keeps emitting
+  // tokens past those errors, but the errors themselves are noise. Filter
+  // any error whose source line falls within a recorded prose range.
+  const lexerErrors = lexerResult.errors.filter(err => {
+    for (const range of parser.proseRanges) {
+      if (err.line >= range.startLine && err.line <= range.endLine) return false
+    }
+    return true
+  })
+  return { ast, lexerErrors }
 }

@@ -56,6 +56,7 @@ import {
 import { isPrimitive } from '../schema/dsl'
 import { isChartSlot, isChartPrimitive } from '../schema/chart-primitives'
 import { isStateBlockStart } from './state-detector'
+import { parseProseBody, shouldParseAsProse, type ProseRange } from './prose-body-parser'
 
 /** True when the first character is uppercase A-Z. */
 function isUppercase(str: string): boolean {
@@ -65,6 +66,30 @@ function isUppercase(str: string): boolean {
 }
 
 const U = ParserUtils
+
+/**
+ * Build the callbacks expected by `prose-body-parser` from either set of
+ * body callbacks (instance or component). Both shapes optionally carry
+ * `getComponentDef` and `generateNodeId`; the prose layer needs them to
+ * propagate `prose` from a definition to a use-site, and to invent ids
+ * for synthesized nodes.
+ */
+function makeProseCallbacks(callbacks: {
+  getComponentDef?(name: string): ComponentDefinition | undefined
+  generateNodeId?(): string
+}) {
+  return {
+    generateNodeId: () => callbacks.generateNodeId?.() ?? '',
+    getComponentDef: callbacks.getComponentDef,
+    reportError: () => {
+      // Errors are silently dropped here; the parser-level callback
+      // wires them through via `recordProseRange`. v1 doesn't surface
+      // structural prose errors (malformed bullets, etc.) — they fall
+      // through as plain paragraph text, which is the most forgiving
+      // behaviour and matches how Markdown treats ambiguous input.
+    },
+  }
+}
 
 interface StateBlockHeader {
   modifier?: 'exclusive' | 'toggle' | 'initial'
@@ -169,6 +194,12 @@ export interface InstanceBodyCallbacks {
   parseStateChildInstance(): Instance | null
   parseChartSlot(slotToken: Token): ChartSlotNode | null
   createTextChild(token: Token): Instance
+  /** Look up a previously-defined component by name (for prose-mode propagation). */
+  getComponentDef?(name: string): ComponentDefinition | undefined
+  /** Allocate a fresh AST node id (parser-class-scoped). */
+  generateNodeId?(): string
+  /** Record a prose-body line range so callers can filter lex errors there. */
+  recordProseRange?(range: ProseRange): void
 }
 
 /* ------------------------------------------------------------------ entry */
@@ -178,6 +209,16 @@ export function parseInstanceBody(
   instance: Instance,
   callbacks: InstanceBodyCallbacks
 ): void {
+  // Prose-mode hook: when this Instance (or its component definition)
+  // carries `, prose`, we delegate body parsing to prose-body-parser
+  // and skip the regular Mirror body grammar entirely. The synthesized
+  // children look exactly like hand-written Mirror to downstream IR.
+  if (shouldParseAsProse(instance, makeProseCallbacks(callbacks))) {
+    const range = parseProseBody(ctx, instance, makeProseCallbacks(callbacks))
+    callbacks.recordProseRange?.(range)
+    return
+  }
+
   // Boolean properties that can appear in instance body
   // Using module-level constant (derived from schema via parser-helpers.ts)
   const booleanProperties = ALL_BOOLEAN_PROPERTIES
@@ -611,6 +652,12 @@ export interface ComponentBodyCallbacks {
   isImplicitOnclickCandidate(name: string): boolean
   createTextChild(token: Token): Instance
   peekAt(offset: number): Token | null
+  /** Look up a previously-defined component by name (for prose-mode propagation). */
+  getComponentDef?(name: string): ComponentDefinition | undefined
+  /** Allocate a fresh AST node id (parser-class-scoped). */
+  generateNodeId?(): string
+  /** Record a prose-body line range so callers can filter lex errors there. */
+  recordProseRange?(range: ProseRange): void
 }
 
 /* ------------------------------------------------------------------ entry */
@@ -620,6 +667,22 @@ export function parseComponentBody(
   component: ComponentDefinition,
   callbacks: ComponentBodyCallbacks
 ): void {
+  // Prose-mode hook: a component definition with `, prose` describes a
+  // prose-style component. Its body (the default children, if any) is
+  // parsed as prose and synthesized into the same shapes the use-site
+  // would produce. The prose property remains on the definition so that
+  // use-sites of this component also enter prose mode.
+  if (
+    shouldParseAsProse(
+      component as unknown as { component?: string; properties: Property[] },
+      makeProseCallbacks(callbacks)
+    )
+  ) {
+    const range = parseProseBody(ctx, component, makeProseCallbacks(callbacks))
+    callbacks.recordProseRange?.(range)
+    return
+  }
+
   while (!U.check(ctx, 'DEDENT') && !U.isAtEnd(ctx)) {
     U.skipNewlines(ctx)
 

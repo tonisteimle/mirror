@@ -121,6 +121,11 @@ export function parseComponentDefinition(this: Parser, name: Token): ComponentDe
   // Skip newline before checking for indented block
   this.skipNewlines()
 
+  // Register before body parsing so the body can self-reference (rare,
+  // but harmless) and so use-sites encountered later — including ones
+  // nested in this body — find the definition for prose propagation.
+  this.componentDefs.set(component.name, component)
+
   // Parse indented block
   if (this.check('INDENT')) {
     this.advance()
@@ -169,6 +174,8 @@ export function parseComponentInheritance(this: Parser, name: Token): ComponentD
 
   // Skip newline before checking for indented block
   this.skipNewlines()
+
+  this.componentDefs.set(component.name, component)
 
   if (this.check('INDENT')) {
     this.advance()
@@ -220,6 +227,8 @@ export function parseComponentDefinitionWithDefaultPrimitive(
 
   // Skip newline before checking for indented block
   this.skipNewlines()
+
+  this.componentDefs.set(component.name, component)
 
   // Parse indented block
   if (this.check('INDENT')) {
@@ -628,6 +637,11 @@ export function parseComponentBody(this: Parser, component: ComponentDefinition)
       ctx.pos = this.pos
       return result
     },
+    getComponentDef: name => this.componentDefs.get(name),
+    generateNodeId: () => this.generateNodeId(),
+    recordProseRange: range => {
+      this.proseRanges.push(range)
+    },
   }
 
   parseComponentBodyExtracted(ctx, component, callbacks)
@@ -717,6 +731,11 @@ export function parseInstanceBody(this: Parser, instance: Instance): void {
       return result
     },
     createTextChild: token => this.createTextChild(token),
+    getComponentDef: name => this.componentDefs.get(name),
+    generateNodeId: () => this.generateNodeId(),
+    recordProseRange: range => {
+      this.proseRanges.push(range)
+    },
   }
 
   parseInstanceBodyExtracted(ctx, instance, callbacks)
