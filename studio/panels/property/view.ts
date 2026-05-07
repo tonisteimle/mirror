@@ -618,14 +618,20 @@ export class PropertyPanelView {
       }
     }
 
-    // Sizing section
+    // Sizing section — surface width and height tokens (separate suffixes
+    // .w and .h, picked up via getSpacingTokens). The section filters
+    // them internally per row.
     if (allowedSections.has('sizing') && sizingCat) {
       const section = this.sections.get('sizing')
       if (section) {
+        const wTokens = isInPositionedContainer ? [] : this.ports.tokens.getSpacingTokens('w')
+        const hTokens = isInPositionedContainer ? [] : this.ports.tokens.getSpacingTokens('h')
         result += section.render({
           ...sectionData,
           category: sizingCat,
-          spacingTokens: isInPositionedContainer ? [] : undefined,
+          // Pass both via spacingTokens (single field) — sizing filters by
+          // .w/.h suffix the same way other sections filter by .pad/.gap.
+          spacingTokens: [...wTokens, ...hTokens],
         })
       }
     }

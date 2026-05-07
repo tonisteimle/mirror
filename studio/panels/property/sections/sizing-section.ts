@@ -11,6 +11,7 @@ import {
   type SectionData,
   type EventHandlerMap,
 } from '../base/section'
+import { renderTokenButtonGroup } from '../utils/render-token-buttons'
 
 /**
  * Sizing icons
@@ -116,6 +117,24 @@ export class SizingSection extends BaseSection {
         `<option value="${preset.value}" ${currentDevice === preset.value ? 'selected' : ''}>${preset.label}</option>`
     ).join('')
 
+    // Token buttons (width + height tokens come pre-loaded in spacingTokens;
+    // filter by suffix the same way the other sections do).
+    const wTokenItems = (data.spacingTokens || [])
+      .filter(t => t.fullName.endsWith('.w'))
+      .map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))
+    const hTokenItems = (data.spacingTokens || [])
+      .filter(t => t.fullName.endsWith('.h'))
+      .map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` }))
+
+    const widthTokenGroup =
+      wTokenItems.length > 0
+        ? `<div class="token-group">${renderTokenButtonGroup({ activeValue: widthValue, propKey: 'w', tokens: wTokenItems })}</div>`
+        : ''
+    const heightTokenGroup =
+      hTokenItems.length > 0
+        ? `<div class="token-group">${renderTokenButtonGroup({ activeValue: heightValue, propKey: 'h', tokens: hTokenItems })}</div>`
+        : ''
+
     return `
       <div class="section">
         <div class="section-label">Size</div>
@@ -143,6 +162,7 @@ export class SizingSection extends BaseSection {
                   </svg>
                 </button>
               </div>
+              ${widthTokenGroup}
               <input type="text" class="${widthInputClass}" autocomplete="off" value="${this.deps.escapeHtml(widthDisplayValue)}" data-prop="width" data-token-ref="${widthIsToken ? this.deps.escapeHtml(widthValue) : ''}" placeholder="auto">
             </div>
           </div>
@@ -161,6 +181,7 @@ export class SizingSection extends BaseSection {
                   </svg>
                 </button>
               </div>
+              ${heightTokenGroup}
               <input type="text" class="${heightInputClass}" autocomplete="off" value="${this.deps.escapeHtml(heightDisplayValue)}" data-prop="height" data-token-ref="${heightIsToken ? this.deps.escapeHtml(heightValue) : ''}" placeholder="auto">
             </div>
           </div>
@@ -239,6 +260,44 @@ export class SizingSection extends BaseSection {
         input: (e: Event, target: HTMLElement) => {
           const input = target as HTMLInputElement
           this.deps.onPropertyChange('is', input.value, 'input')
+        },
+      },
+      // Width/height token buttons. Both the token-btn and the
+      // token-dropdown-item carry data-{w,h}-token, so a single
+      // selector pair covers visible + dropdown variants.
+      '.token-btn[data-w-token], .token-dropdown-item[data-w-token]': {
+        click: (_e: Event, target: HTMLElement) => {
+          const tokenRef = target.dataset.tokenRef
+          const value = tokenRef || target.dataset.wToken
+          if (value) {
+            this.deps.onPropertyChange('width', value, 'token')
+          }
+          target.closest('.token-dropdown')?.classList.remove('open')
+        },
+      },
+      '.token-btn[data-h-token], .token-dropdown-item[data-h-token]': {
+        click: (_e: Event, target: HTMLElement) => {
+          const tokenRef = target.dataset.tokenRef
+          const value = tokenRef || target.dataset.hToken
+          if (value) {
+            this.deps.onPropertyChange('height', value, 'token')
+          }
+          target.closest('.token-dropdown')?.classList.remove('open')
+        },
+      },
+      // Generic more-button toggle for width/height token dropdowns.
+      // (Other sections own their own per-section more-btn handler;
+      // this one fires when the more-btn doesn't match those — within
+      // the sizing section's DOM it's the only one.)
+      '.token-more-btn[data-w-token-dir], .token-more-btn[data-h-token-dir]': {
+        click: (e: Event, target: HTMLElement) => {
+          e.stopPropagation()
+          const container = target.closest('.token-more-container')
+          const dropdown = container?.querySelector('.token-dropdown') as HTMLElement | null
+          if (!dropdown) return
+          const isOpen = dropdown.classList.contains('open')
+          document.querySelectorAll('.token-dropdown.open').forEach(d => d.classList.remove('open'))
+          if (!isOpen) dropdown.classList.add('open')
         },
       },
     }

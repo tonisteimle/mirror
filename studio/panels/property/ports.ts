@@ -145,7 +145,7 @@ export interface TokenPort {
    * Gets spacing tokens for a specific property type.
    * @param propType - 'pad', 'mar', 'gap', or 'rad'
    */
-  getSpacingTokens(propType: 'pad' | 'mar' | 'gap' | 'rad' | 'fs'): SpacingToken[]
+  getSpacingTokens(propType: 'pad' | 'mar' | 'gap' | 'rad' | 'fs' | 'w' | 'h'): SpacingToken[]
 
   /**
    * Gets all color tokens.
