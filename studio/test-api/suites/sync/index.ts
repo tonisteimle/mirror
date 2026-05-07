@@ -11,6 +11,7 @@ export { editorToPreviewTests } from './editor-to-preview.test'
 export { previewToEditorTests } from './preview-to-editor.test'
 export { panelToEditorTests } from './panel-to-editor.test'
 export { editorToPanelTests } from './editor-to-panel.test'
+export { panelEdgeCaseTests } from './panel-edge-cases.test'
 export { multiDirectionalTests } from './multi-directional.test'
 export { rapidChangeTests } from './rapid-changes.test'
 export { edgeCaseTests } from './edge-cases.test'
@@ -28,6 +29,7 @@ import { editorToPreviewTests } from './editor-to-preview.test'
 import { previewToEditorTests } from './preview-to-editor.test'
 import { panelToEditorTests } from './panel-to-editor.test'
 import { editorToPanelTests } from './editor-to-panel.test'
+import { panelEdgeCaseTests } from './panel-edge-cases.test'
 import { multiDirectionalTests } from './multi-directional.test'
 import { rapidChangeTests } from './rapid-changes.test'
 import { edgeCaseTests } from './edge-cases.test'
@@ -46,6 +48,7 @@ export const allSyncTests: TestCase[] = [
   ...previewToEditorTests,
   ...panelToEditorTests,
   ...editorToPanelTests,
+  ...panelEdgeCaseTests,
   ...multiDirectionalTests,
   ...rapidChangeTests,
   ...edgeCaseTests,

@@ -11,7 +11,7 @@ import type {
   CodeModifier,
   ModificationResult,
 } from '../../../core/compiler-types'
-import { isAbsoluteLayoutContainer, createLogger } from '../../../core/compiler-types'
+import { isAbsoluteLayoutContainer } from '../../../core/compiler-types'
 import { events, state } from '../../../core'
 import { TokenCache } from '../utils/tokens'
 import type {
@@ -28,8 +28,6 @@ import type {
   PropertyChange,
   Rect,
 } from '../ports'
-
-const log = createLogger('SelectionAdapter')
 
 // ============================================
 // Selection Provider Interface
@@ -64,16 +62,14 @@ export function createSelectionAdapter(selectionProvider: SelectionProvider): Se
       return selectionProvider.getSelection()
     },
 
-    select(nodeId) {
-      // Selection is typically managed externally
-      // This is a read-mostly port
-      log.warn('Direct selection not supported - use SelectionManager')
-    },
+    // Selection is owned by the core state + SyncCoordinator. The panel
+    // reads via subscribe() / getSelection() but never writes. The two
+    // methods below exist only to satisfy the SelectionPort contract
+    // (test fixtures use them as event-trigger helpers); production code
+    // intentionally leaves them as no-ops.
+    select(_nodeId) {},
 
-    clearSelection() {
-      // Selection is typically managed externally
-      log.warn('Direct clear not supported - use SelectionManager')
-    },
+    clearSelection() {},
   }
 }
 
