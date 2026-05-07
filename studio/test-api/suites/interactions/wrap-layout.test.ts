@@ -38,18 +38,26 @@ export const hKeyBehaviorTests: TestCase[] = describe('H Key - Single vs Multi S
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
 
-      // Multiselect two buttons
       await api.interact.click('node-2')
       await api.utils.delay(100)
       await api.interact.shiftClick('node-3')
       await api.utils.delay(100)
 
-      // Press H to wrap
       await api.interact.pressKey('h')
       await api.utils.waitForCompile()
 
-      // Should have Frame hor wrapping the buttons
-      api.assert.codeContains(/Frame hor/)
+      // Wrap inserts Frame hor (with parent's gap calculated from
+      // rendered spacing) at node-2's position, with the two selected
+      // buttons re-indented under it. Button C stays where it was.
+      // We verify the wrapper line via regex (gap is render-derived)
+      // but anchor the rest with codeEquals-style structural checks.
+      const code = api.editor.getCode()
+      const expectedShape =
+        /^Frame ver, gap 16\n {2}Frame hor, gap \d+\n {4}Button "A"\n {4}Button "B"\n {2}Button "C"$/
+      api.assert.ok(
+        expectedShape.test(code),
+        `Expected Frame ver wrapping a Frame hor with Button A+B + Button C as sibling.\n--- Actual ---\n${code}`
+      )
     }
   ),
 
@@ -59,7 +67,6 @@ export const hKeyBehaviorTests: TestCase[] = describe('H Key - Single vs Multi S
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
 
-      // Multiselect both texts
       await api.interact.click('node-2')
       await api.utils.delay(100)
       await api.interact.shiftClick('node-3')
@@ -68,8 +75,15 @@ export const hKeyBehaviorTests: TestCase[] = describe('H Key - Single vs Multi S
       await api.interact.pressKey('h')
       await api.utils.waitForCompile()
 
-      // Should have Frame with hor and gap
-      api.assert.codeContains(/Frame hor, gap/)
+      const code = api.editor.getCode()
+      // Whole-source check: outer Frame ver gap 12 unchanged, two Text
+      // children re-indented under a new Frame hor with gap.
+      const expectedShape =
+        /^Frame ver, gap 12\n {2}Frame hor, gap \d+\n {4}Text "Item 1"\n {4}Text "Item 2"$/
+      api.assert.ok(
+        expectedShape.test(code),
+        `Expected outer Frame preserved + Frame hor wrapper with gap.\n--- Actual ---\n${code}`
+      )
     }
   ),
 ])
@@ -101,18 +115,21 @@ export const vKeyBehaviorTests: TestCase[] = describe('V Key - Single vs Multi S
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
 
-      // Multiselect two buttons
       await api.interact.click('node-2')
       await api.utils.delay(100)
       await api.interact.shiftClick('node-3')
       await api.utils.delay(100)
 
-      // Press V to wrap
       await api.interact.pressKey('v')
       await api.utils.waitForCompile()
 
-      // Should have Frame ver wrapping the buttons
-      api.assert.codeContains(/Frame ver/)
+      const code = api.editor.getCode()
+      const expectedShape =
+        /^Frame hor, gap 16\n {2}Frame ver, gap \d+\n {4}Button "A"\n {4}Button "B"\n {2}Button "C"$/
+      api.assert.ok(
+        expectedShape.test(code),
+        `Expected Frame hor preserved + Frame ver wrapper for A+B.\n--- Actual ---\n${code}`
+      )
     }
   ),
 
@@ -122,7 +139,6 @@ export const vKeyBehaviorTests: TestCase[] = describe('V Key - Single vs Multi S
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
 
-      // Multiselect both texts
       await api.interact.click('node-2')
       await api.utils.delay(100)
       await api.interact.shiftClick('node-3')
@@ -131,8 +147,13 @@ export const vKeyBehaviorTests: TestCase[] = describe('V Key - Single vs Multi S
       await api.interact.pressKey('v')
       await api.utils.waitForCompile()
 
-      // Should have Frame with ver and gap
-      api.assert.codeContains(/Frame ver, gap/)
+      const code = api.editor.getCode()
+      const expectedShape =
+        /^Frame hor, gap 20\n {2}Frame ver, gap \d+\n {4}Text "Item 1"\n {4}Text "Item 2"$/
+      api.assert.ok(
+        expectedShape.test(code),
+        `Expected outer Frame preserved + Frame ver wrapper.\n--- Actual ---\n${code}`
+      )
     }
   ),
 ])
@@ -313,7 +334,6 @@ export const nestedElementTests: TestCase[] = describe('Nested Element Wrapping'
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
 
-      // Multiselect all three buttons
       await api.interact.click('node-2')
       await api.utils.delay(100)
       await api.interact.shiftClick('node-3')
@@ -321,15 +341,18 @@ export const nestedElementTests: TestCase[] = describe('Nested Element Wrapping'
       await api.interact.shiftClick('node-4')
       await api.utils.delay(100)
 
-      // Wrap horizontally
       await api.interact.pressKey('h')
       await api.utils.waitForCompile()
 
-      // Should have Frame hor containing all buttons
-      api.assert.codeContains(/Frame hor/)
-      api.assert.codeContains(/Button "A"/)
-      api.assert.codeContains(/Button "B"/)
-      api.assert.codeContains(/Button "C"/)
+      // All three buttons should now be wrapped under Frame hor; outer
+      // Frame keeps `ver, gap 8`. Order preserved A → B → C.
+      const code = api.editor.getCode()
+      const expectedShape =
+        /^Frame ver, gap 8\n {2}Frame hor, gap \d+\n {4}Button "A"\n {4}Button "B"\n {4}Button "C"$/
+      api.assert.ok(
+        expectedShape.test(code),
+        `Expected all three buttons wrapped in Frame hor.\n--- Actual ---\n${code}`
+      )
     }
   ),
 
@@ -339,7 +362,6 @@ export const nestedElementTests: TestCase[] = describe('Nested Element Wrapping'
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
 
-      // Wrap A and B horizontally
       await api.interact.click('node-2')
       await api.utils.delay(100)
       await api.interact.shiftClick('node-3')
@@ -348,15 +370,14 @@ export const nestedElementTests: TestCase[] = describe('Nested Element Wrapping'
       await api.interact.pressKey('h')
       await api.utils.waitForCompile()
 
-      // Should have Frame hor containing A and B
+      // A+B wrapped under Frame hor at the position node-2 used to be;
+      // C remains sibling of the new wrapper.
       const code = api.editor.getCode()
-      api.assert.codeContains(/Frame hor/)
-      // C should still be a sibling of the new Frame
-      api.assert.ok(code.includes('Text "C"'), 'Text C should still exist as sibling')
-      // A and B should be wrapped
+      const expectedShape =
+        /^Frame pad 16\n {2}Frame hor, gap \d+\n {4}Text "A"\n {4}Text "B"\n {2}Text "C"$/
       api.assert.ok(
-        code.includes('Text "A"') && code.includes('Text "B"'),
-        'Wrapped elements should still exist'
+        expectedShape.test(code),
+        `Expected A+B wrapped, C as sibling.\n--- Actual ---\n${code}`
       )
     }
   ),
