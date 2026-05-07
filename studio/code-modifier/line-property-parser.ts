@@ -346,6 +346,11 @@ export function updatePropertyInLine(
   newValue: string
 ): string {
   const canonicalName = getCanonicalName(propName)
+  // Trim panel-supplied value so leading/trailing whitespace never
+  // makes it into source. Internal spaces (e.g. `pad 16 12 8`) are
+  // preserved by trim. Without this, a paste of `  200  ` into a
+  // numeric input writes `w   200  ,` and corrupts the line.
+  newValue = newValue.trim()
 
   // Find the property (by canonical name)
   const propIndex = parsedLine.properties.findIndex(p => p.canonicalName === canonicalName)
@@ -382,6 +387,8 @@ export function updatePropertyInLine(
  */
 export function addPropertyToLine(parsedLine: ParsedLine, propName: string, value: string): string {
   const canonicalName = getCanonicalName(propName)
+  // Trim panel-supplied value (cf. updatePropertyInLine).
+  value = value.trim()
   const existing = parsedLine.properties.find(p => p.canonicalName === canonicalName)
   if (existing) {
     const existingValue = existing.value ?? ''

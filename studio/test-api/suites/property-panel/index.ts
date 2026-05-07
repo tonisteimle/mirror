@@ -12,6 +12,7 @@ import { sectionExpandTests } from './section-expand.test'
 import { sizingTokenTests } from './sizing-tokens.test'
 import { colorTokenTests } from './color-tokens.test'
 import { panelWriteTightTests } from './panel-write-tight.test'
+import { panelValidationTests } from './panel-validation.test'
 
 export {
   tokenDisplayTests,
@@ -23,6 +24,7 @@ export {
   sizingTokenTests,
   colorTokenTests,
   panelWriteTightTests,
+  panelValidationTests,
 }
 
 export const allPropertyPanelTests: TestCase[] = [
@@ -35,6 +37,7 @@ export const allPropertyPanelTests: TestCase[] = [
   ...sizingTokenTests,
   ...colorTokenTests,
   ...panelWriteTightTests,
+  ...panelValidationTests,
 ]
 
 export {

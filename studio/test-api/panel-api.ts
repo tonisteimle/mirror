@@ -159,9 +159,17 @@ class PropertyPanelAPIImpl implements PropertyPanelAPI {
       // Wait for debounce (300ms) + processing
       await new Promise(resolve => setTimeout(resolve, 500))
 
-      // Check if the code actually changed
+      // Check if the code actually changed.
+      // Use trimmed value because the production path
+      // (line-property-parser.updatePropertyInLine) trims panel
+      // input before insertion. Without trim here, a value like
+      // '  200  ' wouldn't satisfy `newCode.includes('w   200  ')`,
+      // the check would fail, the fallback regex-replace would run,
+      // and the fallback would write the untrimmed value verbatim,
+      // shadowing the production fix.
+      const trimmedValue = value.trim()
       const newCode = editor?.state?.doc?.toString() ?? ''
-      const valueInCode = propNames.some(n => newCode.includes(`${n} ${value}`))
+      const valueInCode = propNames.some(n => newCode.includes(`${n} ${trimmedValue}`))
       if (newCode !== originalCode && valueInCode) {
         return true
       }
