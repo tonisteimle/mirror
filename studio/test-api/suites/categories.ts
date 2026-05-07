@@ -61,6 +61,7 @@ import {
   allAlignmentFromEmptyTests,
   allAlignmentFromMoveTests,
   eachTemplateGuardTests,
+  gridCellDropTests,
   realPointerEventTests,
   allMoveEdgeCaseTests,
 } from './drag'
@@ -111,6 +112,7 @@ import { allIndentationTests } from './editor/indentation.test'
 import { allEditorDropTests } from './editor/editor-drop.test'
 import { allLinterTests } from './editor/linter.test'
 import { editorFileTabsTests } from './editor/file-tabs.test'
+import { allInlineEditTests } from './inline-edit'
 
 // Data (Data Binding, Actions, Events, Responsive, Charts)
 import { allDataBindingTests } from './data-binding'
@@ -206,6 +208,7 @@ export const dragTests: TestCase[] = [
   ...allAlignmentFromEmptyTests,
   ...allAlignmentFromMoveTests,
   ...eachTemplateGuardTests,
+  ...gridCellDropTests,
   ...realPointerEventTests,
   ...allMoveEdgeCaseTests,
 ]
@@ -273,6 +276,7 @@ export const editorTests: TestCase[] = [
   ...allEditorDropTests,
   ...allLinterTests,
   ...editorFileTabsTests,
+  ...allInlineEditTests,
 ]
 
 /**

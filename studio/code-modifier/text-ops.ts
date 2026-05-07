@@ -6,7 +6,8 @@
  */
 
 import type { CodeModifier, ModificationResult } from './code-modifier'
-import { parseLine, type ParsedLine } from './line-property-parser'
+import { type ParsedLine } from './line-property-parser'
+import { applyLineEditWithParsed } from './line-edit'
 
 /**
  * Update text content of a text element
@@ -25,88 +26,61 @@ export function updateTextContent(
   nodeId: string,
   newText: string
 ): ModificationResult & { oldText?: string } {
-  const nodeMapping = this.sourceMap.getNodeById(nodeId)
-  if (!nodeMapping) {
-    return { ...this.errorResult(`Node not found: ${nodeId}`), oldText: undefined }
-  }
-
-  // Get the node's line
-  const nodeLine = nodeMapping.position.line
-  const line = this.lines[nodeLine - 1]
-  if (!line) {
-    return { ...this.errorResult(`Line not found: ${nodeLine}`), oldText: undefined }
-  }
-
-  // Parse the line
-  const parsedLine = parseLine(line)
-
-  // Get old text content
-  const oldText = parsedLine.textContent
-    ? parsedLine.textContent.replace(/^["']|["']$/g, '') // Remove quotes
-    : ''
-
-  // Escape quotes in new text
   const escapedNewText = newText.replace(/"/g, '\\"')
+  const modifier = this
 
-  // Build the new line
-  let newLine: string
+  const { result, parsedLine } = applyLineEditWithParsed(this, nodeId, (line, parsed) =>
+    computeNewTextLine(modifier, line, parsed, escapedNewText)
+  )
 
+  // Capture oldText for undo. parsedLine is null only if nodeMapping
+  // / line lookup failed — in that case the result is already an
+  // error and oldText is undefined.
+  const oldText = parsedLine?.textContent ? parsedLine.textContent.replace(/^["']|["']$/g, '') : ''
+
+  return { ...result, oldText: result.success ? oldText : undefined }
+}
+
+/**
+ * Compute the new line for a text-content edit. Three cases:
+ *   - Quoted literal already on the line  → in-place replace.
+ *   - No text content + has properties    → insert before first prop.
+ *   - No text content + no properties     → append at end.
+ */
+function computeNewTextLine(
+  modifier: CodeModifier,
+  line: string,
+  parsedLine: ParsedLine,
+  escapedNewText: string
+): string {
   if (parsedLine.textContent) {
-    // Replace existing text content
     // Find the FIRST text content position after the component name
-    // Using indexOf instead of lastIndexOf to avoid matching duplicate text in properties
+    // (indexOf, not lastIndexOf, so duplicate text in property values
+    // doesn't get rewritten).
     const componentEndApprox = parsedLine.indent.length + (parsedLine.componentPart?.length || 0)
     const textStart = line.indexOf(parsedLine.textContent, componentEndApprox)
     if (textStart !== -1) {
-      newLine =
+      return (
         line.substring(0, textStart) +
         `"${escapedNewText}"` +
         line.substring(textStart + parsedLine.textContent.length)
-    } else {
-      // Fallback: rebuild line
-      newLine = this.rebuildLineWithText(parsedLine, escapedNewText)
+      )
     }
-  } else {
-    // Add text content after component name
-    // Insert before first property or at end
-    if (parsedLine.properties.length > 0) {
-      // Insert text content before first property
-      const firstProp = parsedLine.properties[0]
-      const beforeProps = line.substring(0, firstProp.startIndex)
-      const afterProps = line.substring(firstProp.startIndex)
-      // Check if there's a comma separator or not
-      const needsComma = afterProps.trim().startsWith(',') ? '' : ','
-      newLine = `${beforeProps.trimEnd()} "${escapedNewText}"${needsComma} ${afterProps.trimStart()}`
-    } else {
-      // No properties, just append text content
-      newLine = `${line.trimEnd()} "${escapedNewText}"`
-    }
+    // Fallback if indexOf doesn't find the literal — rebuild.
+    return modifier.rebuildLineWithText(parsedLine, escapedNewText)
   }
 
-  // Calculate character offsets for the change
-  const lineStartOffset = this.getCharacterOffset(nodeLine, 1)
-  const from = lineStartOffset
-  const to = lineStartOffset + line.length
-
-  // Apply the change
-  const newLines = [...this.lines]
-  newLines[nodeLine - 1] = newLine
-  const newSource = newLines.join('\n')
-
-  // CRITICAL: Persist the changes for subsequent calls
-  this.source = newSource
-  this.lines = newLines
-
-  return {
-    success: true,
-    newSource,
-    change: {
-      from,
-      to,
-      insert: newLine,
-    },
-    oldText,
+  if (parsedLine.properties.length > 0) {
+    // Insert text content before first property.
+    const firstProp = parsedLine.properties[0]
+    const beforeProps = line.substring(0, firstProp.startIndex)
+    const afterProps = line.substring(firstProp.startIndex)
+    const needsComma = afterProps.trim().startsWith(',') ? '' : ','
+    return `${beforeProps.trimEnd()} "${escapedNewText}"${needsComma} ${afterProps.trimStart()}`
   }
+
+  // No properties, no existing text — append.
+  return `${line.trimEnd()} "${escapedNewText}"`
 }
 
 /**

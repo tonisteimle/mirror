@@ -17,65 +17,8 @@ import {
   addPropertyToLine,
   removePropertyFromLine,
   findPropertyInLine,
-  type ParsedLine,
 } from './line-property-parser'
-
-/**
- * Boilerplate skeleton for any single-line property edit.
- *
- * 1. Resolve nodeId → line index via sourceMap.
- * 2. Parse the original line.
- * 3. Hand the parsed line to `compute`, which returns either the new
- *    line string OR null for a no-op.
- * 4. Persist the new line to the modifier's source/lines (load-bearing
- *    for batch / sequential edits — without this, downstream calls
- *    operate on stale source).
- * 5. Build the CodeMirror-shaped { from, to, insert } change.
- *
- * The three property ops below differ only in step 3.
- */
-function applyLineEdit(
-  modifier: CodeModifier,
-  nodeId: string,
-  compute: (line: string, parsed: ParsedLine) => string | null
-): ModificationResult {
-  const nodeMapping = modifier.sourceMap.getNodeById(nodeId)
-  if (!nodeMapping) return modifier.errorResult(`Node not found: ${nodeId}`)
-
-  const nodeLine = nodeMapping.position.line
-  const line = modifier.lines[nodeLine - 1]
-  if (!line) return modifier.errorResult(`Line not found: ${nodeLine}`)
-
-  const parsedLine = parseLine(line)
-  const newLine = compute(line, parsedLine)
-
-  if (newLine === null) {
-    // No-op: signal success without touching the source.
-    return {
-      success: true,
-      change: { from: 0, to: 0, insert: '' },
-      newSource: modifier.source,
-    }
-  }
-
-  const lineStartOffset = modifier.getCharacterOffset(nodeLine, 1)
-  const from = lineStartOffset
-  const to = lineStartOffset + line.length
-
-  const newLines = [...modifier.lines]
-  newLines[nodeLine - 1] = newLine
-  const newSource = newLines.join('\n')
-
-  // CRITICAL: persist for subsequent calls (sequential / batch edits).
-  modifier.source = newSource
-  modifier.lines = newLines
-
-  return {
-    success: true,
-    newSource,
-    change: { from, to, insert: newLine },
-  }
-}
+import { applyLineEdit } from './line-edit'
 
 /**
  * Update an existing property value
