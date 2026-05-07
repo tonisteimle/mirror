@@ -17,7 +17,65 @@ import {
   addPropertyToLine,
   removePropertyFromLine,
   findPropertyInLine,
+  type ParsedLine,
 } from './line-property-parser'
+
+/**
+ * Boilerplate skeleton for any single-line property edit.
+ *
+ * 1. Resolve nodeId → line index via sourceMap.
+ * 2. Parse the original line.
+ * 3. Hand the parsed line to `compute`, which returns either the new
+ *    line string OR null for a no-op.
+ * 4. Persist the new line to the modifier's source/lines (load-bearing
+ *    for batch / sequential edits — without this, downstream calls
+ *    operate on stale source).
+ * 5. Build the CodeMirror-shaped { from, to, insert } change.
+ *
+ * The three property ops below differ only in step 3.
+ */
+function applyLineEdit(
+  modifier: CodeModifier,
+  nodeId: string,
+  compute: (line: string, parsed: ParsedLine) => string | null
+): ModificationResult {
+  const nodeMapping = modifier.sourceMap.getNodeById(nodeId)
+  if (!nodeMapping) return modifier.errorResult(`Node not found: ${nodeId}`)
+
+  const nodeLine = nodeMapping.position.line
+  const line = modifier.lines[nodeLine - 1]
+  if (!line) return modifier.errorResult(`Line not found: ${nodeLine}`)
+
+  const parsedLine = parseLine(line)
+  const newLine = compute(line, parsedLine)
+
+  if (newLine === null) {
+    // No-op: signal success without touching the source.
+    return {
+      success: true,
+      change: { from: 0, to: 0, insert: '' },
+      newSource: modifier.source,
+    }
+  }
+
+  const lineStartOffset = modifier.getCharacterOffset(nodeLine, 1)
+  const from = lineStartOffset
+  const to = lineStartOffset + line.length
+
+  const newLines = [...modifier.lines]
+  newLines[nodeLine - 1] = newLine
+  const newSource = newLines.join('\n')
+
+  // CRITICAL: persist for subsequent calls (sequential / batch edits).
+  modifier.source = newSource
+  modifier.lines = newLines
+
+  return {
+    success: true,
+    newSource,
+    change: { from, to, insert: newLine },
+  }
+}
 
 /**
  * Update an existing property value
@@ -34,55 +92,23 @@ export function updateProperty(
   newValue: string,
   options: ModifyPropertyOptions = {}
 ): ModificationResult {
+  // Existing-prop check decides between in-place update vs append.
+  // We need the parse result before deciding, so we do the lookup
+  // up-front (outside applyLineEdit), then either delegate to
+  // addProperty or pass the new-line computer to applyLineEdit.
   const nodeMapping = this.sourceMap.getNodeById(nodeId)
-  if (!nodeMapping) {
-    return this.errorResult(`Node not found: ${nodeId}`)
-  }
+  if (!nodeMapping) return this.errorResult(`Node not found: ${nodeId}`)
+  const line = this.lines[nodeMapping.position.line - 1]
+  if (!line) return this.errorResult(`Line not found: ${nodeMapping.position.line}`)
 
-  // Get the node's line
-  const nodeLine = nodeMapping.position.line
-  const line = this.lines[nodeLine - 1]
-  if (!line) {
-    return this.errorResult(`Line not found: ${nodeLine}`)
-  }
-
-  // Parse the entire line for robust property handling
-  const parsedLine = parseLine(line)
-
-  // Check if property exists (using alias-aware lookup)
-  const existingProp = findPropertyInLine(parsedLine, propName)
-
-  if (!existingProp) {
-    // Property doesn't exist - add it
+  const parsed = parseLine(line)
+  if (!findPropertyInLine(parsed, propName)) {
     return this.addProperty(nodeId, propName, newValue, options)
   }
 
-  // Update the property using the line parser
-  const newLine = updatePropertyInLine(parsedLine, propName, newValue)
-
-  // Calculate character offsets for the change
-  const lineStartOffset = this.getCharacterOffset(nodeLine, 1)
-  const from = lineStartOffset
-  const to = lineStartOffset + line.length
-
-  // Apply the change
-  const newLines = [...this.lines]
-  newLines[nodeLine - 1] = newLine
-  const newSource = newLines.join('\n')
-
-  // CRITICAL: Persist the changes for subsequent calls
-  this.source = newSource
-  this.lines = newLines
-
-  return {
-    success: true,
-    newSource,
-    change: {
-      from,
-      to,
-      insert: newLine,
-    },
-  }
+  return applyLineEdit(this, nodeId, (_line, parsedLine) =>
+    updatePropertyInLine(parsedLine, propName, newValue)
+  )
 }
 
 /**
@@ -95,47 +121,9 @@ export function addProperty(
   nodeId: string,
   propName: string,
   value: string,
-  options: ModifyPropertyOptions = {}
+  _options: ModifyPropertyOptions = {}
 ): ModificationResult {
-  const nodeMapping = this.sourceMap.getNodeById(nodeId)
-  if (!nodeMapping) {
-    return this.errorResult(`Node not found: ${nodeId}`)
-  }
-
-  // Find the node's line
-  const nodeLine = nodeMapping.position.line
-  const line = this.lines[nodeLine - 1]
-  if (!line) {
-    return this.errorResult(`Line not found: ${nodeLine}`)
-  }
-
-  // Parse the line and add property
-  const parsedLine = parseLine(line)
-  const newLine = addPropertyToLine(parsedLine, propName, value)
-
-  // Calculate character offsets for the change
-  const lineStartOffset = this.getCharacterOffset(nodeLine, 1)
-  const from = lineStartOffset
-  const to = lineStartOffset + line.length
-
-  // Apply the change
-  const newLines = [...this.lines]
-  newLines[nodeLine - 1] = newLine
-  const newSource = newLines.join('\n')
-
-  // CRITICAL: Persist the changes for subsequent calls
-  this.source = newSource
-  this.lines = newLines
-
-  return {
-    success: true,
-    newSource,
-    change: {
-      from,
-      to,
-      insert: newLine,
-    },
-  }
+  return applyLineEdit(this, nodeId, (_line, parsed) => addPropertyToLine(parsed, propName, value))
 }
 
 /**
@@ -148,58 +136,10 @@ export function removeProperty(
   nodeId: string,
   propName: string
 ): ModificationResult {
-  const nodeMapping = this.sourceMap.getNodeById(nodeId)
-  if (!nodeMapping) {
-    return this.errorResult(`Node not found: ${nodeId}`)
-  }
-
-  // Get the node's line
-  const nodeLine = nodeMapping.position.line
-  const line = this.lines[nodeLine - 1]
-  if (!line) {
-    return this.errorResult(`Line not found: ${nodeLine}`)
-  }
-
-  // Parse the line and check if property exists
-  const parsedLine = parseLine(line)
-  const existingProp = findPropertyInLine(parsedLine, propName)
-
-  if (!existingProp) {
-    // Property doesn't exist - this is a successful no-op
-    // (the property is already "removed" since it's not there)
-    return {
-      success: true,
-      change: { from: 0, to: 0, insert: '' },
-      newSource: this.source,
-    }
-  }
-
-  // Remove the property using the line parser
-  const newLine = removePropertyFromLine(parsedLine, propName)
-
-  // Calculate character offsets for the change
-  const lineStartOffset = this.getCharacterOffset(nodeLine, 1)
-  const from = lineStartOffset
-  const to = lineStartOffset + line.length
-
-  // Apply the change
-  const newLines = [...this.lines]
-  newLines[nodeLine - 1] = newLine
-  const newSource = newLines.join('\n')
-
-  // CRITICAL: Persist the changes for subsequent calls
-  this.source = newSource
-  this.lines = newLines
-
-  return {
-    success: true,
-    newSource,
-    change: {
-      from,
-      to,
-      insert: newLine,
-    },
-  }
+  return applyLineEdit(this, nodeId, (_line, parsed) => {
+    if (!findPropertyInLine(parsed, propName)) return null // no-op
+    return removePropertyFromLine(parsed, propName)
+  })
 }
 
 /**

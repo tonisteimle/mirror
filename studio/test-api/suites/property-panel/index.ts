@@ -11,6 +11,7 @@ import { radiusChangeTests } from './radius-changes.test'
 import { sectionExpandTests } from './section-expand.test'
 import { sizingTokenTests } from './sizing-tokens.test'
 import { colorTokenTests } from './color-tokens.test'
+import { panelWriteTightTests } from './panel-write-tight.test'
 
 export {
   tokenDisplayTests,
@@ -21,6 +22,7 @@ export {
   sectionExpandTests,
   sizingTokenTests,
   colorTokenTests,
+  panelWriteTightTests,
 }
 
 export const allPropertyPanelTests: TestCase[] = [
@@ -32,6 +34,7 @@ export const allPropertyPanelTests: TestCase[] = [
   ...sectionExpandTests,
   ...sizingTokenTests,
   ...colorTokenTests,
+  ...panelWriteTightTests,
 ]
 
 export {
