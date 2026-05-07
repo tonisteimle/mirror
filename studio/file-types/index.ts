@@ -272,12 +272,16 @@ export function detectFileType(nameOrContent: string, content?: string): FileTyp
     code = content
   }
 
-  // Check filename patterns first
+  // Check filename patterns first. The Multi-File-Roadmap unifies all
+  // Mirror-source files under `.mir`, so filename HINTS (e.g. `tokens.mir`,
+  // `components.mir`, `data.mir`) are the cheap first-pass classifier.
+  // Real classification by content runs below if the name is ambiguous.
   if (filename) {
     const lower = filename.toLowerCase()
     if (lower.includes('token')) return 'tokens'
     if (lower.includes('component')) return 'component'
-    if (lower.endsWith('.data') || lower.includes('data.')) return 'data'
+    if (lower.endsWith('.data') || lower.includes('data.') || /\bdata\.mir$/.test(lower))
+      return 'data'
   }
 
   if (!code?.trim()) return 'layout'

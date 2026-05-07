@@ -122,6 +122,8 @@ import {
   setupDesktopMenuHandler,
   // Play Mode (toolbar button, reset, device selector)
   initPlayMode,
+  // Export button (Mirror → React/Vue/Svelte/Vanilla via AI bridge)
+  initExportButton,
   // Property Panel — global DOM event listeners
   setupPropertyPanelIconPicker,
   setupPropertyPanelEventListeners,
@@ -353,6 +355,25 @@ if (!isPlaygroundMode) {
     delete files['index.mir']
   }
 
+  // Multi-File-Roadmap Komponente 4: migrate legacy file extensions
+  // (`.data`, `.tok`, `.com`) to the unified `.mir` extension. The Compiler
+  // accepts both extensions indefinitely (file content is what matters,
+  // not the filename), but the editor UI only emits `.mir` for new files —
+  // so this migration normalizes existing localStorage projects to the
+  // new convention. One-shot per browser profile; no-ops on subsequent
+  // boots once the legacy keys are gone.
+  const extensionMigrations: Array<{ from: string; to: string }> = [
+    { from: 'data.data', to: 'data.mir' },
+    { from: 'tokens.tok', to: 'tokens.mir' },
+    { from: 'components.com', to: 'components.mir' },
+  ]
+  for (const { from, to } of extensionMigrations) {
+    if (files[from] !== undefined && files[to] === undefined) {
+      files[to] = files[from]
+      delete files[from]
+    }
+  }
+
   if (Object.keys(files).length === 0) {
     Object.assign(files, DEFAULT_PROJECT)
   }
@@ -401,16 +422,23 @@ async function saveCurrentFile() {
   }
 }
 
-// Get file type from extension or content sniffing
+// Get file type from extension or content sniffing.
+//
+// Multi-File-Roadmap: `.mir` is the new universal Mirror extension —
+// content decides whether a file is tokens / components / data / layout,
+// not the filename. Legacy extensions (`.tok`, `.com`, `.yaml`/`.yml`)
+// are kept as authoritative type hints because Tauri-projects on disk
+// may still use them.
 function getFileType(filename: string) {
-  // Check file extension first (most reliable for Tauri desktop files)
   const ext = filename.substring(filename.lastIndexOf('.')).toLowerCase()
-  if (ext === '.tok') return 'tokens'
-  if (ext === '.com') return 'component'
-  if (ext === '.yaml' || ext === '.yml') return 'data'
-  if (ext === '.mir' || ext === '.mirror') return 'layout'
+  // Legacy extensions: extension wins (Tauri files on disk).
+  if (ext === '.tok' || ext === '.tokens') return 'tokens'
+  if (ext === '.com' || ext === '.components') return 'component'
+  if (ext === '.yaml' || ext === '.yml' || ext === '.data') return 'data'
 
-  // Fall back to detection from content
+  // For `.mir` / `.mirror` (and anything unknown), fall through to
+  // content-based detection. detectFileType returns 'layout' as the
+  // fallback, so files with no clear pattern still default sensibly.
   const allFiles = window.desktopFiles?.getFiles?.() || files
   const content = allFiles[filename] || ''
   return detectFileType(filename, content)
@@ -1523,6 +1551,11 @@ function compile(code: string) {
       }
       log.debug('[CompilePerf] ================================')
     }
+
+    // Test hook — bump generation so waitForCompile() can detect that a new
+    // compile has landed since the test snapshotted it.
+    ;(window as { __compileGeneration?: number }).__compileGeneration =
+      ((window as { __compileGeneration?: number }).__compileGeneration ?? 0) + 1
   } catch (err) {
     // Reset compile status on error
     studioActions.setCompiling(false)
@@ -1816,6 +1849,11 @@ if (typeof window !== 'undefined') {
       studio.sync?.setSourceMap(sourceMap)
       studio.preview?.setSourceMap(sourceMap)
 
+      // Test hook — bump generation so waitForCompile() can detect that a
+      // new compile has landed since the test snapshotted it.
+      ;(window as { __compileGeneration?: number }).__compileGeneration =
+        ((window as { __compileGeneration?: number }).__compileGeneration ?? 0) + 1
+
       log.debug('[Test] Test code compiled successfully')
       return true
     } catch (error) {
@@ -2071,6 +2109,9 @@ function initStudio() {
     recompile: code => compile(code),
     getEditorSource: () => window.editor?.state.doc.toString() ?? '',
   })
+
+  // Initialize Export button (Mirror → React/Vue/Svelte/Vanilla via AI bridge)
+  initExportButton()
 }
 
 // (setupNotificationHandlers extracted to studio/init/init-notifications.ts —
