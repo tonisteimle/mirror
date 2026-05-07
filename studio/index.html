@@ -54,12 +54,13 @@
 
     <div class="panel editor-panel" style="position: relative;">
       <div class="editor-header">
-        <div class="editor-file-tabs" id="editor-file-tabs">
-          <button class="editor-file-tab" data-file="data.mir">Daten</button>
-          <button class="editor-file-tab" data-file="tokens.mir">Tokens</button>
-          <button class="editor-file-tab" data-file="components.mir">Komponenten</button>
-          <button class="editor-file-tab active" data-file="app.mir">Anwendung</button>
-        </div>
+        <!--
+          Editor file tabs are rendered dynamically from the project's
+          file set (see renderEditorFileTabs in studio/app.ts). The tabs
+          are sorted by phase (data → tokens → components → layout) and
+          fall back to the raw filename for non-standard files.
+        -->
+        <div class="editor-file-tabs" id="editor-file-tabs"></div>
         <div class="editor-actions">
           <a href="https://ux-strategy.ch/mirror/tutorial/" target="_blank" class="tutorial-link" title="Mirror Tutorial öffnen">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -166,6 +167,6 @@
   <script type="module" src="dist/dialog.js?v=2"></script>
   <script type="module" src="dist/tauri-bridge.js?v=2"></script>
   <script type="module" src="dist/desktop-files.js?v=2"></script>
-  <script type="module" src="dist/app.js?v=19"></script>
+  <script type="module" src="dist/app.js?v=20"></script>
 </body>
 </html>

@@ -386,8 +386,17 @@ function isTauriDesktop() {
 
 // Save file - Desktop app uses desktop-files.js for actual disk writes
 async function saveFile(filePath: string, content: string) {
+  const wasNewFile = files[filePath] === undefined
   // Update local cache
   files[filePath] = content
+
+  // Multi-File-Roadmap 7: a freshly-created file (e.g. from an AI cross-
+  // file patch or, eventually, the explorer panel) needs a new tab. The
+  // dynamic renderer's diff guard makes the call a no-op for ordinary
+  // typing-through-an-existing-file saves.
+  if (wasNewFile && typeof renderEditorFileTabs === 'function') {
+    renderEditorFileTabs(currentFile)
+  }
 
   // Desktop: use desktop-files.js for actual disk save (Tauri mode).
   // window.desktopFiles is declared with an index signature at studio/test-api.ts
@@ -490,6 +499,15 @@ function switchFile(filename: string) {
   // Update active state in UI
   document.querySelectorAll('.file').forEach(f => f.classList.remove('active'))
   document.querySelector(`[data-file="${filename}"]`)?.classList.add('active')
+
+  // Multi-File-Roadmap 7: keep the dynamic tab strip in sync regardless
+  // of who called switchFile (test API, file-tree, dynamic tab itself).
+  // Hoisted via `var` because the function declaration is later in this
+  // module — the hoist works for `function`, but TypeScript lints if we
+  // call it before the textual declaration. typeof-guard avoids that.
+  if (typeof renderEditorFileTabs === 'function') {
+    renderEditorFileTabs(filename)
+  }
 
   // Compile. compile() now applies the sibling-files prelude (tokens
   // and components) in test mode too, so cross-file token + component
@@ -977,36 +995,82 @@ resetDemoBtn?.addEventListener('click', async () => {
   }
 })
 
-// Editor file tabs (Daten / Tokens / Komponenten / Anwendung).
-// Each .editor-file-tab carries a data-file attribute that maps 1:1 to
-// a file in the four-file project. Clicking calls switchFile (which
-// already handles save-old + load-new + recompile) and we mirror the
-// active state on the tab strip. Initial active state from the markup
-// stays in sync because switchFile updates [data-file] active on
-// .file elements (legacy file-tree); we manage .editor-file-tab here.
-function syncEditorFileTabs(activeFilename: string): void {
-  document.querySelectorAll('.editor-file-tab').forEach(el => {
-    const isActive = (el as HTMLElement).dataset.file === activeFilename
-    el.classList.toggle('active', isActive)
-  })
+// Editor file tabs — Multi-File-Roadmap Komponente 7: dynamic tabs
+// rendered from the actual file set. Tabs are sorted by phase
+// (data → tokens → components → layout) so the load-order is visually
+// reflected. Standard four-file demo gets German labels; new files (via
+// the explorer panel) fall back to their raw filename.
+const FILE_PHASE: Record<string, number> = {
+  data: 0,
+  tokens: 1,
+  component: 2,
+  javascript: 3,
+  layout: 4,
 }
 
-document.querySelectorAll<HTMLButtonElement>('.editor-file-tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const target = btn.dataset.file
-    if (!target || target === currentFile) return
-    if (typeof window.switchFile === 'function') {
-      window.switchFile(target)
-    } else {
-      // Direct path (in case switchFile isn't on window yet during boot)
-      switchFile(target)
-    }
-    syncEditorFileTabs(target)
-  })
-})
+function tabLabel(filename: string): string {
+  if (filename === 'data.mir') return 'Daten'
+  if (filename === 'tokens.mir') return 'Tokens'
+  if (filename === 'components.mir') return 'Komponenten'
+  if (filename === 'app.mir') return 'Anwendung'
+  return filename
+}
 
-// Initial tab state must match currentFile that the editor actually loaded.
-syncEditorFileTabs(currentFile)
+function renderEditorFileTabs(activeFilename: string): void {
+  const container = document.getElementById('editor-file-tabs')
+  if (!container) return
+
+  const allFiles = window.desktopFiles?.getFiles?.() || files
+  const entries = Object.entries(allFiles).filter(
+    ([_, content]) => typeof content === 'string'
+  ) as Array<[string, string]>
+
+  // Sort by phase (data → tokens → components → layout), then alpha.
+  const sorted = entries
+    .map(([name, content]) => ({
+      name,
+      type: detectFileType(name, content),
+    }))
+    .sort((a, b) => {
+      const pa = FILE_PHASE[a.type] ?? 99
+      const pb = FILE_PHASE[b.type] ?? 99
+      if (pa !== pb) return pa - pb
+      return a.name.localeCompare(b.name)
+    })
+
+  // Cheap diff: only rebuild if the tab set changed. Avoids destroying
+  // event listeners on every save (typing → recompile → renderTabs).
+  const desiredKey = sorted.map(s => s.name).join('|') + '||' + activeFilename
+  if (container.dataset.tabsKey === desiredKey) return
+  container.dataset.tabsKey = desiredKey
+
+  container.innerHTML = ''
+  for (const { name } of sorted) {
+    const btn = document.createElement('button')
+    btn.className = 'editor-file-tab'
+    btn.dataset.file = name
+    btn.textContent = tabLabel(name)
+    if (name === activeFilename) btn.classList.add('active')
+    btn.addEventListener('click', () => {
+      if (name === currentFile) return
+      if (typeof window.switchFile === 'function') {
+        window.switchFile(name)
+      } else {
+        switchFile(name)
+      }
+      renderEditorFileTabs(name)
+    })
+    container.appendChild(btn)
+  }
+}
+
+function syncEditorFileTabs(activeFilename: string): void {
+  // Re-render keeps both the structure and the active state in sync.
+  renderEditorFileTabs(activeFilename)
+}
+
+// Initial render — tabs need to exist before the user clicks anything.
+renderEditorFileTabs(currentFile)
 
 // Update undo/redo button states based on history
 function updateUndoRedoButtons() {
