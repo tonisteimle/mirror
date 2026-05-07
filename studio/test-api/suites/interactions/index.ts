@@ -46,6 +46,8 @@ export {
   combinedShortcutTests,
 } from './layout-shortcuts.test'
 
+export { positionArrowTests } from './position-arrow.test'
+
 export {
   allResizeHandleDblClickTests,
   horizontalHandleTests,

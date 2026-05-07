@@ -14,6 +14,7 @@ import {
   setLayoutService,
   type LayoutService,
 } from '../core'
+import { getCommandContext } from '../core/commands'
 import type { SourceMap } from '../../compiler/ir/source-map'
 import { HandleManager, createHandleManager } from './handle-manager'
 import { KeyboardHandler, createKeyboardHandler } from './keyboard-handler'
@@ -230,7 +231,19 @@ export class PreviewController {
 
     // Initialize keyboard handler if enabled
     if (this.config.enableKeyboardShortcuts) {
-      this.keyboardHandler = createKeyboardHandler({ container: this.container })
+      this.keyboardHandler = createKeyboardHandler({
+        container: this.container,
+        // Wire up the command context so position-arrow keys can dispatch
+        // SetPositionCommand. Without this, every ArrowKey-on-absolute-
+        // element silently no-opped (and surfaced a stale-state warning).
+        getCommandContext: () => {
+          try {
+            return getCommandContext()
+          } catch {
+            return null
+          }
+        },
+      })
       this.keyboardHandler.attach()
     }
 
