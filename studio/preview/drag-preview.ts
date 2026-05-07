@@ -47,6 +47,19 @@ export function getCurrentComponentItem(): ComponentItem | null {
   return currentComponentItem
 }
 
+/** Build a one-line log description of a drop target, exhaustively. */
+function describeDropTarget(target: DropTarget | null): string {
+  if (!target) return 'root (no target)'
+  switch (target.mode) {
+    case 'absolute':
+      return `at (${target.position.x}, ${target.position.y})`
+    case 'aligned':
+      return `aligned:${target.alignmentProperty}`
+    case 'flex':
+      return `at index ${target.insertionIndex}`
+  }
+}
+
 /** Get current drag data */
 export function getCurrentDragData(): ComponentDragData | null {
   return currentDragData
@@ -133,21 +146,12 @@ export class DragPreview {
     const controller = getDragController()
 
     controller.setCallbacks({
-      onDrop: async (source: DragSource, target: DropTarget) => {
-        // Build descriptive log message based on target mode
-        let targetDesc: string
-        if (target.mode === 'absolute') {
-          targetDesc = `at (${target.position.x}, ${target.position.y})`
-        } else if (target.mode === 'aligned') {
-          targetDesc = `aligned:${target.alignmentProperty}`
-        } else {
-          targetDesc = `at index ${(target as any).insertionIndex}`
-        }
+      onDrop: async (source: DragSource, target: DropTarget | null) => {
+        const targetDesc = describeDropTarget(target)
+        log.info('Drop:', source.componentName, '→', target?.containerId ?? 'root', targetDesc)
 
-        log.info('Drop:', source.componentName, '→', target.containerId, targetDesc)
-
-        // Emit the event with current drag data
-        // Note: For aligned drops, the target contains alignmentProperty instead of insertionIndex
+        // Emit the event with current drag data. Subscribers (drag:dropped)
+        // are responsible for handling target === null (root drop).
         events.emit('drag:dropped', { source, target, dragData: currentDragData })
       },
     })

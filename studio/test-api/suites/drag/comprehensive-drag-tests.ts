@@ -10,6 +10,7 @@
 
 import { test, testWithSetup, describe } from '../../test-runner'
 import type { TestCase, TestAPI } from '../../types'
+import { assertSiblingOf, assertParentHasChildren } from '../../helpers/structure'
 
 // =============================================================================
 // Helper Functions
@@ -604,11 +605,13 @@ export const canvasMoveCrossContainerTests: TestCase[] = describe('Canvas Move -
     'Frame gap 16, pad 16\n  Frame gap 8, bg #2a2a3a, pad 12\n    Button "Source"\n  Frame gap 8, bg #3a3a4a, pad 12\n    Text "Target"',
     async (api: TestAPI) => {
       await api.interact.moveElement('node-3', 'node-4', 1)
-      const code = api.editor.getCode()
-      api.assert.ok(
-        verifyPattern(code, 'Button "Source"'),
-        'Button should be moved to second container'
+      await api.utils.waitForCompile()
+
+      api.assert.codeEquals(
+        'Frame gap 16, pad 16\n  Frame gap 8, bg #2a2a3a, pad 12\n  Frame gap 8, bg #3a3a4a, pad 12\n    Text "Target"\n    Button "Source"'
       )
+      assertSiblingOf(api, 'Source', 'Target')
+      assertParentHasChildren(api, 'Source', ['Target', 'Source'])
     }
   ),
 
@@ -617,11 +620,13 @@ export const canvasMoveCrossContainerTests: TestCase[] = describe('Canvas Move -
     'Frame gap 16, pad 16\n  Text "Parent Text"\n  Frame gap 8, pad 12\n    Button "Nested"',
     async (api: TestAPI) => {
       await api.interact.moveElement('node-4', 'node-1', 0)
-      const code = api.editor.getCode()
-      api.assert.ok(
-        verifyPattern(code, 'Button "Nested"'),
-        'Button should be moved to parent container'
+      await api.utils.waitForCompile()
+
+      api.assert.codeEquals(
+        'Frame gap 16, pad 16\n  Button "Nested"\n  Text "Parent Text"\n  Frame gap 8, pad 12'
       )
+      assertSiblingOf(api, 'Nested', 'Parent Text')
+      assertParentHasChildren(api, 'Nested', ['Nested', 'Parent Text', ''])
     }
   ),
 
@@ -630,11 +635,13 @@ export const canvasMoveCrossContainerTests: TestCase[] = describe('Canvas Move -
     'Frame gap 16, pad 16\n  Button "Move Me"\n  Frame gap 8, pad 12\n    Text "Inner"',
     async (api: TestAPI) => {
       await api.interact.moveElement('node-2', 'node-3', 0)
-      const code = api.editor.getCode()
-      api.assert.ok(
-        verifyPattern(code, 'Button "Move Me"'),
-        'Button should be moved into nested container'
+      await api.utils.waitForCompile()
+
+      api.assert.codeEquals(
+        'Frame gap 16, pad 16\n  Frame gap 8, pad 12\n    Button "Move Me"\n    Text "Inner"'
       )
+      assertSiblingOf(api, 'Move Me', 'Inner')
+      assertParentHasChildren(api, 'Move Me', ['Move Me', 'Inner'])
     }
   ),
 ])
@@ -649,8 +656,10 @@ export const canvasMoveHorizontalTests: TestCase[] = describe('Canvas Move - Hor
     'Frame hor, gap 12, pad 16\n  Button "A"\n  Button "B"\n  Button "C"',
     async (api: TestAPI) => {
       await api.interact.moveElement('node-4', 'node-1', 0)
-      const code = api.editor.getCode()
-      api.assert.ok(verifyPattern(code, 'Button "C"'), 'Button C should be moved to first position')
+      await api.utils.waitForCompile()
+
+      api.assert.codeEquals('Frame hor, gap 12, pad 16\n  Button "C"\n  Button "A"\n  Button "B"')
+      assertParentHasChildren(api, 'C', ['C', 'A', 'B'])
     }
   ),
 
@@ -659,11 +668,13 @@ export const canvasMoveHorizontalTests: TestCase[] = describe('Canvas Move - Hor
     'Frame gap 16, pad 16\n  Frame gap 8\n    Button "Vertical"\n  Frame hor, gap 8\n    Text "H1"\n    Text "H2"',
     async (api: TestAPI) => {
       await api.interact.moveElement('node-3', 'node-4', 1)
-      const code = api.editor.getCode()
-      api.assert.ok(
-        verifyPattern(code, 'Button "Vertical"'),
-        'Button should be moved to horizontal container'
+      await api.utils.waitForCompile()
+
+      api.assert.codeEquals(
+        'Frame gap 16, pad 16\n  Frame gap 8\n  Frame hor, gap 8\n    Text "H1"\n    Button "Vertical"\n    Text "H2"'
       )
+      assertSiblingOf(api, 'Vertical', 'H1')
+      assertParentHasChildren(api, 'Vertical', ['H1', 'Vertical', 'H2'])
     }
   ),
 ])
@@ -678,8 +689,15 @@ export const canvasMoveComplexTests: TestCase[] = describe('Canvas Move - Comple
     'Frame gap 16, pad 16\n  Frame gap 12\n    Frame gap 8\n      Text "Deep"\n      Button "Move"',
     async (api: TestAPI) => {
       await api.interact.moveElement('node-5', 'node-2', 0)
-      const code = api.editor.getCode()
-      api.assert.ok(verifyPattern(code, 'Button "Move"'), 'Button should be moved up one level')
+      await api.utils.waitForCompile()
+
+      api.assert.codeEquals(
+        'Frame gap 16, pad 16\n  Frame gap 12\n    Button "Move"\n    Frame gap 8\n      Text "Deep"'
+      )
+      // Note: "Move" is sibling of the Frame containing "Deep", not of Deep itself.
+      // assertParentHasChildren walks parent.children fullText, where the empty-but-
+      // wrapping Frame's fullText collapses to "Deep" (its only descendant text).
+      assertParentHasChildren(api, 'Move', ['Move', 'Deep'])
     }
   ),
 
@@ -688,11 +706,13 @@ export const canvasMoveComplexTests: TestCase[] = describe('Canvas Move - Comple
     'Frame hor, gap 16, pad 16\n  Frame gap 8, w 100\n    Button "In A"\n  Frame gap 8, w 100\n    Text "In B"',
     async (api: TestAPI) => {
       await api.interact.moveElement('node-3', 'node-4', 0)
-      const code = api.editor.getCode()
-      api.assert.ok(
-        verifyPattern(code, 'Button "In A"'),
-        'Button should be moved to sibling container'
+      await api.utils.waitForCompile()
+
+      api.assert.codeEquals(
+        'Frame hor, gap 16, pad 16\n  Frame gap 8, w 100\n  Frame gap 8, w 100\n    Button "In A"\n    Text "In B"'
       )
+      assertSiblingOf(api, 'In A', 'In B')
+      assertParentHasChildren(api, 'In A', ['In A', 'In B'])
     }
   ),
 ])

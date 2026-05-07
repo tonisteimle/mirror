@@ -24,6 +24,7 @@
  */
 
 import { getDragController, type DragController } from '../drag-controller'
+import { DragTestController } from '../drag-test-controller'
 import type { DragSource, DropTarget } from '../types'
 import type {
   DragTestConfig,
@@ -141,7 +142,7 @@ export class DragTestRunner {
     try {
       // Execute drop via DragController
       const dropStartTime = performance.now()
-      await getDragController().simulateDrop(source, target)
+      await new DragTestController(getDragController()).simulateDrop(source, target)
       const dropDuration = performance.now() - dropStartTime
 
       // Wait for code modification (async)
@@ -206,7 +207,7 @@ export class DragTestRunner {
     try {
       // Execute drop via DragController
       const dropStartTime = performance.now()
-      await getDragController().simulateDrop(source, target)
+      await new DragTestController(getDragController()).simulateDrop(source, target)
       const dropDuration = performance.now() - dropStartTime
 
       // Wait for code modification
@@ -299,7 +300,7 @@ export class DragTestRunner {
     try {
       // Execute drop via DragController
       const dropStartTime = performance.now()
-      await getDragController().simulateDrop(source, target)
+      await new DragTestController(getDragController()).simulateDrop(source, target)
       const dropDuration = performance.now() - dropStartTime
 
       // Wait for code modification

@@ -7,6 +7,7 @@
  */
 
 import { getDragController } from './drag-controller'
+import { DragTestController } from './drag-test-controller'
 import {
   setCurrentDragData,
   clearCurrentDragData,
@@ -553,14 +554,15 @@ export class BrowserTestRunner {
     // updatePosition → storeAlignedTarget). Falling back to an explicit
     // flex target keeps the deterministic behaviour for the cases where
     // hit detection lands on a wrong element or stays unset.
-    const computed = controller.getTestState().target
+    const testCtrl = new DragTestController(controller)
+    const computed = testCtrl.getTestState().target
     let target: DropTarget
     if (computed && computed.mode === 'aligned' && computed.containerId === targetNodeId) {
       target = computed
     } else {
       target = { mode: 'flex', containerId: targetNodeId, insertionIndex }
     }
-    await controller.simulateDrop(source, target)
+    await testCtrl.simulateDrop(source, target)
   }
 
   /**
@@ -824,7 +826,7 @@ export class BrowserTestRunner {
       containerId: targetNodeId,
       alignmentProperty: ALIGN_TO_PROPERTY[alignmentZone],
     }
-    await controller.simulateDrop(source, target)
+    await new DragTestController(controller).simulateDrop(source, target)
   }
 
   /**
@@ -885,7 +887,7 @@ export class BrowserTestRunner {
       position: clampedPosition,
       insertionIndex: existingChildren,
     }
-    await controller.simulateDrop(source, target)
+    await new DragTestController(controller).simulateDrop(source, target)
   }
 
   /**
@@ -907,12 +909,9 @@ export class BrowserTestRunner {
    * Check if DragController callbacks are set (required for drops to work)
    */
   private hasCallbacksSet(): boolean {
-    const controller = getDragController()
-    const state = controller.getTestState()
-    // The controller exposes source/target but not callbacks directly
-    // We can check by attempting a dry run or by checking internal state
-    // For now, we'll trust that if DragPreview was initialized, callbacks are set
-    // This is validated during startDrag/simulateDrop
+    // We can't directly inspect the DragController's callbacks (they are
+    // private). For now, trust that if DragPreview initialized successfully,
+    // callbacks are wired. Real validation happens at startDrag/simulateDrop.
     return true
   }
 

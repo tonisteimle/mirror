@@ -55,6 +55,8 @@ import {
   allAlignmentFromEmptyTests,
   allAlignmentFromMoveTests,
   eachTemplateGuardTests,
+  realPointerEventTests,
+  allMoveEdgeCaseTests,
 } from './drag'
 
 // Handles (Visual Manipulation)
@@ -195,6 +197,8 @@ export const dragTests: TestCase[] = [
   ...allAlignmentFromEmptyTests,
   ...allAlignmentFromMoveTests,
   ...eachTemplateGuardTests,
+  ...realPointerEventTests,
+  ...allMoveEdgeCaseTests,
 ]
 
 /**

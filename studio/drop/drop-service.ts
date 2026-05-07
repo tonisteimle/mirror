@@ -75,3 +75,11 @@ export function getDropService(): DropService {
   }
   return dropServiceInstance
 }
+
+/**
+ * Reset the singleton (for testing). Mirrors `resetDragController`
+ * so tests can drop the whole drag/drop stack between cases.
+ */
+export function resetDropService(): void {
+  dropServiceInstance = null
+}

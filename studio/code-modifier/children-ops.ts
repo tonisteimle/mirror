@@ -547,9 +547,9 @@ export function replaceSlot(
 }
 
 /**
- * Move a node to a new location relative to another node
+ * Move a node to a new location relative to another node.
  * @param insertionIndex - For 'inside' placement: position among siblings (0 = first)
- * @param options - Optional: properties to add to the moved element
+ * @param options - Optional: properties to add/update on the moved element
  */
 export function moveNode(
   this: CodeModifier,
@@ -560,188 +560,206 @@ export function moveNode(
   options?: { properties?: string }
 ): ModificationResult {
   const sourceMapping = this.sourceMap.getNodeById(sourceNodeId)
-  if (!sourceMapping) {
-    return this.errorResult(`Source node not found: ${sourceNodeId}`)
-  }
+  if (!sourceMapping) return this.errorResult(`Source node not found: ${sourceNodeId}`)
 
   const targetMapping = this.sourceMap.getNodeById(targetId)
-  if (!targetMapping) {
-    return this.errorResult(`Target node not found: ${targetId}`)
-  }
+  if (!targetMapping) return this.errorResult(`Target node not found: ${targetId}`)
 
-  // Prevent dropping onto self or descendants
-  if (sourceNodeId === targetId) {
-    return this.errorResult('Cannot move node onto itself')
-  }
-
+  if (sourceNodeId === targetId) return this.errorResult('Cannot move node onto itself')
   if (this.isDescendantOf(targetId, sourceNodeId)) {
     return this.errorResult('Cannot move node into its own descendant')
   }
 
-  // Extract the source block text (including all children)
+  // Extract the block to move + figure out which character range is removed.
+  const extracted = extractAndReindent.call(this, sourceMapping, targetMapping, placement)
+  const blockWithProps = applyOptionalProperties(extracted.block, options?.properties)
+
+  // Compute insert position in the *original* source — then adjust if it
+  // sits after the removed range, since removal shifts subsequent offsets.
+  let insertPosition = findInsertionPosition.call(
+    this,
+    sourceNodeId,
+    targetMapping,
+    placement,
+    insertionIndex
+  )
+  if (insertPosition > extracted.removeStart) {
+    insertPosition -= extracted.removeEnd - extracted.adjustedRemoveStart
+  }
+
+  // The insert position is always end-of-previous-line / end-of-last-child,
+  // never line-start, so the inserted text must lead with \n.
+  const insertText = `\n${blockWithProps}`
+  const afterRemoval =
+    this.source.substring(0, extracted.adjustedRemoveStart) +
+    this.source.substring(extracted.removeEnd)
+  const newSource =
+    afterRemoval.substring(0, insertPosition) + insertText + afterRemoval.substring(insertPosition)
+
+  const oldSourceLength = this.source.length
+  this.source = newSource
+  this.lines = newSource.split('\n')
+
+  // Replace the entire document — moves combine a remove and an insert,
+  // so a single replace is the cleanest CodeMirror change.
+  return {
+    success: true,
+    newSource,
+    change: { from: 0, to: oldSourceLength, insert: newSource },
+  }
+}
+
+interface ExtractedBlock {
+  block: string
+  /** Char offset of the source block's first line, column 1. */
+  removeStart: number
+  /** Char offset just past the last char of the source block (incl. trailing \n if present). */
+  removeEnd: number
+  /** removeStart adjusted to also remove a leading \n when the block has no trailing newline. */
+  adjustedRemoveStart: number
+}
+
+/**
+ * Extract the source block (including its children) as text, reindented for
+ * the new placement. Returns the reindented block plus the character offsets
+ * needed to remove the original block while leaving exactly one surrounding
+ * newline (no double-blank line, no missing separator).
+ */
+function extractAndReindent(
+  this: CodeModifier,
+  sourceMapping: NodeMapping,
+  targetMapping: NodeMapping,
+  placement: 'before' | 'after' | 'inside'
+): ExtractedBlock {
   const startLine = sourceMapping.position.line
   const endLine = this.getBlockEndLine(startLine)
   const sourceLines = this.lines.slice(startLine - 1, endLine)
   const sourceBlock = sourceLines.join('\n')
-
-  // Get the source indentation
   const sourceIndent = this.getLineIndent(sourceLines[0])
 
-  // Calculate target indentation
-  let targetIndent: string
-  if (placement === 'inside') {
-    // Check if source is already a child of target (same-container reorder)
-    if (sourceMapping.parentId === targetId) {
-      // Same container - keep the same indentation
-      targetIndent = sourceIndent
-    } else {
-      // Different container - child of target: one level deeper
-      const targetLine = this.lines[targetMapping.position.line - 1]
-      targetIndent = this.getLineIndent(targetLine) + '  '
-    }
-  } else {
-    // Sibling: same level as target
-    const targetLine = this.lines[targetMapping.position.line - 1]
-    targetIndent = this.getLineIndent(targetLine)
-  }
+  const targetIndent = computeTargetIndent.call(
+    this,
+    sourceMapping,
+    targetMapping,
+    placement,
+    sourceIndent
+  )
+  const block = this.reindentBlock(sourceBlock, sourceIndent, targetIndent)
 
-  // Re-indent the source block
-  let reindentedBlock = this.reindentBlock(sourceBlock, sourceIndent, targetIndent)
-
-  // If properties are specified, update or add them to the first line of the block
-  // This properly replaces existing properties (e.g., x, y) instead of appending duplicates
-  if (options?.properties) {
-    const blockLines = reindentedBlock.split('\n')
-    if (blockLines.length > 0) {
-      let firstLine = blockLines[0]
-
-      // Parse the properties to update (format: "x 0, y 84")
-      // Use a dummy component prefix to parse the properties string
-      const propsToUpdate = parseLine('Dummy ' + options.properties)
-
-      // Parse the existing first line
-      let parsedFirstLine = parseLine(firstLine)
-
-      // Update or add each property
-      for (const prop of propsToUpdate.properties) {
-        // updatePropertyInLine handles both update (if exists) and add (if not)
-        firstLine = updatePropertyInLine(parsedFirstLine, prop.name, prop.value)
-        // Re-parse after each modification to get correct positions for next property
-        parsedFirstLine = parseLine(firstLine)
-      }
-
-      blockLines[0] = firstLine
-      reindentedBlock = blockLines.join('\n')
-    }
-  }
-
-  // Calculate positions - we need to handle this carefully
-  // Strategy: Remove first, then insert at adjusted position
-
-  // Get source removal positions
+  // Removal range of the block in the original source.
   const removeStart = this.getCharacterOffset(startLine, 1)
   const endLineContent = this.lines[endLine - 1]
   let removeEnd = this.getCharacterOffset(endLine, endLineContent.length + 1)
 
-  // Determine how to handle newlines around the removed block
-  // We need to remove exactly ONE newline - either before or after, not both
-  const hasNewlineAfter = endLine < this.lines.length
+  // Eat exactly one surrounding newline so the removal doesn't leave a hole.
   let adjustedRemoveStart: number
-
-  if (hasNewlineAfter) {
-    // Remove the trailing newline (after the block)
+  if (endLine < this.lines.length) {
     removeEnd += 1
     adjustedRemoveStart = removeStart
   } else {
-    // No newline after - remove the leading newline (before the block) if it exists
     adjustedRemoveStart = removeStart > 0 ? removeStart - 1 : removeStart
   }
 
-  // Calculate insertion position before removal
-  let insertPosition: number
-  let insertText: string
+  return { block, removeStart, removeEnd, adjustedRemoveStart }
+}
 
-  if (placement === 'inside') {
-    // Insert as child of target
-    const children = this.sourceMap
-      .getChildren(targetId)
-      // Filter out the source node if it's already a child (prevents self-reference issues)
-      .filter(c => c.nodeId !== sourceNodeId)
-      // Sort by line number for correct ordering
-      .sort((a, b) => a.position.line - b.position.line)
+/**
+ * Indentation the moved block needs at its new home:
+ * - sibling placement → match target's own indent
+ * - inside, same parent (reorder) → keep source indent
+ * - inside, different parent → target indent + 2 spaces
+ */
+function computeTargetIndent(
+  this: CodeModifier,
+  sourceMapping: NodeMapping,
+  targetMapping: NodeMapping,
+  placement: 'before' | 'after' | 'inside',
+  sourceIndent: string
+): string {
+  if (placement !== 'inside') {
+    return this.getLineIndent(this.lines[targetMapping.position.line - 1])
+  }
+  if (sourceMapping.parentId === targetMapping.nodeId) {
+    return sourceIndent
+  }
+  return this.getLineIndent(this.lines[targetMapping.position.line - 1]) + '  '
+}
 
-    if (children.length > 0) {
-      // Check if insertionIndex specifies a valid position
-      const validIndex =
-        typeof insertionIndex === 'number' &&
-        Number.isFinite(insertionIndex) &&
-        insertionIndex >= 0 &&
-        insertionIndex < children.length
-      if (validIndex) {
-        // Insert before the child at insertionIndex
-        const targetChild = children[insertionIndex]
-        insertPosition = this.getCharacterOffset(targetChild.position.line, 1) - 1
-        if (insertPosition < 0) insertPosition = 0
-      } else {
-        // After last child (default)
-        const lastChild = children.reduce((a, b) =>
-          a.position.endLine > b.position.endLine ? a : b
-        )
-        const lastChildEndLine = lastChild.position.endLine
-        const lastChildLineContent = this.lines[lastChildEndLine - 1]
-        insertPosition = this.getCharacterOffset(lastChildEndLine, lastChildLineContent.length + 1)
-      }
-    } else {
-      // After parent line (no children yet)
-      const parentLine = targetMapping.position.line
-      const parentLineContent = this.lines[parentLine - 1]
-      insertPosition = this.getCharacterOffset(parentLine, parentLineContent.length + 1)
-    }
-    insertText = `\n${reindentedBlock}`
-  } else if (placement === 'before') {
-    // Insert before target line
-    // Position points to newline at end of previous line, so we need newline at start of insertText
-    insertPosition = this.getCharacterOffset(targetMapping.position.line, 1) - 1
-    if (insertPosition < 0) insertPosition = 0
-    insertText = `\n${reindentedBlock}`
-  } else {
-    // After target - use getBlockEndLine to find actual end including all children
+/**
+ * Apply property overrides to the first line of the block. Existing properties
+ * are updated in place (e.g. `x 0` → `x 50`); missing ones are appended. Used
+ * by drop handlers to set absolute coordinates on newly-moved elements.
+ */
+function applyOptionalProperties(block: string, properties: string | undefined): string {
+  if (!properties) return block
+  const blockLines = block.split('\n')
+  if (blockLines.length === 0) return block
+
+  let firstLine = blockLines[0]
+  const propsToUpdate = parseLine('Dummy ' + properties)
+  let parsedFirstLine = parseLine(firstLine)
+
+  for (const prop of propsToUpdate.properties) {
+    firstLine = updatePropertyInLine(parsedFirstLine, prop.name, prop.value)
+    parsedFirstLine = parseLine(firstLine)
+  }
+
+  blockLines[0] = firstLine
+  return blockLines.join('\n')
+}
+
+/**
+ * Find the character offset where the new (reindented) block should be inserted.
+ * Returned positions are based on the *original* source — caller must adjust
+ * for the removed range when the insert lies past it.
+ */
+function findInsertionPosition(
+  this: CodeModifier,
+  sourceNodeId: string,
+  targetMapping: NodeMapping,
+  placement: 'before' | 'after' | 'inside',
+  insertionIndex: number | undefined
+): number {
+  if (placement === 'before') {
+    // End of the previous line (the \n), so the inserted "\n…" lines up correctly.
+    return Math.max(0, this.getCharacterOffset(targetMapping.position.line, 1) - 1)
+  }
+
+  if (placement === 'after') {
+    // End of the target's whole block (incl. its children).
     const targetEndLine = this.getBlockEndLine(targetMapping.position.line)
     const targetEndContent = this.lines[targetEndLine - 1]
-    insertPosition = this.getCharacterOffset(targetEndLine, targetEndContent.length + 1)
-    insertText = `\n${reindentedBlock}`
+    return this.getCharacterOffset(targetEndLine, targetEndContent.length + 1)
   }
 
-  // Adjust insertion position if it's after the removal position
-  if (insertPosition > removeStart) {
-    const removalLength = removeEnd - adjustedRemoveStart
-    insertPosition -= removalLength
+  // placement === 'inside'
+  const children = this.sourceMap
+    .getChildren(targetMapping.nodeId)
+    // Skip the source itself (same-parent reorder), otherwise we'd anchor on the very node we're removing.
+    .filter(c => c.nodeId !== sourceNodeId)
+    .sort((a, b) => a.position.line - b.position.line)
+
+  if (children.length === 0) {
+    // Empty target → insert immediately after the parent line.
+    const parentLineContent = this.lines[targetMapping.position.line - 1]
+    return this.getCharacterOffset(targetMapping.position.line, parentLineContent.length + 1)
   }
 
-  // First, remove the source block
-  let newSource = this.source.substring(0, adjustedRemoveStart) + this.source.substring(removeEnd)
+  const validIndex =
+    typeof insertionIndex === 'number' &&
+    Number.isFinite(insertionIndex) &&
+    insertionIndex >= 0 &&
+    insertionIndex < children.length
 
-  // Then insert at the new position
-  newSource =
-    newSource.substring(0, insertPosition) + insertText + newSource.substring(insertPosition)
-
-  // Save old source length before persisting (needed for CodeMirror change)
-  const oldSourceLength = this.source.length
-
-  // Persist changes for subsequent operations
-  this.source = newSource
-  this.lines = newSource.split('\n')
-
-  // For move operations, replace the entire document since we have both remove and insert
-  return {
-    success: true,
-    newSource,
-    change: {
-      from: 0,
-      to: oldSourceLength,
-      insert: newSource,
-    },
+  if (validIndex) {
+    const targetChild = children[insertionIndex!]
+    return Math.max(0, this.getCharacterOffset(targetChild.position.line, 1) - 1)
   }
+
+  // Default: append after the last child.
+  const lastChild = children.reduce((a, b) => (a.position.endLine > b.position.endLine ? a : b))
+  const lastChildLineContent = this.lines[lastChild.position.endLine - 1]
+  return this.getCharacterOffset(lastChild.position.endLine, lastChildLineContent.length + 1)
 }
 
 /**

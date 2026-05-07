@@ -32,13 +32,11 @@ export { HitDetector } from './hit-detector'
 export { Indicator } from './indicator'
 
 // Controller
-export {
-  DragController,
-  getDragController,
-  resetDragController,
-  setupGlobalDragReporting,
-} from './drag-controller'
+export { DragController, getDragController, resetDragController } from './drag-controller'
 export type { DragControllerCallbacks } from './drag-controller'
+
+// DevTools (browser-console reporting helpers — opt-in)
+export { setupGlobalDragReporting } from './devtools'
 
 // Reporter (re-export for convenience)
 export * from './reporter'

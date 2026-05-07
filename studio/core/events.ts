@@ -179,6 +179,7 @@ export interface StudioEvents {
       template?: string
       nodeId?: string
     }
+    /** null when the drop landed without a hit (blank/canvas-only state). */
     target: {
       containerId: string
       insertionIndex?: number
@@ -188,7 +189,7 @@ export interface StudioEvents {
       position?: { x: number; y: number }
       /** For aligned drops: alignment property (tl, tc, tr, cl, center, cr, bl, bc, br) */
       alignmentProperty?: string
-    }
+    } | null
     dragData: ComponentDragData | null
   }
   /** Emitted when compilation is requested */

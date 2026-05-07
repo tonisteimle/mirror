@@ -21,6 +21,7 @@ import { InsertionCalculator } from './insertion-calculator'
 import { Indicator, type AlignPosition, ALIGN_TO_PROPERTY } from './indicator'
 import { DragReporter } from './reporter/drag-reporter'
 import { createLogger } from '../../../compiler/utils/logger'
+import { DEFAULT_COMPONENT_SIZES, FALLBACK_COMPONENT_SIZE } from './component-sizes'
 
 const log = createLogger('DragController')
 
@@ -29,24 +30,13 @@ type DragState = 'idle' | 'dragging'
 // Performance tracking (debug only)
 const PERF_LOGGING = false
 
-/** Default sizes for palette components when dropping into absolute containers */
-const DEFAULT_COMPONENT_SIZES: Record<string, { width: number; height: number }> = {
-  Button: { width: 100, height: 40 },
-  Text: { width: 80, height: 24 },
-  Icon: { width: 24, height: 24 },
-  Input: { width: 200, height: 40 },
-  Textarea: { width: 200, height: 100 },
-  Frame: { width: 200, height: 100 },
-  Image: { width: 100, height: 100 },
-  Checkbox: { width: 120, height: 24 },
-  Switch: { width: 50, height: 24 },
-  Slider: { width: 200, height: 24 },
-  Divider: { width: 100, height: 2 },
-  Spacer: { width: 50, height: 20 },
-}
-
 export interface DragControllerCallbacks {
-  onDrop: (source: DragSource, target: DropTarget) => Promise<void>
+  /**
+   * Called when the drag completes. `target` is null when the drop
+   * landed without a hit (e.g. blank-canvas / `canvas …`-only state).
+   * Handlers must decide what to do with a null target.
+   */
+  onDrop: (source: DragSource, target: DropTarget | null) => Promise<void>
 }
 
 export class DragController implements Reportable<ControllerReport> {
@@ -211,9 +201,9 @@ export class DragController implements Reportable<ControllerReport> {
   private calculateInsertion(cursor: Point, hit: import('./types').HitResult) {
     let children = this.cache.getChildren(hit.containerId)
 
-    // Bei Canvas-Move: gezogenes Element aus children filtern
-    // Sonst wird der Index falsch berechnet, weil nach dem Entfernen
-    // des Elements alle folgenden Indizes um 1 nach oben rutschen
+    // Canvas move: filter the dragged element out of the child list. After
+    // the move the source no longer occupies its old slot, so leaving it in
+    // would skew every subsequent index by 1.
     if (this.source?.type === 'canvas' && this.source.nodeId) {
       children = children.filter(c => c.nodeId !== this.source!.nodeId)
     }
@@ -274,7 +264,7 @@ export class DragController implements Reportable<ControllerReport> {
 
   /** Get size of the dragged element */
   private getSourceSize(): { width: number; height: number } {
-    // Canvas-Move: Get real element size
+    // Canvas move: use the real element's measured size.
     if (this.source?.type === 'canvas' && this.source.nodeId) {
       const rect = this.cache.getRect(this.source.nodeId)
       if (rect) {
@@ -282,9 +272,9 @@ export class DragController implements Reportable<ControllerReport> {
       }
     }
 
-    // Palette: Use default component size
-    const componentName = (this.source as any)?.componentName ?? 'Frame'
-    return DEFAULT_COMPONENT_SIZES[componentName] ?? { width: 100, height: 40 }
+    // Palette drop (or fallback): look up by component name.
+    const componentName = this.source?.componentName ?? 'Frame'
+    return DEFAULT_COMPONENT_SIZES[componentName] ?? FALLBACK_COMPONENT_SIZE
   }
 
   /** Get the source DOM element for canvas moves */
@@ -335,12 +325,12 @@ export class DragController implements Reportable<ControllerReport> {
       // state). Forward the drop with a null target so the
       // drag:dropped subscriber can decide to append as a new top-level
       // element. Keeps the v3 controller agnostic about the editor source.
-      log.info('Dropped:', (source as any).componentName || source.type, '→ root (no target)')
+      log.info('Dropped:', source.componentName || source.type, '→ root (no target)')
       this.reset(true)
       await this.executeDropCallback(source, null)
       return
     }
-    log.info('Dropped:', (source as any).componentName || source.type, '→', target.containerId)
+    log.info('Dropped:', source.componentName || source.type, '→', target.containerId)
     this.reset(true)
 
     await this.executeDropCallback(source, target)
@@ -362,7 +352,7 @@ export class DragController implements Reportable<ControllerReport> {
 
     try {
       log.debug('[DragController] Calling onDrop callback...')
-      await this.callbacks.onDrop(source, target as DropTarget)
+      await this.callbacks.onDrop(source, target)
       log.debug('[DragController] onDrop callback completed')
     } catch (error) {
       log.error('[DragController] Drop failed:', error)
@@ -398,113 +388,38 @@ export class DragController implements Reportable<ControllerReport> {
   }
 
   // =============================================================================
-  // Test API - For programmatic testing without real DOM events
+  // Test backdoors — DO NOT CALL FROM PRODUCTION CODE
+  //
+  // These exist so `drag-test-controller.ts` can simulate drags without
+  // synthesising real DragEvents. They expose narrow access to private
+  // state (`source`, `lastTarget`, `state`, `cache`). The full simulation
+  // surface (simulateDrop, etc.) lives in DragTestController, which uses
+  // these as its only entry points.
   // =============================================================================
 
   /**
-   * Simulate a complete drop operation for testing purposes.
-   * Bypasses normal drag validation and directly executes the drop callback.
-   *
-   * @param source - The drag source (palette or canvas element)
-   * @param target - The drop target (container and insertion index, or position for absolute)
-   * @returns Promise that resolves when drop callback completes
-   *
-   * @example
-   * ```typescript
-   * const controller = getDragController()
-   * // Flex drop (index-based)
-   * await controller.simulateDrop(
-   *   { type: 'palette', componentName: 'Button', template: 'Button' },
-   *   { mode: 'flex', containerId: 'node-1', insertionIndex: 0 }
-   * )
-   * // Absolute drop (position-based)
-   * await controller.simulateDrop(
-   *   { type: 'palette', componentName: 'Button', template: 'Button' },
-   *   { mode: 'absolute', containerId: 'node-1', position: { x: 100, y: 50 } }
-   * )
-   * ```
+   * @internal Test-only: force the controller into a chosen state.
+   * Skips all event-driven validation. Production code must drive the
+   * controller through `startDrag` / `updatePosition` / `drop`.
    */
-  async simulateDrop(source: DragSource, target: DropTarget): Promise<void> {
-    // Temporarily set state for reporter and any listeners
+  __forceState(state: DragState, source: DragSource | null, target: DropTarget | null): void {
+    this.state = state
     this.source = source
     this.lastTarget = target
-    this.state = 'dragging'
-
-    let targetDesc: string
-    if (target.mode === 'absolute') {
-      targetDesc = `(${target.position.x}, ${target.position.y})`
-    } else if (target.mode === 'aligned') {
-      targetDesc = `aligned:${target.alignmentProperty}`
-    } else {
-      targetDesc = `index ${(target as FlexDropTarget).insertionIndex}`
-    }
-
-    log.info(
-      '[Test] Simulated drop:',
-      (source as any).componentName || source.nodeId,
-      '→',
-      target.containerId,
-      targetDesc
-    )
-
-    // Execute the drop callback
-    await this.executeDropCallback(source, target)
-
-    // Reset state
-    this.reset(true)
   }
 
-  /**
-   * Simulate a flex drop (backwards-compatible helper)
-   */
-  async simulateFlexDrop(
-    source: DragSource,
-    containerId: string,
-    insertionIndex: number
-  ): Promise<void> {
-    return this.simulateDrop(source, { mode: 'flex', containerId, insertionIndex })
-  }
-
-  /**
-   * Simulate an absolute drop (position-based)
-   */
-  async simulateAbsoluteDrop(
-    source: DragSource,
-    containerId: string,
-    position: Point
-  ): Promise<void> {
-    return this.simulateDrop(source, {
-      mode: 'absolute',
-      containerId,
-      position,
-      insertionIndex: this.cache.getChildren(containerId).length,
-    })
-  }
-
-  /**
-   * Set source directly for testing (allows building up state incrementally)
-   */
-  setTestSource(source: DragSource): void {
-    this.source = source
-    this.state = 'dragging'
-  }
-
-  /**
-   * Set target directly for testing (allows building up state incrementally)
-   */
-  setTestTarget(target: DropTarget): void {
-    this.lastTarget = target
-  }
-
-  /**
-   * Get internal state for test assertions
-   */
-  getTestState(): { state: DragState; source: DragSource | null; target: DropTarget | null } {
+  /** @internal Test-only: snapshot of internal state. */
+  __inspectState(): { state: DragState; source: DragSource | null; target: DropTarget | null } {
     return {
       state: this.state,
       source: this.source,
       target: this.lastTarget,
     }
+  }
+
+  /** @internal Test-only: number of cached children in a container. */
+  __cachedChildCount(containerId: string): number {
+    return this.cache.getChildren(containerId).length
   }
 
   /**
@@ -561,77 +476,5 @@ export function resetDragController(): void {
   if (dragControllerInstance) {
     dragControllerInstance.destroy()
     dragControllerInstance = null
-  }
-}
-
-/**
- * Enable drag reporting from the browser console
- *
- * Usage in browser console:
- *   window.__enableDragReporting()           // Console logging (normal)
- *   window.__enableDragReporting('verbose')  // Console logging (verbose)
- *   window.__enableDragReporting('recording') // Enable recording for JSON export
- *   window.__disableDragReporting()          // Disable
- *   window.__getDragRecordings()             // Get recorded sessions
- *   window.__downloadDragRecordings()        // Download all recordings
- */
-export function setupGlobalDragReporting(): void {
-  // Avoid re-defining if already set up
-  if ((globalThis as any).__enableDragReporting) return
-
-  const { ConsoleAdapter } = require('./reporter/adapters/console-adapter')
-  const { RecordingAdapter } = require('./reporter/adapters/recording-adapter')
-  const { getDragReporter } = require('./reporter/drag-reporter')
-
-  let recordingAdapter: InstanceType<typeof RecordingAdapter> | null = null
-
-  ;(globalThis as any).__enableDragReporting = (
-    mode: 'minimal' | 'normal' | 'verbose' | 'recording' = 'normal'
-  ) => {
-    const controller = getDragController()
-    const reporter = getDragReporter()
-
-    // Set up reporter if not already connected
-    if (!controller.getReporter()) {
-      controller.setReporter(reporter)
-    }
-
-    // Clear existing adapters
-    reporter.clearAdapters()
-
-    if (mode === 'recording') {
-      recordingAdapter = new RecordingAdapter()
-      reporter.addAdapter(recordingAdapter)
-      reporter.addAdapter(new ConsoleAdapter({ level: 'minimal' }))
-      log.debug('[DragReporting] Recording enabled. Use __getDragRecordings() to access.')
-    } else {
-      reporter.addAdapter(new ConsoleAdapter({ level: mode }))
-      log.debug(`[DragReporting] Console logging enabled (${mode})`)
-    }
-
-    reporter.enable()
-  }
-  ;(globalThis as any).__disableDragReporting = () => {
-    const reporter = getDragReporter()
-    reporter.disable()
-    log.debug('[DragReporting] Disabled')
-  }
-  ;(globalThis as any).__getDragRecordings = () => {
-    if (!recordingAdapter) {
-      log.debug(
-        '[DragReporting] No recording adapter. Call __enableDragReporting("recording") first.'
-      )
-      return null
-    }
-    return recordingAdapter.getRecordings()
-  }
-  ;(globalThis as any).__downloadDragRecordings = () => {
-    if (!recordingAdapter) {
-      log.debug(
-        '[DragReporting] No recording adapter. Call __enableDragReporting("recording") first.'
-      )
-      return
-    }
-    recordingAdapter.downloadAll()
   }
 }

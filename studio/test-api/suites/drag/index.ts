@@ -73,3 +73,15 @@ export {
 
 // Each-template guard: blocks reorder of each-rendered nodes
 export { eachTemplateGuardTests } from './each-template-guard.test'
+
+// Real pointer events: bypasses __dragTest, exercises HitDetector + InsertionCalculator
+export { realPointerEventTests } from './real-pointer-events.test'
+
+// Mirror-specific edge cases: components, sub-trees, tokens, undo/redo
+export {
+  allMoveEdgeCaseTests,
+  moveComponentTests,
+  moveDeepSubtreeTests,
+  moveTokenReferenceTests,
+  moveUndoRedoTests,
+} from './move-edge-cases.test'
