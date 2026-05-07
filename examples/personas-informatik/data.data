@@ -1,0 +1,9 @@
+// Personas-Dokument — Daten
+//
+// Bewusst leer: die fünf Personas sind im app.mir handgeschriebene
+// Prosa-Blöcke, keine `personas:`-Datenstruktur. Das passt zum
+// Charakter des Dokuments — Personas sind kuratierter Fliesstext,
+// keine homogenen Records einer Sammlung.
+//
+// Wenn später strukturierte Hilfsdaten dazukommen (z. B. Listen für
+// Charts, Tabellen, oder Cross-References), gehören sie hierher.

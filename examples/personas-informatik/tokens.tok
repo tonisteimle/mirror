@@ -1,0 +1,63 @@
+// Personas-Dokument — Design-Tokens
+// Farben, Typografie-Skala, Layout-Konstanten.
+// Komponenten in components.com referenzieren diese Tokens mit $name.
+
+// ─── Farben ───
+yellow.bg: #FDE70E
+soft.bg: #F4F4F4
+ink.col: #000
+white.col: #fff
+muted.col: #888
+hairline.boc: #e5e5e5
+
+// ─── Layout ───
+content.maxw: 1280
+
+// ─── Typografie-Skala (Schriftgrössen) ───
+caption-xs.fs: 11
+caption-sm.fs: 12
+caption.fs: 13
+small.fs: 14
+body.fs: 17
+body-lg.fs: 19
+lead.fs: 22
+title-sm.fs: 28
+title.fs: 32
+title-lg.fs: 34
+display-sm.fs: 44
+display.fs: 96
+display-xl.fs: 200
+
+// ─── Line-Heights ───
+flush.line: 0.82
+solid.line: 0.95
+tight.line: 1
+snug.line: 1.05
+heading.line: 1.2
+quote.line: 1.45
+body.line: 1.6
+relaxed.line: 1.65
+
+// ─── Tracking (letter-spacing) ───
+tracking-loose.ls: -0.01
+tracking.ls: -0.015
+tracking-tight.ls: -0.02
+tracking-tighter.ls: -0.025
+tracking-tightest.ls: -0.04
+
+// ─── Spacing-Skala ───
+// Alle wiederkehrenden gap-Werte aus components.com. Einmalige Werte
+// (gap 2, 6, 12, 18, 22, 80 und Grid-Gaps wie "gap 32 64") bleiben
+// inline, weil semantisch komponenten-spezifisch.
+gap-xs.gap: 8
+gap-sm.gap: 14
+gap-md.gap: 16
+gap-lg.gap: 24
+gap-xl.gap: 32
+gap-2xl.gap: 56
+gap-3xl.gap: 64
+
+// ─── Schriftgewichte ───
+weight-light.weight: 300
+weight-regular.weight: 400
+weight-bold.weight: bold

@@ -1,0 +1,507 @@
+// Personas — Studieninteressierte Bachelor Informatik (FHNW HSI)
+// Internes Arbeitsdokument. Inline-Prosa: jede Persona ist ein
+// handgeschriebener Block, keine Daten-Struktur mit each-Loop.
+
+canvas desktop, bg #fff, font sans, fs 17
+
+// ─── Topbar ───
+Topbar
+  Logo
+
+// ─── Hero ───
+Hero
+  Eyebrow "Internes Arbeitsdokument"
+  HeroVessel
+    H1 "Personas"
+    HeroSub "Studieninteressierte für den Bachelor Informatik — fünf Profile, die unterschiedliche Wege ins Studium abbilden."
+    MetaList
+      MetaPair
+        MetaLabel "Hochschule"
+        MetaValue "Hochschule für Informatik"
+      MetaPair
+        MetaLabel "Stand"
+        MetaValue "6. Mai 2026"
+      MetaPair
+        MetaLabel "Status"
+        MetaValue "Proto-Personas, hypothesenbasiert"
+      MetaPair
+        MetaLabel "Scope"
+        MetaValue "Studiengang Informatik"
+    Domain "www.fhnw.ch / informatik"
+  HeroBar
+
+// ─── Inhaltsverzeichnis ───
+Section
+  Container
+    H2 "Fünf Personas, die zusammen den Entscheidungsraum aufspannen."
+    TocList
+      TocRow
+        TocNum "01"
+        TocName "Lukas"
+        TocTag "der überzeugte Tüftler"
+      TocRow
+        TocNum "02"
+        TocName "Sara"
+        TocTag "die zweifelnde Quereinsteigerin"
+      TocRow
+        TocNum "03"
+        TocName "Marco"
+        TocTag "der pragmatische EFZ-Absolvent"
+      TocRow
+        TocNum "04"
+        TocName "Nadia"
+        TocTag "die orientierungslose Maturandin"
+      TocRow
+        TocNum "05"
+        TocName "Tim"
+        TocTag "der Game-begeisterte Spezialist"
+
+// ─── Übergreifende Beobachtungen ───
+SectionWide
+  Container
+    TwoColumn
+      ProseColumn
+        H2 "Übergreifende Beobachtungen"
+      ProseBody
+        - **Universalfragen**, die durch fast alle Personas durchgehen, nur in unterschiedlicher Tonart:
+          - «Schaffe ich das?»
+          - «Passe ich da rein?»
+          - «Was wenn ich mich falsch entscheide?»
+          - «Was kommt danach?»
+        - Sehr viele Fragen haben **nichts mit Curriculum** zu tun. Eine Studiengangs-Webseite, die mit Modulübersicht startet, antwortet auf eine Frage, die niemand zuerst stellt.
+        - Manche Fragen sind unangenehm für die Hochschule («Ist FH zweite Wahl?», «Werde ich als Quereinsteigerin auffallen?», «Kann man von Games leben?»). Wer sie ehrlich beantwortet statt umschifft, gewinnt Vertrauen.
+        - **Neu seit 2024 — die AI-Frage:** «Was bedeutet AI für meinen Beruf? Werde ich noch gebraucht, wenn AI in fünf Jahren das Routine-Coding übernimmt?» Diese Sorge zieht sich durch alle Personas — am schärfsten bei denen, die Karriere-ROI rechnen (Marco, Sara), am abstraktesten bei den noch Suchenden (Nadia), spezifisch beim Spezialisten (Tim mit AI-generierten Spielen). Eine Studieninfo, die diese Frage umschifft, wirkt 2026 weltfremd.
+
+// ─── Warum diese fünf Personas? ───
+SectionWide
+  Container
+    TwoColumn
+      ProseColumn
+        H2 "Warum diese fünf Personas?"
+      ProseBody
+        Wir haben uns bewusst für fünf Personas entschieden — genug, um den Entscheidungsraum **breit aufzuspannen**, wenig genug, um sie im Alltag wirklich zu nutzen. Drei wären zu pauschal, sieben werden in der Praxis vergessen. Die Auswahl folgt einer Kontrast-Logik:
+
+        - **Lukas und Nadia** stehen für die Gymi-Welt, an entgegengesetzten Enden: hochkompetent vs. orientierungslos.
+        - **Sara und Marco** stehen für die Berufslehre-Welt, ebenfalls kontrastiv: Quereinstieg ohne Tech-Hintergrund vs. logischer nächster Karriereschritt von einem EFZ aus der Branche.
+        - **Tim** vertritt eine eigene Logik: jemand, der nicht primär eine Hochschule, sondern eine **Studienrichtung** sucht — und FHNW nur erwägt, wenn die Studienrichtung wirklich trägt.
+
+        Zusammen decken sie vier Achsen ab: **Selbstvertrauen** (hoch/tief), **Klarheit der Wahl** (entschieden/suchend), **Treiber** (intrinsisch/extrinsisch), **Vorbildung** (Maturität/EFZ).
+
+// ============================================
+// Persona 01 — Lukas
+// ============================================
+
+PersonaBlock
+  PersonaHeaderBand
+    Container
+      PersonaHeaderRow
+        PersonaNumeral "01"
+        PersonaTitleStack
+          PersonaName "Lukas,"
+          PersonaTag "der überzeugte Tüftler"
+    Container
+      PersonaSteckbrief "18, Gymi (Schwerpunkt Physik & Anwendungen Mathematik), Notenschnitt 5.3. Programmiert seit der Sek, hat einen aktiven GitHub mit eigenen Projekten (Discord-Bots, kleine Web-Apps), liest in der Freizeit über Compiler und Systemprogrammierung. Vater Ingenieur, Mutter Lehrerin."
+  Container
+    PersonaBody
+      WarumBlock
+        ### Warum diese Persona?
+        Lukas verkörpert das Segment der **hochkompetenten, schon technikaffinen Maturand:innen**, die FH und Universität ernsthaft gegeneinander abwägen. Zahlenmässig ist dieses Segment vermutlich klein, für die wahrgenommene Qualität des Studiums aber überproportional wichtig — sie ziehen das Niveau in den Vorlesungen mit. Lukas zwingt uns, eine unangenehme, aber zentrale Frage ernst zu nehmen: **«Ist FH zweite Wahl?»** Wer ihn nicht überzeugt, kommuniziert defensiv und verliert die selbstbewussten Profile an die ETH.
+      DimGrid
+        Dim
+          ### Situation
+          Steht vier Monate vor der Matura. Klassenlehrer und Mathe-Lehrer empfehlen ihm «unbedingt ETH». Eltern wären stolz auf ETH-Zulassung, lassen ihm aber die Wahl. Hat einen FHNW-Schnuppertag besucht und war positiv überrascht (mehr Praxis, weniger anonym als erwartet). Innerlich hin- und hergerissen — die Idee, «nur» an eine FH zu gehen, fühlt sich für ihn nach Statusverlust an, obwohl das fachliche Argument für die FHNW spricht.
+        Dim
+          ### Ziel
+          Ein Studium wählen, in dem er sich technisch wirklich weiterentwickeln kann — nicht im Stoff stehenbleibt, den er schon kennt. Langfristig sieht er sich entweder als Senior Engineer in einer technisch anspruchsvollen Firma oder in der Forschung.
+        Dim
+          ### Herausforderung
+          - **Statusfrage**: Ist FH «zweite Wahl»? Wie reagiert sein Umfeld?
+          - **Sorge vor Unterforderung**: Wird das Studium zu sehr für Anfänger:innen ausgelegt sein?
+          - **Bewertbarkeit**: Schwer einzuschätzen, wo die FHNW fachlich wirklich steht — Webseiten beider Hochschulen klingen ähnlich.
+        Dim
+          ### Needs
+          - Belegbare fachliche Tiefe: konkrete Modul-Inhalte mit Niveau-Hinweis, nicht nur Lernziele
+          - Profile der Dozierenden (Forschung, Industrie, Lehre)
+          - Anrechnung von Vorkenntnissen, ggf. Beschleunigungsoptionen
+          - Sichtbarkeit von Forschungsgruppen und Industrie-Projekten, in die Studierende eingebunden werden
+          - Master-Anschlussoptionen (FHNW-intern und ETH/Uni)
+          - Alumni-Stories: wo arbeiten technisch starke Absolvent:innen?
+      SoftBox
+        Container
+          InnereStimmeRow
+            InnereStimmeMeta
+              H3 "Innere Stimme — *was wirklich im Kopf sitzt*"
+              BodyTxt "O-Ton-Fragen, die Lukas sich selbst stellt — bewusst, halbbewusst, oder im Gespräch mit dem besten Freund."
+            InnereStimmeQuotes
+              Quote "Ist FH eigentlich «zweite Wahl»? Was denken meine Lehrer, wenn ich nicht an die ETH gehe?"
+              Quote "Werde ich gelangweilt sein, weil ich vieles schon kann?"
+              Quote "Wie tief gehen die Module wirklich, oder ist alles «Einführung in...»?"
+              Quote "Wer sind die Dozenten — Praktiker, Forscher, oder eher Schullehrer?"
+              Quote "Kann ich in Forschungs- oder Industrieprojekten mitarbeiten?"
+              Quote "Welche Wahlmodule gibt's, die mich auch nach drei Jahren noch fordern?"
+              Quote "Kann ich Sachen anrechnen lassen, die ich schon kann?"
+              Quote "Brauche ich danach einen Master, um ernst genommen zu werden?"
+              Quote "Lande ich von der FHNW automatisch im Management — oder kann ich technisch arbeiten?"
+              Quote "Treffe ich da andere, die auch schon coden — oder bin ich der einzige?"
+              Quote "Wenn AI in fünf Jahren das Routine-Coding übernimmt — was lerne ich noch, das wirklich tragfähig ist?"
+      ImplikationenBlock
+        ImplikationenTitle "Implikationen für FHNW-Kommunikation"
+        DimGridTwo
+          Dim
+            ### Webseite
+            - Eigene Landing für «schon Erfahrene»: «Du programmierst schon? Hier siehst du, was wir dir Neues bieten.»
+            - Konkrete Modul-Inhalte mit Niveau-Hinweis — nicht nur Lernziele
+            - Profile der Dozierenden mit Forschungs-/Industrie-Hintergrund sichtbar
+            - Forschungsgruppen mit aktuellen Projekten und Studierenden-Beteiligung
+            - «Vom Bachelor zum Master» — FHNW-intern UND Übergang ETH/Uni transparent
+            - Position zur AI-Frage: was lehren wir, das auch in fünf Jahren noch trägt — und warum
+          Dim
+            ### Infoveranstaltung
+            - Live-Coding oder Walkthrough eines studentischen Open-Source-Projekts
+            - Talk eines Dozenten mit erkennbarer Tiefe (Forschung oder Industrie)
+            - Getrennter Q&A-Slot «für Erfahrene» — nicht zwischen Einsteiger-Fragen
+            - Begegnung mit Studierenden im 5./6. Semester
+
+// ============================================
+// Persona 02 — Sara
+// ============================================
+
+PersonaBlock
+  PersonaHeaderBand
+    Container
+      PersonaHeaderRow
+        PersonaNumeral "02"
+        PersonaTitleStack
+          PersonaName "Sara,"
+          PersonaTag "die zweifelnde Quereinsteigerin"
+    Container
+      PersonaSteckbrief "22, vor vier Jahren KV-Lehre abgeschlossen (Versicherung), berufsbegleitend BM nachgeholt vor einem Jahr. Arbeitet 100 % als Sachbearbeiterin in einer Krankenversicherung. Hat im Job angefangen, mit Excel-VBA Auswertungen zu automatisieren — und gemerkt, dass ihr das mehr Spass macht, als sie erwartet hätte. Wohnt noch bei den Eltern im Aargau, hat ca. 25 000 CHF angespart."
+  Container
+    PersonaBody
+      WarumBlock
+        ### Warum diese Persona?
+        Sara vertritt **Quereinsteiger:innen aus nicht-technischen Lehrberufen** — ein Segment, das für die FH besonders relevant ist (Diversifizierung der Studierendenschaft, Frauenförderung, Erschliessen von Talent-Pools jenseits klassischer Tech-Biografien). Sie macht alle Fragen sichtbar, die mit **Selbstvertrauen, Zugehörigkeit und finanziellem Risiko** zusammenhängen — Themen, die in einer rein fachlichen Kommunikation systematisch unsichtbar bleiben. Wer Sara nicht erreicht, kommuniziert nur an die «Sicheren» und vergibt Wachstumspotenzial.
+      DimGrid
+        Dim
+          ### Situation
+          Macht aktuell einen Online-Python-Kurs am Wochenende, kommt aber nur langsam voran. Eltern unterstützen die Idee Studium, fragen aber wiederholt: «Bist du dir sicher, dass das wirklich was für dich ist?» Beste Freundin findet's mutig, im erweiterten Umfeld eher Skepsis. Sie hat noch nie eine Hochschule von innen gesehen.
+        Dim
+          ### Ziel
+          Den Sprung aus der Sachbearbeitung in eine Tech-nahe Rolle schaffen — ohne sich finanziell oder emotional zu überfordern. Sie will wirklich verstehen, was sie tut, statt weiterhin «die Excel-Person im Büro» zu sein.
+        Dim
+          ### Herausforderung
+          - **Mathematik-Selbstzweifel**: Letzte Mathe-Stunde liegt vier Jahre zurück, das Niveau ist ihr unklar.
+          - **Imposter-Gefühl**: Älter als die meisten, kein Tech-Background, kein «Geek-Vorleben» — Angst, aufzufallen.
+          - **Finanzielles Risiko**: Wechsel von 100 % Lohn auf Studium ist ein realer Einschnitt.
+          - **Abbruch-Angst**: Was bleibt, wenn es nicht klappt?
+        Dim
+          ### Needs
+          - Realistische, nicht beschönigte Mathematik-Voraussetzungen
+          - Vorkurs- / Brückenangebote prominent erklärt (Inhalt, Dauer, Kosten)
+          - Studienmodelle (Vollzeit, Teilzeit, berufsbegleitend) inkl. ehrlicher Wochenstunden-Realität
+          - Finanzierungs-Information: Stipendien, Erwerbsersatz, Studiengebühren, mögliche Modelle bei Lohnverzicht
+          - Echte Quereinsteiger:innen-Porträts (keine Marketing-Stars, sondern Menschen wie sie)
+          - Signal von Zugehörigkeit: Altersmix, Frauenanteil, Atmosphäre, Beispiele anderer KV-Hintergründe
+          - Ehrliche Antwort: «Was wenn ich nach einem Semester abbreche — was bleibt mir?»
+      SoftBox
+        Container
+          InnereStimmeRow
+            InnereStimmeMeta
+              H3 "Innere Stimme — *was wirklich im Kopf sitzt*"
+            InnereStimmeQuotes
+              Quote "Schaffe ich die Mathematik? Ich hatte zuletzt vor vier Jahren Mathe."
+              Quote "Werde ich auffallen, weil ich nie programmiert habe?"
+              Quote "Sind alle anderen 18 und ich mit 22 die Älteste?"
+              Quote "Bin ich die einzige Frau ohne Tech-Background?"
+              Quote "Was wenn ich nach einem Semester merke, es war ein Fehler — was bleibt mir dann?"
+              Quote "Gibt's einen Vorkurs? Sollte ich vorher etwas lernen?"
+              Quote "Wie viel Zeit muss ich realistisch investieren — pro Woche?"
+              Quote "Kann ich einen Schnuppertag machen, um zu sehen, ob ich überhaupt verstehe, wovon die reden?"
+              Quote "Werden die anderen mich für dumm halten, wenn ich Grundlagenfragen stelle?"
+              Quote "Kann ich nebenbei arbeiten? Wie viele Prozent gehen?"
+              Quote "Was kostet mich das insgesamt — auch der Lohnausfall?"
+              Quote "Komme ich danach raus aus meinem jetzigen Job — und wohin?"
+      ImplikationenBlock
+        ImplikationenTitle "Implikationen für FHNW-Kommunikation"
+        DimGridTwo
+          Dim
+            ### Webseite
+            - Eigener Einstieg «Du kommst aus dem KV / einem nicht-technischen Beruf?»
+            - Realistische, nicht beschönigte Mathematik-Voraussetzungen
+            - Vorkurse / Brückenangebote prominent — nicht im FAQ-Footer
+            - Echte Quereinsteiger:innen-Porträts (Video, kurz, mit Gesicht und Namen)
+            - Studienmodell-Rechner: «Mein Job ist 80 %, was geht?»
+            - FAQ «Was wenn ich abbreche?» — ehrlich beantwortet
+            - AI-Position: was bleibt menschliche Arbeit, gerade für Quereinsteiger:innen
+          Dim
+            ### Infoveranstaltung
+            - Eigene Session «Quereinstieg — geht das?» mit aktuellen Studierenden ähnlicher Herkunft
+            - Mathe-Schnupperaufgaben — «probier mal, ob du das verstehst»
+            - Kleines, persönliches Format (nicht Massen-Aula)
+            - 1:1-Gespräch mit Studienberatung möglich
+
+// ============================================
+// Persona 03 — Marco
+// ============================================
+
+PersonaBlock
+  PersonaHeaderBand
+    Container
+      PersonaHeaderRow
+        PersonaNumeral "03"
+        PersonaTitleStack
+          PersonaName "Marco,"
+          PersonaTag "der pragmatische EFZ-Absolvent"
+    Container
+      PersonaSteckbrief "23, Informatiker EFZ Plattformentwicklung (4-jährige Lehre), nachher zwei Jahre als Systemtechniker bei einem KMU in Olten. Berufsmaturität während der Lehre. Verdient aktuell ca. 78 000 CHF/Jahr, lebt mit Partnerin in einer 3.5-Zimmer-Wohnung. Rechnet jeden grösseren Schritt durch."
+  Container
+    PersonaBody
+      WarumBlock
+        ### Warum diese Persona?
+        Marco verkörpert das **historische Kernsegment der Fachhochschule** — Berufsleute mit EFZ und Praxiserfahrung, die einen begründeten Karriereschritt suchen. Wenn die Webseite für Marco nicht funktioniert, ist sie an der DNA der FH vorbei. Marco zwingt uns zu **harten Daten** (Lohnentwicklung, Studienmodelle, Anrechnung) statt Marketing-Floskeln, weil er jeden Schritt rechnet und mit Alternativen vergleicht (direkt weiterarbeiten, Master-Studium woanders, Zertifikatsausbildungen). Er ist damit der härteste Test für unsere Argumentation rund um ROI und Karrierewert.
+      DimGrid
+        Dim
+          ### Situation
+          Spürt, dass er an seiner aktuellen Stelle nicht mehr weiterkommt. Will mehr Architektur, mehr Verantwortung, weniger Routine-Tickets. Hat Bekannte, die nach einem Bachelor 30 % mehr verdienen — und welche, die ohne Studium dasselbe wie er. Steht vor einer rein ökonomisch-strategischen Frage, mit emotionaler Komponente (Beziehung, Lebensplanung).
+        Dim
+          ### Ziel
+          Klarer Karrieresprung mit kalkulierbarem Risiko. Ein Studienmodell finden, das mit Beziehung und Finanzen funktioniert. Mittelfristig in eine Rolle mit Entscheidungsspielraum (Tech Lead, Architect, Engineering Manager).
+        Dim
+          ### Herausforderung
+          - **Opportunitätskosten**: Lohnausfall + Studiengebühren über mehrere Jahre.
+          - **Belastung berufsbegleitend**: Vollzeit Studium + Teilzeit Job + Beziehung — geht das?
+          - **Unsicherheit über ROI**: «Lohnt es sich wirklich, oder kann ich das auch durch Erfahrung erreichen?»
+          - **Master-Frage**: Bachelor allein ggf. zu wenig für Senior-Rollen?
+        Dim
+          ### Needs
+          - Echte Lohndaten nach Studienrichtung — nicht nur Schweizer Median
+          - Studienmodell-Transparenz: Wochenrhythmus, Präsenztage, Online-Anteile, realistischer Zeitaufwand
+          - Anrechnung von EFZ und Berufserfahrung — was konkret, wie viel Zeitersparnis
+          - Industrie-Reputation der Studienrichtungen: was ist bei Arbeitgebern gefragt?
+          - Ehrliche Einschätzung: Bachelor reicht oder Master nötig — abhängig vom Karriereziel?
+          - Filterbare Alumni-Karrieren: «Wer kommt aus EFZ + berufsbegleitend ist heute wo?»
+          - Kosten-Rechner: Studiengebühren + Lohnausfall + Opportunitätskosten
+      SoftBox
+        Container
+          InnereStimmeRow
+            InnereStimmeMeta
+              H3 "Innere Stimme — *was wirklich im Kopf sitzt*"
+            InnereStimmeQuotes
+              Quote "Wie viel verdiene ich nach dem Bachelor mehr als jetzt?"
+              Quote "Lohnt sich das gegenüber direkt weiterarbeiten und Erfahrung sammeln?"
+              Quote "Brauche ich einen Master für gute Jobs — oder reicht der Bachelor?"
+              Quote "Berufsbegleitend — wie geht das konkret? Welche Tage, welche Abende?"
+              Quote "Wie lange dauert berufsbegleitend wirklich? 4 Jahre? 5?"
+              Quote "Kann ich Teile aus der Lehre / der BM anrechnen lassen?"
+              Quote "Kann ich zwischen Modellen wechseln, wenn sich mein Job ändert?"
+              Quote "Was kann ich nach dem Bachelor, das ich jetzt nach Lehre + Praxis nicht schon kann?"
+              Quote "Welche Studienrichtung bringt am meisten am Markt — Software Engineering, DevOps, oder etwas anderes?"
+              Quote "Habe ich noch Zeit für Hobbys, Beziehung, Sport?"
+              Quote "Bin ich als Berufsbegleitender Outsider unter den Vollzeitstudis?"
+      ImplikationenBlock
+        ImplikationenTitle "Implikationen für FHNW-Kommunikation"
+        DimGridTwo
+          Dim
+            ### Webseite
+            - Karriere-Sektion mit echten Lohndaten pro Studienrichtung — nicht Schweizer Median
+            - Studienmodell-Vergleich mit konkreten Wochenrhythmen (Tage, Abende, Online-Anteil)
+            - «Bachelor reicht oder Master nötig?» — ehrlich pro Karriereziel
+            - Filterbare Alumni-Datenbank: «EFZ + berufsbegleitend → wo heute?»
+            - Vorleistungs-Anrechnung übersichtlich
+            - Kosten-Rechner: Studiengebühren + Lohnausfall + Opportunitätskosten
+            - AI-Position: harte Antwort, was sich konkret ändert und was bestehen bleibt
+          Dim
+            ### Infoveranstaltung
+            - Panel «Vom EFZ zum Bachelor — und dann?» mit Alumni in unterschiedlichen Rollen
+            - HR-Vertretung aus Industrie: «Was sucht ihr wirklich?»
+            - 1:1-Beratung zu Anrechnung und Studienmodell
+            - Diskussion mit Industrie-Gast zur AI-Wirkung auf Junior- vs. Senior-Rollen
+
+// ============================================
+// Persona 04 — Nadia
+// ============================================
+
+PersonaBlock
+  PersonaHeaderBand
+    Container
+      PersonaHeaderRow
+        PersonaNumeral "04"
+        PersonaTitleStack
+          PersonaName "Nadia,"
+          PersonaTag "die orientierungslose Maturandin"
+    Container
+      PersonaSteckbrief "18, Gymi (Schwerpunkt Wirtschaft & Recht), Notenschnitt 4.8. Hat Informatik-Anwendungen als Ergänzungsfach belegt — eher zufällig. Liest viel, interessiert sich für Politik und Klima. Keine Programmiererfahrung ausser etwas HTML in der Schule. Vater Banker, Mutter Pflegefachfrau."
+  Container
+    PersonaBody
+      WarumBlock
+        ### Warum diese Persona?
+        Nadia vertritt ein **Wachstumssegment**: Maturand:innen ohne Tech-Background, die Informatik / Data Science erst entdecken. Dieses Segment ist entscheidend für den **Frauenanteil** und für das mittelfristige Wachstum der Studierendenzahlen. Nadia macht sichtbar, dass Inhalte nicht nur für Tech-Affine geschrieben werden dürfen — viele Interessierte wollen erst herausfinden, was Informatik überhaupt ist. Sie zwingt uns ausserdem, **Eltern und Klischee-Wirkungen** ernst zu nehmen, die in dieser Lebensphase real die Wahl mitbeeinflussen.
+      DimGrid
+        Dim
+          ### Situation
+          Sechs Monate vor der Matura, weiss noch nicht, was sie studieren soll. Hat bei einer Berufsmesse am FHNW-Stand gestoppt, weil «Data Science» cool klang — weiss aber nicht, was das wirklich ist. Eltern wollen «etwas Solides»: Mutter würde Medizin bevorzugen, Vater BWL. Beste Freundin geht an die Uni Bern, die Klassengruppe ist auf den Universitäten orientiert.
+        Dim
+          ### Ziel
+          Eine begründete Studienwahl treffen, die zu ihr passt — nicht nur «irgendetwas studieren». Ein Beruf, der sie auch in zehn Jahren noch interessiert und Wirkung hat.
+        Dim
+          ### Herausforderung
+          - **Orientierungslosigkeit**: Noch keine klare Vorstellung von Informatik / Data Science / Studienrichtungen.
+          - **Imposter-Risiko**: Fühlt sich mit Wirtschafts-Schwerpunkt schlecht gerüstet.
+          - **Klischee-Ängste**: «Sind da nur Nerds? Würde ich mich wohlfühlen?»
+          - **Familiäre Erwartungen**: Eltern haben andere Vorstellungen, FH-Status ist in ihrem Umfeld nicht selbstverständlich anerkannt.
+          - **Status-Frage**: FH vs. Uni — wie wird das gesehen?
+        Dim
+          ### Needs
+          - Verständliche, nicht-technische Erklärung: Was ist Informatik, was Data Science?
+          - Vergleichbare Darstellung der 6 Studienrichtungen — nicht nur als Liste
+          - Ehrliche Aussage zu Voraussetzungen: ist Wirtschafts-Schwerpunkt ein Problem?
+          - Selbsttests / Schnupperangebote / Probesemester / Vorbereitungsjahr
+          - Klärung: Wechselmöglichkeiten zwischen Studiengängen / Studienrichtungen
+          - Sichtbare Atmosphäre und Diversität (echte Bilder, kein Stockmaterial)
+          - Eigenes Material für Eltern: FH-Status, Karrierechancen, Sicherheit
+          - Vergleich FHNW vs. andere FH vs. Uni — ehrlich, nicht werbend
+      SoftBox
+        Container
+          InnereStimmeRow
+            InnereStimmeMeta
+              H3 "Innere Stimme — *was wirklich im Kopf sitzt*"
+            InnereStimmeQuotes
+              Quote "Was ist eigentlich der Unterschied zwischen Informatik und Data Science?"
+              Quote "Was ist der Unterschied zwischen den 6 Studienrichtungen — verständlich erklärt?"
+              Quote "Muss ich mich schon bei der Bewerbung auf eine Studienrichtung festlegen, oder erst später?"
+              Quote "Was wenn ich mich falsch entscheide? Kann ich wechseln?"
+              Quote "Bin ich mit meinem Wirtschafts-Schwerpunkt überhaupt gerüstet — oder bin ich von Anfang an im Hintertreffen?"
+              Quote "Gibt's einen Selbsttest, der mir hilft zu entscheiden, ob das wirklich zu mir passt?"
+              Quote "Gibt es einen Schnuppertag, ein Probesemester, ein Vorbereitungsjahr?"
+              Quote "Sind alle Informatiker so wie das Klischee? Würde ich mich da wohlfühlen?"
+              Quote "Wie viele Frauen sind im Studiengang?"
+              Quote "Wie ist das Studierendenleben — Events, Vereine, gemeinsam Mittag essen?"
+              Quote "Pendle ich täglich oder ziehe ich näher hin?"
+              Quote "Wieso FHNW und nicht ZHAW oder HSLU? Was unterscheidet euch wirklich?"
+              Quote "Ist eine FH ok, oder denken meine Eltern «lieber Uni»?"
+      ImplikationenBlock
+        ImplikationenTitle "Implikationen für FHNW-Kommunikation"
+        DimGridTwo
+          Dim
+            ### Webseite
+            - Einstieg «Du bist noch unsicher? Hier startest du» — mit Selbsttest oder Quiz
+            - «Informatik vs. Data Science — der ehrliche Vergleich»
+            - Visuell starke «Ein Tag als …»-Studierenden-Stories
+            - Studienrichtungen vergleichbar darstellen, nicht nur als Liste
+            - Kultur und Diversität sichtbar (echte Bilder, nicht Stockfotos)
+            - AI-Position für Unentschlossene: warum Informatik gerade jetzt sinnvoll ist (oder nicht)
+          Dim
+            ### Infoveranstaltung
+            - Schnuppertage / Mini-Workshops «ein Tag als Informatik-Studi»
+            - Vergleichende Sessions: «Worin unterscheiden sich die 6 Studienrichtungen wirklich?»
+            - «Noch nicht entschieden? Komm trotzdem» — explizit auf Plakat / Einladung
+            - Atmosphäre erlebbar machen: gemeinsam Mittag essen, mit Studierenden reden
+
+// ============================================
+// Persona 05 — Tim
+// ============================================
+
+PersonaBlock
+  PersonaHeaderBand
+    Container
+      PersonaHeaderRow
+        PersonaNumeral "05"
+        PersonaTitleStack
+          PersonaName "Tim,"
+          PersonaTag "der Game-begeisterte Spezialist"
+    Container
+      PersonaSteckbrief "17, Informatikmittelschule (IMS) in Bern, im letzten Lehrjahr. Macht in der Freizeit Unity-Tutorials, hat zwei kleine Prototypen gebaut, ist auf Discord in Game-Dev-Communities aktiv, war bereits an zwei Game Jams. Macht nebenbei Musik (Hobby Producer), zeichnet etwas. Vater Sek-Lehrer, Mutter Sozialarbeiterin."
+  Container
+    PersonaBody
+      WarumBlock
+        ### Warum diese Persona?
+        Tim steht stellvertretend für eine ganz andere Logik: Studieninteressierte, die nicht primär eine Hochschule, sondern **eine Studienrichtung** suchen (Game, HPC/AI, Software Engineering oder andere). Er ist der härteste Test dafür, ob die Spezialisierungen **wirklich tragen oder nur Etikett** sind. Wenn Tim die Studienrichtung Game Entwicklung als ernsthaft erkennt, gewinnen wir auch andere Spezialist:innen in den anderen Richtungen. Tim macht zudem sichtbar, dass die Studienrichtungen jeweils eine **eigene inhaltliche Tiefe** kommunizieren müssen — eine generische Studiengangs-Seite reicht nicht.
+      DimGrid
+        Dim
+          ### Situation
+          Weiss seit der 7. Klasse: Games. Hat Schweizer Studios recherchiert (Giants Software, Stray Fawn, Blindflug), weiss, dass die Branche klein ist. Hat ZHdK Game Design auf dem Radar, ist aber klar Coder, nicht Designer. FHNW Game Entwicklung ist daher ernsthafte Option — er fragt sich aber, wie ernst die Hochschule diese Studienrichtung wirklich meint.
+        Dim
+          ### Ziel
+          Eine echte Game-Engineer-Ausbildung mit substanzieller Industrie-Anbindung. Portfolio mit eigenen Spielen aufbauen. Mittelfristig: Gameplay-Programmer oder Engine-Entwickler in einem ernsthaften Studio (Schweiz oder Ausland). Backup-Pfad: solide Grundausbildung, die auch in «klassischen» Software-Jobs trägt.
+        Dim
+          ### Herausforderung
+          - **Kleine CH-Branche**: Realistische Karriere-Perspektive ist schmal.
+          - **Glaubwürdigkeit der Studienrichtung**: Ist FHNW Game Entwicklung «echt» oder nur Dekoration?
+          - **Vergleich**: ZHdK Game Design vs. Auslandschulen (NHTV, Future Games) vs. FHNW.
+          - **Risiko-Diversifikation**: Was, wenn Game-Industrie nicht klappt?
+        Dim
+          ### Needs
+          - Konkrete Modul-Inhalte der Game-Studienrichtung: Engines, Pipelines, Math/Physics, Multiplayer
+          - Showreel / sichtbare Studierendenprojekte (spielbar, verlinkbar)
+          - Industrie-Anbindung: Gastdozent:innen, Praktika, Branchen-Events
+          - Alumni-Karrieren: wer arbeitet heute wo?
+          - Ausweich-/Brückenmodule: Wie weit deckt die Ausbildung auch klassische Software-Engineer-Skills ab?
+          - Community-Signale: Game Jams, Discord, studentische Vereine an der FHNW
+          - Ehrlicher Vergleich mit ZHdK / Auslandschulen
+      SoftBox
+        Container
+          InnereStimmeRow
+            InnereStimmeMeta
+              H3 "Innere Stimme — *was wirklich im Kopf sitzt*"
+            InnereStimmeQuotes
+              Quote "Welche Engines lerne ich? Unity, Unreal, eigenes?"
+              Quote "Mache ich im Studium ein eigenes Spiel?"
+              Quote "Lerne ich auch Art / Sound / Game Design — oder nur Code?"
+              Quote "Wie viel «klassische Informatik» (Mathe, Theorie) muss ich neben dem Game-Stoff machen?"
+              Quote "Welche Game-Firmen kennen die FHNW? Kommen Leute aus der Industrie zu Talks?"
+              Quote "Wo arbeiten Alumni heute? Gibt's überhaupt Schweizer Studios, die einstellen?"
+              Quote "Sollte ich besser an eine spezialisierte Schule (z. B. ZHdK Game Design) oder ins Ausland?"
+              Quote "Kann man von Games in der Schweiz wirklich leben?"
+              Quote "Was wenn die Game-Industrie nicht klappt — bin ich dann auch für «normale» Software-Jobs gerüstet?"
+              Quote "Gibt's eine Game-Dev-Community an der FHNW? Game Jams, Discord, gemeinsame Projekte?"
+              Quote "Sind die anderen auch Game-Nerds — oder bin ich der einzige?"
+              Quote "Bin ich gut genug für die Game-Studienrichtung — oder werden die anderen viel weiter sein?"
+      ImplikationenBlock
+        ImplikationenTitle "Implikationen für FHNW-Kommunikation"
+        DimGridTwo
+          Dim
+            ### Webseite
+            - Studienrichtung Game Entwicklung mit Showreel sichtbar (spielbar verlinkt)
+            - Konkrete Engine-Liste, Tool-Stack, Beispielprojekte
+            - Alumni-Stories aus der Game-Industrie (Schweiz und international)
+            - «Game oder klassische Software?» — Brückenmodule sichtbar
+            - Community-Seite: was läuft an der FHNW jenseits der Vorlesungen (Game Jams, Vereine)
+            - AI-Position spezifisch für Game-Dev: was sich ändert, was bleibt — ehrlich
+          Dim
+            ### Infoveranstaltung
+            - Showcase studentischer Game-Projekte — spielbar!
+            - Talk eines Game-Dev-Alumni oder Industrie-Gasts
+            - Game Jam oder Mini-Hackathon als Tag-der-offenen-Tür-Element
+            - Q&A mit Studierenden der Game-Richtung
+
+// ─── Offene Punkte ───
+SectionWide
+  Container
+    TwoColumn
+      ProseColumn
+        H2 "Offene Punkte / nächste Schritte"
+      OffeneList
+        1. **Eltern als Co-Persona** — vor allem für Lukas und Nadia entscheidungsrelevant. Soll separat ausgearbeitet werden.
+        2. **Diversität explizit verankern** — Frauenanteil, Migrationsbiografie, Erstakademiker:in. Querschnitt durch alle Personas, nicht eigene Persona.
+        3. **Data Science** — analoge Persona-Arbeit, sobald Informatik validiert ist.
+        4. **User Research** — diese Proto-Personas mit echten Studieninteressierten testen (Infotag-Gespräche, kurze Interviews, ggf. Studienberatung-Daten auswerten). Insbesondere prüfen: Stimmen die «inneren Stimmen»? Welche Fragen fehlen? Welche Personas existieren so gar nicht?
+        5. **Inhaltliche Architektur** — pro Persona ableiten, was das für Webseite und Infoveranstaltung konkret heisst (Inhalte, Tonalität, Format, Pfade).
+        6. **Persona-Lücken prüfen** — z. B. Studieninteressierte mit Migrationshintergrund, internationale Bewerber:innen, ältere Quereinsteiger:innen (30+).
+
+// ─── Footer ───
+FooterFrame
+  Container
+    LogoLight
+    FooterGrid
+      FooterColMain
+        FooterHeading "Über dieses Dokument"
+        FooterText "Internes Arbeitsdokument zur Persona-Arbeit für Studieninteressierte des Bachelor Informatik. Proto-Personas, hypothesenbasiert; bewusst dafür gemacht, durch User Research validiert oder verworfen zu werden."
+      FooterColMeta
+        FooterHeading "Status"
+        FooterStatusList
+          FooterText "Stand: 6. Mai 2026"
+          FooterText "Version: v1"
+          FooterText "Scope: Studiengang Informatik"
+    FooterBaseRow
+      FooterBase "© Fachhochschule Nordwestschweiz · Hochschule für Informatik"
+      FooterBase "Internes Arbeitsdokument · nicht zur externen Verbreitung"
