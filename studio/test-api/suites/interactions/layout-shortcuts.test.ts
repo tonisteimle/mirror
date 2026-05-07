@@ -19,37 +19,30 @@ export const horizontalLayoutTests: TestCase[] = describe('H Key - Horizontal La
     'H key sets horizontal layout on selected Frame',
     'Frame gap 8, pad 16\n  Text "Item 1"\n  Text "Item 2"',
     async (api: TestAPI) => {
-      // Wait for initial compile and click to select
       await api.utils.waitForCompile()
-
-      // Get initial layout - should be vertical (column)
-      let element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
-      api.assert.ok(element !== null, 'Frame element should exist')
-      const initialDirection = window.getComputedStyle(element).flexDirection
-      api.assert.ok(
-        initialDirection === 'column',
-        `Initial flex-direction should be column, got ${initialDirection}`
-      )
-
-      await api.interact.click('node-1')
-      await api.utils.delay(100)
-
-      // Press H key
+      await api.studio.setSelection('node-1')
+      await api.utils.delay(50)
       await api.interact.pressKey('h')
       await api.utils.waitForCompile()
 
-      // Verify hor was added to code
-      api.assert.codeContains(/\bhor\b/)
-
-      // Re-query element after compile (DOM may have been recreated)
-      element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
-      api.assert.ok(element !== null, 'Frame element should still exist after compile')
-
-      // Verify visual change - flex-direction should now be row
-      const newDirection = window.getComputedStyle(element).flexDirection
+      // codeEquals over codeContains: catches stray edits to neighbours
+      // (e.g. accidentally rewriting child indentation, dropping pad,
+      // or inserting `hor` on the wrong line).
+      const actual = api.editor.getCode()
+      const expected = 'Frame gap 8, pad 16, hor\n  Text "Item 1"\n  Text "Item 2"'
       api.assert.ok(
-        newDirection === 'row',
-        `Flex-direction should change to row after H key, got ${newDirection}`
+        actual === expected,
+        `Code mismatch.\n--- Expected ---\n${expected}\n--- Actual ---\n${actual}`
+      )
+
+      // Visual check confirms the property actually rendered (catches
+      // a hypothetical regression where the source has `hor` but the
+      // compiler doesn't apply it).
+      const el = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      api.assert.ok(el !== null, 'Frame element should still exist after compile')
+      api.assert.ok(
+        window.getComputedStyle(el).flexDirection === 'row',
+        `Flex-direction should be row, got ${window.getComputedStyle(el).flexDirection}`
       )
     }
   ),
@@ -58,37 +51,24 @@ export const horizontalLayoutTests: TestCase[] = describe('H Key - Horizontal La
     'H key replaces ver with hor',
     'Frame ver, gap 8\n  Text "Item 1"\n  Text "Item 2"',
     async (api: TestAPI) => {
-      // Click the Frame to select it
       await api.utils.waitForCompile()
-
-      // Verify initial vertical layout
-      let element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
-      const initialDirection = window.getComputedStyle(element).flexDirection
-      api.assert.ok(
-        initialDirection === 'column',
-        `Initial flex-direction should be column for ver, got ${initialDirection}`
-      )
-
-      await api.interact.click('node-1')
-      await api.utils.delay(100)
-
-      // Press H key
+      await api.studio.setSelection('node-1')
+      await api.utils.delay(50)
       await api.interact.pressKey('h')
       await api.utils.waitForCompile()
 
-      // Verify hor is present and ver is removed
-      api.assert.codeContains(/\bhor\b/)
-      api.assert.codeNotContains(/\bver\b/)
-
-      // Re-query element after compile
-      element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
-      api.assert.ok(element !== null, 'Frame element should still exist')
-
-      // Verify visual change
-      const newDirection = window.getComputedStyle(element).flexDirection
+      const actual = api.editor.getCode()
+      const expected = 'Frame gap 8, hor\n  Text "Item 1"\n  Text "Item 2"'
       api.assert.ok(
-        newDirection === 'row',
-        `Flex-direction should change to row, got ${newDirection}`
+        actual === expected,
+        `Code mismatch.\n--- Expected ---\n${expected}\n--- Actual ---\n${actual}`
+      )
+
+      const el = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      api.assert.ok(el !== null, 'Frame element should still exist')
+      api.assert.ok(
+        window.getComputedStyle(el).flexDirection === 'row',
+        `Flex-direction should be row, got ${window.getComputedStyle(el).flexDirection}`
       )
     }
   ),
@@ -103,38 +83,24 @@ export const verticalLayoutTests: TestCase[] = describe('V Key - Vertical Layout
     'V key sets vertical layout on selected Frame',
     'Frame hor, gap 8\n  Text "Item 1"\n  Text "Item 2"',
     async (api: TestAPI) => {
-      // Click to select
       await api.utils.waitForCompile()
-
-      // Verify initial horizontal layout
-      let element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
-      api.assert.ok(element !== null, 'Frame element should exist')
-      const initialDirection = window.getComputedStyle(element).flexDirection
-      api.assert.ok(
-        initialDirection === 'row',
-        `Initial flex-direction should be row for hor, got ${initialDirection}`
-      )
-
-      await api.interact.click('node-1')
-      await api.utils.delay(100)
-
-      // Press V key
+      await api.studio.setSelection('node-1')
+      await api.utils.delay(50)
       await api.interact.pressKey('v')
       await api.utils.waitForCompile()
 
-      // Verify ver was added and hor removed
-      api.assert.codeContains(/\bver\b/)
-      api.assert.codeNotContains(/\bhor\b/)
-
-      // Re-query element after compile
-      element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
-      api.assert.ok(element !== null, 'Frame element should still exist')
-
-      // Verify visual change
-      const newDirection = window.getComputedStyle(element).flexDirection
+      const actual = api.editor.getCode()
+      const expected = 'Frame gap 8, ver\n  Text "Item 1"\n  Text "Item 2"'
       api.assert.ok(
-        newDirection === 'column',
-        `Flex-direction should change to column after V key, got ${newDirection}`
+        actual === expected,
+        `Code mismatch.\n--- Expected ---\n${expected}\n--- Actual ---\n${actual}`
+      )
+
+      const el = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      api.assert.ok(el !== null, 'Frame element should still exist')
+      api.assert.ok(
+        window.getComputedStyle(el).flexDirection === 'column',
+        `Flex-direction should be column, got ${window.getComputedStyle(el).flexDirection}`
       )
     }
   ),
@@ -143,42 +109,28 @@ export const verticalLayoutTests: TestCase[] = describe('V Key - Vertical Layout
     'V key replaces grid with ver',
     'Frame grid, gap 8\n  Text "Item 1"\n  Text "Item 2"',
     async (api: TestAPI) => {
-      // Click to select
       await api.utils.waitForCompile()
-
-      // Verify initial grid layout
-      let element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
-      const initialDisplay = window.getComputedStyle(element).display
-      api.assert.ok(
-        initialDisplay === 'grid',
-        `Initial display should be grid, got ${initialDisplay}`
-      )
-
-      await api.interact.click('node-1')
-      await api.utils.delay(100)
-
-      // Press V key
+      await api.studio.setSelection('node-1')
+      await api.utils.delay(50)
       await api.interact.pressKey('v')
       await api.utils.waitForCompile()
 
-      // Verify ver is present and grid is removed
-      api.assert.codeContains(/\bver\b/)
-      api.assert.codeNotContains(/\bgrid\b/)
-
-      // Re-query element after compile
-      element = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
-      api.assert.ok(element !== null, 'Frame element should still exist')
-
-      // Verify visual change - should be flex column now
-      const newDisplay = window.getComputedStyle(element).display
-      const newDirection = window.getComputedStyle(element).flexDirection
+      const actual = api.editor.getCode()
+      const expected = 'Frame gap 8, ver\n  Text "Item 1"\n  Text "Item 2"'
       api.assert.ok(
-        newDisplay === 'flex',
-        `Display should change to flex after V key, got ${newDisplay}`
+        actual === expected,
+        `Code mismatch.\n--- Expected ---\n${expected}\n--- Actual ---\n${actual}`
+      )
+
+      const el = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      api.assert.ok(el !== null, 'Frame element should still exist')
+      api.assert.ok(
+        window.getComputedStyle(el).display === 'flex',
+        `Display should be flex, got ${window.getComputedStyle(el).display}`
       )
       api.assert.ok(
-        newDirection === 'column',
-        `Flex-direction should be column after V key, got ${newDirection}`
+        window.getComputedStyle(el).flexDirection === 'column',
+        `Flex-direction should be column, got ${window.getComputedStyle(el).flexDirection}`
       )
     }
   ),
@@ -193,42 +145,27 @@ export const fullDimensionTests: TestCase[] = describe('F Key - Full Dimension',
     'F key sets w full on wider element',
     'Frame pad 16, w 400\n  Frame w 200, h 50, bg #333',
     async (api: TestAPI) => {
-      // Click inner Frame (wider than tall)
       await api.utils.waitForCompile()
-
-      // Get initial width
-      let element = document.querySelector('[data-mirror-id="node-2"]') as HTMLElement
-      api.assert.ok(element !== null, 'Inner Frame should exist')
-      const initialWidth = element.getBoundingClientRect().width
-      api.assert.ok(
-        Math.abs(initialWidth - 200) < 5,
-        `Initial width should be ~200px, got ${initialWidth}`
-      )
-
-      await api.interact.click('node-2')
-      await api.utils.delay(100)
-
-      // Press F key
+      await api.studio.setSelection('node-2')
+      await api.utils.delay(50)
       await api.interact.pressKey('f')
       await api.utils.waitForCompile()
 
-      // Verify w full was added
-      api.assert.codeContains(/\bw\s+full\b/)
+      const actual = api.editor.getCode()
+      const expected = 'Frame pad 16, w 400\n  Frame w full, h 50, bg #333'
+      api.assert.ok(
+        actual === expected,
+        `Code mismatch.\n--- Expected ---\n${expected}\n--- Actual ---\n${actual}`
+      )
 
-      // Re-query elements after compile
-      element = document.querySelector('[data-mirror-id="node-2"]') as HTMLElement
-      const parentElement = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
-      api.assert.ok(element !== null, 'Inner Frame should still exist')
-      api.assert.ok(parentElement !== null, 'Parent Frame should still exist')
-
-      // Verify visual change - width should now be parent width minus padding
-      const newWidth = element.getBoundingClientRect().width
-      const parentWidth = parentElement.getBoundingClientRect().width
-      const expectedWidth = parentWidth - 32 // 16px padding on each side
-
+      // Visual check: width should fill parent (400 - 32 padding = 368)
+      const inner = document.querySelector('[data-mirror-id="node-2"]') as HTMLElement
+      const parent = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      const expectedWidth = parent.getBoundingClientRect().width - 32
+      const newWidth = inner.getBoundingClientRect().width
       api.assert.ok(
         Math.abs(newWidth - expectedWidth) < 5,
-        `Width should expand to fill parent (~${expectedWidth}px), got ${newWidth}px`
+        `Width should fill parent (~${expectedWidth}px), got ${newWidth}px`
       )
     }
   ),
@@ -237,42 +174,26 @@ export const fullDimensionTests: TestCase[] = describe('F Key - Full Dimension',
     'F key sets h full on taller element',
     'Frame pad 16, h 300\n  Frame w 50, h 200, bg #333',
     async (api: TestAPI) => {
-      // Click inner Frame (taller than wide)
       await api.utils.waitForCompile()
-
-      // Get initial height
-      let element = document.querySelector('[data-mirror-id="node-2"]') as HTMLElement
-      api.assert.ok(element !== null, 'Inner Frame should exist')
-      const initialHeight = element.getBoundingClientRect().height
-      api.assert.ok(
-        Math.abs(initialHeight - 200) < 5,
-        `Initial height should be ~200px, got ${initialHeight}`
-      )
-
-      await api.interact.click('node-2')
-      await api.utils.delay(100)
-
-      // Press F key
+      await api.studio.setSelection('node-2')
+      await api.utils.delay(50)
       await api.interact.pressKey('f')
       await api.utils.waitForCompile()
 
-      // Verify h full was added
-      api.assert.codeContains(/\bh\s+full\b/)
+      const actual = api.editor.getCode()
+      const expected = 'Frame pad 16, h 300\n  Frame w 50, h full, bg #333'
+      api.assert.ok(
+        actual === expected,
+        `Code mismatch.\n--- Expected ---\n${expected}\n--- Actual ---\n${actual}`
+      )
 
-      // Re-query elements after compile
-      element = document.querySelector('[data-mirror-id="node-2"]') as HTMLElement
-      const parentElement = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
-      api.assert.ok(element !== null, 'Inner Frame should still exist')
-      api.assert.ok(parentElement !== null, 'Parent Frame should still exist')
-
-      // Verify visual change - height should now be parent height minus padding
-      const newHeight = element.getBoundingClientRect().height
-      const parentHeight = parentElement.getBoundingClientRect().height
-      const expectedHeight = parentHeight - 32 // 16px padding on each side
-
+      const inner = document.querySelector('[data-mirror-id="node-2"]') as HTMLElement
+      const parent = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
+      const expectedHeight = parent.getBoundingClientRect().height - 32
+      const newHeight = inner.getBoundingClientRect().height
       api.assert.ok(
         Math.abs(newHeight - expectedHeight) < 5,
-        `Height should expand to fill parent (~${expectedHeight}px), got ${newHeight}px`
+        `Height should fill parent (~${expectedHeight}px), got ${newHeight}px`
       )
     }
   ),
@@ -281,48 +202,19 @@ export const fullDimensionTests: TestCase[] = describe('F Key - Full Dimension',
     'F key twice sets both dimensions to full',
     'Frame pad 16, h 300, w 400\n  Frame w 200, h 50, bg #333',
     async (api: TestAPI) => {
-      // Click inner Frame
       await api.utils.waitForCompile()
-
-      let element = document.querySelector('[data-mirror-id="node-2"]') as HTMLElement
-      api.assert.ok(element !== null, 'Inner Frame should exist')
-
-      await api.interact.click('node-2')
-      await api.utils.delay(100)
-
-      // Press F key twice
+      await api.studio.setSelection('node-2')
+      await api.utils.delay(50)
       await api.interact.pressKey('f')
       await api.utils.waitForCompile()
-      await api.utils.delay(100)
-
       await api.interact.pressKey('f')
       await api.utils.waitForCompile()
 
-      // Verify both w full and h full are present
-      api.assert.codeContains(/\bw\s+full\b/)
-      api.assert.codeContains(/\bh\s+full\b/)
-
-      // Re-query elements after compile
-      element = document.querySelector('[data-mirror-id="node-2"]') as HTMLElement
-      const parentElement = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement
-      api.assert.ok(element !== null, 'Inner Frame should still exist')
-      api.assert.ok(parentElement !== null, 'Parent Frame should still exist')
-
-      // Verify visual change - both dimensions should fill parent
-      const newWidth = element.getBoundingClientRect().width
-      const newHeight = element.getBoundingClientRect().height
-      const parentWidth = parentElement.getBoundingClientRect().width
-      const parentHeight = parentElement.getBoundingClientRect().height
-      const expectedWidth = parentWidth - 32
-      const expectedHeight = parentHeight - 32
-
+      const actual = api.editor.getCode()
+      const expected = 'Frame pad 16, h 300, w 400\n  Frame w full, h full, bg #333'
       api.assert.ok(
-        Math.abs(newWidth - expectedWidth) < 5,
-        `Width should fill parent (~${expectedWidth}px), got ${newWidth}px`
-      )
-      api.assert.ok(
-        Math.abs(newHeight - expectedHeight) < 5,
-        `Height should fill parent (~${expectedHeight}px), got ${newHeight}px`
+        actual === expected,
+        `Code mismatch.\n--- Expected ---\n${expected}\n--- Actual ---\n${actual}`
       )
     }
   ),
@@ -337,17 +229,18 @@ export const focusManagementTests: TestCase[] = describe('Focus Management', [
     'Preview shortcuts work when element is selected',
     'Frame gap 8\n  Text "Item 1"\n  Text "Item 2"',
     async (api: TestAPI) => {
-      // Wait for compile and select element in preview
       await api.utils.waitForCompile()
-      await api.interact.click('node-1')
-      await api.utils.delay(100)
-
-      // Press H key - should work because an element is selected
+      await api.studio.setSelection('node-1')
+      await api.utils.delay(50)
       await api.interact.pressKey('h')
       await api.utils.waitForCompile()
 
-      // Verify hor was added
-      api.assert.codeContains(/\bhor\b/)
+      const actual = api.editor.getCode()
+      const expected = 'Frame gap 8, hor\n  Text "Item 1"\n  Text "Item 2"'
+      api.assert.ok(
+        actual === expected,
+        `Code mismatch.\n--- Expected ---\n${expected}\n--- Actual ---\n${actual}`
+      )
     }
   ),
 
@@ -405,27 +298,29 @@ export const combinedShortcutTests: TestCase[] = describe('Layout Shortcuts Comb
     'Can switch between H and V',
     'Frame gap 8\n  Text "Item 1"\n  Text "Item 2"',
     async (api: TestAPI) => {
-      // Select using studio API (properly sets editorHasFocus = false)
       await api.utils.waitForCompile()
       await api.studio.setSelection('node-1')
-      await api.utils.delay(100)
+      await api.utils.delay(50)
 
-      // Press H
+      const expectAfter = (label: string, expected: string): void => {
+        const actual = api.editor.getCode()
+        api.assert.ok(
+          actual === expected,
+          `[${label}] Code mismatch.\n--- Expected ---\n${expected}\n--- Actual ---\n${actual}`
+        )
+      }
+
       await api.interact.pressKey('h')
       await api.utils.waitForCompile()
-      api.assert.codeContains(/\bhor\b/)
+      expectAfter('after H', 'Frame gap 8, hor\n  Text "Item 1"\n  Text "Item 2"')
 
-      // Press V
       await api.interact.pressKey('v')
       await api.utils.waitForCompile()
-      api.assert.codeContains(/\bver\b/)
-      api.assert.codeNotContains(/\bhor\b/)
+      expectAfter('after V', 'Frame gap 8, ver\n  Text "Item 1"\n  Text "Item 2"')
 
-      // Press H again
       await api.interact.pressKey('h')
       await api.utils.waitForCompile()
-      api.assert.codeContains(/\bhor\b/)
-      api.assert.codeNotContains(/\bver\b/)
+      expectAfter('after H again', 'Frame gap 8, hor\n  Text "Item 1"\n  Text "Item 2"')
     }
   ),
 ])
