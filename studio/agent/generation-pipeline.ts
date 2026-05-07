@@ -52,14 +52,11 @@ export interface GenerationPipelineInput {
    */
   context?: TranslationContext
   /**
-   * Project-Kontext für die Translation: existierende Tokens / Components,
-   * die wiederverwendet (nicht redefiniert) werden sollen. Im MVP-Single-
-   * File-Modus oft leer; bei späterer Multi-File-Reaktivierung mit Inhalt.
+   * Project-Kontext für die Translation: alle Sibling-Files. Multi-File-
+   * Roadmap: extension-agnostic; die LLM erkennt am Inhalt was Tokens vs
+   * Components vs Data vs Layouts sind. Map: filename → content.
    */
-  projectFiles?: {
-    tokens: Record<string, string>
-    components: Record<string, string>
-  }
+  siblings?: Record<string, string>
 }
 
 export interface RunGenerationPipelineOptions {
@@ -154,7 +151,7 @@ export async function runGenerationPipeline(
     const translationPrompt = buildTranslationPrompt({
       html,
       context: input.context,
-      projectFiles: input.projectFiles,
+      siblings: input.siblings,
       retryContext:
         attempt > 0
           ? { validationErrors: lastValidationErrors, previousMirror: lastMirror }

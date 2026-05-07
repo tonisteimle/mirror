@@ -48,8 +48,10 @@ export interface QualityViolations {
 
 function runQualityChecks(source: string, ctx: EditCaptureCtx): QualityViolations {
   return {
-    token: checkTokenCompliance(source, ctx.projectFiles.tokens).violations,
-    component: checkComponentCompliance(source, ctx.projectFiles.components).violations,
+    // Multi-File-Roadmap: alle Sibling-Files in beide Compliance-Checks —
+    // der Parser zieht sich selbst raus, was Tokens vs Components sind.
+    token: checkTokenCompliance(source, ctx.siblings).violations,
+    component: checkComponentCompliance(source, ctx.siblings).violations,
     redundancy: checkRedundancyCompliance(source).violations,
   }
 }

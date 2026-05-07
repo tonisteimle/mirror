@@ -29,11 +29,15 @@ export interface EditCaptureCtx {
   instruction: string | null
   /** Diff seit letztem LLM-Call (kann leer sein). */
   diffSinceLastCall: string
-  /** Project-Kontext: Token- und Component-Dateien aus anderen Files. */
-  projectFiles: {
-    tokens: Record<string, string>
-    components: Record<string, string>
-  }
+  /**
+   * Project-Kontext: alle Geschwister-Dateien aus dem Projekt-Root, OHNE
+   * die aktive Datei. Multi-File-Roadmap: Mirror unterscheidet keine
+   * File-Typen mehr — die LLM sieht alle Files und erkennt am Inhalt was
+   * Tokens / Components / Data / Layouts sind. Compliance-Checks
+   * (checkTokenCompliance, checkComponentCompliance) parsen jeden Sibling
+   * und ziehen sich die relevanten Definitionen selbst raus.
+   */
+  siblings: Record<string, string>
 }
 
 const PATCH_FORMAT_EXAMPLES = `### Beispiel — eine Änderung
@@ -115,16 +119,11 @@ ${ctx.diffSinceLastCall}
 \`\`\``)
   }
 
-  const tokenSection = formatProjectFileSection(
-    'Tokens (verfügbar als $name)',
-    ctx.projectFiles.tokens
+  const siblingSection = formatProjectFileSection(
+    'Sibling-Files (Tokens, Components, Data, andere Layouts — alle wiederverwenden statt neu zu definieren)',
+    ctx.siblings
   )
-  const componentSection = formatProjectFileSection(
-    'Components (verfügbar — wiederverwenden statt neu definieren)',
-    ctx.projectFiles.components
-  )
-  if (tokenSection) parts.push(tokenSection.trim())
-  if (componentSection) parts.push(componentSection.trim())
+  if (siblingSection) parts.push(siblingSection.trim())
 
   parts.push(`## Antwort-Format
 

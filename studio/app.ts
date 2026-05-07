@@ -777,21 +777,18 @@ const mirrorLinter = linter(view => {
 // Esc            → dismissGhost (when ghost active)
 const editHandler = createEditHandler({
   getProjectFiles: () => {
-    // Snapshot tokens + components from all OTHER files (current file is in
-    // the editor view, not in projectFiles).
+    // Multi-File-Roadmap Komponente 6a: snapshot ALL sibling files (every
+    // file except the active one), regardless of extension. The LLM reads
+    // each sibling and infers from content whether it's tokens / components
+    // / data / layout — Mirror has no file-type extensions anymore.
     const allFiles = window.desktopFiles?.getFiles?.() || files
-    const tokens: Record<string, string> = {}
-    const components: Record<string, string> = {}
+    const siblings: Record<string, string> = {}
     for (const [name, content] of Object.entries(allFiles)) {
       if (name === currentFile) continue
       if (typeof content !== 'string') continue
-      if (name.endsWith('.tok') || name.endsWith('.tokens')) {
-        tokens[name] = content
-      } else if (name.endsWith('.com') || name.endsWith('.components')) {
-        components[name] = content
-      }
+      siblings[name] = content
     }
-    return { tokens, components }
+    return siblings
   },
   getCurrentFileName: () => currentFile,
 })

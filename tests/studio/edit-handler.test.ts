@@ -45,7 +45,7 @@ beforeEach(async () => {
 })
 
 const baseConfig = (overrides: Partial<Parameters<typeof createEditHandler>[0]> = {}) => ({
-  getProjectFiles: () => ({ tokens: {}, components: {} }),
+  getProjectFiles: () => ({}),
   getCurrentFileName: () => 'app.mir',
   ...overrides,
 })
@@ -120,8 +120,8 @@ describe('EditHandler — handleEditFlow context capture', () => {
       baseConfig({
         runEditFlow,
         getProjectFiles: () => ({
-          tokens: { 'tokens.tok': 'primary.bg: #2271C1' },
-          components: { 'card.com': 'Card: bg #111' },
+          'tokens.mir': 'primary.bg: #2271C1',
+          'components.mir': 'Card: bg #111',
         }),
       })
     )
@@ -129,8 +129,10 @@ describe('EditHandler — handleEditFlow context capture', () => {
     handler.handleEditFlow(view)
     await flush()
 
-    expect(captured!.projectFiles.tokens).toEqual({ 'tokens.tok': 'primary.bg: #2271C1' })
-    expect(captured!.projectFiles.components).toEqual({ 'card.com': 'Card: bg #111' })
+    expect(captured!.siblings).toEqual({
+      'tokens.mir': 'primary.bg: #2271C1',
+      'components.mir': 'Card: bg #111',
+    })
   })
 
   it('integrates the change tracker (empty diff on first call)', async () => {

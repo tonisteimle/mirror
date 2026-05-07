@@ -39,11 +39,13 @@ import {
 } from '../agent/generation-pipeline'
 
 export interface EditHandlerConfig {
-  /** Returns the project's tokens + components for prompt injection. */
-  getProjectFiles: () => {
-    tokens: Record<string, string>
-    components: Record<string, string>
-  }
+  /**
+   * Returns all sibling files in the project (everything except the
+   * currently-active file). Multi-File-Roadmap: Mirror is extension-
+   * agnostic — the LLM reads each sibling and figures out from content
+   * whether it contains tokens, components, data, or layouts.
+   */
+  getProjectFiles: () => Record<string, string>
   /** Returns the file name of the currently active file (used as tracker key). */
   getCurrentFileName: () => string
   /**
@@ -113,7 +115,7 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
           },
       instruction,
       diffSinceLastCall: tracker.getDiffSinceLastCall(fileName, source),
-      projectFiles: config.getProjectFiles(),
+      siblings: config.getProjectFiles(),
     }
   }
 

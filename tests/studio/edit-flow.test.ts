@@ -34,7 +34,7 @@ const baseCtx = (overrides: Partial<EditCaptureCtx> = {}): EditCaptureCtx => ({
   selection: null,
   instruction: null,
   diffSinceLastCall: '',
-  projectFiles: { tokens: {}, components: {} },
+  siblings: {},
   ...overrides,
 })
 
@@ -354,7 +354,7 @@ describe('EditFlow — runEditFlow', () => {
       const tokens = { 't.tok': 'primary.bg: #2271C1' }
       const ctx = baseCtx({
         source: 'Button "Save", bg red',
-        projectFiles: { tokens, components: {} },
+        siblings: tokens,
       })
       // Pass 1: makes a real change (red → #2271C1) that introduces a
       // hardcoded value matching primary.bg → token-violation.
@@ -396,7 +396,7 @@ describe('EditFlow — runEditFlow', () => {
       const tokens = { 't.tok': 'primary.bg: #2271C1' }
       const ctx = baseCtx({
         source: 'Button "Save", bg #2271C1',
-        projectFiles: { tokens, components: {} },
+        siblings: tokens,
       })
       // Pass 1: silence (no-change) — but the source already violates
       // the token rule. Pass 2: applies the token substitution.
@@ -424,7 +424,7 @@ describe('EditFlow — runEditFlow', () => {
       const tokens = { 't.tok': 'primary.bg: #2271C1' }
       const ctx = baseCtx({
         source: 'Button "Save", bg red',
-        projectFiles: { tokens, components: {} },
+        siblings: tokens,
       })
       let call = 0
       bridge.runAgent = async (_p, _t, _path, sessionId) => {
@@ -447,7 +447,7 @@ describe('EditFlow — runEditFlow', () => {
       const tokens = { 't.tok': 'primary.bg: #2271C1' }
       const ctx = baseCtx({
         source: 'Button "Save", bg red',
-        projectFiles: { tokens, components: {} },
+        siblings: tokens,
       })
       // Pass 1: improves color but introduces a token-violation.
       // Pass 2: stays silent (LLM gives up). The orchestrator MUST
@@ -476,7 +476,7 @@ describe('EditFlow — runEditFlow', () => {
       const tokens = { 't.tok': 'primary.bg: #2271C1' }
       const ctx = baseCtx({
         source: 'Button "Save", bg red',
-        projectFiles: { tokens, components: {} },
+        siblings: tokens,
       })
       let call = 0
       bridge.runAgent = async (_p, _t, _path, sessionId) => {
@@ -510,7 +510,7 @@ describe('EditFlow — runEditFlow', () => {
       const tokens = { 't.tok': 'primary.bg: #2271C1' }
       const ctx = baseCtx({
         source: 'Button "Save", bg #2271C1',
-        projectFiles: { tokens, components: {} },
+        siblings: tokens,
       })
       let call = 0
       bridge.runAgent = async (_p, _t, _path, sessionId) => {

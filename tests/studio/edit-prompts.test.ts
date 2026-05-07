@@ -20,7 +20,7 @@ const baseCtx = (overrides: Partial<EditCaptureCtx> = {}): EditCaptureCtx => ({
   selection: null,
   instruction: null,
   diffSinceLastCall: '',
-  projectFiles: { tokens: {}, components: {} },
+  siblings: {},
   ...overrides,
 })
 
@@ -152,36 +152,30 @@ describe('EditPrompts — buildEditPrompt', () => {
   })
 
   describe('Project-Context', () => {
-    it('includes Tokens section when tokens are non-empty', () => {
+    it('includes a Sibling-Files section when siblings are non-empty (with token content)', () => {
       const prompt = buildEditPrompt(
         baseCtx({
-          projectFiles: {
-            tokens: { 'app.tok': 'primary.bg: #2271C1' },
-            components: {},
-          },
+          siblings: { 'tokens.mir': 'primary.bg: #2271C1' },
         })
       )
-      expect(prompt).toContain('## Tokens')
+      expect(prompt).toContain('Sibling-Files')
       expect(prompt).toContain('primary.bg: #2271C1')
+      expect(prompt).toContain('tokens.mir')
     })
 
-    it('includes Components section when components are non-empty', () => {
+    it('includes a Sibling-Files section when siblings are non-empty (with component content)', () => {
       const prompt = buildEditPrompt(
         baseCtx({
-          projectFiles: {
-            tokens: {},
-            components: { 'a.com': 'Card: bg #111' },
-          },
+          siblings: { 'components.mir': 'Card: bg #111' },
         })
       )
-      expect(prompt).toContain('## Components')
+      expect(prompt).toContain('Sibling-Files')
       expect(prompt).toContain('Card: bg #111')
     })
 
-    it('omits both Project sections when neither is set', () => {
+    it('omits the Sibling-Files section when siblings are empty', () => {
       const prompt = buildEditPrompt(baseCtx())
-      expect(prompt).not.toContain('## Tokens')
-      expect(prompt).not.toContain('## Components')
+      expect(prompt).not.toContain('Sibling-Files')
     })
   })
 

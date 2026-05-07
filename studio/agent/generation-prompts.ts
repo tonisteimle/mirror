@@ -127,14 +127,13 @@ export interface TranslationPromptInput {
   /** Optional structured context for the translator. */
   context?: TranslationContext
   /**
-   * Project context — tokens / components already defined in the project.
-   * Translator should reuse existing tokens / components rather than
-   * inventing parallel ones with the same meaning.
+   * Project context — all sibling files already in the project. Multi-File-
+   * Roadmap: extension-agnostic; the translator reads each sibling and
+   * picks up tokens / components / data / layouts from its content. Map:
+   * filename → content. The translator should reuse existing definitions
+   * rather than inventing parallel ones.
    */
-  projectFiles?: {
-    tokens: Record<string, string>
-    components: Record<string, string>
-  }
+  siblings?: Record<string, string>
   /**
    * On retry: validator errors from the previous attempt + the previous
    * Mirror output, so the translator can repair instead of starting from
@@ -183,25 +182,21 @@ const TRANSLATION_OUTPUT_RULES = `## Output rules
 - The first line of your output must be the first line of the Mirror code.`
 
 function formatProjectFilesForTranslator(
-  files: { tokens: Record<string, string>; components: Record<string, string> } | undefined
+  siblings: Record<string, string> | undefined
 ): string | null {
-  if (!files) return null
-  const parts: string[] = []
-  const tokenEntries = Object.entries(files.tokens).filter(([, v]) => v.trim())
-  if (tokenEntries.length > 0) {
-    parts.push(`### Existing tokens (reuse instead of redefining)`)
-    for (const [name, content] of tokenEntries) {
-      parts.push(`\n**${name}**\n\n\`\`\`\n${content.trim()}\n\`\`\``)
-    }
+  if (!siblings) return null
+  const entries = Object.entries(siblings).filter(([, v]) => v.trim())
+  if (entries.length === 0) return null
+  // Multi-File-Roadmap: flat sibling-list, no semantic split. The translator
+  // identifies tokens vs components vs data vs layouts from the file
+  // content, the same way a human code-reviewer would.
+  const parts = [
+    `## Project context — sibling files (reuse existing tokens / components / data instead of redefining)`,
+  ]
+  for (const [name, content] of entries) {
+    parts.push(`\n**${name}**\n\n\`\`\`\n${content.trim()}\n\`\`\``)
   }
-  const componentEntries = Object.entries(files.components).filter(([, v]) => v.trim())
-  if (componentEntries.length > 0) {
-    parts.push(`\n### Existing components (reuse instead of redefining)`)
-    for (const [name, content] of componentEntries) {
-      parts.push(`\n**${name}**\n\n\`\`\`\n${content.trim()}\n\`\`\``)
-    }
-  }
-  return parts.length > 0 ? `## Project context\n\n${parts.join('\n')}` : null
+  return parts.join('\n')
 }
 
 function formatContextBlock(context: TranslationContext | undefined): string | null {
@@ -239,7 +234,7 @@ Produce a corrected Mirror file. Address each error above. Keep everything that 
 }
 
 export function buildTranslationPrompt(input: TranslationPromptInput): string {
-  const { html, context, projectFiles, retryContext } = input
+  const { html, context, siblings, retryContext } = input
 
   const parts: string[] = []
 
@@ -252,7 +247,7 @@ Read \`CLAUDE.md\` in the project root fully — the Mirror DSL syntax, primitiv
   const ctxBlock = formatContextBlock(context)
   if (ctxBlock) parts.push(ctxBlock)
 
-  const projectBlock = formatProjectFilesForTranslator(projectFiles)
+  const projectBlock = formatProjectFilesForTranslator(siblings)
   if (projectBlock) parts.push(projectBlock)
 
   parts.push(`## Source HTML
