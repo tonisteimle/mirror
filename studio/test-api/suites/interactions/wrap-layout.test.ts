@@ -541,6 +541,60 @@ export const edgeCaseTests: TestCase[] = describe('Edge Cases', [
 // Combined Export
 // =============================================================================
 
+// =============================================================================
+// H/V coverage edge cases (replaces-grid for H + undo)
+// =============================================================================
+
+export const hvCoverageTests: TestCase[] = describe('H/V Coverage Edge Cases', [
+  testWithSetup(
+    'H key replaces grid with hor (parity with V replaces grid)',
+    'Frame grid, gap 8\n  Text "Item 1"\n  Text "Item 2"',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      await api.studio.setSelection('node-1')
+      await api.utils.delay(50)
+      await api.interact.pressKey('h')
+      await api.utils.waitForCompile()
+
+      // grid is one of the layout props that setLayoutDirection removes
+      // before adding hor — so the resulting line should have hor and no grid.
+      const actual = api.editor.getCode()
+      const expected = 'Frame gap 8, hor\n  Text "Item 1"\n  Text "Item 2"'
+      api.assert.ok(
+        actual === expected,
+        `Code mismatch.\n--- Expected ---\n${expected}\n--- Actual ---\n${actual}`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'H then Cmd+Z restores previous layout direction',
+    'Frame ver, gap 8\n  Text "A"\n  Text "B"',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      const codeBefore = api.editor.getCode()
+
+      await api.studio.setSelection('node-1')
+      await api.utils.delay(50)
+      await api.interact.pressKey('h')
+      await api.utils.waitForCompile()
+
+      // Sanity check: H landed.
+      api.assert.ok(api.editor.getCode().includes('hor'), 'H should produce hor')
+
+      // Cmd+Z should restore ver.
+      await api.interact.pressKey('z', { meta: true })
+      await api.utils.waitForCompile()
+
+      const codeAfter = api.editor.getCode()
+      api.assert.ok(
+        codeAfter === codeBefore,
+        `Cmd+Z should restore pre-H source.\n--- Expected ---\n${codeBefore}\n--- Actual ---\n${codeAfter}`
+      )
+    }
+  ),
+])
+
 export const allWrapLayoutTests: TestCase[] = [
   ...hKeyBehaviorTests,
   ...vKeyBehaviorTests,
@@ -548,4 +602,5 @@ export const allWrapLayoutTests: TestCase[] = [
   ...nestedElementTests,
   ...gapCalculationTests,
   ...edgeCaseTests,
+  ...hvCoverageTests,
 ]
