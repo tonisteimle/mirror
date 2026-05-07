@@ -18,6 +18,8 @@
 import { testWithSetup, describe } from '../../test-runner'
 import type { TestCase, TestAPI } from '../../types'
 import { assertParentHasChildren } from '../../helpers/structure'
+import { setCurrentDragData } from '../../../preview/drag-preview'
+import { lookupComponentByName } from '../../../preview/drag/test-api-helpers'
 
 /**
  * Dispatch a synthetic DragEvent of the given type on `target` with the
@@ -117,6 +119,89 @@ export const realPointerEventTests: TestCase[] = describe('Drag - Real Pointer E
         `Real-event drag did not produce expected source.\n--- Expected ---\n${expected}\n--- Actual ---\n${actualCode}`
       )
       assertParentHasChildren(api, 'Source', ['Source', 'Target'])
+    }
+  ),
+
+  testWithSetup(
+    'Drop palette Button via real drag events (geometry-driven)',
+    'Frame gap 12, pad 16, bg #1a1a1a',
+    async (api: TestAPI) => {
+      const frame = document.querySelector('[data-mirror-id="node-1"]') as HTMLElement | null
+      const previewContainer = document.getElementById('preview')
+      api.assert.ok(frame, 'Target Frame must exist')
+      api.assert.ok(previewContainer, 'Preview container must exist')
+
+      // The drag-preview module reads `currentDragData` + `currentComponentItem`
+      // from a module-level store (browser security blocks dataTransfer reads
+      // during dragenter/dragover). ComponentPanel.handleDragStart writes to
+      // both fields; here we mimic that step explicitly so the drag-preview's
+      // `startPaletteDrag()` has a `componentItem` to read. We pull the real
+      // palette-defaults via lookupComponentByName so the produced source
+      // matches what dragFromPalette would emit.
+      //
+      // IMPORTANT: `componentName` must come from `item.template` (not
+      // `item.name`), and `mirTemplate` only gets set if the item *actually*
+      // has one (multi-line presets like Accordion). For a plain Button
+      // (template="Button", no mirTemplate), the drop must route to
+      // PaletteDropHandler so properties+textContent are emitted. Setting
+      // mirTemplate here would route to TemplateDropHandler instead and
+      // emit the bare `Button` string with no defaults.
+      const componentItem = lookupComponentByName('Button')
+      api.assert.ok(componentItem, 'Button must exist in palette registry')
+      setCurrentDragData(
+        {
+          fromComponentPanel: true,
+          componentId: componentItem!.id,
+          componentName: componentItem!.template,
+          properties: componentItem!.properties,
+          textContent: componentItem!.textContent,
+          children: componentItem!.children,
+          mirTemplate: componentItem!.mirTemplate,
+          dataBlock: componentItem!.dataBlock,
+        },
+        componentItem!
+      )
+
+      const frameRect = frame!.getBoundingClientRect()
+      // Target the centre of the Frame so HitDetector resolves to it (no
+      // escape-zone issues — the Frame has plenty of padding).
+      const startX = window.innerWidth - 50 // off-canvas (palette-side)
+      const startY = 100
+      const endX = frameRect.left + frameRect.width / 2
+      const endY = frameRect.top + frameRect.height / 2
+
+      const dt = new DataTransfer()
+      // Marker that drag-preview's `getMirrorDragType` checks for palette drags.
+      dt.setData('application/mirror-component', JSON.stringify({ componentName: 'Button' }))
+
+      // Synthetic dragstart on the preview container is enough — the
+      // drag-preview's listener is on container itself; the palette branch
+      // doesn't need a real palette element because we already filled the
+      // global store via setCurrentDragData.
+      fireDragEvent(previewContainer!, 'dragstart', startX, startY, dt)
+
+      const frames = 6
+      for (let i = 1; i <= frames; i++) {
+        const t = i / frames
+        const x = startX + (endX - startX) * t
+        const y = startY + (endY - startY) * t
+        fireDragEvent(previewContainer!, 'dragover', x, y, dt)
+        await nextFrame()
+      }
+
+      fireDragEvent(previewContainer!, 'drop', endX, endY, dt)
+      fireDragEvent(previewContainer!, 'dragend', endX, endY, dt)
+
+      await api.utils.waitForCompile()
+
+      const actual = api.editor.getCode()
+      const expected =
+        'Frame gap 12, pad 16, bg #1a1a1a\n  Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6'
+      api.assert.equals(
+        actual,
+        expected,
+        `Real-event palette drop did not produce expected source.\n--- Expected ---\n${expected}\n--- Actual ---\n${actual}`
+      )
     }
   ),
 ])
