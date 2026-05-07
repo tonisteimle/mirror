@@ -47,6 +47,7 @@ export {
 } from './layout-shortcuts.test'
 
 export { positionArrowTests } from './position-arrow.test'
+export { keyboardEdgeCaseTests } from './keyboard-edge-cases.test'
 
 export {
   allResizeHandleDblClickTests,

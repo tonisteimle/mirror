@@ -21,7 +21,12 @@ import { inlineMarkdownTests } from './core/inline-markdown.test'
 
 // Layout
 import { allLayoutTests } from './layout'
-import { allLayoutShortcutTests, allWrapLayoutTests, positionArrowTests } from './interactions'
+import {
+  allLayoutShortcutTests,
+  allWrapLayoutTests,
+  positionArrowTests,
+  keyboardEdgeCaseTests,
+} from './interactions'
 import { allLayoutVerificationTests } from './layout-verification'
 
 // Styling
@@ -156,6 +161,7 @@ export const layoutTests: TestCase[] = [
   ...allLayoutVerificationTests,
   ...allWrapLayoutTests,
   ...positionArrowTests,
+  ...keyboardEdgeCaseTests,
 ]
 
 /**
