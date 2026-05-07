@@ -105,4 +105,46 @@ export const keyboardGroupTests: TestCase[] = describe('Cmd+G grouping', [
       )
     }
   ),
+
+  testWithSetup(
+    'Cmd+G with single selection does NOT group (no source change)',
+    'Frame ver, gap 8\n  Text "A"\n  Text "B"',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      const codeBefore = api.editor.getCode()
+
+      // Click selects single element — no multi-selection.
+      await api.interact.click('node-2')
+      await api.utils.delay(50)
+      await api.interact.pressKey('g', { meta: true })
+      await api.utils.delay(150)
+
+      const codeAfter = api.editor.getCode()
+      api.assert.ok(
+        codeAfter === codeBefore,
+        `Cmd+G with single selection should not change source.\n--- Before ---\n${codeBefore}\n--- After ---\n${codeAfter}`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'Cmd+G with non-sibling multi-selection does NOT group',
+    'Frame ver, gap 8\n  Text "A"\n  Frame\n    Text "B"',
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      const codeBefore = api.editor.getCode()
+
+      // node-2 (Text "A") and node-4 (Text "B") are NOT siblings — node-2's
+      // parent is node-1, node-4's parent is node-3.
+      await multiSelect(api, ['node-2', 'node-4'])
+      await api.interact.pressKey('g', { meta: true })
+      await api.utils.delay(150)
+
+      const codeAfter = api.editor.getCode()
+      api.assert.ok(
+        codeAfter === codeBefore,
+        `Cmd+G across non-siblings should be rejected (no source change).\n--- Before ---\n${codeBefore}\n--- After ---\n${codeAfter}`
+      )
+    }
+  ),
 ])
