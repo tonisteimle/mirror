@@ -74,6 +74,10 @@ export {
 // Each-template guard: blocks reorder of each-rendered nodes
 export { eachTemplateGuardTests } from './each-template-guard.test'
 
+// Grid cell resize (Phase 3): resize handles on grid-placed elements
+// snap to cell-spans and write `w N, h M` (and `x P, y Q` for w/n drags).
+export { gridCellResizeTests } from './grid-cell-resize.test'
+
 // Real pointer events: bypasses __dragTest, exercises HitDetector + InsertionCalculator
 export { realPointerEventTests } from './real-pointer-events.test'
 

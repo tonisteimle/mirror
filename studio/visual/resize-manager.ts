@@ -16,6 +16,12 @@ import {
   type Rect,
 } from '../preview/multi-selection-bounds'
 import { getSnappingService, shouldBypassSnapping } from './snapping-service'
+import {
+  findOwningGridContainer,
+  readGridGeometry,
+  type GridGeometry,
+} from './grid-overlay/grid-detector'
+import { readGridPlacement, resizeToCells, type GridPlacement } from './grid-overlay/grid-resize'
 
 export type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
 
@@ -65,6 +71,21 @@ export interface MultiResizeState {
   currentHeight: number
 }
 
+/**
+ * Resize state for elements placed in a CSS-grid parent. The drag
+ * snaps to cell-spans; the drop emits `x/y/w/h` as integer cell
+ * coordinates (DSL writes `w 2, h 3` etc., compiler emits the right
+ * grid-row/column-start + `span N` for end).
+ */
+export interface GridResizeState {
+  nodeId: string
+  handle: ResizeHandle
+  geometry: GridGeometry
+  start: GridPlacement
+  current: GridPlacement
+  element: HTMLElement
+}
+
 export interface ResizeManagerConfig {
   container: HTMLElement
   overlayManager: OverlayManager
@@ -79,6 +100,7 @@ export class ResizeManager {
   private handles: HTMLElement[] = []
   private activeResize: ResizeState | null = null
   private activeMultiResize: MultiResizeState | null = null
+  private activeGridResize: GridResizeState | null = null
   private currentNodeId: string | null = null
   private currentNodeIds: string[] = []
 
@@ -347,6 +369,32 @@ export class ResizeManager {
     const element = this.container.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement
     if (!element) return
 
+    // Grid-resize branch: when the parent is a grid *and* the element has
+    // an explicit cell placement, snap the resize to cell-spans rather
+    // than pixels. The DSL emit is `w N, h M, x P, y Q` as integers, which
+    // the compiler interprets as spans/lines in grid context.
+    const gridParent = element.parentElement ? findOwningGridContainer(element.parentElement) : null
+    const gridStart = element ? readGridPlacement(element) : null
+    const gridGeo = gridParent ? readGridGeometry(gridParent) : null
+    if (gridParent && gridStart && gridGeo) {
+      this.activeGridResize = {
+        nodeId,
+        handle: position,
+        geometry: gridGeo,
+        start: gridStart,
+        current: { ...gridStart },
+        element,
+      }
+      document.body.style.cursor = this.getCursor(position)
+      events.emit('resize:start', {
+        nodeId,
+        handle: position,
+        startWidth: gridStart.gridW,
+        startHeight: gridStart.gridH,
+      })
+      return
+    }
+
     // Use LayoutService for unified layout access (cache-first, DOM-fallback)
     const layoutService = getLayoutService()
     const layout = layoutService?.getLayout(nodeId)
@@ -440,7 +488,7 @@ export class ResizeManager {
   }
 
   private onMouseMove(e: MouseEvent): void {
-    if (!this.activeResize && !this.activeMultiResize) return
+    if (!this.activeResize && !this.activeMultiResize && !this.activeGridResize) return
     this.pendingMouseEvent = e // RAF throttling: batch mouse events to animation frames for smooth 60fps
     if (this.rafId === null) {
       this.rafId = requestAnimationFrame(() => {
@@ -457,6 +505,13 @@ export class ResizeManager {
    * Process mouse move event (called via RAF throttling)
    */
   private processMouseMove(e: MouseEvent): void {
+    // Handle grid-cell resize first: takes priority over generic pixel
+    // resize so a grid child never falls into the px-snap path mid-drag.
+    if (this.activeGridResize) {
+      this.handleGridResizeMove(e)
+      return
+    }
+
     // Handle multi-selection resize
     if (this.activeMultiResize) {
       this.handleMultiResizeMove(e)
@@ -627,6 +682,11 @@ export class ResizeManager {
     }
     this.pendingMouseEvent = null
 
+    if (this.activeGridResize) {
+      this.handleGridResizeEnd()
+      return
+    }
+
     // Handle multi-selection resize
     if (this.activeMultiResize) {
       this.handleMultiResizeEnd()
@@ -679,6 +739,97 @@ export class ResizeManager {
     events.emit('resize:end', eventData)
 
     this.activeResize = null
+  }
+
+  // ============================================================================
+  // Grid-Cell Resize
+  // ============================================================================
+
+  private handleGridResizeMove(e: MouseEvent): void {
+    if (!this.activeGridResize) return
+    const { handle, geometry, start, element } = this.activeGridResize
+
+    const next = resizeToCells(handle, { x: e.clientX, y: e.clientY }, geometry, start)
+    this.activeGridResize.current = next
+
+    // Live feedback: write the grid placement directly to the element so
+    // it jumps cell-to-cell as the cursor crosses cell boundaries. Use
+    // longhand because the compiler also emits longhand (`grid-column-end:
+    // span N` co-exists with `grid-column-start: N`); the shorthand
+    // `grid-column` would clobber the start.
+    element.style.setProperty('grid-column-start', String(next.gridX))
+    element.style.setProperty('grid-row-start', String(next.gridY))
+    element.style.setProperty('grid-column-end', `span ${next.gridW}`)
+    element.style.setProperty('grid-row-end', `span ${next.gridH}`)
+
+    // Resize handles follow the element's new bounds.
+    this.updateHandlePositions(element)
+
+    // Surface the cell-extent in the size indicator. Display as cell
+    // counts ("w 2") rather than px since that's what gets written.
+    const rect = element.getBoundingClientRect()
+    const containerRect = this.container.getBoundingClientRect()
+    this.overlayManager.showSizeIndicator(
+      rect.left - containerRect.left + rect.width / 2,
+      rect.top - containerRect.top + rect.height / 2,
+      `w ${next.gridW}`,
+      `h ${next.gridH}`
+    )
+
+    // Mirror the active-cell ghost from the drag pipeline so the user
+    // sees their target span highlighted.
+    events.emit('grid:active-cell', {
+      containerId: this.activeGridResize.nodeId,
+      gridX: next.gridX,
+      gridY: next.gridY,
+      gridW: next.gridW,
+      gridH: next.gridH,
+    })
+  }
+
+  private handleGridResizeEnd(): void {
+    if (!this.activeGridResize) return
+    const { nodeId, start, current } = this.activeGridResize
+
+    document.body.style.cursor = ''
+    this.overlayManager.hideSizeIndicator()
+    events.emit('grid:active-cell', null)
+
+    // Build a single resize:end payload covering all four properties.
+    // The preview controller routes width/height through ResizeCommand
+    // (writes `w N, h M`) and x/y through SetPropertyCommand. In a grid
+    // parent the compiler interprets those integers as spans / lines,
+    // which is exactly the wire format we want.
+    const payload: {
+      nodeId: string
+      width?: number
+      height?: number
+      x?: number
+      y?: number
+    } = { nodeId }
+    if (current.gridW !== start.gridW) payload.width = current.gridW
+    if (current.gridH !== start.gridH) payload.height = current.gridH
+    if (current.gridX !== start.gridX) payload.x = current.gridX
+    if (current.gridY !== start.gridY) payload.y = current.gridY
+
+    const changed =
+      payload.width !== undefined ||
+      payload.height !== undefined ||
+      payload.x !== undefined ||
+      payload.y !== undefined
+    if (changed) {
+      events.emit('resize:end', payload)
+    } else {
+      // Roll back the live inline-style override so the element returns
+      // to its original cell — otherwise a no-op drag leaves the inline
+      // styles competing with the compiler's emit on next render.
+      this.activeGridResize.element.style.removeProperty('grid-column-start')
+      this.activeGridResize.element.style.removeProperty('grid-row-start')
+      this.activeGridResize.element.style.removeProperty('grid-column-end')
+      this.activeGridResize.element.style.removeProperty('grid-row-end')
+    }
+
+    this.activeGridResize = null
   }
 
   // ============================================================================
