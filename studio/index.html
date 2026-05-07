@@ -23,7 +23,7 @@
 
   <!-- Tom Select CSS -->
   <link rel="stylesheet" href="https://esm.sh/tom-select@2.4.3/dist/css/tom-select.default.min.css">
-  <link rel="stylesheet" href="styles.css?v=230">
+  <link rel="stylesheet" href="styles.css?v=231">
   <!-- Mirror Default Styles (for preview) -->
   <link rel="stylesheet" href="dist/mirror-defaults.css?v=1">
 </head>
@@ -44,6 +44,16 @@
 
     <!-- Activity Bar - Panel Toggles -->
     <div id="activity-bar-container" class="activity-bar-container"></div>
+
+    <!-- File Explorer Panel (Multi-File-Roadmap 8) -->
+    <!-- Mounted by studio/file-tree/init.ts (web) or desktop-files.ts (Tauri).
+         Both paths target #file-tree-container so the panel works in both
+         hosting modes. Visibility is toggled via the activity-bar 'files' icon. -->
+    <aside class="explorer-panel" id="explorer-panel">
+      <div id="file-tree-container"></div>
+    </aside>
+
+    <div class="divider" id="explorer-divider"></div>
 
     <!-- Components Panel (separate from File Explorer) -->
     <div class="components-panel" id="components-panel">
@@ -167,6 +177,6 @@
   <script type="module" src="dist/dialog.js?v=2"></script>
   <script type="module" src="dist/tauri-bridge.js?v=2"></script>
   <script type="module" src="dist/desktop-files.js?v=2"></script>
-  <script type="module" src="dist/app.js?v=20"></script>
+  <script type="module" src="dist/app.js?v=21"></script>
 </body>
 </html>

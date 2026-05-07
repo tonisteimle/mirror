@@ -19,6 +19,7 @@
 @import url('./styles/form-controls.css');
 @import url('./styles/cm-linter.css');
 @import url('./styles/bottom-widgets.css');
+@import url('./styles/export-dialog.css');
 
 
     * {
@@ -84,6 +85,26 @@
     .components-panel {
       flex: 0 0 220px;
       min-width: 180px;
+    }
+
+    /* File Explorer Panel (Multi-File-Roadmap 8). Sized like
+       components-panel; its file tree is mounted into #file-tree-container
+       by studio/file-tree/init.ts (web) or desktop-files.ts (Tauri).
+       Visibility is handled by the global .panel-hidden class wired through
+       bootstrap's panel-visibility-changed listener. */
+    .explorer-panel {
+      flex: 0 0 200px;
+      min-width: 160px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg-secondary, #1a1a1a);
+    }
+    .explorer-panel #file-tree-container {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
     }
 
     .preview-panel {

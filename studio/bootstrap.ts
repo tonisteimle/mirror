@@ -820,10 +820,13 @@ function initializeActivityBar(): void {
     return
   }
 
-  // Activity Bar items for all panels
-  // MVP single-file mode: 'files' (file-explorer) and 'design-system'
-  // (tokens + components-with-states) toggles removed.
+  // Activity Bar items for all panels.
+  // Multi-File-Roadmap 8: re-introduce the 'files' (file-explorer)
+  // toggle. The explorer-panel is mounted in index.html and the
+  // file-tree controller/view are wired up by initializeFileTree() at
+  // boot. design-system stays hidden until that panel is rebuilt.
   const items = [
+    { id: 'files', icon: ACTIVITY_BAR_ICONS.files, tooltip: 'File Explorer' },
     { id: 'components', icon: ACTIVITY_BAR_ICONS.components, tooltip: 'Components' },
     { id: 'code', icon: ACTIVITY_BAR_ICONS.code, tooltip: 'Code Editor' },
     { id: 'preview', icon: ACTIVITY_BAR_ICONS.preview, tooltip: 'Preview' },
