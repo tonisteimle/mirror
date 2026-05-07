@@ -13,6 +13,7 @@ import {
 } from '../base/section'
 import type { SpacingToken } from '../types'
 import { getLayoutIcon } from '../../../icons'
+import { renderTokenButtonGroup } from '../utils/render-token-buttons'
 
 /**
  * Layout modes (mutually exclusive)
@@ -129,50 +130,16 @@ export class LayoutSection extends BaseSection {
   }
 
   private renderGapTokens(gapValue: string, tokens: SpacingToken[]): string {
-    const isGapTokenRef = gapValue.startsWith('$')
-    const MAX_DIRECT = 4 // Show all directly if 4 or fewer
-    const VISIBLE_COUNT = 3 // When using dropdown, show 3 visible
-
-    const renderToken = (token: SpacingToken) => {
-      const tokenRef = `$${token.fullName}`
-      const active = isGapTokenRef ? gapValue === tokenRef : gapValue === token.value
-      return `<button class="token-btn ${active ? 'active' : ''}" data-gap-token="${token.value}" data-token-ref="${tokenRef}" title="${tokenRef}: ${token.value}">${token.name}</button>`
-    }
-
-    // Show all if 4 or fewer tokens
-    if (tokens.length <= MAX_DIRECT) {
-      return tokens.map(renderToken).join('')
-    }
-
-    // 5+ tokens: show 3 + dropdown for rest
-    const visibleTokens = tokens.slice(0, VISIBLE_COUNT)
-    const hiddenTokens = tokens.slice(VISIBLE_COUNT)
-
-    // Check if active token is in hidden list
-    const activeInHidden = hiddenTokens.some(token => {
-      const tokenRef = `$${token.fullName}`
-      return isGapTokenRef ? gapValue === tokenRef : gapValue === token.value
+    return renderTokenButtonGroup({
+      activeValue: gapValue,
+      propKey: 'gap',
+      dropdownClass: 'gap',
+      tokens: tokens.map(t => ({
+        label: t.name,
+        value: t.value,
+        tokenRef: `$${t.fullName}`,
+      })),
     })
-
-    const dropdownItems = hiddenTokens
-      .map(token => {
-        const tokenRef = `$${token.fullName}`
-        const active = isGapTokenRef ? gapValue === tokenRef : gapValue === token.value
-        return `<button class="token-dropdown-item ${active ? 'active' : ''}" data-gap-token="${token.value}" data-token-ref="${tokenRef}">${token.name} <span class="token-dropdown-value">${token.value}</span></button>`
-      })
-      .join('')
-
-    return `
-      ${visibleTokens.map(renderToken).join('')}
-      <div class="token-more-container">
-        <button class="token-btn token-more-btn ${activeInHidden ? 'has-active' : ''}" title="${hiddenTokens.length} more tokens">
-          <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-        </button>
-        <div class="token-dropdown token-dropdown-gap">
-          ${dropdownItems}
-        </div>
-      </div>
-    `
   }
 
   private renderWrapRow(wrapActive: boolean): string {

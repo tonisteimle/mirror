@@ -12,6 +12,7 @@ import {
 } from '../base/section'
 import type { SpacingToken } from '../types'
 import { extractSides, parseSidesValue, spacingPropertyNames } from '../utils/spacing-parse'
+import { renderTokenButtonGroup } from '../utils/render-token-buttons'
 
 /**
  * Build padding/margin value from T, R, B, L (simplified)
@@ -135,62 +136,16 @@ export class SpacingSection extends BaseSection {
     direction: string,
     tokens: SpacingToken[]
   ): string {
-    const isTokenRef = activeValue.startsWith('$')
-    const MAX_DIRECT = 4 // Show all directly if 4 or fewer
-    const VISIBLE_COUNT = 3 // When using dropdown, show 3 visible
-
-    const renderToken = (token: SpacingToken) => {
-      const tokenRef = `$${token.fullName}`
-      const shortRef = `$${token.name}` // e.g., "$md" for "md.pad"
-      // Active if:
-      // - Value is token ref and matches full ref ($md.pad) or short ref ($md)
-      // - Value is literal and matches token value (16)
-      const isActive = isTokenRef
-        ? activeValue === tokenRef || activeValue === shortRef
-        : activeValue === token.value
-      return `<button class="token-btn ${isActive ? 'active' : ''}" data-pad-token="${token.value}" data-token-ref="${tokenRef}" data-pad-dir="${direction}" title="${tokenRef}: ${token.value}">${token.name}</button>`
-    }
-
-    // Show all if 4 or fewer tokens
-    if (tokens.length <= MAX_DIRECT) {
-      return tokens.map(renderToken).join('')
-    }
-
-    // 5+ tokens: show 3 + dropdown for rest
-    const visibleTokens = tokens.slice(0, VISIBLE_COUNT)
-    const hiddenTokens = tokens.slice(VISIBLE_COUNT)
-
-    // Check if active token is in hidden list
-    const activeInHidden = hiddenTokens.some(token => {
-      const tokenRef = `$${token.fullName}`
-      const shortRef = `$${token.name}`
-      return isTokenRef
-        ? activeValue === tokenRef || activeValue === shortRef
-        : activeValue === token.value
+    return renderTokenButtonGroup({
+      activeValue,
+      propKey: 'pad',
+      direction,
+      tokens: tokens.map(t => ({
+        label: t.name,
+        value: t.value,
+        tokenRef: `$${t.fullName}`,
+      })),
     })
-
-    const dropdownItems = hiddenTokens
-      .map(token => {
-        const tokenRef = `$${token.fullName}`
-        const shortRef = `$${token.name}`
-        const isActive = isTokenRef
-          ? activeValue === tokenRef || activeValue === shortRef
-          : activeValue === token.value
-        return `<button class="token-dropdown-item ${isActive ? 'active' : ''}" data-pad-token="${token.value}" data-token-ref="${tokenRef}" data-pad-dir="${direction}">${token.name} <span class="token-dropdown-value">${token.value}</span></button>`
-      })
-      .join('')
-
-    return `
-      ${visibleTokens.map(renderToken).join('')}
-      <div class="token-more-container">
-        <button class="token-btn token-more-btn ${activeInHidden ? 'has-active' : ''}" data-pad-dir="${direction}" title="${hiddenTokens.length} more tokens">
-          <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-        </button>
-        <div class="token-dropdown" data-pad-dir="${direction}">
-          ${dropdownItems}
-        </div>
-      </div>
-    `
   }
 
   getHandlers(): EventHandlerMap {

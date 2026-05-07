@@ -11,6 +11,7 @@ import {
   type EventHandlerMap,
 } from '../base/section'
 import type { SpacingToken } from '../types'
+import { renderTokenButtonGroup } from '../utils/render-token-buttons'
 
 /**
  * Circle icon for full radius button
@@ -79,54 +80,26 @@ export class BorderSection extends BaseSection {
       }
     }
 
-    // Build token list: 0 + user tokens
+    // Build token list: 0 + user tokens. The "0" prefix has no tokenRef
+    // so it matches by literal value only.
     const allTokens = [
       { label: '0', value: '0', tokenRef: '' },
       ...tokens.map(t => ({ label: t.name, value: t.value, tokenRef: `$${t.fullName}` })),
     ]
 
-    const MAX_DIRECT = 4 // Show all directly if 4 or fewer
-    const VISIBLE_COUNT = 3 // When using dropdown, show 3 visible
-    const renderToken = (token: { label: string; value: string; tokenRef: string }) => {
-      const isActive = isTokenRef ? radiusValue === token.tokenRef : radiusValue === token.value
-      const title = token.tokenRef ? `${token.tokenRef}: ${token.value}` : token.value
-      return `<button class="token-btn ${isActive ? 'active' : ''}" data-radius="${token.value}" data-token-ref="${token.tokenRef}" title="${title}">${token.label}</button>`
-    }
-
-    let tokenButtons: string
-    if (allTokens.length <= MAX_DIRECT) {
-      tokenButtons = allTokens.map(renderToken).join('')
-    } else {
-      // 5+ tokens: show 3 + dropdown for rest
-      const visibleTokens = allTokens.slice(0, VISIBLE_COUNT)
-      const hiddenTokens = allTokens.slice(VISIBLE_COUNT)
-      const activeInHidden = hiddenTokens.some(t =>
-        isTokenRef ? radiusValue === t.tokenRef : radiusValue === t.value
-      )
-
-      const dropdownItems = hiddenTokens
-        .map(token => {
-          const isActive = isTokenRef ? radiusValue === token.tokenRef : radiusValue === token.value
-          return `<button class="token-dropdown-item ${isActive ? 'active' : ''}" data-radius="${token.value}" data-token-ref="${token.tokenRef}">${token.label} <span class="token-dropdown-value">${token.value}</span></button>`
-        })
-        .join('')
-
-      tokenButtons = `
-        ${visibleTokens.map(renderToken).join('')}
-        <div class="token-more-container">
-          <button class="token-btn token-more-btn ${activeInHidden ? 'has-active' : ''}" title="${hiddenTokens.length} more">
-            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-          </button>
-          <div class="token-dropdown token-dropdown-rad">
-            ${dropdownItems}
-          </div>
-        </div>
-      `
-    }
-
-    // Full radius button (999)
+    // Full radius (999) button — appended after the dynamic list, can be
+    // either of the two forms. We pass it as `trailingHtml` so the helper
+    // can place it correctly relative to the more-button dropdown.
     const fullRadiusActive = radiusValue === '999'
-    const fullRadiusBtn = `<button class="token-btn ${fullRadiusActive ? 'active' : ''}" data-radius="999" title="Full: 999">${CIRCLE_ICON}</button>`
+    const fullRadiusBtn = `<button class="token-btn${fullRadiusActive ? ' active' : ''}" data-rad-token="999" data-token-ref="" title="Full: 999">${CIRCLE_ICON}</button>`
+
+    const tokenButtons = renderTokenButtonGroup({
+      activeValue: radiusValue,
+      propKey: 'rad',
+      dropdownClass: 'rad',
+      tokens: allTokens,
+      trailingHtml: fullRadiusBtn,
+    })
 
     const radiusExpanded = this.isExpanded('radius')
     const radiusSectionClass = `section${radiusExpanded ? ' expanded' : ''}`
@@ -151,7 +124,6 @@ export class BorderSection extends BaseSection {
             <div class="prop-content">
               <div class="token-group">
                 ${tokenButtons}
-                ${fullRadiusBtn}
               </div>
               <input type="text" class="${radiusInputClass}" autocomplete="off" value="${this.deps.escapeHtml(radiusDisplayValue)}" data-prop="radius" data-token-ref="${isTokenRef ? this.deps.escapeHtml(radiusValue) : ''}" placeholder="0">
             </div>
@@ -277,10 +249,10 @@ export class BorderSection extends BaseSection {
 
   getHandlers(): EventHandlerMap {
     return {
-      '.token-btn[data-radius]': {
+      '.token-btn[data-rad-token]': {
         click: (e: Event, target: HTMLElement) => {
           const tokenRef = target.dataset.tokenRef
-          const value = tokenRef || target.dataset.radius
+          const value = tokenRef || target.dataset.radToken
           if (value) {
             this.deps.onPropertyChange('radius', value, 'token')
           }
@@ -309,10 +281,10 @@ export class BorderSection extends BaseSection {
           }
         },
       },
-      '.token-dropdown-item[data-radius]': {
+      '.token-dropdown-item[data-rad-token]': {
         click: (e: Event, target: HTMLElement) => {
           const tokenRef = target.dataset.tokenRef
-          const value = tokenRef || target.dataset.radius
+          const value = tokenRef || target.dataset.radToken
           if (value) {
             this.deps.onPropertyChange('radius', value, 'token')
           }

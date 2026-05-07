@@ -548,8 +548,8 @@ class PropertyPanelAPIImpl implements PropertyPanelAPI {
         pad: 'data-pad-token',
         padding: 'data-pad-token',
         gap: 'data-gap-token',
-        rad: 'data-radius',
-        radius: 'data-radius',
+        rad: 'data-rad-token',
+        radius: 'data-rad-token',
       }
 
       const dataAttr = propToAttr[property]
@@ -874,7 +874,8 @@ class FilesPanelAPIImpl implements FilesPanelAPI {
     if (filename.endsWith('.tok') || filename.endsWith('.tokens')) return 'tokens'
     if (filename.endsWith('.com') || filename.endsWith('.components')) return 'components'
     if (filename.endsWith('.mir') || filename.endsWith('.mirror')) return 'layout'
-    if (filename.endsWith('.yaml') || filename.endsWith('.yml')) return 'data'
+    if (filename.endsWith('.yaml') || filename.endsWith('.yml') || filename.endsWith('.data'))
+      return 'data'
     return 'unknown'
   }
 }

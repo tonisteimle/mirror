@@ -13,6 +13,7 @@ import {
   type SectionData,
   type EventHandlerMap,
 } from '../base/section'
+import { renderTokenButtonGroup } from '../utils/render-token-buttons'
 import type { SpacingToken } from '../types'
 import { extractSides, spacingPropertyNames } from '../utils/spacing-parse'
 
@@ -132,56 +133,16 @@ export class MarginSection extends BaseSection {
     direction: string,
     tokens: SpacingToken[]
   ): string {
-    const isTokenRef = activeValue.startsWith('$')
-    const MAX_DIRECT = 4
-    const VISIBLE_COUNT = 3
-
-    const renderToken = (token: SpacingToken) => {
-      const tokenRef = `$${token.fullName}`
-      const shortRef = `$${token.name}`
-      const isActive = isTokenRef
-        ? activeValue === tokenRef || activeValue === shortRef
-        : activeValue === token.value
-      return `<button class="token-btn ${isActive ? 'active' : ''}" data-mar-token="${token.value}" data-token-ref="${tokenRef}" data-mar-dir="${direction}" title="${tokenRef}: ${token.value}">${token.name}</button>`
-    }
-
-    if (tokens.length <= MAX_DIRECT) {
-      return tokens.map(renderToken).join('')
-    }
-
-    const visibleTokens = tokens.slice(0, VISIBLE_COUNT)
-    const hiddenTokens = tokens.slice(VISIBLE_COUNT)
-
-    const activeInHidden = hiddenTokens.some(token => {
-      const tokenRef = `$${token.fullName}`
-      const shortRef = `$${token.name}`
-      return isTokenRef
-        ? activeValue === tokenRef || activeValue === shortRef
-        : activeValue === token.value
+    return renderTokenButtonGroup({
+      activeValue,
+      propKey: 'mar',
+      direction,
+      tokens: tokens.map(t => ({
+        label: t.name,
+        value: t.value,
+        tokenRef: `$${t.fullName}`,
+      })),
     })
-
-    const dropdownItems = hiddenTokens
-      .map(token => {
-        const tokenRef = `$${token.fullName}`
-        const shortRef = `$${token.name}`
-        const isActive = isTokenRef
-          ? activeValue === tokenRef || activeValue === shortRef
-          : activeValue === token.value
-        return `<button class="token-dropdown-item ${isActive ? 'active' : ''}" data-mar-token="${token.value}" data-token-ref="${tokenRef}" data-mar-dir="${direction}">${token.name} <span class="token-dropdown-value">${token.value}</span></button>`
-      })
-      .join('')
-
-    return `
-      ${visibleTokens.map(renderToken).join('')}
-      <div class="token-more-container">
-        <button class="token-btn token-more-btn ${activeInHidden ? 'has-active' : ''}" data-mar-dir="${direction}" title="${hiddenTokens.length} more tokens">
-          <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-        </button>
-        <div class="token-dropdown" data-mar-dir="${direction}">
-          ${dropdownItems}
-        </div>
-      </div>
-    `
   }
 
   getHandlers(): EventHandlerMap {

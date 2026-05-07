@@ -12,6 +12,7 @@ import {
   type EventHandlerMap,
 } from '../base/section'
 import type { SpacingToken } from '../types'
+import { renderTokenButtonGroup } from '../utils/render-token-buttons'
 
 /**
  * Font options matching prototype
@@ -170,42 +171,16 @@ export class TypographySection extends BaseSection {
   }
 
   private renderSizeTokens(fontSizeValue: string, tokens: SpacingToken[]): string {
-    const MAX_DIRECT = 4 // Show all directly if 4 or fewer
-    const VISIBLE_COUNT = 3 // When using dropdown, show 3 visible
-
-    const renderToken = (token: SpacingToken) => {
-      const isActive = fontSizeValue === token.value
-      return `<button class="token-btn ${isActive ? 'active' : ''}" data-font-size="${token.value}" title="${token.value}px">${token.name}</button>`
-    }
-
-    // Show all if 4 or fewer tokens
-    if (tokens.length <= MAX_DIRECT) {
-      return tokens.map(renderToken).join('')
-    }
-
-    // 5+ tokens: show 3 + dropdown for rest
-    const visibleTokens = tokens.slice(0, VISIBLE_COUNT)
-    const hiddenTokens = tokens.slice(VISIBLE_COUNT)
-    const activeInHidden = hiddenTokens.some(t => fontSizeValue === t.value)
-
-    const dropdownItems = hiddenTokens
-      .map(token => {
-        const isActive = fontSizeValue === token.value
-        return `<button class="token-dropdown-item ${isActive ? 'active' : ''}" data-font-size="${token.value}">${token.name} <span class="token-dropdown-value">${token.value}</span></button>`
-      })
-      .join('')
-
-    return `
-      ${visibleTokens.map(renderToken).join('')}
-      <div class="token-more-container">
-        <button class="token-btn token-more-btn ${activeInHidden ? 'has-active' : ''}" title="${hiddenTokens.length} more tokens">
-          <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 4l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
-        </button>
-        <div class="token-dropdown token-dropdown-fs">
-          ${dropdownItems}
-        </div>
-      </div>
-    `
+    return renderTokenButtonGroup({
+      activeValue: fontSizeValue,
+      propKey: 'fs',
+      dropdownClass: 'fs',
+      tokens: tokens.map(t => ({
+        label: t.name,
+        value: t.value,
+        tokenRef: `$${t.fullName}`,
+      })),
+    })
   }
 
   private renderAlignToggles(textAlignValue: string): string {
@@ -242,9 +217,10 @@ export class TypographySection extends BaseSection {
           this.deps.onPropertyChange('font', select.value, 'select')
         },
       },
-      '.token-btn[data-font-size]': {
+      '.token-btn[data-fs-token]': {
         click: (e: Event, target: HTMLElement) => {
-          const value = target.dataset.fontSize
+          const tokenRef = target.dataset.tokenRef
+          const value = tokenRef || target.dataset.fsToken
           if (value) {
             this.deps.onPropertyChange('font-size', value, 'token')
           }
@@ -273,9 +249,10 @@ export class TypographySection extends BaseSection {
           }
         },
       },
-      '.token-dropdown-item[data-font-size]': {
+      '.token-dropdown-item[data-fs-token]': {
         click: (e: Event, target: HTMLElement) => {
-          const value = target.dataset.fontSize
+          const tokenRef = target.dataset.tokenRef
+          const value = tokenRef || target.dataset.fsToken
           if (value) {
             this.deps.onPropertyChange('font-size', value, 'token')
           }
