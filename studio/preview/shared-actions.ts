@@ -23,70 +23,91 @@ export interface ActionResult {
 }
 
 /**
+ * Validate the multi-selection invariants required by both group and
+ * wrap operations:
+ *   - At least `minCount` elements selected.
+ *   - SourceMap is loaded.
+ *   - All selected nodes share the same parent.
+ *   - That parent is not the root (we never wrap root-level elements).
+ *
+ * Returns either `{ ok: true, multiSelection, parentId }` or
+ * `{ ok: false, error: ActionResult }` shaped so the caller can early-
+ * return without re-validating. `verb` is 'group' or 'wrap', purely
+ * for the user-facing message.
+ */
+function validateMultiSelectionForWrap(
+  minCount: number,
+  verb: 'group' | 'wrap'
+): { ok: true; multiSelection: string[]; parentId: string } | { ok: false; error: ActionResult } {
+  const multiSelection = state.get().multiSelection
+
+  if (multiSelection.length < minCount) {
+    const action = verb === 'group' ? 'group' : 'wrap'
+    return {
+      ok: false,
+      error: { success: false, error: `Select at least ${minCount} elements to ${action}` },
+    }
+  }
+
+  const sourceMap = state.get().sourceMap
+  if (!sourceMap) {
+    return { ok: false, error: { success: false, error: 'No source map available' } }
+  }
+
+  const parents = multiSelection.map(id => sourceMap.getNodeById(id)?.parentId)
+  if (new Set(parents).size !== 1 || !parents[0]) {
+    return {
+      ok: false,
+      error: { success: false, error: 'Selected elements must be siblings (same parent)' },
+    }
+  }
+
+  const parentId = parents[0]
+  // parents[0] is set; this assertion is for the type narrow only.
+  const firstNode = sourceMap.getNodeById(multiSelection[0])
+  if (!firstNode?.parentId) {
+    const action = verb === 'group' ? 'group' : 'wrap'
+    return { ok: false, error: { success: false, error: `Cannot ${action} root elements` } }
+  }
+
+  return { ok: true, multiSelection, parentId }
+}
+
+/**
+ * Read the layout direction of `parentId` from its rendered DOM. Returns
+ * 'hor' if the parent is a row-flex container, 'ver' otherwise (default).
+ */
+function readParentLayoutDirection(container: HTMLElement, parentId: string): 'hor' | 'ver' {
+  const parentEl = container.querySelector(`[data-mirror-id="${parentId}"]`) as HTMLElement | null
+  if (!parentEl) return 'ver'
+  const style = window.getComputedStyle(parentEl)
+  const isHorizontal = style.flexDirection === 'row' || style.flexDirection === 'row-reverse'
+  return isHorizontal ? 'hor' : 'ver'
+}
+
+/**
  * Group selected elements into a Box container
  *
  * @param container - The preview container element (for detecting layout direction)
  * @returns ActionResult with success/failure info
  */
 export function executeGroup(container: HTMLElement): ActionResult {
-  const multiSelection = state.get().multiSelection
+  const validated = validateMultiSelectionForWrap(2, 'group')
+  if (!validated.ok) return validated.error
 
-  if (multiSelection.length < 2) {
-    return {
-      success: false,
-      error: 'Select at least 2 elements to group (Shift+Click)',
-    }
-  }
-
-  const sourceMap = state.get().sourceMap
-  if (!sourceMap) {
-    return { success: false, error: 'No source map available' }
-  }
-
-  // Validate: all nodes must have the same parent
-  const nodes = multiSelection.map(id => sourceMap.getNodeById(id))
-  const parents = nodes.map(n => n?.parentId)
-  if (new Set(parents).size !== 1 || !parents[0]) {
-    return {
-      success: false,
-      error: 'Selected elements must be siblings (same parent)',
-    }
-  }
-
-  const firstNode = sourceMap.getNodeById(multiSelection[0])
-  if (!firstNode?.parentId) {
-    return { success: false, error: 'Cannot group root elements' }
-  }
-
-  // Detect parent's layout direction
-  const parentEl = container.querySelector(
-    `[data-mirror-id="${firstNode.parentId}"]`
-  ) as HTMLElement | null
-
-  let wrapperProps = 'ver' // Default to vertical
-  if (parentEl) {
-    const style = window.getComputedStyle(parentEl)
-    const isHorizontal = style.flexDirection === 'row' || style.flexDirection === 'row-reverse'
-    wrapperProps = isHorizontal ? 'hor' : 'ver'
-  }
-
-  // Execute wrap command
+  const direction = readParentLayoutDirection(container, validated.parentId)
   const result = executor.execute(
     new WrapNodesCommand({
-      nodeIds: multiSelection,
+      nodeIds: validated.multiSelection,
       wrapperName: 'Box',
-      wrapperProps,
+      wrapperProps: direction,
     })
   )
 
   if (result.success) {
     actions.clearMultiSelection()
-    return {
-      success: true,
-      message: `Grouped ${multiSelection.length} elements`,
-    }
+    return { success: true, message: `Grouped ${validated.multiSelection.length} elements` }
   }
-
   return { success: false, error: result.error || 'Failed to group elements' }
 }
 
@@ -101,48 +122,15 @@ export function executeWrapWithLayout(
   container: HTMLElement,
   direction: 'hor' | 'ver'
 ): ActionResult {
-  const multiSelection = state.get().multiSelection
+  const validated = validateMultiSelectionForWrap(2, 'wrap')
+  if (!validated.ok) return validated.error
 
-  if (multiSelection.length < 2) {
-    return {
-      success: false,
-      error: 'Select at least 2 elements (Shift+Click)',
-    }
-  }
+  const gap = calculateAverageGap(container, validated.multiSelection, direction)
+  const wrapperProps = gap > 0 ? `${direction}, gap ${gap}` : direction
 
-  const sourceMap = state.get().sourceMap
-  if (!sourceMap) {
-    return { success: false, error: 'No source map available' }
-  }
-
-  // Validate: all nodes must have the same parent
-  const nodes = multiSelection.map(id => sourceMap.getNodeById(id))
-  const parents = nodes.map(n => n?.parentId)
-  if (new Set(parents).size !== 1 || !parents[0]) {
-    return {
-      success: false,
-      error: 'Selected elements must be siblings (same parent)',
-    }
-  }
-
-  const firstNode = sourceMap.getNodeById(multiSelection[0])
-  if (!firstNode?.parentId) {
-    return { success: false, error: 'Cannot wrap root elements' }
-  }
-
-  // Calculate average gap between selected elements
-  const gap = calculateAverageGap(container, multiSelection, direction)
-
-  // Build wrapper properties
-  let wrapperProps = direction
-  if (gap > 0) {
-    wrapperProps += `, gap ${gap}`
-  }
-
-  // Execute wrap command
   const result = executor.execute(
     new WrapNodesCommand({
-      nodeIds: multiSelection,
+      nodeIds: validated.multiSelection,
       wrapperName: 'Frame',
       wrapperProps,
     })
@@ -153,10 +141,9 @@ export function executeWrapWithLayout(
     const dirLabel = direction === 'hor' ? 'horizontal' : 'vertical'
     return {
       success: true,
-      message: `Wrapped ${multiSelection.length} elements (${dirLabel}, gap ${gap})`,
+      message: `Wrapped ${validated.multiSelection.length} elements (${dirLabel}, gap ${gap})`,
     }
   }
-
   return { success: false, error: result.error || 'Failed to wrap elements' }
 }
 
