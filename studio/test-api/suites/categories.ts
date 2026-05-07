@@ -26,6 +26,7 @@ import {
   allWrapLayoutTests,
   positionArrowTests,
   keyboardEdgeCaseTests,
+  keyboardGroupTests,
 } from './interactions'
 import { allLayoutVerificationTests } from './layout-verification'
 
@@ -162,6 +163,7 @@ export const layoutTests: TestCase[] = [
   ...allWrapLayoutTests,
   ...positionArrowTests,
   ...keyboardEdgeCaseTests,
+  ...keyboardGroupTests,
 ]
 
 /**

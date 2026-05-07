@@ -48,6 +48,7 @@ export {
 
 export { positionArrowTests } from './position-arrow.test'
 export { keyboardEdgeCaseTests } from './keyboard-edge-cases.test'
+export { keyboardGroupTests } from './keyboard-group.test'
 
 export {
   allResizeHandleDblClickTests,
