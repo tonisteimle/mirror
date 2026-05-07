@@ -22,23 +22,24 @@ import { logCodeModifier as log } from '../../compiler/utils/logger'
 import { adjustTemplateIndentation } from '../../compiler/schema/component-templates'
 
 /**
- * Add a child component to a parent node
+ * Add a child block (single line or multi-line template) under a parent.
+ *
+ * Shared core for `addChild` and `addChildWithTemplate` — both compute the
+ * same insertion point, share the same parentProperty injection, and
+ * produce the same change shape. They only differ in how the inserted
+ * text is built. `buildBlock(indent)` returns the body to insert, with
+ * `indent` already applied to every line.
  */
-export function addChild(
+function addChildBlock(
   this: CodeModifier,
   parentId: string,
-  componentName: string,
-  options: AddChildOptions = {}
+  buildBlock: (indent: string) => string,
+  options: Pick<AddChildOptions, 'position' | 'parentProperty'>
 ): ModificationResult {
-  const { position = 'last', properties, textContent, parentProperty } = options
+  const { position = 'last', parentProperty } = options
 
-  // Get parent node mapping
   const parentMapping = this.sourceMap.getNodeById(parentId)
   if (!parentMapping) {
-    // Special case: empty canvas - insert as root element
-    if (this.source.trim() === '' && parentId === 'node-1') {
-      return this.insertAsRoot(componentName, properties, textContent)
-    }
     return this.errorResult(`Parent node not found: ${parentId}`)
   }
 
@@ -56,14 +57,12 @@ export function addChild(
       const parsedLine = parseLine(line)
       const newLine = addPropertyToLine(parsedLine, parentProperty, '')
 
-      // Calculate character offsets for the parent change
       const lineStartOffset = this.getCharacterOffset(parentLine, 1)
       combinedFrom = lineStartOffset
       combinedTo = lineStartOffset + line.length
       combinedInsert = newLine
       parentLengthDelta = newLine.length - line.length
 
-      // Apply the parent property change
       const newLines = [...this.lines]
       newLines[parentLine - 1] = newLine
       this.source = newLines.join('\n')
@@ -73,24 +72,12 @@ export function addChild(
 
   // Get existing children (re-fetch after potential parent modification)
   const children = this.sourceMap.getChildren(parentId)
-
-  // Calculate insertion point and indentation
   const insertionInfo = this.calculateChildInsertionPoint(parentMapping, children, position)
 
-  // Build the new component line
-  const componentLine = this.buildComponentLine(
-    componentName,
-    properties,
-    textContent,
-    insertionInfo.indent
-  )
-
-  // Create the change for child insertion
-  const insertText = `\n${componentLine}`
-  // Adjust insertion position if we modified the parent line
+  const block = buildBlock(insertionInfo.indent)
+  const insertText = `\n${block}`
   const insertPosition = insertionInfo.charOffset + parentLengthDelta
 
-  // Apply the child change
   const newSource =
     this.source.substring(0, insertPosition) + insertText + this.source.substring(insertPosition)
 
@@ -98,9 +85,7 @@ export function addChild(
   this.source = newSource
   this.lines = newSource.split('\n')
 
-  // If we had a parent property change, combine the changes
   if (parentProperty && combinedFrom >= 0) {
-    // The combined change starts at the parent line and ends after the child insertion
     const finalTo = insertPosition + insertText.length
     return {
       success: true,
@@ -122,6 +107,32 @@ export function addChild(
       insert: insertText,
     },
   }
+}
+
+/**
+ * Add a child component to a parent node
+ */
+export function addChild(
+  this: CodeModifier,
+  parentId: string,
+  componentName: string,
+  options: AddChildOptions = {}
+): ModificationResult {
+  const { properties, textContent } = options
+
+  // Special case: empty canvas - insert as root element
+  if (!this.sourceMap.getNodeById(parentId)) {
+    if (this.source.trim() === '' && parentId === 'node-1') {
+      return this.insertAsRoot(componentName, properties, textContent)
+    }
+  }
+
+  return addChildBlock.call(
+    this,
+    parentId,
+    indent => this.buildComponentLine(componentName, properties, textContent, indent),
+    options
+  )
 }
 
 /**
@@ -171,78 +182,70 @@ export function addChildWithTemplate(
   templateCode: string,
   options: Pick<AddChildOptions, 'position' | 'parentProperty'> = {}
 ): ModificationResult {
-  const { position = 'last', parentProperty } = options
+  return addChildBlock.call(
+    this,
+    parentId,
+    indent => adjustTemplateIndentation(templateCode, indent),
+    options
+  )
+}
 
-  // Get parent node mapping
-  const parentMapping = this.sourceMap.getNodeById(parentId)
-  if (!parentMapping) {
-    return this.errorResult(`Parent node not found: ${parentId}`)
+/**
+ * Insert a block (single line or multi-line template) before/after a sibling.
+ *
+ * Shared core for `addChildRelativeTo` and `addChildWithTemplateRelativeTo`.
+ * Both compute the same sibling position and indent; they only differ in
+ * how the inserted text is built. `buildBlock(indent)` returns the body
+ * with `indent` already applied to every line.
+ */
+function addBlockRelativeTo(
+  this: CodeModifier,
+  siblingId: string,
+  buildBlock: (indent: string) => string,
+  placement: 'before' | 'after',
+  callerName: string
+): ModificationResult {
+  const siblingMapping = this.sourceMap.getNodeById(siblingId)
+  if (!siblingMapping) {
+    return this.errorResult(`Sibling node not found: ${siblingId}`)
   }
 
-  // Track combined changes for when we modify parent AND add child
-  let combinedFrom = -1
-  let combinedTo = -1
-  let combinedInsert = ''
-  let parentLengthDelta = 0
-
-  // If parentProperty is specified, add it to the parent first
-  if (parentProperty) {
-    const parentLine = parentMapping.position.line
-    const line = this.lines[parentLine - 1]
-    if (line) {
-      const parsedLine = parseLine(line)
-      const newLine = addPropertyToLine(parsedLine, parentProperty, '')
-
-      // Calculate character offsets for the parent change
-      const lineStartOffset = this.getCharacterOffset(parentLine, 1)
-      combinedFrom = lineStartOffset
-      combinedTo = lineStartOffset + line.length
-      combinedInsert = newLine
-      parentLengthDelta = newLine.length - line.length
-
-      // Apply the parent property change
-      const newLines = [...this.lines]
-      newLines[parentLine - 1] = newLine
-      this.source = newLines.join('\n')
-      this.lines = newLines
-    }
+  const lineIndex = siblingMapping.position.line - 1
+  if (lineIndex < 0 || lineIndex >= this.lines.length) {
+    log.error(`Invalid line position in ${callerName}`, {
+      siblingId,
+      line: siblingMapping.position.line,
+      lineIndex,
+      totalLines: this.lines.length,
+    })
+    return this.errorResult(
+      `Invalid line position for sibling: ${siblingId} (line ${siblingMapping.position.line})`
+    )
   }
 
-  // Get existing children (re-fetch after potential parent modification)
-  const children = this.sourceMap.getChildren(parentId)
+  const indent = this.getLineIndent(this.lines[lineIndex])
+  const block = buildBlock(indent)
 
-  // Calculate insertion point and indentation
-  const insertionInfo = this.calculateChildInsertionPoint(parentMapping, children, position)
+  let insertPosition: number
+  let insertText: string
 
-  // Adjust template indentation
-  const adjustedTemplate = adjustTemplateIndentation(templateCode, insertionInfo.indent)
+  if (placement === 'before') {
+    insertPosition = this.getCharacterOffset(siblingMapping.position.line, 1)
+    insertText = `${block}\n`
+  } else {
+    // getBlockEndLine finds the actual end including all children
+    const siblingEndLine = this.getBlockEndLine(siblingMapping.position.line)
+    const endLineContent = this.lines[siblingEndLine - 1]
+    insertPosition = this.getCharacterOffset(siblingEndLine, endLineContent.length + 1)
+    insertText = `\n${block}`
+  }
 
-  // Create the change
-  const insertText = `\n${adjustedTemplate}`
-  // Adjust insertion position if we modified the parent line
-  const insertPosition = insertionInfo.charOffset + parentLengthDelta
-
-  // Apply the change
   const newSource =
     this.source.substring(0, insertPosition) + insertText + this.source.substring(insertPosition)
 
   // CRITICAL: Persist the changes for subsequent calls
   this.source = newSource
   this.lines = newSource.split('\n')
-
-  // If we had a parent property change, combine the changes
-  if (parentProperty && combinedFrom >= 0) {
-    const finalTo = insertPosition + insertText.length
-    return {
-      success: true,
-      newSource,
-      change: {
-        from: combinedFrom,
-        to: combinedTo,
-        insert: combinedInsert + this.source.substring(combinedTo + parentLengthDelta, finalTo),
-      },
-    }
-  }
 
   return {
     success: true,
@@ -264,66 +267,13 @@ export function addChildWithTemplateRelativeTo(
   templateCode: string,
   placement: 'before' | 'after'
 ): ModificationResult {
-  // Get sibling node mapping
-  const siblingMapping = this.sourceMap.getNodeById(siblingId)
-  if (!siblingMapping) {
-    return this.errorResult(`Sibling node not found: ${siblingId}`)
-  }
-
-  // Validate line position
-  const lineIndex = siblingMapping.position.line - 1
-  if (lineIndex < 0 || lineIndex >= this.lines.length) {
-    log.error('Invalid line position in addChildWithTemplateRelativeTo', {
-      siblingId,
-      line: siblingMapping.position.line,
-      lineIndex,
-      totalLines: this.lines.length,
-    })
-    return this.errorResult(
-      `Invalid line position for sibling: ${siblingId} (line ${siblingMapping.position.line})`
-    )
-  }
-
-  // Get sibling's line to determine indentation
-  const siblingLine = this.lines[lineIndex]
-  const indent = this.getLineIndent(siblingLine)
-
-  // Adjust template indentation
-  const adjustedTemplate = adjustTemplateIndentation(templateCode, indent)
-
-  let insertPosition: number
-  let insertText: string
-
-  if (placement === 'before') {
-    // Insert before sibling's line
-    insertPosition = this.getCharacterOffset(siblingMapping.position.line, 1)
-    insertText = `${adjustedTemplate}\n`
-  } else {
-    // Insert after sibling (at end of sibling's block)
-    // Use getBlockEndLine to find actual end including all children
-    const siblingEndLine = this.getBlockEndLine(siblingMapping.position.line)
-    const endLineContent = this.lines[siblingEndLine - 1]
-    insertPosition = this.getCharacterOffset(siblingEndLine, endLineContent.length + 1)
-    insertText = `\n${adjustedTemplate}`
-  }
-
-  // Apply the change
-  const newSource =
-    this.source.substring(0, insertPosition) + insertText + this.source.substring(insertPosition)
-
-  // CRITICAL: Persist the changes for subsequent calls
-  this.source = newSource
-  this.lines = newSource.split('\n')
-
-  return {
-    success: true,
-    newSource,
-    change: {
-      from: insertPosition,
-      to: insertPosition,
-      insert: insertText,
-    },
-  }
+  return addBlockRelativeTo.call(
+    this,
+    siblingId,
+    indent => adjustTemplateIndentation(templateCode, indent),
+    placement,
+    'addChildWithTemplateRelativeTo'
+  )
 }
 
 /**
@@ -337,67 +287,13 @@ export function addChildRelativeTo(
   options: Omit<AddChildOptions, 'position'> = {}
 ): ModificationResult {
   const { properties, textContent } = options
-
-  // Get sibling node mapping
-  const siblingMapping = this.sourceMap.getNodeById(siblingId)
-  if (!siblingMapping) {
-    return this.errorResult(`Sibling node not found: ${siblingId}`)
-  }
-
-  // Validate line position
-  const lineIndex = siblingMapping.position.line - 1
-  if (lineIndex < 0 || lineIndex >= this.lines.length) {
-    log.error('Invalid line position in addChildRelativeTo', {
-      siblingId,
-      line: siblingMapping.position.line,
-      lineIndex,
-      totalLines: this.lines.length,
-    })
-    return this.errorResult(
-      `Invalid line position for sibling: ${siblingId} (line ${siblingMapping.position.line})`
-    )
-  }
-
-  // Get sibling's line to determine indentation
-  const siblingLine = this.lines[lineIndex]
-  const indent = this.getLineIndent(siblingLine)
-
-  // Build the new component line
-  const componentLine = this.buildComponentLine(componentName, properties, textContent, indent)
-
-  let insertPosition: number
-  let insertText: string
-
-  if (placement === 'before') {
-    // Insert before sibling's line
-    insertPosition = this.getCharacterOffset(siblingMapping.position.line, 1)
-    insertText = `${componentLine}\n`
-  } else {
-    // Insert after sibling (at end of sibling's block)
-    // Use getBlockEndLine to find actual end including all children
-    const siblingEndLine = this.getBlockEndLine(siblingMapping.position.line)
-    const endLineContent = this.lines[siblingEndLine - 1]
-    insertPosition = this.getCharacterOffset(siblingEndLine, endLineContent.length + 1)
-    insertText = `\n${componentLine}`
-  }
-
-  // Apply the change
-  const newSource =
-    this.source.substring(0, insertPosition) + insertText + this.source.substring(insertPosition)
-
-  // CRITICAL: Persist the changes for subsequent calls
-  this.source = newSource
-  this.lines = newSource.split('\n')
-
-  return {
-    success: true,
-    newSource,
-    change: {
-      from: insertPosition,
-      to: insertPosition,
-      insert: insertText,
-    },
-  }
+  return addBlockRelativeTo.call(
+    this,
+    siblingId,
+    indent => this.buildComponentLine(componentName, properties, textContent, indent),
+    placement,
+    'addChildRelativeTo'
+  )
 }
 
 /**
