@@ -17,7 +17,7 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'Text'
-  node_2.textContent = "Title"
+  node_2.innerHTML = formatInlineMarkdown("Title")
   Object.assign(node_2.style, {
     'font-size': '24px',
     'font-weight': '700',
@@ -30,7 +30,7 @@
   _elements['node-3'] = node_3
   node_3.dataset.mirrorId = 'node-3'
   node_3.dataset.mirrorName = 'Text'
-  node_3.textContent = "Light"
+  node_3.innerHTML = formatInlineMarkdown("Light")
   Object.assign(node_3.style, {
     'font-size': '12px',
     'font-weight': '300',
@@ -44,7 +44,7 @@
   _elements['node-4'] = node_4
   node_4.dataset.mirrorId = 'node-4'
   node_4.dataset.mirrorName = 'Text'
-  node_4.textContent = "Caps"
+  node_4.innerHTML = formatInlineMarkdown("Caps")
   Object.assign(node_4.style, {
     'font-size': '14px',
     'text-transform': 'uppercase',
@@ -57,7 +57,7 @@
   _elements['node-5'] = node_5
   node_5.dataset.mirrorId = 'node-5'
   node_5.dataset.mirrorName = 'Text'
-  node_5.textContent = "Mono"
+  node_5.innerHTML = formatInlineMarkdown("Mono")
   Object.assign(node_5.style, {
     'font-family': 'ui-monospace, monospace',
   })
@@ -69,7 +69,7 @@
   _elements['node-6'] = node_6
   node_6.dataset.mirrorId = 'node-6'
   node_6.dataset.mirrorName = 'Text'
-  node_6.textContent = "Underlined"
+  node_6.innerHTML = formatInlineMarkdown("Underlined")
   Object.assign(node_6.style, {
     'text-decoration': 'underline',
   })

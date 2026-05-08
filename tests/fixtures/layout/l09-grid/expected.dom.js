@@ -21,7 +21,7 @@
     'flex-direction': 'column',
     'align-self': 'stretch',
     'align-items': 'flex-start',
-    'grid-row': 'span 40',
+    'grid-row-end': 'span 40',
     'height': '100%',
     'background': 'red',
   })
@@ -38,7 +38,7 @@
     'flex-direction': 'column',
     'align-self': 'stretch',
     'align-items': 'flex-start',
-    'grid-row': 'span 40',
+    'grid-row-end': 'span 40',
     'height': '100%',
     'background': 'blue',
   })
@@ -55,7 +55,7 @@
     'flex-direction': 'column',
     'align-self': 'stretch',
     'align-items': 'flex-start',
-    'grid-row': 'span 40',
+    'grid-row-end': 'span 40',
     'height': '100%',
     'background': 'green',
   })
@@ -72,7 +72,7 @@
     'flex-direction': 'column',
     'align-self': 'stretch',
     'align-items': 'flex-start',
-    'grid-row': 'span 40',
+    'grid-row-end': 'span 40',
     'height': '100%',
     'background': 'yellow',
   })
@@ -89,7 +89,7 @@
     'flex-direction': 'column',
     'align-self': 'stretch',
     'align-items': 'flex-start',
-    'grid-row': 'span 40',
+    'grid-row-end': 'span 40',
     'height': '100%',
     'background': 'purple',
   })
@@ -106,7 +106,7 @@
     'flex-direction': 'column',
     'align-self': 'stretch',
     'align-items': 'flex-start',
-    'grid-row': 'span 40',
+    'grid-row-end': 'span 40',
     'height': '100%',
     'background': 'orange',
   })

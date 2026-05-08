@@ -44,7 +44,7 @@
   _elements['node-3'] = node_3
   node_3.dataset.mirrorId = 'node-3'
   node_3.dataset.mirrorName = 'Text'
-  node_3.textContent = `Echo: ${$get("value")}`
+  node_3.innerHTML = formatInlineMarkdown(`Echo: ${$get("value")}`)
   node_3._textTemplate = () => `Echo: ${$get("value")}`
   _runtime.bindText(node_3, "value")
   node_3.dataset.component = 'Text'
@@ -55,7 +55,7 @@
   _elements['node-4'] = node_4
   node_4.dataset.mirrorId = 'node-4'
   node_4.dataset.mirrorName = 'Text'
-  node_4.textContent = `Length: ${$get("value.length")}`
+  node_4.innerHTML = formatInlineMarkdown(`Length: ${$get("value.length")}`)
   node_4._textTemplate = () => `Length: ${$get("value.length")}`
   _runtime.bindText(node_4, "value.length")
   node_4.dataset.component = 'Text'

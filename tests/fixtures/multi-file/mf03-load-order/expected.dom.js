@@ -17,7 +17,7 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'PrimaryBtn'
-  node_2.textContent = "Save"
+  node_2.innerHTML = formatInlineMarkdown("Save")
   Object.assign(node_2.style, {
     'width': 'fit-content',
     'height': '36px',

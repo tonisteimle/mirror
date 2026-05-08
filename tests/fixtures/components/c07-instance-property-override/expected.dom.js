@@ -4,7 +4,7 @@
   node_1.dataset.mirrorId = 'node-1'
   node_1.dataset.mirrorRoot = 'true'
   node_1.dataset.mirrorName = 'Btn'
-  node_1.textContent = "Default"
+  node_1.innerHTML = formatInlineMarkdown("Default")
   Object.assign(node_1.style, {
     'width': 'fit-content',
     'height': '36px',
@@ -26,7 +26,7 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'Btn'
-  node_2.textContent = "Override"
+  node_2.innerHTML = formatInlineMarkdown("Override")
   Object.assign(node_2.style, {
     'width': 'fit-content',
     'height': '36px',

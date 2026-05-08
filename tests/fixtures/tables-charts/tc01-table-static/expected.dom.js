@@ -34,7 +34,7 @@
   _elements['node-3'] = node_3
   node_3.dataset.mirrorId = 'node-3'
   node_3.dataset.mirrorName = 'Text'
-  node_3.textContent = "Name"
+  node_3.innerHTML = formatInlineMarkdown("Name")
   Object.assign(node_3.style, {
     'color': '#888',
     'font-size': '11px',
@@ -47,7 +47,7 @@
   _elements['node-4'] = node_4
   node_4.dataset.mirrorId = 'node-4'
   node_4.dataset.mirrorName = 'Text'
-  node_4.textContent = "Status"
+  node_4.innerHTML = formatInlineMarkdown("Status")
   Object.assign(node_4.style, {
     'color': '#888',
     'font-size': '11px',
@@ -77,7 +77,7 @@
   _elements['node-6'] = node_6
   node_6.dataset.mirrorId = 'node-6'
   node_6.dataset.mirrorName = 'Text'
-  node_6.textContent = "Max"
+  node_6.innerHTML = formatInlineMarkdown("Max")
   Object.assign(node_6.style, {
     'color': 'white',
   })
@@ -89,7 +89,7 @@
   _elements['node-7'] = node_7
   node_7.dataset.mirrorId = 'node-7'
   node_7.dataset.mirrorName = 'Text'
-  node_7.textContent = "Active"
+  node_7.innerHTML = formatInlineMarkdown("Active")
   Object.assign(node_7.style, {
     'color': 'white',
   })

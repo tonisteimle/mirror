@@ -4,7 +4,7 @@
   node_1.dataset.mirrorId = 'node-1'
   node_1.dataset.mirrorRoot = 'true'
   node_1.dataset.mirrorName = 'Text'
-  node_1.textContent = $get("user.name")
+  node_1.innerHTML = formatInlineMarkdown($get("user.name"))
   node_1._textTemplate = () => $get("user.name")
   _runtime.bindText(node_1, "user.name")
   Object.assign(node_1.style, {

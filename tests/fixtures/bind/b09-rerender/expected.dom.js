@@ -17,7 +17,7 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'Text'
-  node_2.textContent = `Count: ${$get("counter")}`
+  node_2.innerHTML = formatInlineMarkdown(`Count: ${$get("counter")}`)
   node_2._textTemplate = () => `Count: ${$get("counter")}`
   _runtime.bindText(node_2, "counter")
   node_2.dataset.component = 'Text'
@@ -28,7 +28,7 @@
   _elements['node-3'] = node_3
   node_3.dataset.mirrorId = 'node-3'
   node_3.dataset.mirrorName = 'Button'
-  node_3.textContent = "Increment"
+  node_3.innerHTML = formatInlineMarkdown("Increment")
   Object.assign(node_3.style, {
     'width': 'fit-content',
     'height': '36px',

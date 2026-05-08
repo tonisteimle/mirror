@@ -4,7 +4,7 @@
   node_1.dataset.mirrorId = 'node-1'
   node_1.dataset.mirrorRoot = 'true'
   node_1.dataset.mirrorName = 'Text'
-  node_1.textContent = `${$get("company.ceo.name")}, ${$get("company.ceo.title")}`
+  node_1.innerHTML = formatInlineMarkdown(`${$get("company.ceo.name")}, ${$get("company.ceo.title")}`)
   node_1._textTemplate = () => `${$get("company.ceo.name")}, ${$get("company.ceo.title")}`
   _runtime.bindText(node_1, "company.ceo.name")
   _runtime.bindText(node_1, "company.ceo.title")

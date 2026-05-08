@@ -17,7 +17,7 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'Button'
-  node_2.textContent = "Show"
+  node_2.innerHTML = formatInlineMarkdown("Show")
   Object.assign(node_2.style, {
     'width': 'fit-content',
     'height': '36px',
@@ -40,7 +40,7 @@
   _elements['node-3'] = node_3
   node_3.dataset.mirrorId = 'node-3'
   node_3.dataset.mirrorName = 'Button'
-  node_3.textContent = "Hide"
+  node_3.innerHTML = formatInlineMarkdown("Hide")
   Object.assign(node_3.style, {
     'width': 'fit-content',
     'height': '36px',
@@ -63,7 +63,7 @@
   _elements['node-4'] = node_4
   node_4.dataset.mirrorId = 'node-4'
   node_4.dataset.mirrorName = 'Button'
-  node_4.textContent = "Toggle"
+  node_4.innerHTML = formatInlineMarkdown("Toggle")
   Object.assign(node_4.style, {
     'width': 'fit-content',
     'height': '36px',
@@ -129,7 +129,7 @@
   _elements['node-6'] = node_6
   node_6.dataset.mirrorId = 'node-6'
   node_6.dataset.mirrorName = 'Text'
-  node_6.textContent = "Menu"
+  node_6.innerHTML = formatInlineMarkdown("Menu")
   node_6.dataset.component = 'Text'
   node_5.appendChild(node_6)
   

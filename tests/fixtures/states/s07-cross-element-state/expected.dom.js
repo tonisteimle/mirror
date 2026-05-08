@@ -108,7 +108,7 @@
   _elements['node-3'] = node_3
   node_3.dataset.mirrorId = 'node-3'
   node_3.dataset.mirrorName = 'Text'
-  node_3.textContent = "Menu Item 1"
+  node_3.innerHTML = formatInlineMarkdown("Menu Item 1")
   Object.assign(node_3.style, {
     'color': 'white',
   })
@@ -120,7 +120,7 @@
   _elements['node-4'] = node_4
   node_4.dataset.mirrorId = 'node-4'
   node_4.dataset.mirrorName = 'Text'
-  node_4.textContent = "Menu Item 2"
+  node_4.innerHTML = formatInlineMarkdown("Menu Item 2")
   Object.assign(node_4.style, {
     'color': 'white',
   })

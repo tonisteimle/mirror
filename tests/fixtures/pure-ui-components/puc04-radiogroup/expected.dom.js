@@ -17,7 +17,7 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'RadioItem'
-  node_2.textContent = "Monthly"
+  node_2.innerHTML = formatInlineMarkdown("Monthly")
   node_2.setAttribute('value', "monthly")
   Object.assign(node_2.style, {
     'display': 'flex',
@@ -33,7 +33,7 @@
   _elements['node-3'] = node_3
   node_3.dataset.mirrorId = 'node-3'
   node_3.dataset.mirrorName = 'RadioItem'
-  node_3.textContent = "Yearly"
+  node_3.innerHTML = formatInlineMarkdown("Yearly")
   node_3.setAttribute('value', "yearly")
   Object.assign(node_3.style, {
     'display': 'flex',

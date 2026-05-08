@@ -145,7 +145,7 @@
   _elements['node-3'] = node_3
   node_3.dataset.mirrorId = 'node-3'
   node_3.dataset.mirrorName = 'Text'
-  node_3.textContent = "Like"
+  node_3.innerHTML = formatInlineMarkdown("Like")
   Object.assign(node_3.style, {
     'color': '#888',
   })

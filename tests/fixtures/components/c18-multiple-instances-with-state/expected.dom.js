@@ -18,7 +18,7 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'Btn'
-  node_2.textContent = "A"
+  node_2.innerHTML = formatInlineMarkdown("A")
   Object.assign(node_2.style, {
     'width': 'fit-content',
     'height': '36px',
@@ -77,7 +77,7 @@
   _elements['node-3'] = node_3
   node_3.dataset.mirrorId = 'node-3'
   node_3.dataset.mirrorName = 'Btn'
-  node_3.textContent = "B"
+  node_3.innerHTML = formatInlineMarkdown("B")
   Object.assign(node_3.style, {
     'width': 'fit-content',
     'height': '36px',

@@ -4,7 +4,7 @@
   node_1.dataset.mirrorId = 'node-1'
   node_1.dataset.mirrorRoot = 'true'
   node_1.dataset.mirrorName = 'LikeBtn'
-  node_1.textContent = "Like"
+  node_1.innerHTML = formatInlineMarkdown("Like")
   Object.assign(node_1.style, {
     'width': 'fit-content',
     'height': '36px',
@@ -69,7 +69,7 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'Text'
-  node_2.textContent = `${$get("count")} likes`
+  node_2.innerHTML = formatInlineMarkdown(`${$get("count")} likes`)
   node_2._textTemplate = () => `${$get("count")} likes`
   _runtime.bindText(node_2, "count")
   node_2.dataset.component = 'Text'

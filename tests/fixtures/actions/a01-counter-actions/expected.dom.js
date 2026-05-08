@@ -18,7 +18,7 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'Button'
-  node_2.textContent = "-"
+  node_2.innerHTML = formatInlineMarkdown("-")
   Object.assign(node_2.style, {
     'width': 'fit-content',
     'height': '36px',
@@ -41,7 +41,7 @@
   _elements['node-3'] = node_3
   node_3.dataset.mirrorId = 'node-3'
   node_3.dataset.mirrorName = 'Text'
-  node_3.textContent = $get("count")
+  node_3.innerHTML = formatInlineMarkdown($get("count"))
   node_3._textTemplate = () => $get("count")
   _runtime.bindText(node_3, "count")
   node_3.dataset.component = 'Text'
@@ -52,7 +52,7 @@
   _elements['node-4'] = node_4
   node_4.dataset.mirrorId = 'node-4'
   node_4.dataset.mirrorName = 'Button'
-  node_4.textContent = "+"
+  node_4.innerHTML = formatInlineMarkdown("+")
   Object.assign(node_4.style, {
     'width': 'fit-content',
     'height': '36px',
@@ -75,7 +75,7 @@
   _elements['node-5'] = node_5
   node_5.dataset.mirrorId = 'node-5'
   node_5.dataset.mirrorName = 'Button'
-  node_5.textContent = "Reset"
+  node_5.innerHTML = formatInlineMarkdown("Reset")
   Object.assign(node_5.style, {
     'width': 'fit-content',
     'height': '36px',

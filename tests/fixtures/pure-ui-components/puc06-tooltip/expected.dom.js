@@ -75,7 +75,7 @@
   _elements['node-5'] = node_5
   node_5.dataset.mirrorId = 'node-5'
   node_5.dataset.mirrorName = 'Text'
-  node_5.textContent = "Help text"
+  node_5.innerHTML = formatInlineMarkdown("Help text")
   Object.assign(node_5.style, {
     'font-size': '12px',
   })

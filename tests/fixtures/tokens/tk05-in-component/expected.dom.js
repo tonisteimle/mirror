@@ -4,7 +4,7 @@
   node_1.dataset.mirrorId = 'node-1'
   node_1.dataset.mirrorRoot = 'true'
   node_1.dataset.mirrorName = 'Btn'
-  node_1.textContent = "Save"
+  node_1.innerHTML = formatInlineMarkdown("Save")
   Object.assign(node_1.style, {
     'width': 'fit-content',
     'height': '36px',

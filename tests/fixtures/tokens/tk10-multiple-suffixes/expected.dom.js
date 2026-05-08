@@ -22,7 +22,7 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'Text'
-  node_2.textContent = "Branded"
+  node_2.innerHTML = formatInlineMarkdown("Branded")
   Object.assign(node_2.style, {
     'color': 'var(--brand-col)',
   })

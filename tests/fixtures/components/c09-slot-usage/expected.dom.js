@@ -19,7 +19,7 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'Title'
-  node_2.textContent = "Hello"
+  node_2.innerHTML = formatInlineMarkdown("Hello")
   Object.assign(node_2.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -52,7 +52,7 @@
   _elements['node-4'] = node_4
   node_4.dataset.mirrorId = 'node-4'
   node_4.dataset.mirrorName = 'Text'
-  node_4.textContent = "World"
+  node_4.innerHTML = formatInlineMarkdown("World")
   node_4.dataset.component = 'Text'
   node_3.appendChild(node_4)
   

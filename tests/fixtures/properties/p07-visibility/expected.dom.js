@@ -72,7 +72,7 @@
   _elements['node-5'] = node_5
   node_5.dataset.mirrorId = 'node-5'
   node_5.dataset.mirrorName = 'Text'
-  node_5.textContent = "Long content that scrolls"
+  node_5.innerHTML = formatInlineMarkdown("Long content that scrolls")
   node_5.dataset.component = 'Text'
   node_4.appendChild(node_5)
   
@@ -100,7 +100,7 @@
   _elements['node-7'] = node_7
   node_7.dataset.mirrorId = 'node-7'
   node_7.dataset.mirrorName = 'Text'
-  node_7.textContent = "Clipped content overflow"
+  node_7.innerHTML = formatInlineMarkdown("Clipped content overflow")
   node_7.dataset.component = 'Text'
   node_6.appendChild(node_7)
   

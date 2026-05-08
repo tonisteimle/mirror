@@ -4,7 +4,7 @@
   node_1.dataset.mirrorId = 'node-1'
   node_1.dataset.mirrorRoot = 'true'
   node_1.dataset.mirrorName = 'Text'
-  node_1.textContent = $get("name")
+  node_1.innerHTML = formatInlineMarkdown($get("name"))
   node_1._textTemplate = () => $get("name")
   _runtime.bindText(node_1, "name")
   node_1.dataset.component = 'Text'

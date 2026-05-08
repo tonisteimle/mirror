@@ -44,7 +44,7 @@
   _elements['node-3'] = node_3
   node_3.dataset.mirrorId = 'node-3'
   node_3.dataset.mirrorName = 'Text'
-  node_3.textContent = `Suche: ${$get("searchTerm")}`
+  node_3.innerHTML = formatInlineMarkdown(`Suche: ${$get("searchTerm")}`)
   node_3._textTemplate = () => `Suche: ${$get("searchTerm")}`
   _runtime.bindText(node_3, "searchTerm")
   node_3.dataset.component = 'Text'

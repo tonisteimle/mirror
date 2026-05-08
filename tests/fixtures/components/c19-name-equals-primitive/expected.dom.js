@@ -4,7 +4,7 @@
   node_1.dataset.mirrorId = 'node-1'
   node_1.dataset.mirrorRoot = 'true'
   node_1.dataset.mirrorName = 'Button'
-  node_1.textContent = "Custom"
+  node_1.innerHTML = formatInlineMarkdown("Custom")
   Object.assign(node_1.style, {
     'display': 'flex',
     'flex-direction': 'column',

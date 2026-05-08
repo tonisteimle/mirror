@@ -17,7 +17,7 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'Text'
-  node_2.textContent = "Copy this!"
+  node_2.innerHTML = formatInlineMarkdown("Copy this!")
   node_2.dataset.component = 'Text'
   node_1.appendChild(node_2)
   
@@ -26,7 +26,7 @@
   _elements['node-3'] = node_3
   node_3.dataset.mirrorId = 'node-3'
   node_3.dataset.mirrorName = 'Button'
-  node_3.textContent = "Copy"
+  node_3.innerHTML = formatInlineMarkdown("Copy")
   Object.assign(node_3.style, {
     'width': 'fit-content',
     'height': '36px',

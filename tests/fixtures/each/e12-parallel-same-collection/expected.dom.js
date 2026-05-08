@@ -16,7 +16,7 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'Text'
-  node_2.textContent = "List 1:"
+  node_2.innerHTML = formatInlineMarkdown("List 1:")
   node_2.dataset.component = 'Text'
   node_1.appendChild(node_2)
   
@@ -70,7 +70,7 @@
   _elements['node-6'] = node_6
   node_6.dataset.mirrorId = 'node-6'
   node_6.dataset.mirrorName = 'Text'
-  node_6.textContent = "List 2:"
+  node_6.innerHTML = formatInlineMarkdown("List 2:")
   node_6.dataset.component = 'Text'
   node_5.appendChild(node_6)
   

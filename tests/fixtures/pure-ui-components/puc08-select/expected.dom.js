@@ -29,7 +29,7 @@
   _elements['node-3'] = node_3
   node_3.dataset.mirrorId = 'node-3'
   node_3.dataset.mirrorName = 'Text'
-  node_3.textContent = "Choose..."
+  node_3.innerHTML = formatInlineMarkdown("Choose...")
   node_3.dataset.component = 'Text'
   node_2.appendChild(node_3)
   
@@ -53,7 +53,7 @@
   _elements['node-5'] = node_5
   node_5.dataset.mirrorId = 'node-5'
   node_5.dataset.mirrorName = 'Item'
-  node_5.textContent = "Berlin"
+  node_5.innerHTML = formatInlineMarkdown("Berlin")
   Object.assign(node_5.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -69,7 +69,7 @@
   _elements['node-6'] = node_6
   node_6.dataset.mirrorId = 'node-6'
   node_6.dataset.mirrorName = 'Item'
-  node_6.textContent = "Hamburg"
+  node_6.innerHTML = formatInlineMarkdown("Hamburg")
   Object.assign(node_6.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -85,7 +85,7 @@
   _elements['node-7'] = node_7
   node_7.dataset.mirrorId = 'node-7'
   node_7.dataset.mirrorName = 'Item'
-  node_7.textContent = "Munich"
+  node_7.innerHTML = formatInlineMarkdown("Munich")
   Object.assign(node_7.style, {
     'display': 'flex',
     'flex-direction': 'column',

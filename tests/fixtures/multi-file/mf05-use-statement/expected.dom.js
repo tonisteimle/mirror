@@ -19,7 +19,7 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'Text'
-  node_2.textContent = "Hi"
+  node_2.innerHTML = formatInlineMarkdown("Hi")
   node_2.dataset.component = 'Text'
   node_1.appendChild(node_2)
   

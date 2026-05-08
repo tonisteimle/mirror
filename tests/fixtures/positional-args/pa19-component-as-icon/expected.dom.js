@@ -5,7 +5,7 @@
   node_1.dataset.mirrorRoot = 'true'
   node_1.dataset.mirrorName = 'DangerIcon'
   node_1.setAttribute('data-icon-color', "#ff0000")
-  node_1.textContent = "trash"
+  node_1.innerHTML = formatInlineMarkdown("trash")
   node_1.setAttribute('data-icon-size', "32")
   Object.assign(node_1.style, {
     'width': '20px',

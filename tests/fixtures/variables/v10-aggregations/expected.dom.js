@@ -17,7 +17,7 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'Text'
-  node_2.textContent = `Count: ${$get("tasks.count")}`
+  node_2.innerHTML = formatInlineMarkdown(`Count: ${$get("tasks.count")}`)
   node_2._textTemplate = () => `Count: ${$get("tasks.count")}`
   _runtime.bindText(node_2, "tasks.count")
   node_2.dataset.component = 'Text'
@@ -28,7 +28,7 @@
   _elements['node-3'] = node_3
   node_3.dataset.mirrorId = 'node-3'
   node_3.dataset.mirrorName = 'Text'
-  node_3.textContent = `First: ${$get("tasks.first.title")}`
+  node_3.innerHTML = formatInlineMarkdown(`First: ${$get("tasks.first.title")}`)
   node_3._textTemplate = () => `First: ${$get("tasks.first.title")}`
   _runtime.bindText(node_3, "tasks.first.title")
   node_3.dataset.component = 'Text'
@@ -39,7 +39,7 @@
   _elements['node-4'] = node_4
   node_4.dataset.mirrorId = 'node-4'
   node_4.dataset.mirrorName = 'Text'
-  node_4.textContent = `Last: ${$get("tasks.last.title")}`
+  node_4.innerHTML = formatInlineMarkdown(`Last: ${$get("tasks.last.title")}`)
   node_4._textTemplate = () => `Last: ${$get("tasks.last.title")}`
   _runtime.bindText(node_4, "tasks.last.title")
   node_4.dataset.component = 'Text'

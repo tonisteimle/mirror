@@ -17,7 +17,7 @@
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
   node_2.dataset.mirrorName = 'Tab'
-  node_2.textContent = "Home"
+  node_2.innerHTML = formatInlineMarkdown("Home")
   Object.assign(node_2.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -43,7 +43,7 @@
   _elements['node-4'] = node_4
   node_4.dataset.mirrorId = 'node-4'
   node_4.dataset.mirrorName = 'Text'
-  node_4.textContent = "Home content"
+  node_4.innerHTML = formatInlineMarkdown("Home content")
   node_4.dataset.component = 'Text'
   node_3.appendChild(node_4)
   
@@ -56,7 +56,7 @@
   _elements['node-5'] = node_5
   node_5.dataset.mirrorId = 'node-5'
   node_5.dataset.mirrorName = 'Tab'
-  node_5.textContent = "Profile"
+  node_5.innerHTML = formatInlineMarkdown("Profile")
   Object.assign(node_5.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -82,7 +82,7 @@
   _elements['node-7'] = node_7
   node_7.dataset.mirrorId = 'node-7'
   node_7.dataset.mirrorName = 'Text'
-  node_7.textContent = "Profile content"
+  node_7.innerHTML = formatInlineMarkdown("Profile content")
   node_7.dataset.component = 'Text'
   node_6.appendChild(node_7)
   
@@ -95,7 +95,7 @@
   _elements['node-8'] = node_8
   node_8.dataset.mirrorId = 'node-8'
   node_8.dataset.mirrorName = 'Tab'
-  node_8.textContent = "Settings"
+  node_8.innerHTML = formatInlineMarkdown("Settings")
   Object.assign(node_8.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -121,7 +121,7 @@
   _elements['node-10'] = node_10
   node_10.dataset.mirrorId = 'node-10'
   node_10.dataset.mirrorName = 'Text'
-  node_10.textContent = "Settings content"
+  node_10.innerHTML = formatInlineMarkdown("Settings content")
   node_10.dataset.component = 'Text'
   node_9.appendChild(node_10)
   
