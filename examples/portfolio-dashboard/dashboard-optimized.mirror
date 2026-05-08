@@ -68,42 +68,34 @@ AlertActive: Frame w 18, h 18, rad 4, bg rgba(245,158,11,0.15), center, cursor p
 AlertInactive: Frame w 18, h 18, rad 4, bg $bg.card, center, cursor pointer
   Text "○", fs 10, col $muted
 
-// Table Row
-TableRow: Frame $rowbase
+// Table Row — slots defined as flat property-sets (no inline `Frame`
+// keyword: bare `Slot: prop, prop` is the canonical Mirror slot pattern).
+TableRow as Frame: hor, ver-center, pad 10 12, bor b 1 $border, cursor pointer
   hover 0.1s: bg $bg.hover
-  Checkbox: Frame w 40, center
-    Frame w 14, h 14, rad 2, bor 1, boc $muted
-  Instrument: Frame w 180, gap 2
-    Name: col $text, fs 11, weight 500
-    ISIN: font mono, fs 10, col $muted
-  Ticker: Frame w 70
-    Text: font mono, fs 11, weight 600, col $accent
-  Type: Frame w 60
-  Sector: Frame w 90
-    Text: fs 10, col $secondary
-  Qty: Frame w 60, right
-    Text: $mono
-  AvgCost: Frame w 80, right
-    Text: $mono
-  LastPrice: Frame w 80, right
-    Text: $mono
-  Change: Frame w 80, right, hor, ver-center, gap 4
-    Arrow: fs 10
-    Pct: font mono, fs 11
-  MktValue: Frame w 90, right
-    Text: $mono
-  Weight: Frame w 80, center, gap 2
-    Bar: Frame w 60, h 4, bg $border, rad 2
-      Fill: h full, bg $accent, rad 2
-    Pct: $monomuted
-  PL: Frame w 90, right, gap 1
-    Value: font mono, fs 11, weight 500
-    Pct: font mono, fs 10
-  Rating: Frame w 60, center
-  Alert: Frame w 50, center
+  Checkbox: w 40, center
+  Instrument: w 180, gap 2
+  Name: col $text, fs 11, weight 500
+  ISIN: font mono, fs 10, col $muted
+  Ticker: w 70, font mono, fs 11, weight 600, col $accent
+  Type: w 60
+  Sector: w 90, fs 10, col $secondary
+  Qty: w 60, right, font mono, fs 11
+  AvgCost: w 80, right, font mono, fs 11
+  LastPrice: w 80, right, font mono, fs 11
+  Change: w 80, right, hor, ver-center, gap 4
+  Arrow: fs 10
+  Pct: font mono, fs 11
+  MktValue: w 90, right, font mono, fs 11
+  Weight: w 80, center, gap 2
+  Bar: w 60, h 4, bg $border, rad 2
+  Fill: h full, bg $accent, rad 2
+  PL: w 90, right, gap 1
+  Value: font mono, fs 11, weight 500
+  Rating: w 60, center
+  Alert: w 50, center
 
 // Table Header
-TableHeader: Frame hor, ver-center, pad 8 12, bg $bg.header, bor b 1 $border
+TableHeader as Frame: hor, ver-center, pad 8 12, bg $bg.header, bor b 1 $border
   Col: Text fs 10, col $muted, weight 600, uppercase
 
 // === APP STRUCTURE ===

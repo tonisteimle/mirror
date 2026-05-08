@@ -872,6 +872,23 @@ export class Validator {
 
   private checkUndefinedReferences(): void {
     for (const [name, pos] of this.usedComponents) {
+      // `$name` references created when the parser interprets
+      // `Slot: $token` as a slot + a literal `$name` child instance.
+      // These are property-set token references, not component refs —
+      // checked separately by validateTokenReference. Skip the
+      // undefined-component path so it doesn't fire twice.
+      if (name.startsWith('$')) {
+        const tokenName = name.slice(1)
+        const rootName = tokenName.split('.')[0]
+        if (this.definedTokens.has(rootName) || this.definedTokens.has(tokenName)) continue
+        this.addWarning(
+          ERROR_CODES.UNDEFINED_TOKEN,
+          `Token "${name}" is not defined`,
+          pos.line,
+          pos.column
+        )
+        continue
+      }
       const nameLower = name.toLowerCase()
       const isPrimitive = this.rules.validPrimitives.has(nameLower)
       const isAlias = this.rules.primitiveAliases.has(nameLower)

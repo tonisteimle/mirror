@@ -271,12 +271,42 @@ export function validateProject(files: ProjectFile[]): CrossFileError[] {
   // primitives + their slots — always defined regardless of project files.
   const builtinComponents = getBuiltinComponents()
 
-  function checkComponentRef(name: string, filename: string, line: number): void {
+  // Phase 2.5: collect slot names per component definition. When the
+  // user writes `Card: ...; Title: col white; Body: pad 16`, the
+  // children `Title` and `Body` are SLOTS scoped to Card. Use-sites
+  // reference them as `Card; Title "..."; Body "..."` — `Title` and
+  // `Body` aren't globally defined components, but they're valid in
+  // this scope. The walker must respect that scoping or it emits
+  // wall-of-warnings on every slot reference.
+  const componentSlots = new Map<string, Set<string>>()
+  for (const file of files) {
+    let ast
+    try {
+      ast = parse(file.content)
+    } catch {
+      continue
+    }
+    for (const comp of ast.components) {
+      if (comp.type !== 'Component') continue
+      const slots = new Set<string>()
+      collectSlotsFromBody(comp, slots)
+      if (slots.size > 0) componentSlots.set(comp.name, slots)
+    }
+  }
+
+  function checkComponentRef(
+    name: string,
+    filename: string,
+    line: number,
+    activeSlots: ReadonlySet<string>
+  ): void {
     if (isPrimitive(name)) return
     if (builtinComponents.has(name)) return
     if (globalComponents.has(name)) return
+    if (activeSlots.has(name)) return
     const suggestion =
-      suggestSimilar(name, [...globalComponents.keys(), ...builtinComponents], 2) ?? undefined
+      suggestSimilar(name, [...globalComponents.keys(), ...builtinComponents, ...activeSlots], 2) ??
+      undefined
     errors.push({
       code: 'undefined-component',
       filename,
@@ -286,27 +316,63 @@ export function validateProject(files: ProjectFile[]): CrossFileError[] {
     })
   }
 
-  function walkInstance(node: Instance, filename: string): void {
-    // Component reference (the type itself).
-    checkComponentRef(node.component, filename, node.line)
+  function walkInstance(node: Instance, filename: string, parentSlots: ReadonlySet<string>): void {
+    // Component reference (the type itself, against parent's slot scope).
+    checkComponentRef(node.component, filename, node.line, parentSlots)
     // Token references in this node's properties.
     for (const prop of node.properties) {
       for (const ref of collectTokenRefs(prop)) {
         checkTokenRef(ref.name, filename, ref.line)
       }
     }
-    // Recurse into children (only Instance children — Slot/Text/Zag don't
-    // carry component types).
+    // Children are evaluated against THIS node's slot scope: union of
+    // parent's slots (for nested scope) plus any slots defined by this
+    // node's component.
+    const ownSlots = componentSlots.get(node.component)
+    const childScope = ownSlots ? new Set([...parentSlots, ...ownSlots]) : parentSlots
     for (const child of node.children) {
-      if (child.type === 'Instance') walkInstance(child, filename)
+      if (child.type === 'Instance') walkInstance(child, filename, childScope)
     }
   }
 
+  const EMPTY_SLOTS: ReadonlySet<string> = new Set()
   for (const idx of indexes) {
     for (const inst of idx.instances) {
-      walkInstance(inst, idx.filename)
+      walkInstance(inst, idx.filename, EMPTY_SLOTS)
     }
   }
 
   return errors
+}
+
+/**
+ * Walk a component definition's body once and collect every direct- or
+ * deeply-nested child component name. These names are "slot-like" — they
+ * live in the parent's scope and are valid as descendants of any instance
+ * of the parent.
+ */
+function collectSlotsFromBody(
+  comp: import('../parser/ast').ComponentDefinition,
+  slots: Set<string>
+): void {
+  for (const child of comp.children) {
+    if (child.type === 'Instance') {
+      slots.add(child.component)
+      // Also descend — nested slot defs inside Card body become valid
+      // anywhere inside Card too.
+      collectInstanceSlotsRecursive(child, slots)
+    }
+  }
+}
+
+function collectInstanceSlotsRecursive(
+  node: import('../parser/ast').Instance,
+  slots: Set<string>
+): void {
+  for (const child of node.children) {
+    if (child.type === 'Instance') {
+      slots.add(child.component)
+      collectInstanceSlotsRecursive(child, slots)
+    }
+  }
 }
