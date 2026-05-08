@@ -33,13 +33,7 @@
  */
 
 import { spawn } from 'node:child_process'
-import {
-  appendFileSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  writeFileSync,
-} from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -135,13 +129,18 @@ function callClaudeViaSpawn(prompt: string, signal?: AbortSignal): Promise<Bridg
 // Install the shim BEFORE pulling in the pipeline. `runEdit` looks at
 // `window.TauriBridge` — it's the only browser-ish global on the call path.
 {
-  const win: Record<string, unknown> = (globalThis as unknown as { window?: Record<string, unknown> }).window ?? {}
+  const win: Record<string, unknown> =
+    (globalThis as unknown as { window?: Record<string, unknown> }).window ?? {}
   win.TauriBridge = {
     isTauri: () => true,
     agent: {
       checkClaudeCli: async () => true,
-      runAgent: async (prompt: string, _agentType: string, _projectPath: string, _sessionId: string | null) =>
-        callClaudeViaSpawn(prompt),
+      runAgent: async (
+        prompt: string,
+        _agentType: string,
+        _projectPath: string,
+        _sessionId: string | null
+      ) => callClaudeViaSpawn(prompt),
     },
   }
   ;(globalThis as unknown as { window: typeof win }).window = win
@@ -260,7 +259,13 @@ interface FixtureRunRecord {
   translateAttempts: number
   retries: number
   validationErrorCount: number
-  validationErrors: Array<{ code?: string; severity?: string; message: string; line?: number; column?: number }>
+  validationErrors: Array<{
+    code?: string
+    severity?: string
+    message: string
+    line?: number
+    column?: number
+  }>
   htmlBytes: number
   mirrorBytes: number
   rendered: boolean
@@ -431,7 +436,14 @@ async function renderMirror(
     writeFileSync(join(projectDir, 'app.mir'), mirror, 'utf8')
     await spawnAsync(
       'npx',
-      ['tsx', join(REPO_ROOT, 'compiler/build-cli.ts'), projectDir, '--out', join(outDir, 'render.html'), '--quiet'],
+      [
+        'tsx',
+        join(REPO_ROOT, 'compiler/build-cli.ts'),
+        projectDir,
+        '--out',
+        join(outDir, 'render.html'),
+        '--quiet',
+      ],
       { cwd: REPO_ROOT }
     )
   } else {
@@ -439,17 +451,20 @@ async function renderMirror(
     writeFileSync(file, mirror, 'utf8')
     await spawnAsync(
       'npx',
-      ['tsx', join(REPO_ROOT, 'compiler/build-cli.ts'), file, '--out', join(outDir, 'render.html'), '--quiet'],
+      [
+        'tsx',
+        join(REPO_ROOT, 'compiler/build-cli.ts'),
+        file,
+        '--out',
+        join(outDir, 'render.html'),
+        '--quiet',
+      ],
       { cwd: REPO_ROOT }
     )
   }
 }
 
-function spawnAsync(
-  cmd: string,
-  args: string[],
-  opts: { cwd?: string } = {}
-): Promise<void> {
+function spawnAsync(cmd: string, args: string[], opts: { cwd?: string } = {}): Promise<void> {
   return new Promise((resolveP, rejectP) => {
     const proc = spawn(cmd, args, { cwd: opts.cwd, stdio: ['ignore', 'pipe', 'pipe'] })
     let stderr = ''
@@ -466,7 +481,10 @@ function spawnAsync(
 // Reporting
 // ============================================================================
 
-function renderReport(records: FixtureRunRecord[], meta: { startedAt: string; finishedAt: string }): string {
+function renderReport(
+  records: FixtureRunRecord[],
+  meta: { startedAt: string; finishedAt: string }
+): string {
   const total = records.length
   const success = records.filter(r => r.status === 'success').length
   const warning = records.filter(r => r.status === 'warning').length
@@ -513,16 +531,22 @@ function renderReport(records: FixtureRunRecord[], meta: { startedAt: string; fi
     lines.push(`### ${r.fixtureId} — ${r.fixtureLabel}`, '')
     lines.push(`- status: **${r.status}**`)
     lines.push(`- retries: ${r.retries}`)
-    lines.push(`- timings: html ${(r.htmlMs / 1000).toFixed(1)}s · translate ${(r.translateMs / 1000).toFixed(1)}s (${r.translateAttempts} attempts) · total ${(r.totalMs / 1000).toFixed(1)}s`)
-    if (r.htmlBytes) lines.push(`- HTML: ${r.htmlBytes} bytes → \`${r.fixtureId}/run-${r.run}/html.html\``)
-    if (r.mirrorBytes) lines.push(`- Mirror: ${r.mirrorBytes} bytes → \`${r.fixtureId}/run-${r.run}/mirror.mir\``)
+    lines.push(
+      `- timings: html ${(r.htmlMs / 1000).toFixed(1)}s · translate ${(r.translateMs / 1000).toFixed(1)}s (${r.translateAttempts} attempts) · total ${(r.totalMs / 1000).toFixed(1)}s`
+    )
+    if (r.htmlBytes)
+      lines.push(`- HTML: ${r.htmlBytes} bytes → \`${r.fixtureId}/run-${r.run}/html.html\``)
+    if (r.mirrorBytes)
+      lines.push(`- Mirror: ${r.mirrorBytes} bytes → \`${r.fixtureId}/run-${r.run}/mirror.mir\``)
     if (r.rendered) lines.push(`- rendered: \`${r.fixtureId}/run-${r.run}/render.html\``)
     else if (r.renderError) lines.push(`- render error: ${r.renderError}`)
     if (r.errorMessage) lines.push(`- error: ${r.errorMessage}`)
     if (r.validationErrors.length > 0) {
       lines.push(`- validation errors:`)
       for (const e of r.validationErrors) {
-        lines.push(`  - ${e.severity ?? '?'} ${e.code ?? '?'} ${e.line ?? '?'}:${e.column ?? '?'} — ${e.message}`)
+        lines.push(
+          `  - ${e.severity ?? '?'} ${e.code ?? '?'} ${e.line ?? '?'}:${e.column ?? '?'} — ${e.message}`
+        )
       }
     }
     lines.push('')
@@ -647,7 +671,9 @@ async function main(): Promise<void> {
     process.exit(2)
   }
 
-  console.log(`▶ pipeline eval: ${fixtures.length} fixtures × ${cli.runs} runs = ${fixtures.length * cli.runs} runs`)
+  console.log(
+    `▶ pipeline eval: ${fixtures.length} fixtures × ${cli.runs} runs = ${fixtures.length * cli.runs} runs`
+  )
   console.log(`▶ output: ${outRoot}`)
   console.log(`▶ claude: ${CLAUDE_BIN}`)
 
@@ -676,7 +702,10 @@ async function main(): Promise<void> {
   for (const fixture of fixtures) {
     for (let run = 1; run <= cli.runs; run++) {
       const already = records.find(
-        r => r.fixtureId === fixture.id && r.run === run && (r.status === 'success' || r.status === 'warning')
+        r =>
+          r.fixtureId === fixture.id &&
+          r.run === run &&
+          (r.status === 'success' || r.status === 'warning')
       )
       if (already) {
         console.log(`  ⏭  ${fixture.id} run ${run} (already ${already.status})`)
@@ -684,8 +713,7 @@ async function main(): Promise<void> {
       }
       console.log(`  ▶  ${fixture.id} run ${run} ...`)
       const rec = await runFixture(fixture, run, opts, pipeline)
-      const tag =
-        rec.status === 'success' ? '✓' : rec.status === 'warning' ? '⚠' : '✗'
+      const tag = rec.status === 'success' ? '✓' : rec.status === 'warning' ? '⚠' : '✗'
       console.log(
         `  ${tag} ${fixture.id} run ${run} [${rec.status}] retries=${rec.retries} ${(rec.totalMs / 1000).toFixed(0)}s` +
           (rec.errorMessage ? ` — ${rec.errorMessage.slice(0, 80)}` : '')
