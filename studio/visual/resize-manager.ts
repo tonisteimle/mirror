@@ -15,7 +15,7 @@ import {
   type BoundingBox,
   type Rect,
 } from '../preview/multi-selection-bounds'
-import { getSnappingService, shouldBypassSnapping } from './snap/spacing-snap'
+import { getSpacingSnapService, shouldBypassSnapping } from './snap'
 import {
   findOwningGridContainer,
   readGridGeometry,
@@ -563,7 +563,7 @@ export class ResizeManager {
 
     // Grid snapping (unless Cmd/Ctrl held to bypass)
     if (!shouldBypassSnapping(e)) {
-      const snappingService = getSnappingService()
+      const snappingService = getSpacingSnapService()
       if (snappingService) {
         const widthSnap = snappingService.snapToGrid(newWidth)
         const heightSnap = snappingService.snapToGrid(newHeight)

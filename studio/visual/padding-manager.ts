@@ -14,7 +14,7 @@
 import { OverlayManager } from './overlay-manager'
 import { events, getLayoutService } from '../core'
 import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
-import { getSnappingService, shouldBypassSnapping, type SpacingSnapResult } from './snap/spacing-snap'
+import { getSpacingSnapService, shouldBypassSnapping, type SpacingSnapResult } from './snap'
 import { SnapIndicator, createSnapIndicator } from './snap-indicator'
 
 // Visual constants
@@ -844,7 +844,7 @@ export class PaddingManager {
     // Token snapping (unless Cmd/Ctrl held to bypass)
     let snapResult: SpacingSnapResult | undefined
     if (!shouldBypassSnapping(e)) {
-      const snappingService = getSnappingService()
+      const snappingService = getSpacingSnapService()
       if (snappingService) {
         snapResult = snappingService.snapSpacing(newPadding, 'pad')
         if (snapResult.snapped) {

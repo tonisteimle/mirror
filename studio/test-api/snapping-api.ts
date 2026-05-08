@@ -10,13 +10,13 @@
  */
 
 import {
-  getSnappingService,
-  initSnappingService,
-  resetSnappingService,
+  getSpacingSnapService,
+  initSpacingSnapService,
+  resetSpacingSnapService,
   type SpacingSnapResult,
   type SpacingToken,
   type SpacingPropertyType,
-} from '../visual/snap/spacing-snap'
+} from '../visual/snap'
 import { handleSnapSettings, gridSettings } from '../core'
 
 // =============================================================================
@@ -131,7 +131,7 @@ export function createSnappingAPI(): SnappingAPI {
 
   return {
     getDebugInfo(): SnappingDebugInfo {
-      const service = getSnappingService()
+      const service = getSpacingSnapService()
       const source = getSource()
       const handleSettings = handleSnapSettings.get()
       const gridSettingsValue = gridSettings.get()
@@ -174,14 +174,14 @@ export function createSnappingAPI(): SnappingAPI {
     },
 
     testSnap(value: number, propertyType: SpacingPropertyType): SnapTestResult {
-      const service = getSnappingService()
+      const service = getSpacingSnapService()
 
       if (!service) {
         // Try to initialize
-        initSnappingService(getSource)
+        initSpacingSnapService(getSource)
       }
 
-      const activeService = getSnappingService()
+      const activeService = getSpacingSnapService()
       const availableTokens = activeService?.getSpacingTokens(propertyType) ?? []
       const settings = handleSnapSettings.get()
 
@@ -223,18 +223,18 @@ export function createSnappingAPI(): SnappingAPI {
     },
 
     reinit(): void {
-      resetSnappingService()
-      initSnappingService(getSource)
+      resetSpacingSnapService()
+      initSpacingSnapService(getSource)
       console.log('Snapping service reinitialized')
     },
 
     reset(): void {
-      resetSnappingService()
+      resetSpacingSnapService()
       console.log('Snapping service reset')
     },
 
     getTokens(propertyType?: SpacingPropertyType): SpacingToken[] {
-      const service = getSnappingService()
+      const service = getSpacingSnapService()
       if (!service) return []
       return service.getSpacingTokens(propertyType)
     },

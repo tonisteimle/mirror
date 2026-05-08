@@ -392,7 +392,7 @@ import {
   snapRectToGrid,
   createSnapConfig,
   createSnapContext,
-} from '../../studio/visual/snap/alignment-snap'
+} from '../../studio/visual/snap'
 
 describe('snap — calculateSnap', () => {
   it('disabled config returns position unchanged', () => {
@@ -897,18 +897,18 @@ describe('SnapIntegration', () => {
 // =============================================================================
 
 import {
-  SnappingService,
+  SpacingSnapService,
   shouldBypassSnapping,
-  initSnappingService,
-  getSnappingService,
-  resetSnappingService,
-} from '../../studio/visual/snap/spacing-snap'
+  initSpacingSnapService,
+  getSpacingSnapService,
+  resetSpacingSnapService,
+} from '../../studio/visual/snap'
 
-describe('SnappingService — token parsing', () => {
-  beforeEach(() => resetSnappingService())
+describe('SpacingSnapService — token parsing', () => {
+  beforeEach(() => resetSpacingSnapService())
 
   it('parses s.pad / m.mar / l.gap patterns', () => {
-    const s = new SnappingService(() => 's.pad: 4\nm.mar: 8\nl.gap: 16')
+    const s = new SpacingSnapService(() => 's.pad: 4\nm.mar: 8\nl.gap: 16')
     const padTokens = s.getSpacingTokens('pad')
     expect(padTokens.length).toBe(1)
     expect(padTokens[0]).toMatchObject({ name: 's', value: 4, suffix: 'pad' })
@@ -918,20 +918,20 @@ describe('SnappingService — token parsing', () => {
   })
 
   it('parses with leading whitespace and $ prefix', () => {
-    const s = new SnappingService(() => '  $small.pad: 4')
+    const s = new SpacingSnapService(() => '  $small.pad: 4')
     const tokens = s.getSpacingTokens('pad')
     expect(tokens[0].name).toBe('small')
   })
 
   it('sorts tokens by value ascending', () => {
-    const s = new SnappingService(() => 'l.pad: 16\ns.pad: 4\nm.pad: 8')
+    const s = new SpacingSnapService(() => 'l.pad: 16\ns.pad: 4\nm.pad: 8')
     const tokens = s.getSpacingTokens('pad')
     expect(tokens.map(t => t.value)).toEqual([4, 8, 16])
   })
 
   it('caches by source hash — same source skips re-parse', () => {
     let calls = 0
-    const s = new SnappingService(() => {
+    const s = new SpacingSnapService(() => {
       calls++
       return 's.pad: 4'
     })
@@ -945,26 +945,26 @@ describe('SnappingService — token parsing', () => {
 
   it('refreshes when source changes', () => {
     let src = 's.pad: 4'
-    const s = new SnappingService(() => src)
+    const s = new SpacingSnapService(() => src)
     expect(s.getSpacingTokens('pad').length).toBe(1)
     src = 's.pad: 4\nm.pad: 8'
     expect(s.getSpacingTokens('pad').length).toBe(2)
   })
 
   it('returns ALL tokens when no propertyType given', () => {
-    const s = new SnappingService(() => 's.pad: 4\nm.mar: 8')
+    const s = new SpacingSnapService(() => 's.pad: 4\nm.mar: 8')
     expect(s.getSpacingTokens().length).toBe(2)
   })
 
   it('deduplicates same-name same-suffix tokens', () => {
-    const s = new SnappingService(() => 's.pad: 4\ns.pad: 8') // duplicate
+    const s = new SpacingSnapService(() => 's.pad: 4\ns.pad: 8') // duplicate
     expect(s.getSpacingTokens('pad').length).toBe(1)
   })
 })
 
-describe('SnappingService — snapToToken', () => {
+describe('SpacingSnapService — snapToToken', () => {
   it('snaps within threshold to closest token', () => {
-    const s = new SnappingService(() => 's.pad: 4\nm.pad: 8\nl.pad: 16')
+    const s = new SpacingSnapService(() => 's.pad: 4\nm.pad: 8\nl.pad: 16')
     smartGuidesSettings.set({ enabled: true })
     // Need handleSnapSettings — let's check via importing.
     // We use the service's snapToToken directly, which uses handleSnapSettings.get().
@@ -977,19 +977,19 @@ describe('SnappingService — snapToToken', () => {
   })
 
   it('returns unchanged when no token within threshold', () => {
-    const s = new SnappingService(() => 's.pad: 4')
+    const s = new SpacingSnapService(() => 's.pad: 4')
     const result = s.snapToToken(100, 'pad')
     expect(result.snapped).toBe(false)
     expect(result.value).toBe(100)
   })
 })
 
-describe('SnappingService — snapToGrid + snapSpacing', () => {
+describe('SpacingSnapService — snapToGrid + snapSpacing', () => {
   it('snapToGrid disabled when settings.enabled is false', async () => {
     const { gridSettings } = await import('../../studio/core/settings')
     const original = gridSettings.get()
     gridSettings.set({ enabled: false })
-    const s = new SnappingService(() => '')
+    const s = new SpacingSnapService(() => '')
     expect(s.snapToGrid(23).snapped).toBe(false)
     gridSettings.set(original)
   })
@@ -998,7 +998,7 @@ describe('SnappingService — snapToGrid + snapSpacing', () => {
     const { gridSettings } = await import('../../studio/core/settings')
     const original = gridSettings.get()
     gridSettings.set({ enabled: true, size: 8 })
-    const s = new SnappingService(() => '')
+    const s = new SpacingSnapService(() => '')
     const result = s.snapToGrid(23)
     expect(result.value).toBe(24)
     expect(result.snapped).toBe(true)
@@ -1010,7 +1010,7 @@ describe('SnappingService — snapToGrid + snapSpacing', () => {
     const { gridSettings } = await import('../../studio/core/settings')
     const original = gridSettings.get()
     gridSettings.set({ enabled: true, size: 8 })
-    const s = new SnappingService(() => '')
+    const s = new SpacingSnapService(() => '')
     expect(s.snapToGrid(16).snapped).toBe(false) // already on grid
     gridSettings.set(original)
   })
@@ -1019,7 +1019,7 @@ describe('SnappingService — snapToGrid + snapSpacing', () => {
     const { gridSettings } = await import('../../studio/core/settings')
     const original = gridSettings.get()
     gridSettings.set({ enabled: true, size: 8 })
-    const s = new SnappingService(() => '')
+    const s = new SpacingSnapService(() => '')
     const r = s.snapSizeToGrid(23, 14)
     expect(r.width.value).toBe(24)
     expect(r.height.value).toBe(16)
@@ -1027,7 +1027,7 @@ describe('SnappingService — snapToGrid + snapSpacing', () => {
   })
 
   it('snapSpacing: tokens exist for type → snaps to token only (no grid fallback)', () => {
-    const s = new SnappingService(() => 's.pad: 4\nm.pad: 8')
+    const s = new SpacingSnapService(() => 's.pad: 4\nm.pad: 8')
     const r = s.snapSpacing(7, 'pad')
     if (r.snapped) {
       expect(r.tokenName).toBe('$m')
@@ -1038,7 +1038,7 @@ describe('SnappingService — snapToGrid + snapSpacing', () => {
     const { handleSnapSettings } = await import('../../studio/core/settings')
     const original = handleSnapSettings.get()
     handleSnapSettings.set({ enabled: true, gridSize: 4 })
-    const s = new SnappingService(() => '')
+    const s = new SpacingSnapService(() => '')
     const r = s.snapSpacing(7, 'gap')
     expect(r.value).toBe(8) // 7 → grid 4 → 8
     expect(r.gridSnapped).toBe(true)
@@ -1049,28 +1049,28 @@ describe('SnappingService — snapToGrid + snapSpacing', () => {
     const { handleSnapSettings } = await import('../../studio/core/settings')
     const original = handleSnapSettings.get()
     handleSnapSettings.set({ enabled: false })
-    const s = new SnappingService(() => '')
+    const s = new SpacingSnapService(() => '')
     expect(s.snapSpacing(7, 'gap').snapped).toBe(false)
     handleSnapSettings.set(original)
   })
 })
 
-describe('SnappingService — singleton', () => {
-  beforeEach(() => resetSnappingService())
+describe('SpacingSnapService — singleton', () => {
+  beforeEach(() => resetSpacingSnapService())
 
-  it('initSnappingService creates a fresh singleton', () => {
-    const s1 = initSnappingService(() => '')
-    expect(getSnappingService()).toBe(s1)
+  it('initSpacingSnapService creates a fresh singleton', () => {
+    const s1 = initSpacingSnapService(() => '')
+    expect(getSpacingSnapService()).toBe(s1)
   })
 
-  it('getSnappingService without init returns null', () => {
-    expect(getSnappingService()).toBeNull()
+  it('getSpacingSnapService without init returns null', () => {
+    expect(getSpacingSnapService()).toBeNull()
   })
 
-  it('resetSnappingService clears the instance', () => {
-    initSnappingService(() => '')
-    resetSnappingService()
-    expect(getSnappingService()).toBeNull()
+  it('resetSpacingSnapService clears the instance', () => {
+    initSpacingSnapService(() => '')
+    resetSpacingSnapService()
+    expect(getSpacingSnapService()).toBeNull()
   })
 })
 
@@ -1256,11 +1256,11 @@ describe('P3 — mutation-driven', () => {
     expect(m.filter(x => x.to === 'container').length).toBe(0)
   })
 
-  it('M6: SnappingService closest-token wins over farther one within threshold', async () => {
+  it('M6: SpacingSnapService closest-token wins over farther one within threshold', async () => {
     const { handleSnapSettings } = await import('../../studio/core/settings')
     const original = handleSnapSettings.get()
     handleSnapSettings.set({ enabled: true, tokenSnapping: true, threshold: 10 })
-    const s = new SnappingService(() => 's.pad: 4\nm.pad: 8')
+    const s = new SpacingSnapService(() => 's.pad: 4\nm.pad: 8')
     const r = s.snapToToken(7, 'pad') // distance(4)=3, distance(8)=1 → 8 wins
     expect(r.snapped).toBe(true)
     expect(r.value).toBe(8) // strictly the closest, not the first

@@ -42,7 +42,7 @@ export {
   type CoordinateContext,
 } from './coordinate'
 
-// Snap Calculations — moved to studio/visual/snap/alignment-snap.ts
+// Snap Calculations — re-export via studio/visual/snap barrel
 export {
   calculateSnap,
   snapPointToGrid as snapPointToGridWithResult,
@@ -55,7 +55,7 @@ export {
   type Guide,
   type SnapConfig,
   type SnapContext,
-} from '../snap/alignment-snap'
+} from '../snap'
 
 // Coordinate Calculator (centralized position calculations)
 export {

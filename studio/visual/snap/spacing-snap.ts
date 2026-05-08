@@ -1,5 +1,5 @@
 /**
- * SnappingService - Token and Grid Snapping for Handle Dragging
+ * SpacingSnapService - Token and Grid Snapping for Handle Dragging
  *
  * Provides intelligent snapping during drag operations:
  * - Token-Snapping: Padding/Margin/Gap snap to design token values
@@ -40,10 +40,10 @@ export interface SpacingToken {
 export type SpacingPropertyType = 'pad' | 'mar' | 'gap'
 
 // ============================================================================
-// SnappingService Class
+// SpacingSnapService Class
 // ============================================================================
 
-export class SnappingService {
+export class SpacingSnapService {
   private spacingTokens: SpacingToken[] = []
   private getSource: () => string
   private cachedSourceHash: string = ''
@@ -262,31 +262,31 @@ export class SnappingService {
 // Singleton Instance
 // ============================================================================
 
-let snappingServiceInstance: SnappingService | null = null
+let spacingSnapServiceInstance: SpacingSnapService | null = null
 
 /**
  * Get or create the snapping service singleton
  */
-export function getSnappingService(getSource?: () => string): SnappingService | null {
-  if (!snappingServiceInstance && getSource) {
-    snappingServiceInstance = new SnappingService(getSource)
+export function getSpacingSnapService(getSource?: () => string): SpacingSnapService | null {
+  if (!spacingSnapServiceInstance && getSource) {
+    spacingSnapServiceInstance = new SpacingSnapService(getSource)
   }
-  return snappingServiceInstance
+  return spacingSnapServiceInstance
 }
 
 /**
  * Initialize the snapping service
  */
-export function initSnappingService(getSource: () => string): SnappingService {
-  snappingServiceInstance = new SnappingService(getSource)
-  return snappingServiceInstance
+export function initSpacingSnapService(getSource: () => string): SpacingSnapService {
+  spacingSnapServiceInstance = new SpacingSnapService(getSource)
+  return spacingSnapServiceInstance
 }
 
 /**
  * Reset the snapping service (for testing)
  */
-export function resetSnappingService(): void {
-  snappingServiceInstance = null
+export function resetSpacingSnapService(): void {
+  spacingSnapServiceInstance = null
 }
 
 // ============================================================================

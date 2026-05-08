@@ -20,7 +20,7 @@
 
 import { describe, test, expect, beforeAll } from 'vitest'
 import { JSDOM } from 'jsdom'
-import { pointerToCell } from '../../studio/visual/snap/grid-cell-snap'
+import { pointerToCell } from '../../studio/visual/snap'
 import type { GridGeometry } from '../../studio/visual/grid-overlay/grid-detector'
 
 beforeAll(() => {

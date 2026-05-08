@@ -18,7 +18,7 @@
 
 import type { GridGeometry } from './grid-detector'
 import type { ResizeHandle } from '../resize-manager'
-import { pointerToCell } from '../snap/grid-cell-snap'
+import { pointerToCell } from '../snap'
 
 export interface GridPlacement {
   gridX: number

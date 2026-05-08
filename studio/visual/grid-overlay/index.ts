@@ -7,4 +7,4 @@ export {
   readGridGeometry,
   type GridGeometry,
 } from './grid-detector'
-export { pointerToCell, readCurrentSpan, type GridCell } from '../snap/grid-cell-snap'
+export { pointerToCell, readCurrentSpan, type GridCell } from '../snap'
