@@ -1,0 +1,303 @@
+/* Export Dialog — Mirror → Framework code via AI */
+
+.export-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9000;
+  font-family: var(--font-ui, system-ui);
+}
+
+.export-dialog {
+  background: var(--color-bg-1, #1a1a1a);
+  color: var(--color-text-primary, #fff);
+  border: 1px solid var(--color-border, #333);
+  border-radius: var(--radius-lg, 12px);
+  width: min(640px, 92vw);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+}
+
+.export-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border, #333);
+}
+
+.export-dialog-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.export-dialog-close {
+  background: none;
+  border: none;
+  color: var(--color-text-muted, #888);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm, 4px);
+}
+
+.export-dialog-close:hover {
+  background: var(--color-bg-2, #2a2a2a);
+  color: var(--color-text-primary, #fff);
+}
+
+.export-dialog-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.export-dialog-intro {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-muted, #aaa);
+}
+
+.export-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.export-field > span:first-child {
+  font-weight: 500;
+  color: var(--color-text-primary, #fff);
+}
+
+.export-field select {
+  background: var(--color-bg-2, #2a2a2a);
+  color: var(--color-text-primary, #fff);
+  border: 1px solid var(--color-border, #333);
+  border-radius: var(--radius-md, 6px);
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.export-field-checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.export-field-checkbox span small {
+  color: var(--color-text-muted, #888);
+  margin-left: 4px;
+  font-weight: 400;
+}
+
+.export-dialog-progress {
+  padding: 12px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--color-border, #333);
+}
+
+.export-dialog-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.export-dialog-progress-phase {
+  font-weight: 500;
+}
+
+.export-dialog-progress-phase-info { color: var(--color-text-primary, #fff); }
+.export-dialog-progress-phase-success { color: var(--color-success, #10b981); }
+.export-dialog-progress-phase-error { color: var(--color-danger, #ef4444); }
+
+.export-dialog-progress-time {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  color: var(--color-text-muted, #888);
+  font-variant-numeric: tabular-nums;
+}
+
+.export-dialog-progress-bar {
+  height: 4px;
+  background: var(--color-bg-2, #2a2a2a);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.export-dialog-progress-bar-fill {
+  height: 100%;
+  width: 0;
+  background: var(--color-primary, #2271C1);
+  transition: width 200ms ease-out;
+}
+
+.export-dialog-progress-bar-fill-success {
+  background: var(--color-success, #10b981);
+}
+
+.export-dialog-progress-bar-fill-error {
+  background: var(--color-danger, #ef4444);
+}
+
+.export-dialog-progress-log {
+  background: var(--color-bg-0, #0a0a0a);
+  color: var(--color-text-muted, #aaa);
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 8px 12px;
+  margin: 0;
+  border-radius: var(--radius-md, 6px);
+  max-height: 180px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.export-dialog-result {
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-top: 1px solid var(--color-border, #333);
+}
+
+.export-dialog-result-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.export-dialog-result-section label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.export-dialog-result-code {
+  background: var(--color-bg-2, #2a2a2a);
+  color: var(--color-text-primary, #fff);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md, 6px);
+  word-break: break-all;
+  display: block;
+}
+
+.export-dialog-result-multiline {
+  white-space: pre-wrap;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.export-dialog-result-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.export-dialog-result-actions button,
+.export-dialog-copy {
+  background: var(--color-bg-2, #2a2a2a);
+  color: var(--color-text-primary, #fff);
+  border: 1px solid var(--color-border, #333);
+  border-radius: var(--radius-md, 6px);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.export-dialog-copy:hover {
+  background: var(--color-bg-3, #333);
+}
+
+.export-dialog-result-actions .export-dialog-run-claude {
+  background: var(--color-primary, #2271C1);
+  color: white;
+  border-color: var(--color-primary, #2271C1);
+}
+
+.export-dialog-result-actions .export-dialog-run-claude:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.export-dialog-result-actions .export-dialog-run-claude:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.export-dialog-result-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-muted, #888);
+}
+
+.export-dialog-claude-output {
+  background: var(--color-bg-0, #0a0a0a);
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md, 6px);
+  max-height: 240px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  color: var(--color-text-muted, #aaa);
+}
+
+.export-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--color-border, #333);
+  background: var(--color-bg-1, #1a1a1a);
+}
+
+.export-dialog-footer button {
+  background: var(--color-bg-2, #2a2a2a);
+  color: var(--color-text-primary, #fff);
+  border: 1px solid var(--color-border, #333);
+  border-radius: var(--radius-md, 6px);
+  padding: 8px 16px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.export-dialog-footer button:hover:not(:disabled) {
+  background: var(--color-bg-3, #333);
+}
+
+.export-dialog-footer button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.export-dialog-footer .export-dialog-submit {
+  background: var(--color-primary, #2271C1);
+  color: white;
+  border-color: var(--color-primary, #2271C1);
+}
+
+.export-dialog-footer .export-dialog-submit:hover:not(:disabled) {
+  filter: brightness(1.1);
+}

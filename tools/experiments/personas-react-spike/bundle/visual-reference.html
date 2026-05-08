@@ -1,0 +1,1109 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Personas</title>
+<meta name="description" content="Proto-Personas für Studieninteressierte Informatik, FHNW Hochschule für Informatik.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=Spectral:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #000;
+  --white: #fff;
+  --yellow: #FDE70E;
+  --soft: #F4F4F4;
+  --content-max: 1280px;
+  --pad-min: 24px;
+  --pad-x: max(var(--pad-min), calc(50vw - var(--content-max) / 2));
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--black);
+  background: var(--white);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+a { color: inherit; }
+
+/* ─── Topbar ─────────────────────────────────────────────────────────── */
+.topbar {
+  background: var(--white);
+  display: flex; align-items: center;
+  padding-top: clamp(20px, 2.5vw, 32px);
+  padding-bottom: clamp(16px, 2vw, 24px);
+  padding-left: var(--pad-x);
+  padding-right: var(--pad-x);
+}
+.logo {
+  display: flex; align-items: center; gap: 14px;
+  text-decoration: none;
+}
+.logo-mark {
+  display: inline-flex; align-items: baseline;
+  font-size: 28px; line-height: 1;
+}
+.logo-mark .n { font-family: 'Inter'; font-weight: 700; }
+.logo-mark .bar {
+  display: inline-block;
+  width: 1.5px; height: 24px;
+  background: var(--black);
+  margin: 0 4px;
+  transform: translateY(2px);
+}
+.logo-mark .w { font-family: 'Spectral'; font-style: italic; font-weight: 700; font-size: 30px; }
+.logo-text {
+  font-size: 11px; line-height: 1.25; font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+/* ─── Hero ───────────────────────────────────────────────────────────── */
+.hero {
+  position: relative;
+  min-height: 60vh;
+  padding-top: clamp(48px, 6vw, 96px);
+  padding-bottom: clamp(64px, 7vw, 96px);
+  padding-left: var(--pad-x);
+  padding-right: var(--pad-x);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: clamp(40px, 6vw, 80px);
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: var(--pad-x);
+  width: calc((100vw - 2 * var(--pad-x)) * 0.9375);
+  height: 14px;
+  background: var(--yellow);
+}
+.hero-eyebrow {
+  font-size: 13px;
+  font-weight: 400;
+  align-self: start;
+}
+.hero-vessel {
+  background: var(--yellow);
+  padding: clamp(28px, 4vw, 56px) clamp(28px, 4vw, 56px) clamp(24px, 3vw, 40px);
+  max-width: min(820px, 100%);
+  align-self: end;
+  position: relative;
+}
+.hero h1 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(38px, 7vw, 96px);
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+  margin-bottom: 18px;
+}
+.hero-sub {
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-size: clamp(18px, 1.8vw, 22px);
+  line-height: 1.45;
+  margin-bottom: clamp(20px, 2.5vw, 28px);
+  max-width: 60ch;
+}
+.hero-meta {
+  display: flex; flex-wrap: wrap; gap: 10px 32px;
+  font-size: 13px;
+  font-weight: 400;
+  margin-top: clamp(8px, 1vw, 14px);
+}
+.hero-meta dt { font-weight: 700; font-size: 12px; }
+.hero-meta div { display: flex; flex-direction: column; gap: 2px; }
+.hero-domain {
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: clamp(20px, 2.5vw, 32px);
+}
+
+/* ─── Section frames ─────────────────────────────────────────────────── */
+.section-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  margin-bottom: 14px;
+  color: var(--black);
+}
+.implikationen-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(24px, 2.8vw, 32px);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  margin-bottom: clamp(24px, 3vw, 36px);
+}
+
+/* ─── TOC ────────────────────────────────────────────────────────────── */
+.toc {
+  padding: clamp(48px, 7vw, 96px) var(--pad-x);
+}
+.toc-inner { max-width: var(--content-max); margin: 0 auto; }
+.toc h2 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(28px, 3.6vw, 44px);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin-bottom: clamp(28px, 4vw, 48px);
+  max-width: 760px;
+}
+.toc h2 em {
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 300;
+}
+.toc ol { list-style: none; }
+.toc a {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  gap: clamp(20px, 4vw, 56px);
+  align-items: baseline;
+  padding: clamp(10px, 1.4vw, 16px) 8px;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(22px, 2.8vw, 34px);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  transition: background 0.12s ease;
+}
+.toc a:hover { background: var(--yellow); }
+.toc-num {
+  font-weight: 300;
+  font-size: clamp(18px, 1.6vw, 22px);
+}
+.toc-tag {
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-size: clamp(14px, 1.3vw, 17px);
+  text-align: right;
+  max-width: 320px;
+  line-height: 1.35;
+}
+@media (max-width: 720px) {
+  .toc a { grid-template-columns: 56px 1fr; }
+  .toc-tag { display: none; }
+}
+
+/* ─── Prose sections ─────────────────────────────────────────────────── */
+.prose {
+  padding: clamp(56px, 8vw, 112px) var(--pad-x);
+}
+.prose-inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+@media (min-width: 980px) {
+  .prose-inner { grid-template-columns: 280px 1fr; gap: 64px; }
+}
+.prose h2 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(28px, 3.6vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 18px;
+  max-width: 24ch;
+}
+.prose-body { max-width: 64ch; }
+.prose-body p {
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.65;
+  margin-bottom: 18px;
+}
+.prose-body p strong { font-weight: 700; }
+.prose-body em {
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+.prose-body ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 12px 0 24px;
+}
+.prose-body ul ul { margin-left: 24px; margin-top: 8px; margin-bottom: 8px; }
+.prose-body li {
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.6;
+  padding-left: 24px;
+  position: relative;
+  margin-bottom: 8px;
+}
+.prose-body li::before {
+  content: "—"; position: absolute; left: 0; top: 0;
+  font-weight: 400;
+}
+.prose-body li strong { font-weight: 700; }
+.prose-body li ul li::before { content: "·"; font-size: 22px; line-height: 1; top: -2px; }
+
+.callout {
+  background: var(--soft);
+  padding: 18px 22px;
+  margin: 28px 0;
+}
+.callout p { margin: 0; }
+.callout strong { font-weight: 700; }
+
+/* ─── Persona ────────────────────────────────────────────────────────── */
+.persona {
+  padding: 0 var(--pad-x) clamp(48px, 6vw, 80px);
+  position: relative;
+  scroll-margin-top: 0;
+}
+.persona-header {
+  background: var(--yellow);
+  margin: 0 calc(-1 * var(--pad-x)) clamp(48px, 6vw, 80px);
+  padding-top: clamp(40px, 5vw, 72px);
+  padding-bottom: clamp(36px, 5vw, 64px);
+  padding-left: var(--pad-x);
+  padding-right: var(--pad-x);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+@media (min-width: 720px) {
+  .persona-header {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "number title"
+      "steckbrief steckbrief";
+    column-gap: clamp(28px, 4vw, 56px);
+    row-gap: clamp(28px, 3.5vw, 44px);
+    align-items: end;
+  }
+  .persona-header .persona-number { grid-area: number; }
+  .persona-header .persona-titleblock { grid-area: title; }
+  .persona-header .steckbrief { grid-area: steckbrief; }
+}
+.persona-number {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(56px, 14vw, 200px);
+  line-height: 0.82;
+  letter-spacing: -0.04em;
+}
+.persona-titleblock h2 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(28px, 3.6vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.persona-titleblock h2 em {
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+.persona-titleblock .persona-tagline {
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-size: clamp(18px, 1.8vw, 22px);
+  line-height: 1.4;
+  max-width: 60ch;
+  margin-top: 10px;
+}
+.persona-body {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(40px, 5vw, 64px);
+}
+
+.steckbrief {
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.6;
+  max-width: 80ch;
+  margin: 0;
+}
+
+.warum { max-width: 920px; }
+.warum h3 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 19px;
+  margin-bottom: 16px;
+  letter-spacing: -0.005em;
+}
+.warum p {
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.6;
+}
+.warum p strong { font-weight: 700; }
+
+.dim-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(32px, 3vw, 48px) clamp(40px, 4vw, 64px);
+}
+@media (min-width: 720px) { .dim-grid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1180px) { .dim-grid { grid-template-columns: 1fr 1fr 1fr 1fr; } }
+
+.dim-grid--two { grid-template-columns: 1fr; }
+@media (min-width: 720px) { .dim-grid--two { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1180px) { .dim-grid--two { grid-template-columns: 1fr 1fr; } }
+
+.implikationen { margin-top: clamp(40px, 5vw, 72px); }
+
+.dim h3 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 19px;
+  margin-bottom: 18px;
+  letter-spacing: -0.005em;
+}
+.dim p, .dim ul {
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.6;
+}
+.dim ul { list-style: none; padding-left: 0; }
+.dim li {
+  padding-left: 20px;
+  position: relative;
+  margin-bottom: 10px;
+}
+.dim li::before {
+  content: "—"; position: absolute; left: 0; top: 0; font-weight: 400;
+}
+.dim li strong { font-weight: 700; }
+
+/* ─── Innere Stimme ─────────────────────────────────────────────────── */
+.innere-stimme {
+  background: var(--soft);
+  max-width: var(--content-max);
+  margin: clamp(48px, 6vw, 80px) auto 0;
+  padding: 22px 24px;
+  position: relative;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.is-inner {
+  display: grid; grid-template-columns: 1fr;
+  gap: clamp(32px, 4vw, 56px);
+}
+@media (min-width: 920px) { .is-inner { grid-template-columns: 280px 1fr; gap: 64px; } }
+.is-meta { font-family: 'Inter', sans-serif; }
+.is-meta h3 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(24px, 2.8vw, 32px);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  margin-bottom: 12px;
+}
+.is-meta h3 em {
+  font-family: inherit;
+  font-weight: inherit;
+  font-style: normal;
+}
+.is-meta p {
+  font-size: 17px; font-weight: 300;
+  line-height: 1.6;
+  max-width: 32ch;
+}
+.quotes { list-style: none; padding: 0; }
+.quotes li {
+  font-family: 'Spectral', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(18px, 1.95vw, 23px);
+  line-height: 1.45;
+  padding: 6px 0;
+  margin-bottom: 14px;
+  max-width: 60ch;
+}
+
+/* ─── Offene Punkte ──────────────────────────────────────────────────── */
+.offene {
+  padding: clamp(56px, 8vw, 112px) var(--pad-x);
+}
+.offene-inner { max-width: var(--content-max); margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 40px; }
+@media (min-width: 980px) { .offene-inner { grid-template-columns: 280px 1fr; gap: 64px; } }
+.offene h2 {
+  font-family: 'Inter', sans-serif; font-weight: 700;
+  font-size: clamp(28px, 3.6vw, 44px); line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.offene ol {
+  list-style: none;
+  counter-reset: offen;
+}
+.offene li {
+  counter-increment: offen;
+  padding: clamp(14px, 1.8vw, 22px) 0 clamp(14px, 1.8vw, 22px) 56px;
+  position: relative;
+}
+.offene li::before {
+  content: counter(offen, decimal-leading-zero);
+  position: absolute; left: 0; top: clamp(20px, 2.5vw, 28px);
+  font-family: 'Inter', sans-serif; font-weight: 300;
+  font-size: 14px;
+}
+.offene li strong { font-weight: 700; }
+
+/* ─── Footer ─────────────────────────────────────────────────────────── */
+footer {
+  background: var(--black);
+  color: var(--white);
+  padding: clamp(48px, 6vw, 88px) var(--pad-x) clamp(24px, 3vw, 40px);
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 300;
+}
+.footer-inner { max-width: var(--content-max); margin: 0 auto; }
+.footer-mark {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: clamp(40px, 5vw, 64px);
+}
+.footer-mark .logo-mark { color: var(--white); }
+.footer-mark .logo-mark .bar { background: var(--white); }
+.footer-mark .logo-text { color: var(--white); }
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  margin-bottom: 48px;
+}
+@media (min-width: 720px) { .footer-grid { grid-template-columns: 2fr 1fr; } }
+.footer-grid h4 {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 14px;
+}
+.footer-grid p, .footer-grid li { font-size: 14px; line-height: 1.55; font-weight: 300; }
+.footer-grid ul { list-style: none; padding: 0; }
+.footer-grid li { margin-bottom: 6px; }
+.footer-base {
+  display: flex; flex-wrap: wrap; gap: 12px 24px;
+  margin-top: clamp(28px, 3.5vw, 40px);
+  font-size: 12px;
+  color: var(--white);
+}
+
+/* ─── Print ──────────────────────────────────────────────────────────── */
+@media print {
+  .hero { min-height: auto; }
+  .toc { page-break-after: always; }
+  .persona { page-break-before: always; padding-top: 24pt; }
+  .innere-stimme {
+    page-break-inside: avoid; break-inside: avoid;
+    margin-left: 0; margin-right: 0;
+  }
+  body { font-size: 10.5pt; }
+  footer { background: var(--white); color: var(--black); }
+  .footer-grid h4 { color: var(--black); }
+  .footer-mark .logo-mark { color: var(--black); }
+  .footer-mark .logo-mark .bar { background: var(--black); }
+  .footer-mark .logo-text { color: var(--black); }
+  .footer-base { color: var(--black); }
+}
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="#top" class="logo" aria-label="FHNW Hochschule für Informatik">
+    <span class="logo-mark" aria-hidden="true"><span class="n">n</span><span class="bar"></span><span class="w">w</span></span>
+    <span class="logo-text">Fachhochschule Nordwestschweiz<br><strong>Hochschule für Informatik</strong></span>
+  </a>
+</header>
+
+<main id="top">
+
+<section class="hero">
+  <div class="hero-eyebrow">Internes Arbeitsdokument</div>
+  <div class="hero-vessel">
+    <h1>Personas</h1>
+    <div class="hero-sub">Studieninteressierte für den Bachelor Informatik — fünf Profile, die unterschiedliche Wege ins Studium abbilden.</div>
+    <dl class="hero-meta"><div><dt>Hochschule</dt><dd>Hochschule für Informatik</dd></div><div><dt>Stand</dt><dd>6. Mai 2026</dd></div><div><dt>Status</dt><dd>Proto-Personas, hypothesenbasiert</dd></div><div><dt>Scope</dt><dd>Studiengang Informatik</dd></div></dl>
+    <div class="hero-domain">www.fhnw.ch / informatik</div>
+  </div>
+</section>
+
+<nav class="toc" aria-label="Inhaltsverzeichnis">
+  <div class="toc-inner">
+    <h2>Fünf Personas, die zusammen den Entscheidungsraum <em>aufspannen</em>.</h2>
+    <ol>
+      <li><a href="#lukas"><span class="toc-num">01</span><span>Lukas</span><span class="toc-tag">der überzeugte Tüftler</span></a></li>
+      <li><a href="#sara"><span class="toc-num">02</span><span>Sara</span><span class="toc-tag">die zweifelnde Quereinsteigerin</span></a></li>
+      <li><a href="#marco"><span class="toc-num">03</span><span>Marco</span><span class="toc-tag">der pragmatische EFZ-Absolvent</span></a></li>
+      <li><a href="#nadia"><span class="toc-num">04</span><span>Nadia</span><span class="toc-tag">die orientierungslose Maturandin</span></a></li>
+      <li><a href="#tim"><span class="toc-num">05</span><span>Tim</span><span class="toc-tag">der Game-begeisterte Spezialist</span></a></li>
+    </ol>
+  </div>
+</nav>
+
+<section id="uebergreifende-beobachtungen" class="prose">
+  <div class="prose-inner">
+    <div><h2>Übergreifende Beobachtungen</h2></div>
+    <div class="prose-body">
+      <ul>
+<li><strong>Universalfragen</strong>, die durch fast alle Personas durchgehen, nur in unterschiedlicher Tonart:<ul>
+<li>«Schaffe ich das?»</li>
+<li>«Passe ich da rein?»</li>
+<li>«Was wenn ich mich falsch entscheide?»</li>
+<li>«Was kommt danach?»</li>
+</ul></li>
+<li>Sehr viele Fragen haben <strong>nichts mit Curriculum</strong> zu tun. Eine Studiengangs-Webseite, die mit Modulübersicht startet, antwortet auf eine Frage, die niemand zuerst stellt.</li>
+<li>Manche Fragen sind unangenehm für die Hochschule («Ist FH zweite Wahl?», «Werde ich als Quereinsteigerin auffallen?», «Kann man von Games leben?»). Wer sie ehrlich beantwortet statt umschifft, gewinnt Vertrauen.</li>
+<li><strong>Neu seit 2024 — die AI-Frage:</strong> «Was bedeutet AI für meinen Beruf? Werde ich noch gebraucht, wenn AI in fünf Jahren das Routine-Coding übernimmt?» Diese Sorge zieht sich durch alle Personas, mit unterschiedlicher Färbung — am schärfsten bei denen, die Karriere-ROI rechnen (Marco, Sara), am abstraktesten bei den noch Suchenden (Nadia), spezifisch beim Spezialisten (Tim mit AI-generierten Spielen). Eine Studieninfo, die diese Frage umschifft, wirkt 2026 weltfremd.</li>
+</ul>
+    </div>
+  </div>
+</section>
+
+<section id="warum-diese-fuenf-personas" class="prose">
+  <div class="prose-inner">
+    <div><h2>Warum diese fünf Personas?</h2></div>
+    <div class="prose-body">
+      <p>Wir haben uns bewusst für fünf Personas entschieden — genug, um den Entscheidungsraum <strong>breit aufzuspannen</strong>, wenig genug, um sie im Alltag wirklich zu nutzen. Drei wären zu pauschal, sieben werden in der Praxis vergessen. Die Auswahl folgt einer Kontrast-Logik:</p>
+<ul>
+<li><strong>Lukas und Nadia</strong> stehen für die Gymi-Welt, an entgegengesetzten Enden: hochkompetent vs. orientierungslos.</li>
+<li><strong>Sara und Marco</strong> stehen für die Berufslehre-Welt, ebenfalls kontrastiv: Quereinstieg ohne Tech-Hintergrund vs. logischer nächster Karriereschritt von einem EFZ aus der Branche.</li>
+<li><strong>Tim</strong> vertritt eine eigene Logik: jemand, der nicht primär eine Hochschule, sondern eine <strong>Studienrichtung</strong> sucht — und FHNW nur erwägt, wenn die Studienrichtung wirklich trägt.</li>
+</ul>
+<p>Zusammen decken sie vier Achsen ab: <strong>Selbstvertrauen</strong> (hoch/tief), <strong>Klarheit der Wahl</strong> (entschieden/suchend), <strong>Treiber</strong> (intrinsisch/extrinsisch), <strong>Vorbildung</strong> (Maturität/EFZ).</p>
+    </div>
+  </div>
+</section>
+
+<article id="lukas" class="persona">
+  <header class="persona-header">
+    <div class="persona-number">01</div>
+    <div class="persona-titleblock">
+      <h2>Lukas, <em>der überzeugte Tüftler</em></h2>
+    </div>
+    <p class="steckbrief">18, Gymi (Schwerpunkt Physik &amp; Anwendungen Mathematik), Notenschnitt 5.3. Programmiert seit der Sek, hat einen aktiven GitHub mit eigenen Projekten (Discord-Bots, kleine Web-Apps), liest in der Freizeit über Compiler und Systemprogrammierung. Vater Ingenieur, Mutter Lehrerin.</p>
+  </header>
+  <div class="persona-body">
+    <div class="warum">
+      <h3>Warum diese Persona?</h3>
+      <p>Lukas verkörpert das Segment der <strong>hochkompetenten, schon technikaffinen Maturand:innen</strong>, die FH und Universität ernsthaft gegeneinander abwägen. Zahlenmässig ist dieses Segment vermutlich klein, für die wahrgenommene Qualität des Studiums aber überproportional wichtig — sie ziehen das Niveau in den Vorlesungen mit. Lukas zwingt uns, eine unangenehme, aber zentrale Frage ernst zu nehmen: <strong>«Ist FH zweite Wahl?»</strong> Wer ihn nicht überzeugt, kommuniziert defensiv und verliert die selbstbewussten Profile an die ETH.</p>
+    </div>
+    <div class="dim-grid">
+      <div class="dim">
+        <h3>Situation</h3>
+        <p>Steht vier Monate vor der Matura. Klassenlehrer und Mathe-Lehrer empfehlen ihm «unbedingt ETH». Eltern wären stolz auf ETH-Zulassung, lassen ihm aber die Wahl. Hat einen FHNW-Schnuppertag besucht und war positiv überrascht (mehr Praxis, weniger anonym als erwartet). Innerlich hin- und hergerissen — die Idee, «nur» an eine FH zu gehen, fühlt sich für ihn nach Statusverlust an, obwohl das fachliche Argument für die FHNW spricht.</p>
+      </div>
+      <div class="dim">
+        <h3>Ziel</h3>
+        <p>Ein Studium wählen, in dem er sich technisch wirklich weiterentwickeln kann — nicht im Stoff stehenbleibt, den er schon kennt. Langfristig sieht er sich entweder als Senior Engineer in einer technisch anspruchsvollen Firma oder in der Forschung.</p>
+      </div>
+      <div class="dim">
+        <h3>Herausforderung</h3>
+        <ul>
+<li><strong>Statusfrage</strong>: Ist FH «zweite Wahl»? Wie reagiert sein Umfeld?</li>
+<li><strong>Sorge vor Unterforderung</strong>: Wird das Studium zu sehr für Anfänger:innen ausgelegt sein?</li>
+<li><strong>Bewertbarkeit</strong>: Schwer einzuschätzen, wo die FHNW fachlich wirklich steht — Webseiten beider Hochschulen klingen ähnlich.</li>
+</ul>
+      </div>
+      <div class="dim">
+        <h3>Needs</h3>
+        <ul>
+<li>Belegbare fachliche Tiefe: konkrete Modul-Inhalte mit Niveau-Hinweis, nicht nur Lernziele</li>
+<li>Profile der Dozierenden (Forschung, Industrie, Lehre)</li>
+<li>Anrechnung von Vorkenntnissen, ggf. Beschleunigungsoptionen</li>
+<li>Sichtbarkeit von Forschungsgruppen und Industrie-Projekten, in die Studierende eingebunden werden</li>
+<li>Master-Anschlussoptionen (FHNW-intern und ETH/Uni)</li>
+<li>Alumni-Stories: wo arbeiten technisch starke Absolvent:innen?</li>
+</ul>
+      </div>
+    </div>
+    <section class="innere-stimme">
+      <div class="is-inner">
+        <div class="is-meta">
+          <h3>Innere Stimme — <em>was wirklich im Kopf sitzt</em></h3>
+          <p>O-Ton-Fragen, die Lukas sich selbst stellt — bewusst, halbbewusst, oder im Gespräch mit dem besten Freund.</p>
+        </div>
+        <ul class="quotes">
+          <li>Ist FH eigentlich «zweite Wahl»? Was denken meine Lehrer, wenn ich nicht an die ETH gehe?</li>
+          <li>Werde ich gelangweilt sein, weil ich vieles schon kann?</li>
+          <li>Wie tief gehen die Module wirklich, oder ist alles «Einführung in...»?</li>
+          <li>Wer sind die Dozenten — Praktiker, Forscher, oder eher Schullehrer?</li>
+          <li>Kann ich in Forschungs- oder Industrieprojekten mitarbeiten?</li>
+          <li>Welche Wahlmodule gibt's, die mich auch nach drei Jahren noch fordern?</li>
+          <li>Kann ich Sachen anrechnen lassen, die ich schon kann?</li>
+          <li>Brauche ich danach einen Master, um ernst genommen zu werden?</li>
+          <li>Lande ich von der FHNW automatisch im Management — oder kann ich technisch arbeiten?</li>
+          <li>Treffe ich da andere, die auch schon coden — oder bin ich der einzige?</li>
+          <li>Wenn AI in fünf Jahren das Routine-Coding übernimmt — was lerne ich noch, das wirklich tragfähig ist?</li>
+        </ul>
+      </div>
+    </section>
+    <section class="implikationen">
+      <h3 class="implikationen-title">Implikationen für FHNW-Kommunikation</h3>
+      <div class="dim-grid dim-grid--two">
+        <div class="dim">
+          <h3>Webseite</h3>
+          <ul>
+<li>Eigene Landing für «schon Erfahrene»: «Du programmierst schon? Hier siehst du, was wir dir Neues bieten.»</li>
+<li>Konkrete Modul-Inhalte mit Niveau-Hinweis — nicht nur Lernziele</li>
+<li>Profile der Dozierenden mit Forschungs-/Industrie-Hintergrund sichtbar</li>
+<li>Forschungsgruppen mit aktuellen Projekten und Studierenden-Beteiligung</li>
+<li>«Vom Bachelor zum Master» — FHNW-intern UND Übergang ETH/Uni transparent</li>
+<li>Position zur AI-Frage: was lehren wir, das auch in fünf Jahren noch trägt — und warum</li>
+</ul>
+        </div>
+        <div class="dim">
+          <h3>Infoveranstaltung</h3>
+          <ul>
+<li>Live-Coding oder Walkthrough eines studentischen Open-Source-Projekts</li>
+<li>Talk eines Dozenten mit erkennbarer Tiefe (Forschung oder Industrie)</li>
+<li>Getrennter Q&amp;A-Slot «für Erfahrene» — nicht zwischen Einsteiger-Fragen</li>
+<li>Begegnung mit Studierenden im 5./6. Semester</li>
+</ul>
+        </div>
+      </div>
+    </section>
+  </div>
+</article>
+
+<article id="sara" class="persona">
+  <header class="persona-header">
+    <div class="persona-number">02</div>
+    <div class="persona-titleblock">
+      <h2>Sara, <em>die zweifelnde Quereinsteigerin</em></h2>
+    </div>
+    <p class="steckbrief">22, vor vier Jahren KV-Lehre abgeschlossen (Versicherung), berufsbegleitend BM nachgeholt vor einem Jahr. Arbeitet 100 % als Sachbearbeiterin in einer Krankenversicherung. Hat im Job angefangen, mit Excel-VBA Auswertungen zu automatisieren — und gemerkt, dass ihr das mehr Spass macht, als sie erwartet hätte. Wohnt noch bei den Eltern im Aargau, hat ca. 25 000 CHF angespart.</p>
+  </header>
+  <div class="persona-body">
+    <div class="warum">
+      <h3>Warum diese Persona?</h3>
+      <p>Sara vertritt <strong>Quereinsteiger:innen aus nicht-technischen Lehrberufen</strong> — ein Segment, das für die FH besonders relevant ist (Diversifizierung der Studierendenschaft, Frauenförderung, Erschliessen von Talent-Pools jenseits klassischer Tech-Biografien). Sie macht alle Fragen sichtbar, die mit <strong>Selbstvertrauen, Zugehörigkeit und finanziellem Risiko</strong> zusammenhängen — Themen, die in einer rein fachlichen Kommunikation systematisch unsichtbar bleiben. Wer Sara nicht erreicht, kommuniziert nur an die «Sicheren» und vergibt Wachstumspotenzial.</p>
+    </div>
+    <div class="dim-grid">
+      <div class="dim">
+        <h3>Situation</h3>
+        <p>Macht aktuell einen Online-Python-Kurs am Wochenende, kommt aber nur langsam voran. Eltern unterstützen die Idee Studium, fragen aber wiederholt: «Bist du dir sicher, dass das wirklich was für dich ist?» Beste Freundin findet's mutig, im erweiterten Umfeld eher Skepsis. Sie hat noch nie eine Hochschule von innen gesehen.</p>
+      </div>
+      <div class="dim">
+        <h3>Ziel</h3>
+        <p>Den Sprung aus der Sachbearbeitung in eine Tech-nahe Rolle schaffen — ohne sich finanziell oder emotional zu überfordern. Sie will wirklich verstehen, was sie tut, statt weiterhin «die Excel-Person im Büro» zu sein.</p>
+      </div>
+      <div class="dim">
+        <h3>Herausforderung</h3>
+        <ul>
+<li><strong>Mathematik-Selbstzweifel</strong>: Letzte Mathe-Stunde liegt vier Jahre zurück, das Niveau ist ihr unklar.</li>
+<li><strong>Imposter-Gefühl</strong>: Älter als die meisten, kein Tech-Background, kein «Geek-Vorleben» — Angst, aufzufallen.</li>
+<li><strong>Finanzielles Risiko</strong>: Wechsel von 100 % Lohn auf Studium ist ein realer Einschnitt.</li>
+<li><strong>Abbruch-Angst</strong>: Was bleibt, wenn es nicht klappt?</li>
+</ul>
+      </div>
+      <div class="dim">
+        <h3>Needs</h3>
+        <ul>
+<li>Realistische, nicht beschönigte Mathematik-Voraussetzungen</li>
+<li>Vorkurs- / Brückenangebote prominent erklärt (Inhalt, Dauer, Kosten)</li>
+<li>Studienmodelle (Vollzeit, Teilzeit, berufsbegleitend) inkl. ehrlicher Wochenstunden-Realität</li>
+<li>Finanzierungs-Information: Stipendien, Erwerbsersatz, Studiengebühren, mögliche Modelle bei Lohnverzicht</li>
+<li>Echte Quereinsteiger:innen-Porträts (keine Marketing-Stars, sondern Menschen wie sie)</li>
+<li>Signal von Zugehörigkeit: Altersmix, Frauenanteil, Atmosphäre, Beispiele anderer KV-Hintergründe</li>
+<li>Ehrliche Antwort: «Was wenn ich nach einem Semester abbreche — was bleibt mir?»</li>
+</ul>
+      </div>
+    </div>
+    <section class="innere-stimme">
+      <div class="is-inner">
+        <div class="is-meta">
+          <h3>Innere Stimme — <em>was wirklich im Kopf sitzt</em></h3>
+        </div>
+        <ul class="quotes">
+          <li>Schaffe ich die Mathematik? Ich hatte zuletzt vor vier Jahren Mathe.</li>
+          <li>Werde ich auffallen, weil ich nie programmiert habe?</li>
+          <li>Sind alle anderen 18 und ich mit 22 die Älteste?</li>
+          <li>Bin ich die einzige Frau ohne Tech-Background?</li>
+          <li>Was wenn ich nach einem Semester merke, es war ein Fehler — was bleibt mir dann?</li>
+          <li>Gibt's einen Vorkurs? Sollte ich vorher etwas lernen?</li>
+          <li>Wie viel Zeit muss ich realistisch investieren — pro Woche?</li>
+          <li>Kann ich einen Schnuppertag machen, um zu sehen, ob ich überhaupt verstehe, wovon die reden?</li>
+          <li>Werden die anderen mich für dumm halten, wenn ich Grundlagenfragen stelle?</li>
+          <li>Kann ich nebenbei arbeiten? Wie viele Prozent gehen?</li>
+          <li>Was kostet mich das insgesamt — auch der Lohnausfall?</li>
+          <li>Komme ich danach raus aus meinem jetzigen Job — und wohin?</li>
+        </ul>
+      </div>
+    </section>
+    <section class="implikationen">
+      <h3 class="implikationen-title">Implikationen für FHNW-Kommunikation</h3>
+      <div class="dim-grid dim-grid--two">
+        <div class="dim">
+          <h3>Webseite</h3>
+          <ul>
+<li>Eigener Einstieg «Du kommst aus dem KV / einem nicht-technischen Beruf?»</li>
+<li>Realistische, nicht beschönigte Mathematik-Voraussetzungen</li>
+<li>Vorkurse / Brückenangebote prominent — nicht im FAQ-Footer</li>
+<li>Echte Quereinsteiger:innen-Porträts (Video, kurz, mit Gesicht und Namen)</li>
+<li>Studienmodell-Rechner: «Mein Job ist 80 %, was geht?»</li>
+<li>FAQ «Was wenn ich abbreche?» — ehrlich beantwortet</li>
+<li>AI-Position: was bleibt menschliche Arbeit, gerade für Quereinsteiger:innen</li>
+</ul>
+        </div>
+        <div class="dim">
+          <h3>Infoveranstaltung</h3>
+          <ul>
+<li>Eigene Session «Quereinstieg — geht das?» mit aktuellen Studierenden ähnlicher Herkunft</li>
+<li>Mathe-Schnupperaufgaben — «probier mal, ob du das verstehst»</li>
+<li>Kleines, persönliches Format (nicht Massen-Aula)</li>
+<li>1:1-Gespräch mit Studienberatung möglich</li>
+</ul>
+        </div>
+      </div>
+    </section>
+  </div>
+</article>
+
+<article id="marco" class="persona">
+  <header class="persona-header">
+    <div class="persona-number">03</div>
+    <div class="persona-titleblock">
+      <h2>Marco, <em>der pragmatische EFZ-Absolvent</em></h2>
+    </div>
+    <p class="steckbrief">23, Informatiker EFZ Plattformentwicklung (4-jährige Lehre), nachher zwei Jahre als Systemtechniker bei einem KMU in Olten. Berufsmaturität während der Lehre. Verdient aktuell ca. 78 000 CHF/Jahr, lebt mit Partnerin in einer 3.5-Zimmer-Wohnung. Rechnet jeden grösseren Schritt durch.</p>
+  </header>
+  <div class="persona-body">
+    <div class="warum">
+      <h3>Warum diese Persona?</h3>
+      <p>Marco verkörpert das <strong>historische Kernsegment der Fachhochschule</strong> — Berufsleute mit EFZ und Praxiserfahrung, die einen begründeten Karriereschritt suchen. Wenn die Webseite für Marco nicht funktioniert, ist sie an der DNA der FH vorbei. Marco zwingt uns zu <strong>harten Daten</strong> (Lohnentwicklung, Studienmodelle, Anrechnung) statt Marketing-Floskeln, weil er jeden Schritt rechnet und mit Alternativen vergleicht (direkt weiterarbeiten, Master-Studium woanders, Zertifikatsausbildungen). Er ist damit der härteste Test für unsere Argumentation rund um ROI und Karrierewert.</p>
+    </div>
+    <div class="dim-grid">
+      <div class="dim">
+        <h3>Situation</h3>
+        <p>Spürt, dass er an seiner aktuellen Stelle nicht mehr weiterkommt. Will mehr Architektur, mehr Verantwortung, weniger Routine-Tickets. Hat Bekannte, die nach einem Bachelor 30 % mehr verdienen — und welche, die ohne Studium dasselbe wie er. Steht vor einer rein ökonomisch-strategischen Frage, mit emotionaler Komponente (Beziehung, Lebensplanung).</p>
+      </div>
+      <div class="dim">
+        <h3>Ziel</h3>
+        <p>Klarer Karrieresprung mit kalkulierbarem Risiko. Ein Studienmodell finden, das mit Beziehung und Finanzen funktioniert. Mittelfristig in eine Rolle mit Entscheidungsspielraum (Tech Lead, Architect, Engineering Manager).</p>
+      </div>
+      <div class="dim">
+        <h3>Herausforderung</h3>
+        <ul>
+<li><strong>Opportunitätskosten</strong>: Lohnausfall + Studiengebühren über mehrere Jahre.</li>
+<li><strong>Belastung berufsbegleitend</strong>: Vollzeit Studium + Teilzeit Job + Beziehung — geht das?</li>
+<li><strong>Unsicherheit über ROI</strong>: «Lohnt es sich wirklich, oder kann ich das auch durch Erfahrung erreichen?»</li>
+<li><strong>Master-Frage</strong>: Bachelor allein ggf. zu wenig für Senior-Rollen?</li>
+</ul>
+      </div>
+      <div class="dim">
+        <h3>Needs</h3>
+        <ul>
+<li>Echte Lohndaten nach Studienrichtung — nicht nur Schweizer Median</li>
+<li>Studienmodell-Transparenz: Wochenrhythmus, Präsenztage, Online-Anteile, realistischer Zeitaufwand</li>
+<li>Anrechnung von EFZ und Berufserfahrung — was konkret, wie viel Zeitersparnis</li>
+<li>Industrie-Reputation der Studienrichtungen: was ist bei Arbeitgebern gefragt?</li>
+<li>Ehrliche Einschätzung: Bachelor reicht oder Master nötig — abhängig vom Karriereziel?</li>
+<li>Filterbare Alumni-Karrieren: «Wer kommt aus EFZ + berufsbegleitend ist heute wo?»</li>
+<li>Kosten-Rechner: Studiengebühren + Lohnausfall + Opportunitätskosten</li>
+</ul>
+      </div>
+    </div>
+    <section class="innere-stimme">
+      <div class="is-inner">
+        <div class="is-meta">
+          <h3>Innere Stimme — <em>was wirklich im Kopf sitzt</em></h3>
+        </div>
+        <ul class="quotes">
+          <li>Wie viel verdiene ich nach dem Bachelor mehr als jetzt?</li>
+          <li>Lohnt sich das gegenüber direkt weiterarbeiten und Erfahrung sammeln?</li>
+          <li>Brauche ich einen Master für gute Jobs — oder reicht der Bachelor?</li>
+          <li>Berufsbegleitend — wie geht das konkret? Welche Tage, welche Abende?</li>
+          <li>Wie lange dauert berufsbegleitend wirklich? 4 Jahre? 5?</li>
+          <li>Kann ich Teile aus der Lehre / der BM anrechnen lassen?</li>
+          <li>Kann ich zwischen Modellen wechseln, wenn sich mein Job ändert?</li>
+          <li>Was kann ich nach dem Bachelor, das ich jetzt nach Lehre + Praxis nicht schon kann?</li>
+          <li>Welche Studienrichtung bringt am meisten am Markt — Software Engineering, DevOps, oder etwas anderes?</li>
+          <li>Habe ich noch Zeit für Hobbys, Beziehung, Sport?</li>
+          <li>Bin ich als Berufsbegleitender Outsider unter den Vollzeitstudis?</li>
+        </ul>
+      </div>
+    </section>
+    <section class="implikationen">
+      <h3 class="implikationen-title">Implikationen für FHNW-Kommunikation</h3>
+      <div class="dim-grid dim-grid--two">
+        <div class="dim">
+          <h3>Webseite</h3>
+          <ul>
+<li>Karriere-Sektion mit echten Lohndaten pro Studienrichtung — nicht Schweizer Median</li>
+<li>Studienmodell-Vergleich mit konkreten Wochenrhythmen (Tage, Abende, Online-Anteil)</li>
+<li>«Bachelor reicht oder Master nötig?» — ehrlich pro Karriereziel</li>
+<li>Filterbare Alumni-Datenbank: «EFZ + berufsbegleitend → wo heute?»</li>
+<li>Vorleistungs-Anrechnung übersichtlich</li>
+<li>Kosten-Rechner: Studiengebühren + Lohnausfall + Opportunitätskosten</li>
+<li>AI-Position: harte Antwort, was sich konkret ändert und was bestehen bleibt</li>
+</ul>
+        </div>
+        <div class="dim">
+          <h3>Infoveranstaltung</h3>
+          <ul>
+<li>Panel «Vom EFZ zum Bachelor — und dann?» mit Alumni in unterschiedlichen Rollen</li>
+<li>HR-Vertretung aus Industrie: «Was sucht ihr wirklich?»</li>
+<li>1:1-Beratung zu Anrechnung und Studienmodell</li>
+<li>Diskussion mit Industrie-Gast zur AI-Wirkung auf Junior- vs. Senior-Rollen</li>
+</ul>
+        </div>
+      </div>
+    </section>
+  </div>
+</article>
+
+<article id="nadia" class="persona">
+  <header class="persona-header">
+    <div class="persona-number">04</div>
+    <div class="persona-titleblock">
+      <h2>Nadia, <em>die orientierungslose Maturandin</em></h2>
+    </div>
+    <p class="steckbrief">18, Gymi (Schwerpunkt Wirtschaft &amp; Recht), Notenschnitt 4.8. Hat Informatik-Anwendungen als Ergänzungsfach belegt — eher zufällig. Liest viel, interessiert sich für Politik und Klima. Keine Programmiererfahrung ausser etwas HTML in der Schule. Vater Banker, Mutter Pflegefachfrau.</p>
+  </header>
+  <div class="persona-body">
+    <div class="warum">
+      <h3>Warum diese Persona?</h3>
+      <p>Nadia vertritt ein <strong>Wachstumssegment</strong>: Maturand:innen ohne Tech-Background, die Informatik / Data Science erst entdecken. Dieses Segment ist entscheidend für den <strong>Frauenanteil</strong> und für das mittelfristige Wachstum der Studierendenzahlen. Nadia macht sichtbar, dass Inhalte nicht nur für Tech-Affine geschrieben werden dürfen — viele Interessierte wollen erst herausfinden, was Informatik überhaupt ist. Sie zwingt uns ausserdem, <strong>Eltern und Klischee-Wirkungen</strong> ernst zu nehmen, die in dieser Lebensphase real die Wahl mitbeeinflussen.</p>
+    </div>
+    <div class="dim-grid">
+      <div class="dim">
+        <h3>Situation</h3>
+        <p>Sechs Monate vor der Matura, weiss noch nicht, was sie studieren soll. Hat bei einer Berufsmesse am FHNW-Stand gestoppt, weil «Data Science» cool klang — weiss aber nicht, was das wirklich ist. Eltern wollen «etwas Solides»: Mutter würde Medizin bevorzugen, Vater BWL. Beste Freundin geht an die Uni Bern, die Klassengruppe ist auf den Universitäten orientiert.</p>
+      </div>
+      <div class="dim">
+        <h3>Ziel</h3>
+        <p>Eine begründete Studienwahl treffen, die zu ihr passt — nicht nur «irgendetwas studieren». Ein Beruf, der sie auch in zehn Jahren noch interessiert und Wirkung hat.</p>
+      </div>
+      <div class="dim">
+        <h3>Herausforderung</h3>
+        <ul>
+<li><strong>Orientierungslosigkeit</strong>: Noch keine klare Vorstellung von Informatik / Data Science / Studienrichtungen.</li>
+<li><strong>Imposter-Risiko</strong>: Fühlt sich mit Wirtschafts-Schwerpunkt schlecht gerüstet.</li>
+<li><strong>Klischee-Ängste</strong>: «Sind da nur Nerds? Würde ich mich wohlfühlen?»</li>
+<li><strong>Familiäre Erwartungen</strong>: Eltern haben andere Vorstellungen, FH-Status ist in ihrem Umfeld nicht selbstverständlich anerkannt.</li>
+<li><strong>Status-Frage</strong>: FH vs. Uni — wie wird das gesehen?</li>
+</ul>
+      </div>
+      <div class="dim">
+        <h3>Needs</h3>
+        <ul>
+<li>Verständliche, nicht-technische Erklärung: Was ist Informatik, was Data Science?</li>
+<li>Vergleichbare Darstellung der 6 Studienrichtungen — nicht nur als Liste</li>
+<li>Ehrliche Aussage zu Voraussetzungen: ist Wirtschafts-Schwerpunkt ein Problem?</li>
+<li>Selbsttests / Schnupperangebote / Probesemester / Vorbereitungsjahr</li>
+<li>Klärung: Wechselmöglichkeiten zwischen Studiengängen / Studienrichtungen</li>
+<li>Sichtbare Atmosphäre und Diversität (echte Bilder, kein Stockmaterial)</li>
+<li>Eigenes Material für Eltern: FH-Status, Karrierechancen, Sicherheit</li>
+<li>Vergleich FHNW vs. andere FH vs. Uni — ehrlich, nicht werbend</li>
+</ul>
+      </div>
+    </div>
+    <section class="innere-stimme">
+      <div class="is-inner">
+        <div class="is-meta">
+          <h3>Innere Stimme — <em>was wirklich im Kopf sitzt</em></h3>
+        </div>
+        <ul class="quotes">
+          <li>Was ist eigentlich der Unterschied zwischen Informatik und Data Science?</li>
+          <li>Was ist der Unterschied zwischen den 6 Studienrichtungen — verständlich erklärt?</li>
+          <li>Muss ich mich schon bei der Bewerbung auf eine Studienrichtung festlegen, oder erst später?</li>
+          <li>Was wenn ich mich falsch entscheide? Kann ich wechseln?</li>
+          <li>Bin ich mit meinem Wirtschafts-Schwerpunkt überhaupt gerüstet — oder bin ich von Anfang an im Hintertreffen?</li>
+          <li>Gibt's einen Selbsttest, der mir hilft zu entscheiden, ob das wirklich zu mir passt?</li>
+          <li>Gibt es einen Schnuppertag, ein Probesemester, ein Vorbereitungsjahr?</li>
+          <li>Sind alle Informatiker so wie das Klischee? Würde ich mich da wohlfühlen?</li>
+          <li>Wie viele Frauen sind im Studiengang?</li>
+          <li>Wie ist das Studierendenleben — Events, Vereine, gemeinsam Mittag essen?</li>
+          <li>Pendle ich täglich oder ziehe ich näher hin?</li>
+          <li>Wieso FHNW und nicht ZHAW oder HSLU? Was unterscheidet euch wirklich?</li>
+          <li>Ist eine FH ok, oder denken meine Eltern «lieber Uni»?</li>
+        </ul>
+      </div>
+    </section>
+    <section class="implikationen">
+      <h3 class="implikationen-title">Implikationen für FHNW-Kommunikation</h3>
+      <div class="dim-grid dim-grid--two">
+        <div class="dim">
+          <h3>Webseite</h3>
+          <ul>
+<li>Einstieg «Du bist noch unsicher? Hier startest du» — mit Selbsttest oder Quiz</li>
+<li>«Informatik vs. Data Science — der ehrliche Vergleich»</li>
+<li>Visuell starke «Ein Tag als …»-Studierenden-Stories</li>
+<li>Studienrichtungen vergleichbar darstellen, nicht nur als Liste</li>
+<li>Kultur und Diversität sichtbar (echte Bilder, nicht Stockfotos)</li>
+<li>AI-Position für Unentschlossene: warum Informatik gerade jetzt sinnvoll ist (oder nicht)</li>
+</ul>
+        </div>
+        <div class="dim">
+          <h3>Infoveranstaltung</h3>
+          <ul>
+<li>Schnuppertage / Mini-Workshops «ein Tag als Informatik-Studi»</li>
+<li>Vergleichende Sessions: «Worin unterscheiden sich die 6 Studienrichtungen wirklich?»</li>
+<li>«Noch nicht entschieden? Komm trotzdem» — explizit auf Plakat / Einladung</li>
+<li>Atmosphäre erlebbar machen: gemeinsam Mittag essen, mit Studierenden reden</li>
+</ul>
+        </div>
+      </div>
+    </section>
+  </div>
+</article>
+
+<article id="tim" class="persona">
+  <header class="persona-header">
+    <div class="persona-number">05</div>
+    <div class="persona-titleblock">
+      <h2>Tim, <em>der Game-begeisterte Spezialist</em></h2>
+    </div>
+    <p class="steckbrief">17, Informatikmittelschule (IMS) in Bern, im letzten Lehrjahr. Macht in der Freizeit Unity-Tutorials, hat zwei kleine Prototypen gebaut, ist auf Discord in Game-Dev-Communities aktiv, war bereits an zwei Game Jams. Macht nebenbei Musik (Hobby Producer), zeichnet etwas. Vater Sek-Lehrer, Mutter Sozialarbeiterin.</p>
+  </header>
+  <div class="persona-body">
+    <div class="warum">
+      <h3>Warum diese Persona?</h3>
+      <p>Tim steht stellvertretend für eine ganz andere Logik: Studieninteressierte, die nicht primär eine Hochschule, sondern <strong>eine Studienrichtung</strong> suchen (Game, HPC/AI, Software Engineering oder andere). Er ist der härteste Test dafür, ob die Spezialisierungen <strong>wirklich tragen oder nur Etikett</strong> sind. Wenn Tim die Studienrichtung Game Entwicklung als ernsthaft erkennt, gewinnen wir auch andere Spezialist:innen in den anderen Richtungen. Tim macht zudem sichtbar, dass die Studienrichtungen jeweils eine <strong>eigene inhaltliche Tiefe</strong> kommunizieren müssen — eine generische Studiengangs-Seite reicht nicht.</p>
+    </div>
+    <div class="dim-grid">
+      <div class="dim">
+        <h3>Situation</h3>
+        <p>Weiss seit der 7. Klasse: Games. Hat Schweizer Studios recherchiert (Giants Software, Stray Fawn, Blindflug), weiss, dass die Branche klein ist. Hat ZHdK Game Design auf dem Radar, ist aber klar Coder, nicht Designer. FHNW Game Entwicklung ist daher ernsthafte Option — er fragt sich aber, wie ernst die Hochschule diese Studienrichtung wirklich meint.</p>
+      </div>
+      <div class="dim">
+        <h3>Ziel</h3>
+        <p>Eine echte Game-Engineer-Ausbildung mit substanzieller Industrie-Anbindung. Portfolio mit eigenen Spielen aufbauen. Mittelfristig: Gameplay-Programmer oder Engine-Entwickler in einem ernsthaften Studio (Schweiz oder Ausland). Backup-Pfad: solide Grundausbildung, die auch in «klassischen» Software-Jobs trägt.</p>
+      </div>
+      <div class="dim">
+        <h3>Herausforderung</h3>
+        <ul>
+<li><strong>Kleine CH-Branche</strong>: Realistische Karriere-Perspektive ist schmal.</li>
+<li><strong>Glaubwürdigkeit der Studienrichtung</strong>: Ist FHNW Game Entwicklung «echt» oder nur Dekoration?</li>
+<li><strong>Vergleich</strong>: ZHdK Game Design vs. Auslandschulen (NHTV, Future Games) vs. FHNW.</li>
+<li><strong>Risiko-Diversifikation</strong>: Was, wenn Game-Industrie nicht klappt?</li>
+</ul>
+      </div>
+      <div class="dim">
+        <h3>Needs</h3>
+        <ul>
+<li>Konkrete Modul-Inhalte der Game-Studienrichtung: Engines, Pipelines, Math/Physics, Multiplayer</li>
+<li>Showreel / sichtbare Studierendenprojekte (spielbar, verlinkbar)</li>
+<li>Industrie-Anbindung: Gastdozent:innen, Praktika, Branchen-Events</li>
+<li>Alumni-Karrieren: wer arbeitet heute wo?</li>
+<li>Ausweich-/Brückenmodule: Wie weit deckt die Ausbildung auch klassische Software-Engineer-Skills ab?</li>
+<li>Community-Signale: Game Jams, Discord, studentische Vereine an der FHNW</li>
+<li>Ehrlicher Vergleich mit ZHdK / Auslandschulen</li>
+</ul>
+      </div>
+    </div>
+    <section class="innere-stimme">
+      <div class="is-inner">
+        <div class="is-meta">
+          <h3>Innere Stimme — <em>was wirklich im Kopf sitzt</em></h3>
+        </div>
+        <ul class="quotes">
+          <li>Welche Engines lerne ich? Unity, Unreal, eigenes?</li>
+          <li>Mache ich im Studium ein eigenes Spiel?</li>
+          <li>Lerne ich auch Art / Sound / Game Design — oder nur Code?</li>
+          <li>Wie viel «klassische Informatik» (Mathe, Theorie) muss ich neben dem Game-Stoff machen?</li>
+          <li>Welche Game-Firmen kennen die FHNW? Kommen Leute aus der Industrie zu Talks?</li>
+          <li>Wo arbeiten Alumni heute? Gibt's überhaupt Schweizer Studios, die einstellen?</li>
+          <li>Sollte ich besser an eine spezialisierte Schule (z. B. ZHdK Game Design) oder ins Ausland?</li>
+          <li>Kann man von Games in der Schweiz wirklich leben?</li>
+          <li>Was wenn die Game-Industrie nicht klappt — bin ich dann auch für «normale» Software-Jobs gerüstet?</li>
+          <li>Gibt's eine Game-Dev-Community an der FHNW? Game Jams, Discord, gemeinsame Projekte?</li>
+          <li>Sind die anderen auch Game-Nerds — oder bin ich der einzige?</li>
+          <li>Bin ich gut genug für die Game-Studienrichtung — oder werden die anderen viel weiter sein?</li>
+        </ul>
+      </div>
+    </section>
+    <section class="implikationen">
+      <h3 class="implikationen-title">Implikationen für FHNW-Kommunikation</h3>
+      <div class="dim-grid dim-grid--two">
+        <div class="dim">
+          <h3>Webseite</h3>
+          <ul>
+<li>Studienrichtung Game Entwicklung mit Showreel sichtbar (spielbar verlinkt)</li>
+<li>Konkrete Engine-Liste, Tool-Stack, Beispielprojekte</li>
+<li>Alumni-Stories aus der Game-Industrie (Schweiz und international)</li>
+<li>«Game oder klassische Software?» — Brückenmodule sichtbar</li>
+<li>Community-Seite: was läuft an der FHNW jenseits der Vorlesungen (Game Jams, Vereine)</li>
+<li>AI-Position spezifisch für Game-Dev: was sich ändert, was bleibt — ehrlich</li>
+</ul>
+        </div>
+        <div class="dim">
+          <h3>Infoveranstaltung</h3>
+          <ul>
+<li>Showcase studentischer Game-Projekte — spielbar!</li>
+<li>Talk eines Game-Dev-Alumni oder Industrie-Gasts</li>
+<li>Game Jam oder Mini-Hackathon als Tag-der-offenen-Tür-Element</li>
+<li>Q&amp;A mit Studierenden der Game-Richtung</li>
+</ul>
+        </div>
+      </div>
+    </section>
+  </div>
+</article>
+
+<section id="offene-punkte" class="offene">
+  <div class="offene-inner">
+    <h2>Offene Punkte / nächste Schritte</h2>
+    <div>
+      <ol>
+<li><strong>Eltern als Co-Persona</strong> — vor allem für Lukas und Nadia entscheidungsrelevant. Soll separat ausgearbeitet werden.</li>
+<li><strong>Diversität explizit verankern</strong> — Frauenanteil, Migrationsbiografie, Erstakademiker:in. Querschnitt durch alle Personas, nicht eigene Persona.</li>
+<li><strong>Data Science</strong> — analoge Persona-Arbeit, sobald Informatik validiert ist.</li>
+<li><strong>User Research</strong> — diese Proto-Personas mit echten Studieninteressierten testen (Infotag-Gespräche, kurze Interviews, ggf. Studienberatung-Daten auswerten). Insbesondere prüfen: Stimmen die «inneren Stimmen»? Welche Fragen fehlen? Welche Personas existieren so gar nicht?</li>
+<li><strong>Inhaltliche Architektur</strong> — pro Persona ableiten, was das für Webseite und Infoveranstaltung konkret heisst (Inhalte, Tonalität, Format, Pfade).</li>
+<li><strong>Persona-Lücken prüfen</strong> — z. B. Studieninteressierte mit Migrationshintergrund, internationale Bewerber:innen, ältere Quereinsteiger:innen (30+).</li>
+</ol>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-mark">
+      <span class="logo-mark"><span class="n">n</span><span class="bar"></span><span class="w">w</span></span>
+      <span class="logo-text">Fachhochschule Nordwestschweiz<br><strong>Hochschule für Informatik</strong></span>
+    </div>
+    <div class="footer-grid">
+      <div>
+        <h4>Über dieses Dokument</h4>
+        <p>Internes Arbeitsdokument zur Persona-Arbeit für Studieninteressierte des Bachelor Informatik. Proto-Personas, hypothesenbasiert; bewusst dafür gemacht, durch User Research validiert oder verworfen zu werden.</p>
+      </div>
+      <div>
+        <h4>Status</h4>
+        <ul>
+          <li>Stand: 6. Mai 2026</li>
+          <li>Version: v1</li>
+          <li>Scope: Studiengang Informatik</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-base">
+      <span>© Fachhochschule Nordwestschweiz · Hochschule für Informatik</span>
+      <span>Internes Arbeitsdokument · nicht zur externen Verbreitung</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

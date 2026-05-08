@@ -1,0 +1,193 @@
+{
+  "keywords": [
+    {
+      "begin": "\\b(as|extends|each|in|if|else|where|then|by|and|or|not|when|use|route|bind|name|named|selection|canvas|data|loop-focus|typeahead|trigger-text|true|false)\\b",
+      "regularExpression": true
+    }
+  ],
+  "commands": [
+    {
+      "begin": "\\b(toggle|exclusive|show|hide|open|close|select|highlight|highlightNext|highlightPrev|selectHighlighted|activate|deactivate|increment|decrement|set|reset|assign|get|toast|dismiss|focus|blur|clear|setError|clearError|submit|navigate|back|forward|openUrl|scrollTo|scrollBy|scrollToTop|scrollToBottom|copy|add|remove|create|save|revert|delete|call|page|showAt|showBelow|showAbove|showLeft|showRight|showModal)\\s*\\(",
+      "regularExpression": true,
+      "description": "action call"
+    }
+  ],
+  "types": [
+    {
+      "begin": "\\b(Frame|Box|Text|Button|Input|Textarea|Label|Image|Img|Icon|Link|Slot|Divider|Spacer|Header|Nav|Main|Section|Article|Aside|Footer|H1|H2|H3|H4|H5|H6)\\b",
+      "regularExpression": true,
+      "description": "primitive"
+    },
+    {
+      "begin": "\\b(Table|Row|Column|Group|DatePicker|Dialog|Trigger|CloseTrigger|Backdrop|Content|Tooltip|Tabs|Tab|Select|Item|Checkbox|Switch|Slider|RadioGroup|RadioItem|Line|Bar|Pie|Donut|Area|Title|XAxis|YAxis|Grid|Point)\\b",
+      "regularExpression": true,
+      "description": "compound"
+    },
+    {
+      "begin": "(?<=\\bas )[A-Z][A-Za-z0-9_]*",
+      "regularExpression": true,
+      "description": "user component (after as)"
+    },
+    {
+      "begin": "(?<=\\bname )[A-Z][A-Za-z0-9_]*",
+      "regularExpression": true,
+      "description": "named element"
+    },
+    {
+      "begin": "(?<=\\()[A-Z][A-Za-z0-9_]*",
+      "regularExpression": true,
+      "description": "component reference in args"
+    }
+  ],
+  "attributes": [
+    {
+      "begin": "\\b(w|h|width|height|size|minw|maxw|minh|maxh|aspect|grow|shrink)\\b",
+      "regularExpression": true,
+      "description": "sizing"
+    },
+    {
+      "begin": "\\b(hor|ver|horizontal|vertical|gap|gx|gy|gap-x|gap-y|row-height|rh|center|cen|spread|wrap|stacked|grid|dense|align)\\b",
+      "regularExpression": true,
+      "description": "layout"
+    },
+    {
+      "begin": "\\b(tl|tc|tr|cl|cr|bl|bc|br|hor-center|ver-center|left|right|top|bottom)\\b",
+      "regularExpression": true,
+      "description": "anchor"
+    },
+    {
+      "begin": "\\b(x|y|z|abs|absolute|fixed|relative|rotate|rot|scale|opacity|opa|o)\\b",
+      "regularExpression": true,
+      "description": "position"
+    },
+    {
+      "begin": "\\b(pad|padding|p|px|py|pt|pr|pb|pl|pad-x|pad-y|pad-t|pad-r|pad-b|pad-l)\\b",
+      "regularExpression": true,
+      "description": "padding"
+    },
+    {
+      "begin": "\\b(mar|margin|m|mx|my|mt|mr|mb|ml|mar-x|mar-y|mar-t|mar-r|mar-b|mar-l)\\b",
+      "regularExpression": true,
+      "description": "margin"
+    },
+    {
+      "begin": "\\b(bg|background|col|color|c|boc|border-color|ic|icon-color)\\b",
+      "regularExpression": true,
+      "description": "color"
+    },
+    {
+      "begin": "\\b(bor|border|bor-t|bor-b|bor-l|bor-r|bort|borb|borl|borr|rad|radius)\\b",
+      "regularExpression": true,
+      "description": "border"
+    },
+    {
+      "begin": "\\b(fs|font-size|font|weight|line|text-align|italic|underline|uppercase|lowercase|truncate|ls|tracking|letter-spacing)\\b",
+      "regularExpression": true,
+      "description": "typography"
+    },
+    {
+      "begin": "\\b(shadow|cursor|blur|backdrop-blur|blur-bg)\\b",
+      "regularExpression": true,
+      "description": "effects"
+    },
+    {
+      "begin": "\\b(hidden|visible|disabled|scroll|scroll-ver|scroll-hor|scroll-both|clip)\\b",
+      "regularExpression": true,
+      "description": "visibility"
+    },
+    {
+      "begin": "\\b(focusable|editable|keyboard-nav|keynav|loopfocus|triggertext|readonly|placeholder|content|href|src|type|value|checked|text|mask|defaultValue|positioning|step|locale|startOfWeek|fixedWeeks|closeOnSelect|selectionMode)\\b",
+      "regularExpression": true,
+      "description": "interaction"
+    },
+    {
+      "begin": "\\b(is|icon-size|iw|icon-weight|fill)\\b",
+      "regularExpression": true,
+      "description": "icon"
+    },
+    {
+      "begin": "\\b(anim|animation|x-offset|y-offset)\\b",
+      "regularExpression": true,
+      "description": "animation"
+    },
+    {
+      "begin": "\\bhover-(bg|background|col|color|c|opacity|opa|o|scale|border|bor|border-color|boc|radius|rad)\\b",
+      "regularExpression": true,
+      "description": "hover prefix"
+    },
+    {
+      "begin": "\\b(device|mobile|tablet|desktop)\\b",
+      "regularExpression": true,
+      "description": "device preset"
+    }
+  ],
+  "variables": [
+    {
+      "begin": "\\$[a-zA-Z][a-zA-Z0-9_.-]*",
+      "regularExpression": true,
+      "description": "token / data binding"
+    }
+  ],
+  "values": [
+    {
+      "begin": "\\b(hover|focus|active|disabled|on|off|selected|highlighted|expanded|collapsed|open|closed|filled|valid|invalid|loading|error|compact|regular|wide|todo|doing|done)\\b",
+      "regularExpression": true,
+      "description": "states"
+    },
+    {
+      "begin": "\\b(onclick|onhover|onfocus|onblur|onchange|oninput|onkeydown|onkeyup|onclick-outside|onload|onviewenter|onviewexit|onenter|onkeyenter|onkeyescape|onkeyspace|onescape|onspace)\\b",
+      "regularExpression": true,
+      "description": "events"
+    },
+    {
+      "begin": "\\b(escape|enter|space|tab|backspace|delete|arrow-up|arrow-down|arrow-left|arrow-right|home|end)\\b",
+      "regularExpression": true,
+      "description": "keys"
+    },
+    {
+      "begin": "\\b(thin|light|normal|medium|semibold|bold|black)\\b",
+      "regularExpression": true,
+      "description": "weight"
+    },
+    {
+      "begin": "\\b(sans|serif|mono|roboto)\\b",
+      "regularExpression": true,
+      "description": "font family"
+    },
+    {
+      "begin": "\\b(sm|md|lg|xl|full|hug|min|max)\\b",
+      "regularExpression": true,
+      "description": "scale / sizing keyword"
+    },
+    {
+      "begin": "\\b(pointer|grab|move|wait|not-allowed|crosshair|help)\\b",
+      "regularExpression": true,
+      "description": "cursor"
+    },
+    {
+      "begin": "\\b(fade-in|fade-out|slide-in|slide-out|slide-up|slide-down|slide-left|slide-right|scale-in|scale-out|bounce|pulse|shake|spin|reveal-up|reveal-scale|reveal-fade|ease|ease-in|ease-out|ease-in-out|linear)\\b",
+      "regularExpression": true,
+      "description": "animation preset"
+    },
+    {
+      "begin": "\\b(white|black|transparent|red|green|blue|yellow|orange|purple|pink|gray|grey|cyan|magenta|brown)\\b",
+      "regularExpression": true,
+      "description": "named color"
+    },
+    {
+      "begin": "\\b(grad|grad-ver|grad-hor)\\b",
+      "regularExpression": true,
+      "description": "gradient"
+    }
+  ],
+  "numbers": [
+    { "begin": "#[0-9A-Fa-f]{3,8}\\b", "regularExpression": true, "description": "hex color" },
+    { "begin": "\\brgba?\\(", "end": "\\)", "regularExpression": true, "description": "rgb()" },
+    {
+      "begin": "\\b-?\\d+(\\.\\d+)?(px|em|rem|%|s|ms)?\\b",
+      "regularExpression": true,
+      "description": "number with optional unit"
+    }
+  ],
+  "characters": []
+}

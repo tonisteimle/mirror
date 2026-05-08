@@ -1,0 +1,365 @@
+// Personas — Studieninteressierte Bachelor Informatik (FHNW HSI)
+// Internes Arbeitsdokument. Inline-Prosa: jede Persona ist ein
+// handgeschriebener Block, keine Daten-Struktur mit each-Loop.
+
+canvas desktop, bg #fff, font sans, fs 17
+
+// ─── Topbar ───
+Topbar
+  Logo
+
+// ─── Hero ───
+Hero
+  Eyebrow "Internes Arbeitsdokument"
+  HeroVessel
+    H1 "Personas"
+    HeroSub "Studieninteressierte für den Bachelor Informatik — fünf Profile, die unterschiedliche Wege ins Studium abbilden."
+    MetaList
+      MetaPair
+        MetaLabel "Hochschule"
+        MetaValue "Hochschule für Informatik"
+      MetaPair
+        MetaLabel "Stand"
+        MetaValue "6. Mai 2026"
+      MetaPair
+        MetaLabel "Status"
+        MetaValue "Proto-Personas, hypothesenbasiert"
+      MetaPair
+        MetaLabel "Scope"
+        MetaValue "Studiengang Informatik"
+    Domain "www.fhnw.ch / informatik"
+  HeroBar
+
+// ─── Inhaltsverzeichnis ───
+Section
+  Container
+    H2 "Fünf Personas, die zusammen den Entscheidungsraum *aufspannen*."
+    TocList
+      TocRow
+        TocNum "01"
+        TocName "Lukas"
+        TocTag "der überzeugte Tüftler"
+      TocRow
+        TocNum "02"
+        TocName "Sara"
+        TocTag "die zweifelnde Quereinsteigerin"
+      TocRow
+        TocNum "03"
+        TocName "Marco"
+        TocTag "der pragmatische EFZ-Absolvent"
+      TocRow
+        TocNum "04"
+        TocName "Nadia"
+        TocTag "die orientierungslose Maturandin"
+      TocRow
+        TocNum "05"
+        TocName "Tim"
+        TocTag "der Game-begeisterte Spezialist"
+
+// ─── Übergreifende Beobachtungen ───
+SectionWide
+  Container
+    TwoColumn
+      ProseColumn
+        H2 "Übergreifende Beobachtungen"
+      ProseBody
+        - **Universalfragen**, die durch fast alle Personas durchgehen, nur in unterschiedlicher Tonart:
+          - «Schaffe ich das?»
+          - «Passe ich da rein?»
+          - «Was wenn ich mich falsch entscheide?»
+          - «Was kommt danach?»
+        - Sehr viele Fragen haben **nichts mit Curriculum** zu tun. Eine Studiengangs-Webseite, die mit Modulübersicht startet, antwortet auf eine Frage, die niemand zuerst stellt.
+        - Manche Fragen sind unangenehm für die Hochschule («Ist FH zweite Wahl?», «Werde ich als Quereinsteigerin auffallen?», «Kann man von Games leben?»). Wer sie ehrlich beantwortet statt umschifft, gewinnt Vertrauen.
+        - **Neu seit 2024 — die AI-Frage:** «Was bedeutet AI für meinen Beruf? Werde ich noch gebraucht, wenn AI in fünf Jahren das Routine-Coding übernimmt?» Diese Sorge zieht sich durch alle Personas — am schärfsten bei denen, die Karriere-ROI rechnen (Marco, Sara), am abstraktesten bei den noch Suchenden (Nadia), spezifisch beim Spezialisten (Tim mit AI-generierten Spielen). Eine Studieninfo, die diese Frage umschifft, wirkt 2026 weltfremd.
+
+// ─── Warum diese fünf Personas? ───
+SectionWide
+  Container
+    TwoColumn
+      ProseColumn
+        H2 "Warum diese fünf Personas?"
+      ProseBody
+        Wir haben uns bewusst für fünf Personas entschieden — genug, um den Entscheidungsraum **breit aufzuspannen**, wenig genug, um sie im Alltag wirklich zu nutzen. Drei wären zu pauschal, sieben werden in der Praxis vergessen. Die Auswahl folgt einer Kontrast-Logik:
+
+        - **Lukas und Nadia** stehen für die Gymi-Welt, an entgegengesetzten Enden: hochkompetent vs. orientierungslos.
+        - **Sara und Marco** stehen für die Berufslehre-Welt, ebenfalls kontrastiv: Quereinstieg ohne Tech-Hintergrund vs. logischer nächster Karriereschritt von einem EFZ aus der Branche.
+        - **Tim** vertritt eine eigene Logik: jemand, der nicht primär eine Hochschule, sondern eine **Studienrichtung** sucht — und FHNW nur erwägt, wenn die Studienrichtung wirklich trägt.
+
+        Zusammen decken sie vier Achsen ab: **Selbstvertrauen** (hoch/tief), **Klarheit der Wahl** (entschieden/suchend), **Treiber** (intrinsisch/extrinsisch), **Vorbildung** (Maturität/EFZ).
+
+// ============================================
+// Persona 01 — Lukas
+// ============================================
+
+PersonaBlock
+  PersonaHeaderBand
+    Container
+      PersonaHeaderRow
+        PersonaNumeral "01"
+        PersonaTitleStack
+          PersonaName "Lukas, *der überzeugte Tüftler*"
+    Container
+      PersonaSteckbrief "18, Gymi (Schwerpunkt Physik & Anwendungen Mathematik), Notenschnitt 5.3. Programmiert seit der Sek, hat einen aktiven GitHub mit eigenen Projekten (Discord-Bots, kleine Web-Apps), liest in der Freizeit über Compiler und Systemprogrammierung. Vater Ingenieur, Mutter Lehrerin."
+  Container
+    PersonaBody
+      WarumBlock
+        ### Warum diese Persona?
+        Lukas verkörpert das Segment der **hochkompetenten, schon technikaffinen Maturand:innen**, die FH und Universität ernsthaft gegeneinander abwägen. Lukas zwingt uns, eine unangenehme, aber zentrale Frage ernst zu nehmen: **«Ist FH zweite Wahl?»** Wer ihn nicht überzeugt, kommuniziert defensiv und verliert die selbstbewussten Profile an die ETH.
+      DimGrid
+        Dim
+          H4 "Situation"
+          BodyTxt "Steht vier Monate vor der Matura. Klassenlehrer empfehlen ihm «unbedingt ETH». Hat einen FHNW-Schnuppertag besucht und war positiv überrascht (mehr Praxis, weniger anonym als erwartet). Innerlich hin- und hergerissen — die Idee, «nur» an eine FH zu gehen, fühlt sich für ihn nach Statusverlust an, obwohl das fachliche Argument für die FHNW spricht."
+        Dim
+          H4 "Ziel"
+          BodyTxt "Ein Studium wählen, in dem er sich technisch wirklich weiterentwickeln kann. Langfristig sieht er sich entweder als Senior Engineer in einer technisch anspruchsvollen Firma oder in der Forschung."
+        Dim
+          H4 "Herausforderung"
+          BodyTxtMuted "(siehe Detailbericht)"
+        Dim
+          H4 "Needs"
+          BodyTxtMuted "(siehe Detailbericht)"
+      SoftBox
+        Container
+          InnereStimmeRow
+            InnereStimmeMeta
+              H3 "Innere Stimme — *was wirklich im Kopf sitzt*"
+              BodyTxt "O-Ton-Fragen, die diese Persona sich selbst stellt."
+            InnereStimmeQuotes
+              BodyTxtMuted "(O-Ton-Fragen — siehe Detailbericht)"
+      ImplikationenBlock
+        H3 "**Implikationen für FHNW-Kommunikation**"
+        DimGridTwo
+          Dim
+            H4 "Webseite"
+            BodyTxtMuted "(persona-spezifisch — siehe Detailbericht)"
+          Dim
+            H4 "Infoveranstaltung"
+            BodyTxtMuted "(persona-spezifisch — siehe Detailbericht)"
+
+// ============================================
+// Persona 02 — Sara
+// ============================================
+
+PersonaBlock
+  PersonaHeaderBand
+    Container
+      PersonaHeaderRow
+        PersonaNumeral "02"
+        PersonaTitleStack
+          PersonaName "Sara, *die zweifelnde Quereinsteigerin*"
+    Container
+      PersonaSteckbrief "22, vor vier Jahren KV-Lehre abgeschlossen (Versicherung), berufsbegleitend BM nachgeholt vor einem Jahr. Arbeitet 100 % als Sachbearbeiterin in einer Krankenversicherung. Hat im Job angefangen, mit Excel-VBA Auswertungen zu automatisieren — und gemerkt, dass ihr das mehr Spass macht, als sie erwartet hätte."
+  Container
+    PersonaBody
+      WarumBlock
+        ### Warum diese Persona?
+        Sara vertritt **Quereinsteiger:innen aus nicht-technischen Lehrberufen** — ein Segment, das für die FH besonders relevant ist. Sie macht alle Fragen sichtbar, die mit **Selbstvertrauen, Zugehörigkeit und finanziellem Risiko** zusammenhängen — Themen, die in einer rein fachlichen Kommunikation systematisch unsichtbar bleiben.
+      DimGrid
+        Dim
+          H4 "Situation"
+          BodyTxt "Macht aktuell einen Online-Python-Kurs am Wochenende, kommt aber nur langsam voran. Eltern unterstützen die Idee Studium, fragen aber wiederholt: «Bist du dir sicher?» Sie hat noch nie eine Hochschule von innen gesehen."
+        Dim
+          H4 "Ziel"
+          BodyTxt "Den Sprung aus der Sachbearbeitung in eine Tech-nahe Rolle schaffen — ohne sich finanziell oder emotional zu überfordern."
+        Dim
+          H4 "Herausforderung"
+          BodyTxtMuted "(siehe Detailbericht)"
+        Dim
+          H4 "Needs"
+          BodyTxtMuted "(siehe Detailbericht)"
+      SoftBox
+        Container
+          InnereStimmeRow
+            InnereStimmeMeta
+              H3 "Innere Stimme — *was wirklich im Kopf sitzt*"
+              BodyTxt "O-Ton-Fragen, die diese Persona sich selbst stellt."
+            InnereStimmeQuotes
+              BodyTxtMuted "(O-Ton-Fragen — siehe Detailbericht)"
+      ImplikationenBlock
+        H3 "**Implikationen für FHNW-Kommunikation**"
+        DimGridTwo
+          Dim
+            H4 "Webseite"
+            BodyTxtMuted "(persona-spezifisch — siehe Detailbericht)"
+          Dim
+            H4 "Infoveranstaltung"
+            BodyTxtMuted "(persona-spezifisch — siehe Detailbericht)"
+
+// ============================================
+// Persona 03 — Marco
+// ============================================
+
+PersonaBlock
+  PersonaHeaderBand
+    Container
+      PersonaHeaderRow
+        PersonaNumeral "03"
+        PersonaTitleStack
+          PersonaName "Marco, *der pragmatische EFZ-Absolvent*"
+    Container
+      PersonaSteckbrief "23, Informatiker EFZ Plattformentwicklung, nachher zwei Jahre als Systemtechniker bei einem KMU in Olten. Berufsmaturität während der Lehre. Verdient aktuell ca. 78 000 CHF/Jahr, lebt mit Partnerin in einer 3.5-Zimmer-Wohnung. Rechnet jeden grösseren Schritt durch."
+  Container
+    PersonaBody
+      WarumBlock
+        ### Warum diese Persona?
+        Marco verkörpert das **historische Kernsegment der Fachhochschule** — Berufsleute mit EFZ und Praxiserfahrung. Marco zwingt uns zu **harten Daten** statt Marketing-Floskeln, weil er jeden Schritt rechnet und mit Alternativen vergleicht.
+      DimGrid
+        Dim
+          H4 "Situation"
+          BodyTxt "Spürt, dass er an seiner aktuellen Stelle nicht mehr weiterkommt. Will mehr Architektur, mehr Verantwortung, weniger Routine-Tickets. Steht vor einer rein ökonomisch-strategischen Frage, mit emotionaler Komponente."
+        Dim
+          H4 "Ziel"
+          BodyTxt "Klarer Karrieresprung mit kalkulierbarem Risiko. Mittelfristig in eine Rolle mit Entscheidungsspielraum (Tech Lead, Architect, Engineering Manager)."
+        Dim
+          H4 "Herausforderung"
+          BodyTxtMuted "(siehe Detailbericht)"
+        Dim
+          H4 "Needs"
+          BodyTxtMuted "(siehe Detailbericht)"
+      SoftBox
+        Container
+          InnereStimmeRow
+            InnereStimmeMeta
+              H3 "Innere Stimme — *was wirklich im Kopf sitzt*"
+              BodyTxt "O-Ton-Fragen, die diese Persona sich selbst stellt."
+            InnereStimmeQuotes
+              BodyTxtMuted "(O-Ton-Fragen — siehe Detailbericht)"
+      ImplikationenBlock
+        H3 "**Implikationen für FHNW-Kommunikation**"
+        DimGridTwo
+          Dim
+            H4 "Webseite"
+            BodyTxtMuted "(persona-spezifisch — siehe Detailbericht)"
+          Dim
+            H4 "Infoveranstaltung"
+            BodyTxtMuted "(persona-spezifisch — siehe Detailbericht)"
+
+// ============================================
+// Persona 04 — Nadia
+// ============================================
+
+PersonaBlock
+  PersonaHeaderBand
+    Container
+      PersonaHeaderRow
+        PersonaNumeral "04"
+        PersonaTitleStack
+          PersonaName "Nadia, *die orientierungslose Maturandin*"
+    Container
+      PersonaSteckbrief "18, Gymi (Schwerpunkt Wirtschaft & Recht), Notenschnitt 4.8. Hat Informatik-Anwendungen als Ergänzungsfach belegt — eher zufällig. Liest viel, interessiert sich für Politik und Klima. Keine Programmiererfahrung ausser etwas HTML in der Schule."
+  Container
+    PersonaBody
+      WarumBlock
+        ### Warum diese Persona?
+        Nadia vertritt ein **Wachstumssegment**: Maturand:innen ohne Tech-Background. Dieses Segment ist entscheidend für den **Frauenanteil** und für das mittelfristige Wachstum. Sie zwingt uns, **Eltern und Klischee-Wirkungen** ernst zu nehmen.
+      DimGrid
+        Dim
+          H4 "Situation"
+          BodyTxt "Sechs Monate vor der Matura, weiss noch nicht, was sie studieren soll. Hat bei einer Berufsmesse am FHNW-Stand gestoppt, weil «Data Science» cool klang. Eltern wollen «etwas Solides»: Mutter würde Medizin bevorzugen, Vater BWL."
+        Dim
+          H4 "Ziel"
+          BodyTxt "Eine begründete Studienwahl treffen, die zu ihr passt. Ein Beruf, der sie auch in zehn Jahren noch interessiert und Wirkung hat."
+        Dim
+          H4 "Herausforderung"
+          BodyTxtMuted "(siehe Detailbericht)"
+        Dim
+          H4 "Needs"
+          BodyTxtMuted "(siehe Detailbericht)"
+      SoftBox
+        Container
+          InnereStimmeRow
+            InnereStimmeMeta
+              H3 "Innere Stimme — *was wirklich im Kopf sitzt*"
+              BodyTxt "O-Ton-Fragen, die diese Persona sich selbst stellt."
+            InnereStimmeQuotes
+              BodyTxtMuted "(O-Ton-Fragen — siehe Detailbericht)"
+      ImplikationenBlock
+        H3 "**Implikationen für FHNW-Kommunikation**"
+        DimGridTwo
+          Dim
+            H4 "Webseite"
+            BodyTxtMuted "(persona-spezifisch — siehe Detailbericht)"
+          Dim
+            H4 "Infoveranstaltung"
+            BodyTxtMuted "(persona-spezifisch — siehe Detailbericht)"
+
+// ============================================
+// Persona 05 — Tim
+// ============================================
+
+PersonaBlock
+  PersonaHeaderBand
+    Container
+      PersonaHeaderRow
+        PersonaNumeral "05"
+        PersonaTitleStack
+          PersonaName "Tim, *der Game-begeisterte Spezialist*"
+    Container
+      PersonaSteckbrief "17, Informatikmittelschule (IMS) in Bern, im letzten Lehrjahr. Macht in der Freizeit Unity-Tutorials, hat zwei kleine Prototypen gebaut, ist auf Discord in Game-Dev-Communities aktiv, war bereits an zwei Game Jams."
+  Container
+    PersonaBody
+      WarumBlock
+        ### Warum diese Persona?
+        Tim steht für eine ganz andere Logik: Studieninteressierte, die nicht primär eine Hochschule, sondern **eine Studienrichtung** suchen. Er ist der härteste Test dafür, ob die Spezialisierungen **wirklich tragen oder nur Etikett** sind.
+      DimGrid
+        Dim
+          H4 "Situation"
+          BodyTxt "Weiss seit der 7. Klasse: Games. Hat Schweizer Studios recherchiert, weiss, dass die Branche klein ist. ZHdK Game Design ist auf dem Radar, FHNW Game Entwicklung daher ernsthafte Option — er fragt sich aber, wie ernst die Hochschule diese Studienrichtung wirklich meint."
+        Dim
+          H4 "Ziel"
+          BodyTxt "Eine echte Game-Engineer-Ausbildung mit substanzieller Industrie-Anbindung. Mittelfristig: Gameplay-Programmer oder Engine-Entwickler in einem ernsthaften Studio."
+        Dim
+          H4 "Herausforderung"
+          BodyTxtMuted "(siehe Detailbericht)"
+        Dim
+          H4 "Needs"
+          BodyTxtMuted "(siehe Detailbericht)"
+      SoftBox
+        Container
+          InnereStimmeRow
+            InnereStimmeMeta
+              H3 "Innere Stimme — *was wirklich im Kopf sitzt*"
+              BodyTxt "O-Ton-Fragen, die diese Persona sich selbst stellt."
+            InnereStimmeQuotes
+              BodyTxtMuted "(O-Ton-Fragen — siehe Detailbericht)"
+      ImplikationenBlock
+        H3 "**Implikationen für FHNW-Kommunikation**"
+        DimGridTwo
+          Dim
+            H4 "Webseite"
+            BodyTxtMuted "(persona-spezifisch — siehe Detailbericht)"
+          Dim
+            H4 "Infoveranstaltung"
+            BodyTxtMuted "(persona-spezifisch — siehe Detailbericht)"
+
+// ─── Offene Punkte ───
+SectionWide
+  Container
+    TwoColumn
+      ProseColumn
+        H2 "Offene Punkte / nächste Schritte"
+      OffeneList
+        1. **Eltern als Co-Persona** — vor allem für Lukas und Nadia entscheidungsrelevant. Soll separat ausgearbeitet werden.
+        2. **Diversität explizit verankern** — Frauenanteil, Migrationsbiografie, Erstakademiker:in. Querschnitt durch alle Personas, nicht eigene Persona.
+        3. **Data Science** — analoge Persona-Arbeit, sobald Informatik validiert ist.
+        4. **User Research** — diese Proto-Personas mit echten Studieninteressierten testen. Insbesondere prüfen: Stimmen die «inneren Stimmen»? Welche Fragen fehlen? Welche Personas existieren so gar nicht?
+        5. **Inhaltliche Architektur** — pro Persona ableiten, was das für Webseite und Infoveranstaltung konkret heisst.
+        6. **Persona-Lücken prüfen** — z. B. Studieninteressierte mit Migrationshintergrund, internationale Bewerber:innen, ältere Quereinsteiger:innen (30+).
+
+// ─── Footer ───
+FooterFrame
+  Container
+    LogoLight
+    FooterGrid
+      FooterColMain
+        FooterHeading "Über dieses Dokument"
+        FooterText "Internes Arbeitsdokument zur Persona-Arbeit für Studieninteressierte des Bachelor Informatik. Proto-Personas, hypothesenbasiert; bewusst dafür gemacht, durch User Research validiert oder verworfen zu werden."
+      FooterColMeta
+        FooterHeading "Status"
+        FooterStatusList
+          FooterText "Stand: 6. Mai 2026"
+          FooterText "Version: v1"
+          FooterText "Scope: Studiengang Informatik"
+    FooterBaseRow
+      FooterBase "© Fachhochschule Nordwestschweiz · Hochschule für Informatik"
+      FooterBase "Internes Arbeitsdokument · nicht zur externen Verbreitung"

@@ -1,0 +1,11 @@
+// Personas-Dokument — Design-Tokens
+// Farben, Surfaces, Layout-Konstanten
+
+yellow.bg: #FDE70E
+soft.bg: #F4F4F4
+ink.col: #000
+white.col: #fff
+muted.col: #888
+hairline.boc: #e5e5e5
+
+content.maxw: 1280

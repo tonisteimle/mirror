@@ -1,0 +1,14 @@
+{
+  "fileMap": {
+    "extensions": ["mir", "mirror", "tok", "tokens", "com", "components"]
+  },
+  "kind": "code",
+  "metadata": {
+    "author": "Mirror",
+    "distributionURL": "",
+    "lastModified": "2026-05-06",
+    "license": "MIT",
+    "version": "1.0.0",
+    "description": "Mirror DSL — UI language for AI-assisted UI design."
+  }
+}

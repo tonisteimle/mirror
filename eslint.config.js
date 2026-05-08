@@ -15,6 +15,14 @@ export default tseslint.config(
       'packages/*/node_modules/**',
       'docs/**',
       '*.min.js',
+      // Compiler-emitted JS — references runtime-provided globals
+      // (`_elements`, `_runtime`, `formatInlineMarkdown`, `KNOWN_STATES`)
+      // that ESLint can't see. Treat as build artefacts.
+      'examples/**/*.js',
+      'tests/fixtures/**/expected.*.js',
+      'tools/experiments/**/*.js',
+      'tools/experiments/**/*.cjs',
+      'tools/experiments/**/dist/**',
     ],
   },
   {

@@ -1822,41 +1822,58 @@ export function createUI(data = {}) {
     'flex-shrink': '0',
   })
   node_73.dataset.component = 'KpiCard'
-  // Header
-  const node_74 = document.createElement('header')
+  // Label
+  const node_74 = document.createElement('span')
   _elements['node-74'] = node_74
   node_74.dataset.mirrorId = 'node-74'
-  node_74.dataset.mirrorName = 'Header'
+  node_74.dataset.mirrorName = 'Label'
   Object.assign(node_74.style, {
+    'color': 'var(--text-secondary)',
+    'font-size': '13px',
+    'font-weight': '500',
+  })
+  node_74.dataset.component = 'Label'
+  node_74.dataset.slot = 'Label'
+  node_73.appendChild(node_74)
+  
+  // Header
+  const node_75 = document.createElement('div')
+  _elements['node-75'] = node_75
+  node_75.dataset.mirrorId = 'node-75'
+  node_75.dataset.mirrorName = 'Header'
+  Object.assign(node_75.style, {
     'display': 'flex',
-    'flex-direction': 'column',
-    'justify-content': 'center',
-    'align-items': 'flex-start',
+    'flex-direction': 'row',
+    'justify-content': 'space-between',
+    'align-items': 'center',
     'width': '100%',
     'align-self': 'stretch',
     'min-width': '0',
   })
-  node_74.dataset.component = 'Header'
-  node_74.dataset.slot = 'Header'
+  node_75.dataset.layout = 'flex'
+  node_75.dataset.component = 'Header'
+  node_75.dataset.slot = 'Header'
   // Label
-  const node_75 = document.createElement('label')
-  _elements['node-75'] = node_75
-  node_75.dataset.mirrorId = 'node-75'
-  node_75.dataset.mirrorName = 'Label'
-  node_75.innerHTML = formatInlineMarkdown("Bettenbelegung")
-  Object.assign(node_75.style, {
-    'width': 'fit-content',
-  })
-  node_75.dataset.component = 'Label'
-  node_75.dataset.slot = 'Label'
-  node_74.appendChild(node_75)
-  
-  // KpiIconBlue
-  const node_76 = document.createElement('div')
+  const node_76 = document.createElement('span')
   _elements['node-76'] = node_76
   node_76.dataset.mirrorId = 'node-76'
-  node_76.dataset.mirrorName = 'KpiIconBlue'
+  node_76.dataset.mirrorName = 'Label'
+  node_76.innerHTML = formatInlineMarkdown("Bettenbelegung")
   Object.assign(node_76.style, {
+    'color': 'var(--text-secondary)',
+    'font-size': '13px',
+    'font-weight': '500',
+  })
+  node_76.dataset.component = 'Label'
+  node_76.dataset.slot = 'Label'
+  node_75.appendChild(node_76)
+  
+  // KpiIconBlue
+  const node_77 = document.createElement('div')
+  _elements['node-77'] = node_77
+  node_77.dataset.mirrorId = 'node-77'
+  node_77.dataset.mirrorName = 'KpiIconBlue'
+  Object.assign(node_77.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
@@ -1868,16 +1885,16 @@ export function createUI(data = {}) {
     'border-radius': 'var(--radius-md)',
     'background': 'rgba(59,130,246,0.15)',
   })
-  node_76.dataset.component = 'KpiIconBlue'
+  node_77.dataset.component = 'KpiIconBlue'
   // Icon
-  const node_77 = document.createElement('span')
-  _elements['node-77'] = node_77
-  node_77.dataset.mirrorId = 'node-77'
-  node_77.dataset.mirrorName = 'Icon'
-  node_77.setAttribute('data-icon-color', "var(--accent-blue)")
-  node_77.setAttribute('data-icon-size', "20")
+  const node_78 = document.createElement('span')
+  _elements['node-78'] = node_78
+  node_78.dataset.mirrorId = 'node-78'
+  node_78.dataset.mirrorName = 'Icon'
+  node_78.setAttribute('data-icon-color', "var(--accent-blue)")
+  node_78.setAttribute('data-icon-size', "20")
   // Icon default styles
-  Object.assign(node_77.style, {
+  Object.assign(node_78.style, {
     'display': 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
@@ -1885,8 +1902,8 @@ export function createUI(data = {}) {
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_77, "bed-double")
-  Object.assign(node_77.style, {
+  _runtime.loadIcon(node_78, "bed-double")
+  Object.assign(node_78.style, {
     'width': '20px',
     'flex-shrink': '0',
     'height': '20px',
@@ -1895,80 +1912,33 @@ export function createUI(data = {}) {
     'width': '20px',
     'height': '20px',
   })
-  node_77.dataset.component = 'Icon'
-  node_76.appendChild(node_77)
+  node_78.dataset.component = 'Icon'
+  node_77.appendChild(node_78)
   
-  node_74.appendChild(node_76)
+  node_75.appendChild(node_77)
   
-  node_73.appendChild(node_74)
+  node_73.appendChild(node_75)
   
   // Value
-  const node_78 = document.createElement('div')
-  _elements['node-78'] = node_78
-  node_78.dataset.mirrorId = 'node-78'
-  node_78.dataset.mirrorName = 'Value'
-  node_78.innerHTML = formatInlineMarkdown("87%")
-  Object.assign(node_78.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-self': 'stretch',
-    'align-items': 'flex-start',
+  const node_79 = document.createElement('span')
+  _elements['node-79'] = node_79
+  node_79.dataset.mirrorId = 'node-79'
+  node_79.dataset.mirrorName = 'Value'
+  node_79.innerHTML = formatInlineMarkdown("87%")
+  Object.assign(node_79.style, {
     'font-size': '32px',
     'font-weight': '700',
     'color': 'var(--text-primary)',
   })
-  node_78.dataset.component = 'Value'
-  node_78.dataset.slot = 'Value'
-  node_73.appendChild(node_78)
-  
-  // Trend
-  const node_79 = document.createElement('div')
-  _elements['node-79'] = node_79
-  node_79.dataset.mirrorId = 'node-79'
-  node_79.dataset.mirrorName = 'Trend'
-  Object.assign(node_79.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-self': 'stretch',
-    'align-items': 'flex-start',
-    'font-size': '12px',
-    'font-weight': '500',
-    'color': 'var(--text-secondary)',
-  })
-  node_79.dataset.component = 'Trend'
-  node_79.dataset.slot = 'Trend'
-  // Text
-  const node_80 = document.createElement('span')
-  _elements['node-80'] = node_80
-  node_80.dataset.mirrorId = 'node-80'
-  node_80.dataset.mirrorName = 'Text'
-  node_80.innerHTML = formatInlineMarkdown("26 von 30 Betten belegt")
-  node_80.dataset.component = 'Text'
-  node_79.appendChild(node_80)
-  
+  node_79.dataset.component = 'Value'
   node_73.appendChild(node_79)
   
-  // Label
-  const node_81 = document.createElement('label')
-  _elements['node-81'] = node_81
-  node_81.dataset.mirrorId = 'node-81'
-  node_81.dataset.mirrorName = 'Label'
-  Object.assign(node_81.style, {
-    'width': 'fit-content',
-    'color': 'var(--text-secondary)',
-    'font-size': '13px',
-    'font-weight': '500',
-  })
-  node_81.dataset.component = 'Label'
-  node_81.dataset.slot = 'Label'
-  node_73.appendChild(node_81)
-  
   // Frame
-  const node_82 = document.createElement('div')
-  _elements['node-82'] = node_82
-  node_82.dataset.mirrorId = 'node-82'
-  node_82.dataset.mirrorName = 'Frame'
-  Object.assign(node_82.style, {
+  const node_80 = document.createElement('div')
+  _elements['node-80'] = node_80
+  node_80.dataset.mirrorId = 'node-80'
+  node_80.dataset.mirrorName = 'Frame'
+  Object.assign(node_80.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
@@ -1980,13 +1950,13 @@ export function createUI(data = {}) {
     'align-self': 'stretch',
     'min-width': '0',
   })
-  node_82.dataset.component = 'Frame'
+  node_80.dataset.component = 'Frame'
   // Frame
-  const node_83 = document.createElement('div')
-  _elements['node-83'] = node_83
-  node_83.dataset.mirrorId = 'node-83'
-  node_83.dataset.mirrorName = 'Frame'
-  Object.assign(node_83.style, {
+  const node_81 = document.createElement('div')
+  _elements['node-81'] = node_81
+  node_81.dataset.mirrorId = 'node-81'
+  node_81.dataset.mirrorName = 'Frame'
+  Object.assign(node_81.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'align-items': 'flex-start',
@@ -1996,7 +1966,29 @@ export function createUI(data = {}) {
     'width': '87%',
     'background': 'var(--accent-yellow)',
   })
-  node_83.dataset.component = 'Frame'
+  node_81.dataset.component = 'Frame'
+  node_80.appendChild(node_81)
+  
+  node_73.appendChild(node_80)
+  
+  // Trend
+  const node_82 = document.createElement('span')
+  _elements['node-82'] = node_82
+  node_82.dataset.mirrorId = 'node-82'
+  node_82.dataset.mirrorName = 'Trend'
+  Object.assign(node_82.style, {
+    'font-size': '12px',
+    'font-weight': '500',
+    'color': 'var(--text-secondary)',
+  })
+  node_82.dataset.component = 'Trend'
+  // Text
+  const node_83 = document.createElement('span')
+  _elements['node-83'] = node_83
+  node_83.dataset.mirrorId = 'node-83'
+  node_83.dataset.mirrorName = 'Text'
+  node_83.innerHTML = formatInlineMarkdown("26 von 30 Betten belegt")
+  node_83.dataset.component = 'Text'
   node_82.appendChild(node_83)
   
   node_73.appendChild(node_82)
@@ -2020,41 +2012,72 @@ export function createUI(data = {}) {
     'flex-shrink': '0',
   })
   node_84.dataset.component = 'KpiCard'
-  // Header
-  const node_85 = document.createElement('header')
+  // Value
+  const node_85 = document.createElement('span')
   _elements['node-85'] = node_85
   node_85.dataset.mirrorId = 'node-85'
-  node_85.dataset.mirrorName = 'Header'
+  node_85.dataset.mirrorName = 'Value'
   Object.assign(node_85.style, {
+    'font-size': '32px',
+    'font-weight': '700',
+    'color': 'var(--text-primary)',
+  })
+  node_85.dataset.component = 'Value'
+  node_85.dataset.slot = 'Value'
+  node_84.appendChild(node_85)
+  
+  // Label
+  const node_86 = document.createElement('span')
+  _elements['node-86'] = node_86
+  node_86.dataset.mirrorId = 'node-86'
+  node_86.dataset.mirrorName = 'Label'
+  Object.assign(node_86.style, {
+    'color': 'var(--text-secondary)',
+    'font-size': '13px',
+    'font-weight': '500',
+  })
+  node_86.dataset.component = 'Label'
+  node_86.dataset.slot = 'Label'
+  node_84.appendChild(node_86)
+  
+  // Header
+  const node_87 = document.createElement('div')
+  _elements['node-87'] = node_87
+  node_87.dataset.mirrorId = 'node-87'
+  node_87.dataset.mirrorName = 'Header'
+  Object.assign(node_87.style, {
     'display': 'flex',
-    'flex-direction': 'column',
-    'justify-content': 'center',
-    'align-items': 'flex-start',
+    'flex-direction': 'row',
+    'justify-content': 'space-between',
+    'align-items': 'center',
     'width': '100%',
     'align-self': 'stretch',
     'min-width': '0',
   })
-  node_85.dataset.component = 'Header'
-  node_85.dataset.slot = 'Header'
+  node_87.dataset.layout = 'flex'
+  node_87.dataset.component = 'Header'
+  node_87.dataset.slot = 'Header'
   // Label
-  const node_86 = document.createElement('label')
-  _elements['node-86'] = node_86
-  node_86.dataset.mirrorId = 'node-86'
-  node_86.dataset.mirrorName = 'Label'
-  node_86.innerHTML = formatInlineMarkdown("Ø Wartezeit")
-  Object.assign(node_86.style, {
-    'width': 'fit-content',
+  const node_88 = document.createElement('span')
+  _elements['node-88'] = node_88
+  node_88.dataset.mirrorId = 'node-88'
+  node_88.dataset.mirrorName = 'Label'
+  node_88.innerHTML = formatInlineMarkdown("Ø Wartezeit")
+  Object.assign(node_88.style, {
+    'color': 'var(--text-secondary)',
+    'font-size': '13px',
+    'font-weight': '500',
   })
-  node_86.dataset.component = 'Label'
-  node_86.dataset.slot = 'Label'
-  node_85.appendChild(node_86)
+  node_88.dataset.component = 'Label'
+  node_88.dataset.slot = 'Label'
+  node_87.appendChild(node_88)
   
   // KpiIconYellow
-  const node_87 = document.createElement('div')
-  _elements['node-87'] = node_87
-  node_87.dataset.mirrorId = 'node-87'
-  node_87.dataset.mirrorName = 'KpiIconYellow'
-  Object.assign(node_87.style, {
+  const node_89 = document.createElement('div')
+  _elements['node-89'] = node_89
+  node_89.dataset.mirrorId = 'node-89'
+  node_89.dataset.mirrorName = 'KpiIconYellow'
+  Object.assign(node_89.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
@@ -2066,16 +2089,16 @@ export function createUI(data = {}) {
     'border-radius': 'var(--radius-md)',
     'background': 'rgba(245,158,11,0.15)',
   })
-  node_87.dataset.component = 'KpiIconYellow'
+  node_89.dataset.component = 'KpiIconYellow'
   // Icon
-  const node_88 = document.createElement('span')
-  _elements['node-88'] = node_88
-  node_88.dataset.mirrorId = 'node-88'
-  node_88.dataset.mirrorName = 'Icon'
-  node_88.setAttribute('data-icon-color', "var(--accent-yellow)")
-  node_88.setAttribute('data-icon-size', "20")
+  const node_90 = document.createElement('span')
+  _elements['node-90'] = node_90
+  node_90.dataset.mirrorId = 'node-90'
+  node_90.dataset.mirrorName = 'Icon'
+  node_90.setAttribute('data-icon-color', "var(--accent-yellow)")
+  node_90.setAttribute('data-icon-size', "20")
   // Icon default styles
-  Object.assign(node_88.style, {
+  Object.assign(node_90.style, {
     'display': 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
@@ -2083,8 +2106,8 @@ export function createUI(data = {}) {
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_88, "clock")
-  Object.assign(node_88.style, {
+  _runtime.loadIcon(node_90, "clock")
+  Object.assign(node_90.style, {
     'width': '20px',
     'flex-shrink': '0',
     'height': '20px',
@@ -2093,118 +2116,67 @@ export function createUI(data = {}) {
     'width': '20px',
     'height': '20px',
   })
-  node_88.dataset.component = 'Icon'
-  node_87.appendChild(node_88)
+  node_90.dataset.component = 'Icon'
+  node_89.appendChild(node_90)
   
-  node_85.appendChild(node_87)
+  node_87.appendChild(node_89)
   
-  node_84.appendChild(node_85)
+  node_84.appendChild(node_87)
   
-  // Trend
-  const node_89 = document.createElement('div')
-  _elements['node-89'] = node_89
-  node_89.dataset.mirrorId = 'node-89'
-  node_89.dataset.mirrorName = 'Trend'
-  Object.assign(node_89.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-self': 'stretch',
-    'align-items': 'flex-start',
-    'font-size': '12px',
-    'font-weight': '500',
-    'color': 'var(--status-critical)',
-  })
-  node_89.dataset.component = 'Trend'
-  node_89.dataset.slot = 'Trend'
   // Frame
-  const node_90 = document.createElement('div')
-  _elements['node-90'] = node_90
-  node_90.dataset.mirrorId = 'node-90'
-  node_90.dataset.mirrorName = 'Frame'
-  Object.assign(node_90.style, {
+  const node_91 = document.createElement('div')
+  _elements['node-91'] = node_91
+  node_91.dataset.mirrorId = 'node-91'
+  node_91.dataset.mirrorName = 'Frame'
+  Object.assign(node_91.style, {
     'display': 'flex',
     'flex-direction': 'row',
     'align-self': 'stretch',
     'align-items': 'center',
-    'gap': '4px',
+    'gap': '8px',
   })
-  node_90.dataset.layout = 'flex'
-  node_90.dataset.component = 'Frame'
-  // Icon
-  const node_91 = document.createElement('span')
-  _elements['node-91'] = node_91
-  node_91.dataset.mirrorId = 'node-91'
-  node_91.dataset.mirrorName = 'Icon'
-  node_91.setAttribute('data-icon-color', "var(--status-critical)")
-  node_91.setAttribute('data-icon-size', "14")
-  // Icon default styles
-  Object.assign(node_91.style, {
-    'display': 'inline-flex',
-    'align-items': 'center',
-    'justify-content': 'center',
-    'flex-shrink': '0',
-    'line-height': '0',
-  })
-  // Load Lucide icon
-  _runtime.loadIcon(node_91, "trending-up")
-  Object.assign(node_91.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '14px',
-    'width': '14px',
-    'height': '14px',
-  })
-  node_91.dataset.component = 'Icon'
-  node_90.appendChild(node_91)
-  
-  // Text
+  node_91.dataset.layout = 'flex'
+  node_91.dataset.component = 'Frame'
+  // Value
   const node_92 = document.createElement('span')
   _elements['node-92'] = node_92
   node_92.dataset.mirrorId = 'node-92'
-  node_92.dataset.mirrorName = 'Text'
-  node_92.innerHTML = formatInlineMarkdown("+5 min vs. gestern")
-  node_92.dataset.component = 'Text'
-  node_90.appendChild(node_92)
-  
-  node_89.appendChild(node_90)
-  
-  node_84.appendChild(node_89)
-  
-  // Value
-  const node_93 = document.createElement('div')
-  _elements['node-93'] = node_93
-  node_93.dataset.mirrorId = 'node-93'
-  node_93.dataset.mirrorName = 'Value'
-  Object.assign(node_93.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-self': 'stretch',
-    'align-items': 'flex-start',
+  node_92.dataset.mirrorName = 'Value'
+  node_92.innerHTML = formatInlineMarkdown("23")
+  Object.assign(node_92.style, {
     'font-size': '32px',
     'font-weight': '700',
     'color': 'var(--text-primary)',
   })
-  node_93.dataset.component = 'Value'
-  node_93.dataset.slot = 'Value'
-  node_84.appendChild(node_93)
+  node_92.dataset.component = 'Value'
+  node_91.appendChild(node_92)
   
-  // Label
-  const node_94 = document.createElement('label')
+  // Text
+  const node_93 = document.createElement('span')
+  _elements['node-93'] = node_93
+  node_93.dataset.mirrorId = 'node-93'
+  node_93.dataset.mirrorName = 'Text'
+  node_93.innerHTML = formatInlineMarkdown("min")
+  Object.assign(node_93.style, {
+    'color': 'var(--text-secondary)',
+    'font-size': '14px',
+  })
+  node_93.dataset.component = 'Text'
+  node_91.appendChild(node_93)
+  
+  node_84.appendChild(node_91)
+  
+  // Trend
+  const node_94 = document.createElement('span')
   _elements['node-94'] = node_94
   node_94.dataset.mirrorId = 'node-94'
-  node_94.dataset.mirrorName = 'Label'
+  node_94.dataset.mirrorName = 'Trend'
   Object.assign(node_94.style, {
-    'width': 'fit-content',
-    'color': 'var(--text-secondary)',
-    'font-size': '13px',
+    'font-size': '12px',
     'font-weight': '500',
+    'color': 'var(--status-critical)',
   })
-  node_94.dataset.component = 'Label'
-  node_94.dataset.slot = 'Label'
-  node_84.appendChild(node_94)
-  
+  node_94.dataset.component = 'Trend'
   // Frame
   const node_95 = document.createElement('div')
   _elements['node-95'] = node_95
@@ -2215,23 +2187,37 @@ export function createUI(data = {}) {
     'flex-direction': 'row',
     'align-self': 'stretch',
     'align-items': 'center',
-    'gap': '8px',
+    'gap': '4px',
   })
   node_95.dataset.layout = 'flex'
   node_95.dataset.component = 'Frame'
-  // Value
-  const node_96 = document.createElement('div')
+  // Icon
+  const node_96 = document.createElement('span')
   _elements['node-96'] = node_96
   node_96.dataset.mirrorId = 'node-96'
-  node_96.dataset.mirrorName = 'Value'
-  node_96.innerHTML = formatInlineMarkdown("23")
+  node_96.dataset.mirrorName = 'Icon'
+  node_96.setAttribute('data-icon-color', "var(--status-critical)")
+  node_96.setAttribute('data-icon-size', "14")
+  // Icon default styles
   Object.assign(node_96.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-self': 'stretch',
-    'align-items': 'flex-start',
+    'display': 'inline-flex',
+    'align-items': 'center',
+    'justify-content': 'center',
+    'flex-shrink': '0',
+    'line-height': '0',
   })
-  node_96.dataset.component = 'Value'
+  // Load Lucide icon
+  _runtime.loadIcon(node_96, "trending-up")
+  Object.assign(node_96.style, {
+    'width': '20px',
+    'flex-shrink': '0',
+    'height': '20px',
+    'flex-shrink': '0',
+    'font-size': '14px',
+    'width': '14px',
+    'height': '14px',
+  })
+  node_96.dataset.component = 'Icon'
   node_95.appendChild(node_96)
   
   // Text
@@ -2239,15 +2225,13 @@ export function createUI(data = {}) {
   _elements['node-97'] = node_97
   node_97.dataset.mirrorId = 'node-97'
   node_97.dataset.mirrorName = 'Text'
-  node_97.innerHTML = formatInlineMarkdown("min")
-  Object.assign(node_97.style, {
-    'color': 'var(--text-secondary)',
-    'font-size': '14px',
-  })
+  node_97.innerHTML = formatInlineMarkdown("+5 min vs. gestern")
   node_97.dataset.component = 'Text'
   node_95.appendChild(node_97)
   
-  node_84.appendChild(node_95)
+  node_94.appendChild(node_95)
+  
+  node_84.appendChild(node_94)
   
   node_72.appendChild(node_84)
   
@@ -2268,41 +2252,71 @@ export function createUI(data = {}) {
     'flex-shrink': '0',
   })
   node_98.dataset.component = 'KpiCard'
-  // Header
-  const node_99 = document.createElement('header')
+  // Label
+  const node_99 = document.createElement('span')
   _elements['node-99'] = node_99
   node_99.dataset.mirrorId = 'node-99'
-  node_99.dataset.mirrorName = 'Header'
+  node_99.dataset.mirrorName = 'Label'
   Object.assign(node_99.style, {
+    'color': 'var(--text-secondary)',
+    'font-size': '13px',
+    'font-weight': '500',
+  })
+  node_99.dataset.component = 'Label'
+  node_99.dataset.slot = 'Label'
+  node_98.appendChild(node_99)
+  
+  // Trend
+  const node_100 = document.createElement('span')
+  _elements['node-100'] = node_100
+  node_100.dataset.mirrorId = 'node-100'
+  node_100.dataset.mirrorName = 'Trend'
+  Object.assign(node_100.style, {
+    'font-size': '12px',
+    'font-weight': '500',
+  })
+  node_100.dataset.component = 'Trend'
+  node_100.dataset.slot = 'Trend'
+  node_98.appendChild(node_100)
+  
+  // Header
+  const node_101 = document.createElement('div')
+  _elements['node-101'] = node_101
+  node_101.dataset.mirrorId = 'node-101'
+  node_101.dataset.mirrorName = 'Header'
+  Object.assign(node_101.style, {
     'display': 'flex',
-    'flex-direction': 'column',
-    'justify-content': 'center',
-    'align-items': 'flex-start',
+    'flex-direction': 'row',
+    'justify-content': 'space-between',
+    'align-items': 'center',
     'width': '100%',
     'align-self': 'stretch',
     'min-width': '0',
   })
-  node_99.dataset.component = 'Header'
-  node_99.dataset.slot = 'Header'
+  node_101.dataset.layout = 'flex'
+  node_101.dataset.component = 'Header'
+  node_101.dataset.slot = 'Header'
   // Label
-  const node_100 = document.createElement('label')
-  _elements['node-100'] = node_100
-  node_100.dataset.mirrorId = 'node-100'
-  node_100.dataset.mirrorName = 'Label'
-  node_100.innerHTML = formatInlineMarkdown("Patienten aktuell")
-  Object.assign(node_100.style, {
-    'width': 'fit-content',
+  const node_102 = document.createElement('span')
+  _elements['node-102'] = node_102
+  node_102.dataset.mirrorId = 'node-102'
+  node_102.dataset.mirrorName = 'Label'
+  node_102.innerHTML = formatInlineMarkdown("Patienten aktuell")
+  Object.assign(node_102.style, {
+    'color': 'var(--text-secondary)',
+    'font-size': '13px',
+    'font-weight': '500',
   })
-  node_100.dataset.component = 'Label'
-  node_100.dataset.slot = 'Label'
-  node_99.appendChild(node_100)
+  node_102.dataset.component = 'Label'
+  node_102.dataset.slot = 'Label'
+  node_101.appendChild(node_102)
   
   // KpiIconGreen
-  const node_101 = document.createElement('div')
-  _elements['node-101'] = node_101
-  node_101.dataset.mirrorId = 'node-101'
-  node_101.dataset.mirrorName = 'KpiIconGreen'
-  Object.assign(node_101.style, {
+  const node_103 = document.createElement('div')
+  _elements['node-103'] = node_103
+  node_103.dataset.mirrorId = 'node-103'
+  node_103.dataset.mirrorName = 'KpiIconGreen'
+  Object.assign(node_103.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
@@ -2314,16 +2328,16 @@ export function createUI(data = {}) {
     'border-radius': 'var(--radius-md)',
     'background': 'rgba(16,185,129,0.15)',
   })
-  node_101.dataset.component = 'KpiIconGreen'
+  node_103.dataset.component = 'KpiIconGreen'
   // Icon
-  const node_102 = document.createElement('span')
-  _elements['node-102'] = node_102
-  node_102.dataset.mirrorId = 'node-102'
-  node_102.dataset.mirrorName = 'Icon'
-  node_102.setAttribute('data-icon-color', "var(--accent-green)")
-  node_102.setAttribute('data-icon-size', "20")
+  const node_104 = document.createElement('span')
+  _elements['node-104'] = node_104
+  node_104.dataset.mirrorId = 'node-104'
+  node_104.dataset.mirrorName = 'Icon'
+  node_104.setAttribute('data-icon-color', "var(--accent-green)")
+  node_104.setAttribute('data-icon-size', "20")
   // Icon default styles
-  Object.assign(node_102.style, {
+  Object.assign(node_104.style, {
     'display': 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
@@ -2331,8 +2345,8 @@ export function createUI(data = {}) {
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_102, "users")
-  Object.assign(node_102.style, {
+  _runtime.loadIcon(node_104, "users")
+  Object.assign(node_104.style, {
     'width': '20px',
     'flex-shrink': '0',
     'height': '20px',
@@ -2341,62 +2355,25 @@ export function createUI(data = {}) {
     'width': '20px',
     'height': '20px',
   })
-  node_102.dataset.component = 'Icon'
-  node_101.appendChild(node_102)
+  node_104.dataset.component = 'Icon'
+  node_103.appendChild(node_104)
   
-  node_99.appendChild(node_101)
+  node_101.appendChild(node_103)
   
-  node_98.appendChild(node_99)
+  node_98.appendChild(node_101)
   
   // Value
-  const node_103 = document.createElement('div')
-  _elements['node-103'] = node_103
-  node_103.dataset.mirrorId = 'node-103'
-  node_103.dataset.mirrorName = 'Value'
-  node_103.innerHTML = formatInlineMarkdown("34")
-  Object.assign(node_103.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-self': 'stretch',
-    'align-items': 'flex-start',
+  const node_105 = document.createElement('span')
+  _elements['node-105'] = node_105
+  node_105.dataset.mirrorId = 'node-105'
+  node_105.dataset.mirrorName = 'Value'
+  node_105.innerHTML = formatInlineMarkdown("34")
+  Object.assign(node_105.style, {
     'font-size': '32px',
     'font-weight': '700',
     'color': 'var(--text-primary)',
   })
-  node_103.dataset.component = 'Value'
-  node_103.dataset.slot = 'Value'
-  node_98.appendChild(node_103)
-  
-  // Label
-  const node_104 = document.createElement('label')
-  _elements['node-104'] = node_104
-  node_104.dataset.mirrorId = 'node-104'
-  node_104.dataset.mirrorName = 'Label'
-  Object.assign(node_104.style, {
-    'width': 'fit-content',
-    'color': 'var(--text-secondary)',
-    'font-size': '13px',
-    'font-weight': '500',
-  })
-  node_104.dataset.component = 'Label'
-  node_104.dataset.slot = 'Label'
-  node_98.appendChild(node_104)
-  
-  // Trend
-  const node_105 = document.createElement('div')
-  _elements['node-105'] = node_105
-  node_105.dataset.mirrorId = 'node-105'
-  node_105.dataset.mirrorName = 'Trend'
-  Object.assign(node_105.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-self': 'stretch',
-    'align-items': 'flex-start',
-    'font-size': '12px',
-    'font-weight': '500',
-  })
-  node_105.dataset.component = 'Trend'
-  node_105.dataset.slot = 'Trend'
+  node_105.dataset.component = 'Value'
   node_98.appendChild(node_105)
   
   // Frame
@@ -2646,41 +2623,58 @@ export function createUI(data = {}) {
     'border-color': 'rgba(239,68,68,0.3)',
   })
   node_118.dataset.component = 'KpiCard'
-  // Header
-  const node_119 = document.createElement('header')
+  // Label
+  const node_119 = document.createElement('span')
   _elements['node-119'] = node_119
   node_119.dataset.mirrorId = 'node-119'
-  node_119.dataset.mirrorName = 'Header'
+  node_119.dataset.mirrorName = 'Label'
   Object.assign(node_119.style, {
+    'color': 'var(--text-secondary)',
+    'font-size': '13px',
+    'font-weight': '500',
+  })
+  node_119.dataset.component = 'Label'
+  node_119.dataset.slot = 'Label'
+  node_118.appendChild(node_119)
+  
+  // Header
+  const node_120 = document.createElement('div')
+  _elements['node-120'] = node_120
+  node_120.dataset.mirrorId = 'node-120'
+  node_120.dataset.mirrorName = 'Header'
+  Object.assign(node_120.style, {
     'display': 'flex',
-    'flex-direction': 'column',
-    'justify-content': 'center',
-    'align-items': 'flex-start',
+    'flex-direction': 'row',
+    'justify-content': 'space-between',
+    'align-items': 'center',
     'width': '100%',
     'align-self': 'stretch',
     'min-width': '0',
   })
-  node_119.dataset.component = 'Header'
-  node_119.dataset.slot = 'Header'
+  node_120.dataset.layout = 'flex'
+  node_120.dataset.component = 'Header'
+  node_120.dataset.slot = 'Header'
   // Label
-  const node_120 = document.createElement('label')
-  _elements['node-120'] = node_120
-  node_120.dataset.mirrorId = 'node-120'
-  node_120.dataset.mirrorName = 'Label'
-  node_120.innerHTML = formatInlineMarkdown("Kritische Fälle")
-  Object.assign(node_120.style, {
-    'width': 'fit-content',
-  })
-  node_120.dataset.component = 'Label'
-  node_120.dataset.slot = 'Label'
-  node_119.appendChild(node_120)
-  
-  // KpiIconRed
-  const node_121 = document.createElement('div')
+  const node_121 = document.createElement('span')
   _elements['node-121'] = node_121
   node_121.dataset.mirrorId = 'node-121'
-  node_121.dataset.mirrorName = 'KpiIconRed'
+  node_121.dataset.mirrorName = 'Label'
+  node_121.innerHTML = formatInlineMarkdown("Kritische Fälle")
   Object.assign(node_121.style, {
+    'color': 'var(--text-secondary)',
+    'font-size': '13px',
+    'font-weight': '500',
+  })
+  node_121.dataset.component = 'Label'
+  node_121.dataset.slot = 'Label'
+  node_120.appendChild(node_121)
+  
+  // KpiIconRed
+  const node_122 = document.createElement('div')
+  _elements['node-122'] = node_122
+  node_122.dataset.mirrorId = 'node-122'
+  node_122.dataset.mirrorName = 'KpiIconRed'
+  Object.assign(node_122.style, {
     'display': 'flex',
     'flex-direction': 'column',
     'justify-content': 'center',
@@ -2692,16 +2686,16 @@ export function createUI(data = {}) {
     'border-radius': 'var(--radius-md)',
     'background': 'rgba(239,68,68,0.15)',
   })
-  node_121.dataset.component = 'KpiIconRed'
+  node_122.dataset.component = 'KpiIconRed'
   // Icon
-  const node_122 = document.createElement('span')
-  _elements['node-122'] = node_122
-  node_122.dataset.mirrorId = 'node-122'
-  node_122.dataset.mirrorName = 'Icon'
-  node_122.setAttribute('data-icon-color', "var(--status-critical)")
-  node_122.setAttribute('data-icon-size', "20")
+  const node_123 = document.createElement('span')
+  _elements['node-123'] = node_123
+  node_123.dataset.mirrorId = 'node-123'
+  node_123.dataset.mirrorName = 'Icon'
+  node_123.setAttribute('data-icon-color', "var(--status-critical)")
+  node_123.setAttribute('data-icon-size', "20")
   // Icon default styles
-  Object.assign(node_122.style, {
+  Object.assign(node_123.style, {
     'display': 'inline-flex',
     'align-items': 'center',
     'justify-content': 'center',
@@ -2709,8 +2703,8 @@ export function createUI(data = {}) {
     'line-height': '0',
   })
   // Load Lucide icon
-  _runtime.loadIcon(node_122, "alert-triangle")
-  Object.assign(node_122.style, {
+  _runtime.loadIcon(node_123, "alert-triangle")
+  Object.assign(node_123.style, {
     'width': '20px',
     'flex-shrink': '0',
     'height': '20px',
@@ -2719,81 +2713,56 @@ export function createUI(data = {}) {
     'width': '20px',
     'height': '20px',
   })
-  node_122.dataset.component = 'Icon'
-  node_121.appendChild(node_122)
+  node_123.dataset.component = 'Icon'
+  node_122.appendChild(node_123)
   
-  node_119.appendChild(node_121)
+  node_120.appendChild(node_122)
   
-  node_118.appendChild(node_119)
+  node_118.appendChild(node_120)
   
   // Value
-  const node_123 = document.createElement('div')
-  _elements['node-123'] = node_123
-  node_123.dataset.mirrorId = 'node-123'
-  node_123.dataset.mirrorName = 'Value'
-  Object.assign(node_123.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-self': 'stretch',
-    'align-items': 'flex-start',
+  const node_124 = document.createElement('span')
+  _elements['node-124'] = node_124
+  node_124.dataset.mirrorId = 'node-124'
+  node_124.dataset.mirrorName = 'Value'
+  Object.assign(node_124.style, {
     'font-size': '32px',
     'font-weight': '700',
     'color': 'var(--status-critical)',
   })
-  node_123.dataset.component = 'Value'
-  node_123.dataset.slot = 'Value'
+  node_124.dataset.component = 'Value'
   // Text
-  const node_124 = document.createElement('span')
-  _elements['node-124'] = node_124
-  node_124.dataset.mirrorId = 'node-124'
-  node_124.dataset.mirrorName = 'Text'
-  node_124.innerHTML = formatInlineMarkdown("3")
-  node_124.dataset.component = 'Text'
-  node_123.appendChild(node_124)
-  
-  node_118.appendChild(node_123)
-  
-  // Trend
-  const node_125 = document.createElement('div')
+  const node_125 = document.createElement('span')
   _elements['node-125'] = node_125
   node_125.dataset.mirrorId = 'node-125'
-  node_125.dataset.mirrorName = 'Trend'
-  Object.assign(node_125.style, {
-    'display': 'flex',
-    'flex-direction': 'column',
-    'align-self': 'stretch',
-    'align-items': 'flex-start',
+  node_125.dataset.mirrorName = 'Text'
+  node_125.innerHTML = formatInlineMarkdown("3")
+  node_125.dataset.component = 'Text'
+  node_124.appendChild(node_125)
+  
+  node_118.appendChild(node_124)
+  
+  // Trend
+  const node_126 = document.createElement('span')
+  _elements['node-126'] = node_126
+  node_126.dataset.mirrorId = 'node-126'
+  node_126.dataset.mirrorName = 'Trend'
+  Object.assign(node_126.style, {
     'font-size': '12px',
     'font-weight': '500',
     'color': 'var(--status-critical)',
   })
-  node_125.dataset.component = 'Trend'
-  node_125.dataset.slot = 'Trend'
+  node_126.dataset.component = 'Trend'
   // Text
-  const node_126 = document.createElement('span')
-  _elements['node-126'] = node_126
-  node_126.dataset.mirrorId = 'node-126'
-  node_126.dataset.mirrorName = 'Text'
-  node_126.innerHTML = formatInlineMarkdown("Sofortige Aufmerksamkeit erforderlich")
-  node_126.dataset.component = 'Text'
-  node_125.appendChild(node_126)
-  
-  node_118.appendChild(node_125)
-  
-  // Label
-  const node_127 = document.createElement('label')
+  const node_127 = document.createElement('span')
   _elements['node-127'] = node_127
   node_127.dataset.mirrorId = 'node-127'
-  node_127.dataset.mirrorName = 'Label'
-  Object.assign(node_127.style, {
-    'width': 'fit-content',
-    'color': 'var(--text-secondary)',
-    'font-size': '13px',
-    'font-weight': '500',
-  })
-  node_127.dataset.component = 'Label'
-  node_127.dataset.slot = 'Label'
-  node_118.appendChild(node_127)
+  node_127.dataset.mirrorName = 'Text'
+  node_127.innerHTML = formatInlineMarkdown("Sofortige Aufmerksamkeit erforderlich")
+  node_127.dataset.component = 'Text'
+  node_126.appendChild(node_127)
+  
+  node_118.appendChild(node_126)
   
   node_72.appendChild(node_118)
   

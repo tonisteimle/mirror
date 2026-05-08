@@ -1,0 +1,14 @@
+[
+  {
+    "description": "component definition",
+    "kind": "value",
+    "pattern": "^([A-Z][A-Za-z0-9_]*)\\s*:",
+    "template": "$1"
+  },
+  {
+    "description": "token definition",
+    "kind": "value",
+    "pattern": "^([a-z][a-zA-Z0-9_.-]*)\\s*:",
+    "template": "$1"
+  }
+]

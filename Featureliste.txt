@@ -1,0 +1,6 @@
+Footer
+	Layout 		Horizontal
+	Padding		$m
+	
+	Left
+		....
