@@ -171,6 +171,121 @@ export function mix(color1: string, color2: string, weight = 50): string {
 }
 
 // ============================================================================
+// Contrast / readable foreground
+// ============================================================================
+
+/**
+ * Common CSS named colors we resolve for contrast inference.
+ * Kept intentionally small — real users write hex or these obvious names.
+ * Anything not in this map returns null and the caller skips inference.
+ */
+const NAMED_COLORS: Record<string, string> = {
+  white: '#ffffff',
+  black: '#000000',
+  red: '#ff0000',
+  green: '#008000',
+  blue: '#0000ff',
+  yellow: '#ffff00',
+  cyan: '#00ffff',
+  magenta: '#ff00ff',
+  gray: '#808080',
+  grey: '#808080',
+  silver: '#c0c0c0',
+  orange: '#ffa500',
+  purple: '#800080',
+  pink: '#ffc0cb',
+  brown: '#a52a2a',
+  navy: '#000080',
+  teal: '#008080',
+}
+
+/**
+ * Compute relative luminance (Rec. 709) from a hex color. 0..1, with 0=black.
+ */
+function luminance(hex: string): number | null {
+  const rgb = hexToRgb(hex)
+  if (!rgb) return null
+  return (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255
+}
+
+/**
+ * Resolve a CSS color string to its hex form. Returns null if the value
+ * can't be statically classified (transparent, var(), tokens, gradients,
+ * rgba/hsla with alpha, unknown named colors).
+ */
+function resolveSolidHex(value: string): string | null {
+  if (!value) return null
+  const v = value.trim().toLowerCase()
+  if (v === 'transparent' || v === 'currentcolor' || v === 'inherit') return null
+  if (v.startsWith('var(') || v.startsWith('$')) return null
+  if (v.includes('gradient(') || v.startsWith('linear-') || v.startsWith('radial-')) return null
+  if (v.startsWith('rgba(') || v.startsWith('hsla(')) return null
+  return v.startsWith('#') ? v : (NAMED_COLORS[v] ?? null)
+}
+
+/**
+ * Pick a readable foreground (`#000` or `#fff`) for a given background color.
+ * Returns null if the value can't be classified as a solid light/dark color
+ * (transparent, gradients, css-vars, tokens, unknown named colors).
+ *
+ * Uses simple perceptual luminance (Rec. 709 weights). The threshold (0.55)
+ * is biased slightly toward black text — most "neutral grey" backgrounds
+ * still read better with dark text.
+ */
+export function contrastForeground(bgValue: string): '#000' | '#fff' | null {
+  const hex = resolveSolidHex(bgValue)
+  if (!hex) return null
+  const lum = luminance(hex)
+  if (lum === null) return null
+  return lum > 0.55 ? '#000' : '#fff'
+}
+
+/**
+ * Derive a coherent `--m-*` palette from a canvas background.
+ *
+ * Mirror's defaults stylesheet is theme-locked dark: `--m-text: #e0e0e0`,
+ * `--m-surface: #1a1a1a`, etc. When the user declares a light canvas
+ * (`canvas bg #fff`), every surface-themed primitive (Button, Input, Item,
+ * Select-Trigger) would still paint dark surfaces — visually broken.
+ *
+ * This function flips the palette based on canvas-bg luminance:
+ *   light bg → light surfaces, dark text
+ *   dark bg  → keep current dark defaults, just rebase --m-bg
+ *
+ * Returns CSS-variable name → value pairs that the canvas IR transformer
+ * emits inline on `_root`.
+ *
+ * Skipped (returns empty) for un-classifiable bg (gradients, tokens, rgba).
+ * Token-driven palettes are the user's responsibility — they declare their
+ * own surface tokens explicitly.
+ */
+export function derivePaletteVariables(bgValue: string): Record<string, string> {
+  const hex = resolveSolidHex(bgValue)
+  if (!hex) return {}
+  const lum = luminance(hex)
+  if (lum === null) return {}
+
+  const isLight = lum > 0.55
+
+  if (isLight) {
+    return {
+      '--m-bg': bgValue,
+      '--m-text': '#1a1a1a',
+      '--m-text-muted': '#666666',
+      '--m-text-placeholder': '#aaaaaa',
+      '--m-surface': '#f5f5f5',
+      '--m-surface-hover': '#eaeaea',
+      '--m-surface-active': '#dddddd',
+      '--m-surface-selected': '#d0d0d0',
+    }
+  }
+
+  // Dark canvas — keep palette defaults, rebase only --m-bg so the
+  // user-declared color drives the page itself.
+  return { '--m-bg': bgValue }
+}
+
+// ============================================================================
 // Transform Dispatcher
 // ============================================================================
 

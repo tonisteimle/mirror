@@ -9,7 +9,11 @@ import type { ComponentDefinition, Instance, Property, Slot, Text } from '../../
 import { isComponent, isInstance, isSlot } from '../../parser/ast'
 import type { IRNode } from '../types'
 import type { ParentLayoutContext } from '../transformers/transformer-context'
-import { mergeSlotPropertiesIntoFiller as mergeSlotPropertiesIntoFillerExtracted } from '../transformers/slot-utils'
+import {
+  applyDeepSubstitutions,
+  collectAllSlotNames,
+  mergeSlotPropertiesIntoFiller as mergeSlotPropertiesIntoFillerExtracted,
+} from '../transformers/slot-utils'
 import type { IRTransformer } from '../index'
 
 export function resolveChildren(
@@ -23,6 +27,49 @@ export function resolveChildren(
   // This preserves the original order for simple containers like Box with mixed children
   if (componentChildren.length === 0) {
     return instanceChildren.map(child => this.transformChild(child, parentId, parentLayoutContext))
+  }
+
+  // Deep slot matching pre-pass — see docs/concepts/deep-slot-matching.md.
+  // Walk componentChildren recursively to find every slot-name. Any instance
+  // child whose name appears anywhere in the tree becomes a substitution
+  // candidate. Top-level matches are still resolved by Pass 1 below; this
+  // pre-pass only injects fillers at *deeper* positions by rewriting the
+  // componentChildren tree.
+  const allSlotNames = collectAllSlotNames(componentChildren)
+  const topLevelSlotNames = new Set<string>()
+  for (const slot of componentChildren) {
+    if (isInstance(slot)) topLevelSlotNames.add(slot.component)
+    else if (isComponent(slot)) topLevelSlotNames.add((slot as ComponentDefinition).name)
+    else if (isSlot(slot)) topLevelSlotNames.add(slot.name)
+  }
+  const deepSubstitutions = new Map<string, (Instance | Text)[]>()
+  for (const child of instanceChildren) {
+    if (isInstance(child) && allSlotNames.has(child.component)) {
+      const list = deepSubstitutions.get(child.component) ?? []
+      list.push(child)
+      deepSubstitutions.set(child.component, list)
+    }
+  }
+  if (deepSubstitutions.size > 0) {
+    // The componentChildren array is statically typed as (Instance | Slot)[]
+    // but ComponentDefinition appears at runtime via Pass 2 (see line ~157).
+    // The wider type is what applyDeepSubstitutions needs to express.
+    componentChildren = applyDeepSubstitutions(
+      componentChildren as Array<Instance | ComponentDefinition | Slot>,
+      deepSubstitutions,
+      true
+    ) as (Instance | Slot)[]
+    // Drop fillers that were *only* consumed by deep substitution (their
+    // name is not a top-level slot). Without this, Pass 3 below would re-add
+    // them as orphan siblings, duplicating every deep filler. Fillers whose
+    // name *also* matches a top-level slot stay — Pass 1 fills the top-level
+    // position with full semantics, deep substitution already covered the
+    // deeper ones.
+    instanceChildren = instanceChildren.filter(child => {
+      if (!isInstance(child)) return true
+      if (!deepSubstitutions.has(child.component)) return true
+      return topLevelSlotNames.has(child.component)
+    })
   }
 
   // Build map of instance children by component name (slot fillers)

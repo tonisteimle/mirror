@@ -407,28 +407,30 @@ export function propertyToCSS(
     ]
   }
 
-  // Grid span: w (numeric) → grid-column: span N (when parent is grid)
+  // Grid span: w (numeric) → grid-column-end: span N (when parent is grid)
+  //
+  // Must use the longhand `grid-column-end` (not the `grid-column` shorthand),
+  // because `grid-column: span N` resets `grid-column-start` to `auto` and
+  // would clobber the start emitted from `x N`. Same goes for `h` ↔ `y`.
   if ((name === 'w' || name === 'width') && parentLayoutContext?.type === 'grid') {
     const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
     if (!isNaN(numVal) && numVal > 0) {
-      // In grid context, numeric w means column span
-      // Also add width: 100% so the element fills the cell horizontally
       return [
-        { property: 'grid-column', value: `span ${numVal}` },
+        { property: 'grid-column-end', value: `span ${numVal}` },
         { property: 'width', value: '100%' },
       ]
     }
     // If not numeric, fall through to default handling (hug, full, etc.)
   }
 
-  // Grid span: h (numeric) → grid-row: span N (when parent is grid)
+  // Grid span: h (numeric) → grid-row-end: span N (when parent is grid)
   if ((name === 'h' || name === 'height') && parentLayoutContext?.type === 'grid') {
     const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
     if (!isNaN(numVal) && numVal > 0) {
-      // In grid context, numeric h means row span
-      // Also add height: 100% so the element fills the cell vertically
+      // In grid context, numeric h means row span. Use the longhand so the
+      // start emitted from `y N` survives.
       return [
-        { property: 'grid-row', value: `span ${numVal}` },
+        { property: 'grid-row-end', value: `span ${numVal}` },
         { property: 'height', value: '100%' },
       ]
     }

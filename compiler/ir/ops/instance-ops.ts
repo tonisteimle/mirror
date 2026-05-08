@@ -621,6 +621,7 @@ export function transformInstance(
     propertySourceMaps,
     layoutType,
     isDefinition: instance.isDefinition ?? false,
+    isSlotFiller: instance.isSlotFiller || undefined,
     valueBinding,
     mask,
     keyboardNav: hasKeyboardNav || undefined,

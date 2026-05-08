@@ -433,18 +433,35 @@ export class DOMGenerator {
   emitCanvasStyles(varName: string): void {
     if (!this.ir.canvas?.styles.length) return
 
-    this.emit(`Object.assign(${varName}.style, {`)
-    this.indent++
+    // Split styles by emit strategy: regular CSS props go through
+    // Object.assign(style, {...}); custom properties (`--m-bg`, `--paper-…`)
+    // must use setProperty because dashed keys don't camel-case to a valid
+    // style.* slot.
+    const regular: typeof this.ir.canvas.styles = []
+    const cssVars: typeof this.ir.canvas.styles = []
     for (const style of this.ir.canvas.styles) {
-      const jsProperty = cssPropertyToJS(style.property)
-      this.emit(`'${jsProperty}': '${style.value}',`)
+      if (style.property.startsWith('--')) cssVars.push(style)
+      else regular.push(style)
     }
-    this.indent--
-    this.emit('})')
+
+    if (regular.length > 0) {
+      this.emit(`Object.assign(${varName}.style, {`)
+      this.indent++
+      for (const style of regular) {
+        const jsProperty = cssPropertyToJS(style.property)
+        this.emit(`'${jsProperty}': '${style.value}',`)
+      }
+      this.indent--
+      this.emit('})')
+    }
+
+    for (const style of cssVars) {
+      this.emit(`${varName}.style.setProperty('${style.property}', '${style.value}')`)
+    }
 
     // Set CSS variables for inherited properties (color, font-family, font-size)
     const inheritableProps = ['color', 'font-family', 'font-size']
-    for (const style of this.ir.canvas.styles) {
+    for (const style of regular) {
       if (inheritableProps.includes(style.property)) {
         this.emit(`${varName}.style.setProperty('--mirror-${style.property}', '${style.value}')`)
       }

@@ -163,7 +163,7 @@ export class Parser {
       errors: [],
     }
 
-    // Check for canvas at start (must be first non-empty line)
+    // Check for canvas at start (most common case — first non-empty line)
     this.skipNewlines()
     if (this.check('CANVAS')) {
       program.canvas = this.parseCanvas()
@@ -177,6 +177,15 @@ export class Parser {
       this.skipNewlines()
 
       if (this.isAtEnd()) break
+
+      // Canvas may also appear after token/component definitions, e.g. in a
+      // multi-file Studio compile where tokens.tok is prepended as a prelude
+      // before app.mir's canvas. First-occurrence wins.
+      if (this.check('CANVAS')) {
+        const canvas = this.parseCanvas()
+        if (!program.canvas) program.canvas = canvas
+        continue
+      }
 
       // Section headers - track for token grouping
       if (this.check('SECTION')) {

@@ -19,6 +19,7 @@ import type { IR, IRCanvas, IRStyle, IRWarning, IRToken } from './types'
 import { SourceMap, SourceMapBuilder, calculateSourcePosition } from './source-map'
 import { simplePropertyToCSS } from '../schema/ir-helpers'
 import { getDevicePreset } from '../schema/dsl'
+import { contrastForeground, derivePaletteVariables } from '../schema/color-utils'
 // Extracted transformers
 import type { TransformerContext } from './transformers/transformer-context'
 import { transformDataAttributes, transformAnimation } from './transformers/data-transformer'
@@ -306,12 +307,54 @@ export class IRTransformer {
       const propName = prop.name.toLowerCase()
       const value = prop.values[0]
 
+      // Token reference: `bg $paper` → `var(--paper-bg)` (matches the
+      // `<token>.<suffix>` convention emitted by the regular property
+      // transformer).
+      if (
+        value &&
+        typeof value === 'object' &&
+        'kind' in value &&
+        (value as { kind: string }).kind === 'token'
+      ) {
+        const tokenName = (value as { kind: 'token'; name: string }).name
+        const cssVar = `var(--${tokenName}-${propName})`
+        const result = simplePropertyToCSS(propName, cssVar)
+        if (result.handled) {
+          styles.push(...result.styles)
+        }
+        continue
+      }
+
       // Use existing property transformation logic
       if (typeof value === 'string' || typeof value === 'number') {
         const result = simplePropertyToCSS(propName, String(value))
         if (result.handled) {
           styles.push(...result.styles)
         }
+      }
+    }
+
+    // Auto-derive a readable text color when canvas defines a solid bg but no
+    // col. Without this, mirror-defaults' theme color (`var(--m-text)`) bleeds
+    // through and produces light-grey text on a `bg #fff` canvas.
+    const hasBg = styles.some(s => s.property === 'background')
+    const hasCol = styles.some(s => s.property === 'color')
+    if (hasBg && !hasCol) {
+      const bg = styles.find(s => s.property === 'background')!.value
+      const fg = contrastForeground(bg)
+      if (fg) styles.push({ property: 'color', value: fg })
+    }
+
+    // Adaptive theme palette: when canvas declares a solid light bg, flip the
+    // mirror-defaults `--m-*` palette to a coherent light theme so all
+    // surface-themed primitives (Button, Input, Item, Select-Trigger, …)
+    // adapt automatically. Without this, those primitives would still paint
+    // dark surfaces on a white page and look broken.
+    if (hasBg) {
+      const bg = styles.find(s => s.property === 'background')!.value
+      const palette = derivePaletteVariables(bg)
+      for (const [name, value] of Object.entries(palette)) {
+        styles.push({ property: name, value })
       }
     }
 
