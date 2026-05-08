@@ -198,6 +198,27 @@ describe('runGenerationPipeline — happy path', () => {
     expect(stage2Prompt).toContain('Show monthly revenue')
     expect(stage2Prompt).toContain('accent.bg: #2271C1')
   })
+
+  it('threads siblings through stage 1 — design-system honoring', async () => {
+    // Regression for the p4 architectural gap: without siblings in Stage 1,
+    // the LLM invents a parallel palette that the translator cannot rescue
+    // because the design decision is encoded in the HTML pivot.
+    script(ok(VALID_HTML), ok(VALID_MIRROR))
+
+    await runGenerationPipeline({
+      userPrompt: 'Stat cards using brand colors',
+      siblings: {
+        'tokens.tok': 'brand.bg: #2271C1\nmuted.col: #888',
+      },
+    })
+
+    const stage1Prompt = fixture.capturedPrompts[0]
+    expect(stage1Prompt).toContain('## Existing project design system')
+    expect(stage1Prompt).toContain('brand.bg: #2271C1')
+    expect(stage1Prompt).toContain('muted.col: #888')
+    // Verify the design-system framing is in place (not just the values).
+    expect(stage1Prompt).toMatch(/Do not invent a parallel/)
+  })
 })
 
 // =============================================================================

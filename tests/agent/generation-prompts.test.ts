@@ -173,6 +173,102 @@ describe('buildHtmlGenerationPrompt', () => {
       expect(prompt).toMatch(/no markdown code fences/)
     })
   })
+
+  describe('siblings — project design system', () => {
+    // The HTML pivot is where the design palette gets committed. Without
+    // siblings flowing into Stage 1, the LLM invents its own colors and the
+    // translator (Stage 2) can't retroactively swap them to existing project
+    // tokens. These tests pin that siblings DO appear in Stage 1 and that
+    // the framing instructs honoring (not just describing) the system.
+
+    it('includes a project-design-system section when siblings are provided', () => {
+      const prompt = buildHtmlGenerationPrompt({
+        userPrompt: 'Stat cards',
+        siblings: { 'tokens.tok': 'brand.bg: #2271C1\nbrand.col: white' },
+      })
+      expect(prompt).toContain('## Existing project design system')
+    })
+
+    it('embeds each sibling file in a fenced code block, keyed by filename', () => {
+      const prompt = buildHtmlGenerationPrompt({
+        userPrompt: 'Form',
+        siblings: {
+          'tokens.tok': 'brand.bg: #2271C1',
+          'components.com': 'Btn: pad 10 20',
+        },
+      })
+      expect(prompt).toContain('**tokens.tok**')
+      expect(prompt).toContain('brand.bg: #2271C1')
+      expect(prompt).toContain('**components.com**')
+      expect(prompt).toContain('Btn: pad 10 20')
+    })
+
+    it('instructs the LLM to define matching `:root` custom properties', () => {
+      // The translator-side mapping (`:root` → Mirror token) only works if
+      // Stage 1 emits the same names — otherwise the link breaks.
+      const prompt = buildHtmlGenerationPrompt({
+        userPrompt: 'Card',
+        siblings: { 'tokens.tok': 'brand.bg: #2271C1' },
+      })
+      expect(prompt).toMatch(/`:root` custom property/)
+      expect(prompt).toMatch(/same base name/)
+    })
+
+    it('forbids inventing a parallel palette', () => {
+      // Critical for the p4 fixture: without explicit "do not invent",
+      // the HTML stage produces its own palette regardless of siblings.
+      const prompt = buildHtmlGenerationPrompt({
+        userPrompt: 'Cards',
+        siblings: { 'tokens.tok': 'brand.bg: #2271C1' },
+      })
+      expect(prompt).toMatch(/Do not invent a parallel/)
+    })
+
+    it('omits the section when siblings is undefined', () => {
+      const prompt = buildHtmlGenerationPrompt({ userPrompt: 'A widget' })
+      expect(prompt).not.toContain('## Existing project design system')
+    })
+
+    it('omits the section when siblings is an empty object', () => {
+      const prompt = buildHtmlGenerationPrompt({ userPrompt: 'A widget', siblings: {} })
+      expect(prompt).not.toContain('## Existing project design system')
+    })
+
+    it('omits the section when all sibling values are blank', () => {
+      // Whitespace-only entries are effectively absent; the prompt should
+      // not produce a header with empty fences below.
+      const prompt = buildHtmlGenerationPrompt({
+        userPrompt: 'A widget',
+        siblings: { 'empty.tok': '   \n\n  ' },
+      })
+      expect(prompt).not.toContain('## Existing project design system')
+    })
+
+    it('appears before the constraints block (LLM reads context first)', () => {
+      // Order matters for prompt comprehension: the design system must be
+      // visible to the LLM before it processes the constraints, otherwise
+      // the constraints (e.g. "single accent color") are interpreted in a
+      // vacuum.
+      const prompt = buildHtmlGenerationPrompt({
+        userPrompt: 'Cards',
+        siblings: { 'tokens.tok': 'brand.bg: #2271C1' },
+      })
+      const designIdx = prompt.indexOf('## Existing project design system')
+      const constraintsIdx = prompt.indexOf('## Hard constraints')
+      expect(designIdx).toBeGreaterThan(-1)
+      expect(constraintsIdx).toBeGreaterThan(-1)
+      expect(designIdx).toBeLessThan(constraintsIdx)
+    })
+
+    it('works with the sketch branch as well as the userPrompt branch', () => {
+      const prompt = buildHtmlGenerationPrompt({
+        sketch: 'Btn "Save"',
+        siblings: { 'tokens.tok': 'brand.bg: #2271C1' },
+      })
+      expect(prompt).toContain('## Existing project design system')
+      expect(prompt).toContain('brand.bg: #2271C1')
+    })
+  })
 })
 
 // =============================================================================

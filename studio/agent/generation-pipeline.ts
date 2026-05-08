@@ -132,6 +132,7 @@ export async function runGenerationPipeline(
   const htmlPromptInput: HtmlGenerationPromptInput = {
     userPrompt: input.userPrompt,
     sketch: input.sketch,
+    siblings: input.siblings,
   }
   const htmlPrompt = buildHtmlGenerationPrompt(htmlPromptInput)
 

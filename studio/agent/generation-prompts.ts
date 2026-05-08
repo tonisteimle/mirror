@@ -31,6 +31,16 @@ export interface HtmlGenerationPromptInput {
    * Pipeline interpretiert grosszügig und idiomatisch.
    */
   sketch?: string
+  /**
+   * Project context — existing sibling files (tokens, components, data,
+   * layouts). The HTML stage uses them to honor the project's design
+   * system: matching color values flow through as `:root` custom
+   * properties, so the translator can map them back to `$token` cleanly.
+   * Without this, Stage 1 invents a parallel palette and the translator
+   * cannot rescue it (the design decision is already encoded in the HTML
+   * pivot). Map: filename → content.
+   */
+  siblings?: Record<string, string>
 }
 
 const HTML_HARD_CONSTRAINTS = `## Hard constraints (the HTML must stay within Mirror's possibility space)
@@ -67,8 +77,37 @@ const HTML_OUTPUT_RULES = `## Output rules
 - Inline all CSS in a single \`<style>\` block in the \`<head>\`.
 - Inline all JS in a single \`<script>\` at the end of \`<body>\`.`
 
+function formatProjectFilesForHtmlStage(
+  siblings: Record<string, string> | undefined
+): string | null {
+  if (!siblings) return null
+  const entries = Object.entries(siblings).filter(([, v]) => v.trim())
+  if (entries.length === 0) return null
+  // Critical: the HTML pivot encodes the design decision — palette, spacing
+  // scale, component vocabulary. If Stage 1 invents its own palette, the
+  // translator cannot retroactively swap to project tokens (the source HTML
+  // already commits the colors). So we hand the HTML stage the project's
+  // design system and require it to honor those values directly, expressed
+  // as `:root` custom properties using matching names so the translator
+  // can map them straight back to `$token` form.
+  const parts = [
+    `## Existing project design system — honor these tokens and components`,
+    ``,
+    `The Mirror project already defines tokens, components, and data in sibling files. Your HTML must honor this design system so the downstream translator can map your output back to the existing definitions cleanly:`,
+    ``,
+    `- For each token below, define a matching \`:root\` custom property using the **same base name** and the **same value** (e.g. \`brand.bg: #2271C1\` → \`--brand: #2271C1;\`), then reference it via \`var(--brand)\` everywhere that color appears.`,
+    `- Do not invent a parallel color palette, spacing scale, or radius set. Use the project's values.`,
+    `- For each component below, mirror its structure — class names, slot names — so the translator recognizes the existing component instead of redefining it.`,
+    ``,
+  ]
+  for (const [name, content] of entries) {
+    parts.push(`**${name}**\n\n\`\`\`\n${content.trim()}\n\`\`\``)
+  }
+  return parts.join('\n')
+}
+
 export function buildHtmlGenerationPrompt(input: HtmlGenerationPromptInput): string {
-  const { userPrompt, sketch } = input
+  const { userPrompt, sketch, siblings } = input
   if (!userPrompt && !sketch) {
     throw new Error('buildHtmlGenerationPrompt: either userPrompt or sketch is required')
   }
@@ -92,6 +131,9 @@ export function buildHtmlGenerationPrompt(input: HtmlGenerationPromptInput): str
     )
     parts.push(`## User request\n\n${userPrompt}`)
   }
+
+  const projectBlock = formatProjectFilesForHtmlStage(siblings)
+  if (projectBlock) parts.push(projectBlock)
 
   parts.push(
     `Your output will subsequently be translated to the Mirror DSL by a separate agent — follow the constraints and translation-friendly conventions below so the translation can stay clean and idiomatic.`
