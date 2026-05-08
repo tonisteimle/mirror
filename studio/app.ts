@@ -2467,6 +2467,20 @@ if (!isPlaygroundMode) {
       module.initDesktopFiles({
         onFileSelect: (filePath, content) => {
           log.debug('[DesktopFiles] Loading file into editor:', filePath)
+          // Persist the OUTGOING file's live editor content first. Without
+          // this, swapping editor content drops any in-flight edits — most
+          // visibly when the token-extract trigger writes tokens.tok and
+          // the storage 'file:created' event auto-selects the new file
+          // before the editor's just-applied `bg $primary` replacement
+          // has been mirrored back to files[currentFile]. switchFile()
+          // does the same persist-first dance for tab/explorer clicks; we
+          // need it on this path too.
+          if (currentFile && currentFile !== filePath && editor) {
+            const outgoing = editor.state.doc.toString()
+            if (files[currentFile] !== outgoing) {
+              files[currentFile] = outgoing
+            }
+          }
           // Update currentFile for appLockExtension
           currentFile = filePath
           // Track previewFile separately: only follow the editor when the
