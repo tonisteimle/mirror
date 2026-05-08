@@ -78,11 +78,11 @@ Card: Frame bg $bg.card, rad $radius.lg, pad $space.xl, gap $space.lg
 // KPI CARD COMPONENT
 // ========================================
 
-KpiCard: Frame bg $bg.card, rad $radius.lg, pad $space.xl, gap $space.md, w 220
-  Header: Frame hor, spread, ver-center, w full
-  Value: Text fs 32, weight 700, col $text.primary
-  Label: Text col $text.secondary, fs 13, weight 500
-  Trend: Text fs 12, weight 500
+KpiCard as Frame: bg $bg.card, rad $radius.lg, pad $space.xl, gap $space.md, w 220
+  Header as Frame: hor, spread, ver-center, w full
+  Value as Text: fs 32, weight 700, col $text.primary
+  Label as Text: col $text.secondary, fs 13, weight 500
+  Trend as Text: fs 12, weight 500
 
 KpiIconBlue: Frame w 40, h 40, rad $radius.md, center, bg rgba(59,130,246,0.15)
 KpiIconYellow: Frame w 40, h 40, rad $radius.md, center, bg rgba(245,158,11,0.15)

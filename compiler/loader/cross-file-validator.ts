@@ -23,6 +23,7 @@ import type { Property, Instance } from '../parser/ast'
 import { parse, parseWithDiagnostics } from '../parser'
 import { isPrimitive } from '../schema/dsl'
 import { suggestSimilar } from '../validator/string-utils'
+import { getBuiltinComponents } from '../validator/builtin-prelude'
 import { classify, isPropertySet, isPlainToken, isDataObject } from './classify'
 import type { ProjectFile } from './project-loader'
 
@@ -266,10 +267,16 @@ export function validateProject(files: ProjectFile[]): CrossFileError[] {
     })
   }
 
+  // Built-in components / template slots / chart primitives / Zag
+  // primitives + their slots — always defined regardless of project files.
+  const builtinComponents = getBuiltinComponents()
+
   function checkComponentRef(name: string, filename: string, line: number): void {
     if (isPrimitive(name)) return
+    if (builtinComponents.has(name)) return
     if (globalComponents.has(name)) return
-    const suggestion = suggestSimilar(name, globalComponents.keys(), 2) ?? undefined
+    const suggestion =
+      suggestSimilar(name, [...globalComponents.keys(), ...builtinComponents], 2) ?? undefined
     errors.push({
       code: 'undefined-component',
       filename,

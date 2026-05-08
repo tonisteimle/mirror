@@ -31,6 +31,7 @@ const SLOT_ALIASES = [
   'Content',
   'Backdrop',
   'Title',
+  'Subtitle',
   'Body',
   'Desc',
   'Description',
@@ -41,6 +42,7 @@ const SLOT_ALIASES = [
   'TabList',
   'TabPanel',
   'Item',
+  'Items',
   'ItemTrigger',
   'ItemContent',
   'Indicator',
@@ -66,10 +68,21 @@ const SLOT_ALIASES = [
   'AppShell',
   'Sidebar',
   'Main',
+  'MainContent',
+  'MainArea',
   // Pure-Mirror surfaces
   'Card',
   'Avatar',
   'Badge',
+  // Generic UI slots used across many domains — text/badge/action areas
+  // around primary content. Adding to the prelude reduces the
+  // boilerplate `Subtitle as Text:` defs that every project repeats.
+  'Caption',
+  'Count',
+  'Actions',
+  'Toolbar',
+  'Meta',
+  'Status',
 ] as const
 
 /**
