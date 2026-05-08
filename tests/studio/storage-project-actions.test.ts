@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Project Actions Tests
  *
@@ -313,9 +314,99 @@ describe('importProject', () => {
     expect(typeof importProject).toBe('function')
   })
 
-  // Note: Full import testing requires mocking file input and FileReader
-  // which is complex in Node.js environment. The function creates a hidden
-  // file input, triggers click, and reads the selected files.
+  it('imports Mirror files from a folder selection (full happy path)', async () => {
+    // P2 coverage: the actual import path was previously only "is a function".
+    // Mock document.createElement to return a fake file input, then drive
+    // the onchange handler with simulated File objects.
+    const fakeFiles = [
+      makeFakeFile('myproj/app.mir', 'Frame "App"'),
+      makeFakeFile('myproj/tokens.tok', 'primary.bg: #2271C1'),
+      makeFakeFile('myproj/readme.md', '# ignored'), // not a Mirror file
+    ]
+    const fakeInput = makeFakeFileInput(fakeFiles)
+    const realCreateElement = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
+      if (tag === 'input') return fakeInput
+      return realCreateElement(tag)
+    }) as typeof document.createElement)
+
+    const { importProject } = await getProjectActions()
+    const promise = importProject()
+    // Trigger the input's onchange event after promise is awaiting.
+    await fakeInput.triggerChange()
+    const result = await promise
+
+    expect(result).toBe(true)
+    const stored = JSON.parse(mockStorage.getItem('mirror-files') || '{}')
+    expect(stored['app.mir']).toBe('Frame "App"')
+    expect(stored['tokens.tok']).toBe('primary.bg: #2271C1')
+    // Non-Mirror file was filtered out:
+    expect(stored['readme.md']).toBeUndefined()
+  })
+
+  it('returns false when user cancels (empty file list)', async () => {
+    const fakeInput = makeFakeFileInput([])
+    vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
+      if (tag === 'input') return fakeInput
+      return document.createElement.bind(document)(tag)
+    }) as typeof document.createElement)
+
+    const { importProject } = await getProjectActions()
+    const promise = importProject()
+    await fakeInput.triggerChange() // empty FileList
+    const result = await promise
+    expect(result).toBe(false)
+  })
+
+  it('shows alert and returns false when folder has no Mirror files', async () => {
+    const fakeFiles = [
+      makeFakeFile('myproj/readme.md', '# md'),
+      makeFakeFile('myproj/style.css', '.x{}'),
+    ]
+    const fakeInput = makeFakeFileInput(fakeFiles)
+    vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
+      if (tag === 'input') return fakeInput
+      return document.createElement.bind(document)(tag)
+    }) as typeof document.createElement)
+    const alertMock = vi.fn().mockResolvedValue(undefined)
+    ;(global as unknown as { MirrorDialog: unknown }).MirrorDialog = { alert: alertMock }
+
+    const { importProject } = await getProjectActions()
+    const promise = importProject()
+    await fakeInput.triggerChange()
+    const result = await promise
+
+    expect(result).toBe(false)
+    expect(alertMock).toHaveBeenCalled()
+    // Locked: the alert text mentions Mirror file types so the user
+    // knows what was expected.
+    expect(alertMock.mock.calls[0][0]).toMatch(/Mirror-Dateien/)
+  })
+
+  it('strips the common root-folder prefix from imported paths', async () => {
+    // User picks `myproj/`. The webkitRelativePath is `myproj/x/y.mir`.
+    // After import, stored key should be `x/y.mir` (no `myproj/`).
+    const fakeFiles = [
+      makeFakeFile('rootfolder/sub/nested.mir', 'A'),
+      makeFakeFile('rootfolder/top.mir', 'B'),
+    ]
+    const fakeInput = makeFakeFileInput(fakeFiles)
+    vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
+      if (tag === 'input') return fakeInput
+      return document.createElement.bind(document)(tag)
+    }) as typeof document.createElement)
+
+    const { importProject } = await getProjectActions()
+    const promise = importProject()
+    await fakeInput.triggerChange()
+    await promise
+
+    const stored = JSON.parse(mockStorage.getItem('mirror-files') || '{}')
+    expect(stored['sub/nested.mir']).toBe('A')
+    expect(stored['top.mir']).toBe('B')
+    // Old prefixed keys must NOT be present:
+    expect(stored['rootfolder/top.mir']).toBeUndefined()
+  })
 })
 
 // =============================================================================
@@ -344,7 +435,199 @@ describe('exportProject', () => {
       title: 'Export fehlgeschlagen',
     })
   })
+
+  it('zips files and triggers a download (full happy path)', async () => {
+    // P2 coverage: the export path was previously only tested for the
+    // empty case. Mock JSZip + URL.createObjectURL + the anchor click.
+    mockStorage.setItem(
+      'mirror-files',
+      JSON.stringify({
+        'app.mir': 'Frame "App"',
+        'tokens.tok': 'primary.bg: #2271C1',
+      })
+    )
+
+    const fileEntries: Record<string, string> = {}
+    const generateAsyncMock = vi.fn().mockResolvedValue(new Blob(['zipped']))
+    class FakeJSZip {
+      file(path: string, content: string) {
+        fileEntries[path] = content
+      }
+      generateAsync = generateAsyncMock
+    }
+    ;(global.window as unknown as { JSZip: typeof FakeJSZip }).JSZip = FakeJSZip
+
+    const createObjUrlMock = vi.fn().mockReturnValue('blob:fake-url')
+    const revokeObjUrlMock = vi.fn()
+    // Patch only the methods, leave URL constructor intact (reloadFresh uses `new URL(...)`)
+    URL.createObjectURL = createObjUrlMock as unknown as typeof URL.createObjectURL
+    URL.revokeObjectURL = revokeObjUrlMock as unknown as typeof URL.revokeObjectURL
+
+    // Track anchor click + download attribute
+    const anchorClick = vi.fn()
+    const fakeAnchor: HTMLAnchorElement = {
+      href: '',
+      download: '',
+      click: anchorClick,
+    } as unknown as HTMLAnchorElement
+    const realCreateElement = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation(((tag: string) => {
+      if (tag === 'a') return fakeAnchor
+      return realCreateElement(tag)
+    }) as typeof document.createElement)
+    vi.spyOn(document.body, 'appendChild').mockImplementation(
+      ((n: Node) => n) as typeof document.body.appendChild
+    )
+    vi.spyOn(document.body, 'removeChild').mockImplementation(
+      ((n: Node) => n) as typeof document.body.removeChild
+    )
+
+    const { exportProject } = await getProjectActions()
+    await exportProject()
+
+    // Both files made it into the zip.
+    expect(fileEntries['app.mir']).toBe('Frame "App"')
+    expect(fileEntries['tokens.tok']).toBe('primary.bg: #2271C1')
+    // Download triggered with sensible filename + URL housekeeping.
+    expect(fakeAnchor.download).toBe('mirror-project.zip')
+    expect(fakeAnchor.href).toBe('blob:fake-url')
+    expect(anchorClick).toHaveBeenCalled()
+    expect(revokeObjUrlMock).toHaveBeenCalledWith('blob:fake-url')
+  })
 })
+
+// =============================================================================
+// TAURI BRANCHES (P2 coverage)
+// =============================================================================
+
+describe('Tauri branches — newProject / loadDemo / importProject / exportProject', () => {
+  beforeEach(() => {
+    // isTauri() reads __TAURI_INTERNALS__. Setting it makes isTauri() return true.
+    ;(global.window as unknown as { __TAURI_INTERNALS__: unknown }).__TAURI_INTERNALS__ = {}
+  })
+
+  afterEach(() => {
+    delete (global.window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__
+    delete (global.window as unknown as { __TAURI_BRIDGE__?: unknown }).__TAURI_BRIDGE__
+  })
+
+  it('newProject delegates to TauriBridge.newProject when Tauri is detected', async () => {
+    const newProjectMock = vi.fn().mockResolvedValue(undefined)
+    ;(global.window as unknown as { __TAURI_BRIDGE__: unknown }).__TAURI_BRIDGE__ = {
+      newProject: newProjectMock,
+    }
+    const { newProject } = await getProjectActions()
+    await newProject('demo')
+    expect(newProjectMock).toHaveBeenCalledWith('demo')
+    // No localStorage write happened — Tauri branch took over.
+    expect(mockStorage.getItem('mirror-files')).toBeNull()
+  })
+
+  it('newProject silently no-ops when Tauri bridge is missing', async () => {
+    // No __TAURI_BRIDGE__ set, but isTauri()=true.
+    const { newProject } = await getProjectActions()
+    await expect(newProject()).resolves.toBeUndefined()
+    expect(mockStorage.getItem('mirror-files')).toBeNull()
+  })
+
+  it('loadDemoProject delegates to TauriBridge.loadDemo when present', async () => {
+    const loadDemoMock = vi.fn().mockResolvedValue(undefined)
+    ;(global.window as unknown as { __TAURI_BRIDGE__: unknown }).__TAURI_BRIDGE__ = {
+      loadDemo: loadDemoMock,
+    }
+    const { loadDemoProject } = await getProjectActions()
+    await loadDemoProject()
+    expect(loadDemoMock).toHaveBeenCalled()
+  })
+
+  it('importProject returns false when Tauri bridge is missing the method', async () => {
+    ;(global.window as unknown as { __TAURI_BRIDGE__: unknown }).__TAURI_BRIDGE__ = {}
+    const { importProject } = await getProjectActions()
+    const result = await importProject()
+    expect(result).toBe(false)
+  })
+
+  it('importProject returns whatever TauriBridge.importProject returns', async () => {
+    ;(global.window as unknown as { __TAURI_BRIDGE__: unknown }).__TAURI_BRIDGE__ = {
+      importProject: vi.fn().mockResolvedValue(true),
+    }
+    const { importProject } = await getProjectActions()
+    expect(await importProject()).toBe(true)
+  })
+
+  it('exportProject delegates to TauriBridge.exportProject when present', async () => {
+    const exportMock = vi.fn().mockResolvedValue(undefined)
+    ;(global.window as unknown as { __TAURI_BRIDGE__: unknown }).__TAURI_BRIDGE__ = {
+      exportProject: exportMock,
+    }
+    const { exportProject } = await getProjectActions()
+    await exportProject()
+    expect(exportMock).toHaveBeenCalled()
+  })
+
+  it('exportProject is a no-op when Tauri bridge has no exportProject', async () => {
+    ;(global.window as unknown as { __TAURI_BRIDGE__: unknown }).__TAURI_BRIDGE__ = {}
+    const { exportProject } = await getProjectActions()
+    await expect(exportProject()).resolves.toBeUndefined()
+  })
+})
+
+// =============================================================================
+// HELPERS for new tests
+// =============================================================================
+
+interface FakeFileInput extends HTMLInputElement {
+  triggerChange(): Promise<void>
+  triggerCancel(): void
+}
+
+function makeFakeFileInput(files: File[]): FakeFileInput {
+  const handlers: { onchange?: () => Promise<void> | void; oncancel?: () => void } = {}
+  const fakeFileList = {
+    length: files.length,
+    item: (i: number) => files[i],
+    [Symbol.iterator]: function* () {
+      for (const f of files) yield f
+    },
+  } as unknown as FileList
+  // Make Array.from work
+  Object.defineProperty(fakeFileList, 'length', { value: files.length })
+  for (let i = 0; i < files.length; i++) {
+    ;(fakeFileList as unknown as Record<number, File>)[i] = files[i]
+  }
+  const input = {
+    type: '',
+    webkitdirectory: false,
+    multiple: false,
+    files: fakeFileList,
+    set onchange(h: () => Promise<void> | void) {
+      handlers.onchange = h
+    },
+    get onchange() {
+      return handlers.onchange ?? (() => {})
+    },
+    set oncancel(h: () => void) {
+      handlers.oncancel = h
+    },
+    get oncancel() {
+      return handlers.oncancel ?? (() => {})
+    },
+    click: () => {},
+    triggerChange: async () => {
+      const r = handlers.onchange?.()
+      if (r instanceof Promise) await r
+    },
+    triggerCancel: () => handlers.oncancel?.(),
+  }
+  return input as unknown as FakeFileInput
+}
+
+function makeFakeFile(webkitRelativePath: string, content: string): File {
+  const name = webkitRelativePath.split('/').pop() ?? webkitRelativePath
+  const f = new File([content], name)
+  Object.defineProperty(f, 'webkitRelativePath', { value: webkitRelativePath })
+  return f
+}
 
 // =============================================================================
 // MIRROR FILE DETECTION

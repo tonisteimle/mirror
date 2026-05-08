@@ -22,6 +22,40 @@ import { logCodeModifier as log } from '../../compiler/utils/logger'
 import { adjustTemplateIndentation } from '../../compiler/schema/component-templates'
 
 /**
+ * 9-zone alignment keywords. Mutually exclusive: a single Frame can
+ * carry at most one. Drop-into-zone must remove competing keywords
+ * before adding the new one, otherwise the line ends up with two
+ * conflicting alignments (e.g. `Frame center, tl`) and the renderer's
+ * behavior is undefined.
+ */
+const ALIGNMENT_KEYWORDS = ['tl', 'tc', 'tr', 'cl', 'center', 'cr', 'bl', 'bc', 'br'] as const
+
+function isAlignmentKeyword(prop: string): boolean {
+  return (ALIGNMENT_KEYWORDS as readonly string[]).includes(prop)
+}
+
+/**
+ * Build the new parent-line content for an alignment-zone drop:
+ * strip any existing alignment keyword, then add the new one. Done
+ * in one composed transformation so callers can apply a single
+ * line-replacement (instead of two passes that mess up offset math
+ * for the subsequent child insertion).
+ */
+function buildLineWithExclusiveAlignment(line: string, newKeyword: string): string {
+  let result = line
+  for (const kw of ALIGNMENT_KEYWORDS) {
+    if (kw === newKeyword) continue
+    let parsed = parseLine(result)
+    while (findPropertyInLine(parsed, kw)) {
+      result = removePropertyFromLine(parsed, kw)
+      parsed = parseLine(result)
+    }
+  }
+  const parsed = parseLine(result)
+  return addPropertyToLine(parsed, newKeyword, '')
+}
+
+/**
  * Add a child block (single line or multi-line template) under a parent.
  *
  * Shared core for `addChild` and `addChildWithTemplate` — both compute the
@@ -49,13 +83,21 @@ function addChildBlock(
   let combinedInsert = ''
   let parentLengthDelta = 0
 
-  // If parentProperty is specified, add it to the parent first
+  // If parentProperty is specified, add it to the parent first.
+  // Special-case alignment keywords (tl/tc/tr/cl/center/cr/bl/bc/br):
+  // they're mutually exclusive — strip any existing alignment keyword
+  // before injecting the new one in a SINGLE line transformation, so
+  // a re-aligned drop produces `Frame tl` instead of `Frame center,
+  // tl`. Doing the strip-and-add as one composed step (rather than
+  // two writes) keeps parentLengthDelta consistent for the downstream
+  // child insertion.
   if (parentProperty) {
     const parentLine = parentMapping.position.line
     const line = this.lines[parentLine - 1]
     if (line) {
-      const parsedLine = parseLine(line)
-      const newLine = addPropertyToLine(parsedLine, parentProperty, '')
+      const newLine = isAlignmentKeyword(parentProperty)
+        ? buildLineWithExclusiveAlignment(line, parentProperty)
+        : addPropertyToLine(parseLine(line), parentProperty, '')
 
       const lineStartOffset = this.getCharacterOffset(parentLine, 1)
       combinedFrom = lineStartOffset
@@ -76,7 +118,14 @@ function addChildBlock(
 
   const block = buildBlock(insertionInfo.indent)
   const insertText = `\n${block}`
-  const insertPosition = insertionInfo.charOffset + parentLengthDelta
+  // calculateChildInsertionPoint reads from this.lines which is already
+  // post-update (after parentProperty injection), so charOffset is in
+  // post-update coordinates. Adding parentLengthDelta double-counts —
+  // harmless when delta>0 because substring() clamps past-end, but
+  // catastrophic when delta<0 (alignment-keyword strip shrinks the
+  // parent line) because the insertion position lands MID-LINE,
+  // producing `Frame ... tlutton "Button"` corruption.
+  const insertPosition = insertionInfo.charOffset
 
   const newSource =
     this.source.substring(0, insertPosition) + insertText + this.source.substring(insertPosition)

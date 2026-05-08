@@ -71,6 +71,9 @@ export {
   alignmentMoveEdgeCases,
 } from './alignment-from-move.test'
 
+// Tight contract tests: byte-exact source + DOM computed-style + threshold
+export { alignmentTightTests } from './alignment-tight.test'
+
 // Each-template guard: blocks reorder of each-rendered nodes
 export { eachTemplateGuardTests } from './each-template-guard.test'
 

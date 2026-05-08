@@ -350,10 +350,13 @@ export class Indicator implements Reportable<IndicatorReport> {
     else if (relY < thirdHeight * 2) row = 'center'
     else row = 'bottom'
 
-    // Combine to position
+    // Combine to position. Two special cases for row=center:
+    //   - both center → just 'center'
+    //   - row=center otherwise → 'center-{col}' (col first looks weird)
+    // All other rows fall through to the default `${row}-${col}` form,
+    // which already covers top-center / bottom-center correctly.
     if (row === 'center' && col === 'center') return 'center'
     if (row === 'center') return `center-${col}` as AlignPosition
-    if (col === 'center') return `${row}-center` as AlignPosition
     return `${row}-${col}` as AlignPosition
   }
 

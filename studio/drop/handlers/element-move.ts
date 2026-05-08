@@ -7,6 +7,10 @@
 import { BaseDropHandler } from './base-handler'
 import type { DropResult, DropContext, ModificationResult, GridPlacement } from '../types'
 
+// 9-zone alignment keywords are mutually exclusive on a single Frame.
+// Cf. children-ops.ts ALIGNMENT_KEYWORDS — keep the two lists in sync.
+const ALIGNMENT_KEYWORDS = ['tl', 'tc', 'tr', 'cl', 'center', 'cr', 'bl', 'bc', 'br'] as const
+
 /**
  * Build a `x N, y M [, w P] [, h Q]` snippet for moveNode's
  * options.properties. Default spans (1) are omitted to keep the DSL minimal.
@@ -30,9 +34,18 @@ export class ElementMoveHandler extends BaseDropHandler {
     // This is needed because each modification updates the CodeModifier's internal source
     const originalSourceLength = context.codeModifier.getSourceLength()
 
-    // If alignment zone is specified, add it to the PARENT FIRST
-    // addProperty only modifies line content (not line count), so SourceMap positions stay valid
+    // If alignment zone is specified, add it to the PARENT FIRST.
+    // addProperty only modifies line content (not line count), so SourceMap
+    // positions stay valid. Alignment keywords are mutually exclusive,
+    // so strip any existing one before adding the new — otherwise a
+    // re-aligned drop produces `Frame center, tl` (two conflicting
+    // alignments).
     if (alignment?.zone) {
+      for (const kw of ALIGNMENT_KEYWORDS) {
+        if (kw !== alignment.zone) {
+          context.codeModifier.removeProperty(targetNodeId, kw)
+        }
+      }
       const alignResult = context.codeModifier.addProperty(targetNodeId, alignment.zone, '')
       if (!alignResult.success) {
         return alignResult
