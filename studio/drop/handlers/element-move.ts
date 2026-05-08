@@ -5,7 +5,18 @@
  */
 
 import { BaseDropHandler } from './base-handler'
-import type { DropResult, DropContext, ModificationResult } from '../types'
+import type { DropResult, DropContext, ModificationResult, GridPlacement } from '../types'
+
+/**
+ * Build a `x N, y M [, w P] [, h Q]` snippet for moveNode's
+ * options.properties. Default spans (1) are omitted to keep the DSL minimal.
+ */
+function formatGridProps(p: GridPlacement): string {
+  const parts = [`x ${p.x}`, `y ${p.y}`]
+  if (p.w > 1) parts.push(`w ${p.w}`)
+  if (p.h > 1) parts.push(`h ${p.h}`)
+  return parts.join(', ')
+}
 
 export class ElementMoveHandler extends BaseDropHandler {
   canHandle(result: DropResult): boolean {
@@ -13,7 +24,7 @@ export class ElementMoveHandler extends BaseDropHandler {
   }
 
   async handle(result: DropResult, context: DropContext): Promise<ModificationResult> {
-    const { source, targetNodeId, placement, insertionIndex, alignment } = result
+    const { source, targetNodeId, placement, insertionIndex, alignment, gridPlacement } = result
 
     // Track original source length BEFORE any modifications
     // This is needed because each modification updates the CodeModifier's internal source
@@ -28,12 +39,20 @@ export class ElementMoveHandler extends BaseDropHandler {
       }
     }
 
+    // Grid placement is folded into the moveNode call via options.properties
+    // — moveNode rewrites the source but does NOT refresh sourceMap, so a
+    // separate post-move updateProperty would hit a stale line position.
+    // Passing the props through `applyOptionalProperties` writes them onto
+    // the moved block's first line in the same edit.
+    const properties = gridPlacement ? formatGridProps(gridPlacement) : undefined
+
     // Then move the node - CodeModifier uses updated this.source from addProperty
     const moveResult = context.codeModifier.moveNode(
       source.nodeId!,
       targetNodeId,
       placement,
-      insertionIndex
+      insertionIndex,
+      properties ? { properties } : undefined
     )
 
     // If we did both addProperty and moveNode, we need to fix the change range
