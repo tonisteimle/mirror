@@ -840,13 +840,16 @@ export function parseInlineChildren(this: Parser, instance: Instance): void {
       if (isComponent) {
         const childName = this.advance()
 
-        // Create child instance
+        // Create child instance. `events: []` is initialized so the
+        // implicit-onclick branch below has somewhere to push.
         const child: Instance = {
           type: 'Instance',
           component: childName.value,
           name: null,
           properties: [],
           children: [],
+          states: [],
+          events: [],
           line: childName.line,
           column: childName.column,
         }
@@ -887,8 +890,25 @@ export function parseInlineChildren(this: Parser, instance: Instance): void {
             continue
           }
 
-          // Property (lowercase identifier)
+          // Property OR implicit-onclick action.
+          //
+          // `Frame: Btn "Save", toast("ok")` — the inline-children path
+          // used parseProperty() which doesn't know about action calls
+          // and parses `toast` as a property name (eating `(`, "ok", `)`
+          // as values). The validator then complains about an unknown
+          // property. Mirror the implicit-onclick check from
+          // inline-property-parser.ts so action calls become events,
+          // matching the top-level instance behavior.
           if (this.check('IDENTIFIER')) {
+            const identName = this.current().value
+            if (this.checkNext('LPAREN') && this.isImplicitOnclickCandidate(identName)) {
+              const event = this.parseImplicitOnclick()
+              if (event) {
+                if (!child.events) child.events = []
+                child.events.push(event)
+              }
+              continue
+            }
             const prop = this.parseProperty()
             if (prop) child.properties.push(prop)
             continue

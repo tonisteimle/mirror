@@ -300,4 +300,57 @@ MyContent: Frame name MyContent, pad 16
       expect(root.textContent).toContain('Embedded content')
     })
   })
+
+  // ---------------------------------------------------------------------------
+  // Inline-action recognition in slot/inline-children context
+  // ---------------------------------------------------------------------------
+
+  describe('inline actions in slot bodies', () => {
+    it('toast(...) in a slot body is parsed as onclick event, not as a property', () => {
+      // Was a pre-existing bug: `parseInlineChildren` (the path used for
+      // `Slot: Button "X", toast("ok")`) called `parseProperty()` which
+      // doesn't know about implicit-onclick. The validator then complained
+      // about "Unknown property toast". Mirroring the implicit-onclick
+      // check from inline-property-parser fixes it.
+      const src = `Frame
+  CloseTrigger: Button "Save", bg #2271C1, toast("Saved")`
+
+      // Compile end-to-end — should NOT throw a validation error.
+      const code = generateDOM(parse(src)).replace(/^export\s+function/gm, 'function')
+      const fn = new Function(code + '\nreturn createUI();')
+      const root = fn() as HTMLElement
+      expect(root).toBeTruthy()
+
+      // The Button must NOT carry a "toast" attribute (would mean it
+      // was parsed as a property and rendered as data-* on the element).
+      const button = root.querySelector('button')
+      expect(button).not.toBeNull()
+      expect(button?.getAttribute('toast')).toBeNull()
+      expect(button?.getAttribute('data-toast')).toBeNull()
+    })
+
+    it('navigate(X) in a slot body is also recognized as onclick', () => {
+      const src = `Frame
+  Item: Button "Go", bg #2271C1, navigate(NextScreen)`
+      const code = generateDOM(parse(src)).replace(/^export\s+function/gm, 'function')
+      const fn = new Function(code + '\nreturn createUI();')
+      const root = fn() as HTMLElement
+      const button = root.querySelector('button')
+      expect(button).not.toBeNull()
+      expect(button?.getAttribute('navigate')).toBeNull()
+    })
+
+    it('multiple inline actions in a slot body all parse as events', () => {
+      const src = `Frame
+  Btn: Button "X", toast("a"), toggle()`
+      const code = generateDOM(parse(src)).replace(/^export\s+function/gm, 'function')
+      const fn = new Function(code + '\nreturn createUI();')
+      const root = fn() as HTMLElement
+      const button = root.querySelector('button')
+      expect(button).not.toBeNull()
+      // Neither action becomes a property
+      expect(button?.getAttribute('toast')).toBeNull()
+      expect(button?.getAttribute('toggle')).toBeNull()
+    })
+  })
 })

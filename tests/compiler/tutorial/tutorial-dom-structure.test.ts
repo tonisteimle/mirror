@@ -76,17 +76,6 @@ function checkChildOrder(
 // ============================================================
 // GRUNDLEGENDE STRUKTUR-TESTS
 // ============================================================
-// Per-example skip list for cases that depend on browser-runtime features
-// the inline jsdom runtime can't provide (IntersectionObserver,
-// setupInViewAnimation) or use syntax/data the renderer can't smoke-test
-// without significant scaffolding (custom JS functions, scoped each-loops).
-const SKIP_EXAMPLES: Record<string, number[]> = {
-  '06 - states': [10, 11], // IntersectionObserver
-  '07 - animationen': [8, 9, 10, 12, 13], // setupInViewAnimation / setupScrollAnimation
-  '14 - tables': [20], // user-defined JS (select(), custom methods)
-  '16 - forms': [11], // user-defined JS (isValidEmail, register)
-}
-
 // Whole chapters skipped because the inline runtime doesn't ship the
 // underlying machinery — adding 20+ skipped per-example entries is noise.
 const SKIP_CHAPTERS = new Set([
@@ -106,10 +95,7 @@ describe('DOM Structure: Basic Rendering', () => {
     describe(name, () => {
       examples.forEach((code, index) => {
         const exampleNum = index + 1
-        const shouldSkip = SKIP_EXAMPLES[name]?.includes(exampleNum)
-
-        const testFn = shouldSkip ? it.skip : it
-        testFn(`Example ${exampleNum} renders without errors`, () => {
+        it(`Example ${exampleNum} renders without errors`, () => {
           expect(() => {
             const { root } = renderWithRuntime(code, container)
             expect(root).toBeTruthy()

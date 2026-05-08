@@ -37834,6 +37834,517 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 6 1`] = `
     {
       "children": [
         {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "RadioItem",
+          "primitive": "radioitem",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Monatlich – €9/Monat",
+            },
+            {
+              "name": "value",
+              "value": "monthly",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "RadioItem",
+          "primitive": "radioitem",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Jährlich – €99/Jahr",
+            },
+            {
+              "name": "value",
+              "value": "yearly",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "RadioItem",
+          "primitive": "radioitem",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Lifetime – €299",
+            },
+            {
+              "name": "value",
+              "value": "lifetime",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "RadioGroup",
+      "primitive": "radiogroup",
+      "properties": [
+        {
+          "name": "value",
+          "value": "monthly",
+        },
+      ],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 7 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Slider",
+          "primitive": "slider",
+          "properties": [
+            {
+              "name": "value",
+              "value": "50",
+            },
+            {
+              "name": "min",
+              "value": "0",
+            },
+            {
+              "name": "max",
+              "value": "100",
+            },
+            {
+              "name": "step",
+              "value": "10",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Text",
+          "primitive": "text",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Lautstärke: $volume",
+            },
+          ],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#888",
+            },
+          ],
+          "tag": "span",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "12px",
+        },
+        {
+          "property": "width",
+          "value": "280px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [
+    {
+      "name": "volume",
+      "type": "size",
+      "value": 50,
+    },
+  ],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 8 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "isZagComponent": true,
+      "items": [],
+      "machineConfig": {
+        "id": "node-1",
+        "placeholder": "Datum wählen",
+      },
+      "name": "DatePicker",
+      "primitive": "datepicker",
+      "properties": [],
+      "slots": {
+        "ClearTrigger": {
+          "apiMethod": "getClearTriggerProps",
+          "children": [],
+          "element": "div",
+          "name": "ClearTrigger",
+          "portal": false,
+          "styles": [],
+        },
+        "Content": {
+          "apiMethod": "getContentProps",
+          "children": [],
+          "element": "div",
+          "name": "Content",
+          "portal": true,
+          "styles": [],
+        },
+        "Control": {
+          "apiMethod": "getControlProps",
+          "children": [],
+          "element": "div",
+          "name": "Control",
+          "portal": false,
+          "styles": [],
+        },
+        "Input": {
+          "apiMethod": "getInputProps",
+          "children": [],
+          "element": "div",
+          "name": "Input",
+          "portal": false,
+          "styles": [],
+        },
+        "Label": {
+          "apiMethod": "getLabelProps",
+          "children": [],
+          "element": "div",
+          "name": "Label",
+          "portal": false,
+          "styles": [],
+        },
+        "MonthSelect": {
+          "apiMethod": "getMonthSelectProps",
+          "children": [],
+          "element": "div",
+          "name": "MonthSelect",
+          "portal": false,
+          "styles": [],
+        },
+        "NextTrigger": {
+          "apiMethod": "getNextTriggerProps",
+          "children": [],
+          "element": "div",
+          "name": "NextTrigger",
+          "portal": false,
+          "styles": [],
+        },
+        "Positioner": {
+          "apiMethod": "getPositionerProps",
+          "children": [],
+          "element": "div",
+          "name": "Positioner",
+          "portal": true,
+          "styles": [],
+        },
+        "PresetTrigger": {
+          "apiMethod": "getPresetTriggerProps",
+          "children": [],
+          "element": "div",
+          "name": "PresetTrigger",
+          "portal": false,
+          "styles": [],
+        },
+        "PrevTrigger": {
+          "apiMethod": "getPrevTriggerProps",
+          "children": [],
+          "element": "div",
+          "name": "PrevTrigger",
+          "portal": false,
+          "styles": [],
+        },
+        "RangeText": {
+          "apiMethod": "getRangeTextProps",
+          "children": [],
+          "element": "div",
+          "name": "RangeText",
+          "portal": false,
+          "styles": [],
+        },
+        "Root": {
+          "apiMethod": "getRootProps",
+          "children": [],
+          "element": "div",
+          "name": "Root",
+          "portal": false,
+          "styles": [],
+        },
+        "Table": {
+          "apiMethod": "getTableProps",
+          "children": [],
+          "element": "div",
+          "name": "Table",
+          "portal": false,
+          "styles": [],
+        },
+        "TableBody": {
+          "apiMethod": "getTableBodyProps",
+          "children": [],
+          "element": "div",
+          "name": "TableBody",
+          "portal": false,
+          "styles": [],
+        },
+        "TableCell": {
+          "apiMethod": "getTableCellProps",
+          "children": [],
+          "element": "div",
+          "name": "TableCell",
+          "portal": false,
+          "styles": [],
+        },
+        "TableCellTrigger": {
+          "apiMethod": "getTableCellTriggerProps",
+          "children": [],
+          "element": "div",
+          "name": "TableCellTrigger",
+          "portal": false,
+          "styles": [],
+        },
+        "TableHead": {
+          "apiMethod": "getTableHeadProps",
+          "children": [],
+          "element": "div",
+          "name": "TableHead",
+          "portal": false,
+          "styles": [],
+        },
+        "TableHeader": {
+          "apiMethod": "getTableHeaderProps",
+          "children": [],
+          "element": "div",
+          "name": "TableHeader",
+          "portal": false,
+          "styles": [],
+        },
+        "TableRow": {
+          "apiMethod": "getTableRowProps",
+          "children": [],
+          "element": "div",
+          "name": "TableRow",
+          "portal": false,
+          "styles": [],
+        },
+        "Trigger": {
+          "apiMethod": "getTriggerProps",
+          "children": [],
+          "element": "button",
+          "name": "Trigger",
+          "portal": false,
+          "styles": [],
+        },
+        "ViewControl": {
+          "apiMethod": "getViewControlProps",
+          "children": [],
+          "element": "div",
+          "name": "ViewControl",
+          "portal": false,
+          "styles": [],
+        },
+        "ViewTrigger": {
+          "apiMethod": "getViewTriggerProps",
+          "children": [],
+          "element": "div",
+          "name": "ViewTrigger",
+          "portal": false,
+          "styles": [],
+        },
+        "YearSelect": {
+          "apiMethod": "getYearSelectProps",
+          "children": [],
+          "element": "div",
+          "name": "YearSelect",
+          "portal": false,
+          "styles": [],
+        },
+      },
+      "sourcePosition": {
+        "column": 11,
+        "endColumn": 11,
+        "endLine": 1,
+        "line": 1,
+      },
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+      ],
+      "tag": "div",
+      "zagType": "datepicker",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
           "bind": "searchTerm",
           "children": [],
           "events": [],
@@ -37951,7 +38462,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 6 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 7 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 10 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -38108,7 +38619,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 7 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 8 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 11 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -38518,7 +39029,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 8 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 12 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -38715,7 +39226,7 @@ exports[`Tutorial IR Snapshots > 11 - eingabe > Example 9 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 11 - eingabe > Example 10 1`] = `
+exports[`Tutorial IR Snapshots > 11 - eingabe > Example 13 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -43781,6 +44292,205 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
     {
       "children": [
         {
+          "children": [],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Icon",
+          "primitive": "icon",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "info",
+            },
+            {
+              "name": "data-icon-color",
+              "value": "#888",
+            },
+            {
+              "name": "data-icon-size",
+              "value": "20",
+            },
+          ],
+          "styles": [
+            {
+              "property": "width",
+              "value": "20px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "height",
+              "value": "20px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "color",
+              "value": "#888",
+            },
+            {
+              "property": "font-size",
+              "value": "20px",
+            },
+            {
+              "property": "width",
+              "value": "20px",
+            },
+            {
+              "property": "height",
+              "value": "20px",
+            },
+            {
+              "property": "position",
+              "value": "absolute",
+            },
+          ],
+          "tag": "span",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-4",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Hilfetext",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+                {
+                  "property": "font-size",
+                  "value": "12px",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-3",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "position",
+              "value": "absolute",
+            },
+            {
+              "property": "left",
+              "value": "28px",
+            },
+            {
+              "property": "position",
+              "value": "absolute",
+            },
+            {
+              "property": "top",
+              "value": "-4px",
+            },
+            {
+              "property": "padding",
+              "value": "6px 10px",
+            },
+            {
+              "property": "background",
+              "value": "#111",
+            },
+            {
+              "property": "border-radius",
+              "value": "4px",
+            },
+            {
+              "property": "display",
+              "value": "none",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "layoutType": "absolute",
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "position",
+          "value": "relative",
+        },
+        {
+          "property": "width",
+          "value": "24px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+        {
+          "property": "height",
+          "value": "24px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 13 - overlays > Example 6 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
           "children": [
             {
               "children": [],
@@ -44065,7 +44775,7 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 13 - overlays > Example 6 1`] = `
+exports[`Tutorial IR Snapshots > 13 - overlays > Example 7 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -44245,7 +44955,7 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 6 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 13 - overlays > Example 7 1`] = `
+exports[`Tutorial IR Snapshots > 13 - overlays > Example 8 1`] = `
 {
   "animations": [],
   "icons": [],
@@ -44804,7 +45514,21 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 7 1`] = `
                   "children": [
                     {
                       "children": [],
-                      "events": [],
+                      "events": [
+                        {
+                          "actions": [
+                            {
+                              "args": [
+                                "Kontakt gespeichert",
+                              ],
+                              "isBuiltinStateFunction": false,
+                              "isFunctionCall": true,
+                              "type": "toast",
+                            },
+                          ],
+                          "name": "click",
+                        },
+                      ],
                       "id": "node-19",
                       "isDefinition": false,
                       "name": "Button",
@@ -44989,7 +45713,7 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 7 1`] = `
 }
 `;
 
-exports[`Tutorial IR Snapshots > 13 - overlays > Example 8 1`] = `
+exports[`Tutorial IR Snapshots > 13 - overlays > Example 9 1`] = `
 {
   "animations": [],
   "icons": [],
