@@ -173,13 +173,10 @@ function C() {
     expect(result.mirror).toContain('"Hi"')
   })
 
-  it('KNOWN LIMITATION — parenthesized return with whitespace before `(` fails to parse', () => {
-    // The current `extractReturnJSX` uses `returnIndex + 7` as the slice
-    // start, which works only when "return " is followed *immediately* by
-    // `(`. With whitespace or newlines between `return` and `(`, the slice
-    // includes the `(` itself and parseJSXElement fails (input must start
-    // with `<`). This is a real bug in studio/react-converter/index.ts —
-    // pinning it here so a future fix flips the assertion.
+  it('extracts JSX from a parenthesized return with leading whitespace', () => {
+    // Regression for the original `returnIndex + 7` shortcut — the slice
+    // start now tracks the actual `(` position, so any amount of
+    // whitespace or newlines between `return` and `(` works.
     const result = convertReactToMirror(`
       function C() {
         return (
@@ -187,8 +184,23 @@ function C() {
         )
       }
     `)
-    expect(result.errors.length).toBeGreaterThan(0)
-    expect(result.mirror).toBe('')
+    expect(result.errors).toEqual([])
+    expect(result.mirror).toContain('Box')
+  })
+
+  it('extracts JSX from a parenthesized multiline return with styled children', () => {
+    const result = convertReactToMirror(`
+      function C() {
+        return (
+          <div style={{ padding: '8px' }}>
+            <span style={{ color: '#fff' }}>Hi</span>
+          </div>
+        )
+      }
+    `)
+    expect(result.errors).toEqual([])
+    expect(result.mirror).toContain('pad 8')
+    expect(result.mirror).toContain('"Hi"')
   })
 })
 
@@ -248,17 +260,41 @@ function C() {
     expect(result.mirror).toContain('w 200')
   })
 
-  it('KNOWN LIMITATION — self-closing tags as children with attributes are not detected', () => {
-    // parseChildren's self-close regex `^<tag[^>]*/>` is greedy: `[^>]*`
-    // consumes the trailing `/` since `/` is not `>`, so the literal `/>`
-    // anchor fails to match. The inner element is silently skipped — the
-    // wrapping <div> renders, but the <input /> child is dropped.
-    // Pin behavior; a future fix (e.g. `[^>/]*\/>` or non-greedy) flips this.
+  it('detects self-closing children with attributes (non-greedy regex)', () => {
+    // Regression for the original greedy `[^>]*` self-close pattern that
+    // swallowed the trailing `/`. The fix is non-greedy `[^>]*?\/>`.
     const result = convertReactToMirror(
       `function C() { return <div><input style={{ width: '200px' }} /></div> }`
     )
     expect(result.errors).toEqual([])
-    expect(result.mirror).not.toContain('Input')
+    expect(result.mirror).toContain('Input')
+    expect(result.mirror).toContain('w 200')
+  })
+
+  it('detects multiple self-closing children as siblings under a container', () => {
+    // Regression for the deeper bug: parseJSXElement's `isSelfClosing` was
+    // computed via `jsx.includes('/>')` — true for ANY container with a
+    // self-closing descendant, which made the container skip its children
+    // entirely. The fix anchors `isSelfClosing` to whether the opening
+    // match itself ended with `/>`.
+    const result = convertReactToMirror(
+      `function C() { return <div><input /><br /><img src="x" /></div> }`
+    )
+    expect(result.errors).toEqual([])
+    expect(result.mirror).toContain('Input')
+    expect(result.mirror).toContain('Br')
+    expect(result.mirror).toContain('Image')
+  })
+
+  it('correctly identifies a top-level self-closing tag as self-closing (no children parse)', () => {
+    // The fix must not make all non-self-closing tags accidentally
+    // self-closing. A bare `<img />` at the root must still be treated as
+    // a leaf — without the fix, the previous `jsx.includes('/>')` was
+    // (coincidentally) right for this case; the new check anchors on the
+    // open-tag match. Verifies it didn't regress.
+    const result = convertReactToMirror(`function C() { return <img src="logo.png" /> }`)
+    expect(result.errors).toEqual([])
+    expect(result.mirror).toContain('Image')
   })
 
   it('drops bare JSX expression children like {variable} that have no surrounding text', () => {
@@ -271,13 +307,21 @@ function C() {
     expect(result.mirror).not.toContain('{')
   })
 
-  it('KNOWN LIMITATION — JSX expressions interleaved with text leak through verbatim', () => {
-    // Text + {expr} mixed in a child: the parser captures the whole run
-    // including the brace, since it only filters strings that *start* with
-    // `{`. Pin behavior so a future fix surfaces here.
+  it('strips JSX expressions interleaved with text, keeping the literal parts', () => {
+    // Regression for the original "starts-with-{" filter that let
+    // `{name}` through when there was leading text. stripJsxExpressions
+    // removes `{...}` runs and collapses surrounding whitespace.
     const result = convertReactToMirror(`function C() { return <span>Hello {name}</span> }`)
     expect(result.errors).toEqual([])
-    expect(result.mirror).toContain('Hello {name}')
+    expect(result.mirror).not.toContain('{')
+    expect(result.mirror).toContain('"Hello"')
+  })
+
+  it('strips JSX expressions surrounded by text on both sides', () => {
+    const result = convertReactToMirror(`function C() { return <span>Hi {name} there</span> }`)
+    expect(result.errors).toEqual([])
+    expect(result.mirror).not.toContain('{')
+    expect(result.mirror).toMatch(/Hi\s+there/)
   })
 })
 

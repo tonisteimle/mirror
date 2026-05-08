@@ -240,6 +240,11 @@ function extractReturnJSX(code: string): string {
 
   if (code[pos] !== '(') return code
 
+  // Remember the position just past the opening `(` so we slice the inner
+  // expression — independent of how much whitespace came between `return`
+  // and `(`. The previous `returnIndex + 7` shortcut assumed exactly one
+  // space and broke on `return\n  (...)`.
+  const innerStart = pos + 1
   let depth = 1
   pos++
 
@@ -257,7 +262,7 @@ function extractReturnJSX(code: string): string {
     pos++
   }
 
-  return code.slice(returnIndex + 7, pos - 1).trim()
+  return code.slice(innerStart, pos - 1).trim()
 }
 
 // ============================================
@@ -272,7 +277,11 @@ function parseJSXElement(jsx: string): ParsedElement | null {
 
   const tag = openTagMatch[1].toLowerCase()
   const propsStr = openTagMatch[2]
-  const isSelfClosing = jsx.includes('/>')
+  // Whether the OPENING tag itself was self-closing — not whether the
+  // string contains a `/>` anywhere (which is true for any container with
+  // a self-closing child). The previous `jsx.includes('/>')` check made
+  // every container with a self-closing descendant skip its children.
+  const isSelfClosing = openTagMatch[0].endsWith('/>')
 
   let style: Record<string, string> | null = null
   const styleMatch = propsStr.match(/style=\{\{([^}]+)\}\}/)
@@ -292,13 +301,30 @@ function parseJSXElement(jsx: string): ParsedElement | null {
   return element
 }
 
+/**
+ * Strip JSX expressions (`{...}`) from a text run before pushing it as a
+ * Mirror text child. JSX expressions don't round-trip to Mirror — they'd
+ * leak through verbatim and break the Mirror parser. We drop them and
+ * keep only the literal text around them. Best-effort: nested braces in
+ * an expression like `{{foo: 'bar'}}` are handled because `[^}]*` stops
+ * at the first `}` and the lazy regex re-matches.
+ */
+function stripJsxExpressions(text: string): string {
+  return text
+    .replace(/\{[^{}]*\}/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function parseChildren(content: string): (ParsedElement | string)[] {
   const children: (ParsedElement | string)[] = []
   const trimmed = content.trim()
   if (!trimmed) return children
 
   if (!trimmed.includes('<')) {
-    if (trimmed && !trimmed.startsWith('{')) children.push(trimmed)
+    if (trimmed.startsWith('{')) return children
+    const stripped = stripJsxExpressions(trimmed)
+    if (stripped) children.push(stripped)
     return children
   }
 
@@ -318,7 +344,10 @@ function parseChildren(content: string): (ParsedElement | string)[] {
     const openTagStart = trimmed.indexOf('<', pos)
     if (openTagStart === -1) {
       const text = trimmed.slice(textStart).trim()
-      if (text && !text.startsWith('{') && !text.startsWith('</')) children.push(text)
+      if (text && !text.startsWith('</')) {
+        const stripped = stripJsxExpressions(text)
+        if (stripped) children.push(stripped)
+      }
       break
     }
 
@@ -340,7 +369,10 @@ function parseChildren(content: string): (ParsedElement | string)[] {
 
     if (openTagStart > textStart) {
       const text = trimmed.slice(textStart, openTagStart).trim()
-      if (text && !text.startsWith('{') && !text.startsWith('</')) children.push(text)
+      if (text && !text.startsWith('</')) {
+        const stripped = stripJsxExpressions(text)
+        if (stripped) children.push(stripped)
+      }
     }
 
     const tagNameMatch = trimmed.slice(openTagStart).match(/^<(\w+)/)
@@ -350,7 +382,11 @@ function parseChildren(content: string): (ParsedElement | string)[] {
     }
 
     const tagName = tagNameMatch[1]
-    const selfCloseMatch = trimmed.slice(openTagStart).match(new RegExp(`^<${tagName}[^>]*/>`))
+    // Non-greedy `*?` so `[^>]*?` does not swallow the trailing `/` —
+    // otherwise self-closing children with attributes (e.g. `<input style=
+    // {{...}} />`) get silently dropped because the literal `/>` anchor
+    // can't match what the greedy quantifier consumed.
+    const selfCloseMatch = trimmed.slice(openTagStart).match(new RegExp(`^<${tagName}[^>]*?/>`))
 
     if (selfCloseMatch) {
       const element = parseJSXElement(selfCloseMatch[0])
