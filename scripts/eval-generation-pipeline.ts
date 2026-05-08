@@ -252,6 +252,11 @@ interface FixtureRunRecord {
       line?: number
       column?: number
     }>
+    /** Mirror produced by this attempt, before validation. Only present
+     *  when the attempt failed — successful attempts' source already lives
+     *  in mirror.mir at the cell root. Useful for diagnosing what the
+     *  retry loop is actually catching. */
+    mirror?: string
   }>
   htmlBytes: number
   mirrorBytes: number
@@ -330,6 +335,10 @@ async function runFixture(fixture: Fixture, run: number, opts: RunOpts): Promise
       sketch: fixture.sketch,
       siblings: fixture.siblings,
     }
+    // Pair translate-done's mirror with the subsequent validate event so
+    // we can persist the failing source per attempt. Mirror is held in a
+    // closure, not a record field, because we only want it on failures.
+    let lastMirrorByAttempt: string | null = null
     lastResult = await runGenerationPipeline(input, {
       signal: ac.signal,
       maxTranslationRetries: opts.maxRetries,
@@ -343,6 +352,7 @@ async function runFixture(fixture: Fixture, run: number, opts: RunOpts): Promise
           record.translateMs += event.durationMs
           record.translateAttempts += 1
           record.retries = event.attempt
+          lastMirrorByAttempt = event.mirror
         }
         if (event.kind === 'validate') {
           record.attempts.push({
@@ -356,6 +366,9 @@ async function runFixture(fixture: Fixture, run: number, opts: RunOpts): Promise
               line: e.line,
               column: e.column,
             })),
+            // Failed attempts: persist their mirror for post-mortem analysis.
+            // Successful attempts' source already lives at <cell>/mirror.mir.
+            ...(event.valid ? {} : { mirror: lastMirrorByAttempt ?? '' }),
           })
         }
       },
@@ -555,6 +568,24 @@ function renderReport(
         lines.push(
           `  - ${e.severity ?? '?'} ${e.code ?? '?'} ${e.line ?? '?'}:${e.column ?? '?'} — ${e.message}`
         )
+      }
+    }
+    // Per-attempt diagnostics for retried runs: even when the final attempt
+    // is clean, the failing attempts' errors are diagnostically valuable —
+    // they reveal which LLM mistakes the retry loop is actually catching.
+    const failingAttempts = r.attempts.filter(a => !a.valid)
+    if (failingAttempts.length > 0) {
+      lines.push(`- attempts that retried:`)
+      for (const a of failingAttempts) {
+        const codes = a.errors
+          .map(e => e.code ?? '?')
+          .slice(0, 3)
+          .join(', ')
+        const more = a.errors.length > 3 ? ` +${a.errors.length - 3}` : ''
+        lines.push(`  - attempt ${a.attempt}: ${a.errorCount} error(s) [${codes}${more}]`)
+        for (const e of a.errors.slice(0, 3)) {
+          lines.push(`    - ${e.code ?? '?'} ${e.line ?? '?'}:${e.column ?? '?'} — ${e.message}`)
+        }
       }
     }
     lines.push('')
