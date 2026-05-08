@@ -83,7 +83,6 @@ function checkChildOrder(
 const SKIP_EXAMPLES: Record<string, number[]> = {
   '06 - states': [10, 11], // IntersectionObserver
   '07 - animationen': [8, 9, 10, 12, 13], // setupInViewAnimation / setupScrollAnimation
-  '09 - daten': [9], // each/in scope edge case
   '14 - tables': [20], // user-defined JS (select(), custom methods)
   '16 - forms': [11], // user-defined JS (isValidEmail, register)
 }
