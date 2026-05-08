@@ -270,7 +270,7 @@ export function derivePaletteVariables(bgValue: string): Record<string, string> 
   if (isLight) {
     return {
       '--m-bg': bgValue,
-      '--m-text': '#1a1a1a',
+      '--m-text': '#000',
       '--m-text-muted': '#666666',
       '--m-text-placeholder': '#aaaaaa',
       '--m-surface': '#f5f5f5',
