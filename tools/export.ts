@@ -380,11 +380,19 @@ export function buildBundle(opts: Options) {
     mkdirSync(snapshotDir, { recursive: true })
     console.log(`📸 Capturing render snapshot (this takes ~10 s)...`)
     const snapshotCli = join(__dirname, 'snapshot.ts')
+    // Hard timeout: snapshot uses headless Chrome via CDP, which has
+    // been observed to hang indefinitely on certain pages (Chrome
+    // attach/detach race). 120 s is generous for a normal capture
+    // (~10 s expected) and bounds the worst case.
     const result = spawnSync('npx', ['tsx', snapshotCli, projectAbs, '--out', snapshotDir], {
       stdio: 'inherit',
       cwd: process.cwd(),
+      timeout: 120_000,
+      killSignal: 'SIGKILL',
     })
-    if (result.status !== 0) {
+    if (result.signal === 'SIGKILL') {
+      console.warn(`warn: snapshot capture timed out after 120s, continuing without`)
+    } else if (result.status !== 0) {
       console.warn(`warn: snapshot capture failed (exit ${result.status}), continuing without`)
     } else {
       snapshotIncluded = true

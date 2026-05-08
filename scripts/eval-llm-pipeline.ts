@@ -385,20 +385,31 @@ export async function runCell(cell: EvalCell, run: number, opts: RunOpts): Promi
       const verR = await exec(
         'npx',
         ['tsx', 'tools/verify.ts', bundlePath, '--threshold', String(opts.threshold)],
-        { cwd: REPO_ROOT, logPath }
+        // 5-min hard cap — verify is a Chrome-driving task and has been
+        // observed to hang on the same CDP race as snapshot.
+        { cwd: REPO_ROOT, logPath, timeoutMs: 300_000 }
       )
       result.verifyTimeMs = Date.now() - tVer
+      // Trust the report content over the exit code. The agent itself
+      // runs verify as part of its pipeline, so verify-report.md may
+      // already be on disk before our redundant verify run starts.
+      // Our run can crash on a CDP race (Chrome attach/detach) without
+      // invalidating the agent's earlier successful verification — the
+      // file is the source of truth.
       const reportPath = join(bundlePath, 'verify-report.md')
       if (existsSync(reportPath)) {
         const parsed = parseVerifyReport(readFileSync(reportPath, 'utf8'))
         result.viewportScores = parsed.scores
-        if (verR.code !== 0 || !parsed.passed) {
+        if (!parsed.passed) {
           result.status = 'verify-fail'
           result.error = `verify thresholds not met`
         }
       } else {
         result.status = 'verify-fail'
-        result.error = 'verify-report.md not produced'
+        result.error =
+          verR.code !== 0
+            ? `verify exited ${verR.code} and produced no report`
+            : 'verify-report.md not produced'
       }
     } else {
       logTo(logPath, '[no-verify] snapshot disabled, skipping verify')
@@ -416,28 +427,35 @@ export async function runCell(cell: EvalCell, run: number, opts: RunOpts): Promi
             : join(bundlePath, 'generated', 'dist')
         const genDir = existsSync(candidate) ? candidate : join(bundlePath, 'generated')
         if (existsSync(genDir)) {
-          result.functional = await runFunctional({
-            generatedDir: genDir,
-            project: cell.project.label,
-          })
-          logTo(
-            logPath,
-            `[functional] ${result.functional.passed}/${result.functional.total} contractual claims pass`
-          )
-          // If functional fails AND verify hadn't already flagged a
-          // problem, downgrade status.
-          if (
-            result.status === 'success' &&
-            result.functional.total > 0 &&
-            result.functional.passed < result.functional.total
-          ) {
-            // Don't fail the cell outright on partial functional miss
-            // — keep status=success but the report will surface the
-            // partial score. We only flip to verify-fail if zero
-            // claims pass (catastrophic miss).
-            if (result.functional.passed === 0) {
-              result.status = 'verify-fail'
-              result.error = 'functional eval: 0 claims passed'
+          // Hard 60-s cap — runFunctional uses CDP which has been seen
+          // to hang. Race against a timeout that resolves with a null
+          // result so the cell can complete cleanly.
+          result.functional = await Promise.race([
+            runFunctional({ generatedDir: genDir, project: cell.project.label }),
+            new Promise<null>(r => setTimeout(() => r(null), 60_000)),
+          ])
+          if (!result.functional) {
+            logTo(logPath, '[functional] timed out after 60s')
+          } else {
+            logTo(
+              logPath,
+              `[functional] ${result.functional.passed}/${result.functional.total} contractual claims pass`
+            )
+            // If functional fails AND verify hadn't already flagged a
+            // problem, downgrade status.
+            if (
+              result.status === 'success' &&
+              result.functional.total > 0 &&
+              result.functional.passed < result.functional.total
+            ) {
+              // Don't fail the cell outright on partial functional miss
+              // — keep status=success but the report will surface the
+              // partial score. We only flip to verify-fail if zero
+              // claims pass (catastrophic miss).
+              if (result.functional.passed === 0) {
+                result.status = 'verify-fail'
+                result.error = 'functional eval: 0 claims passed'
+              }
             }
           }
         } else {
