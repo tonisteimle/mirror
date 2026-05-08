@@ -25,49 +25,11 @@ type PropertyValue =
   | ComputedExpression
 import type { IRStyle } from '../types'
 import { DIRECTION_MAP, schemaPropertyToCSS } from '../../schema/ir-helpers'
+import { PX_PROPERTY_NAMES } from '../../schema/property-schema'
 
 // =============================================================================
 // CSS Value Formatting
 // =============================================================================
-
-/**
- * Properties that need px units for numeric values.
- */
-const NEEDS_PX_PROPERTIES = new Set([
-  'padding',
-  'pad',
-  'p',
-  'margin',
-  'mar',
-  'm',
-  'gap',
-  'g',
-  'gap-x',
-  'gx',
-  'gap-y',
-  'gy',
-  'row-height',
-  'rh',
-  'width',
-  'w',
-  'height',
-  'h',
-  'min-width',
-  'minw',
-  'max-width',
-  'maxw',
-  'min-height',
-  'minh',
-  'max-height',
-  'maxh',
-  'font-size',
-  'fs',
-  'radius',
-  'rad',
-  'border-radius',
-  'border',
-  'bor',
-])
 
 /**
  * Format CSS value with appropriate units.
@@ -78,7 +40,7 @@ const NEEDS_PX_PROPERTIES = new Set([
  * formatCSSValue('opacity', '0.5') → '0.5'
  */
 export function formatCSSValue(property: string, value: string): string {
-  if (NEEDS_PX_PROPERTIES.has(property)) {
+  if (PX_PROPERTY_NAMES.has(property)) {
     // Handle multi-value properties (e.g., "8 16" → "8px 16px")
     return value
       .split(' ')

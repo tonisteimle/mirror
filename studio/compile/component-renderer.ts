@@ -6,6 +6,8 @@
  */
 
 import type { Component, AST, MirrorLangAPI } from './types'
+import { STATE_NAMES } from '../../compiler/schema/parser-helpers'
+import { PX_PROPERTY_NAMES } from '../../compiler/schema/property-schema'
 
 // ============================================
 // TYPES
@@ -24,25 +26,6 @@ interface ComponentSection {
   lineStart: number
   lineEnd: number
 }
-
-// ============================================
-// CONSTANTS
-// ============================================
-
-const BEHAVIOR_STATES = [
-  'hover',
-  'active',
-  'focus',
-  'disabled',
-  'selected',
-  'highlighted',
-  'expanded',
-  'collapsed',
-  'on',
-  'off',
-  'valid',
-  'invalid',
-]
 
 // ============================================
 // MAIN EXPORT
@@ -222,7 +205,7 @@ export class ComponentRenderer {
   private collectStates(comp: Component, states: Set<string>): void {
     const compStates = (comp as any).states || []
     for (const state of compStates) {
-      if (BEHAVIOR_STATES.includes(state.name)) {
+      if (STATE_NAMES.has(state.name)) {
         states.add(state.name)
       }
     }
@@ -373,54 +356,7 @@ export class ComponentRenderer {
     const parts = tokenName.split('.')
     const suffix = parts[parts.length - 1]
 
-    // Properties that require px units
-    const pxProperties = [
-      'pad',
-      'padding',
-      'p',
-      'px',
-      'py',
-      'pt',
-      'pr',
-      'pb',
-      'pl',
-      'mar',
-      'margin',
-      'm',
-      'mx',
-      'my',
-      'mt',
-      'mr',
-      'mb',
-      'ml',
-      'gap',
-      'g',
-      'gx',
-      'gy',
-      'rad',
-      'radius',
-      'fs',
-      'font-size',
-      'w',
-      'width',
-      'h',
-      'height',
-      'minw',
-      'maxw',
-      'minh',
-      'maxh',
-      'bor',
-      'border',
-      'bort',
-      'borr',
-      'borb',
-      'borl',
-      'is',
-      'icon-size',
-      'line',
-    ]
-
-    if (pxProperties.includes(suffix)) {
+    if (PX_PROPERTY_NAMES.has(suffix)) {
       return `${value}px`
     }
 

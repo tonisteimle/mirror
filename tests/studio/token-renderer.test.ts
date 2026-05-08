@@ -146,19 +146,15 @@ describe('TokenRenderer — direct-color detection', () => {
 // =============================================================================
 
 describe('TokenRenderer — $reference resolution', () => {
-  it('Q5: in-file $ref does NOT resolve in swatch (map key/value format mismatch bug)', () => {
+  it('resolves in-file $ref in swatch background', () => {
     createRenderer().render(
       ast([
         { name: 'primary', value: '#2271C1' },
         { name: 'theme.bg', value: '$primary' },
       ])
     )
-    // theme.bg's swatch shows raw `$primary` because buildTokenMap stores
-    // keys as bare names but resolveValue looks up `$primary`. Only when
-    // the bug is fixed will the second swatch read `background: #2271C1`.
-    // Extract every swatch background; theme.bg is the second token rendered.
     const swatches = Array.from(preview.innerHTML.matchAll(/background: ([^"]+)"/g), m => m[1])
-    expect(swatches).toEqual(['#2271C1', '$primary'])
+    expect(swatches).toEqual(['#2271C1', '#2271C1'])
   })
 
   it('value class for $reference is "token-ref"', () => {
@@ -181,20 +177,16 @@ describe('TokenRenderer — $reference resolution', () => {
     expect(preview.innerHTML).toContain('class="tokens-preview-value number"')
   })
 
-  it('attempts cross-file resolve via getAllProjectSource (Q5: regex bug — see findings)', () => {
-    // The current regex anchors `^\$tokenName:` but Mirror sources define
-    // tokens as `tokenName:` (no leading $). So cross-file lookup never
-    // matches and falls back to returning the raw $reference.
+  it('resolves $ref via cross-file getAllProjectSource', () => {
     const allSource = `external.bg: #abcdef\n`
     createRenderer(allSource).render(ast([{ name: 'card.bg', value: '$external.bg' }]))
-    expect(preview.innerHTML).toContain('background: $external.bg')
+    expect(preview.innerHTML).toContain('background: #abcdef')
   })
 
-  it('returns raw $ref when cross-file lookup fails (matches the regex-bug behavior)', () => {
+  it('resolves cross-file $ref chains transitively', () => {
     const allSource = `a: #2271C1\nb: $a\nc: $b\n`
     createRenderer(allSource).render(ast([{ name: 'card.bg', value: '$c' }]))
-    // Same-file map has no $c → tries cross-file → regex doesn't match → raw value.
-    expect(preview.innerHTML).toContain('background: $c')
+    expect(preview.innerHTML).toContain('background: #2271C1')
   })
 
   it('breaks reference cycles without crashing', () => {

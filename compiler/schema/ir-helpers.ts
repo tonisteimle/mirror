@@ -106,6 +106,23 @@ export const ALIGNMENT_PROPERTIES = new Set([
 ])
 
 /**
+ * 9-zone position keywords (short form) used by studio drop / code-modifier
+ * to find and rewrite the position keyword on a property line. Subset of
+ * ALIGNMENT_PROPERTIES.
+ */
+export const POSITION_KEYWORDS_9ZONE = [
+  'tl',
+  'tc',
+  'tr',
+  'cl',
+  'center',
+  'cr',
+  'bl',
+  'bc',
+  'br',
+] as const
+
+/**
  * Direction property names for layout processing.
  * These properties set flex-direction.
  */

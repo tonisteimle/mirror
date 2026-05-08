@@ -20,18 +20,10 @@ import {
 } from './line-property-parser'
 import { logCodeModifier as log } from '../../compiler/utils/logger'
 import { adjustTemplateIndentation } from '../../compiler/schema/component-templates'
-
-/**
- * 9-zone alignment keywords. Mutually exclusive: a single Frame can
- * carry at most one. Drop-into-zone must remove competing keywords
- * before adding the new one, otherwise the line ends up with two
- * conflicting alignments (e.g. `Frame center, tl`) and the renderer's
- * behavior is undefined.
- */
-const ALIGNMENT_KEYWORDS = ['tl', 'tc', 'tr', 'cl', 'center', 'cr', 'bl', 'bc', 'br'] as const
+import { POSITION_KEYWORDS_9ZONE } from '../../compiler/schema/ir-helpers'
 
 function isAlignmentKeyword(prop: string): boolean {
-  return (ALIGNMENT_KEYWORDS as readonly string[]).includes(prop)
+  return (POSITION_KEYWORDS_9ZONE as readonly string[]).includes(prop)
 }
 
 /**
@@ -43,7 +35,7 @@ function isAlignmentKeyword(prop: string): boolean {
  */
 function buildLineWithExclusiveAlignment(line: string, newKeyword: string): string {
   let result = line
-  for (const kw of ALIGNMENT_KEYWORDS) {
+  for (const kw of POSITION_KEYWORDS_9ZONE) {
     if (kw === newKeyword) continue
     let parsed = parseLine(result)
     while (findPropertyInLine(parsed, kw)) {

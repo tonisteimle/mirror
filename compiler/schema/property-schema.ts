@@ -2228,3 +2228,20 @@ export const SCHEMA: Record<string, PropertyDef> = {
     },
   },
 }
+
+/**
+ * Canonical set of property names + aliases whose numeric values get a `px`
+ * suffix. Derived from SCHEMA where `numeric.unit === 'px'`. Single source of
+ * truth for compiler's CSS emission AND studio's token-CSS injection — adding
+ * a new px-needing property in SCHEMA propagates here automatically.
+ */
+export const PX_PROPERTY_NAMES: ReadonlySet<string> = (() => {
+  const set = new Set<string>()
+  for (const def of Object.values(SCHEMA)) {
+    if (def.numeric?.unit === 'px') {
+      set.add(def.name)
+      for (const alias of def.aliases) set.add(alias)
+    }
+  }
+  return set
+})()

@@ -61,7 +61,7 @@ export class TokenRenderer {
   private buildTokenMap(tokens: Token[]): TokenMap {
     const map = new Map<string, string>()
     for (const t of tokens) {
-      map.set(t.name, t.value)
+      map.set('$' + t.name, t.value)
     }
     return map
   }
@@ -283,7 +283,8 @@ export class TokenRenderer {
   }
 
   private findTokenValue(tokenName: string, source: string): string {
-    const escaped = tokenName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const stripped = tokenName.startsWith('$') ? tokenName.slice(1) : tokenName
+    const escaped = stripped.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     const regex = new RegExp(`^${escaped}:\\s*([^\\n]+)`, 'm')
     const match = source.match(regex)
     return match ? this.resolveFromSource(match[1].trim()) : tokenName

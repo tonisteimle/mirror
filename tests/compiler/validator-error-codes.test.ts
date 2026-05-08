@@ -195,13 +195,6 @@ describe('W110 DUPLICATE_PROPERTY', () => {
     const result = validate('Frame bg #333, bg #444')
     expect(result.warnings.some(e => e.code === ERROR_CODES.DUPLICATE_PROPERTY)).toBe(true)
   })
-
-  it.skip('warns on duplicate property with alias (NOT YET IMPLEMENTED)', () => {
-    // NOTE: Alias-aware duplicate detection not implemented
-    // Currently only exact property name matches are detected
-    const result = validate('Frame w 100, width 200')
-    expect(result.warnings.some(e => e.code === ERROR_CODES.DUPLICATE_PROPERTY)).toBe(true)
-  })
 })
 
 describe('E120 MISSING_REQUIRED', () => {
@@ -228,80 +221,11 @@ describe('E120 MISSING_REQUIRED', () => {
   })
 })
 
-// ============================================================================
-// EVENT ERRORS (E2xx)
-// ============================================================================
-
-// NOTE: Mirror event syntax uses properties, not state-like blocks:
-// - Button toggle() - action on default event (click)
-// - Button onclick toggle() - explicit event
-// - Frame onkeydown enter toggle() - with key modifier
-// The colon syntax (onclick:) is parsed as a state block, not an event
-
-describe('E200 UNKNOWN_EVENT', () => {
-  it.skip('errors on unknown event name (parsing issue with property-style events)', () => {
-    // NOTE: Property-style events like "Frame onunknown toggle()" aren't parsed as events
-    // They're parsed as properties. Event validation needs proper AST event nodes.
-    const result = validate('Frame onunknown toggle()')
-    expect(result.valid).toBe(false)
-    expect(result.errors.some(e => e.code === ERROR_CODES.UNKNOWN_EVENT)).toBe(true)
-  })
-
-  it.skip('errors on typo in event name (parsing issue with property-style events)', () => {
-    const result = validate('Frame onclck toggle()') // Typo: should be onclick
-    expect(result.valid).toBe(false)
-    expect(result.errors.some(e => e.code === ERROR_CODES.UNKNOWN_EVENT)).toBe(true)
-  })
-})
-
-describe('E201 UNKNOWN_KEY', () => {
-  it.skip('errors on unknown key in keyboard event (parsing issue)', () => {
-    const result = validate('Frame onkeydown unknownkey toggle()')
-    expect(result.valid).toBe(false)
-    expect(result.errors.some(e => e.code === ERROR_CODES.UNKNOWN_KEY)).toBe(true)
-  })
-
-  it.skip('errors on typo in key name (parsing issue)', () => {
-    const result = validate('Frame onkeydown entr toggle()') // Typo: should be enter
-    expect(result.valid).toBe(false)
-    expect(result.errors.some(e => e.code === ERROR_CODES.UNKNOWN_KEY)).toBe(true)
-  })
-})
-
-describe('E202 UNEXPECTED_KEY', () => {
-  it.skip('warns when key used on non-keyboard event (parsing issue)', () => {
-    const result = validate('Frame onclick enter toggle()')
-    // Key "enter" is unexpected on onclick
-    expect(result.warnings.some(e => e.code === ERROR_CODES.UNEXPECTED_KEY)).toBe(true)
-  })
-
-  it.skip('warns when key used on hover event (parsing issue)', () => {
-    const result = validate('Frame onhover space toggle()')
-    expect(result.warnings.some(e => e.code === ERROR_CODES.UNEXPECTED_KEY)).toBe(true)
-  })
-})
-
-// ============================================================================
-// ACTION ERRORS (E3xx)
-// ============================================================================
-
-describe('E300 UNKNOWN_ACTION', () => {
-  // NOTE: Action validation works when events are parsed into proper AST Event nodes
-  // The colon syntax (onclick:) is parsed as a state block, not an event
-  // Property-style events need proper parsing to reach action validation
-
-  it.skip('errors on unknown action name (parsing issue)', () => {
-    const result = validate('Button unknownAction()')
-    expect(result.valid).toBe(false)
-    expect(result.errors.some(e => e.code === ERROR_CODES.UNKNOWN_ACTION)).toBe(true)
-  })
-
-  it.skip('errors on typo in action name (parsing issue)', () => {
-    const result = validate('Button togle()') // Typo: should be toggle
-    expect(result.valid).toBe(false)
-    expect(result.errors.some(e => e.code === ERROR_CODES.UNKNOWN_ACTION)).toBe(true)
-  })
-})
+// Event/key/action validation (E200/E201/E202/E300) was previously
+// covered by skipped tests using property-style event syntax
+// (`Frame onunknown toggle()`). The parser does not promote those into
+// AST Event nodes, so the validator never sees them. Re-add tests
+// once events are first-class AST nodes.
 
 // ============================================================================
 // TOKEN ERRORS (W5xx)
@@ -321,15 +245,8 @@ describe('W500 UNDEFINED_TOKEN', () => {
 
 // W501 / W503 are intentionally NOT emitted — see compiler/validator/validator.ts
 // (checkUnusedDefinitions is disabled, commit ceda307d: "unused definitions are
-// allowed; only undefined references are errors"). The "warns on …" tests are
-// skipped to lock in this design without re-enabling the disabled check.
+// allowed; only undefined references are errors").
 describe('W501 UNUSED_TOKEN', () => {
-  it.skip('warns on unused token definition (disabled — unused defs allowed)', () => {
-    const result = validate(`primary.bg: #2563eb
-Frame bg #333`)
-    expect(result.warnings.some(e => e.code === ERROR_CODES.UNUSED_TOKEN)).toBe(true)
-  })
-
   it('does not warn when token is used', () => {
     const result = validate(`primary.bg: #2563eb
 Frame bg $primary`)
@@ -344,12 +261,6 @@ Frame bg $card`)
 })
 
 describe('W503 UNUSED_COMPONENT', () => {
-  it.skip('warns on unused component definition (disabled — unused defs allowed)', () => {
-    const result = validate(`Btn as Button: pad 10
-Frame w 100`)
-    expect(result.warnings.some(e => e.code === ERROR_CODES.UNUSED_COMPONENT)).toBe(true)
-  })
-
   it('does not warn when component is used as instance', () => {
     const result = validate(`Btn as Button: pad 10
 Btn "Click"`)
@@ -368,30 +279,10 @@ PrimaryBtn "Click"`)
 // STRUCTURE ERRORS (E6xx)
 // ============================================================================
 
-describe('E602 CIRCULAR_REFERENCE', () => {
-  // NOTE: Circular reference detection checks component INHERITANCE chains
-  // A as B: means A extends B. If B also extends A (or extends something that extends A),
-  // that's a circular reference.
-  // However, if B doesn't exist as a component, it's treated as a primitive reference.
-
-  it.skip('detects direct circular reference (parsing issue - B seen as primitive)', () => {
-    // When we write "A as B:", B is seen as a primitive (not yet defined)
-    // The circular reference detection only tracks component.extends relationships
-    // This test needs both A and B to be defined as components that extend each other
-    const result = validate(`A as B:
-B as A:`)
-    expect(result.valid).toBe(false)
-    expect(result.errors.some(e => e.code === ERROR_CODES.CIRCULAR_REFERENCE)).toBe(true)
-  })
-
-  it.skip('detects indirect circular reference (parsing issue)', () => {
-    const result = validate(`A as B:
-B as C:
-C as A:`)
-    expect(result.valid).toBe(false)
-    expect(result.errors.some(e => e.code === ERROR_CODES.CIRCULAR_REFERENCE)).toBe(true)
-  })
-})
+// E602 CIRCULAR_REFERENCE: detection requires both sides of `A as B:` /
+// `B as A:` to resolve as known components, but the parser treats the
+// undefined RHS as a primitive on first sight. Re-add tests once the
+// parser does a second pass to resolve cross-references.
 
 describe('E603 DUPLICATE_DEFINITION', () => {
   it('errors on duplicate component definition', () => {

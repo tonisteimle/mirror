@@ -6,10 +6,7 @@
 
 import { BaseDropHandler } from './base-handler'
 import type { DropResult, DropContext, ModificationResult, GridPlacement } from '../types'
-
-// 9-zone alignment keywords are mutually exclusive on a single Frame.
-// Cf. children-ops.ts ALIGNMENT_KEYWORDS — keep the two lists in sync.
-const ALIGNMENT_KEYWORDS = ['tl', 'tc', 'tr', 'cl', 'center', 'cr', 'bl', 'bc', 'br'] as const
+import { POSITION_KEYWORDS_9ZONE } from '../../../compiler/schema/ir-helpers'
 
 /**
  * Build a `x N, y M [, w P] [, h Q]` snippet for moveNode's
@@ -41,7 +38,7 @@ export class ElementMoveHandler extends BaseDropHandler {
     // re-aligned drop produces `Frame center, tl` (two conflicting
     // alignments).
     if (alignment?.zone) {
-      for (const kw of ALIGNMENT_KEYWORDS) {
+      for (const kw of POSITION_KEYWORDS_9ZONE) {
         if (kw !== alignment.zone) {
           context.codeModifier.removeProperty(targetNodeId, kw)
         }
