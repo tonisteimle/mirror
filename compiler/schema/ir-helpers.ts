@@ -658,9 +658,30 @@ export const PROPERTY_TO_TOKEN_SUFFIX: Record<string, string> = {
   width: '.w',
   h: '.h',
   height: '.h',
+  // Min/Max sizing — needed so e.g. `Container: maxw $content`
+  // resolves to `var(--content-maxw)` via the schema-defined token.
+  minw: '.minw',
+  'min-width': '.minw',
+  maxw: '.maxw',
+  'max-width': '.maxw',
+  minh: '.minh',
+  'min-height': '.minh',
+  maxh: '.maxh',
+  'max-height': '.maxh',
   // Font size
   fs: '.fs',
   'font-size': '.fs',
+  // Typography that takes token values
+  // (e.g. `weight $weight-bold` → `var(--weight-bold-weight)`).
+  weight: '.weight',
+  'font-weight': '.weight',
+  line: '.line',
+  'line-height': '.line',
+  font: '.font',
+  'font-family': '.font',
+  ls: '.ls',
+  'letter-spacing': '.ls',
+  tracking: '.ls',
   // Icon
   ic: '.ic',
   'icon-color': '.ic',

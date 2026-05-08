@@ -56,6 +56,7 @@ addresses:
     id: "addr1"
     firstName: "Max"
     lastName: "Mustermann"
+    initials: "MM"
     company: "Muster GmbH"
     street: "Hauptstraße 42"
     zip: "10115"
@@ -68,6 +69,7 @@ addresses:
     id: "addr2"
     firstName: "Anna"
     lastName: "Schmidt"
+    initials: "AS"
     company: ""
     street: "Seestraße 15"
     zip: "80331"
@@ -80,6 +82,7 @@ addresses:
     id: "addr3"
     firstName: "Thomas"
     lastName: "Weber"
+    initials: "TW"
     company: "Weber & Partner"
     street: "Kirchweg 8"
     zip: "20095"
@@ -92,6 +95,7 @@ addresses:
     id: "addr4"
     firstName: "Lisa"
     lastName: "Braun"
+    initials: "LB"
     company: ""
     street: "Parkallee 23"
     zip: "50667"
@@ -141,7 +145,7 @@ Frame w full, h full, hor, bg $surface-secondary
           Frame hor, spread, ver-center
             Frame hor, gap 12, ver-center
               Frame w 44, h 44, rad 99, bg $surface-tertiary, center
-                Text $address.firstName[0] + $address.lastName[0], col $text-secondary, fs 14, weight 600
+                Text "$address.initials", col $text-secondary, fs 14, weight 600
               Frame gap 2
                 Text $address.firstName + " " + $address.lastName, col $text-primary, fs 14, weight 600
                 Text $address.city, col $text-muted, fs 12
@@ -172,7 +176,7 @@ Frame w full, h full, hor, bg $surface-secondary
         Frame hor, spread, ver-center
           Frame hor, gap 16, ver-center
             Frame w 64, h 64, rad 99, bg $primary, center
-              Text $selectedAddress.firstName[0] + $selectedAddress.lastName[0], col white, fs 20, weight 600
+              Text "$selectedAddress.initials", col white, fs 20, weight 600
             Frame gap 4
               Text $selectedAddress.firstName + " " + $selectedAddress.lastName, col $text-primary, fs 24, weight 700
               Text $selectedAddress.company, col $text-secondary, fs 14

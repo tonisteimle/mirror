@@ -11,7 +11,15 @@ TaskRow: Frame hor, spread, ver-center, pad 16, bg $card, rad $radius, w full, c
   hover 0.15s:
     bg #1e1b4b
 
-Frame name TasksScreen, gap 24, w full
+// Filter tab — top-level so the parser sees a real component def.
+FilterTab as Frame: pad 10 20, rad $radius, cursor pointer, col $muted, weight 500, exclusive()
+  hover 0.15s:
+    col white
+  on:
+    bg $primary
+    col white
+
+TasksScreen as Frame: gap 24, w full
 
   // Page Header
   PageHeader
@@ -31,12 +39,6 @@ Frame name TasksScreen, gap 24, w full
 
   // Filter Tabs
   Frame hor, gap 8, pad 4, bg $card, rad $radius-lg, w hug
-    FilterTab: pad 10 20, rad $radius, cursor pointer, col $muted, weight 500, exclusive()
-      hover 0.15s:
-        col white
-      on:
-        bg $primary
-        col white
     FilterTab "Alle (8)", on
     FilterTab "Offen (5)"
     FilterTab "Erledigt (3)"

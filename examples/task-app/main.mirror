@@ -114,19 +114,20 @@ AppShell
           Icon "chevron-up", ic $muted, is 18
 
   MainContent
-    // Screens werden hier geladen
-    // Mit show können externe Dateien referenziert werden
+    // Screens are component definitions in screens/*.mirror
+    // (compileProject picks them up automatically). Each is rendered
+    // inside a named view-Frame; navigate(...) switches visibility.
     Frame name DashboardView
-      show DashboardScreen from screens/dashboard
+      DashboardScreen
 
     Frame name TasksView, hidden
-      show TasksScreen from screens/tasks
+      TasksScreen
 
     Frame name ProjectsView, hidden
-      show ProjectsScreen from screens/projects
+      ProjectsScreen
 
     Frame name TeamView, hidden
-      show TeamScreen from screens/team
+      TeamScreen
 
     Frame name SettingsView, hidden
-      show SettingsScreen from screens/settings
+      SettingsScreen

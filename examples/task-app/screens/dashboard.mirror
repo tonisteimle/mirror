@@ -6,7 +6,7 @@ use tokens
 use components
 use data
 
-Frame name DashboardScreen, gap 24, w full
+DashboardScreen as Frame: gap 24, w full
 
   // Page Header
   PageHeader

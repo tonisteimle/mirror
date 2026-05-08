@@ -12,7 +12,17 @@ ProjectCard: Card w 360
   Stats: hor, gap 16, mar 8 0
   Progress: gap 8, mar 8 0
 
-Frame name ProjectsScreen, gap 24, w full
+// Status Filter chip — hoisted to top-level so the parser sees a real
+// component def instead of inline props that flatten into the parent.
+StatusFilter as Frame: pad 8 16, rad $radius-full, cursor pointer, hor, gap 6, ver-center, bor 1, boc $border, exclusive()
+  hover 0.15s:
+    bg #ffffff11
+  on:
+    bg $primary
+    boc $primary
+    col white
+
+ProjectsScreen as Frame: gap 24, w full
 
   // Page Header
   PageHeader
@@ -48,13 +58,6 @@ Frame name ProjectsScreen, gap 24, w full
 
   // Status Filters
   Frame hor, gap 8
-    StatusFilter: pad 8 16, rad $radius-full, cursor pointer, hor, gap 6, ver-center, bor 1, boc $border, exclusive()
-      hover 0.15s:
-        bg #ffffff11
-      on:
-        bg $primary
-        boc $primary
-        col white
     StatusFilter on
       Frame w 8, h 8, rad 99, bg white
       Text "Alle"

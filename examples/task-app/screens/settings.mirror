@@ -16,7 +16,18 @@ SettingsItem: Frame hor, spread, ver-center, pad 16 0, bor 0 0 1 0, boc $border
   Label: gap 2
   Control:
 
-Frame name SettingsScreen, gap 24, w full
+// Theme picker — pill-style toggle
+ThemeBtn as Frame: pad 10 16, rad $radius, cursor pointer, bor 2, hor, gap 8, ver-center, exclusive()
+
+// Accent-color swatch
+ColorBtn as Frame: w 32, h 32, rad 99, cursor pointer, bor 2, boc transparent, exclusive()
+  hover 0.15s:
+    scale 1.1
+  on:
+    bor 3
+    boc white
+
+SettingsScreen as Frame: gap 24, w full
 
   // Page Header
   PageHeader
@@ -80,11 +91,6 @@ Frame name SettingsScreen, gap 24, w full
               Text "Theme", col white, fs 14
               Text "Wähle dein bevorzugtes Farbschema", col $muted, fs 12
             Frame hor, gap 8
-              ThemeBtn: Frame pad 10 16, rad $radius, cursor pointer, bor 2, hor, gap 8, ver-center, exclusive()
-                hover 0.15s:
-                  opacity 0.8
-                on:
-                  boc $primary
               ThemeBtn bg #1a1625, boc $primary, on
                 Icon "moon", ic white, is 16
                 Text "Dunkel", col white, fs 13
@@ -100,12 +106,6 @@ Frame name SettingsScreen, gap 24, w full
               Text "Akzentfarbe", col white, fs 14
               Text "Hauptfarbe der Anwendung", col $muted, fs 12
             Frame hor, gap 8
-              ColorBtn: Frame w 32, h 32, rad 99, cursor pointer, bor 2, boc transparent, exclusive()
-                hover 0.15s:
-                  scale 1.1
-                on:
-                  bor 3
-                  boc white
               ColorBtn bg #6366f1, on
               ColorBtn bg #10b981
               ColorBtn bg #f59e0b

@@ -13,7 +13,16 @@ MemberCard: Card w 300, center
   Status: hor, gap 8, ver-center
   Actions: hor, gap 8, mar 12 0 0 0
 
-Frame name TeamScreen, gap 24, w full
+// Department filter chip
+DeptFilter as Frame: pad 8 16, rad $radius-full, cursor pointer, col $muted, bor 1, boc $border, exclusive()
+  hover 0.15s:
+    bg #ffffff11
+  on:
+    bg $primary
+    boc $primary
+    col white
+
+TeamScreen as Frame: gap 24, w full
 
   // Page Header
   PageHeader
@@ -51,13 +60,6 @@ Frame name TeamScreen, gap 24, w full
 
   // Department Filter
   Frame hor, gap 8
-    DeptFilter: pad 8 16, rad $radius-full, cursor pointer, col $muted, bor 1, boc $border, exclusive()
-      hover 0.15s:
-        bg #ffffff11
-      on:
-        bg $primary
-        col white
-        boc $primary
     DeptFilter "Alle", on
     DeptFilter "Engineering"
     DeptFilter "Design"
