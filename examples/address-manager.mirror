@@ -20,24 +20,25 @@ text-muted.col: #94a3b8
 // === KOMPONENTEN ===
 
 // Eingabefeld mit Label
-FormField: Frame gap 4, w full
+FormField as Frame: gap 4, w full
   FieldLabel: col $text-secondary, fs 13, weight 500
-  FieldInput: Input bg $surface, col $text-primary, pad 10 12, rad 6, w full, bor 1, boc $border
-    focus:
-      boc $primary
+
+FieldInput as Input: bg $surface, col $text-primary, pad 10 12, rad 6, w full, bor 1, boc $border
+  focus:
+    boc $primary
 
 // Action Button
-Btn: Button pad 10 16, rad 6, fs 13, weight 500, cursor pointer
+Btn as Button: pad 10 16, rad 6, fs 13, weight 500, cursor pointer
   hover 0.15s:
     opacity 0.9
 
 // Icon Button
-IconBtn: Frame w 36, h 36, rad 6, center, cursor pointer
+IconBtn as Frame: w 36, h 36, rad 6, center, cursor pointer
   hover 0.15s:
     bg $surface-tertiary
 
 // Adresskarte
-AddressCard: Frame pad 16, bg $surface, rad 8, gap 8, bor 1, boc $border, cursor pointer
+AddressCard as Frame: pad 16, bg $surface, rad 8, gap 8, bor 1, boc $border, cursor pointer
   hover 0.2s:
     boc $primary-light
     shadow sm
@@ -46,7 +47,7 @@ AddressCard: Frame pad 16, bg $surface, rad 8, gap 8, bor 1, boc $border, cursor
     bg #eff6ff
 
 // Badge
-Badge: Frame pad 4 8, rad 4, fs 11, weight 500
+Badge as Frame: pad 4 8, rad 4, fs 11, weight 500
 
 // === DATEN ===
 
@@ -100,7 +101,7 @@ addresses:
     email: "lisa.braun@mail.de"
     category: "Familie"
 
-selectedAddress: null
+selectedAddress: ""
 editMode: false
 searchQuery: ""
 

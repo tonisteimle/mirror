@@ -57,6 +57,10 @@ const COMPONENT_BEHAVIOR_PROPS = [
   'open',
   'show',
   'badge',
+  // Dialog template
+  'closeOnOutsideClick',
+  'closeIcon',
+  'modal',
   // Zag DatePicker (and shared by other Zag primitives)
   'defaultValue',
   'selectionMode',

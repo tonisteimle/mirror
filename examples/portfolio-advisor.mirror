@@ -19,30 +19,30 @@ text-muted.col: #64748b
 // === KOMPONENTEN ===
 
 // Stat Card
-StatCard: Frame bg $surface-secondary, pad 20, rad 12, gap 8, min-w 180
+StatCard as Frame: bg $surface-secondary, pad 20, rad 12, gap 8, minw 180
   Label: col $text-muted, fs 12, uppercase, weight 500
   Value: col $text-primary, fs 28, weight 700
   Change: fs 13, weight 600
 
 // Position Row
-PositionRow: Frame hor, spread, ver-center, pad 16, bg $surface-secondary, rad 8, w full
-  Asset: Frame hor, gap 12, ver-center
-    Logo: Frame w 40, h 40, rad 8, center
-    Info: Frame gap 2
+PositionRow as Frame: hor, spread, ver-center, pad 16, bg $surface-secondary, rad 8, w full
+  Asset as Frame: hor, gap 12, ver-center
+    Logo as Frame: w 40, h 40, rad 8, center
+    Info as Frame: gap 2
       Name: col $text-primary, fs 14, weight 600
       Type: col $text-muted, fs 12
-  Data: Frame hor, gap 32, ver-center
-    Col: Frame gap 2, w 100
+  Data as Frame: hor, gap 32, ver-center
+    Col as Frame: gap 2, w 100
       Label: col $text-muted, fs 11, uppercase
       Value: col $text-primary, fs 14, weight 500
 
 // Action Button
-ActionBtn: Button pad 10 16, rad 8, fs 13, weight 500, cursor pointer
+ActionBtn as Button: pad 10 16, rad 8, fs 13, weight 500, cursor pointer
   hover 0.15s:
     opacity 0.9
 
 // Nav Item
-NavItem: Frame hor, gap 12, ver-center, pad 12 16, rad 8, col $text-secondary, cursor pointer
+NavItem as Frame: hor, gap 12, ver-center, pad 12 16, rad 8, col $text-secondary, cursor pointer
   hover 0.15s:
     bg $surface-tertiary
     col $text-primary

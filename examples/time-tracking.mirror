@@ -224,7 +224,7 @@ CellHours: Text col $text, fs $fs-md, w $col-hours, right, weight 500
 // Viewport wrapper - fills screen, centers content
 Frame w full, minh 100vh, bg $bg, tc
   // Content container - fixed width, centered by parent
-  Frame w 900, maxw full, pad $space-xl, gap $gap-2xl
+  Frame w 900, maxw 100%, pad $space-xl, gap $gap-2xl
     compact:
       pad $space-md
       gap $gap-xl

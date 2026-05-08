@@ -352,8 +352,10 @@ export function generateValidationRules(): ValidationRules {
     validActions: new Set(Object.keys(DSL.actions)),
     actionTargets: buildActionTargetMap(),
 
-    // States
-    validStates: new Set(Object.keys(DSL.states)),
+    // States — built-in (hover/focus/...) plus size-states that respond
+    // to CSS container-queries (compact/regular/wide). Custom user-
+    // defined size states are handled at validation time, not here.
+    validStates: new Set([...Object.keys(DSL.states), ...Object.keys(DSL.sizeStates)]),
     systemStates: new Set(
       Object.entries(DSL.states)
         .filter(([_, def]) => def.system)

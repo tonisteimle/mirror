@@ -1305,7 +1305,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
   'letter-spacing': {
     name: 'letter-spacing',
-    aliases: ['ls', 'tracking'],
+    aliases: ['ls', 'tracking', 'letter'],
     category: 'typography',
     description: 'Letter spacing (tracking). Negative values tighten.',
 
