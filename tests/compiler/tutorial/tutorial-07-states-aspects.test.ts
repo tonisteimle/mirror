@@ -206,13 +206,6 @@ AccordionItem`,
     click(accordion)
     expect(accordion.dataset.state).toBe('on')
   })
-
-  // Known Tutorial-Limitation: child-element `on:` state-blocks are emitted
-  // into `_stateStyles` but the runtime applies them only to the element
-  // itself, not when a *parent's* state changes. The Tutorial Accordion
-  // example relies on parent → child state propagation. See
-  // `themen/07-states.md` "Tutorial-Limitations".
-  it.todo('clicking accordion toggles hidden body to visible (child state-propagation)')
 })
 
 // =============================================================================

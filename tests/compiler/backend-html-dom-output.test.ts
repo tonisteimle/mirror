@@ -74,7 +74,10 @@ function colorMatches(actual: string, expected: string): boolean {
   const hexToRgb = (hex: string): string | null => {
     hex = hex.replace('#', '')
     if (hex.length === 3) {
-      hex = hex.split('').map(c => c + c).join('')
+      hex = hex
+        .split('')
+        .map(c => c + c)
+        .join('')
     }
     const r = parseInt(hex.substring(0, 2), 16)
     const g = parseInt(hex.substring(2, 4), 16)
@@ -94,7 +97,6 @@ function colorMatches(actual: string, expected: string): boolean {
 // 1. BASIC STRUCTURE - Tag-Namen und Verschachtelung
 // ============================================================
 describe('HTML Structure', () => {
-
   it('Frame wird zu <div>', () => {
     const el = render(`Frame`)
     expect(el.tagName.toLowerCase()).toBe('div')
@@ -147,14 +149,12 @@ Frame
     expect(el.children[1].textContent).toBe('B')
     expect(el.children[2].textContent).toBe('C')
   })
-
 })
 
 // ============================================================
 // 2. CSS PROPERTIES - Styles korrekt im DOM
 // ============================================================
 describe('CSS Properties', () => {
-
   it('width in px', () => {
     const el = render(`Frame w 200`)
     expect(getStyle(el, 'width')).toBe('200px')
@@ -194,14 +194,12 @@ describe('CSS Properties', () => {
     const el = render(`Frame z 999`)
     expect(getStyle(el, 'z-index')).toBe('999')
   })
-
 })
 
 // ============================================================
 // 3. LAYOUT - Flexbox korrekt
 // ============================================================
 describe('Layout', () => {
-
   it('Frame hat display: flex', () => {
     const el = render(`Frame`)
     expect(getStyle(el, 'display')).toBe('flex')
@@ -256,14 +254,12 @@ Frame
     const child = el.children[0] as HTMLElement
     expect(getStyle(child, 'width')).toBe('fit-content')
   })
-
 })
 
 // ============================================================
 // 4. KOMBINATIONEN - Mehrere Properties zusammen
 // ============================================================
 describe('Property Combinations', () => {
-
   it('hor center gap 10', () => {
     const el = render(`Frame hor center gap 10`)
     expect(getStyle(el, 'flex-direction')).toBe('row')
@@ -286,14 +282,12 @@ describe('Property Combinations', () => {
     expect(getStyle(el, 'gap')).toBe('8px')
     expect(getStyle(el, 'flex-direction')).toBe('column')
   })
-
 })
 
 // ============================================================
 // 5. 9-ZONE ALIGNMENT
 // ============================================================
 describe('9-Zone Alignment', () => {
-
   it('tl = top-left', () => {
     const el = render(`Frame tl`)
     expect(getStyle(el, 'justify-content')).toBe('flex-start')
@@ -341,14 +335,12 @@ describe('9-Zone Alignment', () => {
     expect(getStyle(el, 'justify-content')).toBe('flex-end')
     expect(getStyle(el, 'align-items')).toBe('flex-end')
   })
-
 })
 
 // ============================================================
 // 6. VERERBUNG - Component Inheritance
 // ============================================================
 describe('Inheritance', () => {
-
   it('Component erbt Properties', () => {
     const el = render(`
 Card as Frame:
@@ -410,14 +402,12 @@ A
     expect(getStyle(el, 'width')).toBe('200px')
     expect(getStyle(el, 'height')).toBe('100px')
   })
-
 })
 
 // ============================================================
 // 7. LETZTER GEWINNT - Override-Regeln
 // ============================================================
 describe('Last Value Wins', () => {
-
   it('w 100 w 200 → 200px', () => {
     const el = render(`Frame w 100 w 200`)
     expect(getStyle(el, 'width')).toBe('200px')
@@ -449,14 +439,12 @@ describe('Last Value Wins', () => {
     const el = render(`Frame hor tc`)
     expect(getStyle(el, 'flex-direction')).toBe('row')
   })
-
 })
 
 // ============================================================
 // 8. STACKED LAYOUT (formerly Position)
 // ============================================================
 describe('Stacked Layout', () => {
-
   it('stacked → position: relative auf Parent', () => {
     const el = render(`Frame stacked`)
     expect(getStyle(el, 'position')).toBe('relative')
@@ -487,14 +475,12 @@ Frame stacked
     const el = render(`Frame fixed`)
     expect(getStyle(el, 'position')).toBe('fixed')
   })
-
 })
 
 // ============================================================
 // 9. VISUAL PROPERTIES
 // ============================================================
 describe('Visual Properties', () => {
-
   it('shadow sm', () => {
     const el = render(`Frame shadow sm`)
     expect(getStyle(el, 'box-shadow')).toContain('rgba')
@@ -524,14 +510,12 @@ describe('Visual Properties', () => {
     const el = render(`Frame clip`)
     expect(getStyle(el, 'overflow')).toBe('hidden')
   })
-
 })
 
 // ============================================================
 // 10. TYPOGRAPHY
 // ============================================================
 describe('Typography', () => {
-
   it('font-size', () => {
     const el = render(`Text "Test" fs 24`)
     expect(getStyle(el, 'font-size')).toBe('24px')
@@ -566,14 +550,12 @@ describe('Typography', () => {
     const el = render(`Text "Test" uppercase`)
     expect(getStyle(el, 'text-transform')).toBe('uppercase')
   })
-
 })
 
 // ============================================================
 // 11. TRANSFORM
 // ============================================================
 describe('Transform', () => {
-
   it('rotate', () => {
     const el = render(`Frame rotate 45`)
     expect(getStyle(el, 'transform')).toContain('rotate(45deg)')
@@ -588,14 +570,12 @@ describe('Transform', () => {
     const el = render(`Frame scale 1.5`)
     expect(getStyle(el, 'transform')).toContain('scale(1.5)')
   })
-
 })
 
 // ============================================================
 // 12. GRID
 // ============================================================
 describe('Grid', () => {
-
   it('grid 3 → display: grid mit 3 columns', () => {
     const el = render(`Frame grid 3`)
     expect(getStyle(el, 'display')).toBe('grid')
@@ -606,14 +586,12 @@ describe('Grid', () => {
     const el = render(`Frame grid auto`)
     expect(getStyle(el, 'display')).toBe('grid')
   })
-
 })
 
 // ============================================================
 // 13. TOKENS - CSS Variables
 // ============================================================
 describe('Tokens', () => {
-
   it('Token als bg → var(--name)', () => {
     const el = render(`
 primary: #3B82F6
@@ -633,14 +611,12 @@ Frame bg $accent
     const bg = getStyle(el, 'background')
     expect(bg).toContain('var(--')
   })
-
 })
 
 // ============================================================
 // 14. BORDER SHORTCUTS
 // ============================================================
 describe('Border Shortcuts', () => {
-
   it('bor 1 #333', () => {
     const el = render(`Frame bor 1 #333`)
     const border = getStyle(el, 'border')
@@ -658,14 +634,12 @@ describe('Border Shortcuts', () => {
     const el = render(`Frame rad tl 8`)
     expect(getStyle(el, 'border-top-left-radius')).toBe('8px')
   })
-
 })
 
 // ============================================================
 // 15. EDGE CASES
 // ============================================================
 describe('Edge Cases', () => {
-
   it('leerer Frame', () => {
     const el = render(`Frame`)
     expect(el.children.length).toBe(0)
@@ -697,14 +671,12 @@ describe('Edge Cases', () => {
     const aspect = getStyle(el, 'aspect-ratio')
     expect(aspect === '16/9' || aspect === '16 / 9').toBe(true)
   })
-
 })
 
 // ============================================================
 // 16. CONSTRAINTS COMBINATIONS
 // ============================================================
 describe('Constraints Combinations', () => {
-
   it('minw + w full in vertical parent', () => {
     // w full in vertical parent → align-self: stretch (cross-axis)
     const el = render(`
@@ -737,14 +709,12 @@ Frame hor
     expect(getStyle(child, 'min-width')).toBe('100px')
     expect(getStyle(child, 'flex')).toBe('1 1 0%')
   })
-
 })
 
 // ============================================================
 // 17. COMPLEX NESTING
 // ============================================================
 describe('Complex Nesting', () => {
-
   it('3 Ebenen verschachtelt mit verschiedenen Layouts', () => {
     const el = render(`
 Frame hor gap 10
@@ -779,27 +749,23 @@ Row
     expect(getStyle(el, 'gap')).toBe('8px')
     expect(el.children.length).toBe(2)
   })
-
 })
 
 // ============================================================
 // 18. DATA ATTRIBUTES
 // ============================================================
 describe('Data Attributes', () => {
-
   it('Element hat data-mirror-id', () => {
     const el = render(`Frame`)
     expect(el.dataset.mirrorId).toBeDefined()
     expect(el.dataset.mirrorId).toContain('node-')
   })
-
 })
 
 // ============================================================
 // 19. EVENTS - Event-Listener werden registriert
 // ============================================================
 describe('Events', () => {
-
   it('onclick registriert click-listener', () => {
     const el = render(`
 Button as button:
@@ -815,14 +781,12 @@ Button "Click"
     const el = render(`Button "Test" onclick toggle self`)
     expect(el.tagName.toLowerCase()).toBe('button')
   })
-
 })
 
 // ============================================================
 // 20. STATES - State-Styles werden generiert
 // ============================================================
 describe('States', () => {
-
   it('hover-bg wird zu hover-state', () => {
     const el = render(`Frame bg #333 hover-bg #555`)
     // Base style ist gesetzt
@@ -852,14 +816,12 @@ Field
 `)
     expect(el.tagName.toLowerCase()).toBe('input')
   })
-
 })
 
 // ============================================================
 // 21. EACH LOOP - Iteration über Daten
 // ============================================================
 describe('Each Loop', () => {
-
   it('each container wird erstellt', () => {
     // each ohne Daten erstellt container
     const ast = parse(`
@@ -880,36 +842,12 @@ each $item in $items
     // Container existiert
     expect(root).toBeDefined()
   })
-
-  it.skip('each rendert items aus daten', () => {
-    // TODO: Each loop runtime behavior has changed, needs investigation
-    const ast = parse(`
-Item as Frame:
-  pad 8
-
-each $task in $tasks
-  Item $task.title
-`)
-    let domCode = generateDOM(ast)
-    domCode = domCode.replace(/^export\s+function/gm, 'function')
-
-    // Note: createUI() returns the root element directly
-    const fn = new Function(domCode + '\nreturn createUI({ tasks: [{ title: "A" }, { title: "B" }] });')
-    const root = fn() as HTMLElement
-    container.appendChild(root)
-
-    // Items werden gerendert
-    const items = root.querySelectorAll('[data-each-item]')
-    expect(items.length).toBe(2)
-  })
-
 })
 
 // ============================================================
 // 22. CONDITIONALS - if/else
 // ============================================================
 describe('Conditionals', () => {
-
   it('if true rendert content', () => {
     const ast = parse(`
 Panel as Frame:
@@ -928,14 +866,12 @@ if (true)
 
     expect(root).toBeDefined()
   })
-
 })
 
 // ============================================================
 // 23. SLOTS - Component Slots
 // ============================================================
 describe('Slots', () => {
-
   it('Slot-Inhalt wird eingefügt', () => {
     const el = render(`
 Card as Frame:
@@ -960,14 +896,12 @@ Panel
 `)
     expect(el.textContent).toContain('Default')
   })
-
 })
 
 // ============================================================
 // 24. MEHR PRIMITIVES
 // ============================================================
 describe('More Primitives', () => {
-
   it('Textarea wird zu <textarea>', () => {
     const el = render(`Textarea`)
     expect(el.tagName.toLowerCase()).toBe('textarea')
@@ -1034,14 +968,12 @@ describe('More Primitives', () => {
     const el = render(`Aside`)
     expect(el.tagName.toLowerCase()).toBe('aside')
   })
-
 })
 
 // ============================================================
 // 25. MEHR CSS PROPERTIES
 // ============================================================
 describe('More CSS Properties', () => {
-
   it('margin', () => {
     const el = render(`Frame margin 20`)
     expect(getStyle(el, 'margin')).toBe('20px')
@@ -1101,14 +1033,12 @@ describe('More CSS Properties', () => {
     const el = render(`Frame x-offset 10`)
     expect(getStyle(el, 'transform')).toContain('translateX(10px)')
   })
-
 })
 
 // ============================================================
 // 26. ALIASE
 // ============================================================
 describe('Property Aliases', () => {
-
   it('width = w', () => {
     const el1 = render(`Frame width 100`)
     const el2 = render(`Frame w 100`)
@@ -1207,14 +1137,12 @@ describe('Property Aliases', () => {
     expect(getStyle(el1, 'transform')).toContain('rotate(45deg)')
     expect(getStyle(el2, 'transform')).toContain('rotate(45deg)')
   })
-
 })
 
 // ============================================================
 // 27. MEHR PRIMITIVES (Rest)
 // ============================================================
 describe('Remaining Primitives', () => {
-
   it('H3 wird zu <h3>', () => {
     const el = render(`H3 "Heading"`)
     expect(el.tagName.toLowerCase()).toBe('h3')
@@ -1255,14 +1183,12 @@ describe('Remaining Primitives', () => {
     const el = render(`Img`)
     expect(el.tagName.toLowerCase()).toBe('img')
   })
-
 })
 
 // ============================================================
 // 28. LAYOUT PROPERTIES
 // ============================================================
 describe('Layout Properties', () => {
-
   it('wrap', () => {
     const el = render(`Frame wrap`)
     expect(getStyle(el, 'flex-wrap')).toBe('wrap')
@@ -1289,14 +1215,12 @@ Frame
     const shrink = getStyle(child, 'flex-shrink')
     expect(shrink === '1' || shrink === '').toBe(true) // default ist 1
   })
-
 })
 
 // ============================================================
 // 29. DIRECTIONAL SPACING
 // ============================================================
 describe('Directional Spacing', () => {
-
   it('pad left', () => {
     const el = render(`Frame pad left 20`)
     expect(getStyle(el, 'padding-left')).toBe('20px')
@@ -1316,14 +1240,12 @@ describe('Directional Spacing', () => {
     const el = render(`Frame pad bottom 20`)
     expect(getStyle(el, 'padding-bottom')).toBe('20px')
   })
-
 })
 
 // ============================================================
 // 30. MEHR VISUAL PROPERTIES
 // ============================================================
 describe('More Visual Properties', () => {
-
   it('shadow md', () => {
     const el = render(`Frame shadow md`)
     expect(getStyle(el, 'box-shadow')).toContain('rgba')
@@ -1389,14 +1311,12 @@ describe('More Visual Properties', () => {
     expect(getStyle(el, 'text-overflow')).toBe('ellipsis')
     expect(getStyle(el, 'white-space')).toBe('nowrap')
   })
-
 })
 
 // ============================================================
 // 31. TYPOGRAPHY - FONT FAMILIES
 // ============================================================
 describe('Font Families', () => {
-
   it('font sans', () => {
     const el = render(`Text "Test" font sans`)
     const font = getStyle(el, 'font-family')
@@ -1414,14 +1334,12 @@ describe('Font Families', () => {
     const font = getStyle(el, 'font-family')
     expect(font.toLowerCase()).toContain('roboto')
   })
-
 })
 
 // ============================================================
 // 32. POSITION PROPERTIES
 // ============================================================
 describe('More Position Properties', () => {
-
   it('absolute (standalone)', () => {
     const el = render(`Frame absolute`)
     expect(getStyle(el, 'position')).toBe('absolute')
@@ -1436,14 +1354,12 @@ describe('More Position Properties', () => {
     const el = render(`Frame relative`)
     expect(getStyle(el, 'position')).toBe('relative')
   })
-
 })
 
 // ============================================================
 // 33. SIZE PROPERTY
 // ============================================================
 describe('Size Property', () => {
-
   it('size setzt w und h', () => {
     const el = render(`Frame size 100`)
     expect(getStyle(el, 'width')).toBe('100px')
@@ -1459,14 +1375,12 @@ Frame
     // size full sollte beide Dimensionen auf full setzen
     expect(getStyle(child, 'flex')).toBe('1 1 0%')
   })
-
 })
 
 // ============================================================
 // 34. WEIGHT KEYWORDS
 // ============================================================
 describe('Weight Keywords', () => {
-
   it('weight thin = 100', () => {
     const el = render(`Text "T" weight thin`)
     expect(getStyle(el, 'font-weight')).toBe('100')
@@ -1496,14 +1410,12 @@ describe('Weight Keywords', () => {
     const el = render(`Text "T" weight black`)
     expect(getStyle(el, 'font-weight')).toBe('900')
   })
-
 })
 
 // ============================================================
 // 35. TEXT ALIGN
 // ============================================================
 describe('Text Align', () => {
-
   it('text-align left', () => {
     const el = render(`Text "T" text-align left`)
     expect(getStyle(el, 'text-align')).toBe('left')
@@ -1518,14 +1430,12 @@ describe('Text Align', () => {
     const el = render(`Text "T" text-align justify`)
     expect(getStyle(el, 'text-align')).toBe('justify')
   })
-
 })
 
 // ============================================================
 // 36. CENTER ALIGNMENT SHORTCUTS
 // ============================================================
 describe('Center Alignment Shortcuts', () => {
-
   it('hor-center sets align-items center (flex column)', () => {
     // Note: standalone properties must come BEFORE value properties on same line
     const el = render(`Frame hor-center w 100`)
@@ -1541,14 +1451,12 @@ describe('Center Alignment Shortcuts', () => {
     expect(getStyle(el, 'flex-direction')).toBe('column')
     expect(getStyle(el, 'justify-content')).toBe('center')
   })
-
 })
 
 // ============================================================
 // 37. DIRECTIONAL MARGIN
 // ============================================================
 describe('Directional Margin', () => {
-
   it('margin left sets margin-left', () => {
     const el = render(`Frame margin left 20`)
     expect(getStyle(el, 'margin-left')).toBe('20px')
@@ -1568,14 +1476,12 @@ describe('Directional Margin', () => {
     const el = render(`Frame margin bottom 25`)
     expect(getStyle(el, 'margin-bottom')).toBe('25px')
   })
-
 })
 
 // ============================================================
 // 38. MORE PROPERTY ALIASES (Pin Center Properties removed)
 // ============================================================
 describe('More Property Aliases', () => {
-
   it('g = gap alias', () => {
     const el = render(`Frame hor g 15`)
     expect(getStyle(el, 'gap')).toBe('15px')
@@ -1603,14 +1509,12 @@ describe('More Property Aliases', () => {
     const el = render(`Frame m 20`)
     expect(getStyle(el, 'margin')).toBe('20px')
   })
-
 })
 
 // ============================================================
 // 40. ICON PRIMITIVE
 // ============================================================
 describe('Icon Primitive', () => {
-
   it('Icon renders as span', () => {
     const el = render(`Icon "star"`)
     expect(el.tagName.toLowerCase()).toBe('span')
@@ -1620,14 +1524,12 @@ describe('Icon Primitive', () => {
     const el = render(`Icon "star" fs 24`)
     expect(getStyle(el, 'font-size')).toBe('24px')
   })
-
 })
 
 // ============================================================
 // 41. STACKED LAYOUT
 // ============================================================
 describe('Stacked Layout', () => {
-
   it('stacked sets position relative on parent', () => {
     const el = render(`Frame stacked
   Frame bg #f00`)
@@ -1644,14 +1546,12 @@ describe('Stacked Layout', () => {
     expect(getStyle(children[0] as HTMLElement, 'position')).toBe('absolute')
     expect(getStyle(children[1] as HTMLElement, 'position')).toBe('absolute')
   })
-
 })
 
 // ============================================================
 // 42. ALIGN PROPERTY
 // ============================================================
 describe('Align Property', () => {
-
   it('align top sets align-items flex-start', () => {
     const el = render(`Frame hor align top`)
     expect(getStyle(el, 'align-items')).toBe('flex-start')
@@ -1677,14 +1577,12 @@ describe('Align Property', () => {
     expect(getStyle(el, 'justify-content')).toBe('center')
     expect(getStyle(el, 'align-items')).toBe('center')
   })
-
 })
 
 // ============================================================
 // 43. STANDALONE ALIGNMENT
 // ============================================================
 describe('Standalone Alignment', () => {
-
   it('left sets justify-content flex-start', () => {
     const el = render(`Frame hor left`)
     expect(getStyle(el, 'justify-content')).toBe('flex-start')
@@ -1706,14 +1604,12 @@ describe('Standalone Alignment', () => {
     // In vertical layout, top/bottom control justify-content
     expect(getStyle(el, 'justify-content')).toBe('flex-end')
   })
-
 })
 
 // ============================================================
 // 44. LAYOUT + POSITION KONFLIKTE
 // ============================================================
 describe('Layout + Position Conflicts', () => {
-
   it('hor center + pos x - position overrides', () => {
     const el = render(`Frame hor center pos x 50`)
     expect(getStyle(el, 'position')).toBe('absolute')
@@ -1729,14 +1625,12 @@ describe('Layout + Position Conflicts', () => {
     const el = render(`Frame stacked grid 3`)
     expect(getStyle(el, 'display')).toBe('grid')
   })
-
 })
 
 // ============================================================
 // 45. TRANSFORM KOMBINATIONEN
 // ============================================================
 describe('Transform Combinations', () => {
-
   it('rotate + scale zusammen', () => {
     const el = render(`Frame rotate 45 scale 1.5`)
     const transform = getStyle(el, 'transform')
@@ -1750,14 +1644,12 @@ describe('Transform Combinations', () => {
     expect(transform).toContain('rotate(90deg)')
     expect(transform).toContain('scale(2)')
   })
-
 })
 
 // ============================================================
 // 46. MEHR REIHENFOLGE KONFLIKTE
 // ============================================================
 describe('More Order Conflicts', () => {
-
   it('tl dann br - br gewinnt', () => {
     const el = render(`Frame tl br`)
     expect(getStyle(el, 'justify-content')).toBe('flex-end')
@@ -1779,14 +1671,12 @@ describe('More Order Conflicts', () => {
     const el = render(`Frame hor spread center`)
     expect(getStyle(el, 'justify-content')).toBe('center')
   })
-
 })
 
 // ============================================================
 // 47. TIEFE VERSCHACHTELUNG (4+ EBENEN)
 // ============================================================
 describe('Deep Nesting 4+ Levels', () => {
-
   it('4 ebenen layout-wechsel', () => {
     const el = render(`
 Frame hor
@@ -1814,14 +1704,12 @@ Frame stacked
     expect(getStyle(child, 'position')).toBe('absolute')
     expect(getStyle(child, 'left')).toBe('10px')
   })
-
 })
 
 // ============================================================
 // 48. NULL-WERTE
 // ============================================================
 describe('Zero Values', () => {
-
   it('pad 0 margin 0 gap 0', () => {
     const el = render(`Frame pad 0 margin 0 gap 0`)
     expect(getStyle(el, 'padding')).toBe('0px')
@@ -1849,14 +1737,12 @@ describe('Zero Values', () => {
     const el = render(`Frame rotate 0`)
     expect(getStyle(el, 'transform')).toContain('rotate(0deg)')
   })
-
 })
 
 // ============================================================
 // 49. NEGATIVE WERTE
 // ============================================================
 describe('Negative Values', () => {
-
   it('margin -10', () => {
     const el = render(`Frame margin -10`)
     expect(getStyle(el, 'margin')).toBe('-10px')
@@ -1877,14 +1763,12 @@ describe('Negative Values', () => {
     const el = render(`Frame rotate -180`)
     expect(getStyle(el, 'transform')).toContain('rotate(-180deg)')
   })
-
 })
 
 // ============================================================
 // 50. EXTREME WERTE
 // ============================================================
 describe('Extreme Values', () => {
-
   it('w 99999', () => {
     const el = render(`Frame w 99999`)
     expect(getStyle(el, 'width')).toBe('99999px')
@@ -1909,14 +1793,12 @@ describe('Extreme Values', () => {
     const el = render(`Frame z 9999`)
     expect(getStyle(el, 'z-index')).toBe('9999')
   })
-
 })
 
 // ============================================================
 // 51. MULTIPLE STATES
 // ============================================================
 describe('Multiple States', () => {
-
   it('hover state kompiliert', () => {
     const el = render(`
 Frame bg #fff
@@ -1938,14 +1820,12 @@ Frame
   state selected: bg #f00 bor 2`)
     expect(el.tagName.toLowerCase()).toBe('div')
   })
-
 })
 
 // ============================================================
 // 52. MULTIPLE EVENTS
 // ============================================================
 describe('Multiple Events', () => {
-
   it('onclick kompiliert', () => {
     const el = render(`
 Button "Click"
@@ -1967,14 +1847,12 @@ Input
   onkeydown enter: submit`)
     expect(el.tagName.toLowerCase()).toBe('input')
   })
-
 })
 
 // ============================================================
 // 53. TOKEN REIHENFOLGE
 // ============================================================
 describe('Token Order', () => {
-
   it('token dann fester wert - fester gewinnt', () => {
     const el = render(`
 $size: 100
@@ -1999,14 +1877,12 @@ Frame pad $space gap $space margin $space`)
     expect(getStyle(el, 'gap')).toBe('var(--space)')
     expect(getStyle(el, 'margin')).toBe('var(--space)')
   })
-
 })
 
 // ============================================================
 // 54. PRAXIS-PATTERNS
 // ============================================================
 describe('Practical Patterns', () => {
-
   it('card component', () => {
     const el = render(`
 Frame ver pad 16 gap 12 bg #fff rad 8 shadow md
@@ -2042,14 +1918,12 @@ Frame hor spread pad 16 bg #333
     expect(getStyle(el, 'justify-content')).toBe('space-between')
     expect(getStyle(el, 'padding')).toBe('16px')
   })
-
 })
 
 // ============================================================
 // 55. ROBUSTHEIT - LEERZEILEN
 // ============================================================
 describe('Robustness - Empty Lines', () => {
-
   it('leerzeile am anfang', () => {
     const el = render(`
 Frame bg #f00`)
@@ -2095,14 +1969,12 @@ Frame hor
 `)
     expect(colorMatches(getStyle(el, 'background-color'), '#0f0')).toBe(true)
   })
-
 })
 
 // ============================================================
 // 56. ROBUSTHEIT - EINRÜCKUNG
 // ============================================================
 describe('Robustness - Indentation', () => {
-
   it('2 spaces einrückung', () => {
     const el = render(`Frame
   Text "child"`)
@@ -2134,14 +2006,12 @@ describe('Robustness - Indentation', () => {
   Text "x"   `)
     expect(colorMatches(getStyle(el, 'background-color'), '#f00')).toBe(true)
   })
-
 })
 
 // ============================================================
 // 57. ROBUSTHEIT - KOMMENTARE
 // ============================================================
 describe('Robustness - Comments', () => {
-
   it('kommentar am zeilenende', () => {
     const el = render(`Frame bg #f00 // red background`)
     expect(colorMatches(getStyle(el, 'background-color'), '#f00')).toBe(true)
@@ -2177,14 +2047,12 @@ Frame bg #00f`)
   Text "x"`)
     expect(colorMatches(getStyle(el, 'background-color'), '#ff0')).toBe(true)
   })
-
 })
 
 // ============================================================
 // 58. ROBUSTHEIT - SEMIKOLONS
 // ============================================================
 describe('Robustness - Semicolons', () => {
-
   it('semikolon am zeilenende', () => {
     const el = render(`Frame bg #f00;`)
     expect(colorMatches(getStyle(el, 'background-color'), '#f00')).toBe(true)
@@ -2202,14 +2070,12 @@ describe('Robustness - Semicolons', () => {
     expect(colorMatches(getStyle(el, 'background-color'), '#0f0')).toBe(true)
     expect(getStyle(el, 'padding')).toBe('10px')
   })
-
 })
 
 // ============================================================
 // 59. ROBUSTHEIT - STRINGS
 // ============================================================
 describe('Robustness - Strings', () => {
-
   it('einfache anführungszeichen', () => {
     const el = render(`Text 'Hello'`)
     expect(el.textContent).toBe('Hello')
@@ -2234,14 +2100,12 @@ describe('Robustness - Strings', () => {
     const el = render(`Text "Test: äöü ß €"`)
     expect(el.textContent).toContain('äöü')
   })
-
 })
 
 // ============================================================
 // 60. ROBUSTHEIT - KOMPLEXE SZENARIEN
 // ============================================================
 describe('Robustness - Complex Scenarios', () => {
-
   it('alles zusammen: leerzeilen, kommentare, einrückung', () => {
     const el = render(`
 // Header component
@@ -2293,5 +2157,4 @@ Child`)
     const text = el.querySelector('div div div span')
     expect(text?.textContent).toBe('deep')
   })
-
 })

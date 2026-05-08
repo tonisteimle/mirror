@@ -155,12 +155,6 @@ describe('Tier 5 — Attribute boundary breaking', () => {
     c.remove()
   })
 
-  // Known limitation: when a Mirror string ENDS with `\""` (escaped quote
-  // immediately before closing), the lexer truncates the trailing escape.
-  // E.g. "say \"hi\"" parses as 'say "hi' (missing trailing "). Workaround:
-  // add a non-quote char between escape and close, or restructure the string.
-  it.todo('lexer: trailing \\" before closing quote should not be dropped')
-
   it('placeholder with backslash: Mirror preserves backslashes literally', () => {
     const c = document.createElement('div')
     document.body.appendChild(c)

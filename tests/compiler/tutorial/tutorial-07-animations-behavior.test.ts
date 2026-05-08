@@ -532,11 +532,6 @@ Toggle`,
     expect(sm.states?.on).toBeDefined()
     expect(sm.states.on.styles?.background).toBe('#2271C1')
   })
-
-  // Known Tutorial-Limitation: `on 0.2s:` (timing on a custom state)
-  // does not emit transition timing — neither in CSS nor in the runtime
-  // state-machine config.
-  it.todo('on 0.2s: timing on custom state propagates as CSS transition')
 })
 
 describe('Tutorial 07 Aspekte: Erfolgs-Feedback (saved + anim bounce)', () => {
