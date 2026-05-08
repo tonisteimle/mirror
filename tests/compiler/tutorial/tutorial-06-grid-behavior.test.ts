@@ -29,27 +29,32 @@ afterEach(() => {
 // GRID BASICS
 // ============================================================
 describe('Grid Basics', () => {
-
   it('grid N setzt display: grid', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Frame grid 3
   Frame bg #333
   Frame bg #444
   Frame bg #555
-`, container)
+`,
+      container
+    )
 
     const frame = root.querySelector('[data-mirror-name="Frame"]') as HTMLElement
     expect(frame.style.display).toBe('grid')
   })
 
   it('grid N setzt N Spalten', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Frame grid 4, gap 8
   Frame bg #333
   Frame bg #444
   Frame bg #555
   Frame bg #666
-`, container)
+`,
+      container
+    )
 
     const frame = root.querySelector('[data-mirror-name="Frame"]') as HTMLElement
     expect(frame.style.display).toBe('grid')
@@ -58,12 +63,15 @@ Frame grid 4, gap 8
   })
 
   it('grid auto für automatische Spalten', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Frame grid auto
   Frame w 100, bg #333
   Frame w 100, bg #444
   Frame w 100, bg #555
-`, container)
+`,
+      container
+    )
 
     const frame = root.querySelector('[data-mirror-name="Frame"]') as HTMLElement
     expect(frame.style.display).toBe('grid')
@@ -74,15 +82,17 @@ Frame grid auto
 // GRID GAP
 // ============================================================
 describe('Grid Gap', () => {
-
   it('gap in Grid funktioniert', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Frame grid 2, gap 16
   Frame bg #333
   Frame bg #444
   Frame bg #555
   Frame bg #666
-`, container)
+`,
+      container
+    )
 
     const frame = root.querySelector('[data-mirror-name="Frame"]') as HTMLElement
     expect(frame.style.gap).toBe('16px')
@@ -93,33 +103,41 @@ Frame grid 2, gap 16
 // GRID SPAN
 // ============================================================
 describe('Grid Span', () => {
-
   it('w 2 in Grid spannt 2 Spalten', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Frame grid 3, gap 8
   Frame w 2, bg #2563eb
   Frame bg #333
   Frame bg #333
   Frame bg #333
-`, container)
+`,
+      container
+    )
 
     const wideItem = root.querySelectorAll('[data-mirror-name="Frame"]')[1] as HTMLElement
-    // gridColumn sollte span 2 sein
-    expect(wideItem.style.gridColumn).toContain('2')
+    // gridColumnEnd sollte "span 2" sein. Compiler emittiert die Longhand
+    // grid-column-end statt der Shorthand grid-column, weil Shorthand mit
+    // einer separat gesetzten grid-column-start (für `x N`) kollidiert
+    // und die Start-Spalte clobbern würde.
+    expect(wideItem.style.gridColumnEnd).toContain('2')
   })
 
   it('h 2 in Grid spannt 2 Zeilen', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Frame grid 3, gap 8
   Frame h 2, bg #2563eb
   Frame bg #333
   Frame bg #333
   Frame bg #333
-`, container)
+`,
+      container
+    )
 
     const tallItem = root.querySelectorAll('[data-mirror-name="Frame"]')[1] as HTMLElement
-    // gridRow sollte span 2 sein
-    expect(tallItem.style.gridRow).toContain('2')
+    // gridRowEnd sollte "span 2" sein (Longhand wie bei grid-column-end).
+    expect(tallItem.style.gridRowEnd).toContain('2')
   })
 })
 
@@ -127,14 +145,16 @@ Frame grid 3, gap 8
 // DENSE PACKING
 // ============================================================
 describe('Dense Packing', () => {
-
   it('dense setzt grid-auto-flow: dense', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Frame grid 3, dense
   Frame bg #333
   Frame w 2, bg #2563eb
   Frame bg #333
-`, container)
+`,
+      container
+    )
 
     const frame = root.querySelector('[data-mirror-name="Frame"]') as HTMLElement
     expect(frame.style.gridAutoFlow).toContain('dense')
@@ -145,23 +165,26 @@ Frame grid 3, dense
 // TUTORIAL BEISPIELE
 // ============================================================
 describe('Tutorial 06 Beispiele', () => {
-
   it('Beispiel: Photo Grid', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Frame grid 3, gap 8, pad 16, bg #111
   Frame h 150, bg #333, rad 8
   Frame w 2, h 150, bg #2563eb, rad 8
   Frame h 150, bg #333, rad 8
   Frame h 150, bg #333, rad 8
   Frame h 150, bg #333, rad 8
-`, container)
+`,
+      container
+    )
 
     const grid = root.querySelector('[data-mirror-name="Frame"]') as HTMLElement
     expect(grid.style.display).toBe('grid')
   })
 
   it('Beispiel: Dashboard Grid', () => {
-    const { root } = renderWithRuntime(`
+    const { root } = renderWithRuntime(
+      `
 Frame grid 4, gap 16, pad 16
   Frame w 2, h 2, bg #1a1a1a, rad 8, pad 16
     Text "Main Chart" weight bold
@@ -171,7 +194,9 @@ Frame grid 4, gap 16, pad 16
     Text "Stats 2"
   Frame w 2, bg #1a1a1a, rad 8, pad 16
     Text "Table"
-`, container)
+`,
+      container
+    )
 
     const grid = root.querySelector('[data-mirror-name="Frame"]') as HTMLElement
     expect(grid.style.display).toBe('grid')
