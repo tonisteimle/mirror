@@ -1120,6 +1120,22 @@ export function parseComponentBody(
           column: slotName.column,
         }
 
+        // Optional inline type hint: `Body: Frame col white, fs 14`. Designers
+        // commonly write the visual type of a slot as the first token after
+        // the colon. If it matches a primitive or a known component, it is
+        // redundant — skip it so the props that follow attach to this slot
+        // and don't get flattened into the parent.
+        if (U.check(ctx, 'IDENTIFIER')) {
+          const next = U.current(ctx).value
+          const looksLikeType = next[0] === next[0].toUpperCase()
+          if (
+            looksLikeType &&
+            (isPrimitive(next.toLowerCase()) || callbacks.getComponentDef?.(next) !== undefined)
+          ) {
+            U.advance(ctx) // skip redundant type hint
+          }
+        }
+
         callbacks.parseInlineProperties(slot.properties)
         U.skipNewlines(ctx)
         if (U.check(ctx, 'INDENT')) {
