@@ -80,11 +80,49 @@ describe('StorageService File Operations', () => {
       expect(readSpy).not.toHaveBeenCalled()
     })
 
-    it('should refresh cache after TTL', async () => {
-      // This test verifies cache behavior conceptually
-      // In production, cache expires after 5 seconds
-      const content = await service.readFile('app.mir')
-      expect(content).toBeDefined()
+    it('should refresh cache after TTL (locks 5s window)', async () => {
+      // P3-discriminating: lock the actual TTL behavior. With fake timers
+      // we can advance past the 5s window and verify the next read
+      // re-fetches from the provider (calls readFile again).
+      vi.useFakeTimers()
+      let providerCalls = 0
+      const realRead = provider.readFile.bind(provider)
+      provider.readFile = async (path: string) => {
+        providerCalls++
+        return realRead(path)
+      }
+      try {
+        await service.readFile('app.mir') // call 1: cache miss
+        expect(providerCalls).toBe(1)
+        await service.readFile('app.mir') // call 2: cache hit
+        expect(providerCalls).toBe(1)
+        // Advance past the 5s TTL.
+        vi.advanceTimersByTime(5_001)
+        await service.readFile('app.mir') // call 3: cache expired → miss
+        expect(providerCalls).toBe(2)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('cache stays warm just before TTL expiry (boundary)', async () => {
+      vi.useFakeTimers()
+      let providerCalls = 0
+      const realRead = provider.readFile.bind(provider)
+      provider.readFile = async (path: string) => {
+        providerCalls++
+        return realRead(path)
+      }
+      try {
+        await service.readFile('app.mir')
+        expect(providerCalls).toBe(1)
+        // 4_999ms < 5_000ms TTL → still cached.
+        vi.advanceTimersByTime(4_999)
+        await service.readFile('app.mir')
+        expect(providerCalls).toBe(1)
+      } finally {
+        vi.useRealTimers()
+      }
     })
 
     it('should throw on non-existent file', async () => {
@@ -373,6 +411,86 @@ describe('StorageService Prelude', () => {
     // Should not throw
     const prelude = await service.buildPrelude()
     expect(typeof prelude).toBe('string')
+  })
+
+  // P2 coverage gaps from --coverage on service.ts ---------------------
+
+  it('detects component file by content even when extension is generic .mir', async () => {
+    // Coverage gap: the prelude scan reads `.mir`/unknown files and runs
+    // detectFileType on the CONTENT to figure out tokens/components.
+    // Lock in: a `.mir` file whose content looks like a component is
+    // treated as a component for prelude purposes.
+    await service.writeFile('shared.mir', 'PrimaryBtn as Button: bg #2271C1, col white')
+    const preludeFiles = await service.getPreludeFiles()
+    const shared = preludeFiles.find(f => f.path === 'shared.mir')
+    expect(shared).toBeDefined()
+    expect(shared!.type).toBe('component')
+  })
+
+  it('emits error event but does not throw when a prelude file fails to read', async () => {
+    // Coverage gap: getPreludeFiles wraps each readFile in try/catch and
+    // emits 'error' so the UI can show a notification, but continues to
+    // load the rest. Mock the provider to fail readFile for one file.
+    const errorEvents: Array<{ operation: string; path?: string }> = []
+    service.events.on('error', e => errorEvents.push({ operation: e.operation, path: e.path }))
+
+    const realRead = provider.readFile.bind(provider)
+    provider.readFile = async (path: string) => {
+      if (path === 'tokens.mir') throw new Error('disk corrupt')
+      return realRead(path)
+    }
+    // Bypass cache so the failing read is exercised:
+    service.invalidateCache('tokens.mir')
+
+    const files = await service.getPreludeFiles()
+    // No throw; the failing file is simply absent from the result.
+    expect(files.find(f => f.path === 'tokens.mir')).toBeUndefined()
+    // The error was emitted so the caller can surface it.
+    expect(errorEvents).toContainEqual({
+      operation: 'getPreludeFiles',
+      path: 'tokens.mir',
+    })
+  })
+
+  it('skips data files (.yaml/.yml) in prelude scan', async () => {
+    // Coverage: the prelude continue-branch for data/javascript types.
+    await service.writeFile('data.yaml', 'foo: bar')
+    const files = await service.getPreludeFiles()
+    expect(files.find(f => f.path === 'data.yaml')).toBeUndefined()
+  })
+})
+
+// =============================================================================
+// NATIVE DIALOGS
+// =============================================================================
+
+describe('StorageService Native Dialogs (P2 coverage)', () => {
+  it('canOpenFolderDialog returns false for providers without native support', () => {
+    // DemoProvider has supportsNativeDialogs: false.
+    expect(service.canOpenFolderDialog()).toBe(false)
+  })
+
+  it('canOpenFolderDialog returns false when service is not initialized', () => {
+    const uninit = new StorageService()
+    expect(uninit.canOpenFolderDialog()).toBe(false)
+  })
+
+  it('openFolderDialog throws when provider has no openFolderDialog method', async () => {
+    // Lock in: explicit error message rather than a silent return.
+    await expect(service.openFolderDialog()).rejects.toThrow(/native dialogs/i)
+  })
+
+  it('openFolderDialog delegates to provider when method is present', async () => {
+    // Add a fake openFolderDialog to the provider and ensure it gets called.
+    let called = false
+    ;(provider as unknown as { openFolderDialog: () => Promise<string | null> }).openFolderDialog =
+      async () => {
+        called = true
+        return '/some/path'
+      }
+    const result = await service.openFolderDialog()
+    expect(called).toBe(true)
+    expect(result).toBe('/some/path')
   })
 })
 

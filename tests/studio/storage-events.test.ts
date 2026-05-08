@@ -131,6 +131,51 @@ describe('StorageEventEmitter', () => {
 
       consoleError.mockRestore()
     })
+
+    it('error in middle of listener chain does not stop downstream listeners', () => {
+      // Locks in the contract: each listener is independently isolated.
+      // A regression that aborted the loop on first error would silently
+      // strand subscribers registered after a buggy one.
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const before = vi.fn()
+      const middle = vi.fn(() => {
+        throw new Error('boom')
+      })
+      const after1 = vi.fn()
+      const after2 = vi.fn()
+
+      emitter.on('file:created', before)
+      emitter.on('file:created', middle)
+      emitter.on('file:created', after1)
+      emitter.on('file:created', after2)
+
+      emitter.emit('file:created', { path: 'test.mir' })
+
+      expect(before).toHaveBeenCalled()
+      expect(middle).toHaveBeenCalled()
+      expect(after1).toHaveBeenCalled()
+      expect(after2).toHaveBeenCalled()
+      consoleError.mockRestore()
+    })
+
+    it('multiple errors in different listeners are all isolated', () => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const errA = vi.fn(() => {
+        throw new Error('A')
+      })
+      const errB = vi.fn(() => {
+        throw new Error('B')
+      })
+      const ok = vi.fn()
+
+      emitter.on('file:created', errA)
+      emitter.on('file:created', errB)
+      emitter.on('file:created', ok)
+
+      expect(() => emitter.emit('file:created', { path: 'x' })).not.toThrow()
+      expect(ok).toHaveBeenCalled()
+      consoleError.mockRestore()
+    })
   })
 
   describe('off()', () => {
@@ -256,9 +301,7 @@ describe('Storage Event Types', () => {
     const callback = vi.fn()
     emitter.on('tree:changed', callback)
 
-    const tree = [
-      { type: 'file' as const, name: 'index.mir', path: 'index.mir' },
-    ]
+    const tree = [{ type: 'file' as const, name: 'index.mir', path: 'index.mir' }]
     emitter.emit('tree:changed', { tree })
 
     expect(callback).toHaveBeenCalledWith({ tree })
