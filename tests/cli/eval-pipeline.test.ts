@@ -119,8 +119,10 @@ describe('renderReport', () => {
       exportTimeMs: 1000,
       agentTimeMs: 5000,
       verifyTimeMs: 500,
-      totalTimeMs: 6500,
+      functionalTimeMs: 200,
+      totalTimeMs: 6700,
       viewportScores: { mobile: 96, tablet: 97, desktop: 98 },
+      functional: null,
       bundlePath: '/tmp/x',
       logPath: '/tmp/x/log',
       ...over,
@@ -146,7 +148,7 @@ describe('renderReport', () => {
     expect(md).toContain('# LLM Pipeline Eval')
     expect(md).toContain('## Success matrix')
     // 1 of 2 passed; mean of 6 scores = (96+97+98+80+81+82)/6 = 89.0
-    expect(md).toMatch(/1\/2 · 89\.0%/)
+    expect(md).toMatch(/1\/2 · px 89\.0%/)
   })
 
   it('per-cell detail section lists individual runs with their scores', () => {

@@ -36,6 +36,7 @@ import {
 import { resolve, join, dirname, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawn, spawnSync } from 'node:child_process'
+import { runFunctional, type FunctionalResult } from './eval-functional'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(__dirname, '..')
@@ -75,8 +76,10 @@ export interface CellResult {
   exportTimeMs: number
   agentTimeMs: number
   verifyTimeMs: number
+  functionalTimeMs: number
   totalTimeMs: number
   viewportScores: Record<string, number>
+  functional: FunctionalResult | null
   bundlePath: string
   logPath: string
   error?: string
@@ -170,7 +173,11 @@ export function renderReport(
     const passes = rs.filter(r => r.status === 'success').length
     const allScores = rs.flatMap(r => Object.values(r.viewportScores))
     const mean = allScores.length > 0 ? allScores.reduce((a, b) => a + b, 0) / allScores.length : 0
-    return `${passes}/${rs.length} · ${mean.toFixed(1)}%`
+    // Aggregate functional: total passed / total checked across runs.
+    const fnPassed = rs.reduce((a, r) => a + (r.functional?.passed ?? 0), 0)
+    const fnTotal = rs.reduce((a, r) => a + (r.functional?.total ?? 0), 0)
+    const fnPart = fnTotal > 0 ? ` · fn ${fnPassed}/${fnTotal}` : ''
+    return `${passes}/${rs.length} · px ${mean.toFixed(1)}%${fnPart}`
   }
 
   const lines: string[] = [
@@ -202,14 +209,25 @@ export function renderReport(
       const rs = groups.get(`${tier}|${target}` as Key) ?? []
       if (rs.length === 0) continue
       lines.push(`### ${tier} · ${proj.label} → ${target}`, '')
-      lines.push(`| Run | Status | mobile | tablet | desktop | Time |`)
-      lines.push(`| ---:| ------ | -----:| -----:| -------:| ----:|`)
+      lines.push(`| Run | Status | mobile | tablet | desktop | Functional | Time |`)
+      lines.push(`| ---:| ------ | -----:| -----:| -------:| ---------- | ----:|`)
       for (const r of rs) {
         const m = r.viewportScores.mobile?.toFixed(1) ?? '—'
         const t = r.viewportScores.tablet?.toFixed(1) ?? '—'
         const d = r.viewportScores.desktop?.toFixed(1) ?? '—'
+        const fn = r.functional ? `${r.functional.passed}/${r.functional.total}` : '—'
         const time = `${(r.totalTimeMs / 1000).toFixed(0)}s`
-        lines.push(`| ${r.run} | ${r.status} | ${m} | ${t} | ${d} | ${time} |`)
+        lines.push(`| ${r.run} | ${r.status} | ${m} | ${t} | ${d} | ${fn} | ${time} |`)
+      }
+      // Failing-claim breakdown — shows WHICH semantic checks missed.
+      const allFailed = rs.flatMap(r => r.functional?.details ?? []).filter(d => !d.passed)
+      if (allFailed.length > 0) {
+        const tally = new Map<string, number>()
+        for (const f of allFailed) tally.set(f.name, (tally.get(f.name) ?? 0) + 1)
+        lines.push('', `_failed claims (count across runs):_`)
+        for (const [name, count] of [...tally.entries()].sort((a, b) => b[1] - a[1])) {
+          lines.push(`- ${name} (×${count})`)
+        }
       }
       lines.push('')
     }
@@ -292,8 +310,10 @@ export async function runCell(cell: EvalCell, run: number, opts: RunOpts): Promi
     exportTimeMs: 0,
     agentTimeMs: 0,
     verifyTimeMs: 0,
+    functionalTimeMs: 0,
     totalTimeMs: 0,
     viewportScores: {},
+    functional: null,
     bundlePath,
     logPath,
   }
@@ -360,29 +380,74 @@ export async function runCell(cell: EvalCell, run: number, opts: RunOpts): Promi
     result.agentTimeMs = Date.now() - tAgent
 
     // 3. Verify (only meaningful with --snapshot)
-    if (!opts.snapshot) {
-      logTo(logPath, '[no-verify] snapshot disabled, skipping verify')
-      result.totalTimeMs = Date.now() - t0
-      return result
-    }
-    const tVer = Date.now()
-    const verR = await exec(
-      'npx',
-      ['tsx', 'tools/verify.ts', bundlePath, '--threshold', String(opts.threshold)],
-      { cwd: REPO_ROOT, logPath }
-    )
-    result.verifyTimeMs = Date.now() - tVer
-    const reportPath = join(bundlePath, 'verify-report.md')
-    if (existsSync(reportPath)) {
-      const parsed = parseVerifyReport(readFileSync(reportPath, 'utf8'))
-      result.viewportScores = parsed.scores
-      if (verR.code !== 0 || !parsed.passed) {
+    if (opts.snapshot) {
+      const tVer = Date.now()
+      const verR = await exec(
+        'npx',
+        ['tsx', 'tools/verify.ts', bundlePath, '--threshold', String(opts.threshold)],
+        { cwd: REPO_ROOT, logPath }
+      )
+      result.verifyTimeMs = Date.now() - tVer
+      const reportPath = join(bundlePath, 'verify-report.md')
+      if (existsSync(reportPath)) {
+        const parsed = parseVerifyReport(readFileSync(reportPath, 'utf8'))
+        result.viewportScores = parsed.scores
+        if (verR.code !== 0 || !parsed.passed) {
+          result.status = 'verify-fail'
+          result.error = `verify thresholds not met`
+        }
+      } else {
         result.status = 'verify-fail'
-        result.error = `verify thresholds not met`
+        result.error = 'verify-report.md not produced'
       }
     } else {
-      result.status = 'verify-fail'
-      result.error = 'verify-report.md not produced'
+      logTo(logPath, '[no-verify] snapshot disabled, skipping verify')
+    }
+
+    // 4. Functional eval — semantic checks beyond pixel-diff. Run even
+    // if verify failed; the functional score is independent.
+    if (!opts.dryRun) {
+      const tFn = Date.now()
+      try {
+        // Resolve generated dir for this target.
+        const candidate =
+          cell.target === 'vanilla'
+            ? join(bundlePath, 'generated')
+            : join(bundlePath, 'generated', 'dist')
+        const genDir = existsSync(candidate) ? candidate : join(bundlePath, 'generated')
+        if (existsSync(genDir)) {
+          result.functional = await runFunctional({
+            generatedDir: genDir,
+            project: cell.project.label,
+          })
+          logTo(
+            logPath,
+            `[functional] ${result.functional.passed}/${result.functional.total} contractual claims pass`
+          )
+          // If functional fails AND verify hadn't already flagged a
+          // problem, downgrade status.
+          if (
+            result.status === 'success' &&
+            result.functional.total > 0 &&
+            result.functional.passed < result.functional.total
+          ) {
+            // Don't fail the cell outright on partial functional miss
+            // — keep status=success but the report will surface the
+            // partial score. We only flip to verify-fail if zero
+            // claims pass (catastrophic miss).
+            if (result.functional.passed === 0) {
+              result.status = 'verify-fail'
+              result.error = 'functional eval: 0 claims passed'
+            }
+          }
+        } else {
+          logTo(logPath, '[functional] no generated dir found, skipping')
+        }
+      } catch (err) {
+        logTo(logPath, `[functional] error: ${(err as Error).message}`)
+      } finally {
+        result.functionalTimeMs = Date.now() - tFn
+      }
     }
   } catch (err) {
     result.status = 'verify-fail'
