@@ -56,6 +56,7 @@ export type TokenType =
   | 'SELECTION'
   | 'BIND' // bind varName (track active exclusive() child content)
   | 'ROUTE'
+  | 'FROM' // from path/to/file (source-path hint for multifile docs)
   | 'WITH'
   | 'CANVAS' // canvas keyword for canvas definitions
   | 'USE' // use filename (imports components from another file)

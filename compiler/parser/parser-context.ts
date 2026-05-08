@@ -55,6 +55,7 @@ export const KEYWORD_TOKEN_TYPES: TokenType[] = [
   'SELECTION',
   'BIND',
   'ROUTE',
+  'FROM',
   'WITH',
   'BY',
   'ASC',

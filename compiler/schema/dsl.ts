@@ -204,6 +204,7 @@ export const DSL = {
       'selection',
       'bind', // Bind active exclusive() child content to variable
       'route', // @deprecated - use navigate() or Tab/NavItem without children instead
+      'from', // Source-file hint: `Screen from screens/dashboard` (multifile docs)
       'with',
       'by',
       'asc',

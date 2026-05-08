@@ -351,6 +351,14 @@ export function parseInstance(this: Parser, name: Token): Instance | Slot | ZagN
     instance.properties.splice(routeIndex, 1)
   }
 
+  // Extract _from property and move to instance.from
+  const fromIndex = instance.properties.findIndex(p => p.name === '_from')
+  if (fromIndex !== -1) {
+    const fromProp = instance.properties[fromIndex]
+    instance.from = String(fromProp.values[0])
+    instance.properties.splice(fromIndex, 1)
+  }
+
   // Extract initial state from properties
   // A property with empty values and lowercase name that isn't a known property/keyword is an initial state
   // Example: Button "Click" selected → "selected" becomes initialState

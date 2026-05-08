@@ -105,6 +105,12 @@ export function parseInlineProperties(
       continue
     }
 
+    if (U.check(ctx, 'FROM')) {
+      const prop = consumeFrom(ctx, callbacks)
+      if (prop) properties.push(prop)
+      continue
+    }
+
     if (U.check(ctx, 'BIND')) {
       const prop = consumeBind(ctx)
       if (prop) properties.push(prop)
@@ -202,6 +208,29 @@ function consumeRoute(ctx: ParserContext, cb: InlinePropertiesCallbacks): Proper
     values: [routePath],
     line: routeToken.line,
     column: routeToken.column,
+  }
+}
+
+/* ----------------------------------------------------- branch: from */
+
+/**
+ * `Screen from path/to/file` — slash-separated source-file hint that
+ * documents where the referenced component is defined. Same shape as
+ * `route`: tokenize the path with `parseRoutePath`, attach as a
+ * prefixed `_from` marker property; parse-blocks lifts it to
+ * `instance.from`.
+ */
+function consumeFrom(ctx: ParserContext, cb: InlinePropertiesCallbacks): Property | null {
+  const fromToken = U.advance(ctx)
+  const fromPath = cb.parseRoutePath()
+  if (!fromPath) return null
+
+  return {
+    type: 'Property',
+    name: '_from',
+    values: [fromPath],
+    line: fromToken.line,
+    column: fromToken.column,
   }
 }
 
