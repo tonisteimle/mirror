@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Mirror Studio",
+  "version": "0.1.0",
+  "identifier": "ch.fhnw.mirror.studio",
+  "build": {
+    "beforeDevCommand": "npm run dev:studio:watch",
+    "devUrl": "http://localhost:5173/studio/",
+    "beforeBuildCommand": "npm run build:studio",
+    "frontendDist": "../studio"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Mirror Studio",
+        "width": 1400,
+        "height": 900,
+        "minWidth": 1024,
+        "minHeight": 700,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://esm.sh https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://esm.sh; img-src 'self' data: blob: https:; font-src 'self' data: https://esm.sh; connect-src 'self' https://esm.sh https://cdnjs.cloudflare.com https://unpkg.com https://api.iconify.design https://api.imgbb.com http://localhost:* ws://localhost:* http://ipc.localhost ipc:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+    }
+  },
+  "bundle": {
+    "active": false,
+    "targets": ["dmg", "app"],
+    "icon": [],
+    "category": "DeveloperTool",
+    "shortDescription": "Mirror Studio Desktop",
+    "longDescription": "Mirror Studio — die Sprache für AI-unterstütztes UI-Design."
+  }
+}
