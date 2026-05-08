@@ -30,9 +30,30 @@
 
     <p class="intro">Dieses Kapitel zeigt, wie du <strong>Daten vom UI trennst</strong>: Variablen definieren, in Komponenten verwenden, und bei Bedarf austauschen.</p>
 
+    <p class="intro"><strong>Das Kapitel ist umfangreich.</strong> Es deckt drei zusammengehörige Themen ab — du kannst sie linear lesen oder gezielt zum Bereich springen, der dich gerade interessiert:</p>
+
+    <table class="ref-table">
+      <tr><th>Bereich</th><th>Was du lernst</th><th>Springe zu</th></tr>
+      <tr>
+        <td><strong>1. Variablen</strong></td>
+        <td>Werte einmal definieren, überall verwenden. Strings, Zahlen, Arithmetik.</td>
+        <td><a href="#variablen">Variablen</a></td>
+      </tr>
+      <tr>
+        <td><strong>2. Daten-Strukturen</strong></td>
+        <td>Listen, Objekte, Sammlungen. Iteration mit <code>each</code>, Aggregation mit <code>.count</code>/<code>.first</code>.</td>
+        <td><a href="#strukturen">Strukturen</a></td>
+      </tr>
+      <tr>
+        <td><strong>3. Bedingungen</strong></td>
+        <td><code>if</code>/<code>else</code>, Ternary-Ausdrücke, kombiniert mit <code>each</code>.</td>
+        <td><a href="#bedingungen">Bedingungen</a></td>
+      </tr>
+    </table>
+
 
     <!-- ============================================================ -->
-    <section>
+    <section id="variablen">
       <h2>Das Problem: Hardcoded Text</h2>
       <p>Stell dir vor, du baust eine Begrüßung. Der Name steht direkt im Code:</p>
 
@@ -131,7 +152,7 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
 
 
     <!-- ============================================================ -->
-    <section>
+    <section id="strukturen">
       <h2>Einfache Listen</h2>
       <p>Für einfache Listen ohne Attribute – nur Namen auflisten:</p>
       <div class="playground" data-playground>
@@ -461,7 +482,7 @@ Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
 
 
     <!-- ============================================================ -->
-    <section>
+    <section id="bedingungen">
       <h2>Bedingte Anzeige: if / else</h2>
       <p>Manchmal soll ein Element nur unter bestimmten Bedingungen angezeigt werden. Mit <code>if</code> zeigst du Elemente nur an, wenn eine Bedingung erfüllt ist:</p>
       <div class="playground" data-playground>
