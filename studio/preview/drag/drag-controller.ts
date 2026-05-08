@@ -17,7 +17,7 @@ import type {
 } from './types'
 import { events } from '../../core'
 import { findOwningGridContainer, readGridGeometry } from '../../visual/grid-overlay/grid-detector'
-import { pointerToCell, readCurrentSpan } from '../../visual/grid-overlay/grid-snap'
+import { pointerToCell, readCurrentSpan } from '../../visual/snap/grid-cell-snap'
 import type { ControllerReport, Reportable } from './reporter/types'
 import { LayoutCache } from './layout-cache'
 import { HitDetector } from './hit-detector'

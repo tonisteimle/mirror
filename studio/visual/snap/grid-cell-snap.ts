@@ -16,7 +16,7 @@
  *   - Cursor outside the grid bounds clamps to the nearest edge cell.
  */
 
-import type { GridGeometry } from './grid-detector'
+import type { GridGeometry } from '../grid-overlay/grid-detector'
 
 export interface GridCell {
   /** 1-indexed column. Falls in [1, columnCount]. */

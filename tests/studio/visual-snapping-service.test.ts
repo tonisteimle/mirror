@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'
-import { SnappingService, shouldBypassSnapping } from '../../studio/visual/snapping-service'
+import { SnappingService, shouldBypassSnapping } from '../../studio/visual/snap/spacing-snap'
 import { handleSnapSettings, gridSettings } from '../../studio/core/settings'
 
 beforeEach(() => {

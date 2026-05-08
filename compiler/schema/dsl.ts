@@ -361,6 +361,7 @@ export const DSL = {
     clear: { description: 'Clear input value', params: ['target?'] },
     setError: { description: 'Set error message on input', params: ['target', 'message'] },
     clearError: { description: 'Clear error message on input', params: ['target'] },
+    selectText: { description: 'Select all text in input', params: ['target?'] },
     // List-navigation helpers (Select / Dropdown / Combobox)
     highlightNext: { description: 'Highlight next item in list', params: ['list'] },
     highlightPrev: { description: 'Highlight previous item in list', params: ['list'] },
@@ -402,6 +403,8 @@ export const DSL = {
     invalid: { description: 'Invalid state' },
     loading: { description: 'Loading state' },
     error: { description: 'Error state' },
+    copied: { description: 'Just-copied feedback (set by `copy()` for ~1.5s)' },
+    saved: { description: 'Just-saved feedback (set after CRUD save)' },
   } as Record<string, StateDef>,
 
   // ---------------------------------------------------------------------------

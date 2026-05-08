@@ -392,7 +392,7 @@ import {
   snapRectToGrid,
   createSnapConfig,
   createSnapContext,
-} from '../../studio/visual/models/snap'
+} from '../../studio/visual/snap/alignment-snap'
 
 describe('snap — calculateSnap', () => {
   it('disabled config returns position unchanged', () => {
@@ -902,7 +902,7 @@ import {
   initSnappingService,
   getSnappingService,
   resetSnappingService,
-} from '../../studio/visual/snapping-service'
+} from '../../studio/visual/snap/spacing-snap'
 
 describe('SnappingService — token parsing', () => {
   beforeEach(() => resetSnappingService())

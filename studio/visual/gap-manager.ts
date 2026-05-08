@@ -15,7 +15,7 @@
 import { OverlayManager } from './overlay-manager'
 import { events, getLayoutService } from '../core'
 import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
-import { getSnappingService, shouldBypassSnapping, type SnapResult } from './snapping-service'
+import { getSnappingService, shouldBypassSnapping, type SpacingSnapResult } from './snap/spacing-snap'
 import { SnapIndicator, createSnapIndicator } from './snap-indicator'
 
 // Visual constants
@@ -36,7 +36,7 @@ export interface GapState {
   element: HTMLElement
   direction: 'horizontal' | 'vertical'
   // Last snap result for visual feedback
-  lastSnapResult?: SnapResult
+  lastSnapResult?: SpacingSnapResult
 }
 
 export interface GapManagerConfig {
@@ -760,7 +760,7 @@ export class GapManager {
     let newGap = Math.max(0, startGap + delta)
 
     // Token snapping (unless Cmd/Ctrl held to bypass)
-    let snapResult: SnapResult | undefined
+    let snapResult: SpacingSnapResult | undefined
     if (!shouldBypassSnapping(e)) {
       const snappingService = getSnappingService()
       if (snappingService) {

@@ -15,7 +15,7 @@ import {
   type BoundingBox,
   type Rect,
 } from '../preview/multi-selection-bounds'
-import { getSnappingService, shouldBypassSnapping } from './snapping-service'
+import { getSnappingService, shouldBypassSnapping } from './snap/spacing-snap'
 import {
   findOwningGridContainer,
   readGridGeometry,

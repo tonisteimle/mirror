@@ -24,7 +24,7 @@ import { ResizeManager, createResizeManager, type SizingMode } from '../visual/r
 import { PaddingManager, createPaddingManager, type PaddingHandle } from '../visual/padding-manager'
 import { MarginManager, createMarginManager, type MarginHandle } from '../visual/margin-manager'
 import { GapManager, createGapManager } from '../visual/gap-manager'
-import { initSnappingService, resetSnappingService } from '../visual/snapping-service'
+import { initSnappingService, resetSnappingService } from '../visual/snap/spacing-snap'
 import { SlotVisibilityService, createSlotVisibilityService } from './slot-visibility'
 import { DragPreview, createDragPreview } from './drag-preview'
 

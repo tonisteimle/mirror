@@ -134,30 +134,30 @@ export {
   type ValidatedCoordinates,
 } from './models/coordinate-calculator'
 
-// Snap Calculations (used by resize and drawing)
+// Snap Calculations (used by resize and drawing) — geometric edge/center alignment
 export {
   calculateSnap,
   createSnapConfig,
   createSnapContext,
   type SnapAxis,
-  type SnapResult as SnapCalcResult,
+  type AlignmentSnapResult,
   type SnapAxisInfo,
   type Guide as SnapGuide,
   type SnapConfig,
   type SnapContext,
-} from './models/snap'
+} from './snap/alignment-snap'
 
-// Snapping Service (token and grid snapping)
+// Spacing Snapping Service (token snapping for pad/mar/gap)
 export {
   SnappingService,
   getSnappingService,
   initSnappingService,
   resetSnappingService,
   shouldBypassSnapping,
-  type SnapResult as SpacingSnapResult,
+  type SpacingSnapResult,
   type SpacingToken,
   type SpacingPropertyType,
-} from './snapping-service'
+} from './snap/spacing-snap'
 
 // Snap Indicator (visual feedback)
 export { SnapIndicator, createSnapIndicator, type SnapIndicatorConfig } from './snap-indicator'

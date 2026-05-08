@@ -14,7 +14,7 @@
 import { OverlayManager } from './overlay-manager'
 import { events, getLayoutService } from '../core'
 import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
-import { getSnappingService, shouldBypassSnapping, type SnapResult } from './snapping-service'
+import { getSnappingService, shouldBypassSnapping, type SpacingSnapResult } from './snap/spacing-snap'
 import { SnapIndicator, createSnapIndicator } from './snap-indicator'
 
 // Visual constants
@@ -40,7 +40,7 @@ export interface MarginState {
   // Store all start margins for multi-side adjustments
   startMargins: { top: number; right: number; bottom: number; left: number }
   // Last snap result for visual feedback
-  lastSnapResult?: SnapResult
+  lastSnapResult?: SpacingSnapResult
 }
 
 export interface MarginManagerConfig {
@@ -804,7 +804,7 @@ export class MarginManager {
     let newMargin = Math.max(0, startMargin + delta)
 
     // Token snapping (unless Cmd/Ctrl held to bypass)
-    let snapResult: SnapResult | undefined
+    let snapResult: SpacingSnapResult | undefined
     if (!shouldBypassSnapping(e)) {
       const snappingService = getSnappingService()
       if (snappingService) {

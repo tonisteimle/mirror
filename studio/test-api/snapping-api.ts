@@ -13,10 +13,10 @@ import {
   getSnappingService,
   initSnappingService,
   resetSnappingService,
-  type SnapResult,
+  type SpacingSnapResult,
   type SpacingToken,
   type SpacingPropertyType,
-} from '../visual/snapping-service'
+} from '../visual/snap/spacing-snap'
 import { handleSnapSettings, gridSettings } from '../core'
 
 // =============================================================================
@@ -56,7 +56,7 @@ export interface SnapTestResult {
   /** Property type */
   propertyType: SpacingPropertyType
   /** Snap result */
-  result: SnapResult
+  result: SpacingSnapResult
   /** Available tokens for this property type */
   availableTokens: SpacingToken[]
   /** Debug info */

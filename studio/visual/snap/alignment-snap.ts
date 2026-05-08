@@ -7,7 +7,7 @@
  * - Edge snapping (container bounds)
  */
 
-import type { Point, Rect } from './coordinate'
+import type { Point, Rect } from '../models/coordinate'
 
 // ============================================================================
 // Types
@@ -15,7 +15,7 @@ import type { Point, Rect } from './coordinate'
 
 export type SnapAxis = 'x' | 'y' | 'both'
 
-export interface SnapResult {
+export interface AlignmentSnapResult {
   /** Snapped position */
   position: Point
   /** Active guides (for visualization) */
@@ -100,10 +100,7 @@ const DEFAULT_CONFIG: SnapConfig = {
 /**
  * Calculate snapped position and active guides
  */
-export function calculateSnap(
-  position: Point,
-  context: SnapContext
-): SnapResult {
+export function calculateSnap(position: Point, context: SnapContext): AlignmentSnapResult {
   const { config, dragRect, siblingRects, containerRect } = context
 
   if (!config.enabled) {
@@ -299,7 +296,7 @@ function buildVerticalGuide(
 ): Guide | null {
   // Find all rects that align at this X position
   const alignedRects = siblings
-    .filter((s) => {
+    .filter(s => {
       const r = s.rect
       return (
         Math.abs(r.x - snap.snapped) < 1 ||
@@ -307,12 +304,12 @@ function buildVerticalGuide(
         Math.abs(r.x + r.width / 2 - snap.snapped) < 1
       )
     })
-    .map((s) => s.rect)
+    .map(s => s.rect)
 
   // Calculate guide extent
   const allRects = [...alignedRects, dragRect]
-  const minY = Math.min(...allRects.map((r) => r.y))
-  const maxY = Math.max(...allRects.map((r) => r.y + r.height))
+  const minY = Math.min(...allRects.map(r => r.y))
+  const maxY = Math.max(...allRects.map(r => r.y + r.height))
 
   return {
     type: snap.referenceId ? 'center' : 'edge',
@@ -332,7 +329,7 @@ function buildHorizontalGuide(
 ): Guide | null {
   // Find all rects that align at this Y position
   const alignedRects = siblings
-    .filter((s) => {
+    .filter(s => {
       const r = s.rect
       return (
         Math.abs(r.y - snap.snapped) < 1 ||
@@ -340,12 +337,12 @@ function buildHorizontalGuide(
         Math.abs(r.y + r.height / 2 - snap.snapped) < 1
       )
     })
-    .map((s) => s.rect)
+    .map(s => s.rect)
 
   // Calculate guide extent
   const allRects = [...alignedRects, dragRect]
-  const minX = Math.min(...allRects.map((r) => r.x))
-  const maxX = Math.max(...allRects.map((r) => r.x + r.width))
+  const minX = Math.min(...allRects.map(r => r.x))
+  const maxX = Math.max(...allRects.map(r => r.x + r.width))
 
   return {
     type: snap.referenceId ? 'center' : 'edge',

@@ -9,13 +9,13 @@
  * - Cmd/Ctrl: Bypass all snapping (free drag)
  */
 
-import { handleSnapSettings, gridSettings, events } from '../core'
+import { handleSnapSettings, gridSettings, events } from '../../core'
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export interface SnapResult {
+export interface SpacingSnapResult {
   /** The snapped value (or original if no snap occurred) */
   value: number
   /** Whether snapping occurred */
@@ -140,9 +140,9 @@ export class SnappingService {
    *
    * @param value - The current value to potentially snap
    * @param propertyType - The property type ('pad', 'mar', 'gap')
-   * @returns SnapResult with snapped value and token info
+   * @returns SpacingSnapResult with snapped value and token info
    */
-  snapToToken(value: number, propertyType: SpacingPropertyType): SnapResult {
+  snapToToken(value: number, propertyType: SpacingPropertyType): SpacingSnapResult {
     const settings = handleSnapSettings.get()
 
     // Check if token snapping is enabled
@@ -184,9 +184,9 @@ export class SnappingService {
    * Snap a value to the grid
    *
    * @param value - The current value to potentially snap
-   * @returns SnapResult with snapped value
+   * @returns SpacingSnapResult with snapped value
    */
-  snapToGrid(value: number): SnapResult {
+  snapToGrid(value: number): SpacingSnapResult {
     const settings = gridSettings.get()
 
     if (!settings.enabled) {
@@ -206,7 +206,10 @@ export class SnappingService {
   /**
    * Snap both width and height to grid
    */
-  snapSizeToGrid(width: number, height: number): { width: SnapResult; height: SnapResult } {
+  snapSizeToGrid(
+    width: number,
+    height: number
+  ): { width: SpacingSnapResult; height: SpacingSnapResult } {
     return {
       width: this.snapToGrid(width),
       height: this.snapToGrid(height),
@@ -226,9 +229,9 @@ export class SnappingService {
    *
    * @param value - The current value
    * @param propertyType - The property type
-   * @returns SnapResult
+   * @returns SpacingSnapResult
    */
-  snapSpacing(value: number, propertyType: SpacingPropertyType): SnapResult {
+  snapSpacing(value: number, propertyType: SpacingPropertyType): SpacingSnapResult {
     const relevantTokens = this.getSpacingTokens(propertyType)
 
     // If tokens exist for this property type, ONLY snap to tokens (no grid fallback)
