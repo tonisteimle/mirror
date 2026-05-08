@@ -13,13 +13,27 @@ import {
 } from '../../../studio/preview/drag/test-api/drag-test-runner'
 import { createMockContext, createMockContextWithDropSimulation } from './mock-context'
 
-// Mock the drag controller
+// Mock the drag controller. DragTestController wraps a real
+// DragController via the `__forceState` / `__inspectState` /
+// `__cachedChildCount` backdoors and then calls `controller.drop()`.
+// The mock has to expose all four hooks plus a callable `drop`, otherwise
+// DragTestController.simulateDrop throws a TypeError and the runner
+// falls into its `success: false` error branch.
+const mockState = {
+  state: 'idle' as 'idle' | 'dragging',
+  source: null as unknown,
+  target: null as unknown,
+}
 vi.mock('../../../studio/preview/drag/drag-controller', () => ({
   getDragController: () => ({
-    simulateDrop: vi.fn().mockResolvedValue(undefined),
-    setTestSource: vi.fn(),
-    setTestTarget: vi.fn(),
-    getTestState: vi.fn().mockReturnValue({ state: 'idle', source: null, target: null }),
+    drop: vi.fn().mockResolvedValue(undefined),
+    __forceState: vi.fn((state: 'idle' | 'dragging', source: unknown, target: unknown) => {
+      mockState.state = state
+      mockState.source = source
+      mockState.target = target
+    }),
+    __inspectState: vi.fn(() => ({ ...mockState })),
+    __cachedChildCount: vi.fn(() => 0),
   }),
 }))
 

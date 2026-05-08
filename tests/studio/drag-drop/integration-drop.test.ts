@@ -6,10 +6,11 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { DragController, resetDragController } from '../../../studio/preview/drag/drag-controller'
+import { DragTestController } from '../../../studio/preview/drag/drag-test-controller'
 import { CodeModifier } from '../../../studio/code-modifier/code-modifier'
 import { parse } from '../../../compiler/parser'
 import { toIR } from '../../../compiler/ir'
-import type { DragSource, DropTarget } from '../../../studio/preview/drag/types'
+import type { DragSource, FlexDropTarget } from '../../../studio/preview/drag/types'
 
 /**
  * Simuliert den kompletten Drop-Flow wie in app.js
@@ -17,7 +18,7 @@ import type { DragSource, DropTarget } from '../../../studio/preview/drag/types'
 function simulateDropWithCodeModification(
   code: string,
   source: DragSource,
-  target: DropTarget,
+  target: FlexDropTarget,
   componentCode: string
 ): { success: boolean; newSource: string } {
   // 1. Parse und erstelle SourceMap
@@ -40,10 +41,12 @@ function simulateDropWithCodeModification(
 
 describe('Integration: Drop Flow', () => {
   let controller: DragController
+  let test: DragTestController
 
   beforeEach(() => {
     resetDragController()
     controller = new DragController()
+    test = new DragTestController(controller)
   })
 
   afterEach(() => {
@@ -56,7 +59,7 @@ describe('Integration: Drop Flow', () => {
 
       // Simuliere Drop
       const source: DragSource = { type: 'palette', componentName: 'Button' }
-      const target: DropTarget = { containerId: 'node-1', insertionIndex: 0 }
+      const target: FlexDropTarget = { mode: 'flex', containerId: 'node-1', insertionIndex: 0 }
 
       // Callback simuliert Code-Änderung
       let resultCode = ''
@@ -67,7 +70,7 @@ describe('Integration: Drop Flow', () => {
         },
       })
 
-      await controller.simulateDrop(source, target)
+      await test.simulateDrop(source, target)
 
       expect(resultCode).toContain('Button "Click"')
       expect(resultCode).toMatch(/Frame gap 8\n {2}Button "Click"/)
@@ -78,7 +81,7 @@ describe('Integration: Drop Flow', () => {
   Text "Existing"`
 
       const source: DragSource = { type: 'palette', componentName: 'Icon' }
-      const target: DropTarget = { containerId: 'node-1', insertionIndex: 0 }
+      const target: FlexDropTarget = { mode: 'flex', containerId: 'node-1', insertionIndex: 0 }
 
       let resultCode = ''
       controller.setCallbacks({
@@ -88,7 +91,7 @@ describe('Integration: Drop Flow', () => {
         },
       })
 
-      await controller.simulateDrop(source, target)
+      await test.simulateDrop(source, target)
 
       // Icon sollte VOR Text eingefügt werden
       const lines = resultCode.split('\n')
@@ -101,7 +104,7 @@ describe('Integration: Drop Flow', () => {
       const initialCode = `Frame gap 8`
 
       const source: DragSource = { type: 'palette', componentName: 'Checkbox' }
-      const target: DropTarget = { containerId: 'node-1', insertionIndex: 0 }
+      const target: FlexDropTarget = { mode: 'flex', containerId: 'node-1', insertionIndex: 0 }
 
       let resultCode = ''
       controller.setCallbacks({
@@ -116,7 +119,7 @@ describe('Integration: Drop Flow', () => {
         },
       })
 
-      await controller.simulateDrop(source, target)
+      await test.simulateDrop(source, target)
 
       expect(resultCode).toContain('Checkbox')
       expect(resultCode).toContain('Control:')
@@ -133,7 +136,7 @@ describe('Integration: Drop Flow', () => {
 
       // Verschiebe "Third" an Position 0 (vor "First")
       const source: DragSource = { type: 'canvas', nodeId: 'node-4' }
-      const target: DropTarget = { containerId: 'node-1', insertionIndex: 0 }
+      const target: FlexDropTarget = { mode: 'flex', containerId: 'node-1', insertionIndex: 0 }
 
       let dropCalled = false
       controller.setCallbacks({
@@ -147,7 +150,7 @@ describe('Integration: Drop Flow', () => {
         },
       })
 
-      await controller.simulateDrop(source, target)
+      await test.simulateDrop(source, target)
 
       expect(dropCalled).toBe(true)
     })
@@ -161,7 +164,7 @@ describe('Integration: Drop Flow', () => {
 
       // Füge Button zum inneren Frame (node-2) hinzu
       const source: DragSource = { type: 'palette', componentName: 'Button' }
-      const target: DropTarget = { containerId: 'node-2', insertionIndex: 1 }
+      const target: FlexDropTarget = { mode: 'flex', containerId: 'node-2', insertionIndex: 1 }
 
       let resultCode = ''
       controller.setCallbacks({
@@ -171,7 +174,7 @@ describe('Integration: Drop Flow', () => {
         },
       })
 
-      await controller.simulateDrop(source, target)
+      await test.simulateDrop(source, target)
 
       // Button sollte mit 4 Spaces eingerückt sein
       expect(resultCode).toMatch(/\n {4}Button "Nested"/)

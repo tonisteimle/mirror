@@ -1,19 +1,22 @@
 /**
  * Simple Palette Drag Test
  *
- * Testet einen einfachen Button-Drop in einen leeren Container.
+ * Tests a simple Button-drop into an empty container via DragTestController.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { DragController, resetDragController } from '../../../studio/preview/drag/drag-controller'
+import { DragTestController } from '../../../studio/preview/drag/drag-test-controller'
 
 describe('Simple Palette Drag', () => {
   let controller: DragController
+  let test: DragTestController
   let dropCallback: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     resetDragController()
     controller = new DragController()
+    test = new DragTestController(controller)
     dropCallback = vi.fn().mockResolvedValue(undefined)
     controller.setCallbacks({ onDrop: dropCallback })
   })
@@ -23,34 +26,29 @@ describe('Simple Palette Drag', () => {
   })
 
   it('should call onDrop with correct source and target', async () => {
-    // Arrange: Button von Palette
     const source = {
       type: 'palette' as const,
       componentName: 'Button',
       template: 'Button',
     }
-
-    // Arrange: Ziel-Container
     const target = {
+      mode: 'flex' as const,
       containerId: 'node-1',
       insertionIndex: 0,
     }
 
-    // Act: Drop simulieren
-    await controller.simulateDrop(source, target)
+    await test.simulateDrop(source, target)
 
-    // Assert: Callback wurde mit korrekten Parametern aufgerufen
     expect(dropCallback).toHaveBeenCalledTimes(1)
     expect(dropCallback).toHaveBeenCalledWith(source, target)
   })
 
   it('should reset state after drop', async () => {
     const source = { type: 'palette' as const, componentName: 'Text' }
-    const target = { containerId: 'node-1', insertionIndex: 0 }
+    const target = { mode: 'flex' as const, containerId: 'node-1', insertionIndex: 0 }
 
-    await controller.simulateDrop(source, target)
+    await test.simulateDrop(source, target)
 
-    // State sollte zurückgesetzt sein
     expect(controller.isDragging()).toBe(false)
     expect(controller.getSource()).toBeNull()
     expect(controller.getTarget()).toBeNull()
@@ -59,27 +57,27 @@ describe('Simple Palette Drag', () => {
   it('should handle canvas element move', async () => {
     const source = {
       type: 'canvas' as const,
-      nodeId: 'node-2', // Element das verschoben wird
+      nodeId: 'node-2',
     }
     const target = {
-      containerId: 'node-1', // Ziel-Container
-      insertionIndex: 1, // Nach erstem Kind
+      mode: 'flex' as const,
+      containerId: 'node-1',
+      insertionIndex: 1,
     }
 
-    await controller.simulateDrop(source, target)
+    await test.simulateDrop(source, target)
 
     expect(dropCallback).toHaveBeenCalledWith(source, target)
   })
 
   it('should work without callbacks', async () => {
-    // Controller ohne Callbacks
     const emptyController = new DragController()
+    const emptyTest = new DragTestController(emptyController)
 
-    // Sollte nicht werfen
     await expect(
-      emptyController.simulateDrop(
+      emptyTest.simulateDrop(
         { type: 'palette', componentName: 'Frame' },
-        { containerId: 'node-1', insertionIndex: 0 }
+        { mode: 'flex', containerId: 'node-1', insertionIndex: 0 }
       )
     ).resolves.not.toThrow()
 
