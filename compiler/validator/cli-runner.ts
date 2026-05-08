@@ -204,9 +204,13 @@ export function expandInputs(inputs: string[]): string[] {
 export function collectPrelude(files: Array<{ filename: string; content: string }>): {
   tokens: Set<string>
   components: Set<string>
+  proseComponents: Set<string>
 } {
   const tokens = new Set<string>()
   const components = new Set<string>()
+  // Component names that carry `, prose` on their definition. Used to
+  // teach the parser about prose-mode components defined in OTHER files.
+  const proseComponents = new Set<string>()
   // Also seed token "base names" — `primary.bg` registers `primary` so
   // `bg $primary` resolves the family-shorthand.
   const tokenBases = new Set<string>()
@@ -227,12 +231,18 @@ export function collectPrelude(files: Array<{ filename: string; content: string 
       }
     }
     for (const comp of c.components) {
-      if (comp.type === 'Component') components.add(comp.name)
+      if (comp.type === 'Component') {
+        components.add(comp.name)
+        // Component carries `, prose` on its definition.
+        if (comp.properties.some(p => p.name === 'prose')) {
+          proseComponents.add(comp.name)
+        }
+      }
     }
   }
 
   for (const base of tokenBases) tokens.add(base)
-  return { tokens, components }
+  return { tokens, components, proseComponents }
 }
 
 // ============================================================================
@@ -290,10 +300,15 @@ export function runValidator(opts: RunnerOptions): RunnerResult {
   // intentionally validates standalone so missing token defs surface).
   const prelude = projectMode
     ? collectPrelude(codeFiles.filter(f => isMirrorCodeFile(f.filename)))
-    : { tokens: new Set<string>(), components: new Set<string>() }
+    : {
+        tokens: new Set<string>(),
+        components: new Set<string>(),
+        proseComponents: new Set<string>(),
+      }
   const validateOpts: ValidateOptions = {
     preludeTokens: prelude.tokens,
     preludeComponents: prelude.components,
+    proseComponentPrelude: prelude.proseComponents,
   }
 
   // Validate each code file (data files have their own grammar, skipped).

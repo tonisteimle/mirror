@@ -76,11 +76,13 @@ const U = ParserUtils
  */
 function makeProseCallbacks(callbacks: {
   getComponentDef?(name: string): ComponentDefinition | undefined
+  isProseComponent?(name: string): boolean
   generateNodeId?(): string
 }) {
   return {
     generateNodeId: () => callbacks.generateNodeId?.() ?? '',
     getComponentDef: callbacks.getComponentDef,
+    isProseComponent: callbacks.isProseComponent,
     reportError: () => {
       // Errors are silently dropped here; the parser-level callback
       // wires them through via `recordProseRange`. v1 doesn't surface
@@ -196,6 +198,8 @@ export interface InstanceBodyCallbacks {
   createTextChild(token: Token): Instance
   /** Look up a previously-defined component by name (for prose-mode propagation). */
   getComponentDef?(name: string): ComponentDefinition | undefined
+  /** Cross-file prose prelude (validator project mode). */
+  isProseComponent?(name: string): boolean
   /** Allocate a fresh AST node id (parser-class-scoped). */
   generateNodeId?(): string
   /** Record a prose-body line range so callers can filter lex errors there. */
@@ -654,6 +658,8 @@ export interface ComponentBodyCallbacks {
   peekAt(offset: number): Token | null
   /** Look up a previously-defined component by name (for prose-mode propagation). */
   getComponentDef?(name: string): ComponentDefinition | undefined
+  /** Cross-file prose prelude (validator project mode). */
+  isProseComponent?(name: string): boolean
   /** Allocate a fresh AST node id (parser-class-scoped). */
   generateNodeId?(): string
   /** Record a prose-body line range so callers can filter lex errors there. */

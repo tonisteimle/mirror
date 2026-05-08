@@ -119,6 +119,12 @@ export interface ValidateOptions {
   preludeTokens?: Set<string>
   /** Pre-defined components from other files (e.g., from prelude) */
   preludeComponents?: Set<string>
+  /**
+   * Names of components defined in OTHER files that carry `, prose`. Used
+   * by project-mode validation so prose bodies in `app.mir` are parsed as
+   * prose even when the prose component lives in `components.com`.
+   */
+  proseComponentPrelude?: ReadonlySet<string>
 }
 
 /**
@@ -132,7 +138,9 @@ export function validate(source: string, options?: ValidateOptions): ValidationR
   // Parse with full diagnostics — surfaces both lexer and parser errors,
   // and runs the positional-args preprocessor so validator output matches
   // what the compiler actually consumes.
-  const { ast, lexerErrors } = parseWithDiagnostics(source)
+  const { ast, lexerErrors } = parseWithDiagnostics(source, {
+    proseComponentPrelude: options?.proseComponentPrelude,
+  })
   const lexerValidationErrors = convertLexerErrors(lexerErrors)
   const parserValidationErrors = convertParserErrors(ast.errors)
 

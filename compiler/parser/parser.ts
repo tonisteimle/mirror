@@ -60,6 +60,14 @@ export class Parser {
    */
   proseRanges: Array<{ startLine: number; endLine: number }> = []
 
+  /**
+   * Cross-file prose prelude. Component names whose definitions live
+   * in OTHER files but should still trigger prose-mode body parsing
+   * here. Populated by `parseWithDiagnostics({ proseComponentPrelude })`
+   * when running validation in project mode.
+   */
+  proseComponentPrelude?: ReadonlySet<string>
+
   constructor(tokens: Token[], source: string = '') {
     this.tokens = tokens
     this.source = source
@@ -538,15 +546,37 @@ export function parse(source: string): AST {
 }
 
 /**
+ * Options for parseWithDiagnostics. Used by the validator's project mode
+ * to teach the parser about prose-mode components defined in other files.
+ */
+export interface ParseDiagnosticsOptions {
+  /**
+   * Component names whose definitions in OTHER files declare `, prose`.
+   * When the parser sees a use-site of one of these components, it
+   * switches to prose-body parsing — without this, prose bodies in
+   * `app.mir` referencing components from `components.com` get
+   * parsed as ordinary Mirror and emit hundreds of false-positive
+   * lexer errors for «»—öäü inside the prose text.
+   */
+  proseComponentPrelude?: ReadonlySet<string>
+}
+
+/**
  * Parse with full diagnostics — collects both lexer and parser errors.
  * Used by `validator/` which surfaces lexer errors (unclosed strings, bad
  * indentation) separately from parser errors. Standard callers should use
  * `parse()`; only reach for this when you need lexer-level diagnostics.
  */
-export function parseWithDiagnostics(source: string): { ast: AST; lexerErrors: LexerError[] } {
+export function parseWithDiagnostics(
+  source: string,
+  options?: ParseDiagnosticsOptions
+): { ast: AST; lexerErrors: LexerError[] } {
   const expanded = resolvePositionalArgs(source)
   const lexerResult = tokenizeWithErrors(expanded)
   const parser = new Parser(lexerResult.tokens, expanded)
+  if (options?.proseComponentPrelude) {
+    parser.proseComponentPrelude = options.proseComponentPrelude
+  }
   const ast = parser.parse()
   // Prose bodies legitimately contain characters the Mirror lexer can't
   // tokenize (umlauts, em-dashes, guillemets). The lexer keeps emitting

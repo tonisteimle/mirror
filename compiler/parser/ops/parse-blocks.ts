@@ -638,6 +638,7 @@ export function parseComponentBody(this: Parser, component: ComponentDefinition)
       return result
     },
     getComponentDef: name => this.componentDefs.get(name),
+    isProseComponent: name => this.proseComponentPrelude?.has(name) ?? false,
     generateNodeId: () => this.generateNodeId(),
     recordProseRange: range => {
       this.proseRanges.push(range)
@@ -732,6 +733,7 @@ export function parseInstanceBody(this: Parser, instance: Instance): void {
     },
     createTextChild: token => this.createTextChild(token),
     getComponentDef: name => this.componentDefs.get(name),
+    isProseComponent: name => this.proseComponentPrelude?.has(name) ?? false,
     generateNodeId: () => this.generateNodeId(),
     recordProseRange: range => {
       this.proseRanges.push(range)

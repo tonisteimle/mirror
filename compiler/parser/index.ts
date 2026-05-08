@@ -1,4 +1,5 @@
 export { parse, parseWithDiagnostics } from './parser'
+export type { ParseDiagnosticsOptions } from './parser'
 export { tokenize, Lexer } from './lexer'
 export type { Token, TokenType, LexerError, LexerErrorCode } from './lexer'
 

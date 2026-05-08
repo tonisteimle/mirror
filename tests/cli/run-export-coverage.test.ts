@@ -144,7 +144,9 @@ describe('runExportPipeline — robustness', () => {
     // Snapshot phase must appear, and must precede done if both exist.
     expect(snapIdx).toBeGreaterThanOrEqual(0)
     if (doneIdx >= 0) expect(snapIdx).toBeLessThan(doneIdx)
-  }, 30_000)
+    // Generous: snapshot has its own 120s cap inside the orchestrator;
+    // headroom for tsx startup + Chrome attach makes 30s tight.
+  }, 180_000)
 })
 
 // ---------------------------------------------------------------------------

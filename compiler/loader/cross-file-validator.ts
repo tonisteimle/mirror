@@ -20,7 +20,7 @@
  */
 
 import type { Property, Instance } from '../parser/ast'
-import { parse } from '../parser'
+import { parse, parseWithDiagnostics } from '../parser'
 import { isPrimitive } from '../schema/dsl'
 import { suggestSimilar } from '../validator/string-utils'
 import { classify, isPropertySet, isPlainToken, isDataObject } from './classify'
@@ -113,10 +113,16 @@ interface FileIndex {
 }
 
 /**
- * Build a per-file index of definitions + instance roots.
+ * Build a per-file index of definitions + instance roots. The prose
+ * prelude lets the parser switch to prose-body parsing for components
+ * defined in OTHER files — without it, capitalized German words inside
+ * prose paragraphs would be parsed as Instance refs and flagged as
+ * undefined components in the cross-file pass.
  */
-function indexFile(file: ProjectFile): FileIndex {
-  const ast = parse(file.content)
+function indexFile(file: ProjectFile, proseComponentPrelude?: ReadonlySet<string>): FileIndex {
+  const ast = proseComponentPrelude
+    ? parseWithDiagnostics(file.content, { proseComponentPrelude }).ast
+    : parse(file.content)
   const c = classify(ast)
   const tokenDefs = new Map<
     string,
@@ -174,8 +180,31 @@ function indexFile(file: ProjectFile): FileIndex {
 export function validateProject(files: ProjectFile[]): CrossFileError[] {
   const errors: CrossFileError[] = []
 
-  // Phase 1: index every file's definitions.
-  const indexes = files.map(indexFile)
+  // Phase 0: prelude scan — find every component name across all files
+  // that carries `, prose` so the parser knows to switch to prose-body
+  // parsing in OTHER files where the component is used. Without this
+  // every capitalized German word inside a prose paragraph (e.g.
+  // "Universalfragen", "Schaffe", "Was") gets parsed as an undefined
+  // component reference.
+  const proseComponentPrelude = new Set<string>()
+  for (const file of files) {
+    let ast
+    try {
+      ast = parse(file.content)
+    } catch {
+      continue
+    }
+    const cls = classify(ast)
+    for (const comp of cls.components) {
+      if (comp.type === 'Component' && comp.properties.some(p => p.name === 'prose')) {
+        proseComponentPrelude.add(comp.name)
+      }
+    }
+  }
+
+  // Phase 1: index every file's definitions, this time with the prose
+  // prelude so prose bodies don't pollute the instance tree.
+  const indexes = files.map(f => indexFile(f, proseComponentPrelude))
 
   // Phase 2: build global definition tables. For tokens, also detect
   // duplicate definitions across files (same name with different values).
