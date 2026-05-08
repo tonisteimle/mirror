@@ -90,6 +90,12 @@ export class IRTransformer {
   // (Bug #21). When a component references itself in its body, we'd recurse
   // infinitely. Detect via stack-membership and bail with a warning.
   componentInstantiationStack: string[] = []
+  // Pre-computed set of components whose own definition body contains a
+  // direct or transitive instance of themselves (Tree → Tree, A→B→A).
+  // Only members of this set need runtime cycle protection. Plain user
+  // nesting of the same component (DashItem inside DashItem via a prose
+  // sub-bullet) is finite — the AST is finite — and must NOT be flagged.
+  selfRecursiveComponents: Set<string> = new Set()
 
   constructor(ast: AST, includeSourceMap: boolean = false) {
     this.ast = ast
@@ -99,6 +105,38 @@ export class IRTransformer {
     // Build component lookup map (including nested component definitions)
     for (const comp of ast.components) {
       this.registerComponent(comp)
+    }
+    // Pre-compute which components are self-recursive in their own
+    // definition body (direct or transitive). Walk each component's
+    // children-tree following Instance refs through componentMap; if the
+    // walk re-enters the start component, it's self-recursive.
+    for (const [name, def] of this.componentMap) {
+      const visited = new Set<string>()
+      const stack: ComponentDefinition[] = [def]
+      let recursive = false
+      while (stack.length > 0 && !recursive) {
+        const cur = stack.pop()!
+        const walk = (children: unknown[]): void => {
+          for (const child of children) {
+            if (recursive) return
+            const c = child as { type?: string; component?: string; children?: unknown[] }
+            if (c.type === 'Instance' && c.component) {
+              if (c.component === name) {
+                recursive = true
+                return
+              }
+              if (!visited.has(c.component)) {
+                visited.add(c.component)
+                const next = this.componentMap.get(c.component)
+                if (next) stack.push(next)
+              }
+            }
+            if (c.children) walk(c.children)
+          }
+        }
+        walk(cur.children || [])
+      }
+      if (recursive) this.selfRecursiveComponents.add(name)
     }
     // Build token lookup set and property set map
     for (const token of ast.tokens) {

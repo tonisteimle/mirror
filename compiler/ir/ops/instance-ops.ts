@@ -239,7 +239,17 @@ export function transformInstance(
   // they're just nested boxes. The check has to be after componentMap
   // lookup, see below.
   const component = this.componentMap.get(instance.component)
-  if (component && this.componentInstantiationStack.includes(instance.component)) {
+  // Only flag as a cycle when the component is self-recursive *in its own
+  // definition* (precomputed in IRTransformer constructor) AND we are
+  // currently expanding that definition. A user nesting two instances of
+  // the same non-recursive component (e.g. a DashItem inside another
+  // DashItem via a prose sub-bullet) is finite — the AST is finite —
+  // and must NOT be silently dropped to Unknown.
+  if (
+    component &&
+    this.selfRecursiveComponents.has(instance.component) &&
+    this.componentInstantiationStack.includes(instance.component)
+  ) {
     this.addWarning({
       type: 'recursive-component',
       message: `Component '${instance.component}' references itself recursively (cycle: ${[...this.componentInstantiationStack, instance.component].join(' → ')}). Recursion stopped — Mirror does not support self-referential components.`,
