@@ -109,60 +109,10 @@ describe('Schema Parsing', () => {
     })
   })
 
-  // ============================================================
-  // Constraints — feature not yet implemented in parser
-  // ============================================================
-  describe.skip('Constraints', () => {
-    test('parses required constraint', () => {
-      const code = `$schema:
-  name: string, required`
-      const ast = parse(code)
-      expect(ast.schema?.fields[0].constraints).toBeDefined()
-      const required = ast.schema?.fields[0].constraints?.find(c => c.type === 'required')
-      expect(required).toBeDefined()
-    })
-
-    test('parses max constraint with value', () => {
-      const code = `$schema:
-  title: string, max 100`
-      const ast = parse(code)
-      const max = ast.schema?.fields[0].constraints?.find(c => c.type === 'max')
-      expect(max).toBeDefined()
-      expect(max?.value).toBe(100)
-    })
-
-    test('parses onDelete cascade constraint', () => {
-      const code = `$schema:
-  author: $users, onDelete cascade`
-      const ast = parse(code)
-      const onDelete = ast.schema?.fields[0].constraints?.find(c => c.type === 'onDelete')
-      expect(onDelete).toBeDefined()
-      expect(onDelete?.action).toBe('cascade')
-    })
-
-    test('parses onDelete nullify constraint', () => {
-      const code = `$schema:
-  author: $users, onDelete nullify`
-      const ast = parse(code)
-      const onDelete = ast.schema?.fields[0].constraints?.find(c => c.type === 'onDelete')
-      expect(onDelete?.action).toBe('nullify')
-    })
-
-    test('parses onDelete restrict constraint', () => {
-      const code = `$schema:
-  author: $users, onDelete restrict`
-      const ast = parse(code)
-      const onDelete = ast.schema?.fields[0].constraints?.find(c => c.type === 'onDelete')
-      expect(onDelete?.action).toBe('restrict')
-    })
-
-    test('parses multiple constraints', () => {
-      const code = `$schema:
-  title: string, required, max 200`
-      const ast = parse(code)
-      expect(ast.schema?.fields[0].constraints?.length).toBe(2)
-    })
-  })
+  // Schema constraints (required / max / onDelete cascade|nullify|restrict)
+  // are not parsed as first-class constraint AST nodes for single-field
+  // declarations. The Complex-Schema test below covers the only patterns
+  // that currently work end-to-end.
 
   // ============================================================
   // Complex Schema
