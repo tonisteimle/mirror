@@ -165,6 +165,69 @@
 
     <!-- ============================================================ -->
     <section>
+      <h2>RadioGroup</h2>
+      <p>Eine <code>RadioGroup</code> erzwingt <strong>genau eine</strong> Auswahl aus einer Liste. <code>value "x"</code> setzt den Default; <code>RadioItem ... value "y"</code> definiert die einzelnen Optionen:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>RadioGroup value "monthly"
+  RadioItem "Monatlich – €9/Monat", value "monthly"
+  RadioItem "Jährlich – €99/Jahr", value "yearly"
+  RadioItem "Lifetime – €299", value "lifetime"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+      <p><code>RadioGroup</code> unterstützt — wie Select — <code>bind</code> für Two-Way-Binding.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Slider</h2>
+      <p><code>Slider</code> für numerische Werte zwischen <code>min</code> und <code>max</code>. Der Wert kann mit <code>bind</code> gebunden werden:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>volume: 50
+
+Frame gap 12, w 280
+  Slider value 50, min 0, max 100, step 10
+  Text "Lautstärke: $volume", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+      <table class="ref-table">
+        <tr><th>Property</th><th>Beschreibung</th></tr>
+        <tr><td><code>value</code></td><td>Startwert</td></tr>
+        <tr><td><code>min</code></td><td>Minimum</td></tr>
+        <tr><td><code>max</code></td><td>Maximum</td></tr>
+        <tr><td><code>step</code></td><td>Schrittweite</td></tr>
+        <tr><td><code>bind</code></td><td>Two-Way-Binding</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>DatePicker</h2>
+      <p><code>DatePicker</code> ist die einzige verbleibende Zag-Komponente in Mirror — ein Kalender-Picker mit Tastaturnavigation und Range-Mode:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>DatePicker placeholder "Datum wählen"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+      <table class="ref-table">
+        <tr><th>Property</th><th>Beschreibung</th></tr>
+        <tr><td><code>placeholder</code></td><td>Platzhaltertext</td></tr>
+        <tr><td><code>selectionMode</code></td><td><code>"single"</code> (Default) / <code>"multiple"</code> / <code>"range"</code></td></tr>
+        <tr><td><code>min</code> / <code>max</code></td><td>Datumsbereich begrenzen</td></tr>
+        <tr><td><code>locale</code></td><td>Locale wie <code>"de-DE"</code> (Default <code>"en-US"</code>)</td></tr>
+        <tr><td><code>startOfWeek</code></td><td><code>0</code> = Sonntag, <code>1</code> = Montag</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
       <h2>Two-Way Binding</h2>
       <p>Mit <code>bind</code> verknüpfst du ein Eingabefeld mit einer Variable. Änderungen im Feld aktualisieren die Variable automatisch – und umgekehrt:</p>
       <div class="playground" data-playground>
@@ -307,6 +370,9 @@ Frame gap 12, w 280
         <tr><td><code>Checkbox</code></td><td>An/Aus mit Haken</td><td><code>checked</code>, <code>disabled</code></td></tr>
         <tr><td><code>Switch</code></td><td>An/Aus als Schieberegler</td><td><code>checked</code>, <code>disabled</code></td></tr>
         <tr><td><code>Select</code></td><td>Dropdown-Auswahl</td><td><code>placeholder</code>, <code>bind</code></td></tr>
+        <tr><td><code>RadioGroup</code></td><td>Genau-eine-Auswahl</td><td><code>value</code>, <code>bind</code></td></tr>
+        <tr><td><code>Slider</code></td><td>Numerischer Wert</td><td><code>value</code>, <code>min</code>, <code>max</code>, <code>step</code>, <code>bind</code></td></tr>
+        <tr><td><code>DatePicker</code></td><td>Kalender-Auswahl</td><td><code>placeholder</code>, <code>selectionMode</code>, <code>locale</code></td></tr>
       </table>
 
       <p><strong>Binding:</strong> <code>Input bind varName</code> verknüpft Eingabe bidirektional mit einer Variable.</p>

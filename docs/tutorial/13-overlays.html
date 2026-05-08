@@ -99,6 +99,9 @@
     <!-- ============================================================ -->
     <section>
       <h2>Tooltip</h2>
+      <div class="note">
+        <strong>Status:</strong> <code>Tooltip</code> ist heute ein <strong>statisches Pure-Mirror-Pattern</strong> mit zwei Slots — <code>Trigger:</code> und <code>Content:</code> rendern beide sichtbar nebeneinander. Eine echte Hover-Show-Mechanik ist noch nicht verdrahtet. Für animierte Hover-Hilfen siehe das <em>Hover-Pattern</em> weiter unten oder <a href="06-states.html">Kapitel&nbsp;6 → States</a> mit <code>hover:</code>.
+      </div>
       <p>Tooltips zeigen kurze Hilfetexte bei Hover. Sie eignen sich für Icons oder Buttons, die zusätzliche Erklärung brauchen:</p>
       <div class="playground" data-playground>
         <div class="playground-code">
@@ -151,6 +154,21 @@
 
       <div class="note">
         <strong>Tipp:</strong> Tooltips sollten kurz und informativ sein. Für längere Inhalte oder Interaktionen nutze lieber einen Dialog oder ein Popover.
+      </div>
+
+      <h3>Hover-Pattern (echtes Hover-Verhalten)</h3>
+      <p>Bis das <code>Tooltip</code>-Verhalten verdrahtet ist, baust du einen funktionierenden Hover-Hint mit <code>stacked</code> + <code>hover:</code>. Das Content-Frame ist standardmässig <code>hidden</code> und wird im <code>hover:</code>-State sichtbar:</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame stacked, w 24, h 24
+  Icon "info", ic #888, is 20
+  Frame x 28, y -4, pad 6 10, bg #111, rad 4, hidden
+    Text "Hilfetext", col white, fs 12
+  hover:
+    Frame x 28, y -4, pad 6 10, bg #111, rad 4, visible
+      Text "Hilfetext", col white, fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
       </div>
     </section>
 

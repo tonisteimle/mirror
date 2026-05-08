@@ -31,6 +31,45 @@
 
     <!-- ============================================================ -->
     <section>
+      <h2>Canvas — die App-Basis</h2>
+      <p><code>canvas</code> definiert die Grundfläche der App: Hintergrundfarbe, Standardschrift, Standardfarbe und ein Geräte-Preset. Diese Properties <strong>vererben sich auf alle Kinder</strong>, du musst sie also nicht überall wiederholen.</p>
+      <p><code>canvas</code> ist optional — fehlt sie, rendert Mirror gegen einen leeren Body. Wenn vorhanden, muss sie die <strong>erste Zeile</strong> der Datei sein.</p>
+
+      <div class="code-block">
+        <pre>canvas mobile, bg #1a1a1a, col white, font sans
+
+// Top-Level Elemente brauchen keine Einrückung nach canvas
+Text "Titel", fs 24
+Frame hor, gap 12
+  Button "A"
+  Button "B"</pre>
+      </div>
+
+      <h3>Geräte-Presets</h3>
+      <p>Statt Pixelwerte: ein Preset wählen. Die Presets setzen <code>w</code> und <code>h</code> einer typischen Geräteklasse.</p>
+      <table class="ref-table">
+        <tr><th>Preset</th><th>Größe</th><th>Anwendung</th></tr>
+        <tr><td><code>canvas mobile</code></td><td>375 × 812</td><td>iPhone-ähnlich</td></tr>
+        <tr><td><code>canvas tablet</code></td><td>768 × 1024</td><td>iPad-ähnlich</td></tr>
+        <tr><td><code>canvas desktop</code></td><td>1440 × 900</td><td>Desktop-Browser</td></tr>
+      </table>
+
+      <p>Preset und Properties lassen sich kombinieren — das Preset setzt die Größe, Properties überschreiben oder erweitern:</p>
+      <div class="code-block">
+        <pre>canvas mobile, bg #0a0a0a, col white</pre>
+      </div>
+
+      <h3>Vererbbare Properties</h3>
+      <p><code>col</code>, <code>font</code>, <code>fs</code> auf der Canvas sind <strong>Defaults für alle Kinder</strong>. Schreibe sie einmal hier statt auf jedem Text.</p>
+
+      <div class="note">
+        <strong>Faustregel:</strong> Canvas für die globalen Defaults (Schrift, Hintergrund, Farbe), Tokens für wiederverwendbare Werte, lokale Properties für Ausnahmen.
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
       <h2>Flex Layout</h2>
       <h3>Richtung: hor und ver</h3>
       <p>Standardmäßig fließen Kinder vertikal (untereinander). Mit <code>hor</code> wechselst du auf horizontal.</p>

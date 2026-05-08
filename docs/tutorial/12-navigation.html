@@ -209,6 +209,15 @@
       <p><strong>Was passiert:</strong> Klick auf ein NavItem → der zugehörige View wird sichtbar, die anderen werden ausgeblendet. Die Views liegen im selben Content-Frame nebeneinander; <code>hidden</code> auf den nicht-aktiven Views macht sie unsichtbar bis zur Auswahl.</p>
 
       <p>Für richtig große Apps lebt jeder View in einer eigenen Datei. Statt lokaler Definitionen referenzierst du sie via <code>show ViewName from Datei</code> – siehe <a href="10-seiten.html">Kapitel&nbsp;10 → "Komplettes Beispiel: App in vier Dateien"</a>.</p>
+
+      <h3>Die <code>from</code>-Klausel</h3>
+      <p>Hinter <code>show ViewName</code> kann optional <code>from path/to/file</code> stehen — ein <strong>Quelldatei-Hinweis</strong> ohne Dateiendung, slash-getrennt. Das macht für den Leser sichtbar, in welcher Datei der View definiert ist:</p>
+      <div class="code-block">
+        <pre>NavItem "Dashboard", icon "home", show DashboardView from screens/dashboard
+NavItem "Projects", icon "folder", show ProjectsView from screens/projects
+NavItem "Settings", icon "settings", show SettingsView from screens/settings</pre>
+      </div>
+      <p>Die Klausel ist <strong>dokumentierend</strong>, nicht zwingend: der Multi-File-Loader findet alle <code>screens/*.mir</code>-Dateien automatisch. <code>from</code> hilft Studio und Validator, beim Klick direkt zur richtigen Datei zu springen.</p>
     </section>
 
 

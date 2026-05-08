@@ -171,6 +171,22 @@ each color in $colors
       </div>
 
       <p><strong>Keine Doppelpunkte nötig</strong> – der Eintrag <em>ist</em> der Wert. Sauberer als JSON-Arrays und konsistent mit dem Rest von Mirror.</p>
+
+      <h3>Index mit <code>each item, i in $list</code></h3>
+      <p>Brauchst du die Position in der Liste — etwa für Nummerierung oder erste-Zeile-Spezialfälle — bekommst du sie mit einem zweiten Variablennamen nach dem Komma:</p>
+      <div class="code-block">
+        <pre>colors:
+  red
+  green
+  blue
+
+each color, i in $colors
+  Frame hor, gap 8, ver-center
+    Text "#$i", col #888, w 24
+    Frame w 20, h 20, rad 4, bg $color
+    Text "$color", col white</pre>
+      </div>
+      <p>Der Index startet bei <code>0</code>. Für 1-basierte Anzeigen: <code>Text "Position $i + 1"</code>.</p>
     </section>
 
 
