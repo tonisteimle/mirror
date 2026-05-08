@@ -11,16 +11,21 @@
  * @vitest-environment jsdom
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import {
   setEditStatus,
   hideEditStatus,
   getEditStatusElement,
+  getEditStatusElapsedSeconds,
 } from '../../studio/editor/edit-status-indicator'
 
 beforeEach(() => {
   document.body.innerHTML = ''
   hideEditStatus()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe('EditStatusIndicator — visibility', () => {
@@ -114,6 +119,88 @@ describe('EditStatusIndicator — singleton', () => {
     hideEditStatus()
     hideEditStatus()
     expect(document.querySelector('.cm-llm-status')).toBeNull()
+  })
+})
+
+describe('EditStatusIndicator — elapsed-counter', () => {
+  it('does not render the counter outside of "thinking"', () => {
+    setEditStatus('ready')
+    const el = document.querySelector('.cm-llm-status-elapsed') as HTMLElement
+    expect(el).not.toBeNull()
+    expect(el.style.display).toBe('none')
+    expect(el.textContent).toBe('')
+  })
+
+  it('shows the counter after >= 1s in "thinking"', () => {
+    vi.useFakeTimers()
+    setEditStatus('thinking')
+    // Sub-second: counter intentionally suppressed (0s flicker = noise).
+    const el = document.querySelector('.cm-llm-status-elapsed') as HTMLElement
+    expect(el.textContent).toBe('')
+    // Tick to 1500 ms — interval has fired once at 1000 ms.
+    vi.advanceTimersByTime(1500)
+    expect(el.textContent).toMatch(/\(1s\)/)
+    // Tick to 4500 ms — counter at 4 seconds.
+    vi.advanceTimersByTime(3000)
+    expect(el.textContent).toMatch(/\(4s\)/)
+  })
+
+  it('keeps the counter ticking when the thinking message is updated', () => {
+    vi.useFakeTimers()
+    setEditStatus('thinking', 'AI denkt nach…')
+    vi.advanceTimersByTime(3500)
+    // Phase update: caller changes the message text mid-call.
+    setEditStatus('thinking', 'Übersetze HTML zu Mirror…')
+    const el = document.querySelector('.cm-llm-status-elapsed') as HTMLElement
+    // Counter must NOT reset to 0 — same call, just new phase label.
+    expect(el.textContent).toMatch(/\(3s\)/)
+    expect(getEditStatusElapsedSeconds()).toBe(3)
+  })
+
+  it('resets the counter when leaving and re-entering thinking', () => {
+    vi.useFakeTimers()
+    setEditStatus('thinking')
+    vi.advanceTimersByTime(5000)
+    setEditStatus('ready')
+    // Now a new call starts.
+    setEditStatus('thinking')
+    vi.advanceTimersByTime(1500)
+    const el = document.querySelector('.cm-llm-status-elapsed') as HTMLElement
+    // Counter shows 1s — fresh call, fresh start, doesn't accumulate.
+    expect(el.textContent).toMatch(/\(1s\)/)
+  })
+
+  it('hides the counter on transition to ready / error / warning', () => {
+    vi.useFakeTimers()
+    setEditStatus('thinking')
+    vi.advanceTimersByTime(2500)
+    const el = document.querySelector('.cm-llm-status-elapsed') as HTMLElement
+    expect(el.textContent).toMatch(/\(2s\)/)
+
+    setEditStatus('ready')
+    expect(el.textContent).toBe('')
+    expect(el.style.display).toBe('none')
+
+    // Re-enter thinking, then jump to error.
+    setEditStatus('thinking')
+    vi.advanceTimersByTime(500)
+    setEditStatus('error', 'boom')
+    expect(el.textContent).toBe('')
+    expect(el.style.display).toBe('none')
+    expect(getEditStatusElapsedSeconds()).toBeNull()
+  })
+
+  it('hideEditStatus stops the counter', () => {
+    vi.useFakeTimers()
+    setEditStatus('thinking')
+    vi.advanceTimersByTime(1500)
+    expect(getEditStatusElapsedSeconds()).toBe(1)
+    hideEditStatus()
+    expect(getEditStatusElapsedSeconds()).toBeNull()
+    // Re-creating the indicator must not inherit the old counter.
+    setEditStatus('thinking')
+    vi.advanceTimersByTime(500)
+    expect(getEditStatusElapsedSeconds()).toBe(0)
   })
 })
 
