@@ -306,9 +306,18 @@ export class DragPreview {
   private schedulePositionUpdate(e: DragEvent): void {
     if (this.rafPending) return
 
+    // Cmd (mac) / Ctrl (win) / Alt → bypass the grid-cell escape so the
+    // user can drop INTO a cell-child container instead of getting
+    // redirected to the grid parent. Captured here because the DragEvent
+    // is the only place that surfaces the modifier state during HTML5
+    // drag-and-drop (mousemove events don't fire mid-drag).
+    const x = e.clientX
+    const y = e.clientY
+    const bypassGridEscape = e.metaKey || e.ctrlKey || e.altKey
+
     this.rafPending = true
     requestAnimationFrame(() => {
-      getDragController().updatePosition({ x: e.clientX, y: e.clientY })
+      getDragController().updatePosition({ x, y }, { bypassGridEscape })
       this.rafPending = false
     })
   }

@@ -46,7 +46,11 @@ export class HitDetector implements Reportable<HitReport> {
     }
   }
 
-  detect(cursor: Point, cache: LayoutCache): HitResult | null {
+  detect(
+    cursor: Point,
+    cache: LayoutCache,
+    options?: { bypassGridEscape?: boolean }
+  ): HitResult | null {
     this.resetDetectionState(cursor)
     const element = document.elementFromPoint(cursor.x, cursor.y)
     if (!element) {
@@ -55,7 +59,7 @@ export class HitDetector implements Reportable<HitReport> {
       return null
     }
     this.lastElementAtPoint = element.getAttribute('data-mirror-id')
-    const result = this.findValidContainer(element, cache, cursor)
+    const result = this.findValidContainer(element, cache, cursor, options)
     this.lastResult = result
     if (!result) log.debug('No valid container at', cursor.x, cursor.y)
     return result
@@ -79,15 +83,43 @@ export class HitDetector implements Reportable<HitReport> {
   private findValidContainer(
     element: Element,
     cache: LayoutCache,
-    cursor: Point
+    cursor: Point,
+    options?: { bypassGridEscape?: boolean }
   ): HitResult | null {
     let current: Element | null = element
     while (current) {
+      // Grid-cell escape: when `current` sits as a direct child of a CSS-
+      // grid container, prefer the grid as the hit target. Drops on a
+      // grid are placement-by-cell — landing "into" a cell-child element
+      // would lose the (gridX, gridY) intent and put the dragged element
+      // *inside* the existing occupant instead of *alongside* it. The
+      // dragged element ends up stacked at the same cell, which matches
+      // CSS grid's natural stacking when two children overlap on a cell.
+      //
+      // Cmd/Alt held → bypass: lets users explicitly drop INTO a
+      // grid-cell-child that's itself a container.
+      if (!options?.bypassGridEscape) {
+        const parent = current.parentElement
+        if (parent && this.isGridParent(parent)) {
+          const gridResult = this.tryBuildHitResult(parent, cache)
+          if (gridResult) {
+            this.lastEscapeZone.usedParent = true
+            this.lastEscapeZone.parentId = gridResult.containerId
+            return gridResult
+          }
+        }
+      }
+
       const result = this.tryBuildHitResult(current, cache)
       if (result) return this.tryEscapeToParent(current, cache, cursor, result) || result
       current = current.parentElement
     }
     return null
+  }
+
+  private isGridParent(el: Element): boolean {
+    const display = getComputedStyle(el).display
+    return display === 'grid' || display === 'inline-grid'
   }
 
   /** Find parent container (skip current) */

@@ -102,8 +102,15 @@ export class DragController implements Reportable<ControllerReport> {
     this.reporter?.startSession(source)
   }
 
-  /** Update drag position - called on every mouse move */
-  updatePosition(cursor: Point): void {
+  /**
+   * Update drag position - called on every mouse move.
+   *
+   * `bypassGridEscape` is forwarded to the hit-detector. When true (the
+   * caller passes Cmd/Alt held), the detector skips its grid-cell escape
+   * rule, so the user can drop INTO a cell-child that's itself a
+   * container instead of getting redirected to the grid parent.
+   */
+  updatePosition(cursor: Point, options?: { bypassGridEscape?: boolean }): void {
     if (this.state !== 'dragging') {
       // Only log once when drag ends
       if (this.lastLoggedContainer !== null) {
@@ -113,7 +120,7 @@ export class DragController implements Reportable<ControllerReport> {
       return
     }
 
-    const hit = this.hitDetector.detect(cursor, this.cache)
+    const hit = this.hitDetector.detect(cursor, this.cache, options)
     if (!hit) {
       if (this.lastLoggedContainer !== null) {
         log.debug('updatePosition: No hit')

@@ -130,11 +130,35 @@ export const gridCellDropTests: TestCase[] = describe('Grid Cell Drop (Phase 2)'
   ),
 
   // ---------------------------------------------------------------------------
-  // KNOWN LIMITATION: cell-on-cell drops (dropping onto a cell that already
-  // contains another grid child) are blocked by the hit-detector picking up
-  // the existing child instead of the grid container. Tracked for Phase-2
-  // follow-up. All tests here therefore target empty cells.
+  // 4. Phase 2D — drop ONTO a cell that already contains another grid child.
+  //    The hit-detector's grid-cell escape rule prefers the grid parent, so
+  //    the dragged element snaps to the *cell coordinate* of the existing
+  //    occupant (it ends up stacked at the same cell, which is how CSS grid
+  //    naturally renders two children placed on the same cell).
   // ---------------------------------------------------------------------------
+  testWithSetup(
+    'Drop onto an occupied cell snaps to that cell (cell-on-cell)',
+    GRID_FIXTURE,
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+
+      const cellAId = findIdByName('CellA')!
+      const gridId = findIdByName('MainGrid')!
+
+      // Anchor sits at (4, 2). Drop CellA onto Anchor's cell — without
+      // the cell-on-cell escape rule the hit-detector would land on
+      // Anchor (a flex-row container) and route through the index-based
+      // drop pipeline, never writing x/y onto CellA.
+      await api.interact.moveElementToCell(cellAId, gridId, { x: 4, y: 2 })
+
+      const cellALine = api.editor
+        .getCode()
+        .split('\n')
+        .find(l => l.includes('CellA'))!
+      api.assert.ok(/\bx 4\b/.test(cellALine), `Expected "x 4", got: ${cellALine}`)
+      api.assert.ok(/\by 2\b/.test(cellALine), `Expected "y 2", got: ${cellALine}`)
+    }
+  ),
 
   // ---------------------------------------------------------------------------
   // 5. Default span (w 1, h 1) is NOT emitted — keeps DSL minimal
