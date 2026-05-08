@@ -59,6 +59,15 @@ export interface GenerationPipelineInput {
   siblings?: Record<string, string>
 }
 
+/**
+ * LLM-Runner-Signatur. Erhält einen Prompt + optionales AbortSignal,
+ * liefert den Raw-Output (vor stripCodeFences). Production: `runEdit`
+ * aus `./fixer` (geht über window.TauriBridge → claude CLI). Tests +
+ * Eval-CLIs injizieren ihren eigenen Runner und brauchen keine Bridge-
+ * Shims.
+ */
+export type LlmRunner = (prompt: string, signal?: AbortSignal) => Promise<string>
+
 export interface RunGenerationPipelineOptions {
   /** Cancel laufenden Pipeline-Run (z.B. wenn der User Esc drückt). */
   signal?: AbortSignal
@@ -69,6 +78,12 @@ export interface RunGenerationPipelineOptions {
    * aufgerufen. Erlaubt Eval / Studio-Status-Indicator ohne globalen State.
    */
   onStep?: (event: GenerationPipelineStepEvent) => void
+  /**
+   * LLM-Runner-Override. Default: `runEdit` aus `./fixer` (production
+   * path via `window.TauriBridge`). Tests passieren einen Stub direkt;
+   * Eval-CLIs können `claude` direkt spawnen ohne Bridge-Shim.
+   */
+  runner?: LlmRunner
 }
 
 export type GenerationPipelineStatus = 'success' | 'warning' | 'error'
@@ -101,7 +116,7 @@ export async function runGenerationPipeline(
   input: GenerationPipelineInput,
   options: RunGenerationPipelineOptions = {}
 ): Promise<GenerationPipelineResult> {
-  const { signal, maxTranslationRetries = DEFAULT_MAX_RETRIES, onStep } = options
+  const { signal, maxTranslationRetries = DEFAULT_MAX_RETRIES, onStep, runner = runEdit } = options
 
   if (!input.userPrompt && !input.sketch) {
     return {
@@ -123,7 +138,7 @@ export async function runGenerationPipeline(
   let htmlRaw: string
   const htmlStart = performance.now()
   try {
-    htmlRaw = await runEdit(htmlPrompt, signal)
+    htmlRaw = await runner(htmlPrompt, signal)
   } catch (err) {
     if (isAbortError(err)) throw err
     const message = errorMessage(err)
@@ -161,7 +176,7 @@ export async function runGenerationPipeline(
     let mirrorRaw: string
     const translateStart = performance.now()
     try {
-      mirrorRaw = await runEdit(translationPrompt, signal)
+      mirrorRaw = await runner(translationPrompt, signal)
     } catch (err) {
       if (isAbortError(err)) throw err
       const message = errorMessage(err)

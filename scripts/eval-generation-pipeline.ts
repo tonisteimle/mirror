@@ -57,17 +57,16 @@ function findClaudeBinary(): string {
 }
 const CLAUDE_BIN = findClaudeBinary()
 
-interface BridgeRunAgentResult {
-  session_id: string
-  success: boolean
-  output: string
-  error: string | null
-}
+let runnerCallCount = 0
+let runnerTotalMs = 0
 
-let bridgeCallCount = 0
-let bridgeTotalMs = 0
-
-function callClaudeViaSpawn(prompt: string, signal?: AbortSignal): Promise<BridgeRunAgentResult> {
+/**
+ * LlmRunner that spawns the `claude` CLI directly. Matches the contract
+ * the pipeline expects (prompt → raw output, AbortSignal-aware). No
+ * `window.TauriBridge` shim — the pipeline accepts a `runner` option
+ * that bypasses the bridge entirely.
+ */
+function claudeSpawnRunner(prompt: string, signal?: AbortSignal): Promise<string> {
   return new Promise((resolveP, rejectP) => {
     if (signal?.aborted) {
       rejectP(new DOMException('Aborted', 'AbortError'))
@@ -91,34 +90,21 @@ function callClaudeViaSpawn(prompt: string, signal?: AbortSignal): Promise<Bridg
     proc.on('error', err => {
       if (signal) signal.removeEventListener('abort', onAbort)
       const elapsed = Date.now() - start
-      bridgeCallCount += 1
-      bridgeTotalMs += elapsed
-      resolveP({
-        session_id: '',
-        success: false,
-        output: '',
-        error: `spawn failed: ${err.message}`,
-      })
+      runnerCallCount += 1
+      runnerTotalMs += elapsed
+      rejectP(new Error(`spawn failed: ${err.message}`))
     })
     proc.on('close', code => {
       if (signal) signal.removeEventListener('abort', onAbort)
       const elapsed = Date.now() - start
-      bridgeCallCount += 1
-      bridgeTotalMs += elapsed
+      runnerCallCount += 1
+      runnerTotalMs += elapsed
       if (aborted) {
         rejectP(new DOMException('Aborted', 'AbortError'))
         return
       }
-      if (code === 0) {
-        resolveP({ session_id: 'eval', success: true, output: stdout, error: null })
-      } else {
-        resolveP({
-          session_id: 'eval',
-          success: false,
-          output: stdout,
-          error: stderr.trim() || `claude exited with code ${code}`,
-        })
-      }
+      if (code === 0) resolveP(stdout)
+      else rejectP(new Error(stderr.trim() || `claude exited with code ${code}`))
     })
 
     proc.stdin.write(prompt)
@@ -126,29 +112,12 @@ function callClaudeViaSpawn(prompt: string, signal?: AbortSignal): Promise<Bridg
   })
 }
 
-// Install the shim BEFORE pulling in the pipeline. `runEdit` looks at
-// `window.TauriBridge` — it's the only browser-ish global on the call path.
-{
-  const win: Record<string, unknown> =
-    (globalThis as unknown as { window?: Record<string, unknown> }).window ?? {}
-  win.TauriBridge = {
-    isTauri: () => true,
-    agent: {
-      checkClaudeCli: async () => true,
-      runAgent: async (
-        prompt: string,
-        _agentType: string,
-        _projectPath: string,
-        _sessionId: string | null
-      ) => callClaudeViaSpawn(prompt),
-    },
-  }
-  ;(globalThis as unknown as { window: typeof win }).window = win
-}
-
-// Now we can dynamically import the pipeline.
-type PipelineModule = typeof import('../studio/agent/generation-pipeline')
-const pipelineModulePromise: Promise<PipelineModule> = import('../studio/agent/generation-pipeline')
+import type {
+  GenerationPipelineInput,
+  GenerationPipelineResult,
+  GenerationPipelineStepEvent,
+} from '../studio/agent/generation-pipeline'
+import { runGenerationPipeline } from '../studio/agent/generation-pipeline'
 
 // ============================================================================
 // Fixtures — 6 prompts span the spectrum we care about.
@@ -284,12 +253,7 @@ function logTo(path: string, text: string) {
   appendFileSync(path, text, 'utf8')
 }
 
-async function runFixture(
-  fixture: Fixture,
-  run: number,
-  opts: RunOpts,
-  pipeline: PipelineModule
-): Promise<FixtureRunRecord> {
+async function runFixture(fixture: Fixture, run: number, opts: RunOpts): Promise<FixtureRunRecord> {
   const cellRoot = join(opts.outRoot, fixture.id, `run-${run}`)
   mkdirSync(cellRoot, { recursive: true })
 
@@ -347,9 +311,10 @@ async function runFixture(
       sketch: fixture.sketch,
       siblings: fixture.siblings,
     }
-    lastResult = await pipeline.runGenerationPipeline(input, {
+    lastResult = await runGenerationPipeline(input, {
       signal: ac.signal,
       maxTranslationRetries: opts.maxRetries,
+      runner: claudeSpawnRunner,
       onStep: (event: GenerationPipelineStepEvent) => {
         logTo(stepsPath, JSON.stringify({ t: Date.now() - t0, ...event }) + '\n')
         if (event.kind === 'html-done') {
@@ -497,7 +462,7 @@ function renderReport(
     `Started: ${meta.startedAt}`,
     `Finished: ${meta.finishedAt}`,
     `Duration: ${(sumMs / 1000).toFixed(0)}s total wall-clock`,
-    `Bridge calls: ${bridgeCallCount} (${(bridgeTotalMs / 1000).toFixed(0)}s in claude)`,
+    `Runner calls: ${runnerCallCount} (${(runnerTotalMs / 1000).toFixed(0)}s in claude)`,
     ``,
     `## Summary`,
     ``,
@@ -689,7 +654,6 @@ async function main(): Promise<void> {
     }
   }
 
-  const pipeline = await pipelineModulePromise
   const startedAt = new Date().toISOString()
 
   const opts: RunOpts = {
@@ -712,7 +676,7 @@ async function main(): Promise<void> {
         continue
       }
       console.log(`  ▶  ${fixture.id} run ${run} ...`)
-      const rec = await runFixture(fixture, run, opts, pipeline)
+      const rec = await runFixture(fixture, run, opts)
       const tag = rec.status === 'success' ? '✓' : rec.status === 'warning' ? '⚠' : '✗'
       console.log(
         `  ${tag} ${fixture.id} run ${run} [${rec.status}] retries=${rec.retries} ${(rec.totalMs / 1000).toFixed(0)}s` +

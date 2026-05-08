@@ -632,3 +632,76 @@ describe('runGenerationPipeline — telemetry', () => {
     expect(translateDone.durationMs).toBeGreaterThanOrEqual(0)
   })
 })
+
+// =============================================================================
+// runner option — dependency-injection path (no vi.mock)
+// =============================================================================
+//
+// The pipeline accepts an optional `runner` that overrides the default
+// `runEdit` import. This is the cleanest test seam — every test above
+// hooks via vi.mock for historical reasons, but new callers (eval CLIs,
+// out-of-tree tools) inject directly. These tests pin that contract.
+
+describe('runGenerationPipeline — runner option (DI)', () => {
+  // The translation prompt starts with "You are translating ..." — that's
+  // the most reliable discriminator vs the HTML prompt (which talks
+  // about "translated to the Mirror DSL by a separate agent" and would
+  // false-match on a substring search for "translate").
+  const isTranslationPrompt = (prompt: string): boolean => prompt.startsWith('You are translating')
+
+  it('uses injected runner instead of default runEdit', async () => {
+    const calls: string[] = []
+    const stubRunner = async (prompt: string): Promise<string> => {
+      calls.push(prompt.slice(0, 30))
+      if (isTranslationPrompt(prompt)) return VALID_MIRROR
+      return VALID_HTML
+    }
+
+    const result = await runGenerationPipeline({ userPrompt: 'A card' }, { runner: stubRunner })
+
+    expect(result.status).toBe('success')
+    expect(result.mirror).toBe(VALID_MIRROR)
+    expect(result.html).toBe(VALID_HTML)
+    // Default-mocked runEdit (via vi.mock above) MUST NOT have been called
+    // when the caller passed a runner — confirms DI shadows the import.
+    expect(fixture.capturedPrompts).toHaveLength(0)
+    expect(calls).toHaveLength(2)
+  })
+
+  it('propagates AbortSignal to the injected runner', async () => {
+    const ac = new AbortController()
+    let receivedSignal: AbortSignal | undefined
+    const stubRunner = async (prompt: string, signal?: AbortSignal): Promise<string> => {
+      receivedSignal = signal
+      ac.abort()
+      throw new DOMException('Aborted', 'AbortError')
+    }
+
+    await expect(
+      runGenerationPipeline({ userPrompt: 'A card' }, { runner: stubRunner, signal: ac.signal })
+    ).rejects.toMatchObject({ name: 'AbortError' })
+
+    expect(receivedSignal).toBe(ac.signal)
+  })
+
+  it('runner override does NOT affect retry-context — same as the production path', async () => {
+    // First translation returns invalid Mirror; second returns valid.
+    let translationCall = 0
+    const stubRunner = async (prompt: string): Promise<string> => {
+      if (!isTranslationPrompt(prompt)) return VALID_HTML
+      translationCall += 1
+      if (translationCall === 1) return 'this is not valid mirror'
+      // Second call MUST receive retry-context with the prior errors —
+      // generation-prompts.ts emits "## Previous attempt" + "Validator
+      // errors to fix" as section headers in the retry block.
+      expect(prompt).toMatch(/Previous attempt|Validator errors to fix/)
+      return VALID_MIRROR
+    }
+
+    const result = await runGenerationPipeline({ userPrompt: 'A card' }, { runner: stubRunner })
+
+    expect(result.status).toBe('success')
+    expect(result.translationRetries).toBe(1)
+    expect(translationCall).toBe(2)
+  })
+})
