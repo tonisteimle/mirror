@@ -72,7 +72,14 @@ export const tokenExtractTests: TestCase[] = describe('Token Extract (:: syntax)
         searchFor: 'bg #333',
       })
 
-      // Check that the code now has $primary
+      // After extraction the editor switches to tokens.tok to show the
+      // new token definition. Switch back to app.mir so codeContains
+      // reads the source the test actually targeted.
+      const switchFile = (window as any).switchFile
+      if (typeof switchFile === 'function') {
+        switchFile('app.mir')
+        await api.utils.delay(100)
+      }
       api.assert.codeContains(/bg\s+\$primary/)
 
       // Check that tokens file was created/updated

@@ -810,6 +810,49 @@ export class TestRunner {
       ;(document.activeElement as HTMLElement)?.blur?.()
     }
 
+    // Force editorHasFocus=false. The studio's editorHasFocus state
+    // gates global keyboard shortcuts (T/R/I, P/M/G, undo/redo). Tests
+    // that don't explicitly click into the preview rely on shortcuts
+    // working — without resetting this here, a prior test's leftover
+    // editor.dispatch / dialog.click leaves editorHasFocus=true and
+    // every subsequent pressKey() gets silently swallowed.
+    if (studio?.actions?.setEditorFocus) {
+      studio.actions.setEditorFocus(false)
+    }
+
+    // Reset multi-file state to a clean app.mir-only baseline. Only
+    // necessary when a previous test left currentFile pointing at a
+    // tokens / components / data file (the extraction-style tests
+    // do this routinely). For tests that already are on app.mir we
+    // skip the switchFile call — calling it unconditionally triggers
+    // a compile that races with the next setCode and can revert
+    // mid-test edits in token-extract style suites.
+    const wfiles = (window as any).files
+    const switchFile = (window as any).switchFile
+    const studioState = studio?.state?.get?.()
+    const cur = studioState?.currentFile
+    const needsSwitch = cur && cur !== 'app.mir'
+    if (needsSwitch && wfiles && typeof wfiles === 'object' && typeof switchFile === 'function') {
+      if (wfiles['app.mir'] === undefined) wfiles['app.mir'] = ''
+      try {
+        switchFile('app.mir')
+      } catch {
+        /* studio not yet ready */
+      }
+    }
+    if (wfiles && typeof wfiles === 'object') {
+      for (const name of Object.keys(wfiles)) {
+        if (name !== 'app.mir') delete wfiles[name]
+      }
+    }
+    const desktopFiles = (window as any).desktopFiles
+    if (desktopFiles?.getFiles && desktopFiles?.updateFileCache) {
+      const dfiles = desktopFiles.getFiles() || {}
+      for (const name of Object.keys(dfiles)) {
+        if (name !== 'app.mir') desktopFiles.updateFileCache(name, undefined)
+      }
+    }
+
     // =========================================================================
     // Hover State - B1.3 / B5.1
     // =========================================================================
