@@ -9,10 +9,14 @@
  *   `npm run ai-bridge`. **NICHT** in `allAITests` — explizit über
  *   Kategorie `ai.realLlm` aufrufen, weil die Tests langsam (5-15 s pro
  *   Scenario) sind und externe Infra (Bridge-Server, claude CLI) brauchen.
+ * - `realLlmGenerationTests` — Browser-E2E für die HTML-first Generation-
+ *   Pipeline (Cmd+Alt+Enter). Auch real-LLM, sehr langsam (30-90 s pro
+ *   Scenario). Ebenfalls über Kategorie `ai.realLlm`.
  */
 
 import type { TestCase } from '../../types'
 
 export { realLlmEditFlowTests } from './edit-flow-real-llm.test'
+export { realLlmGenerationTests } from './generate-from-prompt-real-llm.test'
 
 export const allAITests: TestCase[] = []

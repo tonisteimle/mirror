@@ -135,7 +135,7 @@ import { allCompilerVerificationTests, allPreludeTests } from './compiler-verifi
 import { allCompilerTests } from './compiler'
 
 // AI (LLM-Edit-Flow browser tests — populated in Phase 4)
-import { allAITests, realLlmEditFlowTests } from './ai'
+import { allAITests, realLlmEditFlowTests, realLlmGenerationTests } from './ai'
 
 // Tutorial
 import { allTutorialTests } from './tutorial'
@@ -326,8 +326,12 @@ export const aiTests: TestCase[] = [...allAITests]
 /**
  * 15b. AI.REALLLM - Real-LLM Browser-E2E (calls actual `claude` CLI via
  * `npm run ai-bridge`). NOT in `aiTests` because slow + needs external infra.
+ *
+ * Two suites:
+ *   - `realLlmEditFlowTests` — Cmd+Enter / Cmd+Shift+Enter (patch-based)
+ *   - `realLlmGenerationTests` — Cmd+Alt+Enter (HTML-first pipeline)
  */
-export const aiRealLlmTests: TestCase[] = [...realLlmEditFlowTests]
+export const aiRealLlmTests: TestCase[] = [...realLlmEditFlowTests, ...realLlmGenerationTests]
 
 /**
  * 16. TUTORIAL - Tutorial verification tests
