@@ -12,8 +12,12 @@ import type {
   FlexDropTarget,
   AbsoluteDropTarget,
   AlignedDropTarget,
+  GridDropTarget,
   HitResult,
 } from './types'
+import { events } from '../../core'
+import { findOwningGridContainer, readGridGeometry } from '../../visual/grid-overlay/grid-detector'
+import { pointerToCell, readCurrentSpan } from '../../visual/grid-overlay/grid-snap'
 import type { ControllerReport, Reportable } from './reporter/types'
 import { LayoutCache } from './layout-cache'
 import { HitDetector } from './hit-detector'
@@ -125,6 +129,13 @@ export class DragController implements Reportable<ControllerReport> {
     }
 
     // Branch based on layout type
+    if (hit.layout === 'grid') {
+      // Grid: cell-aware drop. Compute cell from cursor + live grid
+      // geometry, store as a GridDropTarget, mirror the cell as an
+      // active-cell ghost via GridOverlay.
+      this.handleGridHit(cursor, hit)
+      return
+    }
     if (hit.layout === 'absolute') {
       // Absolute/stacked layout: position-based drop
       const absResult = this.calculateAbsolutePosition(cursor, hit)
@@ -194,6 +205,9 @@ export class DragController implements Reportable<ControllerReport> {
   /** Clear target and hide indicator */
   private clearTarget(): void {
     this.indicator.hide()
+    // Drop the active-cell ghost regardless of whether the previous
+    // target was a grid hit — emit-cost is one no-op listener call.
+    events.emit('grid:active-cell', null)
     this.lastTarget = null
   }
 
@@ -301,6 +315,74 @@ export class DragController implements Reportable<ControllerReport> {
   /** Store aligned drop target (for empty containers with 9-point grid) */
   private storeAlignedTarget(containerId: string, alignmentProperty: string): void {
     this.lastTarget = { mode: 'aligned', containerId, alignmentProperty }
+  }
+
+  /** Store grid drop target (cell-aware placement) */
+  private storeGridTarget(target: GridDropTarget): void {
+    this.lastTarget = target
+  }
+
+  /**
+   * Handle a hover over a CSS-grid container. Reads grid geometry from
+   * the live DOM, snaps the cursor to a cell, carries the dragged
+   * element's existing span across, and emits `grid:active-cell` so the
+   * overlay can ghost the targeted span. The drop emits `x N, y M` (and
+   * `w P, h Q` when > 1) onto the moved element via ElementMoveHandler.
+   */
+  private handleGridHit(cursor: Point, hit: HitResult): void {
+    const containerEl = this.cache.getElement(hit.containerId)
+    if (!containerEl) return this.clearTarget()
+
+    // Use the *innermost* grid container — the hit may have escaped to a
+    // grid parent from a cell-child, but we still need the actual grid
+    // element to read tracks from.
+    const gridEl = findOwningGridContainer(containerEl) ?? containerEl
+    const geo = readGridGeometry(gridEl)
+    if (!geo) return this.clearTarget()
+
+    const cell = pointerToCell(cursor, geo)
+
+    // Carry the dragged element's existing span across (so a `w 2` cell
+    // stays `w 2` after the move). Defaults to 1×1 for palette drops.
+    let gridW = 1
+    let gridH = 1
+    if (this.source?.type === 'canvas' && this.source.nodeId) {
+      const sourceEl = this.cache.getElement(this.source.nodeId)
+      const span = sourceEl ? readCurrentSpan(sourceEl) : null
+      if (span) {
+        gridW = span.w
+        gridH = span.h
+      }
+    }
+
+    // insertionIndex: append to the end of the grid's children. The
+    // moveNode handler uses this for sibling ordering inside the source
+    // file; the *visual* placement comes from the cell coordinates.
+    const children = this.cache.getChildren(hit.containerId)
+    const insertionIndex = children.length
+
+    // Container highlight + active-cell ghost.
+    this.highlightContainer(hit.containerId, hit.containerRect)
+    events.emit('grid:active-cell', {
+      containerId: hit.containerId,
+      gridX: cell.x,
+      gridY: cell.y,
+      gridW,
+      gridH,
+    })
+
+    this.storeGridTarget({
+      mode: 'grid',
+      containerId: hit.containerId,
+      gridX: cell.x,
+      gridY: cell.y,
+      gridW,
+      gridH,
+      insertionIndex,
+    })
+
+    // Capture frame for reporting
+    this.reporter?.captureFrame(cursor)
   }
 
   /** Check if an element is a direct child of a container */
@@ -433,6 +515,7 @@ export class DragController implements Reportable<ControllerReport> {
     this.source = null
     this.lastTarget = null
     this.indicator.hide()
+    events.emit('grid:active-cell', null)
     this.cache.invalidate()
   }
 

@@ -183,12 +183,17 @@ export interface StudioEvents {
     target: {
       containerId: string
       insertionIndex?: number
-      /** For absolute/stacked/aligned containers: position mode */
-      mode?: 'flex' | 'absolute' | 'aligned'
+      /** For absolute/stacked/aligned/grid containers: position mode */
+      mode?: 'flex' | 'absolute' | 'aligned' | 'grid'
       /** For absolute/stacked containers: drop position */
       position?: { x: number; y: number }
       /** For aligned drops: alignment property (tl, tc, tr, cl, center, cr, bl, bc, br) */
       alignmentProperty?: string
+      /** For grid drops: 1-indexed cell coordinates (x, y) and span (w, h). */
+      gridX?: number
+      gridY?: number
+      gridW?: number
+      gridH?: number
     } | null
     dragData: ComponentDragData | null
   }
@@ -221,6 +226,19 @@ export interface StudioEvents {
   'component:insert-requested': { item: ComponentPanelItem }
   /** Grid settings changed */
   'grid:changed': { enabled: boolean; size: number; showVisual: boolean; color: string }
+  /**
+   * CSS-grid active-cell highlight. Emitted while the cursor hovers a
+   * grid container during a drag (or a grid-resize). Payload null means
+   * "clear the active-cell ghost". The GridOverlay subscribes to draw a
+   * span-rect over the targeted cells; nothing else should consume this.
+   */
+  'grid:active-cell': {
+    containerId: string
+    gridX: number
+    gridY: number
+    gridW: number
+    gridH: number
+  } | null
   /** Smart guides settings changed */
   'smartGuides:changed': {
     enabled: boolean

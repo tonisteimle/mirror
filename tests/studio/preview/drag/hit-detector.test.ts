@@ -106,7 +106,7 @@ describe('HitDetector', () => {
       expect(result?.layout).toBe('flex-row')
     })
 
-    it('detects grid layout as flex-row', () => {
+    it('detects grid layout as `grid` (cell-aware drop branch)', () => {
       const container = document.createElement('div')
       container.setAttribute('data-mirror-id', 'grid-container')
 
@@ -121,7 +121,10 @@ describe('HitDetector', () => {
 
       const result = detector.detect({ x: 100, y: 100 }, cache)
 
-      expect(result?.layout).toBe('flex-row')
+      // Was 'flex-row' (index-based insertion). Mirror now keeps grid
+      // identity through hit-detection so DragController can compute
+      // (gridX, gridY) instead of dropping x/y semantics.
+      expect(result?.layout).toBe('grid')
     })
 
     it('detects stacked layout (position: relative) as flex-column', () => {

@@ -170,7 +170,10 @@ export class HitDetector implements Reportable<HitReport> {
 
     // Standard flex detection
     if (style.display === 'flex') return this.getFlexDirection(style)
-    if (style.display === 'grid') return 'flex-row'
+    // CSS grid: route to the cell-aware drop branch in DragController.
+    // Previously fell through to 'flex-row' (index-based insertion), which
+    // dropped Mirror's `x N, y M` semantics on the floor.
+    if (style.display === 'grid' || style.display === 'inline-grid') return 'grid'
 
     // Fallback: position relative without absolute children = flex-column
     if (style.position === 'relative') return 'flex-column'
