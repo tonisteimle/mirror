@@ -7,6 +7,8 @@ import {
   expandInputs,
   collectPrelude,
   applyIgnore,
+  applyInlineDisables,
+  parseInlineDisables,
   crossFileCodeToErrorCode,
 } from '../../compiler/validator/cli-runner'
 
@@ -387,6 +389,113 @@ describe('validator CLI runner — --unused', () => {
     // Both family entries are "used" because $primary covers them.
     const unusedTokens = warnings.filter(w => w.code === 'W501')
     expect(unusedTokens.length).toBe(0)
+  })
+})
+
+describe('inline-disable comments', () => {
+  it('parseInlineDisables — disable-line with code list', () => {
+    const map = parseInlineDisables(
+      `Frame nonsense 5  // validate-disable-line E100
+Frame ok 16`
+    )
+    expect(map.lineMap.get(1)?.has('E100')).toBe(true)
+    expect(map.lineMap.has(2)).toBe(false)
+  })
+
+  it('parseInlineDisables — disable-next-line', () => {
+    const map = parseInlineDisables(
+      `// validate-disable-next-line E100
+Frame nonsense 5
+Frame other`
+    )
+    expect(map.nextLineMap.get(2)?.has('E100')).toBe(true)
+  })
+
+  it('parseInlineDisables — wildcard when no codes given', () => {
+    const map = parseInlineDisables('Frame x  // validate-disable-line')
+    expect(map.lineMap.get(1)?.has('*')).toBe(true)
+  })
+
+  it('parseInlineDisables — multi-code', () => {
+    const map = parseInlineDisables('Frame x  // validate-disable-line E100, W110, E105')
+    const codes = map.lineMap.get(1)!
+    expect(codes.has('E100')).toBe(true)
+    expect(codes.has('W110')).toBe(true)
+    expect(codes.has('E105')).toBe(true)
+  })
+
+  it('end-to-end: disable-next-line suppresses E100', () => {
+    const f = path.join(tmpDir, 'app.mir')
+    writeFile(
+      f,
+      `canvas mobile
+// validate-disable-next-line E100
+Text "x", nonsenseprop 5`
+    )
+    const result = runValidator({ inputs: [f] })
+    const codes = result.fileResults[0].errors.map(e => e.code)
+    expect(codes).not.toContain('E100')
+  })
+
+  it('end-to-end: disable-line suppresses on same line', () => {
+    const f = path.join(tmpDir, 'app.mir')
+    writeFile(
+      f,
+      `canvas mobile
+Text "x", nonsenseprop 5  // validate-disable-line E100`
+    )
+    const result = runValidator({ inputs: [f] })
+    const codes = result.fileResults[0].errors.map(e => e.code)
+    expect(codes).not.toContain('E100')
+  })
+
+  it('end-to-end: wildcard disable suppresses everything on the line', () => {
+    const f = path.join(tmpDir, 'app.mir')
+    writeFile(
+      f,
+      `canvas mobile
+Text "x", nonsenseprop 5, anothernonsense "x"  // validate-disable-line`
+    )
+    const result = runValidator({ inputs: [f] })
+    expect(result.fileResults[0].errors.length).toBe(0)
+  })
+
+  it('does NOT suppress unrelated lines', () => {
+    const f = path.join(tmpDir, 'app.mir')
+    writeFile(
+      f,
+      `canvas mobile
+// validate-disable-next-line E100
+Text "x", nonsenseprop 5
+Text "y", anothernonsense 7`
+    )
+    const result = runValidator({ inputs: [f] })
+    const codes = result.fileResults[0].errors.map(e => e.code)
+    // Line 4's error must still surface.
+    expect(codes).toContain('E100')
+  })
+
+  it('applyInlineDisables — direct API filters as expected', () => {
+    const result = applyInlineDisables(
+      {
+        valid: false,
+        errors: [
+          { severity: 'error', code: 'E100', message: 'a', line: 5, column: 1 },
+          { severity: 'error', code: 'E105', message: 'b', line: 5, column: 1 },
+          { severity: 'error', code: 'E100', message: 'c', line: 6, column: 1 },
+        ],
+        warnings: [],
+        errorCount: 3,
+        warningCount: 0,
+      },
+      {
+        lineMap: new Map([[5, new Set(['E100'])]]),
+        nextLineMap: new Map(),
+      }
+    )
+    // Line 5 E100 suppressed; line 5 E105 kept; line 6 E100 kept.
+    expect(result.errorCount).toBe(2)
+    expect(result.errors.map(e => `${e.line}:${e.code}`)).toEqual(['5:E105', '6:E100'])
   })
 })
 

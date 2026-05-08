@@ -278,6 +278,98 @@ export function applyIgnore(
 }
 
 // ============================================================================
+// Inline disable comments
+// ============================================================================
+
+/**
+ * Per-line suppression sets parsed from `// validate-disable-*` comments
+ * in the source. Two scopes:
+ *   - `lineMap` — exact line → suppressed codes (`disable-line`)
+ *   - `nextLineMap` — line+1 → suppressed codes (`disable-next-line`)
+ *
+ * Use `'*'` (or empty arg list) as a sentinel to suppress every code on
+ * that line.
+ */
+export interface InlineDisableMap {
+  lineMap: Map<number, Set<string>>
+  nextLineMap: Map<number, Set<string>>
+}
+
+/**
+ * Scan source for `// validate-disable-line [E014,W110]` and
+ * `// validate-disable-next-line [E014]` comments. The codes list is
+ * optional; omitted = suppress everything on that line.
+ *
+ * Whitespace/case are tolerant. Multiple codes can be comma-separated
+ * with optional spaces.
+ */
+export function parseInlineDisables(source: string): InlineDisableMap {
+  const lineMap = new Map<number, Set<string>>()
+  const nextLineMap = new Map<number, Set<string>>()
+  const lines = source.split('\n')
+
+  const lineRegex = /\/\/\s*validate-disable-line\b\s*([A-Z0-9, ]*)/i
+  const nextLineRegex = /\/\/\s*validate-disable-next-line\b\s*([A-Z0-9, ]*)/i
+
+  for (let i = 0; i < lines.length; i++) {
+    const lineNo = i + 1 // 1-based
+    const lineText = lines[i]
+
+    const match1 = lineText.match(lineRegex)
+    if (match1) {
+      const codes = parseCodeList(match1[1])
+      lineMap.set(lineNo, codes)
+      continue
+    }
+
+    const match2 = lineText.match(nextLineRegex)
+    if (match2) {
+      const codes = parseCodeList(match2[1])
+      nextLineMap.set(lineNo + 1, codes)
+    }
+  }
+
+  return { lineMap, nextLineMap }
+}
+
+function parseCodeList(raw: string): Set<string> {
+  const trimmed = raw.trim()
+  if (!trimmed) return new Set(['*'])
+  return new Set(
+    trimmed
+      .split(',')
+      .map(c => c.trim().toUpperCase())
+      .filter(Boolean)
+  )
+}
+
+/**
+ * Filter a ValidationResult against inline-disable comments. Errors and
+ * warnings whose line + code are explicitly suppressed are removed.
+ */
+export function applyInlineDisables(
+  result: ValidationResult,
+  disables: InlineDisableMap
+): ValidationResult {
+  const isSuppressed = (e: ValidationError): boolean => {
+    const lineSet = disables.lineMap.get(e.line)
+    if (lineSet && (lineSet.has('*') || lineSet.has(e.code))) return true
+    const nextSet = disables.nextLineMap.get(e.line)
+    if (nextSet && (nextSet.has('*') || nextSet.has(e.code))) return true
+    return false
+  }
+  const errors = result.errors.filter(e => !isSuppressed(e))
+  const warnings = result.warnings.filter(w => !isSuppressed(w))
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
+    errorCount: errors.length,
+    warningCount: warnings.length,
+  }
+}
+
+// ============================================================================
 // runner
 // ============================================================================
 
@@ -324,7 +416,10 @@ export function runValidator(opts: RunnerOptions): RunnerResult {
   for (const f of codeFiles) {
     if (!isMirrorCodeFile(f.filename)) continue
     const raw = validate(f.content, validateOpts)
-    const filtered = applyIgnore(raw, opts.ignoreCodes)
+    // Apply inline-disable comments first, then global --ignore.
+    const disables = parseInlineDisables(f.content)
+    const afterInline = applyInlineDisables(raw, disables)
+    const filtered = applyIgnore(afterInline, opts.ignoreCodes)
     fileResults.push({
       filename: f.filename,
       relativePath: path.relative(process.cwd(), f.absolute),

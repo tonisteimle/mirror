@@ -184,6 +184,13 @@ Exit codes:
   2  Warnings exceeded --max-warnings
   3  Bad CLI usage (unknown flag, no inputs, etc.)
 
+Inline disables (per-line suppression in the source itself):
+  // validate-disable-line                    suppress all codes on this line
+  // validate-disable-line E100               suppress only E100 on this line
+  // validate-disable-line E100, W110         suppress multiple codes
+  // validate-disable-next-line               suppress on the next non-comment line
+  // validate-disable-next-line E105          suppress only E105 on the next line
+
 Examples:
   mirror-validate app.mir
   mirror-validate tokens.tok components.com app.mir
@@ -191,6 +198,7 @@ Examples:
   mirror-validate "src/*.mir" --watch
   mirror-validate app.mir --ignore=E014,W110
   mirror-validate examples/foo --json --max-warnings=0
+  mirror-validate examples/foo --unused
 `)
 }
 
