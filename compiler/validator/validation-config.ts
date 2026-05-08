@@ -51,6 +51,11 @@ const HTML_PASSTHROUGH_PROPS = ['id'] as const
 const COMPONENT_BEHAVIOR_PROPS = [
   // Two-way binding marker
   'bind',
+  // State-cycling annotations (CLAUDE.md: `Btn: pad 12 20, toggle()`).
+  // The parser tokenises these with parens as 2-value strings; we accept
+  // them here so they don't surface as "unknown property" noise.
+  'toggle',
+  'exclusive',
   // Icon content (the icon name string)
   'icon',
   // Component-template state props

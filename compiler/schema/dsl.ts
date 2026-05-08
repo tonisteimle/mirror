@@ -375,8 +375,17 @@ export const DSL = {
     // System states (CSS pseudo-classes)
     hover: { description: 'Mouse hover state', system: true },
     focus: { description: 'Focus state', system: true },
+    'focus-visible': { description: 'Keyboard-focus state', system: true },
+    'focus-within': { description: 'Element contains a focused descendant', system: true },
     active: { description: 'Active/pressed state', system: true },
     disabled: { description: 'Disabled state', system: true },
+    visited: { description: 'Visited link state', system: true },
+    checked: { description: 'Checked state (checkbox/radio/switch)', system: true },
+    placeholder: { description: 'Placeholder pseudo-element (::placeholder)', system: true },
+    'placeholder-shown': { description: 'Input shows placeholder text', system: true },
+    'first-child': { description: 'First child of its parent', system: true },
+    'last-child': { description: 'Last child of its parent', system: true },
+    empty: { description: 'Element has no children', system: true },
 
     // Custom states (data-state attribute)
     selected: { description: 'Selected state' },

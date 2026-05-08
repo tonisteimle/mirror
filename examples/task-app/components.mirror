@@ -108,8 +108,10 @@ AvatarMd as Avatar: w 36, h 36, fs 12
 AvatarLg as Avatar: w 48, h 48, fs 16
 AvatarXl as Avatar: w 64, h 64, fs 20
 
-// Avatar Stack (überlappend)
-AvatarStack: hor, gap -8
+// Avatar Stack (überlappend) — CSS gap is clamped to >= 0; for overlap
+// use negative margin on the children instead (each child shifts left
+// by 8px, except the first).
+AvatarStack: hor
 
 // ============================================
 // PROGRESS
