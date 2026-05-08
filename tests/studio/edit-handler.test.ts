@@ -545,7 +545,7 @@ describe('EditHandler — acceptGhost', () => {
     expect(view.state.doc.toString()).toBe('SECOND')
   })
 
-  it('shows + N andere Dateien hint in the status indicator on cross-file ready', async () => {
+  it('summarises cross-file scope in the ready hint (changes + total files)', async () => {
     const runEditFlow = vi.fn(
       async (): Promise<EditResult> => ({
         status: 'ready',
@@ -561,7 +561,81 @@ describe('EditHandler — acceptGhost', () => {
 
     const el = getEditStatusElement()
     expect(el).not.toBeNull()
-    expect(el!.textContent).toMatch(/2.*andere Dateien/)
+    // Active file (1 hunk: full replacement) + 2 sibling changes = 3 files total.
+    expect(el!.textContent).toMatch(/in 3 Dateien/)
+    expect(el!.textContent).toContain('Tab akzeptieren')
+  })
+
+  it('lead-text says "1 Änderung" when the active file changed in one hunk', async () => {
+    const runEditFlow = vi.fn(async () => ready('REPLACED'))
+    const handler = createEditHandler(baseConfig({ runEditFlow }))
+    handler.handleEditFlow(view)
+    await flush()
+    const el = getEditStatusElement()
+    expect(el!.textContent).toMatch(/^1 Änderung/)
+    // Singular file → no "in N Dateien" suffix.
+    expect(el!.textContent).not.toMatch(/in \d+ Datei/)
+  })
+
+  it('counts hunks (not lines) when the diff is a multi-region patch', async () => {
+    // baseSource has 5 lines; proposed swaps line 2 and line 5 only —
+    // two non-adjacent hunks.
+    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: 'A\nB\nC\nD\nE' } })
+    const proposed = 'A\nBB\nC\nD\nEE'
+    const runEditFlow = vi.fn(
+      async (): Promise<EditResult> => ({
+        status: 'ready',
+        proposedSource: proposed,
+        retries: 0,
+      })
+    )
+    const handler = createEditHandler(baseConfig({ runEditFlow }))
+    handler.handleEditFlow(view)
+    await flush()
+    const el = getEditStatusElement()
+    expect(el!.textContent).toMatch(/^2 Änderungen/)
+  })
+
+  it('falls back to bare Tab/Esc when proposed equals base (no diff)', async () => {
+    // Edge case: defensive path. `runEditFlow` returns a `ready` whose
+    // proposedSource is identical to the current doc. computeLineDiff
+    // yields zero hunks; the lead text should be omitted entirely.
+    const docNow = view.state.doc.toString()
+    const runEditFlow = vi.fn(
+      async (): Promise<EditResult> => ({
+        status: 'ready',
+        proposedSource: docNow,
+        retries: 0,
+      })
+    )
+    const handler = createEditHandler(baseConfig({ runEditFlow }))
+    handler.handleEditFlow(view)
+    await flush()
+    const el = getEditStatusElement()
+    // The bare default message ("Tab akzeptieren · Esc verwerfen") fires —
+    // no leading "0 Änderungen" noise.
+    expect(el!.textContent).not.toMatch(/0 Änderung/)
+    expect(el!.textContent).toContain('Tab akzeptieren')
+  })
+
+  it('appends Quality-Issues to the ready hint when violations remain', async () => {
+    const runEditFlow = vi.fn(
+      async (): Promise<EditResult> => ({
+        status: 'ready',
+        proposedSource: 'REPLACED',
+        retries: 0,
+        qualityViolations: {
+          token: [{} as never],
+          component: [{} as never],
+          redundancy: [],
+        },
+      })
+    )
+    const handler = createEditHandler(baseConfig({ runEditFlow }))
+    handler.handleEditFlow(view)
+    await flush()
+    const el = getEditStatusElement()
+    expect(el!.textContent).toMatch(/2 Quality-Issues/)
   })
 })
 

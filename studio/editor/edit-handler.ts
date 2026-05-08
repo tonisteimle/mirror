@@ -30,6 +30,7 @@ import {
   type EditResult,
   type QualityViolations,
 } from '../agent/edit-flow'
+import { computeLineDiff } from '../agent/source-diff'
 import type { EditCaptureCtx } from '../agent/edit-prompts'
 import { createChangeTracker, type ChangeTracker } from '../agent/change-tracker'
 import {
@@ -176,7 +177,8 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
           : null
       const issues = countQualityIssues(result.qualityViolations)
       const otherCount = pendingOtherFileChanges ? Object.keys(pendingOtherFileChanges).length : 0
-      setEditStatus('ready', buildReadyHint(issues, otherCount))
+      const activeHunks = computeLineDiff(baseSource, result.proposedSource).length
+      setEditStatus('ready', buildReadyHint(activeHunks, otherCount, issues))
     } else if (result.status === 'no-change') {
       const issues = countQualityIssues(result.qualityViolations)
       if (issues > 0) {
@@ -270,16 +272,14 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
     }
 
     setGhostDiff(view, baseSource, result.mirror)
+    const activeHunks = computeLineDiff(baseSource, result.mirror).length
     if (result.status === 'warning') {
       const errorCount = result.validationErrors?.length ?? 0
-      setEditStatus(
-        'warning',
-        `Tab akzeptieren · Esc verwerfen · ⚠ ${errorCount} Validator-${
-          errorCount === 1 ? 'Issue' : 'Issues'
-        }`
-      )
+      const validatorTag = `⚠ ${errorCount} Validator-${errorCount === 1 ? 'Issue' : 'Issues'}`
+      const base = buildReadyHint(activeHunks, 0, 0) ?? 'Tab akzeptieren · Esc verwerfen'
+      setEditStatus('warning', `${base} · ${validatorTag}`)
     } else {
-      setEditStatus('ready')
+      setEditStatus('ready', buildReadyHint(activeHunks, 0, 0))
     }
   }
 
@@ -382,15 +382,52 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
   }
 }
 
-function buildReadyHint(qualityIssues: number, otherFiles: number): string | undefined {
-  if (qualityIssues === 0 && otherFiles === 0) return undefined
-  const parts: string[] = ['Tab akzeptieren · Esc verwerfen']
-  if (otherFiles > 0) {
-    parts.push(`+ ${otherFiles} ${otherFiles === 1 ? 'andere Datei' : 'andere Dateien'}`)
+/**
+ * Build the message shown next to the Tab/Esc hint when a ghost is ready.
+ *
+ * Lead with the diff size — `3 Änderungen` (in `2 Dateien` if siblings
+ * were touched) — so the user sees scope at a glance instead of having
+ * to scroll through the ghost decorations. `Tab akzeptieren · Esc
+ * verwerfen` always trails so the action keys stay easy to find.
+ *
+ * Returns `undefined` only when there is genuinely nothing to say
+ * (no diff, no other files, no quality issues) so the caller can fall
+ * back to the default-message render path.
+ */
+function buildReadyHint(
+  activeFileHunks: number,
+  otherFiles: number,
+  qualityIssues: number
+): string | undefined {
+  const totalChanges = activeFileHunks
+  const totalFiles = otherFiles + (activeFileHunks > 0 ? 1 : 0)
+
+  const parts: string[] = []
+
+  if (totalChanges > 0) {
+    if (totalFiles > 1) {
+      parts.push(
+        `${totalChanges} ${totalChanges === 1 ? 'Änderung' : 'Änderungen'} in ${totalFiles} Dateien`
+      )
+    } else {
+      parts.push(`${totalChanges} ${totalChanges === 1 ? 'Änderung' : 'Änderungen'}`)
+    }
+  } else if (otherFiles > 0) {
+    // Active file unchanged but siblings were patched.
+    parts.push(`Änderungen in ${otherFiles} ${otherFiles === 1 ? 'Datei' : 'Dateien'}`)
   }
+
+  parts.push('Tab akzeptieren · Esc verwerfen')
+
   if (qualityIssues > 0) {
     parts.push(`⚠ ${qualityIssues} Quality-${qualityIssues === 1 ? 'Issue' : 'Issues'}`)
   }
+
+  // Returning undefined when there's nothing to add lets setEditStatus
+  // fall back to the DEFAULT_MESSAGES entry (`Tab akzeptieren · Esc
+  // verwerfen`), keeping the bare-bones case clean.
+  if (parts.length === 1 && qualityIssues === 0) return undefined
+
   return parts.join(' · ')
 }
 
