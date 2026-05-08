@@ -82,6 +82,10 @@ export { gridCellDropTests } from './grid-cell-drop.test'
 // snap to cell-spans and write `w N, h M` (and `x P, y Q` for w/n drags).
 export { gridCellResizeTests } from './grid-cell-resize.test'
 
+// Grid cell insert (Phase 4): clicking an empty cell of an active grid
+// inserts a default Frame at that cell.
+export { gridCellInsertTests } from './grid-cell-insert.test'
+
 // Real pointer events: bypasses __dragTest, exercises HitDetector + InsertionCalculator
 export { realPointerEventTests } from './real-pointer-events.test'
 

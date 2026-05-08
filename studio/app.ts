@@ -43,7 +43,7 @@ import type { Diagnostic } from '@codemirror/lint'
 
 // Custom dialogs
 import { alert } from './dialog'
-import { initNotifications } from './init'
+import { initNotifications, initGridOverlay } from './init'
 import { debounce } from './core/debounce'
 
 // New architecture imports
@@ -2183,6 +2183,14 @@ function initStudio() {
 
   // Initialize Export button (Mirror → React/Vue/Svelte/Vanilla via AI bridge)
   initExportButton()
+
+  // Initialize CSS-grid overlay: visualizes structural grids (Phase 1),
+  // shows the active drop-cell during a drag (Phase 2), and turns empty
+  // cells into click-to-insert affordances (Phase 4).
+  const previewContainerEl = document.getElementById('preview')
+  if (previewContainerEl) {
+    initGridOverlay({ container: previewContainerEl, mode: 'auto' })
+  }
 }
 
 // (setupNotificationHandlers extracted to studio/init/init-notifications.ts —

@@ -63,6 +63,7 @@ import {
   eachTemplateGuardTests,
   gridCellDropTests,
   gridCellResizeTests,
+  gridCellInsertTests,
   realPointerEventTests,
   allMoveEdgeCaseTests,
 } from './drag'
@@ -211,6 +212,7 @@ export const dragTests: TestCase[] = [
   ...eachTemplateGuardTests,
   ...gridCellDropTests,
   ...gridCellResizeTests,
+  ...gridCellInsertTests,
   ...realPointerEventTests,
   ...allMoveEdgeCaseTests,
 ]

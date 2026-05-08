@@ -17,3 +17,8 @@ export {
 } from './init-inline-edit'
 export { initSync, type SyncInitConfig, type SyncInitResult } from './init-sync'
 export { initNotifications, type NotificationInitConfig } from './init-notifications'
+export {
+  initGridOverlay,
+  type GridOverlayInitConfig,
+  type GridOverlayInitResult,
+} from './init-grid-overlay'

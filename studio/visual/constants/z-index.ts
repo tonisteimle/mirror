@@ -20,6 +20,11 @@
 // Z-Index Layers
 // ============================================================================
 
+/** CSS-grid structural overlay (lines + active-cell ghost). Sits below
+ *  drop indicators so an in-flight drag's chrome paints on top, but
+ *  above the user's content so dashed lines are always visible. */
+export const Z_INDEX_GRID_OVERLAY = 9400
+
 /** Layout inference indicators (parenthesis, zone highlight) */
 export const Z_INDEX_INFERENCE = 9500
 export const Z_INDEX_INFERENCE_TEXT = 9501
