@@ -28,6 +28,18 @@ export interface Alignment {
   zone?: string
 }
 
+/**
+ * Cell-aware placement for drops onto a CSS-grid container. The cell
+ * coordinates are 1-indexed and match the Mirror DSL (`x N, y M, w P, h Q`).
+ * `w`/`h` carry the dragged element's existing span; default to 1.
+ */
+export interface GridPlacement {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
 export interface DropResult {
   source: DropSource
   targetNodeId: string
@@ -35,6 +47,9 @@ export interface DropResult {
   insertionIndex?: number
   absolutePosition?: AbsolutePosition
   alignment?: Alignment
+  /** Set when the drop target is a CSS-grid container; carries the cell
+   * coordinates the dragged element should land on. */
+  gridPlacement?: GridPlacement
   isDuplicate?: boolean
 }
 
@@ -92,7 +107,8 @@ export interface CodeModifier {
     sourceId: string,
     targetId: string,
     placement: string,
-    index?: number
+    index?: number,
+    options?: { properties?: string }
   ): ModificationResult
   updateProperty(nodeId: string, property: string, value: string): ModificationResult
   addChild(targetId: string, component: string, options: AddChildOptions): ModificationResult

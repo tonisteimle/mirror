@@ -14,8 +14,8 @@ export interface ChildInfo {
 
 export type FlexLayout = 'flex-row' | 'flex-column'
 
-/** Layout type including absolute/stacked positioning */
-export type LayoutType = 'flex-row' | 'flex-column' | 'absolute'
+/** Layout type including absolute/stacked + grid (cell-aware) positioning */
+export type LayoutType = 'flex-row' | 'flex-column' | 'absolute' | 'grid'
 
 export interface HitResult {
   containerId: string
@@ -40,7 +40,22 @@ export interface DragSource {
 }
 
 /** Discriminated union for drop targets */
-export type DropTarget = FlexDropTarget | AbsoluteDropTarget | AlignedDropTarget
+export type DropTarget = FlexDropTarget | AbsoluteDropTarget | AlignedDropTarget | GridDropTarget
+
+/** Drop target for CSS-grid containers (cell-aware placement). */
+export interface GridDropTarget {
+  mode: 'grid'
+  containerId: string
+  /** 1-indexed cell column the cursor lands on. */
+  gridX: number
+  /** 1-indexed cell row the cursor lands on. */
+  gridY: number
+  /** Span carried over from the dragged element (defaults to 1). */
+  gridW: number
+  gridH: number
+  /** Index used by moveNode for sibling ordering inside the grid. */
+  insertionIndex: number
+}
 
 /** Drop target for flex/grid layouts (index-based) */
 export interface FlexDropTarget {
