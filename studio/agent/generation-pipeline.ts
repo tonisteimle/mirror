@@ -28,6 +28,7 @@ import {
   type TranslationContext,
 } from './generation-prompts'
 import { validate, type ValidationError, type ValidationResult } from '../../compiler/validator'
+import { collectPrelude } from '../../compiler/validator/cli-runner'
 
 // ============================================================================
 // API
@@ -136,6 +137,20 @@ export async function runGenerationPipeline(
       error: 'Pipeline-Input leer — userPrompt oder sketch muss gesetzt sein.',
     }
   }
+
+  // Sibling-derived validator prelude — extracts token + component names
+  // from the project's other files so the LLM's correct re-use of them
+  // doesn't get flagged as "undefined" by the per-file validator. Computed
+  // once before the retry loop (immutable across attempts).
+  const prelude = input.siblings
+    ? collectPrelude(
+        Object.entries(input.siblings).map(([filename, content]) => ({ filename, content }))
+      )
+    : {
+        tokens: new Set<string>(),
+        components: new Set<string>(),
+        proseComponents: new Set<string>(),
+      }
 
   // -------------------------------------------------------------------------
   // Stage 1: HTML-Generation
@@ -251,7 +266,11 @@ export async function runGenerationPipeline(
     // W500s from `$N`-shaped string literals are filtered out.
     let validationErrors: ValidationError[]
     try {
-      const result = validate(mirror)
+      const result = validate(mirror, {
+        preludeTokens: prelude.tokens,
+        preludeComponents: prelude.components,
+        proseComponentPrelude: prelude.proseComponents,
+      })
       validationErrors = selectBlockingIssues(result)
       onStep?.({
         kind: 'validate',

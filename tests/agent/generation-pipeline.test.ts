@@ -219,6 +219,56 @@ describe('runGenerationPipeline — happy path', () => {
     // Verify the design-system framing is in place (not just the values).
     expect(stage1Prompt).toMatch(/Do not invent a parallel/)
   })
+
+  it('feeds siblings into the validator as a prelude — sibling tokens count as defined', async () => {
+    // Without prelude wiring, a Mirror that correctly references sibling
+    // tokens (e.g. `bg $brand` when brand is defined in tokens.tok) gets
+    // flagged as "Token \"$brand\" is not defined" — which forces the
+    // pipeline into an unnecessary retry where the LLM redefines the
+    // tokens locally and produces duplicate-definition conflicts at
+    // project-load time.
+    const mirrorUsingSiblingTokens = `Frame pad 16, bg $brand
+  Text "Hello", col $muted`
+    script(ok(VALID_HTML), ok(mirrorUsingSiblingTokens))
+
+    const result = await runGenerationPipeline({
+      userPrompt: 'A card',
+      siblings: {
+        'tokens.tok': 'brand.bg: #2271C1\nmuted.col: #888',
+      },
+    })
+
+    expect(result.status).toBe('success')
+    expect(result.translationRetries).toBe(0)
+    expect(result.mirror).toBe(mirrorUsingSiblingTokens)
+  })
+
+  it('feeds siblings into the validator as a prelude — sibling components count as defined', async () => {
+    const mirrorUsingSiblingComponent = `Frame pad 16
+  Btn "Save"`
+    script(ok(VALID_HTML), ok(mirrorUsingSiblingComponent))
+
+    const result = await runGenerationPipeline({
+      userPrompt: 'A card with a button',
+      siblings: {
+        'components.com': 'Btn: pad 10 20, rad 6, bg #2271C1, col white',
+      },
+    })
+
+    expect(result.status).toBe('success')
+    expect(result.translationRetries).toBe(0)
+  })
+
+  it('does not pollute prelude when no siblings are provided — undefined tokens still surface', async () => {
+    // The empty-prelude path must still flag undefined tokens; the
+    // sibling-prelude convenience must not weaken validation in solo runs.
+    script(ok(VALID_HTML), ok(INVALID_MIRROR_BAD_TOKEN), ok(VALID_MIRROR))
+
+    const result = await runGenerationPipeline({ userPrompt: 'A card' })
+
+    expect(result.translationRetries).toBe(1)
+    expect(result.status).toBe('success')
+  })
 })
 
 // =============================================================================
