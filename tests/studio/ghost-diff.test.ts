@@ -22,6 +22,7 @@ import {
   setGhostDiff,
   clearGhostDiff,
   isGhostActive,
+  getGhostLineSet,
 } from '../../studio/editor/ghost-diff'
 
 function stateFor(doc: string): EditorState {
@@ -247,6 +248,77 @@ describe('GhostDiff — EditorView integration', () => {
     expect(view.dom.querySelector('.cm-ghost-removed')).toBeNull()
     expect(view.dom.querySelector('.cm-ghost-added')).toBeNull()
     view.destroy()
+  })
+})
+
+// ============================================================
+// getGhostLineSet
+// ============================================================
+
+describe('getGhostLineSet', () => {
+  it('returns empty set when there is no diff', () => {
+    const doc = EditorState.create({ doc: 'A\nB' }).doc
+    expect(getGhostLineSet('A\nB', 'A\nB', doc).size).toBe(0)
+  })
+
+  it('marks every removed line', () => {
+    // 4-line doc, lines 2 and 3 replaced with one new line.
+    const baseSource = 'A\nB\nC\nD'
+    const newSource = 'A\nXX\nD'
+    const doc = EditorState.create({ doc: baseSource }).doc
+    const set = getGhostLineSet(baseSource, newSource, doc)
+    // Lines 2, 3 (removed) + 4 (line after the replacement, where the
+    // widget cursor naturally lands) — but 4 only if it's within doc bounds.
+    expect(set.has(2)).toBe(true)
+    expect(set.has(3)).toBe(true)
+    // Line 4 is the widget anchor side.
+    expect(set.has(4)).toBe(true)
+    expect(set.has(1)).toBe(false)
+  })
+
+  it('marks the anchor line for a pure mid-doc addition', () => {
+    // 3-line doc; pure addition between lines 2 and 3.
+    const baseSource = 'A\nB\nC'
+    const newSource = 'A\nB\nNEW\nC'
+    const doc = EditorState.create({ doc: baseSource }).doc
+    const set = getGhostLineSet(baseSource, newSource, doc)
+    // Anchor is end of line 2 (line before oldStart=3); cursor on
+    // either line 2 or 3 should accept.
+    expect(set.has(2)).toBe(true)
+    expect(set.has(3)).toBe(true)
+    expect(set.has(1)).toBe(false)
+  })
+
+  it('marks line 1 for a top-of-doc pure addition', () => {
+    const baseSource = 'A\nB'
+    const newSource = 'NEW\nA\nB'
+    const doc = EditorState.create({ doc: baseSource }).doc
+    const set = getGhostLineSet(baseSource, newSource, doc)
+    expect(set.has(1)).toBe(true)
+    expect(set.has(2)).toBe(false)
+  })
+
+  it('does not include lines outside the doc bounds (defensive)', () => {
+    // Replacement of the very last line; "line after" would be line 4,
+    // which doesn't exist.
+    const baseSource = 'A\nB\nC'
+    const newSource = 'A\nB\nXX'
+    const doc = EditorState.create({ doc: baseSource }).doc
+    const set = getGhostLineSet(baseSource, newSource, doc)
+    expect(set.has(3)).toBe(true)
+    expect(set.has(4)).toBe(false) // no phantom out-of-bounds entry
+  })
+
+  it('marks multiple disjoint hunks independently', () => {
+    // Lines 1 and 4 changed, line 2 and 3 untouched.
+    const baseSource = 'A\nB\nC\nD\nE'
+    const newSource = 'AA\nB\nC\nDD\nE'
+    const doc = EditorState.create({ doc: baseSource }).doc
+    const set = getGhostLineSet(baseSource, newSource, doc)
+    expect(set.has(1)).toBe(true)
+    expect(set.has(4)).toBe(true)
+    // Untouched middle lines are out of zone.
+    expect(set.has(3)).toBe(false)
   })
 })
 

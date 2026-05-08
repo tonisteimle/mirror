@@ -22,7 +22,7 @@
 
 import type { EditorView, KeyBinding } from '@codemirror/view'
 import type { EditorState } from '@codemirror/state'
-import { ghostDiffField } from './ghost-diff'
+import { ghostDiffField, getGhostLineSet } from './ghost-diff'
 
 export interface LlmEditKeymapConfig {
   /** Mod-Enter handler: starts the edit flow (capture + LLM call). */
@@ -52,6 +52,31 @@ export function isGhostActiveSelector(state: EditorState): boolean {
   }
 }
 
+/**
+ * Tab-accept gating predicate.
+ *
+ * When the user is mid-typing and a ghost-diff appears, pressing Tab
+ * to indent should NOT silently accept the AI proposal. The proposal
+ * is accepted only when the cursor sits in the diff zone — the lines
+ * that the ghost overlay actually marks (removed lines + add-widget
+ * anchors). Anywhere else, return false so CodeMirror's default Tab
+ * binding (indent / autocomplete) runs.
+ */
+export function isCursorInGhostRange(state: EditorState): boolean {
+  if (!isGhostActiveSelector(state)) return false
+  let ghost
+  try {
+    ghost = state.field(ghostDiffField)
+  } catch {
+    return false
+  }
+  if (!ghost.active) return false
+  const cursorPos = state.selection.main.head
+  const cursorLine = state.doc.lineAt(cursorPos).number
+  const ghostLines = getGhostLineSet(ghost.baseSource, ghost.newSource, state.doc)
+  return ghostLines.has(cursorLine)
+}
+
 export function llmEditKeymap(config: LlmEditKeymapConfig): readonly KeyBinding[] {
   return [
     {
@@ -69,7 +94,10 @@ export function llmEditKeymap(config: LlmEditKeymapConfig): readonly KeyBinding[
     {
       key: 'Tab',
       run: view => {
-        if (!isGhostActiveSelector(view.state)) return false
+        // Two gates: (1) ghost must be active, (2) cursor must be on
+        // a line the ghost overlay touches. Without (2) Tab would
+        // silently swallow indent presses in unchanged code regions.
+        if (!isCursorInGhostRange(view.state)) return false
         return config.acceptGhost(view)
       },
     },

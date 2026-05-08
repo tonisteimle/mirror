@@ -212,3 +212,53 @@ export function clearGhostDiff(view: EditorView): void {
 export function isGhostActive(state: { field: (f: typeof ghostDiffField) => GhostDiffState }) {
   return state.field(ghostDiffField).active
 }
+
+/**
+ * Lines (1-based, in the current `doc`) that the ghost-diff overlay
+ * touches: every line marked with the strike-through decoration plus
+ * the anchor line where each "added" widget renders.
+ *
+ * Used by the keymap to gate `Tab`-accept on cursor proximity. If the
+ * cursor is far from the diff, the user is mid-typing somewhere else —
+ * Tab should mean "indent", not "accept the AI's suggestion". If the
+ * cursor sits on a removed line or right next to an added widget, the
+ * user is reviewing the diff — Tab means "accept".
+ */
+export function getGhostLineSet(baseSource: string, newSource: string, doc: Text): Set<number> {
+  const lineSet = new Set<number>()
+  const hunks = computeLineDiff(baseSource, newSource)
+  const totalLines = doc.lines
+
+  for (const hunk of hunks) {
+    for (let i = 0; i < hunk.removed.length; i++) {
+      const lineNum = hunk.oldStart + i
+      if (lineNum >= 1 && lineNum <= totalLines) lineSet.add(lineNum)
+    }
+
+    if (hunk.added.length > 0) {
+      if (hunk.removed.length > 0) {
+        // Replacement: widget renders just below the last removed line.
+        // Include both the last-removed line and the line after it
+        // (where the cursor naturally lands when reviewing).
+        const lastRemoved = hunk.oldStart + hunk.removed.length - 1
+        if (lastRemoved >= 1 && lastRemoved <= totalLines) lineSet.add(lastRemoved)
+        if (lastRemoved + 1 >= 1 && lastRemoved + 1 <= totalLines) {
+          lineSet.add(lastRemoved + 1)
+        }
+      } else {
+        // Pure addition: widget anchored at end of line `oldStart - 1`
+        // (or top-of-doc for `oldStart <= 1`). Include both the anchor
+        // line and `oldStart` so click-positions in either spot work.
+        if (hunk.oldStart <= 1) {
+          if (totalLines >= 1) lineSet.add(1)
+        } else {
+          const anchor = hunk.oldStart - 1
+          if (anchor >= 1 && anchor <= totalLines) lineSet.add(anchor)
+          if (hunk.oldStart >= 1 && hunk.oldStart <= totalLines) lineSet.add(hunk.oldStart)
+        }
+      }
+    }
+  }
+
+  return lineSet
+}

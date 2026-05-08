@@ -10,9 +10,13 @@
 
 import { describe, it, expect, vi } from 'vitest'
 import type { EditorView } from '@codemirror/view'
-import { llmEditKeymap, isGhostActiveSelector } from '../../studio/editor/llm-keymap'
+import {
+  llmEditKeymap,
+  isGhostActiveSelector,
+  isCursorInGhostRange,
+} from '../../studio/editor/llm-keymap'
 import { ghostDiffField, setGhostDiffEffect } from '../../studio/editor/ghost-diff'
-import { EditorState } from '@codemirror/state'
+import { EditorState, EditorSelection } from '@codemirror/state'
 
 const fakeView = (extra: Partial<EditorView> = {}): EditorView =>
   ({
@@ -77,7 +81,7 @@ describe('llmEditKeymap — bindings', () => {
 })
 
 describe('llmEditKeymap — Tab / Escape (ghost gating)', () => {
-  it('Tab calls acceptGhost only when ghostDiffField.active', () => {
+  it('Tab calls acceptGhost only when ghostDiffField.active and cursor in zone', () => {
     const acceptGhost = vi.fn(() => true)
     const keymap = llmEditKeymap({
       handleEditFlow: () => true,
@@ -92,7 +96,8 @@ describe('llmEditKeymap — Tab / Escape (ghost gating)', () => {
     expect(tabBinding?.run?.(inactiveView)).toBe(false)
     expect(acceptGhost).not.toHaveBeenCalled()
 
-    // Active: dispatch effect, then re-evaluate.
+    // Active + cursor at start of doc (= line 1 = the removed line in
+    // a one-line replacement) → accept fires.
     const activeState = EditorState.create({
       doc: 'A',
       extensions: [ghostDiffField],
@@ -102,6 +107,55 @@ describe('llmEditKeymap — Tab / Escape (ghost gating)', () => {
     const activeView = fakeView({ state: activeState })
     expect(tabBinding?.run?.(activeView)).toBe(true)
     expect(acceptGhost).toHaveBeenCalledWith(activeView)
+  })
+
+  it('Tab does NOT accept when cursor sits on an unchanged line far from the diff', () => {
+    const acceptGhost = vi.fn(() => true)
+    const keymap = llmEditKeymap({
+      handleEditFlow: () => true,
+      openPromptField: () => true,
+      acceptGhost,
+      dismissGhost: () => true,
+    })
+
+    // 6-line doc; only line 1 changes.
+    const doc = 'A\nB\nC\nD\nE\nF'
+    const newSource = 'AA\nB\nC\nD\nE\nF'
+    let state = EditorState.create({ doc, extensions: [ghostDiffField] }).update({
+      effects: setGhostDiffEffect.of({ baseSource: doc, newSource }),
+    }).state
+    // Park the cursor on line 5 (offset for 'A\nB\nC\nD\n' = 8).
+    state = state.update({ selection: EditorSelection.single(8) }).state
+    const view = fakeView({ state })
+    const tabBinding = keymap.find(b => b.key === 'Tab')
+
+    expect(tabBinding?.run?.(view)).toBe(false)
+    expect(acceptGhost).not.toHaveBeenCalled()
+  })
+
+  it('Tab accepts when cursor sits on or next to a pure-addition widget', () => {
+    const acceptGhost = vi.fn(() => true)
+    const keymap = llmEditKeymap({
+      handleEditFlow: () => true,
+      openPromptField: () => true,
+      acceptGhost,
+      dismissGhost: () => true,
+    })
+
+    // 4-line doc, addition appended at the end. Pure-add widget anchors
+    // at the end of line 4 (the last existing line).
+    const doc = 'A\nB\nC\nD'
+    const newSource = 'A\nB\nC\nD\nNEW'
+    let state = EditorState.create({ doc, extensions: [ghostDiffField] }).update({
+      effects: setGhostDiffEffect.of({ baseSource: doc, newSource }),
+    }).state
+    // Cursor on line 4 (offset 6 = start of 'D').
+    state = state.update({ selection: EditorSelection.single(6) }).state
+    const view = fakeView({ state })
+
+    const tabBinding = keymap.find(b => b.key === 'Tab')
+    expect(tabBinding?.run?.(view)).toBe(true)
+    expect(acceptGhost).toHaveBeenCalledOnce()
   })
 
   it('Escape always delegates to dismissGhost; the handler decides whether to consume', () => {
@@ -135,6 +189,58 @@ describe('llmEditKeymap — Tab / Escape (ghost gating)', () => {
     const ghostView = fakeView({ state: ghostState })
     expect(escBinding?.run?.(ghostView)).toBe(true)
     expect(dismissGhost).toHaveBeenCalledWith(ghostView)
+  })
+})
+
+describe('isCursorInGhostRange', () => {
+  it('returns false when no ghost is active', () => {
+    const state = EditorState.create({ doc: 'A\nB\nC', extensions: [ghostDiffField] })
+    expect(isCursorInGhostRange(state)).toBe(false)
+  })
+
+  it('returns true when cursor sits on a removed line', () => {
+    const doc = 'A\nB\nC'
+    let state = EditorState.create({ doc, extensions: [ghostDiffField] }).update({
+      effects: setGhostDiffEffect.of({ baseSource: doc, newSource: 'A\nXXX\nC' }),
+    }).state
+    // Line 2 = the removed 'B'. Offset 2 = start of 'B'.
+    state = state.update({ selection: EditorSelection.single(2) }).state
+    expect(isCursorInGhostRange(state)).toBe(true)
+  })
+
+  it('returns false when cursor is N lines away from any hunk', () => {
+    const doc = 'A\nB\nC\nD\nE'
+    let state = EditorState.create({ doc, extensions: [ghostDiffField] }).update({
+      effects: setGhostDiffEffect.of({ baseSource: doc, newSource: 'AA\nB\nC\nD\nE' }),
+    }).state
+    // Line 4 (offset for 'A\nB\nC\n' = 6) → far from line 1.
+    state = state.update({ selection: EditorSelection.single(6) }).state
+    expect(isCursorInGhostRange(state)).toBe(false)
+  })
+
+  it('returns true on the line right after a replacement (where the widget renders)', () => {
+    const doc = 'A\nB\nC\nD'
+    let state = EditorState.create({ doc, extensions: [ghostDiffField] }).update({
+      effects: setGhostDiffEffect.of({ baseSource: doc, newSource: 'A\nXXX\nC\nD' }),
+    }).state
+    // Line 3 = right after the replaced line 2. Offset 4 = start of 'C'.
+    state = state.update({ selection: EditorSelection.single(4) }).state
+    expect(isCursorInGhostRange(state)).toBe(true)
+  })
+
+  it('handles top-of-doc pure addition correctly', () => {
+    const doc = 'A\nB\nC'
+    let state = EditorState.create({ doc, extensions: [ghostDiffField] }).update({
+      effects: setGhostDiffEffect.of({ baseSource: doc, newSource: 'NEW\nA\nB\nC' }),
+    }).state
+    // Cursor on line 1 (the anchor for top-of-doc additions).
+    state = state.update({ selection: EditorSelection.single(0) }).state
+    expect(isCursorInGhostRange(state)).toBe(true)
+  })
+
+  it('returns false when ghostDiffField is not installed', () => {
+    const state = EditorState.create({ doc: 'A' })
+    expect(isCursorInGhostRange(state)).toBe(false)
   })
 })
 
