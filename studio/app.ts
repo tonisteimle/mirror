@@ -43,7 +43,11 @@ import type { Diagnostic } from '@codemirror/lint'
 
 // Custom dialogs
 import { alert } from './dialog'
-import { initNotifications, initGridOverlay } from './init'
+import {
+  initNotifications,
+  initGridOverlay,
+  renderEditorFileTabs as renderEditorFileTabsImpl,
+} from './init'
 import { debounce } from './core/debounce'
 
 // New architecture imports
@@ -1000,73 +1004,23 @@ resetDemoBtn?.addEventListener('click', async () => {
 // (data → tokens → components → layout) so the load-order is visually
 // reflected. Standard four-file demo gets German labels; new files (via
 // the explorer panel) fall back to their raw filename.
-const FILE_PHASE: Record<string, number> = {
-  data: 0,
-  tokens: 1,
-  component: 2,
-  javascript: 3,
-  layout: 4,
-}
-
-function tabLabel(filename: string): string {
-  if (filename === 'data.mir') return 'Daten'
-  if (filename === 'tokens.mir') return 'Tokens'
-  if (filename === 'components.mir') return 'Komponenten'
-  if (filename === 'app.mir') return 'Anwendung'
-  return filename
+// File tabs renderer extracted to studio/init/file-tabs.ts. The deps
+// closure binds the live module-scope state (files, currentFile, switchFile).
+const fileTabsDeps = {
+  getFiles: () => window.desktopFiles?.getFiles?.() || files,
+  getCurrentFile: () => currentFile,
+  detectFileType,
+  switchFile: (name: string) => {
+    if (typeof window.switchFile === 'function') {
+      window.switchFile(name)
+    } else {
+      switchFile(name)
+    }
+  },
 }
 
 function renderEditorFileTabs(activeFilename: string): void {
-  const container = document.getElementById('editor-file-tabs')
-  if (!container) return
-
-  const allFiles = window.desktopFiles?.getFiles?.() || files
-  const entries = Object.entries(allFiles).filter(
-    ([_, content]) => typeof content === 'string'
-  ) as Array<[string, string]>
-
-  // Sort by phase (data → tokens → components → layout), then alpha.
-  const sorted = entries
-    .map(([name, content]) => ({
-      name,
-      type: detectFileType(name, content),
-    }))
-    .sort((a, b) => {
-      const pa = FILE_PHASE[a.type] ?? 99
-      const pb = FILE_PHASE[b.type] ?? 99
-      if (pa !== pb) return pa - pb
-      return a.name.localeCompare(b.name)
-    })
-
-  // Cheap diff: only rebuild if the tab set changed. Avoids destroying
-  // event listeners on every save (typing → recompile → renderTabs).
-  const desiredKey = sorted.map(s => s.name).join('|') + '||' + activeFilename
-  if (container.dataset.tabsKey === desiredKey) return
-  container.dataset.tabsKey = desiredKey
-
-  container.innerHTML = ''
-  for (const { name } of sorted) {
-    const btn = document.createElement('button')
-    btn.className = 'editor-file-tab'
-    btn.dataset.file = name
-    btn.textContent = tabLabel(name)
-    if (name === activeFilename) btn.classList.add('active')
-    btn.addEventListener('click', () => {
-      if (name === currentFile) return
-      if (typeof window.switchFile === 'function') {
-        window.switchFile(name)
-      } else {
-        switchFile(name)
-      }
-      renderEditorFileTabs(name)
-    })
-    container.appendChild(btn)
-  }
-}
-
-function syncEditorFileTabs(activeFilename: string): void {
-  // Re-render keeps both the structure and the active state in sync.
-  renderEditorFileTabs(activeFilename)
+  renderEditorFileTabsImpl(activeFilename, fileTabsDeps)
 }
 
 // Initial render — tabs need to exist before the user clicks anything.

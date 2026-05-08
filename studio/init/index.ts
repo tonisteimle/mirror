@@ -22,3 +22,4 @@ export {
   type GridOverlayInitConfig,
   type GridOverlayInitResult,
 } from './init-grid-overlay'
+export { tabLabel, renderEditorFileTabs, syncEditorFileTabs, type FileTabsDeps } from './file-tabs'
