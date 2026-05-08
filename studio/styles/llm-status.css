@@ -1,0 +1,91 @@
+/* ============================================================
+   LLM Edit-Flow Status Indicator
+   ----------------------------------------------------------------
+   Singleton DOM widget (`studio/editor/edit-status-indicator.ts`)
+   that floats above the editor and reports the LLM call's state.
+   The indicator shows four mutually-exclusive states via class
+   modifiers; the elapsed-counter span only renders during
+   `thinking` after the first second.
+
+   Restrained visual language — no shadows, no gradients, just
+   solid colors that read well against both light and dark editor
+   themes. Position is fixed near the top of the viewport so the
+   user notices a state change without losing their cursor.
+   ============================================================ */
+
+.cm-llm-status {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 9999;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  font-size: 13px;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  /* Subtle border instead of a shadow — per design preference. */
+  border: 1px solid currentColor;
+}
+
+.cm-llm-status-message {
+  font-weight: 500;
+}
+
+.cm-llm-status-elapsed {
+  /* Monospace digits keep the counter from jiggling as it ticks. */
+  font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
+  font-size: 12px;
+  opacity: 0.7;
+  font-weight: 400;
+}
+
+/* ---- States ---- */
+
+.cm-llm-status-thinking {
+  background: #eff6ff; /* very light blue */
+  color: #1e40af;
+  border-color: #bfdbfe;
+  /* A slow, almost imperceptible pulse so the user knows the call
+     is alive without it being visually loud. */
+  animation: cm-llm-status-pulse 2s ease-in-out infinite;
+}
+
+.cm-llm-status-ready {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #a7f3d0;
+}
+
+.cm-llm-status-error {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.cm-llm-status-warning {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+@keyframes cm-llm-status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Reduced-motion users get a static indicator. */
+@media (prefers-reduced-motion: reduce) {
+  .cm-llm-status-thinking {
+    animation: none;
+  }
+}
