@@ -859,6 +859,29 @@ export class Interactions implements InteractionAPI {
     }
   }
 
+  /**
+   * Move an element onto a specific cell of a CSS-grid container.
+   * Delegates to __dragTest.moveElement(...).toCell(...).execute() — the
+   * test-runner reads live grid geometry, animates the cursor onto the
+   * cell-center, and dispatches a real grid drop.
+   */
+  async moveElementToCell(
+    source: string,
+    target: string,
+    cell: { x: number; y: number }
+  ): Promise<void> {
+    const dragTest = (window as any).__dragTest
+    if (!dragTest) {
+      throw new Error('Drag test API not available')
+    }
+
+    const result = await dragTest.moveElement(source).toContainer(target).toCell(cell).execute()
+
+    if (!result.success) {
+      throw new Error(`Move to cell failed: ${result.error}`)
+    }
+  }
+
   // ===========================================================================
   // Resize Handle Interactions
   // ===========================================================================

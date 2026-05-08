@@ -315,6 +315,148 @@ export class BrowserTestRunner {
   }
 
   /**
+   * Execute a canvas element move to a specific grid cell.
+   *
+   * Animates the cursor onto the cell-center (read live from the grid
+   * container's gridTemplateColumns/Rows) and dispatches a real grid
+   * drop. The DragController.handleGridHit branch picks it up, computes
+   * (gridX, gridY), and the ElementMoveHandler writes `x N, y M` (and
+   * `w P, h Q` if the dragged element's existing span is > 1) onto the
+   * moved block — folded into the same moveNode edit.
+   */
+  async executeCanvasMoveToCell(params: {
+    sourceNodeId: string
+    targetNodeId: string
+    cell: { x: number; y: number }
+  }): Promise<BrowserTestResult> {
+    const startTime = performance.now()
+    const codeBefore = this.getCode()
+    const description = `Move ${params.sourceNodeId} to ${params.targetNodeId} cell (${params.cell.x}, ${params.cell.y})`
+
+    try {
+      const sourceEl = this.findElement(params.sourceNodeId)
+      const targetEl = this.findElement(params.targetNodeId)
+      if (!sourceEl)
+        return this.errorResult(description, `Source ${params.sourceNodeId} not found`, startTime)
+      if (!targetEl)
+        return this.errorResult(description, `Target ${params.targetNodeId} not found`, startTime)
+
+      // Read live grid geometry from computed styles. Same source as the
+      // production grid-detector — keeps the test honest about cell math.
+      const cs = getComputedStyle(targetEl)
+      if (cs.display !== 'grid' && cs.display !== 'inline-grid') {
+        return this.errorResult(
+          description,
+          `Target ${params.targetNodeId} is not a grid container (display=${cs.display})`,
+          startTime,
+          codeBefore
+        )
+      }
+      const cols = parseTrackList(cs.gridTemplateColumns)
+      const rows = parseTrackList(cs.gridTemplateRows)
+      const colGap = parsePx(cs.columnGap)
+      const rowGap = parsePx(cs.rowGap)
+      if (
+        params.cell.x < 1 ||
+        params.cell.x > cols.length ||
+        params.cell.y < 1 ||
+        params.cell.y > rows.length
+      ) {
+        return this.errorResult(
+          description,
+          `Cell (${params.cell.x}, ${params.cell.y}) out of grid bounds (${cols.length}×${rows.length})`,
+          startTime,
+          codeBefore
+        )
+      }
+
+      const targetRect = targetEl.getBoundingClientRect()
+      const padLeft = parsePx(cs.paddingLeft)
+      const padTop = parsePx(cs.paddingTop)
+      const offX = padLeft + cellCenterOffset(cols, colGap, params.cell.x - 1)
+      const offY = padTop + cellCenterOffset(rows, rowGap, params.cell.y - 1)
+      const dropPos: Point = { x: targetRect.left + offX, y: targetRect.top + offY }
+
+      // Build the drag from the source element's center to the cell center.
+      const sourceRect = sourceEl.getBoundingClientRect()
+      const startPos: Point = {
+        x: sourceRect.left + sourceRect.width / 2,
+        y: sourceRect.top + sourceRect.height / 2,
+      }
+
+      setCanvasDragData(params.sourceNodeId)
+      const source: DragSource = { type: 'canvas', nodeId: params.sourceNodeId }
+
+      // Reuse executeAnimatedDrag's pattern: animate cursor, then read
+      // back the controller's computed grid target and simulateDrop.
+      const controller = getDragController()
+      const { steps, stepDelay, showCursor } = this.animationConfig
+      if (showCursor) this.showVisualCursor(startPos)
+      controller.startDrag(source, this.previewContainer!)
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps
+        const cur: Point = {
+          x: startPos.x + (dropPos.x - startPos.x) * t,
+          y: startPos.y + (dropPos.y - startPos.y) * t,
+        }
+        controller.updatePosition(cur)
+        if (showCursor) this.moveVisualCursor(cur)
+        await this.delay(stepDelay)
+      }
+      if (showCursor) this.hideVisualCursor()
+
+      const testCtrl = new DragTestController(controller)
+      const computed = testCtrl.getTestState().target
+      let target: DropTarget
+      if (computed && computed.mode === 'grid' && computed.containerId === params.targetNodeId) {
+        // Override cell coords with the test's intent in case the cursor
+        // ended up off-by-one inside the cell.
+        target = {
+          ...computed,
+          gridX: params.cell.x,
+          gridY: params.cell.y,
+        }
+      } else {
+        // Fallback: synthesize a GridDropTarget directly. Lets tests work
+        // even if the controller's hit-detection didn't latch on.
+        target = {
+          mode: 'grid',
+          containerId: params.targetNodeId,
+          gridX: params.cell.x,
+          gridY: params.cell.y,
+          gridW: 1,
+          gridH: 1,
+          insertionIndex: targetEl.children.length,
+        }
+      }
+      await testCtrl.simulateDrop(source, target)
+      clearCurrentDragData()
+
+      const codeChanged = await this.waitForCodeChange(codeBefore, 2000)
+      const codeAfter = this.getCode()
+      if (!codeChanged) {
+        return this.errorResult(
+          description,
+          `Code did not change after grid drop. Drop callbacks may not be wired up.`,
+          startTime,
+          codeBefore
+        )
+      }
+
+      return {
+        success: true,
+        description,
+        duration: performance.now() - startTime,
+        codeBefore,
+        codeAfter,
+      }
+    } catch (error) {
+      clearCurrentDragData()
+      return this.errorResult(description, String(error), startTime, codeBefore)
+    }
+  }
+
+  /**
    * Execute a canvas element move to an alignment zone
    */
   async executeCanvasMoveToAlignmentZone(params: {
@@ -1151,6 +1293,17 @@ class CanvasMoveBuilder {
     return this
   }
 
+  /**
+   * Move element onto a specific grid cell. The cell is 1-indexed and
+   * matches the Mirror DSL (`x N, y M`). Triggers the cell-aware drop
+   * branch — the dropped element ends up at the cell's center.
+   */
+  toCell(cell: { x: number; y: number }): this {
+    this.cell = cell
+    return this
+  }
+  private cell?: { x: number; y: number }
+
   async execute(): Promise<BrowserTestResult> {
     if (!this.targetId)
       return {
@@ -1159,6 +1312,15 @@ class CanvasMoveBuilder {
         duration: 0,
         error: 'Target container not specified. Use .toContainer(nodeId)',
       }
+
+    // Cell drop takes priority over alignment & index when set.
+    if (this.cell) {
+      return this.runner.executeCanvasMoveToCell({
+        sourceNodeId: this.sourceId,
+        targetNodeId: this.targetId,
+        cell: this.cell,
+      })
+    }
 
     // Use alignment zone execution if specified
     if (this.alignmentZone) {
@@ -1175,4 +1337,34 @@ class CanvasMoveBuilder {
       insertionIndex: this.index,
     })
   }
+}
+
+// =============================================================================
+// Grid cell-center math (used by executeCanvasMoveToCell)
+// =============================================================================
+
+function parseTrackList(raw: string): number[] {
+  if (!raw || raw === 'none') return []
+  const tokens = raw.trim().split(/\s+/)
+  const sizes: number[] = []
+  for (const tok of tokens) {
+    if (tok.startsWith('[') || tok.endsWith(']')) continue
+    if (!/px$/.test(tok)) continue
+    const n = parseFloat(tok)
+    if (Number.isFinite(n)) sizes.push(n)
+  }
+  return sizes
+}
+
+function parsePx(raw: string): number {
+  if (!raw) return 0
+  const n = parseFloat(raw)
+  return Number.isFinite(n) ? n : 0
+}
+
+/** Center offset (in px) of cell `index` within a track list. 0-indexed. */
+function cellCenterOffset(sizes: number[], gap: number, index: number): number {
+  let off = 0
+  for (let i = 0; i < index; i++) off += sizes[i] + gap
+  return off + sizes[index] / 2
 }

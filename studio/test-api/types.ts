@@ -458,6 +458,13 @@ export interface InteractionAPI {
       | 'bottom-center'
       | 'bottom-right'
   ): Promise<void>
+  /**
+   * Move an element onto a specific cell of a CSS-grid container. Cell
+   * coordinates are 1-indexed, matching the Mirror DSL (`x N, y M`).
+   * The dropped element gets `x N, y M` (and `w P, h Q` if its existing
+   * span is > 1) written onto its source line atomically.
+   */
+  moveElementToCell(source: string, target: string, cell: { x: number; y: number }): Promise<void>
   /** Double-click on resize handle to set dimension to full */
   doubleClickResizeHandle(
     nodeId: string,

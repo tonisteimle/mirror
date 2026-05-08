@@ -61,6 +61,7 @@ import {
   allAlignmentFromEmptyTests,
   allAlignmentFromMoveTests,
   eachTemplateGuardTests,
+  gridCellDropTests,
   gridCellResizeTests,
   realPointerEventTests,
   allMoveEdgeCaseTests,
@@ -132,7 +133,7 @@ import { allCompilerVerificationTests, allPreludeTests } from './compiler-verifi
 import { allCompilerTests } from './compiler'
 
 // AI (LLM-Edit-Flow browser tests — populated in Phase 4)
-import { allAITests } from './ai'
+import { allAITests, realLlmEditFlowTests } from './ai'
 
 // Tutorial
 import { allTutorialTests } from './tutorial'
@@ -208,6 +209,7 @@ export const dragTests: TestCase[] = [
   ...allAlignmentFromEmptyTests,
   ...allAlignmentFromMoveTests,
   ...eachTemplateGuardTests,
+  ...gridCellDropTests,
   ...gridCellResizeTests,
   ...realPointerEventTests,
   ...allMoveEdgeCaseTests,
@@ -318,6 +320,12 @@ export const compilerTests: TestCase[] = [
 export const aiTests: TestCase[] = [...allAITests]
 
 /**
+ * 15b. AI.REALLLM - Real-LLM Browser-E2E (calls actual `claude` CLI via
+ * `npm run ai-bridge`). NOT in `aiTests` because slow + needs external infra.
+ */
+export const aiRealLlmTests: TestCase[] = [...realLlmEditFlowTests]
+
+/**
  * 16. TUTORIAL - Tutorial verification tests
  */
 export const tutorialTests: TestCase[] = [...allTutorialTests]
@@ -366,6 +374,7 @@ export type CategoryName =
   | 'project'
   | 'compiler'
   | 'ai'
+  | 'ai.realLlm'
   | 'tutorial'
   | 'stress'
   | 'headed'
@@ -457,6 +466,11 @@ export const categories: Record<CategoryName, CategoryInfo> = {
     name: 'ai',
     description: 'AI-assist (LLM-Edit-Flow browser tests)',
     tests: aiTests,
+  },
+  'ai.realLlm': {
+    name: 'ai.realLlm',
+    description: 'Real-LLM E2E (calls `claude` CLI via ai-bridge — slow, external)',
+    tests: aiRealLlmTests,
   },
   tutorial: {
     name: 'tutorial',
