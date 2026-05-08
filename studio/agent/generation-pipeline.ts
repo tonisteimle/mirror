@@ -398,6 +398,14 @@ function detectPreflightIssues(source: string): ValidationError[] {
  * Entferne markdown code-fences aus dem LLM-Output, falls vorhanden.
  * Die System-Prompts verlangen "no fences", aber LLMs ignorieren das
  * gelegentlich. Wir säubern defensiv, statt am Output zu scheitern.
+ *
+ * Edge cases handled:
+ *  - opening fence with optional language hint (` ``` `, ` ```html`, ` ```mirror`)
+ *  - empty fence body (` ```html\n``` `) — closing fence may sit directly
+ *    after the opening newline, with no leading content newline. We make
+ *    the leading newline optional in the close-regex; without it, an
+ *    empty fence collapses to just `\`\`\`` instead of empty string,
+ *    and the pipeline's empty-output guard misses it.
  */
 function stripCodeFences(raw: string, language: 'html' | 'mirror'): string {
   let s = raw.trim()
@@ -406,8 +414,9 @@ function stripCodeFences(raw: string, language: 'html' | 'mirror'): string {
   const openMatch = s.match(openRegex)
   if (!openMatch) return s
   s = s.slice(openMatch[0].length)
-  // Strip trailing fence
-  const closeMatch = s.match(/\n```\s*$/)
+  // Strip trailing fence. Leading newline is optional so empty / one-line
+  // bodies still collapse cleanly.
+  const closeMatch = s.match(/\n?```\s*$/)
   if (closeMatch) {
     s = s.slice(0, s.length - closeMatch[0].length)
   }
