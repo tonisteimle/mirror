@@ -107,7 +107,19 @@ export type GenerationPipelineStepEvent =
   | { kind: 'html-done'; html: string; durationMs: number }
   | { kind: 'translate-start'; attempt: number }
   | { kind: 'translate-done'; mirror: string; attempt: number; durationMs: number }
-  | { kind: 'validate'; attempt: number; valid: boolean; errorCount: number }
+  | {
+      kind: 'validate'
+      attempt: number
+      valid: boolean
+      errorCount: number
+      /**
+       * Per-attempt errors. Empty array on success. Carrying the actual
+       * errors (not just the count) lets observers — eval CLI, telemetry,
+       * studio UI — analyze failure modes across retries instead of only
+       * seeing the final attempt's errors.
+       */
+      errors: ValidationError[]
+    }
   | { kind: 'error'; phase: 'html' | 'translate' | 'validate'; message: string }
 
 const DEFAULT_MAX_RETRIES = 2
@@ -215,6 +227,7 @@ export async function runGenerationPipeline(
         attempt,
         valid: false,
         errorCount: preflight.length,
+        errors: preflight,
       })
       lastMirror = mirror
       lastValidationErrors = preflight
@@ -245,6 +258,7 @@ export async function runGenerationPipeline(
         attempt,
         valid: validationErrors.length === 0,
         errorCount: validationErrors.length,
+        errors: validationErrors,
       })
       if (validationErrors.length === 0) {
         return {

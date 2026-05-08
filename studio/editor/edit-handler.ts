@@ -213,6 +213,12 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
           // for the pipeline to interpret and polish. Empty editor → pure
           // prompt-driven generation.
           sketch: baseSource.trim() === '' ? undefined : baseSource,
+          // Project context flows into both stages: HTML stage uses it to
+          // honor existing tokens (matching :root custom properties),
+          // translator uses it to reuse existing component definitions.
+          // Without this, the user-facing pipeline invents a parallel
+          // palette regardless of what tokens.tok defines.
+          siblings: config.getProjectFiles(),
         },
         {
           signal: ctrl.signal,

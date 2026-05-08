@@ -743,6 +743,82 @@ describe('EditHandler — openPromptField', () => {
 })
 
 // ============================================================
+// generateFromPrompt — Mod-Alt-Enter (full-file LLM generation)
+// ============================================================
+
+describe('EditHandler — generateFromPrompt', () => {
+  it('passes project files as siblings to the generation pipeline', async () => {
+    // Without this wiring, the user-facing Cmd+Alt+Enter path generates
+    // HTML using a parallel palette regardless of what tokens.tok defines —
+    // exactly the architectural failure mode that p4-tokens-resolved
+    // surfaced in the eval suite. Lock the wiring so it cannot regress.
+    let capturedInput: { siblings?: Record<string, string> } | null = null
+    const runGenerationPipeline = vi.fn(async (input: { siblings?: Record<string, string> }) => {
+      capturedInput = input
+      return { status: 'success' as const, mirror: 'Frame', html: '<html></html>' }
+    })
+    let onSubmit: ((text: string) => void) | null = null
+    const openPromptField = vi.fn((_view, options) => {
+      onSubmit = options.onSubmit
+      return { element: document.createElement('div'), close: () => {} }
+    })
+
+    const handler = createEditHandler(
+      baseConfig({
+        runGenerationPipeline: runGenerationPipeline as unknown as Parameters<
+          typeof createEditHandler
+        >[0]['runGenerationPipeline'],
+        openPromptField,
+        getProjectFiles: () => ({
+          'tokens.tok': 'brand.bg: #2271C1',
+          'components.com': 'Btn: pad 10 20',
+        }),
+      })
+    )
+
+    handler.generateFromPrompt(view)
+    onSubmit!('three stat cards')
+    await flush()
+
+    expect(runGenerationPipeline).toHaveBeenCalled()
+    expect(capturedInput).not.toBeNull()
+    expect(capturedInput!.siblings).toEqual({
+      'tokens.tok': 'brand.bg: #2271C1',
+      'components.com': 'Btn: pad 10 20',
+    })
+  })
+
+  it('passes an empty object when the project has no other files', async () => {
+    let capturedInput: { siblings?: Record<string, string> } | null = null
+    const runGenerationPipeline = vi.fn(async (input: { siblings?: Record<string, string> }) => {
+      capturedInput = input
+      return { status: 'success' as const, mirror: 'Frame', html: '<html></html>' }
+    })
+    let onSubmit: ((text: string) => void) | null = null
+    const openPromptField = vi.fn((_view, options) => {
+      onSubmit = options.onSubmit
+      return { element: document.createElement('div'), close: () => {} }
+    })
+
+    const handler = createEditHandler(
+      baseConfig({
+        runGenerationPipeline: runGenerationPipeline as unknown as Parameters<
+          typeof createEditHandler
+        >[0]['runGenerationPipeline'],
+        openPromptField,
+        getProjectFiles: () => ({}),
+      })
+    )
+
+    handler.generateFromPrompt(view)
+    onSubmit!('hello world')
+    await flush()
+
+    expect(capturedInput!.siblings).toEqual({})
+  })
+})
+
+// ============================================================
 // Helpers
 // ============================================================
 

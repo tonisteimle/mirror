@@ -31,6 +31,8 @@ interface TauriBridgeStorage {
     openFile(filters?: unknown[]): Promise<string | null>
   }
   project: {
+    openProject(path: string): Promise<unknown>
+    createProject(name: string, path: string): Promise<unknown>
     getRecentProjects(): Promise<string[]>
   }
   window: {

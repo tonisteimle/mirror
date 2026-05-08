@@ -603,7 +603,12 @@ describe('runGenerationPipeline — telemetry', () => {
     const events: GenerationPipelineStepEvent[] = []
     await runGenerationPipeline({ userPrompt: 'A card' }, { onStep: e => events.push(e) })
     const validate = events.find(e => e.kind === 'validate')
-    expect(validate).toMatchObject({ kind: 'validate', valid: true, errorCount: 0 })
+    expect(validate).toMatchObject({
+      kind: 'validate',
+      valid: true,
+      errorCount: 0,
+      errors: [],
+    })
   })
 
   it('emits a validate event with valid:false on the failing attempt, then valid:true on retry success', async () => {
@@ -619,6 +624,31 @@ describe('runGenerationPipeline — telemetry', () => {
     expect(validates).toHaveLength(2)
     expect(validates[0]).toMatchObject({ valid: false, attempt: 0 })
     expect(validates[1]).toMatchObject({ valid: true, attempt: 1 })
+  })
+
+  it('carries the actual ValidationError objects in the validate event on failure', async () => {
+    // Per-attempt error detail must be observable. Without this, observers
+    // (eval CLI, telemetry) can only see the count and lose the diagnosis
+    // when a retry succeeds — the failing attempt's errors are gone.
+    script(ok(VALID_HTML), ok(INVALID_MIRROR_BAD_TOKEN), ok(VALID_MIRROR))
+
+    const events: GenerationPipelineStepEvent[] = []
+    await runGenerationPipeline({ userPrompt: 'A card' }, { onStep: e => events.push(e) })
+
+    const validates = events.filter(e => e.kind === 'validate') as Extract<
+      GenerationPipelineStepEvent,
+      { kind: 'validate' }
+    >[]
+    expect(validates[0].errors.length).toBeGreaterThan(0)
+    expect(validates[0].errors.length).toBe(validates[0].errorCount)
+    // Each error must carry diagnostic detail, not just a code.
+    expect(validates[0].errors[0]).toMatchObject({
+      code: expect.any(String),
+      message: expect.any(String),
+    })
+    // Successful retry's event has empty errors and matching count.
+    expect(validates[1].errors).toEqual([])
+    expect(validates[1].errorCount).toBe(0)
   })
 
   it('emits an error event with phase:html when stage 1 throws', async () => {

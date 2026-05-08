@@ -235,6 +235,24 @@ interface FixtureRunRecord {
     line?: number
     column?: number
   }>
+  /**
+   * Per-attempt diagnostics. Index = attempt number. On retries that
+   * eventually succeed, the failing attempts' errors live here even though
+   * `validationErrors` (final attempt) is empty. Lets us analyze failure
+   * modes across the whole run, not just the last attempt.
+   */
+  attempts: Array<{
+    attempt: number
+    valid: boolean
+    errorCount: number
+    errors: Array<{
+      code?: string
+      severity?: string
+      message: string
+      line?: number
+      column?: number
+    }>
+  }>
   htmlBytes: number
   mirrorBytes: number
   rendered: boolean
@@ -295,6 +313,7 @@ async function runFixture(fixture: Fixture, run: number, opts: RunOpts): Promise
     retries: 0,
     validationErrorCount: 0,
     validationErrors: [],
+    attempts: [],
     htmlBytes: 0,
     mirrorBytes: 0,
     rendered: false,
@@ -324,6 +343,20 @@ async function runFixture(fixture: Fixture, run: number, opts: RunOpts): Promise
           record.translateMs += event.durationMs
           record.translateAttempts += 1
           record.retries = event.attempt
+        }
+        if (event.kind === 'validate') {
+          record.attempts.push({
+            attempt: event.attempt,
+            valid: event.valid,
+            errorCount: event.errorCount,
+            errors: event.errors.map(e => ({
+              code: e.code,
+              severity: e.severity,
+              message: e.message,
+              line: e.line,
+              column: e.column,
+            })),
+          })
         }
       },
     })
@@ -356,6 +389,16 @@ async function runFixture(fixture: Fixture, run: number, opts: RunOpts): Promise
       writeFileSync(join(cellRoot, 'error.txt'), lastResult.error, 'utf8')
     }
     record.retries = lastResult.translationRetries ?? record.retries
+    // Sidecar with per-attempt diagnostics. Useful when retries succeeded
+    // (validation.json captures only the final attempt — but analyzing why
+    // earlier attempts failed needs this richer view).
+    if (record.attempts.some(a => !a.valid)) {
+      writeFileSync(
+        join(cellRoot, 'attempts.json'),
+        JSON.stringify(record.attempts, null, 2),
+        'utf8'
+      )
+    }
   } catch (err) {
     record.status = 'crashed'
     record.errorMessage = (err as Error).message
