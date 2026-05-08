@@ -148,6 +148,28 @@ export const PROPERTY_RANGES: Record<string, PropertyRange> = {
   opa: { min: 0, max: 1, description: 'between 0 and 1' },
   o: { min: 0, max: 1, description: 'between 0 and 1' },
   scale: { min: 0, description: 'greater than 0' },
+  // CSS font-weight is restricted to 100..900 (multiples of 100 are
+  // typical but the spec allows any numeric in the range; the keywords
+  // thin/light/normal/medium/semibold/bold/black are the canonical names).
+  weight: { min: 1, max: 1000, description: 'between 1 and 1000 (typical: 100..900)' },
+  // Sizing & spacing must be non-negative — CSS allows negative margins
+  // but `width: -10px` is just garbage.
+  'font-size': { min: 0, description: 'greater than or equal to 0' },
+  fs: { min: 0, description: 'greater than or equal to 0' },
+  width: { min: 0, description: 'greater than or equal to 0' },
+  w: { min: 0, description: 'greater than or equal to 0' },
+  height: { min: 0, description: 'greater than or equal to 0' },
+  h: { min: 0, description: 'greater than or equal to 0' },
+  radius: { min: 0, description: 'greater than or equal to 0' },
+  rad: { min: 0, description: 'greater than or equal to 0' },
+  gap: { min: 0, description: 'greater than or equal to 0' },
+  g: { min: 0, description: 'greater than or equal to 0' },
+  padding: { min: 0, description: 'greater than or equal to 0' },
+  pad: { min: 0, description: 'greater than or equal to 0' },
+  p: { min: 0, description: 'greater than or equal to 0' },
+  // Border thickness is non-negative (CSS allows but renders as zero).
+  border: { min: 0, description: 'greater than or equal to 0' },
+  bor: { min: 0, description: 'greater than or equal to 0' },
   // Animation-related properties
   threshold: { min: 0, max: 1, description: 'between 0 and 1' },
   stagger: { min: 0, description: 'greater than or equal to 0' },

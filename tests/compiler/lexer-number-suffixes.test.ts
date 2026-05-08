@@ -51,18 +51,23 @@ describe('Lexer Number Suffix: Time units', () => {
   it('-0.5s', () => expectSingleNumber('-0.5s', '-0.5s'))
   it('-200ms', () => expectSingleNumber('-200ms', '-200ms'))
 
-  it('100sec splits as NUMBER "100s" + IDENTIFIER "ec"', () => {
+  // Word-boundary check: a unit is only consumed if NOT followed by a
+  // letter/digit. This avoids surprising "partial" matches like
+  // `100sec` → `100s` + `ec` (Old greedy behavior would silently glue
+  // a wrong unit onto the number; new behavior keeps the whole identifier
+  // visible so the user sees what they typed.)
+  it('100sec does NOT consume "s" — unit followed by letter, returned as identifier', () => {
     const result = tokens('100sec')
     expect(result.length).toBe(2)
-    expect(result[0]).toMatchObject({ type: 'NUMBER', value: '100s' })
-    expect(result[1]).toMatchObject({ type: 'IDENTIFIER', value: 'ec' })
+    expect(result[0]).toMatchObject({ type: 'NUMBER', value: '100' })
+    expect(result[1]).toMatchObject({ type: 'IDENTIFIER', value: 'sec' })
   })
 
-  it('100msec splits as NUMBER "100ms" + IDENTIFIER "ec"', () => {
+  it('100msec does NOT consume "ms" — unit followed by letter, returned as identifier', () => {
     const result = tokens('100msec')
     expect(result.length).toBe(2)
-    expect(result[0]).toMatchObject({ type: 'NUMBER', value: '100ms' })
-    expect(result[1]).toMatchObject({ type: 'IDENTIFIER', value: 'ec' })
+    expect(result[0]).toMatchObject({ type: 'NUMBER', value: '100' })
+    expect(result[1]).toMatchObject({ type: 'IDENTIFIER', value: 'msec' })
   })
 })
 
@@ -95,18 +100,23 @@ describe('Lexer Number Suffix: Viewport units', () => {
     expect(result[1]).toMatchObject({ type: 'IDENTIFIER', value: 'vmix' })
   })
 
-  it('100vhpx splits as NUMBER "100vh" + IDENTIFIER "px"', () => {
+  // Word-boundary check: `vh` followed by another letter (`p`) is
+  // ambiguous garbage — refuse to consume `vh`, emit `100` + `vhpx` so
+  // the user sees the bad token whole instead of getting `100vh px`.
+  it('100vhpx does NOT consume "vh" — unit followed by letter, returned as identifier', () => {
     const result = tokens('100vhpx')
     expect(result.length).toBe(2)
-    expect(result[0]).toMatchObject({ type: 'NUMBER', value: '100vh' })
-    expect(result[1]).toMatchObject({ type: 'IDENTIFIER', value: 'px' })
+    expect(result[0]).toMatchObject({ type: 'NUMBER', value: '100' })
+    expect(result[1]).toMatchObject({ type: 'IDENTIFIER', value: 'vhpx' })
   })
 
-  it('2vh1 splits as NUMBER "2vh" + NUMBER "1"', () => {
+  it('2vh1 does NOT consume "vh" — unit followed by digit, splits cleanly', () => {
     const result = tokens('2vh1')
+    // No clean split — `vh1` is just an identifier that happens to have
+    // a digit at the end. The lexer doesn't try to re-tokenize identifiers.
     expect(result.length).toBe(2)
-    expect(result[0]).toMatchObject({ type: 'NUMBER', value: '2vh' })
-    expect(result[1]).toMatchObject({ type: 'NUMBER', value: '1' })
+    expect(result[0]).toMatchObject({ type: 'NUMBER', value: '2' })
+    expect(result[1]).toMatchObject({ type: 'IDENTIFIER', value: 'vh1' })
   })
 })
 
@@ -158,13 +168,14 @@ describe('Lexer Number Suffix: Combinations', () => {
     expectSingleNumber('100%s', '100%s')
   })
 
-  it('100sms — s wins, ms not re-consumed', () => {
-    // After 's' is consumed, peek='m', peekNext='s' would match the ms-branch,
-    // but the else-if guards it. Only 's' is consumed.
+  it('100sms — word-boundary refuses "s" (followed by letter), whole identifier returned', () => {
+    // Word-boundary check: `s` is rejected because `m` follows; then the
+    // unit table can't match `sms` either. Result: `100` + `sms` so the
+    // user sees the unintended unit whole.
     const result = tokens('100sms')
     expect(result.length).toBe(2)
-    expect(result[0]).toMatchObject({ type: 'NUMBER', value: '100s' })
-    expect(result[1]).toMatchObject({ type: 'IDENTIFIER', value: 'ms' })
+    expect(result[0]).toMatchObject({ type: 'NUMBER', value: '100' })
+    expect(result[1]).toMatchObject({ type: 'IDENTIFIER', value: 'sms' })
   })
 })
 

@@ -824,6 +824,21 @@ export const SCHEMA: Record<string, PropertyDef> = {
     },
   },
 
+  'ver-baseline': {
+    name: 'ver-baseline',
+    aliases: [],
+    category: 'layout',
+    description: 'Align children to text baseline (mixed font sizes line up)',
+
+    keywords: {
+      _standalone: {
+        description: 'Baseline alignment for cross-axis',
+        css: [{ property: 'align-items', value: 'baseline' }],
+        example: 'Frame hor, ver-baseline; Text "12", fs 24; Text "px", fs 14',
+      },
+    },
+  },
+
   // ---------------------------------------------------------------------------
   // SPACING
   // ---------------------------------------------------------------------------

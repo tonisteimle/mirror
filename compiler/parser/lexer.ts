@@ -629,46 +629,69 @@ export class Lexer {
 
   /**
    * Consume CSS-like number suffixes after digits/decimal:
-   *   %, s, ms, vh, vw, vmin, vmax, and aspect-ratio fraction (/n).
+   *   %, s, ms, vh, vw, vmin, vmax, fr (CSS Grid),
+   *   ch, em, rem (typography),
+   *   px, pt, pc (lengths),
+   *   cm, mm, in (physical lengths),
+   *   deg, rad, turn (angles)
+   *   and aspect-ratio fraction (/n).
+   *
+   * Each unit is consumed atomically so that `60ch`, `1.5em`, `100%`,
+   * `45deg` all become a single NUMBER token (e.g. `60ch`) rather than
+   * being split into NUMBER + IDENTIFIER. The validator + IR-transformer
+   * then preserve the unit suffix unchanged in the emitted CSS.
+   *
+   * The order of checks matters: longer prefixes win over shorter ones
+   * (e.g. `rem` before `r`-as-anything-else). We use a fixed ordered
+   * list and try each in turn.
    */
   private consumeNumberSuffixes(value: string): string {
     if (this.peek() === '%') {
       value += this.advance()
     }
 
-    if (this.peek() === 's') {
-      value += this.advance()
-    } else if (this.peek() === 'm' && this.peekNext() === 's') {
-      value += this.advance() // m
-      value += this.advance() // s
-    }
-
-    // CSS Grid fractional unit: 1fr, 2fr, …
-    if (this.peek() === 'f' && this.peekNext() === 'r') {
-      value += this.advance() // f
-      value += this.advance() // r
-    }
-
-    if (this.peek() === 'v') {
-      const next = this.peekNext()
-      if (next === 'h' || next === 'w') {
-        value += this.advance() // v
-        value += this.advance() // h or w
-      } else if (next === 'm') {
-        const afterNext = this.source[this.pos + 2]
-        if (afterNext === 'i' || afterNext === 'a') {
-          const afterAfterNext = this.source[this.pos + 3]
-          if (
-            (afterNext === 'i' && afterAfterNext === 'n') ||
-            (afterNext === 'a' && afterAfterNext === 'x')
-          ) {
-            value += this.advance() // v
-            value += this.advance() // m
-            value += this.advance() // i or a
-            value += this.advance() // n or x
-          }
-        }
+    // Multi-character unit table. Each row is [prefix-char, full-unit]:
+    // we peek the first char, then verify the rest before consuming.
+    const consumeIfMatches = (unit: string): boolean => {
+      for (let i = 0; i < unit.length; i++) {
+        if (this.source[this.pos + i] !== unit[i]) return false
       }
+      // Make sure we don't swallow part of a longer identifier that
+      // happens to start with the same letters (e.g. `5remember` should
+      // not consume `rem`). The character following the unit must NOT
+      // be a letter or digit.
+      const after = this.source[this.pos + unit.length]
+      if (after && /[a-zA-Z0-9]/.test(after)) return false
+      for (let i = 0; i < unit.length; i++) {
+        value += this.advance()
+      }
+      return true
+    }
+
+    // Order matters: longer matches first (rem before em, ms before s).
+    const units = [
+      'rem',
+      'em',
+      'ms',
+      's',
+      'ch',
+      'px',
+      'pt',
+      'pc',
+      'in',
+      'cm',
+      'mm',
+      'fr',
+      'vh',
+      'vw',
+      'vmin',
+      'vmax',
+      'deg',
+      'rad',
+      'turn',
+    ]
+    for (const unit of units) {
+      if (consumeIfMatches(unit)) break
     }
 
     if (this.peek() === '/' && this.isDigit(this.peekNext())) {

@@ -1011,6 +1011,37 @@ export class Validator {
         'Use only one position alignment'
       )
     }
+
+    // Visibility conflict: hidden + visible
+    const hasHidden = propNames.has('hidden')
+    const hasVisible = propNames.has('visible')
+    if (hasHidden && hasVisible) {
+      this.addError(
+        ERROR_CODES.LAYOUT_CONFLICT,
+        'Visibility conflict: cannot use both "hidden" and "visible" on the same element',
+        line,
+        column,
+        'Remove one of the visibility properties'
+      )
+    }
+
+    // Overflow conflict: scroll + clip — both set overflow but to different
+    // values (auto vs hidden), so the latter silently wins. Surface it.
+    const hasClip = propNames.has('clip')
+    const hasScroll =
+      propNames.has('scroll') ||
+      propNames.has('scroll-ver') ||
+      propNames.has('scroll-hor') ||
+      propNames.has('scroll-both')
+    if (hasClip && hasScroll) {
+      this.addError(
+        ERROR_CODES.LAYOUT_CONFLICT,
+        'Overflow conflict: cannot combine "clip" with "scroll"/"scroll-hor"/"scroll-ver"',
+        line,
+        column,
+        'Use one — clip hides overflow, scroll shows scrollbars'
+      )
+    }
   }
 
   /**

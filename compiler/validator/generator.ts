@@ -53,6 +53,72 @@ export function isValidColor(value: string): boolean {
 }
 
 /**
+ * CSS length-with-unit values that the validator should accept where a
+ * numeric value is expected. Examples: `60ch`, `1.5em`, `100%`, `10vh`.
+ *
+ * Mirror's primary unit is unitless pixels, but typography (`maxw 60ch`),
+ * viewport-relative sizing (`h 100vh`), and percentage layouts (`w 50%`)
+ * are first-class CSS patterns that designers use all the time. Rejecting
+ * them produces noise that drives users to disable the validator entirely.
+ *
+ * The runtime CSS pipeline already passes these strings through unchanged
+ * (see `compiler/ir/transformers/property-transformer.ts`).
+ */
+const CSS_LENGTH_REGEX =
+  /^-?\d+(\.\d+)?(px|pt|pc|in|cm|mm|ch|em|rem|vh|vw|vmin|vmax|%|fr|deg|rad|turn|s|ms)$/i
+
+/**
+ * Generic CSS keywords that pass through unchanged for spacing, sizing,
+ * and positional properties (centering pattern, intrinsic sizing).
+ * These are universally understood in CSS and the runtime preserves them
+ * (`property-transformer.ts:296` "preserve 'auto'").
+ */
+const CSS_GENERIC_KEYWORDS = new Set([
+  'auto',
+  'inherit',
+  'initial',
+  'unset',
+  'revert',
+  'fit-content',
+  'min-content',
+  'max-content',
+])
+
+/**
+ * Properties for which CSS-length-units (`60ch`, `100vh`) and generic
+ * CSS keywords (`auto`, `fit-content`) are semantically valid in Mirror.
+ * Falsy = strict numeric only (e.g., `opacity 0.8`, never `opacity 50%`).
+ *
+ * The set is derived from the property category — every spacing/sizing
+ * property is permissive, but `opacity`, `scale`, and animation timings
+ * stay strict so out-of-range values still surface.
+ */
+function acceptsCSSLength(prop: PropertyDef): boolean {
+  return (
+    prop.category === 'spacing' ||
+    prop.category === 'sizing' ||
+    prop.category === 'typography' ||
+    prop.category === 'border'
+  )
+}
+
+/**
+ * Detects CSS-length-with-unit (`60ch`, `1.5em`) — accepted on
+ * spacing/sizing properties.
+ */
+export function isValidCSSLengthValue(val: string): boolean {
+  return CSS_LENGTH_REGEX.test(val)
+}
+
+/**
+ * Detects generic CSS pass-through keywords (`auto`, `fit-content`) —
+ * accepted on spacing/sizing properties.
+ */
+export function isCSSGenericKeyword(val: string): boolean {
+  return CSS_GENERIC_KEYWORDS.has(val.toLowerCase())
+}
+
+/**
  * Check if a value is valid in a color context (color property values).
  * This includes colors, gradient keywords, and rgba() syntax.
  */
@@ -192,9 +258,13 @@ function createValidatorForProperty(prop: PropertyDef): ValueValidator {
           if (!isNaN(num)) {
             // String that's a valid number
           } else if (!val.startsWith('#') && !val.startsWith('$')) {
-            // Not a number, color, or token - might be a keyword
+            // Not a number, color, or token - might be a keyword or CSS value
             const validKeywords = Object.keys(prop.keywords || {}).filter(k => k !== '_standalone')
-            if (!validKeywords.includes(val) && !prop.directional?.directions.includes(val)) {
+            const isKeyword = validKeywords.includes(val)
+            const isDirection = prop.directional?.directions.includes(val) ?? false
+            const isCSSLength = acceptsCSSLength(prop) && isValidCSSLengthValue(val)
+            const isCSSKeyword = acceptsCSSLength(prop) && isCSSGenericKeyword(val)
+            if (!isKeyword && !isDirection && !isCSSLength && !isCSSKeyword) {
               errors.push(`Invalid numeric value "${val}" for "${prop.name}"`)
             }
           }
