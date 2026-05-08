@@ -361,6 +361,20 @@ Frame; Icon "star", ic #f59e0b, is 20; Text "Favorit", col white</textarea>
         <tr><td><code>fill</code></td><td>Ausgefüllte Variante</td><td><code>Icon "heart", fill</code></td></tr>
       </table>
 
+      <h3>Custom Icons</h3>
+      <p>Eigene Icons als <strong>SVG-Pfaddaten</strong> in einem <code>$icons:</code>-Block definieren. Mehrere Pfade mit <code>|</code> trennen, ViewBox standardmässig <code>0 0 24 24</code>. Custom-Icons werden gleich verwendet wie Lucide-Icons:</p>
+
+      <div class="code-block">
+        <pre>$icons:
+  hbox: "M3 3h18v18H3z|M9 3v18|M15 3v18"
+  grid: "M3 3h8v8H3z|M13 3h8v8h-8z|M3 13h8v8H3z|M13 13h8v8h-8z"
+
+Frame hor, gap 8
+  Icon "hbox", is 20, ic #888       // Custom
+  Icon "check", is 20, ic #10b981   // Lucide
+  Icon "grid", is 20, ic #2271C1    // Custom</pre>
+      </div>
+
     </section>
 
 

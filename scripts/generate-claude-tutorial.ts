@@ -58,8 +58,11 @@ function extractContent(html: string): string {
     lines.push('')
   }
 
-  // Process sections
-  const sectionRegex = /<section>([\s\S]*?)<\/section>/g
+  // Process sections — accept both `<section>` and `<section id="...">`.
+  // Some tutorial sections carry id-anchors for in-page links; the prior
+  // regex silently dropped them, so whole sub-chapters never made it into
+  // the generated MD.
+  const sectionRegex = /<section(?:\s[^>]*)?>([\s\S]*?)<\/section>/g
   let sectionMatch
 
   while ((sectionMatch = sectionRegex.exec(html)) !== null) {
@@ -260,7 +263,10 @@ function convertTable(html: string): string {
     const cellRegex = /<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/g
     let cellMatch
     while ((cellMatch = cellRegex.exec(match[1])) !== null) {
-      cells.push(cleanText(cellMatch[1]))
+      // Escape pipe chars so cell contents like `||` (logical-or in code)
+      // don't break the table column-count — Markdown treats `|` as a
+      // separator, even inside `code`.
+      cells.push(cleanText(cellMatch[1]).replace(/\|/g, '\\|'))
     }
     if (cells.length > 0) {
       rows.push(cells)
