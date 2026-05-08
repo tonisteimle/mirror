@@ -165,9 +165,20 @@ export const PROPERTY_TO_CSS: Record<string, string> = {
   'font-size': 'font-size',
   fs: 'font-size',
   weight: 'font-weight',
+  'font-weight': 'font-weight',
   line: 'line-height',
+  'line-height': 'line-height',
   font: 'font-family',
+  'font-family': 'font-family',
   'text-align': 'text-align',
+  // Letter-spacing aliases — schema's letter-spacing entry handles direct
+  // numeric values (`ls -0.02` → -0.02em), but not `var(--token-ls)` from
+  // a token reference. The fallback path in simplePropertyToCSS needs the
+  // alias→CSS-property mapping here so var() values reach CSS at all.
+  ls: 'letter-spacing',
+  'letter-spacing': 'letter-spacing',
+  tracking: 'letter-spacing',
+  letter: 'letter-spacing',
 
   // Effects
   opacity: 'opacity',
