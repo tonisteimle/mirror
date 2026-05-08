@@ -123,13 +123,14 @@ Frame bg #1a1a1a, pad 20, rad 8, gap 12
 Für einfache Strukturen kannst du Kinder auch in **einer Zeile** schreiben. Trenne sie mit Semikolon:
 
 ```mirror
-// Mit Einrückung (3 Zeilen)
-Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6
-  Icon "check", ic #10b981, is 20
-  Text "Erfolgreich gespeichert", col white
+Frame gap 16, w hug
+  // Mit Einrückung (3 Zeilen)
+  Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6
+    Icon "check", ic #10b981, is 20
+    Text "Erfolgreich gespeichert", col white
 
-// Gleiche Struktur in einer Zeile
-Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6; Icon "check", ic #10b981, is 20; Text "Erfolgreich gespeichert", col white
+  // Gleiche Struktur in einer Zeile
+  Frame hor, gap 12, bg #1a1a1a, pad 12, rad 6; Icon "check", ic #10b981, is 20; Text "Erfolgreich gespeichert", col white
 ```
 
 **Was passiert hier?**
@@ -154,13 +155,14 @@ Bei den häufigsten Properties – `w`, `h` und `bg` – kannst du den Property-
 - Eine **Zahl** oder `hug` / `full` → Breite (erste Position) bzw. Höhe (zweite Position)
 
 ```mirror
-// Lang
-Frame w 100, h 50, bg #2271C1
-Button "Speichern", w hug, h 32, bg #2271C1, col white, rad 6
+Frame gap 16, w hug
+  // Lang
+  Frame w 100, h 50, bg #2271C1
+  Button "Speichern", w hug, h 32, bg #2271C1, col white, rad 6
 
-// Kurz – identische Wirkung
-Frame 100, 50, #2271C1
-Button "Speichern", hug, 32, #2271C1, col white, rad 6
+  // Kurz – identische Wirkung
+  Frame 100, 50, #2271C1
+  Button "Speichern", hug, 32, #2271C1, col white, rad 6
 ```
 
 **Pro Primitive ein etwas anderer Default**, weil Designer es so erwarten:
@@ -173,23 +175,25 @@ Button "Speichern", hug, 32, #2271C1, col white, rad 6
 | `Image`                               | —               | `w`         | `h`         |
 
 ```mirror
-// Text: Farbe → col (Textfarbe), nicht bg
-Text "Hallo", #2271C1, fs 18
+Frame gap 16, w hug
+  // Text: Farbe → col (Textfarbe), nicht bg
+  Text "Hallo", #2271C1, fs 18
 
-// Icon: Farbe → ic (Icon-Farbe), Zahl → is (Icon-Größe)
-Icon "check", #10b981, 24
+  // Icon: Farbe → ic (Icon-Farbe), Zahl → is (Icon-Größe)
+  Icon "check", #10b981, 24
 
-// Image: nur Größen, keine Farbe
-Image src "https://picsum.photos/200/100", 200, 100
+  // Image: nur Größen, keine Farbe
+  Image src "https://picsum.photos/200/100", 200, 100
 ```
 
 ```mirror
-// Du kannst einzelne Properties explizit lassen, andere positional
-Frame w 100, 50, #2271C1
-//    explizit  positional positional
+Frame gap 16, w hug
+  // Du kannst einzelne Properties explizit lassen, andere positional
+  Frame w 100, 50, #2271C1
+  //    explizit  positional positional
 
-// Auch in dieser Reihenfolge:
-Frame 100, 50, bg #2271C1, gap 12, pad 16
+  // Auch in dieser Reihenfolge:
+  Frame 100, 50, bg #2271C1, gap 12, pad 16
 ```
 
 > **Hinweis:** **Tipp-Abkürzung beim Schreiben:** Diese Kurzschreibweise ist als Eingabe-Hilfe gedacht. Beide Schreibweisen sind 100 % äquivalent — der Compiler erzeugt identischen Output. Speichert das Studio den Code zurück, wird er auf die explizite Form normalisiert. Das Tutorial nutzt deshalb durchgängig die explizite Form (für Klarheit), aber im täglichen Schreiben sparst du dir mit der Kurzform viel Tipparbeit.
@@ -676,11 +680,12 @@ primary.bg: #2271C1
 space.pad: 16
 radius.rad: 8
 
-// Lang
-Frame bg $primary, pad $space, rad $radius, w 200, h 100
+Frame gap 16, w hug
+  // Lang
+  Frame bg $primary, pad $space, rad $radius, w 200, h 100
 
-// Kurz – identische Wirkung
-Frame $primary, $space, $radius, w 200, h 100
+  // Kurz – identische Wirkung
+  Frame $primary, $space, $radius, w 200, h 100
 ```
 
 **Wenn ein Token mehrere Suffixe hat** (z. B. `primary.bg` + `primary.col`), entscheidet das Primitive welcher Suffix zum Zug kommt – genauso wie bei direkten Farben:
@@ -1392,7 +1397,7 @@ Frame gap 16
 
 ---
 
-### Zusammenfassung
+### Das Wichtigste
 
 | System          | Verwendung                                 |
 | --------------- | ------------------------------------------ |
@@ -1756,7 +1761,7 @@ Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
 
 ---
 
-### Zusammenfassung
+### Das Wichtigste
 
 - `bg, col` – Hintergrund & Textfarbe
 - `bg grad #a #b`, `col grad #a #b` – Gradients (auch `grad-ver`, `grad 45`)
@@ -2056,7 +2061,7 @@ Frame gap 8
 
 ---
 
-### Zusammenfassung
+### Das Wichtigste
 
 **States** definieren das Aussehen, **Funktionen** lösen den Wechsel aus.
 
@@ -2313,7 +2318,7 @@ Nach dem Klick wechselt der Button in den `saved`-State mit grünem Hintergrund 
 
 ---
 
-### Zusammenfassung
+### Das Wichtigste
 
 #### Transitions
 
@@ -2657,7 +2662,7 @@ function absenden() {
 
 ---
 
-### Zusammenfassung
+### Das Wichtigste
 
 #### State & Sichtbarkeit
 
@@ -2715,29 +2720,6 @@ _Echte Daten statt Platzhalter_
 
 Bisher hast du Text direkt in Komponenten geschrieben: `Text "Max Mustermann"`. Das funktioniert – aber was, wenn derselbe Name an 10 Stellen steht und du ihn ändern willst? Oder wenn du den Prototyp mit verschiedenen Testdaten zeigen möchtest?
 
-### Das Problem: Hardcoded Text
-
-Stell dir vor, du baust eine Begrüßung. Der Name steht direkt im Code:
-
-```mirror
-Frame gap 8, bg #1a1a1a, pad 16, rad 8
-  Text "Willkommen, Max!", col white, fs 18
-  Text "Du hast 3 neue Nachrichten.", col #888
-  Text "Max's Profil", col #2563eb
-```
-
-**Das Problem:** "Max" steht dreimal im Code. Willst du den Namen ändern, musst du jede Stelle finden. Bei einem echten Prototyp mit Dutzenden Screens wird das schnell unübersichtlich.
-
-```mirror
-name: "Max"
-messageCount: 3
-
-Frame gap 8, bg #1a1a1a, pad 16, rad 8
-  Text "Willkommen, $name!", col white, fs 18
-  Text "Du hast $messageCount neue Nachrichten.", col #888
-  Text "$name's Profil", col #2563eb
-```
-
 ### Variablen definieren
 
 Eine Variable wird mit Namen und Wert definiert. Bei der Verwendung steht `$` davor:
@@ -2782,24 +2764,6 @@ Frame gap 8, bg #1a1a1a, pad 16, rad 8
 ```
 
 > **Hinweis:** **Hinweis:** Für ein Dollarzeichen im Text schreibe `$$`. Für Berechnungen brauchst du weiterhin den `+` Operator.
-
-### Einfache Listen
-
-Für einfache Listen ohne Attribute – nur Namen auflisten:
-
-```mirror
-colors:
-  red
-  green
-  blue
-
-each color in $colors
-  Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 6, mar 0 0 4 0
-    Frame w 20, h 20, rad 4, bg $color
-    Text "$color", col white
-```
-
-**Keine Doppelpunkte nötig** – der Eintrag _ist_ der Wert. Sauberer als JSON-Arrays und konsistent mit dem Rest von Mirror.
 
 ### Datenobjekte: Zusammengehörige Daten gruppieren
 
@@ -2914,7 +2878,7 @@ anna:
   plan: Basic
 ```
 
-// data/customers.data max: name: Max Mustermann email: max@example.com plan: Pro anna: name: Anna Schmidt email: anna@example.com plan: Basic In Mirror mit `$dateiname.eintrag.attribut` zugreifen:
+In Mirror mit `$dateiname.eintrag.attribut` zugreifen:
 
 ```mirror
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
@@ -2952,8 +2916,6 @@ anna:
   role: Design
 ```
 
-// data/users.data toni: name: Toni Steimle role: Lead anna: name: Anna Schmidt role: Design // data/tasks.data task1: title: Design Review assignee: $users.toni task2: title: Wireframes assignee: $users.anna **Zugriff durch die Relation:**
-
 ```mirror
 // data/tasks.data
 
@@ -2966,13 +2928,15 @@ task2:
   assignee: $users.anna
 ```
 
+**Zugriff durch die Relation:**
+
 ```mirror
 Frame gap 8, bg #1a1a1a, pad 16, rad 8
   Text "$tasks.task1.title", col white, weight 500
   Text "Zuständig: $tasks.task1.assignee.name", col #888
 ```
 
-Frame gap 8, bg #1a1a1a, pad 16, rad 8 Text "$tasks.task1.title", col white, weight 500 Text "Zuständig: $tasks.task1.assignee.name", col #888 `$tasks.task1.assignee`ist der User`$users.toni`. Mit `.name` greifst du auf dessen Attribute zu.
+`$tasks.task1.assignee` ist der User `$users.toni`. Mit `.name` greifst du auf dessen Attribute zu.
 
 #### N-zu-N Relationen
 
@@ -3065,45 +3029,6 @@ Frame hor, gap 12, bg #0a0a0a, pad 16, rad 8
       Text "$product.name", col white, fs 16, weight 600
       Text "$$product.price", col #2271C1, fs 24, weight 700
       Text "$product.features", col #888, fs 12
-```
-
-### Bedingte Anzeige: if / else
-
-Manchmal soll ein Element nur unter bestimmten Bedingungen angezeigt werden. Mit `if` zeigst du Elemente nur an, wenn eine Bedingung erfüllt ist:
-
-```mirror
-loggedIn: true
-
-if loggedIn
-  Text "Willkommen zurück!", col white
-```
-
-#### if / else
-
-Mit `else` definierst du eine Alternative:
-
-```mirror
-loggedIn: false
-
-if loggedIn
-  Text "Willkommen zurück!", col white
-else
-  Button "Anmelden", bg #2271C1, col white, pad 10 20, rad 6
-```
-
-#### Mehrere Elemente
-
-Ein `if`-Block kann mehrere Kinder haben:
-
-```mirror
-showDetails: true
-
-Frame bg #1a1a1a, pad 16, rad 8, gap 8
-  Text "Produkt", col white, fs 16, weight 500
-  if showDetails
-    Text "Beschreibung des Produkts", col #888, fs 13
-    Text "Preis: €29", col #10b981, fs 14
-    Button "Kaufen", bg #2271C1, col white, pad 8 16, rad 4
 ```
 
 ### Komplexe Bedingungen
@@ -3309,7 +3234,7 @@ Frame hor, gap 12, ver-center, bg #1a1a1a, pad 12, rad 8
 
 ---
 
-### Zusammenfassung
+### Das Wichtigste
 
 #### Variablen & Daten
 
@@ -3406,8 +3331,6 @@ Tabs defaultValue "Home"
   Tab "Settings", show Settings  // → lädt Settings.mirror
 ```
 
-// app.mirror Tabs defaultValue "Home" Tab "Home", show Home // → lädt Home.mirror Tab "Settings", show Settings // → lädt Settings.mirror // Home.mirror Frame pad 20, gap 16 Text "Willkommen", fs 24, weight bold Text "Das ist die Startseite." // Settings.mirror Frame pad 20, gap 16 Text "Einstellungen", fs 24, weight bold Switch "Dark Mode" Switch "Benachrichtigungen" Die Dateistruktur:
-
 ```mirror
 // Home.mirror
 Frame pad 20, gap 16
@@ -3422,6 +3345,8 @@ Frame pad 20, gap 16
   Switch "Dark Mode"
   Switch "Benachrichtigungen"
 ```
+
+Die Dateistruktur:
 
 ```mirror
 app.mirror       ← Navigation
@@ -3448,8 +3373,6 @@ ProfileView: Frame name ProfileView, pad 20, gap 16
   Input "Name"
 ```
 
-// Pages.mirror – enthält mehrere Views HomeView: Frame name HomeView, pad 20, gap 16 Text "Home", fs 24, weight bold Text "Willkommen auf der Startseite" SettingsView: Frame name SettingsView, pad 20, gap 16 Text "Einstellungen", fs 24, weight bold Switch "Dark Mode" ProfileView: Frame name ProfileView, pad 20, gap 16 Text "Profil", fs 24, weight bold Input "Name" // app.mirror – referenziert Views aus Pages Tabs defaultValue "Home" Tab "Home", show HomeView from Pages Tab "Settings", show SettingsView from Pages Tab "Profile", show ProfileView from Pages **Vorteil:** Zusammengehörige Views bleiben in einer Datei. Du brauchst nicht für jeden Tab eine eigene Datei.
-
 ```mirror
 // app.mirror – referenziert Views aus Pages
 Tabs defaultValue "Home"
@@ -3457,6 +3380,8 @@ Tabs defaultValue "Home"
   Tab "Settings", show SettingsView from Pages
   Tab "Profile", show ProfileView from Pages
 ```
+
+**Vorteil:** Zusammengehörige Views bleiben in einer Datei. Du brauchst nicht für jeden Tab eine eigene Datei.
 
 ### Wann was verwenden?
 
@@ -3522,8 +3447,6 @@ Card: bg #1a1a1a, pad 16, rad 8, gap 8
 PrimaryBtn as Button: bg #2271C1, col white, pad 10 20, rad 6
 ```
 
-// components.mirror Card: bg #1a1a1a, pad 16, rad 8, gap 8 Title: col white, fs 16, weight 500 Body: col #888, fs 14 PrimaryBtn as Button: bg #2271C1, col white, pad 10 20, rad 6 // dashboard.mirror use components Frame gap 16 Card Title "Willkommen" Body "Schön dass du da bist." PrimaryBtn "Los geht's" `use` importiert Komponenten-Definitionen. `show` zeigt Content an. Beides ergänzt sich.
-
 ```mirror
 // dashboard.mirror
 use components
@@ -3535,9 +3458,209 @@ Frame gap 16
   PrimaryBtn "Los geht's"
 ```
 
+`use` importiert Komponenten-Definitionen. `show` zeigt Content an. Beides ergänzt sich.
+
+#### Was wird importiert?
+
+`use` liest die ganze Ziel-Datei und übernimmt aus ihr:
+
+- **Komponenten-Definitionen** (`Card:`, `PrimaryBtn as Button:`) – das ist der Hauptzweck.
+- **Tokens** (`primary.bg: #2271C1`) – auch verfügbar nach `use`, du kannst sie via `$primary` referenzieren.
+- **Daten** (`users: ...`) – ebenfalls importiert, falls die Datei Daten-Blöcke enthält.
+
+Was _nicht_ importiert wird: Top-Level-UI-Bäume (`Frame ...` ohne Definition). Die werden gerendert wenn du die Datei via `show` einbindest, nicht wenn du sie via `use` importierst.
+
+#### Mehrere uses kombinieren
+
+Du kannst beliebig viele Dateien importieren — sie werden vor dem ersten UI-Element aufgelistet:
+
+```mirror
+// app.mirror
+use tokens
+use components
+use data
+
+Frame pad 20, gap 16
+  Card
+    Title "Letzte Aktivität"
+    each event in $events
+      Text event.message, col $muted
+```
+
+**Konvention:** `use`-Zeilen ganz oben, dann optionale Tokens/Komponenten der aktuellen Datei, dann der UI-Baum.
+
+#### show vs. use im Vergleich
+
+|                  | `use Datei`                            | `show Datei`                               |
+| ---------------- | -------------------------------------- | ------------------------------------------ |
+| Zweck            | Definitionen verfügbar machen          | Content rendern                            |
+| Wo platziert     | Oben in der Datei                      | Innerhalb des UI-Baums                     |
+| Was passiert     | Components/Tokens/Data lokal verfügbar | UI-Baum der Ziel-Datei wird hier eingefügt |
+| Mehrfach erlaubt | Ja (mehrere Imports)                   | Ja (gleicher Content an mehreren Stellen)  |
+
+### Komplettes Beispiel: App in vier Dateien
+
+Eine kleine Task-App, aufgeteilt in eine Token-, eine Components-, zwei View- und eine App-Datei. So sieht eine echte Mirror-Projekt-Struktur aus:
+
+```mirror
+my-app/
+├── tokens.tok          ← Farben, Abstände, Radien
+├── components.com      ← Card, PrimaryBtn, Pill
+├── tasks.mir           ← TasksView (mit Daten)
+├── settings.mir        ← SettingsView
+└── app.mir             ← Entry: SideNav + show
+```
+
+**1. Tokens** – das Design-System:
+
+```mirror
+// tokens.tok
+ink.col: #f5f5f5
+muted.col: #888
+surface.bg: #1a1a1a
+page.bg: #0a0a0a
+border.boc: #2a2a2a
+brand.bg: #2271C1
+brand.col: white
+```
+
+**2. Komponenten** – wiederverwendbar:
+
+```mirror
+// components.com
+use tokens
+
+Card: bg $surface, pad 16, rad 8, gap 8, bor 1, boc $border
+  Title: col $ink, fs 15, weight 500
+  Body: col $muted, fs 13
+
+PrimaryBtn as Button: bg $brand, col $brand, pad 10 20, rad 6, cursor pointer
+Pill: pad 4 10, rad 99, fs 11, weight 500
+```
+
+**3. Tasks-View** – mit lokalen Daten:
+
+```mirror
+// tasks.mir
+use tokens
+use components
+
+tasks:
+  t1:
+    title: "Design Review"
+    status: "Open"
+  t2:
+    title: "Mirror-Tutorial fertig"
+    status: "Done"
+
+TasksView: Frame name TasksView, gap 12, pad 20
+  Title "Tasks", fs 20, weight 600
+  each t in $tasks
+    Card
+      Frame hor, spread, ver-center
+        Title t.title
+        Pill bg $surface, col $muted, t.status
+```
+
+**4. Settings-View**:
+
+```mirror
+// settings.mir
+use tokens
+use components
+
+SettingsView: Frame name SettingsView, gap 12, pad 20
+  Title "Einstellungen", fs 20, weight 600
+  Card
+    Switch "Dark Mode", checked
+    Switch "E-Mail-Benachrichtigungen"
+  PrimaryBtn "Speichern"
+```
+
+**5. App-Entry** – Navigation + Routing:
+
+```mirror
+// app.mir
+use tokens
+use components
+
+Frame hor, h full, bg $page, col $ink
+  SideNav defaultValue "Tasks", w 200, bg $surface
+    NavItem "Tasks", icon "list", show TasksView from tasks
+    NavItem "Settings", icon "settings", show SettingsView from settings
+
+  Frame grow, pad 24
+    // Hier wird der jeweilige View gerendert
+```
+
+**Was hier passiert:**
+
+- `app.mir` ist der Entry-Point – die Datei, die der Compiler lädt.
+- `use tokens` + `use components` machen das Design-System überall verfügbar – auch in `tasks.mir` und `settings.mir`, wo dieselben Imports stehen.
+- `show TasksView from tasks` referenziert das benannte `TasksView`-Element aus `tasks.mir`.
+- Die Daten (`tasks: ...`) leben bei der View, die sie braucht – nicht in einer globalen Daten-Datei.
+
+**Skaliert:** Mehr Views? Eine neue `.mir`-Datei + ein `NavItem` in `app.mir`. Mehr Komponenten? In `components.com` definieren – sie sind sofort in allen Dateien mit `use components` verfügbar.
+
+### Datei-Organisations-Patterns
+
+Mirror erzwingt keine Verzeichnisstruktur. Drei Patterns, die sich in der Praxis bewährt haben:
+
+#### Flat – für kleine Apps (≤ 5 Screens)
+
+```mirror
+my-app/
+├── tokens.tok
+├── components.com
+├── home.mir
+├── settings.mir
+└── app.mir         ← Entry
+```
+
+Jede Seite eine Datei, alles im Root. Schnell, übersichtlich, kein Indirektions-Aufwand.
+
+#### Folders – für mittelgroße Apps
+
+```mirror
+my-app/
+├── tokens/
+│   ├── colors.tok
+│   └── spacing.tok
+├── components/
+│   ├── card.com
+│   └── nav.com
+├── screens/
+│   ├── home.mir
+│   ├── tasks.mir
+│   └── settings.mir
+└── app.mir
+```
+
+Tokens, Components und Screens je eigenes Verzeichnis. Der Compiler lädt im _Projekt-Modus_ automatisch alles aus diesen Standard-Verzeichnissen – siehe CLAUDE.md → "Projekt-Struktur". Du musst sie nicht explizit per `use` importieren.
+
+#### Feature-based – für große Apps
+
+```mirror
+my-app/
+├── shared/
+│   ├── tokens.tok
+│   └── components.com
+├── tasks/
+│   ├── tasks-view.mir
+│   ├── task-card.com
+│   └── tasks-data.yaml
+├── settings/
+│   └── settings-view.mir
+└── app.mir
+```
+
+Pro Feature ein Verzeichnis mit allem Drum und Dran (View + feature-spezifische Komponenten + Daten). `shared/` hält das Cross-Feature-Material. Skaliert mit Team-Größe – jeder arbeitet primär in einem Feature-Ordner.
+
+**Faustregel:** Starte flat. Bei mehr als ~5 Screens auf folders. Bei mehr als ~3 Feature-Bereichen auf feature-based.
+
 ---
 
-### Zusammenfassung
+### Das Wichtigste
 
 #### show Syntax
 
@@ -3777,7 +3900,7 @@ Frame gap 12, w 280
 
 ---
 
-### Zusammenfassung
+### Das Wichtigste
 
 | Komponente | Verwendung               | Wichtige Properties                       |
 | ---------- | ------------------------ | ----------------------------------------- |
@@ -3903,9 +4026,83 @@ SideNav defaultValue "dashboard", w 220
 
 > **Hinweis:** **Tipp:** SideNav eignet sich für App-Shells mit fester Sidebar. Kombiniere es mit einem Content-Bereich rechts davon.
 
+### App-Shell: SideNav + Content
+
+In echten Apps lebt SideNav nie für sich allein – sie steht links, rechts daneben kommt der eigentliche View-Bereich. Das klassische Layout ist `hor` + `w full, h full`:
+
+```mirror
+Frame hor, h 360, bg #0a0a0a, col white
+  SideNav defaultValue "dashboard", w 200, bg #1a1a1a
+    NavItem "Dashboard", icon "home", value "dashboard"
+    NavItem "Projects", icon "folder", value "projects"
+    NavItem "Messages", icon "mail", value "messages", badge "3"
+
+  Frame grow, pad 24
+    Text "Dashboard", fs 22, weight 600
+    Text "Hier sind deine Daten.", col #888
+```
+
+**Das Pattern:**
+
+- Outer `Frame hor` – horizontale Anordnung
+- `SideNav` mit fester `w` – feste Sidebar-Breite
+- Content-Frame mit `grow` – nimmt restlichen Platz
+
+### Navigation + show: Routing zwischen Views
+
+Die statischen Beispiele oben zeigen die Navigation, aber wechseln den Content nicht. Mit `show` aus Kapitel&nbsp;10 wird daraus echtes Routing – jedes `NavItem` referenziert einen View:
+
+```mirror
+Frame hor, h 360, bg #0a0a0a, col white
+  SideNav defaultValue "Dashboard", w 200, bg #1a1a1a
+    NavItem "Dashboard", icon "home", show DashboardView
+    NavItem "Projects", icon "folder", show ProjectsView
+    NavItem "Settings", icon "settings", show SettingsView
+
+  Frame grow, pad 24
+    DashboardView: Frame name DashboardView
+      Text "Dashboard", fs 22, weight 600
+      Text "Übersicht und Kennzahlen.", col #888
+    ProjectsView: Frame name ProjectsView, hidden
+      Text "Projects", fs 22, weight 600
+      Text "12 aktive Projekte.", col #888
+    SettingsView: Frame name SettingsView, hidden
+      Text "Settings", fs 22, weight 600
+      Text "App-Konfiguration.", col #888
+```
+
+**Was passiert:** Klick auf ein NavItem → der zugehörige View wird sichtbar, die anderen werden ausgeblendet. Die Views liegen im selben Content-Frame nebeneinander; `hidden` auf den nicht-aktiven Views macht sie unsichtbar bis zur Auswahl.
+
+### Tabs mit show: Content auslagern
+
+Genauso funktioniert `show` in Tabs. Wenn der Tab-Inhalt komplex ist (Forms, Listen, Sub-Komponenten), holst du ihn aus einer benannten View statt ihn inline im Tab zu schreiben:
+
+```mirror
+Tabs defaultValue "Account"
+  Tab "Account", show AccountView
+  Tab "Notifications", show NotifyView
+  Tab "Privacy", show PrivacyView
+
+AccountView: Frame name AccountView, gap 12, pad 16
+  Input placeholder "Name"
+  Input placeholder "Email"
+  Button "Speichern", bg #2271C1, col white, pad 10 20, rad 6
+
+NotifyView: Frame name NotifyView, gap 12, pad 16, hidden
+  Switch "E-Mail-Digest", checked
+  Switch "Push-Benachrichtigungen", checked
+  Switch "Wöchentliche Zusammenfassung"
+
+PrivacyView: Frame name PrivacyView, gap 12, pad 16, hidden
+  Switch "Profil öffentlich"
+  Switch "Aktivitäten-Verlauf"
+```
+
+**Wann inline, wann show?** Wenn der Tab-Inhalt zwei, drei Zeilen ist – inline. Wenn er ein eigenes Mini-Formular oder eine Liste ist – ausgelagert. Lange Tabs mit inline-Content machen die Tab-Definition unlesbar.
+
 ---
 
-### Zusammenfassung
+### Das Wichtigste
 
 | Komponente | Verwendung                   | Wichtige Properties        |
 | ---------- | ---------------------------- | -------------------------- |
@@ -4039,25 +4236,76 @@ Tooltip positioning "bottom"
 
 Beide Komponenten folgen dem gleichen Muster mit benannten Slots (`Name:`):
 
-```mirror
-// Dialog-Muster
-Dialog
-  Trigger: [Element das öffnet]
-  Backdrop: [Hintergrund-Styling]
-  Content: [Dialog-Inhalt]
-    CloseTrigger: [Elemente die schließen]
+**Dialog-Muster** – Trigger, Backdrop, Content, CloseTrigger:
 
-// Tooltip-Muster
-Tooltip positioning "position"
-  Trigger: [Element bei Hover]
-  Content: [Tooltip-Inhalt]
+```mirror
+Dialog
+  Trigger: Button "Öffnen"
+  Backdrop: bg rgba(0,0,0,0.5)
+  Content: pad 24, bg #1a1a1a, rad 12
+    Text "Inhalt", col white
+    CloseTrigger: Button "OK"
 ```
 
-Der Doppelpunkt (`:`) nach dem Namen markiert einen **Slot** – einen benannten Bereich, der von der Komponente speziell behandelt wird.
+**Tooltip-Muster** – Trigger, Content:
+
+```mirror
+Tooltip positioning "bottom"
+  Trigger: Icon "info", ic #888, is 20
+  Content: Text "Hilfetext", fs 12
+```
+
+### Praxis: Dialog + Formular + Toast
+
+In echten Apps stehen Overlays selten allein. Ein typisches Muster: ein Dialog enthält ein Formular, der Submit-Button schließt den Dialog und gibt dem Nutzer per `toast()` Bestätigung. Mehr zu Toast in Kapitel&nbsp;8 → Funktionen:
+
+```mirror
+Dialog
+  Trigger: Button "Kontakt hinzufügen", bg #2271C1, col white, pad 10 20, rad 6
+  Backdrop: bg rgba(0,0,0,0.5)
+  Content: Frame ver, gap 16, pad 24, bg #1a1a1a, rad 12, w 360
+    Text "Neuer Kontakt", weight bold, fs 18, col white
+    Frame ver, gap 12
+      Frame ver, gap 4
+        Text "Name", fs 12, col #888
+        Input placeholder "Max Mustermann"
+      Frame ver, gap 4
+        Text "E-Mail", fs 12, col #888
+        Input placeholder "max@example.com", type "email"
+    Frame hor, gap 8
+      CloseTrigger: Button "Abbrechen", bg #333, col white, pad 10 20, rad 6, grow
+      CloseTrigger: Button "Speichern", bg #2271C1, col white, pad 10 20, rad 6, grow, toast("Kontakt gespeichert")
+```
+
+**Was passiert:** Klick auf "Speichern" macht zwei Dinge gleichzeitig — der `CloseTrigger:`-Slot schließt den Dialog, und `toast(...)` zeigt eine Bestätigung am Bildschirmrand. Der Nutzer sieht: Dialog weg + grüne Bestätigung.
+
+### Tooltips auf Icons in Navigation
+
+Tooltips kommen besonders häufig in Navigation vor — Icons ohne Text brauchen einen Hover-Hinweis, damit der Nutzer ihre Bedeutung versteht. Ein häufiges Muster aus Kapitel&nbsp;12 → SideNav:
+
+```mirror
+Frame hor, gap 0, bg #1a1a1a, pad 8, rad 8
+  Tooltip positioning "bottom"
+    Trigger: Frame pad 8, rad 6, cursor pointer
+      Icon "home", ic #888, is 18
+    Content: Text "Dashboard", fs 12
+
+  Tooltip positioning "bottom"
+    Trigger: Frame pad 8, rad 6, cursor pointer
+      Icon "folder", ic #888, is 18
+    Content: Text "Projekte", fs 12
+
+  Tooltip positioning "bottom"
+    Trigger: Frame pad 8, rad 6, cursor pointer
+      Icon "settings", ic #888, is 18
+    Content: Text "Einstellungen", fs 12
+```
+
+**Faustregel:** Jedes klickbare Icon ohne Label sollte einen Tooltip haben. Ein nacktes Icon ohne Text und ohne Tooltip ist im Zweifel Verständnis-Reibung.
 
 ---
 
-### Zusammenfassung
+### Das Wichtigste
 
 | Komponente | Verwendung       | Wichtige Slots                                       |
 | ---------- | ---------------- | ---------------------------------------------------- |
@@ -4104,7 +4352,7 @@ Die Struktur ist klar: `Table` als Container, `TableHeader` für Spaltenübersch
 
 ### Datengebundene Tabellen
 
-Für dynamische Daten nutzt du `each` um über eine Datenquelle zu iterieren:
+Für dynamische Daten nutzt du `each` um über eine Datenquelle zu iterieren. Die Datenstrukturen — `tasks: ...`, `$users.count`, `where`, `by` — sind alle in Kapitel&nbsp;9 → Daten beschrieben:
 
 ```mirror
 tasks:
@@ -4378,7 +4626,7 @@ Table bg #1a1a1a, rad 8, w full
 
 ---
 
-### Zusammenfassung
+### Das Wichtigste
 
 **Statische Tabellen:** `Table` + `TableHeader` + `TableRow` für feste Werte.
 
@@ -4411,7 +4659,7 @@ Für alternierende Farben nutze CSS `:nth-child(odd/even)` oder definiere separa
 
 _Datenvisualisierung mit Chart.js_
 
-Charts machen Daten sichtbar. Mirror bietet einfache Primitives für die häufigsten Chart-Typen – **Line**, **Bar**, **Pie** und mehr. Die Daten kommen aus Variablen, das Styling ist minimal.
+Charts machen Daten sichtbar. Mirror bietet einfache Primitives für die häufigsten Chart-Typen – **Line**, **Bar**, **Pie** und mehr. Die Daten kommen aus Variablen (siehe Kapitel&nbsp;9 → Daten), das Styling ist minimal.
 
 ### Das Prinzip
 
@@ -4786,7 +5034,7 @@ Frame gap 16
 
 ---
 
-### Zusammenfassung
+### Das Wichtigste
 
 #### Chart-Typen
 
@@ -4828,5 +5076,228 @@ Frame gap 16
 **Sizing:** Charts nehmen `w` und `h` wie jedes andere Element. Mit `w full` füllen sie den Container.
 
 **Subkomponenten:** Mit `XAxis:`, `Point:` etc. passt du jeden Aspekt des Charts an – konsistent mit Mirrors Komponenten-Syntax.
+
+---
+
+## Prosa-Mode
+
+_Textlastige Inhalte ohne Wrapper-Rauschen_
+
+Wenn ein Mirror-Dokument viel **echten Fliesstext** enthält — Personas, Briefings, Strategiepapiere, Tutorials, Landingpages — wird die normale Syntax dicht: jeder Absatz braucht `BodyTxt "..."`, jede Bullet-Liste einen verschachtelten Container. Der Inhalt verschwindet hinter dem Markup. Prosa-Mode ist die Antwort: ein Frame mit `, prose` erlaubt in seinem Body eine Markdown-Untermenge, und der Parser übersetzt sie in normale Mirror-Komponenten.
+
+### Das Problem
+
+So sieht eine Bullet-Liste mit Intro heute ohne Prosa-Mode aus:
+
+```mirror
+BodyTxt as Text: fs 16, line 1.5
+DashItem: hor, gap 16
+  DashMarker as Text: w 12
+  DashMarker "—"
+
+ProseBody as Frame: gap 12
+
+ProseBody
+  DashItem
+    BodyTxt "Erster Punkt — wichtige Aussage."
+  DashItem
+    BodyTxt "Zweiter Punkt — Begründung dazu."
+  DashItem
+    BodyTxt "Dritter Punkt — Schlussfolgerung."
+```
+
+Sechs Wrapper-Zeilen für drei Inhaltszeilen. In einer UI ist das richtig — Struktur _ist_ Bedeutung. In einem Persona-Dokument ist die Struktur sekundär; der Text ist Bedeutung. Genau hier hilft Prosa-Mode.
+
+### Die Idee: ein Frame, eine Property
+
+`prose` ist eine Frame-Property wie `hor`, `gap` oder `wrap`. Sie schaltet den Body des Frames auf Markdown-Untermenge um:
+
+```mirror
+BodyTxt as Text: fs 16, line 1.5, col #ddd
+DashItem: hor, gap 16
+  DashMarker as Text: w 12, col #888
+  DashMarker "—"
+BodyTxtCompact as Text: fs 16, line 1.4, col #ddd
+
+ProseBody as Frame: bg #1a1a1a, pad 24, rad 8, gap 12, prose
+
+ProseBody
+  Erster Absatz aus normalem Fliesstext, ohne Quotes, ohne Wrapper.
+
+  - Erster Punkt — wichtige Aussage.
+  - Zweiter Punkt — Begründung dazu.
+  - Dritter Punkt — Schlussfolgerung.
+
+  Zweiter Absatz nach den Bullets.
+```
+
+Drei neue Regeln im Prosa-Body:
+
+- **Bare Strings** — Zeilen ohne Komponentennamen werden zu Absätzen (`BodyTxt`).
+- **Leerzeile = neuer Absatz** — einzelne Zeilenumbrüche bleiben im selben Absatz (Markdown-Konvention).
+- **- Marker** am Zeilenanfang wird zu einer Bullet (`DashItem` mit Text-Inhalt).
+
+### Headings: # / ## /
+
+Markdown-Headings im Prosa-Body werden zu `H2`, `H3` bzw. `H4`:
+
+```mirror
+BodyTxt as Text: fs 16, line 1.5, col #ddd
+H2 as Text: fs 32, weight bold, col white, mar-b 8
+H3 as Text: fs 22, weight bold, col white, mar-b 6
+H4 as Text: fs 16, weight bold, col white
+
+Article as Frame: bg #1a1a1a, pad 24, rad 8, gap 12, prose
+
+Article
+  # Hauptüberschrift
+
+  Einleitender Absatz, der den Leser ins Thema holt.
+
+  ## Unterabschnitt
+
+  Eine Erklärung dazu, was hier behandelt wird.
+
+  ### Detail
+
+  Noch tiefer: spezifischer Text mit weiterer Erklärung.
+```
+
+Mirror erwartet, dass du `H2`, `H3`, `H4` als Komponenten definierst (typischerweise `as Text` mit Schriftgröße + Gewicht). Ohne Definition fallen sie auf neutrale Defaults zurück.
+
+### Numerierte Listen: 1. / 2. / 3.
+
+Eine Zeile, die mit `Ziffer + Punkt + Leerzeichen` beginnt, wird zu einem `OffenePunkt` mit zweistellig-gepaddter Nummer:
+
+```mirror
+BodyTxtCompact as Text: fs 16, line 1.4, col #ddd
+OffenePunkt as Frame: hor, gap 16
+OffeneNum as Text: fs 14, weight bold, col #888, w 32
+
+OffeneList as Frame: gap 16, bg #1a1a1a, pad 24, rad 8, prose
+
+OffeneList
+  1. Erster Schritt mit kurzer Erklärung.
+  2. Zweiter Schritt — Begründung dazu.
+  3. Dritter Schritt — Schlussfolgerung.
+```
+
+Die Zahl wird automatisch auf zwei Stellen gepaddet (`01`, `02` …). Ab 10 wird die Zahl unverändert ausgegeben (`10`).
+
+### Verschachtelte Bullets via Einrückung
+
+Standard-Markdown-Regel: tiefere Einrückung unter einem `-` macht das Sub-Bullet zum Kind:
+
+```mirror
+BodyTxtCompact as Text: fs 16, line 1.4, col #ddd
+DashItem: hor, gap 16
+  DashMarker as Text: w 12, col #888
+  DashMarker "—"
+
+ProseBody as Frame: bg #1a1a1a, pad 24, rad 8, gap 12, prose
+
+ProseBody
+  - Top-Level-Bullet
+    - Sub-Bullet eins
+    - Sub-Bullet zwei
+  - Anderer Top-Level-Bullet
+    - Mit eigenem Sub-Bullet
+```
+
+Im Prosa-Body ist das die **einzige** Stelle, an der Einrückung Hierarchie bedeutet. Sonst sind alle Konstrukte Geschwister: `# Heading` "besitzt" nicht die folgenden Absätze, sie stehen flach nebeneinander.
+
+### Vererbung über Komponenten-Definition
+
+Wenn du `prose` auf eine **Komponenten-Definition** setzt, ist jeder Use-Site automatisch Prosa-Mode — kein `, prose` mehr nötig:
+
+```mirror
+BodyTxt as Text: fs 16, line 1.5, col #ddd
+H3 as Text: fs 20, weight bold, col white
+
+// Definition trägt prose
+Article as Frame: bg #1a1a1a, pad 24, rad 8, gap 12, prose
+
+Frame gap 16, w hug
+  // Use-Site braucht es nicht — vererbt sich
+  Article
+    ## Erste Sektion
+
+    Erster Absatz im Prosa-Mode. Funktioniert ohne `, prose` an dieser Stelle.
+
+  Article
+    ## Zweite Sektion
+
+    Auch hier: implizit Prosa, weil Article so definiert ist.
+```
+
+Das ist der typische Pattern für textlastige Dokumente: eine `Article`, `WarumBlock`, `ProseBody` Komponente einmal mit `prose` definieren, dann beliebig oft handgeschrieben verwenden — ohne Markup-Wiederholung.
+
+### Mischung mit normalem Mirror
+
+Geschwister eines Prosa-Blocks bleiben unverändert. Du kannst Prosa-Inseln in einem ansonsten klassischen Mirror-Layout haben:
+
+```mirror
+BodyTxt as Text: fs 16, line 1.5, col #ddd
+BodyTxtCompact as Text: fs 16, line 1.4, col #ddd
+H3 as Text: fs 20, weight bold, col white
+DashItem: hor, gap 16
+  DashMarker as Text: w 12, col #888
+  DashMarker "—"
+
+Card as Frame: bg #1a1a1a, pad 24, rad 8, gap 16
+ProseBody as Frame: gap 12, prose
+
+// Card ist normales Mirror, ProseBody darin ist Prosa
+Card
+  H3 "Persona: Lukas"
+  ProseBody
+    Lukas verkörpert das Segment der **hochkompetenten** Maturanden.
+
+    - 18 Jahre, Gymi
+    - Programmiert seit der Sek
+    - GitHub aktiv
+
+  Frame hor, gap 8
+    Button "Bearbeiten", bg #2271C1, col white, pad 8 16, rad 4
+    Button "Löschen", bg #ef4444, col white, pad 8 16, rad 4
+```
+
+Drei Ebenen sind nebeneinander: das `Card`-Layout (normales Mirror), der `ProseBody` (Prosa) und die `Frame hor` mit Buttons (wieder normales Mirror).
+
+### Was im Prosa-Mode _weiterläuft_
+
+- **Inline-Markdown** — `**bold**` und `*italic*` funktionieren in jedem Prosa-Text wie sonst auch in Mirror-Strings.
+- **Variablen-Interpolation** — `$user.name` in einem Prosa-Absatz wird zur Laufzeit aufgelöst.
+- **Sonderzeichen** — Umlaute, Em-Dashes (`—`), Guillemets (`«»`), Smart Quotes funktionieren als normaler Text. Der Lexer würde sie ausserhalb von Prosa als Fehler markieren; im Prosa-Body werden diese Fehler unterdrückt.
+- **Komponenten-Definitionen** — die Mappings (`BodyTxt` = Absatz, `DashItem` = Bullet, `H2/H3/H4` = Headings, `OffenePunkt` = numerierter Eintrag) sind ganz normale Mirror-Komponenten. Du definierst sie wie immer.
+
+### Wann Prosa-Mode _nicht_ passt
+
+Prosa-Mode ist für textlastige Bereiche da. Bei UI-lastigen Strukturen (Dashboards, Forms, Toolbars) ist die heutige Mirror-Form besser, weil dort die Struktur die Bedeutung trägt. Faustregel:
+
+**Wenn der Text länger ist als die Komponente, prose an. Wenn die Komponente länger ist als der Text, prose aus.**
+
+> **Hinweis:** **Wenn der Text länger ist als die Komponente, prose an. Wenn die Komponente länger ist als der Text, prose aus.**
+
+Konkret: ein Persona-Block mit drei Absätzen Prosa und zwei Bullet-Listen — Prosa-Mode. Eine Statistik-Card mit Zahl, Label und Icon — kein Prosa-Mode.
+
+---
+
+### Das Wichtigste
+
+| Konstrukt       | Markdown-Schreibweise                 | Synthetisiert zu                           |
+| --------------- | ------------------------------------- | ------------------------------------------ |
+| Absatz          | bare String, mehrere Zeilen joinen    | `BodyTxt "..."`                            |
+| Absatz-Trennung | Leerzeile                             | neuer `BodyTxt`                            |
+| Bullet          | `- Text`                              | `DashItem > BodyTxtCompact`                |
+| Sub-Bullet      | Bullet mit 2 Spaces tiefer eingerückt | verschachteltes `DashItem`                 |
+| Heading 1       | `# Titel`                             | `H2 "Titel"`                               |
+| Heading 2       | `## Titel`                            | `H3 "Titel"`                               |
+| Heading 3       | `### Titel`                           | `H4 "Titel"`                               |
+| Numeriert       | `1. Text`                             | `OffenePunkt > OffeneNum + BodyTxtCompact` |
+| Aktivieren      | `, prose` als Frame-Property          | Body wird als Markdown gelesen             |
+| Vererben        | `prose` auf Komponenten-Definition    | jeder Use-Site ist Prosa-Mode              |
+
+**Das Prinzip:** Prosa-Mode ist _kein_ neuer Compiler — es ist eine Schreib-Abkürzung, die der Parser auf bestehende Mirror-Komponenten abbildet. Der AST nach dem Parsen sieht aus, als hättest du jeden Absatz, jede Bullet, jeden Heading von Hand getippt.
 
 ---

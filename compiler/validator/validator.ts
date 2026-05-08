@@ -381,7 +381,13 @@ export class Validator {
     // Track component usage:
     // - For defined components: track for unused detection
     // - For undefined components: track for E002 error reporting
-    if (!isPrimitive && !isAlias) {
+    //
+    // Skip tracking when the instance carries a `from` hint
+    // (`show X from Y` cross-file reference). The component lives in
+    // Y.mirror; single-file validation can't see it. Project-mode
+    // validation runs after compileProject merges all files and
+    // catches genuine cross-file misses there.
+    if (!isPrimitive && !isAlias && !instance.from) {
       this.trackUsedComponent(instance.component, instance.line, instance.column)
     }
 

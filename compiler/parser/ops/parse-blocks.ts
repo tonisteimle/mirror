@@ -359,6 +359,41 @@ export function parseInstance(this: Parser, name: Token): Instance | Slot | ZagN
     instance.properties.splice(fromIndex, 1)
   }
 
+  // Extract `show X` and desugar to a child instance of component X.
+  //
+  // This makes `Tab "Home", show HomeView` render HomeView's content as
+  // the Tab's child without manual instantiation. The cross-file form
+  // `show X from Y` works automatically: project-mode auto-loads Y.mirror
+  // so the component X is in the unified componentMap by the time IR runs.
+  //
+  // The synthetic instance is prepended (not appended) so that any block
+  // children parsed later still come after — preserving source order in
+  // the rendered DOM.
+  const showIndex = instance.properties.findIndex(p => p.name === 'show')
+  if (showIndex !== -1) {
+    const showProp = instance.properties[showIndex]
+    const target = String(showProp.values[0])
+    instance.show = target
+    instance.properties.splice(showIndex, 1)
+
+    const synth: Instance = {
+      type: 'Instance',
+      component: target,
+      name: null,
+      properties: [],
+      children: [],
+      states: [],
+      events: [],
+      line: showProp.line,
+      column: showProp.column,
+      // Propagate cross-file hint so single-file validation knows the
+      // component might be defined in Y.mirror (project-mode resolves it
+      // at compileProject time via the unified componentMap).
+      from: instance.from,
+    }
+    instance.children.unshift(synth)
+  }
+
   // Extract initial state from properties
   // A property with empty values and lowercase name that isn't a known property/keyword is an initial state
   // Example: Button "Click" selected → "selected" becomes initialState

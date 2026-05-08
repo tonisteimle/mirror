@@ -35856,7 +35856,64 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 2 1`] = `
     {
       "children": [
         {
-          "children": [],
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-4",
+                  "isDefinition": false,
+                  "isSlotFiller": true,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Das ist der Home-Content",
+                    },
+                  ],
+                  "styles": [],
+                  "tag": "span",
+                },
+              ],
+              "events": [],
+              "id": "node-3",
+              "instanceName": "HomeView",
+              "isDefinition": false,
+              "name": "HomeView",
+              "primitive": "Frame",
+              "properties": [
+                {
+                  "name": "name",
+                  "value": "HomeView",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "padding",
+                  "value": "20px",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
           "events": [],
           "id": "node-2",
           "isDefinition": false,
@@ -35889,9 +35946,66 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 2 1`] = `
           "tag": "div",
         },
         {
-          "children": [],
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-7",
+                  "isDefinition": false,
+                  "isSlotFiller": true,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Das sind die Einstellungen",
+                    },
+                  ],
+                  "styles": [],
+                  "tag": "span",
+                },
+              ],
+              "events": [],
+              "id": "node-6",
+              "instanceName": "SettingsView",
+              "isDefinition": false,
+              "name": "SettingsView",
+              "primitive": "Frame",
+              "properties": [
+                {
+                  "name": "name",
+                  "value": "SettingsView",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "padding",
+                  "value": "20px",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
           "events": [],
-          "id": "node-3",
+          "id": "node-5",
           "isDefinition": false,
           "name": "Tab",
           "primitive": "tab",
@@ -36016,7 +36130,64 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 3 1`] = `
           "tag": "div",
         },
         {
-          "children": [],
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-6",
+                  "isDefinition": false,
+                  "isSlotFiller": true,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Details aus lokaler View",
+                    },
+                  ],
+                  "styles": [],
+                  "tag": "span",
+                },
+              ],
+              "events": [],
+              "id": "node-5",
+              "instanceName": "DetailsView",
+              "isDefinition": false,
+              "name": "DetailsView",
+              "primitive": "Frame",
+              "properties": [
+                {
+                  "name": "name",
+                  "value": "DetailsView",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "padding",
+                  "value": "20px",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
           "events": [],
           "id": "node-4",
           "isDefinition": false,
@@ -36049,9 +36220,38 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 3 1`] = `
           "tag": "div",
         },
         {
-          "children": [],
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-8",
+              "isDefinition": false,
+              "name": "More",
+              "primitive": "more",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
           "events": [],
-          "id": "node-5",
+          "id": "node-7",
           "isDefinition": false,
           "name": "Tab",
           "primitive": "tab",
@@ -36128,7 +36328,36 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
         {
           "children": [
             {
-              "children": [],
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-4",
+                  "isDefinition": false,
+                  "name": "DashboardView",
+                  "primitive": "dashboardview",
+                  "properties": [],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                  ],
+                  "tag": "div",
+                },
+              ],
               "events": [],
               "id": "node-3",
               "isDefinition": false,
@@ -36161,9 +36390,38 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
               "tag": "div",
             },
             {
-              "children": [],
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-6",
+                  "isDefinition": false,
+                  "name": "ProjectsView",
+                  "primitive": "projectsview",
+                  "properties": [],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                  ],
+                  "tag": "div",
+                },
+              ],
               "events": [],
-              "id": "node-4",
+              "id": "node-5",
               "isDefinition": false,
               "name": "NavItem",
               "primitive": "navitem",
@@ -36194,9 +36452,38 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
               "tag": "div",
             },
             {
-              "children": [],
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-8",
+                  "isDefinition": false,
+                  "name": "SettingsView",
+                  "primitive": "settingsview",
+                  "properties": [],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                  ],
+                  "tag": "div",
+                },
+              ],
               "events": [],
-              "id": "node-5",
+              "id": "node-7",
               "isDefinition": false,
               "name": "NavItem",
               "primitive": "navitem",
@@ -36269,7 +36556,7 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
                 {
                   "children": [],
                   "events": [],
-                  "id": "node-8",
+                  "id": "node-11",
                   "instanceName": "DashboardView",
                   "isDefinition": false,
                   "name": "Frame",
@@ -36303,7 +36590,7 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
                 {
                   "children": [],
                   "events": [],
-                  "id": "node-9",
+                  "id": "node-12",
                   "isDefinition": false,
                   "name": "Text",
                   "primitive": "text",
@@ -36318,7 +36605,7 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
                 },
               ],
               "events": [],
-              "id": "node-7",
+              "id": "node-10",
               "isDefinition": false,
               "name": "DashboardView",
               "primitive": "dashboardview",
@@ -36348,7 +36635,7 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
                 {
                   "children": [],
                   "events": [],
-                  "id": "node-11",
+                  "id": "node-14",
                   "instanceName": "ProjectsView",
                   "isDefinition": false,
                   "name": "Frame",
@@ -36386,7 +36673,7 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
                 {
                   "children": [],
                   "events": [],
-                  "id": "node-12",
+                  "id": "node-15",
                   "isDefinition": false,
                   "name": "Text",
                   "primitive": "text",
@@ -36401,7 +36688,7 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
                 },
               ],
               "events": [],
-              "id": "node-10",
+              "id": "node-13",
               "isDefinition": false,
               "name": "ProjectsView",
               "primitive": "projectsview",
@@ -36431,7 +36718,7 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
                 {
                   "children": [],
                   "events": [],
-                  "id": "node-14",
+                  "id": "node-17",
                   "instanceName": "SettingsView",
                   "isDefinition": false,
                   "name": "Frame",
@@ -36469,7 +36756,7 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
                 {
                   "children": [],
                   "events": [],
-                  "id": "node-15",
+                  "id": "node-18",
                   "isDefinition": false,
                   "name": "Text",
                   "primitive": "text",
@@ -36484,7 +36771,7 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
                 },
               ],
               "events": [],
-              "id": "node-13",
+              "id": "node-16",
               "isDefinition": false,
               "name": "SettingsView",
               "primitive": "settingsview",
@@ -36511,7 +36798,7 @@ exports[`Tutorial IR Snapshots > 10 - seiten > Example 4 1`] = `
             },
           ],
           "events": [],
-          "id": "node-6",
+          "id": "node-9",
           "isDefinition": false,
           "name": "Frame",
           "primitive": "frame",
@@ -39728,6 +40015,1569 @@ exports[`Tutorial IR Snapshots > 12 - navigation > Example 4 1`] = `
 }
 `;
 
+exports[`Tutorial IR Snapshots > 12 - navigation > Example 5 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "NavItem",
+              "primitive": "navitem",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Dashboard",
+                },
+                {
+                  "name": "value",
+                  "value": "dashboard",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-4",
+              "isDefinition": false,
+              "name": "NavItem",
+              "primitive": "navitem",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Projects",
+                },
+                {
+                  "name": "value",
+                  "value": "projects",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-5",
+              "isDefinition": false,
+              "name": "NavItem",
+              "primitive": "navitem",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Messages",
+                },
+                {
+                  "name": "value",
+                  "value": "messages",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "SideNav",
+          "primitive": "sidenav",
+          "properties": [
+            {
+              "name": "data-default-value",
+              "value": "dashboard",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "width",
+              "value": "200px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-7",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Dashboard",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "font-size",
+                  "value": "22px",
+                },
+                {
+                  "property": "font-weight",
+                  "value": "600",
+                },
+              ],
+              "tag": "span",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-8",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Hier sind deine Daten.",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "color",
+                  "value": "#888",
+                },
+              ],
+              "tag": "span",
+            },
+          ],
+          "events": [],
+          "id": "node-6",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "flex-grow",
+              "value": "1",
+            },
+            {
+              "property": "padding",
+              "value": "24px",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "layoutType": "flex",
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "row",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "height",
+          "value": "360px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+        {
+          "property": "background",
+          "value": "#0a0a0a",
+        },
+        {
+          "property": "color",
+          "value": "white",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 12 - navigation > Example 6 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-4",
+                  "isDefinition": false,
+                  "name": "DashboardView",
+                  "primitive": "dashboardview",
+                  "properties": [],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                  ],
+                  "tag": "div",
+                },
+              ],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "NavItem",
+              "primitive": "navitem",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Dashboard",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-6",
+                  "isDefinition": false,
+                  "name": "ProjectsView",
+                  "primitive": "projectsview",
+                  "properties": [],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                  ],
+                  "tag": "div",
+                },
+              ],
+              "events": [],
+              "id": "node-5",
+              "isDefinition": false,
+              "name": "NavItem",
+              "primitive": "navitem",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Projects",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-8",
+                  "isDefinition": false,
+                  "name": "SettingsView",
+                  "primitive": "settingsview",
+                  "properties": [],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                  ],
+                  "tag": "div",
+                },
+              ],
+              "events": [],
+              "id": "node-7",
+              "isDefinition": false,
+              "name": "NavItem",
+              "primitive": "navitem",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Settings",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "SideNav",
+          "primitive": "sidenav",
+          "properties": [
+            {
+              "name": "data-default-value",
+              "value": "Dashboard",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "width",
+              "value": "200px",
+            },
+            {
+              "property": "flex-shrink",
+              "value": "0",
+            },
+            {
+              "property": "background",
+              "value": "#1a1a1a",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-11",
+                  "instanceName": "DashboardView",
+                  "isDefinition": false,
+                  "name": "Frame",
+                  "primitive": "frame",
+                  "properties": [
+                    {
+                      "name": "name",
+                      "value": "DashboardView",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                  ],
+                  "tag": "div",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-12",
+                  "isDefinition": false,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Dashboard",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "font-size",
+                      "value": "22px",
+                    },
+                    {
+                      "property": "font-weight",
+                      "value": "600",
+                    },
+                  ],
+                  "tag": "span",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-13",
+                  "isDefinition": false,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Übersicht und Kennzahlen.",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "color",
+                      "value": "#888",
+                    },
+                  ],
+                  "tag": "span",
+                },
+              ],
+              "events": [],
+              "id": "node-10",
+              "isDefinition": false,
+              "name": "DashboardView",
+              "primitive": "dashboardview",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-15",
+                  "instanceName": "ProjectsView",
+                  "isDefinition": false,
+                  "name": "Frame",
+                  "primitive": "frame",
+                  "properties": [
+                    {
+                      "name": "name",
+                      "value": "ProjectsView",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                    {
+                      "property": "display",
+                      "value": "none",
+                    },
+                  ],
+                  "tag": "div",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-16",
+                  "isDefinition": false,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Projects",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "font-size",
+                      "value": "22px",
+                    },
+                    {
+                      "property": "font-weight",
+                      "value": "600",
+                    },
+                  ],
+                  "tag": "span",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-17",
+                  "isDefinition": false,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "12 aktive Projekte.",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "color",
+                      "value": "#888",
+                    },
+                  ],
+                  "tag": "span",
+                },
+              ],
+              "events": [],
+              "id": "node-14",
+              "isDefinition": false,
+              "name": "ProjectsView",
+              "primitive": "projectsview",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-19",
+                  "instanceName": "SettingsView",
+                  "isDefinition": false,
+                  "name": "Frame",
+                  "primitive": "frame",
+                  "properties": [
+                    {
+                      "name": "name",
+                      "value": "SettingsView",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                    {
+                      "property": "display",
+                      "value": "none",
+                    },
+                  ],
+                  "tag": "div",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-20",
+                  "isDefinition": false,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Settings",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "font-size",
+                      "value": "22px",
+                    },
+                    {
+                      "property": "font-weight",
+                      "value": "600",
+                    },
+                  ],
+                  "tag": "span",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-21",
+                  "isDefinition": false,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "App-Konfiguration.",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "color",
+                      "value": "#888",
+                    },
+                  ],
+                  "tag": "span",
+                },
+              ],
+              "events": [],
+              "id": "node-18",
+              "isDefinition": false,
+              "name": "SettingsView",
+              "primitive": "settingsview",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-9",
+          "isDefinition": false,
+          "name": "Frame",
+          "primitive": "frame",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+            {
+              "property": "flex-grow",
+              "value": "1",
+            },
+            {
+              "property": "padding",
+              "value": "24px",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "layoutType": "flex",
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "row",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "height",
+          "value": "360px",
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0",
+        },
+        {
+          "property": "background",
+          "value": "#0a0a0a",
+        },
+        {
+          "property": "color",
+          "value": "white",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 12 - navigation > Example 7 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-4",
+                  "isDefinition": false,
+                  "isSlotFiller": true,
+                  "name": "Input",
+                  "primitive": "input",
+                  "properties": [
+                    {
+                      "name": "placeholder",
+                      "value": "Name",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "height",
+                      "value": "36px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "padding",
+                      "value": "0px 12px",
+                    },
+                    {
+                      "property": "border-radius",
+                      "value": "6px",
+                    },
+                    {
+                      "property": "border-width",
+                      "value": "0px",
+                    },
+                    {
+                      "property": "border-style",
+                      "value": "solid",
+                    },
+                    {
+                      "property": "width",
+                      "value": "200px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                  ],
+                  "tag": "input",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-5",
+                  "isDefinition": false,
+                  "isSlotFiller": true,
+                  "name": "Input",
+                  "primitive": "input",
+                  "properties": [
+                    {
+                      "name": "placeholder",
+                      "value": "Email",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "height",
+                      "value": "36px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "padding",
+                      "value": "0px 12px",
+                    },
+                    {
+                      "property": "border-radius",
+                      "value": "6px",
+                    },
+                    {
+                      "property": "border-width",
+                      "value": "0px",
+                    },
+                    {
+                      "property": "border-style",
+                      "value": "solid",
+                    },
+                    {
+                      "property": "width",
+                      "value": "200px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                  ],
+                  "tag": "input",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-6",
+                  "isDefinition": false,
+                  "isSlotFiller": true,
+                  "name": "Button",
+                  "primitive": "button",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Speichern",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "fit-content",
+                    },
+                    {
+                      "property": "height",
+                      "value": "36px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "min-width",
+                      "value": "36px",
+                    },
+                    {
+                      "property": "padding",
+                      "value": "10px 20px",
+                    },
+                    {
+                      "property": "border-radius",
+                      "value": "6px",
+                    },
+                    {
+                      "property": "border-width",
+                      "value": "0px",
+                    },
+                    {
+                      "property": "border-style",
+                      "value": "solid",
+                    },
+                    {
+                      "property": "cursor",
+                      "value": "pointer",
+                    },
+                    {
+                      "property": "background",
+                      "value": "#2271C1",
+                    },
+                    {
+                      "property": "color",
+                      "value": "white",
+                    },
+                  ],
+                  "tag": "button",
+                },
+              ],
+              "events": [],
+              "id": "node-3",
+              "instanceName": "AccountView",
+              "isDefinition": false,
+              "name": "AccountView",
+              "primitive": "Frame",
+              "properties": [
+                {
+                  "name": "name",
+                  "value": "AccountView",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "gap",
+                  "value": "12px",
+                },
+                {
+                  "property": "padding",
+                  "value": "16px",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Tab",
+          "primitive": "tab",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Account",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-9",
+                  "isDefinition": false,
+                  "isSlotFiller": true,
+                  "name": "Switch",
+                  "primitive": "switch",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "E-Mail-Digest",
+                    },
+                    {
+                      "name": "checked",
+                      "value": true,
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                  ],
+                  "tag": "div",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-10",
+                  "isDefinition": false,
+                  "isSlotFiller": true,
+                  "name": "Switch",
+                  "primitive": "switch",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Push-Benachrichtigungen",
+                    },
+                    {
+                      "name": "checked",
+                      "value": true,
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                  ],
+                  "tag": "div",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-11",
+                  "isDefinition": false,
+                  "isSlotFiller": true,
+                  "name": "Switch",
+                  "primitive": "switch",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Wöchentliche Zusammenfassung",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                  ],
+                  "tag": "div",
+                },
+              ],
+              "events": [],
+              "id": "node-8",
+              "instanceName": "NotifyView",
+              "isDefinition": false,
+              "name": "NotifyView",
+              "primitive": "Frame",
+              "properties": [
+                {
+                  "name": "name",
+                  "value": "NotifyView",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "gap",
+                  "value": "12px",
+                },
+                {
+                  "property": "padding",
+                  "value": "16px",
+                },
+                {
+                  "property": "display",
+                  "value": "none",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-7",
+          "isDefinition": false,
+          "name": "Tab",
+          "primitive": "tab",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Notifications",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-14",
+                  "isDefinition": false,
+                  "isSlotFiller": true,
+                  "name": "Switch",
+                  "primitive": "switch",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Profil öffentlich",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                  ],
+                  "tag": "div",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-15",
+                  "isDefinition": false,
+                  "isSlotFiller": true,
+                  "name": "Switch",
+                  "primitive": "switch",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Aktivitäten-Verlauf",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                  ],
+                  "tag": "div",
+                },
+              ],
+              "events": [],
+              "id": "node-13",
+              "instanceName": "PrivacyView",
+              "isDefinition": false,
+              "name": "PrivacyView",
+              "primitive": "Frame",
+              "properties": [
+                {
+                  "name": "name",
+                  "value": "PrivacyView",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "gap",
+                  "value": "12px",
+                },
+                {
+                  "property": "padding",
+                  "value": "16px",
+                },
+                {
+                  "property": "display",
+                  "value": "none",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-12",
+          "isDefinition": false,
+          "name": "Tab",
+          "primitive": "tab",
+          "properties": [
+            {
+              "name": "textContent",
+              "value": "Privacy",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Tabs",
+      "primitive": "tabs",
+      "properties": [
+        {
+          "name": "data-default-value",
+          "value": "Account",
+        },
+      ],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
 exports[`Tutorial IR Snapshots > 13 - overlays > Example 1 1`] = `
 {
   "animations": [],
@@ -42386,6 +44236,1436 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 6 1`] = `
         {
           "property": "align-items",
           "value": "flex-start",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 13 - overlays > Example 7 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "Button",
+              "primitive": "button",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Kontakt hinzufügen",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "width",
+                  "value": "fit-content",
+                },
+                {
+                  "property": "height",
+                  "value": "36px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+                {
+                  "property": "min-width",
+                  "value": "36px",
+                },
+                {
+                  "property": "padding",
+                  "value": "10px 20px",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "6px",
+                },
+                {
+                  "property": "border-width",
+                  "value": "0px",
+                },
+                {
+                  "property": "border-style",
+                  "value": "solid",
+                },
+                {
+                  "property": "cursor",
+                  "value": "pointer",
+                },
+                {
+                  "property": "background",
+                  "value": "#2271C1",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "button",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Trigger",
+          "primitive": "trigger",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [],
+          "events": [],
+          "id": "node-4",
+          "isDefinition": false,
+          "name": "Backdrop",
+          "primitive": "backdrop",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [],
+              "events": [],
+              "id": "node-6",
+              "isDefinition": false,
+              "layoutType": "flex",
+              "name": "Frame",
+              "primitive": "frame",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "gap",
+                  "value": "16px",
+                },
+                {
+                  "property": "padding",
+                  "value": "24px",
+                },
+                {
+                  "property": "background",
+                  "value": "#1a1a1a",
+                },
+                {
+                  "property": "border-radius",
+                  "value": "12px",
+                },
+                {
+                  "property": "width",
+                  "value": "360px",
+                },
+                {
+                  "property": "flex-shrink",
+                  "value": "0",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [],
+              "events": [],
+              "id": "node-7",
+              "isDefinition": false,
+              "name": "Text",
+              "primitive": "text",
+              "properties": [
+                {
+                  "name": "textContent",
+                  "value": "Neuer Kontakt",
+                },
+              ],
+              "styles": [
+                {
+                  "property": "font-weight",
+                  "value": "700",
+                },
+                {
+                  "property": "font-size",
+                  "value": "18px",
+                },
+                {
+                  "property": "color",
+                  "value": "white",
+                },
+              ],
+              "tag": "span",
+            },
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "children": [],
+                      "events": [],
+                      "id": "node-10",
+                      "isDefinition": false,
+                      "name": "Text",
+                      "primitive": "text",
+                      "properties": [
+                        {
+                          "name": "textContent",
+                          "value": "Name",
+                        },
+                      ],
+                      "styles": [
+                        {
+                          "property": "font-size",
+                          "value": "12px",
+                        },
+                        {
+                          "property": "color",
+                          "value": "#888",
+                        },
+                      ],
+                      "tag": "span",
+                    },
+                    {
+                      "children": [],
+                      "events": [],
+                      "id": "node-11",
+                      "isDefinition": false,
+                      "name": "Input",
+                      "primitive": "input",
+                      "properties": [
+                        {
+                          "name": "placeholder",
+                          "value": "Max Mustermann",
+                        },
+                      ],
+                      "styles": [
+                        {
+                          "property": "height",
+                          "value": "36px",
+                        },
+                        {
+                          "property": "flex-shrink",
+                          "value": "0",
+                        },
+                        {
+                          "property": "padding",
+                          "value": "0px 12px",
+                        },
+                        {
+                          "property": "border-radius",
+                          "value": "6px",
+                        },
+                        {
+                          "property": "border-width",
+                          "value": "0px",
+                        },
+                        {
+                          "property": "border-style",
+                          "value": "solid",
+                        },
+                        {
+                          "property": "width",
+                          "value": "200px",
+                        },
+                        {
+                          "property": "flex-shrink",
+                          "value": "0",
+                        },
+                      ],
+                      "tag": "input",
+                    },
+                  ],
+                  "events": [],
+                  "id": "node-9",
+                  "isDefinition": false,
+                  "layoutType": "flex",
+                  "name": "Frame",
+                  "primitive": "frame",
+                  "properties": [],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                    {
+                      "property": "gap",
+                      "value": "4px",
+                    },
+                  ],
+                  "tag": "div",
+                },
+                {
+                  "children": [
+                    {
+                      "children": [],
+                      "events": [],
+                      "id": "node-13",
+                      "isDefinition": false,
+                      "name": "Text",
+                      "primitive": "text",
+                      "properties": [
+                        {
+                          "name": "textContent",
+                          "value": "E-Mail",
+                        },
+                      ],
+                      "styles": [
+                        {
+                          "property": "font-size",
+                          "value": "12px",
+                        },
+                        {
+                          "property": "color",
+                          "value": "#888",
+                        },
+                      ],
+                      "tag": "span",
+                    },
+                    {
+                      "children": [],
+                      "events": [],
+                      "id": "node-14",
+                      "isDefinition": false,
+                      "name": "Input",
+                      "primitive": "input",
+                      "properties": [
+                        {
+                          "name": "placeholder",
+                          "value": "max@example.com",
+                        },
+                        {
+                          "name": "type",
+                          "value": "email",
+                        },
+                      ],
+                      "styles": [
+                        {
+                          "property": "height",
+                          "value": "36px",
+                        },
+                        {
+                          "property": "flex-shrink",
+                          "value": "0",
+                        },
+                        {
+                          "property": "padding",
+                          "value": "0px 12px",
+                        },
+                        {
+                          "property": "border-radius",
+                          "value": "6px",
+                        },
+                        {
+                          "property": "border-width",
+                          "value": "0px",
+                        },
+                        {
+                          "property": "border-style",
+                          "value": "solid",
+                        },
+                        {
+                          "property": "width",
+                          "value": "200px",
+                        },
+                        {
+                          "property": "flex-shrink",
+                          "value": "0",
+                        },
+                      ],
+                      "tag": "input",
+                    },
+                  ],
+                  "events": [],
+                  "id": "node-12",
+                  "isDefinition": false,
+                  "layoutType": "flex",
+                  "name": "Frame",
+                  "primitive": "frame",
+                  "properties": [],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                    {
+                      "property": "gap",
+                      "value": "4px",
+                    },
+                  ],
+                  "tag": "div",
+                },
+              ],
+              "events": [],
+              "id": "node-8",
+              "isDefinition": false,
+              "layoutType": "flex",
+              "name": "Frame",
+              "primitive": "frame",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "gap",
+                  "value": "12px",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "children": [],
+                      "events": [],
+                      "id": "node-17",
+                      "isDefinition": false,
+                      "name": "Button",
+                      "primitive": "button",
+                      "properties": [
+                        {
+                          "name": "textContent",
+                          "value": "Abbrechen",
+                        },
+                      ],
+                      "styles": [
+                        {
+                          "property": "width",
+                          "value": "fit-content",
+                        },
+                        {
+                          "property": "height",
+                          "value": "36px",
+                        },
+                        {
+                          "property": "flex-shrink",
+                          "value": "0",
+                        },
+                        {
+                          "property": "min-width",
+                          "value": "36px",
+                        },
+                        {
+                          "property": "padding",
+                          "value": "10px 20px",
+                        },
+                        {
+                          "property": "border-radius",
+                          "value": "6px",
+                        },
+                        {
+                          "property": "border-width",
+                          "value": "0px",
+                        },
+                        {
+                          "property": "border-style",
+                          "value": "solid",
+                        },
+                        {
+                          "property": "cursor",
+                          "value": "pointer",
+                        },
+                        {
+                          "property": "background",
+                          "value": "#333",
+                        },
+                        {
+                          "property": "color",
+                          "value": "white",
+                        },
+                        {
+                          "property": "flex-grow",
+                          "value": "1",
+                        },
+                      ],
+                      "tag": "button",
+                    },
+                  ],
+                  "events": [],
+                  "id": "node-16",
+                  "isDefinition": false,
+                  "name": "CloseTrigger",
+                  "primitive": "closetrigger",
+                  "properties": [],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                  ],
+                  "tag": "div",
+                },
+                {
+                  "children": [
+                    {
+                      "children": [],
+                      "events": [],
+                      "id": "node-19",
+                      "isDefinition": false,
+                      "name": "Button",
+                      "primitive": "button",
+                      "properties": [
+                        {
+                          "name": "textContent",
+                          "value": "Speichern",
+                        },
+                      ],
+                      "styles": [
+                        {
+                          "property": "width",
+                          "value": "fit-content",
+                        },
+                        {
+                          "property": "height",
+                          "value": "36px",
+                        },
+                        {
+                          "property": "flex-shrink",
+                          "value": "0",
+                        },
+                        {
+                          "property": "min-width",
+                          "value": "36px",
+                        },
+                        {
+                          "property": "padding",
+                          "value": "10px 20px",
+                        },
+                        {
+                          "property": "border-radius",
+                          "value": "6px",
+                        },
+                        {
+                          "property": "border-width",
+                          "value": "0px",
+                        },
+                        {
+                          "property": "border-style",
+                          "value": "solid",
+                        },
+                        {
+                          "property": "cursor",
+                          "value": "pointer",
+                        },
+                        {
+                          "property": "background",
+                          "value": "#2271C1",
+                        },
+                        {
+                          "property": "color",
+                          "value": "white",
+                        },
+                        {
+                          "property": "flex-grow",
+                          "value": "1",
+                        },
+                      ],
+                      "tag": "button",
+                    },
+                  ],
+                  "events": [],
+                  "id": "node-18",
+                  "isDefinition": false,
+                  "name": "CloseTrigger",
+                  "primitive": "closetrigger",
+                  "properties": [],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                  ],
+                  "tag": "div",
+                },
+              ],
+              "events": [],
+              "id": "node-15",
+              "isDefinition": false,
+              "layoutType": "flex",
+              "name": "Frame",
+              "primitive": "frame",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "row",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+                {
+                  "property": "gap",
+                  "value": "8px",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-5",
+          "isDefinition": false,
+          "name": "Content",
+          "primitive": "content",
+          "properties": [],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "name": "Dialog",
+      "primitive": "dialog",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "column",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "background",
+          "value": "rgba(0,0,0,0.5)",
+        },
+      ],
+      "tag": "div",
+    },
+  ],
+  "tokens": [],
+}
+`;
+
+exports[`Tutorial IR Snapshots > 13 - overlays > Example 8 1`] = `
+{
+  "animations": [],
+  "icons": [],
+  "nodes": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-4",
+                  "isDefinition": false,
+                  "name": "Frame",
+                  "primitive": "frame",
+                  "properties": [],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                    {
+                      "property": "padding",
+                      "value": "8px",
+                    },
+                    {
+                      "property": "border-radius",
+                      "value": "6px",
+                    },
+                    {
+                      "property": "cursor",
+                      "value": "pointer",
+                    },
+                  ],
+                  "tag": "div",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-5",
+                  "isDefinition": false,
+                  "name": "Icon",
+                  "primitive": "icon",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "home",
+                    },
+                    {
+                      "name": "data-icon-color",
+                      "value": "#888",
+                    },
+                    {
+                      "name": "data-icon-size",
+                      "value": "18",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "height",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "color",
+                      "value": "#888",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "width",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "height",
+                      "value": "18px",
+                    },
+                  ],
+                  "tag": "span",
+                },
+              ],
+              "events": [],
+              "id": "node-3",
+              "isDefinition": false,
+              "name": "Trigger",
+              "primitive": "trigger",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-7",
+                  "isDefinition": false,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Dashboard",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "font-size",
+                      "value": "12px",
+                    },
+                  ],
+                  "tag": "span",
+                },
+              ],
+              "events": [],
+              "id": "node-6",
+              "isDefinition": false,
+              "name": "Content",
+              "primitive": "content",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-2",
+          "isDefinition": false,
+          "name": "Tooltip",
+          "primitive": "tooltip",
+          "properties": [
+            {
+              "name": "data-positioning",
+              "value": "bottom",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-10",
+                  "isDefinition": false,
+                  "name": "Frame",
+                  "primitive": "frame",
+                  "properties": [],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                    {
+                      "property": "padding",
+                      "value": "8px",
+                    },
+                    {
+                      "property": "border-radius",
+                      "value": "6px",
+                    },
+                    {
+                      "property": "cursor",
+                      "value": "pointer",
+                    },
+                  ],
+                  "tag": "div",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-11",
+                  "isDefinition": false,
+                  "name": "Icon",
+                  "primitive": "icon",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "folder",
+                    },
+                    {
+                      "name": "data-icon-color",
+                      "value": "#888",
+                    },
+                    {
+                      "name": "data-icon-size",
+                      "value": "18",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "height",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "color",
+                      "value": "#888",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "width",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "height",
+                      "value": "18px",
+                    },
+                  ],
+                  "tag": "span",
+                },
+              ],
+              "events": [],
+              "id": "node-9",
+              "isDefinition": false,
+              "name": "Trigger",
+              "primitive": "trigger",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-13",
+                  "isDefinition": false,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Projekte",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "font-size",
+                      "value": "12px",
+                    },
+                  ],
+                  "tag": "span",
+                },
+              ],
+              "events": [],
+              "id": "node-12",
+              "isDefinition": false,
+              "name": "Content",
+              "primitive": "content",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-8",
+          "isDefinition": false,
+          "name": "Tooltip",
+          "primitive": "tooltip",
+          "properties": [
+            {
+              "name": "data-positioning",
+              "value": "bottom",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-16",
+                  "isDefinition": false,
+                  "name": "Frame",
+                  "primitive": "frame",
+                  "properties": [],
+                  "styles": [
+                    {
+                      "property": "display",
+                      "value": "flex",
+                    },
+                    {
+                      "property": "flex-direction",
+                      "value": "column",
+                    },
+                    {
+                      "property": "align-self",
+                      "value": "stretch",
+                    },
+                    {
+                      "property": "align-items",
+                      "value": "flex-start",
+                    },
+                    {
+                      "property": "padding",
+                      "value": "8px",
+                    },
+                    {
+                      "property": "border-radius",
+                      "value": "6px",
+                    },
+                    {
+                      "property": "cursor",
+                      "value": "pointer",
+                    },
+                  ],
+                  "tag": "div",
+                },
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-17",
+                  "isDefinition": false,
+                  "name": "Icon",
+                  "primitive": "icon",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "settings",
+                    },
+                    {
+                      "name": "data-icon-color",
+                      "value": "#888",
+                    },
+                    {
+                      "name": "data-icon-size",
+                      "value": "18",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "width",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "height",
+                      "value": "20px",
+                    },
+                    {
+                      "property": "flex-shrink",
+                      "value": "0",
+                    },
+                    {
+                      "property": "color",
+                      "value": "#888",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "width",
+                      "value": "18px",
+                    },
+                    {
+                      "property": "height",
+                      "value": "18px",
+                    },
+                  ],
+                  "tag": "span",
+                },
+              ],
+              "events": [],
+              "id": "node-15",
+              "isDefinition": false,
+              "name": "Trigger",
+              "primitive": "trigger",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+            {
+              "children": [
+                {
+                  "children": [],
+                  "events": [],
+                  "id": "node-19",
+                  "isDefinition": false,
+                  "name": "Text",
+                  "primitive": "text",
+                  "properties": [
+                    {
+                      "name": "textContent",
+                      "value": "Einstellungen",
+                    },
+                  ],
+                  "styles": [
+                    {
+                      "property": "font-size",
+                      "value": "12px",
+                    },
+                  ],
+                  "tag": "span",
+                },
+              ],
+              "events": [],
+              "id": "node-18",
+              "isDefinition": false,
+              "name": "Content",
+              "primitive": "content",
+              "properties": [],
+              "styles": [
+                {
+                  "property": "display",
+                  "value": "flex",
+                },
+                {
+                  "property": "flex-direction",
+                  "value": "column",
+                },
+                {
+                  "property": "align-self",
+                  "value": "stretch",
+                },
+                {
+                  "property": "align-items",
+                  "value": "flex-start",
+                },
+              ],
+              "tag": "div",
+            },
+          ],
+          "events": [],
+          "id": "node-14",
+          "isDefinition": false,
+          "name": "Tooltip",
+          "primitive": "tooltip",
+          "properties": [
+            {
+              "name": "data-positioning",
+              "value": "bottom",
+            },
+          ],
+          "styles": [
+            {
+              "property": "display",
+              "value": "flex",
+            },
+            {
+              "property": "flex-direction",
+              "value": "column",
+            },
+            {
+              "property": "align-self",
+              "value": "stretch",
+            },
+            {
+              "property": "align-items",
+              "value": "flex-start",
+            },
+          ],
+          "tag": "div",
+        },
+      ],
+      "events": [],
+      "id": "node-1",
+      "isDefinition": false,
+      "layoutType": "flex",
+      "name": "Frame",
+      "primitive": "frame",
+      "properties": [],
+      "styles": [
+        {
+          "property": "display",
+          "value": "flex",
+        },
+        {
+          "property": "flex-direction",
+          "value": "row",
+        },
+        {
+          "property": "align-self",
+          "value": "stretch",
+        },
+        {
+          "property": "align-items",
+          "value": "flex-start",
+        },
+        {
+          "property": "gap",
+          "value": "0px",
+        },
+        {
+          "property": "background",
+          "value": "#1a1a1a",
+        },
+        {
+          "property": "padding",
+          "value": "8px",
+        },
+        {
+          "property": "border-radius",
+          "value": "8px",
         },
       ],
       "tag": "div",

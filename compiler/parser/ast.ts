@@ -215,6 +215,10 @@ export interface Instance extends BaseNode {
   bind?: string // bind active exclusive() child: "bind value" → bind: "value"
   route?: string // navigation target: "route Home" → route: "Home"
   from?: string // source-file hint: "Screen from screens/dashboard" → from: "screens/dashboard"
+  show?: string // content reference: "Tab show HomeView" → show: "HomeView". The
+  // parser desugars this to a synthetic child instance of the
+  // referenced component, so the IR/emitter need no special
+  // handling — the show target renders inside the parent.
   isDefinition?: boolean // true if ends with : (definition, not rendered)
   isSlotFiller?: boolean // true if produced by deep slot substitution (see slot-utils.ts)
   isCompound?: boolean // true if this is a Compound primitive (Shell, etc.)
