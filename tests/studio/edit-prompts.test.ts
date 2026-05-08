@@ -131,6 +131,15 @@ describe('EditPrompts — buildEditPrompt', () => {
       expect(prompt).toContain('## User-Selection')
       expect(prompt).toContain('  Text "Hello"')
     })
+
+    it('selection text is wrapped in a mirror code-fence (not raw)', () => {
+      // The LLM needs the selection delimited so it doesn't bleed into
+      // adjacent sections. Lock in the fence wrap.
+      const prompt = buildEditPrompt(
+        baseCtx({ selection: { from: 0, to: 12, text: 'Frame gap 12' } })
+      )
+      expect(prompt).toMatch(/## User-Selection[\s\S]*?```mirror\nFrame gap 12\n```/)
+    })
   })
 
   describe('Modus 3 — mit Instruction', () => {
@@ -149,6 +158,28 @@ describe('EditPrompts — buildEditPrompt', () => {
       )
       expect(prompt).toContain('## User-Anweisung')
       expect(prompt).toContain('## User-Selection')
+    })
+
+    it('Selection precedes Instruction in the output (lock section order)', () => {
+      // Section order matters for the LLM: Selection identifies the
+      // primary focus area, then Instruction clarifies the goal. A swap
+      // would change the LLM's reading frame.
+      const prompt = buildEditPrompt(
+        baseCtx({
+          instruction: 'mach das responsive',
+          selection: { from: 0, to: 12, text: 'Frame gap 12' },
+        })
+      )
+      const idxSel = prompt.indexOf('## User-Selection')
+      const idxInst = prompt.indexOf('## User-Anweisung')
+      expect(idxSel).toBeGreaterThan(0)
+      expect(idxInst).toBeGreaterThan(idxSel)
+    })
+
+    it('preserves multi-line instructions verbatim', () => {
+      const inst = 'Mach folgende Änderungen:\n1. Padding auf 24\n2. Background auf primary'
+      const prompt = buildEditPrompt(baseCtx({ instruction: inst }))
+      expect(prompt).toContain(inst)
     })
   })
 
@@ -226,6 +257,185 @@ describe('EditPrompts — buildEditPrompt', () => {
     it('embeds the source under a heading with the file name', () => {
       const prompt = buildEditPrompt(baseCtx({ fileName: 'login.mir' }))
       expect(prompt).toContain('## Aktuelle Datei (login.mir)')
+    })
+  })
+
+  // -----------------------------------------------------------------------
+  // P2 coverage gaps
+  // -----------------------------------------------------------------------
+
+  describe('Section ordering invariants', () => {
+    it('Source heading precedes Cursor heading precedes Antwort-Format', () => {
+      const prompt = buildEditPrompt(baseCtx())
+      const idxSrc = prompt.indexOf('## Aktuelle Datei')
+      const idxCur = prompt.indexOf('## Cursor-Position')
+      const idxFmt = prompt.indexOf('## Antwort-Format')
+      expect(idxSrc).toBeGreaterThan(0)
+      expect(idxCur).toBeGreaterThan(idxSrc)
+      expect(idxFmt).toBeGreaterThan(idxCur)
+    })
+
+    it('Diff section appears AFTER User-Anweisung when both are present', () => {
+      // Diff is "what user did since last call" — it's context, not the
+      // primary directive. It should sit between user-input and the
+      // sibling files.
+      const prompt = buildEditPrompt(
+        baseCtx({
+          instruction: 'do X',
+          diffSinceLastCall: '@@ -1,1 +1,1 @@\n-A\n+B',
+        })
+      )
+      const idxInst = prompt.indexOf('## User-Anweisung')
+      const idxDiff = prompt.indexOf('## Vom User zuletzt geänderte Bereiche')
+      expect(idxInst).toBeGreaterThan(0)
+      expect(idxDiff).toBeGreaterThan(idxInst)
+    })
+
+    it('Sibling-Files section appears AFTER Diff section', () => {
+      const prompt = buildEditPrompt(
+        baseCtx({
+          diffSinceLastCall: '@@ -1,1 +1,1 @@\n-A\n+B',
+          siblings: { 'tokens.mir': 'primary.bg: #2271C1' },
+        })
+      )
+      const idxDiff = prompt.indexOf('## Vom User zuletzt geänderte Bereiche')
+      const idxSib = prompt.indexOf('Sibling-Files')
+      expect(idxDiff).toBeGreaterThan(0)
+      expect(idxSib).toBeGreaterThan(idxDiff)
+    })
+
+    it('Antwort-Format always comes LAST (rules section terminates the prompt)', () => {
+      // Critical: the LLM reads top-to-bottom. The final instruction is
+      // "output ONLY patches". Putting anything after Antwort-Format
+      // would weaken that signal.
+      const prompt = buildEditPrompt(
+        baseCtx({
+          instruction: 'do X',
+          selection: { from: 0, to: 4, text: 'test' },
+          diffSinceLastCall: '@@ -1,1 +1,1 @@\n-A\n+B',
+          siblings: { 'tokens.mir': 'a.bg: #fff' },
+        })
+      )
+      // Check that the ## Antwort-Format heading is the LAST top-level
+      // ## heading in the prompt.
+      const headings = [...prompt.matchAll(/^## /gm)].map(m => m.index!)
+      const lastHeading = Math.max(...headings)
+      const fmtIdx = prompt.indexOf('## Antwort-Format')
+      expect(fmtIdx).toBe(lastHeading)
+    })
+  })
+
+  describe('Edge cases', () => {
+    it('empty source still produces a valid prompt with empty code-fence', () => {
+      const prompt = buildEditPrompt(baseCtx({ source: '' }))
+      // The code-fence opens and closes around the empty source. Two
+      // consecutive ```mirror lines would mean the closing fence is
+      // present.
+      expect(prompt).toContain('```mirror\n\n```')
+      // Cursor and rules still present.
+      expect(prompt).toContain('Zeile 1, Spalte 1')
+      expect(prompt).toMatch(/Anker MUSS unique sein/)
+    })
+
+    it('selection containing @@FIND-style markers is preserved verbatim (no escaping)', () => {
+      // Risk: if someone selects text that already contains @@FIND/@@END,
+      // we would NOT escape it — the LLM must figure out from the heading
+      // that this is selection content, not patch output. Lock in the
+      // current behavior so a future "let's escape" change is intentional.
+      const text = '@@FIND\nBlock\n@@REPLACE\nReplaced\n@@END'
+      const prompt = buildEditPrompt(baseCtx({ selection: { from: 0, to: 30, text } }))
+      // Selection is wrapped in ```mirror; the @@-tokens must appear inside.
+      expect(prompt).toMatch(/## User-Selection[\s\S]*?@@FIND[\s\S]*?@@END/)
+    })
+
+    it('multi-byte unicode in source is preserved verbatim', () => {
+      const src = 'Frame gap 12\n  Text "Größe 🎯"'
+      const prompt = buildEditPrompt(baseCtx({ source: src }))
+      expect(prompt).toContain(src)
+    })
+
+    it('multiple siblings produce multiple ### file headings within the section', () => {
+      const prompt = buildEditPrompt(
+        baseCtx({
+          siblings: {
+            'tokens.mir': 'a.bg: #fff',
+            'components.mir': 'Card: bg #111',
+          },
+        })
+      )
+      // Both names must appear, both prefixed with `### ` (file sub-heading).
+      expect(prompt).toContain('### tokens.mir')
+      expect(prompt).toContain('### components.mir')
+    })
+
+    it('siblings with whitespace-only content are filtered (no ### heading emitted)', () => {
+      // Discovery: prompt-utils.formatProjectFileSection filters those out.
+      const prompt = buildEditPrompt(
+        baseCtx({
+          siblings: {
+            'real.mir': 'Frame gap 12',
+            'empty.mir': '   \n\n',
+          },
+        })
+      )
+      expect(prompt).toContain('### real.mir')
+      expect(prompt).not.toContain('### empty.mir')
+    })
+
+    it('siblings section is dropped entirely when ALL siblings are whitespace-only', () => {
+      const prompt = buildEditPrompt(
+        baseCtx({
+          siblings: { 'empty.mir': '\n\n' },
+        })
+      )
+      expect(prompt).not.toContain('Sibling-Files')
+    })
+
+    it('source is wrapped in ```mirror code-fence (not generic ```)', () => {
+      const prompt = buildEditPrompt(baseCtx({ source: 'Frame' }))
+      expect(prompt).toContain('```mirror\nFrame\n```')
+    })
+
+    it('diff is wrapped in ```diff code-fence (not ```mirror)', () => {
+      const prompt = buildEditPrompt(baseCtx({ diffSinceLastCall: '@@ -1,1 +1,1 @@\n-A\n+B' }))
+      // The diff fence is a syntax-highlight signal for the LLM —
+      // tells it "this is unified-diff, not Mirror source".
+      expect(prompt).toContain('```diff\n@@ -1,1 +1,1 @@')
+    })
+  })
+
+  describe('Critical rules content', () => {
+    it('rules 1-8 are all present (no rule silently dropped)', () => {
+      // The ruleset is the contract with the LLM. A regression that
+      // accidentally drops a rule (e.g. via a bad merge) would silently
+      // weaken the LLM's behavior. Lock in the count.
+      const prompt = buildEditPrompt(baseCtx())
+      // Rule numbers appear at the start of `\d. **`-prefixed lines.
+      const ruleHeads = prompt.match(/^\d\. \*\*/gm) ?? []
+      expect(ruleHeads).toHaveLength(8)
+    })
+
+    it('rule about "Stille ist heilig" (no-op response policy) is present', () => {
+      const prompt = buildEditPrompt(baseCtx())
+      expect(prompt).toMatch(/Stille ist heilig/)
+    })
+
+    it('rule about token-Pflicht is present', () => {
+      const prompt = buildEditPrompt(baseCtx())
+      expect(prompt).toMatch(/Token-Pflicht/)
+    })
+
+    it('@@FILE cross-file syntax is documented in examples', () => {
+      const prompt = buildEditPrompt(baseCtx())
+      expect(prompt).toContain('@@FILE tokens.mir')
+      expect(prompt).toContain('Cross-File-Patch')
+    })
+
+    it('forbids creating new files (only existing files can be patched)', () => {
+      const prompt = buildEditPrompt(baseCtx())
+      // The LLM must NOT invent new files. Lock in the prohibition copy.
+      expect(prompt).toMatch(/EXISTIERENDE Files/)
+      expect(prompt).toMatch(/neue Files anzulegen ist nicht erlaubt/)
     })
   })
 })

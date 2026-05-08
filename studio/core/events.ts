@@ -239,6 +239,16 @@ export interface StudioEvents {
     gridW: number
     gridH: number
   } | null
+  /**
+   * User clicked an empty cell of an active grid (Phase 4). The init
+   * wiring subscribes and inserts a default Frame at that cell
+   * (`x N, y M`) so a grid acts like a click-to-fill canvas.
+   */
+  'grid:insert-at-cell': {
+    containerId: string
+    gridX: number
+    gridY: number
+  }
   /** Smart guides settings changed */
   'smartGuides:changed': {
     enabled: boolean

@@ -405,7 +405,9 @@ export const realLlmEditFlowTests: TestCase[] = describe('AI · LLM-Edit-Flow (r
   // ───────────────────────────────────────────────────────────────────────
   testWithSetup(
     'edge: empty editor → error status, no LLM call',
-    'canvas mobile',
+    // Fixture has a renderable element so waitForCompile sees data-mirror-id
+    // nodes; we wipe to empty AFTER the initial compile settles.
+    'canvas mobile\n\nText "placeholder"',
     async (api: TestAPI) => {
       ensureShimInstalled()
       await api.utils.waitForCompile()

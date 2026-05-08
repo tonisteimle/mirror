@@ -23,11 +23,13 @@
  */
 
 import { Z_INDEX_GRID_OVERLAY } from '../constants/z-index'
+import { events } from '../../core'
 import {
   isGridContainer,
   findOwningGridContainer,
   findGridContainersIn,
   readGridGeometry,
+  getOccupiedCells,
   type GridGeometry,
 } from './grid-detector'
 
@@ -82,6 +84,13 @@ export class GridOverlay {
   private windowResizeHandler: () => void
   /** Currently-previewed drop cell (from a live drag), or null. */
   private activeCell: ActiveCellHint | null = null
+  /**
+   * Currently-hovered insert-target cell (from cursor over an empty
+   * cell with no drag in flight). Painted with the same highlight as
+   * activeCell — distinct field so a real drag never gets shadowed by
+   * leftover hover state.
+   */
+  private hoveredCell: ActiveCellHint | null = null
 
   constructor(config: GridOverlayConfig) {
     this.container = config.container
@@ -286,10 +295,18 @@ export class GridOverlay {
     }
 
     // Active drop-cell highlight: solid accent fill + outline, sits on top
-    // of the dashed lines. Rendered last so it's painted above.
+    // of the dashed lines. Rendered last so it's painted above. Drag
+    // wins over hover when both are set — a click in flight is a
+    // committed drop intent.
     record.activeCellRect = null
-    if (this.activeCell && this.isHintForTarget(this.activeCell, record.target)) {
-      const cellRect = computeCellRect(geo, this.activeCell)
+    const activeHint =
+      this.activeCell && this.isHintForTarget(this.activeCell, record.target)
+        ? this.activeCell
+        : this.hoveredCell && this.isHintForTarget(this.hoveredCell, record.target)
+          ? this.hoveredCell
+          : null
+    if (activeHint) {
+      const cellRect = computeCellRect(geo, activeHint)
       if (cellRect) {
         const rect = document.createElementNS(SVG_NS, 'rect') as SVGRectElement
         rect.setAttribute('x', String(cellRect.x))
@@ -303,6 +320,73 @@ export class GridOverlay {
         rect.setAttribute('stroke-opacity', '0.9')
         record.svg.appendChild(rect)
         record.activeCellRect = rect
+      }
+    }
+
+    // Phase 4: empty-cell click affordance. One transparent rect per
+    // unoccupied cell, with `pointer-events: auto` so SVG-level clicks
+    // route to the insert handler. Lines + filled cells stay
+    // pointer-events: none (set on the SVG root) so normal selection
+    // clicks pass through unchanged.
+    this.addEmptyCellHitZones(record, geo)
+  }
+
+  private addEmptyCellHitZones(record: ActiveGrid, geo: GridGeometry): void {
+    const containerId = record.target.dataset.mirrorId
+    if (!containerId) return
+    const occupied = getOccupiedCells(record.target)
+    const colCount = geo.columnSizes.length
+    const rowCount = geo.rowSizes.length
+
+    for (let y = 1; y <= rowCount; y++) {
+      for (let x = 1; x <= colCount; x++) {
+        if (occupied.has(`${x},${y}`)) continue
+        const cellRect = computeCellRect(geo, {
+          containerId,
+          gridX: x,
+          gridY: y,
+          gridW: 1,
+          gridH: 1,
+        })
+        if (!cellRect) continue
+
+        const hit = document.createElementNS(SVG_NS, 'rect') as SVGRectElement
+        hit.setAttribute('x', String(cellRect.x))
+        hit.setAttribute('y', String(cellRect.y))
+        hit.setAttribute('width', String(cellRect.w))
+        hit.setAttribute('height', String(cellRect.h))
+        hit.setAttribute('fill', 'transparent')
+        hit.style.pointerEvents = 'auto'
+        hit.style.cursor = 'pointer'
+        hit.dataset.mirrorOverlay = 'grid-cell-hit'
+
+        hit.addEventListener('mouseenter', () => {
+          this.hoveredCell = { containerId, gridX: x, gridY: y, gridW: 1, gridH: 1 }
+          // Local refresh — don't re-emit `grid:active-cell` (would loop
+          // back into setActiveCell). The hovered field drives redraw.
+          this.refresh()
+        })
+        hit.addEventListener('mouseleave', () => {
+          if (
+            this.hoveredCell &&
+            this.hoveredCell.containerId === containerId &&
+            this.hoveredCell.gridX === x &&
+            this.hoveredCell.gridY === y
+          ) {
+            this.hoveredCell = null
+            this.refresh()
+          }
+        })
+        hit.addEventListener('click', e => {
+          // Stop propagation so the underlying preview-click handler
+          // doesn't re-select the grid (or unselect if it's already
+          // selected) — the insert handler manages selection itself.
+          e.stopPropagation()
+          this.hoveredCell = null
+          events.emit('grid:insert-at-cell', { containerId, gridX: x, gridY: y })
+        })
+
+        record.svg.appendChild(hit)
       }
     }
   }

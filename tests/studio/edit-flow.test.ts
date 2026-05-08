@@ -43,9 +43,15 @@ describe('EditFlow — runEditFlow', () => {
     test('returns status=ready with patched source for a valid patch response', async () => {
       bridge.setMockRawOutput('@@FIND\n  Text "Hello"\n@@REPLACE\n  Text "Hi"\n@@END')
       const result = await runEditFlow(baseCtx())
-      expect(result.status).toBe('ready')
-      expect(result.proposedSource).toBe('Frame gap 12\n  Text "Hi"')
-      expect(result.error).toBeUndefined()
+      // Sharp: full-shape so we lock retries=0 and undefined optionals
+      // — a regression that accidentally sets retries=1 on a clean run
+      // (off-by-one) would slip past `expect(result.status).toBe('ready')`.
+      expect(result).toEqual({
+        status: 'ready',
+        proposedSource: 'Frame gap 12\n  Text "Hi"',
+        retries: 0,
+        qualityViolations: { token: [], component: [], redundancy: [] },
+      })
     })
 
     test('applies multiple patches in sequence', async () => {
@@ -682,6 +688,291 @@ describe('EditFlow — runEditFlow', () => {
       setTimeout(() => ctrl.abort(), 20)
 
       await expect(promise).rejects.toMatchObject({ name: 'AbortError' })
+    })
+  })
+
+  // -----------------------------------------------------------------------
+  // P2 coverage gaps
+  // -----------------------------------------------------------------------
+
+  describe('Default maxRetries', () => {
+    test('uses maxRetries=2 by default when option is omitted', async () => {
+      // Critical: lock in the documented default. A regression where the
+      // default drifts to 0 or 5 would silently change cost and latency.
+      const ctx = baseCtx({ source: 'A' })
+      let callCount = 0
+      bridge.runAgent = async (_p, _t, _path, sessionId) => {
+        callCount++
+        return {
+          session_id: sessionId || 'mock',
+          success: true,
+          output: '@@FIND\nNOPE\n@@REPLACE\nX\n@@END',
+          error: null,
+        }
+      }
+
+      const result = await runEditFlow(ctx) // no maxRetries passed
+      expect(result.status).toBe('error')
+      // 1 initial + 2 retries = 3 calls total
+      expect(callCount).toBe(3)
+      expect(result.retries).toBe(2)
+    })
+  })
+
+  describe('Quality-retry — different violation types', () => {
+    test('retry prompt mentions component-violations when present', async () => {
+      // First pass produces a hardcoded button matching a component;
+      // verify the retry instruction includes the component-violation copy.
+      const components = { 'c.com': 'PrimaryBtn as Button: bg #2271C1, col white' }
+      const ctx = baseCtx({
+        source: 'Button "Save"',
+        siblings: components,
+      })
+
+      const responses = [
+        '@@FIND\nButton "Save"\n@@REPLACE\nButton "Save", bg #2271C1, col white\n@@END',
+        '@@FIND\nButton "Save", bg #2271C1, col white\n@@REPLACE\nPrimaryBtn "Save"\n@@END',
+      ]
+      let call = 0
+      const observedPrompts: string[] = []
+      bridge.runAgent = async (prompt, _t, _path, sessionId) => {
+        observedPrompts.push(prompt)
+        return {
+          session_id: sessionId || 'mock',
+          success: true,
+          output: responses[call++] ?? '',
+          error: null,
+        }
+      }
+
+      const result = await runEditFlow(ctx, { qualityRetry: true })
+      expect(call).toBe(2)
+      expect(result.status).toBe('ready')
+      expect(result.proposedSource).toBe('PrimaryBtn "Save"')
+      // The 2nd prompt must mention the component-violation hint specifically.
+      expect(observedPrompts[1]).toContain('Component-Verstösse')
+      expect(observedPrompts[1]).toContain('PrimaryBtn')
+    })
+
+    test('retry prompt mentions redundancy-violations when present', async () => {
+      const ctx = baseCtx({
+        source: 'Button "X"',
+      })
+      const responses = [
+        // Pass 1 introduces a duplicate property.
+        '@@FIND\nButton "X"\n@@REPLACE\nButton "X", bg red, bg blue\n@@END',
+        // Pass 2 cleans it up.
+        '@@FIND\nButton "X", bg red, bg blue\n@@REPLACE\nButton "X", bg red\n@@END',
+      ]
+      let call = 0
+      const observedPrompts: string[] = []
+      bridge.runAgent = async (prompt, _t, _path, sessionId) => {
+        observedPrompts.push(prompt)
+        return {
+          session_id: sessionId || 'mock',
+          success: true,
+          output: responses[call++] ?? '',
+          error: null,
+        }
+      }
+
+      const result = await runEditFlow(ctx, { qualityRetry: true })
+      expect(call).toBe(2)
+      expect(result.status).toBe('ready')
+      expect(result.proposedSource).toBe('Button "X", bg red')
+      expect(observedPrompts[1]).toContain('Redundanz-Verstösse')
+    })
+
+    test('retry instruction preserves the user instruction with explicit attribution', async () => {
+      // When the user gave a specific instruction, the retry must mention
+      // it so the LLM doesn't drift away from the original goal.
+      const tokens = { 't.tok': 'primary.bg: #2271C1' }
+      const ctx = baseCtx({
+        source: 'Button "Save", bg red',
+        siblings: tokens,
+        instruction: 'Mach den Button blau',
+      })
+
+      const responses = [
+        '@@FIND\nButton "Save", bg red\n@@REPLACE\nButton "Save", bg #2271C1\n@@END',
+        '@@FIND\nButton "Save", bg #2271C1\n@@REPLACE\nButton "Save", bg $primary\n@@END',
+      ]
+      let call = 0
+      const observedPrompts: string[] = []
+      bridge.runAgent = async (prompt, _t, _path, sessionId) => {
+        observedPrompts.push(prompt)
+        return {
+          session_id: sessionId || 'mock',
+          success: true,
+          output: responses[call++] ?? '',
+          error: null,
+        }
+      }
+
+      await runEditFlow(ctx, { qualityRetry: true })
+      // The 2nd prompt must contain the instruction-preservation copy.
+      expect(observedPrompts[1]).toContain('Ursprüngliche User-Anweisung')
+      expect(observedPrompts[1]).toContain('Mach den Button blau')
+    })
+  })
+
+  describe('Cross-file ↔ single-file path divergence', () => {
+    test('a clean single-file response after a cross-file retry uses the single-file path', async () => {
+      // First call: cross-file with bad anchor → triggers retry.
+      // Second call: pure single-file response → must succeed via the
+      // single-file path. Lock in that the orchestrator doesn't get
+      // stuck in cross-file mode.
+      const responses = [
+        ['@@FILE tokens.mir', '@@FIND', 'BogusAnchor', '@@REPLACE', 'foo', '@@END'].join('\n'),
+        '@@FIND\n  Text "Hello"\n@@REPLACE\n  Text "Hi"\n@@END',
+      ]
+      let call = 0
+      bridge.runAgent = async (_p, _t, _path, sessionId) => ({
+        session_id: sessionId || 'mock',
+        success: true,
+        output: responses[call++] ?? '',
+        error: null,
+      })
+
+      const result = await runEditFlow(
+        baseCtx({ siblings: { 'tokens.mir': 'primary.bg: #2271C1' } }),
+        { maxRetries: 1 }
+      )
+      expect(result.status).toBe('ready')
+      expect(result.proposedSource).toBe('Frame gap 12\n  Text "Hi"')
+      // Single-file path must NOT produce otherFileChanges.
+      expect(result.otherFileChanges).toBeUndefined()
+    })
+  })
+
+  describe('Bridge-error stringification', () => {
+    test('non-Error object rejection is JSON-stringified, not "[object Object]"', async () => {
+      // errorMessage() detects plain objects and JSON-stringifies them so
+      // the structure surfaces in the error UI. The naive String(err)
+      // fallback would produce "[object Object]" — useless to the user.
+      bridge.runAgent = async () => Promise.reject({ code: 'E_BAD', detail: 'something useful' })
+      const result = await runEditFlow(baseCtx())
+      expect(result.status).toBe('error')
+      expect(result.error).toContain('something useful')
+      expect(result.error).not.toContain('[object Object]')
+    })
+
+    test('plain-string rejection (non-Error) is included verbatim in the error message', async () => {
+      bridge.runAgent = async () => Promise.reject('rate-limit')
+      const result = await runEditFlow(baseCtx())
+      expect(result.status).toBe('error')
+      expect(result.error).toBe('rate-limit') // not "Error: rate-limit", not stringified
+    })
+
+    test('object with a circular reference falls back to String() without throwing', async () => {
+      const circular: Record<string, unknown> = { code: 'E_BAD' }
+      circular.self = circular
+      bridge.runAgent = async () => Promise.reject(circular)
+      const result = await runEditFlow(baseCtx())
+      expect(result.status).toBe('error')
+      // JSON.stringify throws on circular refs → catch falls back to String().
+      // The fallback IS '[object Object]' here — that's the documented worst case.
+      expect(result.error).toBe('[object Object]')
+    })
+  })
+
+  describe('Empty-source guard', () => {
+    test('empty source path also reports retries=0 (no calls were made)', async () => {
+      const result = await runEditFlow(baseCtx({ source: '' }))
+      expect(result.status).toBe('error')
+      expect(result.retries).toBe(0)
+    })
+
+    test('source-too-large path also reports retries=0', async () => {
+      const huge = 'A'.repeat(200_000)
+      const result = await runEditFlow(baseCtx({ source: huge }))
+      expect(result.status).toBe('error')
+      expect(result.retries).toBe(0)
+    })
+  })
+
+  describe('Telemetry — fine-grained ordering', () => {
+    test('quality-retry merges otherFileChanges from both passes (covers merge branch)', async () => {
+      // Coverage gap: mergeOtherFileChanges line 463 (spread-merge path).
+      // Without this, both first.otherFileChanges and second.other... are
+      // always undefined and the merge function returns undefined early.
+      const tokens = { 't.tok': 'primary.bg: #2271C1' }
+      const ctx = baseCtx({
+        source: 'Button "Save", bg #2271C1',
+        siblings: tokens,
+      })
+      const responses = [
+        [
+          '@@FILE t.tok',
+          '@@FIND',
+          'primary.bg: #2271C1',
+          '@@REPLACE',
+          'primary.bg: #2271C1\naccent.bg: #f00',
+          '@@END',
+          '@@FIND',
+          'Button "Save", bg #2271C1',
+          '@@REPLACE',
+          'Button "Save", bg #2271C1, col white',
+          '@@END',
+        ].join('\n'),
+        [
+          '@@FILE t.tok',
+          '@@FIND',
+          'primary.bg: #2271C1\naccent.bg: #f00',
+          '@@REPLACE',
+          'primary.bg: #2271C1\naccent.bg: #f00\nsecondary.bg: #0f0',
+          '@@END',
+          '@@FIND',
+          'Button "Save", bg #2271C1, col white',
+          '@@REPLACE',
+          'Button "Save", bg $primary, col white',
+          '@@END',
+        ].join('\n'),
+      ]
+      let call = 0
+      bridge.runAgent = async (_p, _t, _path, sessionId) => ({
+        session_id: sessionId || 'mock',
+        success: true,
+        output: responses[call++] ?? '',
+        error: null,
+      })
+
+      const result = await runEditFlow(ctx, { qualityRetry: true })
+      expect(call).toBe(2)
+      expect(result.status).toBe('ready')
+      expect(result.qualityRetried).toBe(true)
+      // Retry's content overrides pass-1's content for the same file.
+      expect(result.otherFileChanges).toBeDefined()
+      expect(result.otherFileChanges!['t.tok']).toBe(
+        'primary.bg: #2271C1\naccent.bg: #f00\nsecondary.bg: #0f0'
+      )
+    })
+
+    test('quality-retry event fires AFTER the retry completes, not before', async () => {
+      // Lock in event ordering: the user observes events in this order.
+      const tokens = { 't.tok': 'primary.bg: #2271C1' }
+      const ctx = baseCtx({
+        source: 'Button "Save", bg #2271C1',
+        siblings: tokens,
+      })
+      const responses = [
+        '',
+        '@@FIND\nButton "Save", bg #2271C1\n@@REPLACE\nButton "Save", bg $primary\n@@END',
+      ]
+      let call = 0
+      bridge.runAgent = async (_p, _t, _path, sessionId) => ({
+        session_id: sessionId || 'mock',
+        success: true,
+        output: responses[call++] ?? '',
+        error: null,
+      })
+
+      const events: EditFlowAttemptEvent[] = []
+      await runEditFlow(ctx, { qualityRetry: true, onAttempt: e => events.push(e) })
+
+      // Pass-1 no-change → Pass-2 success → quality-retry meta-event.
+      const kinds = events.map(e => e.kind)
+      expect(kinds).toEqual(['no-change', 'success', 'quality-retry'])
     })
   })
 })

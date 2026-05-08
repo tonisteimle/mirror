@@ -27,20 +27,26 @@ afterEach(() => {
 })
 
 describe('Fixer — runEdit', () => {
-  test('returns the bridge raw output on success', async () => {
-    bridge.setMockRawOutput('@@FIND\nButton "Save"\n@@REPLACE\nButton "Save", bg blue\n@@END')
+  test('returns the bridge raw output on success (byte-exact)', async () => {
+    const expected = '@@FIND\nButton "Save"\n@@REPLACE\nButton "Save", bg blue\n@@END'
+    bridge.setMockRawOutput(expected)
     const result = await runEdit('test prompt')
-    expect(result).toContain('@@FIND')
-    expect(result).toContain('Button "Save", bg blue')
+    // Sharp: byte-exact equality. The fixer must NOT trim, normalize, or
+    // re-wrap the output — downstream parser depends on it being verbatim.
+    expect(result).toBe(expected)
   })
 
-  test('passes the prompt and "edit" agentType to the bridge', async () => {
+  test('passes prompt, "edit" agentType, empty projectPath, and null sessionId to bridge', async () => {
     let observedPrompt = ''
     let observedAgentType = ''
+    let observedProjectPath: string | undefined
+    let observedSessionId: string | null | undefined
     const original = bridge.runAgent.bind(bridge)
     bridge.runAgent = async (prompt, agentType, projectPath, sessionId) => {
       observedPrompt = prompt
       observedAgentType = agentType
+      observedProjectPath = projectPath
+      observedSessionId = sessionId
       return original(prompt, agentType, projectPath, sessionId)
     }
 
@@ -48,7 +54,12 @@ describe('Fixer — runEdit', () => {
     await runEdit('hello world')
 
     expect(observedPrompt).toBe('hello world')
+    // Sharp: agentType MUST be exactly 'edit' — backend routing depends on it.
     expect(observedAgentType).toBe('edit')
+    // Sharp: projectPath empty (the fixer is stateless, no project context).
+    expect(observedProjectPath).toBe('')
+    // Sharp: sessionId null (no session reuse).
+    expect(observedSessionId).toBeNull()
   })
 
   test('throws on bridge error', async () => {
@@ -118,5 +129,105 @@ describe('Fixer — runEdit', () => {
     setTimeout(() => ctrl.abort(), 20)
 
     await expect(promise).rejects.toMatchObject({ name: 'AbortError' })
+  })
+
+  // -----------------------------------------------------------------------
+  // P2 coverage gaps
+  // -----------------------------------------------------------------------
+
+  test('throws when isTauri() returns false (e.g. plain browser without bridge wired)', async () => {
+    // The bridge object exists but reports it's not in a Tauri context.
+    // Should still throw the ai-bridge hint, NOT crash from a missing API.
+    bridge.isTauri = () => false
+    await expect(runEdit('test prompt')).rejects.toThrow(/ai-bridge/i)
+  })
+
+  test('does not call runAgent when bridge is missing (short-circuit)', async () => {
+    let callCount = 0
+    bridge.runAgent = async () => {
+      callCount++
+      return { session_id: 'x', success: true, output: '', error: null }
+    }
+    ;(globalThis as any).window.TauriBridge = undefined
+
+    await expect(runEdit('test prompt')).rejects.toThrow()
+    expect(callCount).toBe(0)
+  })
+
+  test('does not call runAgent when claude CLI check fails (short-circuit)', async () => {
+    let callCount = 0
+    bridge.checkClaudeCli = async () => false
+    bridge.runAgent = async () => {
+      callCount++
+      return { session_id: 'x', success: true, output: '', error: null }
+    }
+
+    await expect(runEdit('test prompt')).rejects.toThrow(/Claude CLI nicht/i)
+    expect(callCount).toBe(0)
+  })
+
+  test('AbortError has the standard DOMException shape (name + message)', async () => {
+    // Lock in DOMException semantics — downstream uses `err.name` to
+    // distinguish abort from other errors. A switch to plain Error would
+    // silently break that branch.
+    const ctrl = new AbortController()
+    ctrl.abort()
+    try {
+      await runEdit('test prompt', ctrl.signal)
+      expect.fail('should have thrown')
+    } catch (err) {
+      expect(err).toBeInstanceOf(DOMException)
+      expect((err as DOMException).name).toBe('AbortError')
+      expect((err as DOMException).message).toBe('Aborted')
+    }
+  })
+
+  test('returns empty output when bridge succeeds with empty string', async () => {
+    // Edge: an empty success is valid (the LLM may produce no patches).
+    // The fixer must return '' verbatim rather than treat it as a failure.
+    bridge.setMockRawOutput('')
+    const result = await runEdit('test prompt')
+    expect(result).toBe('')
+  })
+
+  test('preserves trailing newlines and whitespace in raw output', async () => {
+    // The parser is whitespace-sensitive in @@FIND/@@REPLACE blocks.
+    // A regression that trims output would silently break patches that
+    // depend on a trailing newline.
+    const raw = '@@FIND\n  text\n@@REPLACE\n  REPLACED\n@@END\n\n'
+    bridge.setMockRawOutput(raw)
+    const result = await runEdit('test prompt')
+    expect(result).toBe(raw) // byte-exact, including trailing \n\n
+  })
+
+  test('preserves multi-byte unicode in output', async () => {
+    // Mirror DSL allows German umlauts and emoji in strings — the bridge
+    // path must not corrupt them.
+    const raw = '@@FIND\nText "Größe"\n@@REPLACE\nText "Grösse 🎯"\n@@END'
+    bridge.setMockRawOutput(raw)
+    const result = await runEdit('test prompt')
+    expect(result).toBe(raw)
+  })
+
+  test('AbortError after pre-check reject still reports AbortError, not the pre-check error', async () => {
+    // Subtle ordering: signal aborts already-aborted check happens first.
+    // Even if checkClaudeCli would also fail, the abort wins.
+    bridge.checkClaudeCli = async () => false
+    const ctrl = new AbortController()
+    ctrl.abort()
+    await expect(runEdit('test prompt', ctrl.signal)).rejects.toMatchObject({
+      name: 'AbortError',
+    })
+  })
+
+  test('error from bridge with a non-empty error string surfaces verbatim', async () => {
+    // Lock in that the error message is passed through, not wrapped.
+    bridge.runAgent = async (_p, _t, _path, sessionId) => ({
+      session_id: sessionId || 'mock',
+      success: false,
+      output: '',
+      error: 'CLI killed by SIGTERM at line 42',
+    })
+    await expect(runEdit('test prompt')).rejects.toThrow('CLI killed by SIGTERM at line 42')
   })
 })

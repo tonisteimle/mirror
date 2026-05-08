@@ -96,12 +96,11 @@ describe('PatchApplier — applyPatches', () => {
 
       expect(result.success).toBe(false)
       expect(result.newSource).toBeUndefined()
-      expect(result.retryHints).toHaveLength(1)
-      expect(result.retryHints![0]).toMatchObject({
-        reason: 'no-match',
-        matchCount: 0,
-      })
-      expect(result.retryHints![0].patch.find).toBe('Button "x"')
+      // Sharp: toEqual catches accidental extra fields on RetryHint that
+      // toMatchObject would miss.
+      expect(result.retryHints).toEqual([
+        { reason: 'no-match', matchCount: 0, patch: { find: 'Button "x"', replace: 'Button "y"' } },
+      ])
     })
 
     it('reports multiple-matches when anchor matches more than once', () => {
@@ -109,11 +108,15 @@ describe('PatchApplier — applyPatches', () => {
       const result = applyPatches(source, [patch('Text "x"', 'Text "y"')])
 
       expect(result.success).toBe(false)
-      expect(result.retryHints).toHaveLength(1)
-      expect(result.retryHints![0]).toMatchObject({
-        reason: 'multiple-matches',
-        matchCount: 3,
-      })
+      expect(result.retryHints).toEqual([
+        {
+          reason: 'multiple-matches',
+          matchCount: 3,
+          patch: { find: 'Text "x"', replace: 'Text "y"' },
+        },
+      ])
+      // Source must remain untouched on failure (no leak).
+      expect(result.newSource).toBeUndefined()
     })
 
     it('reports retryHints only for the failing patch when earlier patches succeed', () => {
@@ -178,6 +181,175 @@ describe('PatchApplier — applyPatches', () => {
         expect(result.success).toBe(true)
         expect(result.newSource).toBe(src)
       }
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // Coverage gaps surfaced during the quality pass
+  // ---------------------------------------------------------------------------
+  describe('edge cases (P2 coverage)', () => {
+    it('subsequent patches are NOT attempted when an earlier patch fails', () => {
+      // Documented behavior: applyPatches returns at the first failure with
+      // exactly one retryHint. Locking this in protects against a future
+      // refactor that might "collect all hints" and silently change the
+      // contract for the orchestrator.
+      const source = 'Text "ambiguous"\nText "ambiguous"\nText "later"'
+      const result = applyPatches(source, [
+        patch('Text "ambiguous"', 'Text "X"'), // fails (2 matches)
+        patch('Text "later"', 'Text "Y"'), // would succeed if reached
+      ])
+
+      expect(result.success).toBe(false)
+      expect(result.retryHints).toHaveLength(1)
+      expect(result.retryHints![0].patch.find).toBe('Text "ambiguous"')
+      // Source must remain unchanged — patch 2 must not have run.
+      expect(result.newSource).toBeUndefined()
+    })
+
+    it('a later patch can fail because an earlier patch removed its anchor', () => {
+      // Sequence semantics: patch 1 deletes the anchor patch 2 expected.
+      // The result is a no-match for patch 2 — sequence ordering matters.
+      const source = 'A\nB\nC'
+      const result = applyPatches(source, [
+        patch('B\n', ''), // removes B
+        patch('B', 'X'), // anchor no longer exists
+      ])
+
+      expect(result.success).toBe(false)
+      expect(result.retryHints).toHaveLength(1)
+      expect(result.retryHints![0].reason).toBe('no-match')
+      expect(result.retryHints![0].matchCount).toBe(0)
+    })
+
+    it('rejects no-match against an empty source', () => {
+      const result = applyPatches('', [patch('anchor', 'x')])
+      expect(result.success).toBe(false)
+      expect(result.retryHints).toEqual([
+        { reason: 'no-match', matchCount: 0, patch: { find: 'anchor', replace: 'x' } },
+      ])
+    })
+
+    it('anchor at the very start of source is matched', () => {
+      const source = 'Frame gap 12\n  Text "x"'
+      const result = applyPatches(source, [patch('Frame gap 12', 'Card gap 12')])
+      expect(result.success).toBe(true)
+      expect(result.newSource).toBe('Card gap 12\n  Text "x"')
+    })
+
+    it('anchor at the very end of source is matched', () => {
+      const source = 'Frame gap 12\n  Text "last"'
+      const result = applyPatches(source, [patch('Text "last"', 'Text "final"')])
+      expect(result.success).toBe(true)
+      expect(result.newSource).toBe('Frame gap 12\n  Text "final"')
+    })
+
+    it('CR is treated as a literal character (no normalization in applier)', () => {
+      // The applier is byte-strict. Source with CRLF and a FIND that contains
+      // only LF will not match — this is intentional. The parser normalizes;
+      // the applier doesn't.
+      const source = 'first\r\nsecond'
+      const result = applyPatches(source, [patch('first\nsecond', 'replaced')])
+      expect(result.success).toBe(false)
+      expect(result.retryHints![0].reason).toBe('no-match')
+    })
+
+    it('patch on a substring of a longer line matches just that substring', () => {
+      const source = 'Text "Hello, World!"'
+      const result = applyPatches(source, [patch('Hello', 'Hi')])
+      expect(result.success).toBe(true)
+      expect(result.newSource).toBe('Text "Hi, World!"')
+    })
+
+    it('overlapping match candidates count as separate occurrences (non-overlap is enforced via pos += needle.length)', () => {
+      // Pattern "aa" in "aaaa" → indexOf advances by needle length. We expect
+      // 2 occurrences (aa + aa), not 3 (overlapping). countOccurrences uses
+      // pos = idx + needle.length, locking this in.
+      const source = 'aaaa'
+      const result = applyPatches(source, [patch('aa', 'X')])
+      expect(result.success).toBe(false)
+      expect(result.retryHints![0]).toMatchObject({
+        reason: 'multiple-matches',
+        matchCount: 2,
+      })
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // Multi-file applier
+  // ---------------------------------------------------------------------------
+  describe('applyPatchesMultiFile', () => {
+    it('groups multiple patches targeting the same file (covers grouped.has path)', async () => {
+      const { applyPatchesMultiFile } = await import('../../studio/agent/patch-applier')
+      const files = {
+        'app.mir': 'Frame gap 12\n  Text "A"\n  Text "B"',
+      }
+      const patches = [
+        { find: 'Text "A"', replace: 'Text "AA"' },
+        { find: 'Text "B"', replace: 'Text "BB"' },
+      ]
+      const result = applyPatchesMultiFile(files, patches, { defaultFile: 'app.mir' })
+      expect(result.success).toBe(true)
+      expect(result.updatedFiles).toEqual({
+        'app.mir': 'Frame gap 12\n  Text "AA"\n  Text "BB"',
+      })
+    })
+
+    it('multi-file: collects retryHints across files when one file fails', async () => {
+      const { applyPatchesMultiFile } = await import('../../studio/agent/patch-applier')
+      const files = {
+        'app.mir': 'Frame gap 12\n  Text "A"',
+        'tokens.mir': 'primary.bg: #2271C1',
+      }
+      const patches = [
+        // app.mir succeeds
+        { find: 'Text "A"', replace: 'Text "Z"' },
+        // tokens.mir succeeds
+        { find: 'primary.bg: #2271C1', replace: 'primary.bg: #FFF', targetFile: 'tokens.mir' },
+        // app.mir fails (no match) — same file as patch 1
+        { find: 'BogusAnchor', replace: 'foo' },
+      ]
+      const result = applyPatchesMultiFile(files, patches, { defaultFile: 'app.mir' })
+      expect(result.success).toBe(false)
+      expect(result.retryHints).toBeDefined()
+      // The hint must carry the targetFile so the caller knows where to look.
+      const hint = result.retryHints![0] as { reason: string; targetFile: string }
+      expect(hint.targetFile).toBe('app.mir')
+      expect(hint.reason).toBe('no-match')
+      // All-or-nothing: NO files leak through, even though tokens.mir would
+      // have succeeded on its own.
+      expect(result.updatedFiles).toBeUndefined()
+    })
+
+    it('rejects unknown @@FILE before applying anything', async () => {
+      const { applyPatchesMultiFile } = await import('../../studio/agent/patch-applier')
+      const files = { 'app.mir': 'A' }
+      const patches = [{ find: 'A', replace: 'X', targetFile: 'phantom.mir' }]
+      const result = applyPatchesMultiFile(files, patches, { defaultFile: 'app.mir' })
+      expect(result.success).toBe(false)
+      expect(result.unknownFiles).toEqual(['phantom.mir'])
+      expect(result.retryHints).toBeUndefined()
+      expect(result.updatedFiles).toBeUndefined()
+    })
+
+    it('applies cross-file patches in distinct files independently', async () => {
+      const { applyPatchesMultiFile } = await import('../../studio/agent/patch-applier')
+      const files = {
+        'app.mir': 'Text "Hi"',
+        'tokens.mir': 'primary.bg: #fff',
+        'components.mir': 'Btn: pad 12',
+      }
+      const patches = [
+        { find: 'Text "Hi"', replace: 'Text "Hello"' },
+        { find: 'primary.bg: #fff', replace: 'primary.bg: #000', targetFile: 'tokens.mir' },
+        { find: 'pad 12', replace: 'pad 16', targetFile: 'components.mir' },
+      ]
+      const result = applyPatchesMultiFile(files, patches, { defaultFile: 'app.mir' })
+      expect(result.success).toBe(true)
+      expect(result.updatedFiles).toEqual({
+        'app.mir': 'Text "Hello"',
+        'tokens.mir': 'primary.bg: #000',
+        'components.mir': 'Btn: pad 16',
+      })
     })
   })
 })

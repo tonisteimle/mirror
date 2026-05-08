@@ -63,6 +63,49 @@ export function getDirectGridChildren(el: Element): HTMLElement[] {
 }
 
 /**
+ * Set of `"x,y"` cell-key strings occupied by direct grid children.
+ * Reads gridColumnStart/Row + grid-column/row-end (`span N`) from each
+ * child's computed style; cells beyond explicit tracks are silently
+ * ignored (CSS would auto-grow, but our cell-snap math doesn't see
+ * implicit tracks anyway).
+ *
+ * Used by the Phase-4 click-to-insert affordance to decide which cells
+ * are empty and therefore clickable.
+ */
+export function getOccupiedCells(el: Element): Set<string> {
+  const out = new Set<string>()
+  if (!isGridContainer(el)) return out
+  for (const child of getDirectGridChildren(el)) {
+    const cs = getComputedStyle(child)
+    const x = parseLineIndex(cs.gridColumnStart)
+    const y = parseLineIndex(cs.gridRowStart)
+    if (x === null || y === null) continue
+    const w = parseSpan(cs.gridColumnEnd) ?? 1
+    const h = parseSpan(cs.gridRowEnd) ?? 1
+    // A `w 2` child blocks its right neighbor too — mark every cell
+    // it spans, not just the start.
+    for (let dy = 0; dy < h; dy++) {
+      for (let dx = 0; dx < w; dx++) {
+        out.add(`${x + dx},${y + dy}`)
+      }
+    }
+  }
+  return out
+}
+
+function parseLineIndex(raw: string): number | null {
+  if (!raw || raw === 'auto') return null
+  const m = raw.match(/^(\d+)$/)
+  return m ? parseInt(m[1], 10) : null
+}
+
+function parseSpan(raw: string): number | null {
+  if (!raw) return null
+  const m = raw.match(/^span\s+(\d+)$/)
+  return m ? parseInt(m[1], 10) : null
+}
+
+/**
  * Walk up the DOM until we find a grid-container ancestor (inclusive).
  * Returns the innermost grid container, or null if none.
  */

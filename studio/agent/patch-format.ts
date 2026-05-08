@@ -68,10 +68,12 @@ export function parsePatchResponse(rawText: string): ParsedPatchResponse {
   const patches: Patch[] = []
   const parseErrors: string[] = []
 
-  // Strip leading BOM, normalize line endings.
-  let text = rawText
-  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1)
-  text = text.replace(/\r\n/g, '\n')
+  // Normalize CRLF → LF. State machine works on line-by-line indices that
+  // must match the source the user sees in the editor.
+  // Note: a leading BOM at position 0 is handled implicitly — String.trim()
+  // strips U+FEFF, so marker-line detection works regardless. Content lines
+  // with BOM are not a real-world LLM output pattern.
+  const text = rawText.replace(/\r\n/g, '\n')
 
   // Edge: empty input → no work.
   if (text.length === 0) return { patches, parseErrors }
@@ -114,6 +116,11 @@ export function parsePatchResponse(rawText: string): ParsedPatchResponse {
           `Line ${i + 1}: unexpected @@FIND while in state '${state}' ` +
             `(block starting at line ${blockStartLine + 1} is unclosed and will be discarded)`
         )
+        // Recovery must drop the discarded block's @@FILE too — otherwise the
+        // file target would leak into the next block, attaching the wrong
+        // patch to the wrong file. Found via the quality-pass discovery test
+        // "@@FILE is reset between blocks".
+        currentFile = undefined
       }
       state = 'in_find'
       currentFind = []

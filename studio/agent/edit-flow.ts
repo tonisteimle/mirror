@@ -573,5 +573,15 @@ function isAbortError(err: unknown): boolean {
 
 function errorMessage(err: unknown): string {
   if (err instanceof Error) return err.message
+  if (typeof err === 'string') return err
+  // Plain-object rejection: String(err) would produce '[object Object]' —
+  // useless to the user. JSON-stringify so at least the structure surfaces.
+  if (typeof err === 'object' && err !== null) {
+    try {
+      return JSON.stringify(err)
+    } catch {
+      return String(err)
+    }
+  }
   return String(err)
 }

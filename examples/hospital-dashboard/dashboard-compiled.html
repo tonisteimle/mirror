@@ -440,7 +440,7 @@ export function createUI(data = {}) {
     'flex-direction': 'column',
     'align-items': 'flex-start',
     'gap': 'var(--space-xl)',
-    'grid-column': 'span 240',
+    'grid-column-end': 'span 240',
     'width': '100%',
     'height': '100%',
     'align-self': 'stretch',
@@ -470,7 +470,7 @@ export function createUI(data = {}) {
   _elements['node-4'] = node_4
   node_4.dataset.mirrorId = 'node-4'
   node_4.dataset.mirrorName = 'SidebarLabel'
-  node_4.textContent = "Stationen"
+  node_4.innerHTML = formatInlineMarkdown("Stationen")
   Object.assign(node_4.style, {
     'font-size': '11px',
     'font-weight': '600',
@@ -536,7 +536,7 @@ export function createUI(data = {}) {
   _elements['node-7'] = node_7
   node_7.dataset.mirrorId = 'node-7'
   node_7.dataset.mirrorName = 'Text'
-  node_7.textContent = "Notaufnahme"
+  node_7.innerHTML = formatInlineMarkdown("Notaufnahme")
   node_7.dataset.component = 'Text'
   node_5.appendChild(node_7)
   
@@ -545,7 +545,7 @@ export function createUI(data = {}) {
   _elements['node-8'] = node_8
   node_8.dataset.mirrorId = 'node-8'
   node_8.dataset.mirrorName = 'SidebarBadge'
-  node_8.textContent = "3"
+  node_8.innerHTML = formatInlineMarkdown("3")
   Object.assign(node_8.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -617,7 +617,7 @@ export function createUI(data = {}) {
   _elements['node-11'] = node_11
   node_11.dataset.mirrorId = 'node-11'
   node_11.dataset.mirrorName = 'Text'
-  node_11.textContent = "Innere Medizin"
+  node_11.innerHTML = formatInlineMarkdown("Innere Medizin")
   node_11.dataset.component = 'Text'
   node_9.appendChild(node_11)
   
@@ -677,7 +677,7 @@ export function createUI(data = {}) {
   _elements['node-14'] = node_14
   node_14.dataset.mirrorId = 'node-14'
   node_14.dataset.mirrorName = 'Text'
-  node_14.textContent = "Chirurgie"
+  node_14.innerHTML = formatInlineMarkdown("Chirurgie")
   node_14.dataset.component = 'Text'
   node_12.appendChild(node_14)
   
@@ -737,7 +737,7 @@ export function createUI(data = {}) {
   _elements['node-17'] = node_17
   node_17.dataset.mirrorId = 'node-17'
   node_17.dataset.mirrorName = 'Text'
-  node_17.textContent = "Pädiatrie"
+  node_17.innerHTML = formatInlineMarkdown("Pädiatrie")
   node_17.dataset.component = 'Text'
   node_15.appendChild(node_17)
   
@@ -797,7 +797,7 @@ export function createUI(data = {}) {
   _elements['node-20'] = node_20
   node_20.dataset.mirrorId = 'node-20'
   node_20.dataset.mirrorName = 'Text'
-  node_20.textContent = "Kardiologie"
+  node_20.innerHTML = formatInlineMarkdown("Kardiologie")
   node_20.dataset.component = 'Text'
   node_18.appendChild(node_20)
   
@@ -823,7 +823,7 @@ export function createUI(data = {}) {
   _elements['node-22'] = node_22
   node_22.dataset.mirrorId = 'node-22'
   node_22.dataset.mirrorName = 'SidebarLabel'
-  node_22.textContent = "Verwaltung"
+  node_22.innerHTML = formatInlineMarkdown("Verwaltung")
   Object.assign(node_22.style, {
     'font-size': '11px',
     'font-weight': '600',
@@ -888,7 +888,7 @@ export function createUI(data = {}) {
   _elements['node-25'] = node_25
   node_25.dataset.mirrorId = 'node-25'
   node_25.dataset.mirrorName = 'Text'
-  node_25.textContent = "Personal"
+  node_25.innerHTML = formatInlineMarkdown("Personal")
   node_25.dataset.component = 'Text'
   node_23.appendChild(node_25)
   
@@ -948,7 +948,7 @@ export function createUI(data = {}) {
   _elements['node-28'] = node_28
   node_28.dataset.mirrorId = 'node-28'
   node_28.dataset.mirrorName = 'Text'
-  node_28.textContent = "Auslastung"
+  node_28.innerHTML = formatInlineMarkdown("Auslastung")
   node_28.dataset.component = 'Text'
   node_26.appendChild(node_28)
   
@@ -1008,7 +1008,7 @@ export function createUI(data = {}) {
   _elements['node-31'] = node_31
   node_31.dataset.mirrorId = 'node-31'
   node_31.dataset.mirrorName = 'Text'
-  node_31.textContent = "Einstellungen"
+  node_31.innerHTML = formatInlineMarkdown("Einstellungen")
   node_31.dataset.component = 'Text'
   node_29.appendChild(node_31)
   
@@ -1098,7 +1098,7 @@ export function createUI(data = {}) {
   _elements['node-36'] = node_36
   node_36.dataset.mirrorId = 'node-36'
   node_36.dataset.mirrorName = 'Text'
-  node_36.textContent = "Hilfe"
+  node_36.innerHTML = formatInlineMarkdown("Hilfe")
   node_36.dataset.component = 'Text'
   node_34.appendChild(node_36)
   
@@ -1231,7 +1231,7 @@ export function createUI(data = {}) {
   _elements['node-43'] = node_43
   node_43.dataset.mirrorId = 'node-43'
   node_43.dataset.mirrorName = 'Text'
-  node_43.textContent = "StationView"
+  node_43.innerHTML = formatInlineMarkdown("StationView")
   Object.assign(node_43.style, {
     'font-size': '18px',
     'font-weight': '600',
@@ -1261,7 +1261,7 @@ export function createUI(data = {}) {
   _elements['node-45'] = node_45
   node_45.dataset.mirrorId = 'node-45'
   node_45.dataset.mirrorName = 'NavTabActive'
-  node_45.textContent = "Dashboard"
+  node_45.innerHTML = formatInlineMarkdown("Dashboard")
   Object.assign(node_45.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -1283,7 +1283,7 @@ export function createUI(data = {}) {
   _elements['node-46'] = node_46
   node_46.dataset.mirrorId = 'node-46'
   node_46.dataset.mirrorName = 'NavTab'
-  node_46.textContent = "Patienten"
+  node_46.innerHTML = formatInlineMarkdown("Patienten")
   Object.assign(node_46.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -1304,7 +1304,7 @@ export function createUI(data = {}) {
   _elements['node-47'] = node_47
   node_47.dataset.mirrorId = 'node-47'
   node_47.dataset.mirrorName = 'NavTab'
-  node_47.textContent = "Personal"
+  node_47.innerHTML = formatInlineMarkdown("Personal")
   Object.assign(node_47.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -1325,7 +1325,7 @@ export function createUI(data = {}) {
   _elements['node-48'] = node_48
   node_48.dataset.mirrorId = 'node-48'
   node_48.dataset.mirrorName = 'NavTab'
-  node_48.textContent = "Berichte"
+  node_48.innerHTML = formatInlineMarkdown("Berichte")
   Object.assign(node_48.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -1443,7 +1443,7 @@ export function createUI(data = {}) {
   _elements['node-53'] = node_53
   node_53.dataset.mirrorId = 'node-53'
   node_53.dataset.mirrorName = 'Text'
-  node_53.textContent = "3"
+  node_53.innerHTML = formatInlineMarkdown("3")
   Object.assign(node_53.style, {
     'color': 'white',
     'font-size': '11px',
@@ -1501,7 +1501,7 @@ export function createUI(data = {}) {
   _elements['node-56'] = node_56
   node_56.dataset.mirrorId = 'node-56'
   node_56.dataset.mirrorName = 'Text'
-  node_56.textContent = "MW"
+  node_56.innerHTML = formatInlineMarkdown("MW")
   Object.assign(node_56.style, {
     'color': 'white',
     'font-weight': '600',
@@ -1530,7 +1530,7 @@ export function createUI(data = {}) {
   _elements['node-58'] = node_58
   node_58.dataset.mirrorId = 'node-58'
   node_58.dataset.mirrorName = 'Text'
-  node_58.textContent = "Dr. Maria Weber"
+  node_58.innerHTML = formatInlineMarkdown("Dr. Maria Weber")
   Object.assign(node_58.style, {
     'color': 'var(--text-primary)',
     'font-weight': '500',
@@ -1544,7 +1544,7 @@ export function createUI(data = {}) {
   _elements['node-59'] = node_59
   node_59.dataset.mirrorId = 'node-59'
   node_59.dataset.mirrorName = 'Text'
-  node_59.textContent = "Stationsleitung"
+  node_59.innerHTML = formatInlineMarkdown("Stationsleitung")
   Object.assign(node_59.style, {
     'color': 'var(--text-muted)',
     'font-size': '11px',
@@ -1613,7 +1613,7 @@ export function createUI(data = {}) {
   _elements['node-63'] = node_63
   node_63.dataset.mirrorId = 'node-63'
   node_63.dataset.mirrorName = 'Text'
-  node_63.textContent = "Notaufnahme"
+  node_63.innerHTML = formatInlineMarkdown("Notaufnahme")
   Object.assign(node_63.style, {
     'font-size': '24px',
     'font-weight': '600',
@@ -1627,7 +1627,7 @@ export function createUI(data = {}) {
   _elements['node-64'] = node_64
   node_64.dataset.mirrorId = 'node-64'
   node_64.dataset.mirrorName = 'Text'
-  node_64.textContent = "Übersicht für Mittwoch, 9. April 2025 • Schicht: Früh (06:00 - 14:00)"
+  node_64.innerHTML = formatInlineMarkdown("Übersicht für Mittwoch, 9. April 2025 • Schicht: Früh (06:00 - 14:00)")
   Object.assign(node_64.style, {
     'color': 'var(--text-secondary)',
     'font-size': '14px',
@@ -1712,7 +1712,7 @@ export function createUI(data = {}) {
   _elements['node-68'] = node_68
   node_68.dataset.mirrorId = 'node-68'
   node_68.dataset.mirrorName = 'Text'
-  node_68.textContent = "Export"
+  node_68.innerHTML = formatInlineMarkdown("Export")
   node_68.dataset.component = 'Text'
   node_66.appendChild(node_68)
   
@@ -1779,7 +1779,7 @@ export function createUI(data = {}) {
   _elements['node-71'] = node_71
   node_71.dataset.mirrorId = 'node-71'
   node_71.dataset.mirrorName = 'Text'
-  node_71.textContent = "Patient aufnehmen"
+  node_71.innerHTML = formatInlineMarkdown("Patient aufnehmen")
   node_71.dataset.component = 'Text'
   node_69.appendChild(node_71)
   
@@ -1843,7 +1843,7 @@ export function createUI(data = {}) {
   _elements['node-75'] = node_75
   node_75.dataset.mirrorId = 'node-75'
   node_75.dataset.mirrorName = 'Label'
-  node_75.textContent = "Bettenbelegung"
+  node_75.innerHTML = formatInlineMarkdown("Bettenbelegung")
   Object.assign(node_75.style, {
     'width': 'fit-content',
   })
@@ -1907,7 +1907,7 @@ export function createUI(data = {}) {
   _elements['node-78'] = node_78
   node_78.dataset.mirrorId = 'node-78'
   node_78.dataset.mirrorName = 'Value'
-  node_78.textContent = "87%"
+  node_78.innerHTML = formatInlineMarkdown("87%")
   Object.assign(node_78.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -1942,7 +1942,7 @@ export function createUI(data = {}) {
   _elements['node-80'] = node_80
   node_80.dataset.mirrorId = 'node-80'
   node_80.dataset.mirrorName = 'Text'
-  node_80.textContent = "26 von 30 Betten belegt"
+  node_80.innerHTML = formatInlineMarkdown("26 von 30 Betten belegt")
   node_80.dataset.component = 'Text'
   node_79.appendChild(node_80)
   
@@ -2041,7 +2041,7 @@ export function createUI(data = {}) {
   _elements['node-86'] = node_86
   node_86.dataset.mirrorId = 'node-86'
   node_86.dataset.mirrorName = 'Label'
-  node_86.textContent = "Ø Wartezeit"
+  node_86.innerHTML = formatInlineMarkdown("Ø Wartezeit")
   Object.assign(node_86.style, {
     'width': 'fit-content',
   })
@@ -2164,7 +2164,7 @@ export function createUI(data = {}) {
   _elements['node-92'] = node_92
   node_92.dataset.mirrorId = 'node-92'
   node_92.dataset.mirrorName = 'Text'
-  node_92.textContent = "+5 min vs. gestern"
+  node_92.innerHTML = formatInlineMarkdown("+5 min vs. gestern")
   node_92.dataset.component = 'Text'
   node_90.appendChild(node_92)
   
@@ -2224,7 +2224,7 @@ export function createUI(data = {}) {
   _elements['node-96'] = node_96
   node_96.dataset.mirrorId = 'node-96'
   node_96.dataset.mirrorName = 'Value'
-  node_96.textContent = "23"
+  node_96.innerHTML = formatInlineMarkdown("23")
   Object.assign(node_96.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -2239,7 +2239,7 @@ export function createUI(data = {}) {
   _elements['node-97'] = node_97
   node_97.dataset.mirrorId = 'node-97'
   node_97.dataset.mirrorName = 'Text'
-  node_97.textContent = "min"
+  node_97.innerHTML = formatInlineMarkdown("min")
   Object.assign(node_97.style, {
     'color': 'var(--text-secondary)',
     'font-size': '14px',
@@ -2289,7 +2289,7 @@ export function createUI(data = {}) {
   _elements['node-100'] = node_100
   node_100.dataset.mirrorId = 'node-100'
   node_100.dataset.mirrorName = 'Label'
-  node_100.textContent = "Patienten aktuell"
+  node_100.innerHTML = formatInlineMarkdown("Patienten aktuell")
   Object.assign(node_100.style, {
     'width': 'fit-content',
   })
@@ -2353,7 +2353,7 @@ export function createUI(data = {}) {
   _elements['node-103'] = node_103
   node_103.dataset.mirrorId = 'node-103'
   node_103.dataset.mirrorName = 'Value'
-  node_103.textContent = "34"
+  node_103.innerHTML = formatInlineMarkdown("34")
   Object.assign(node_103.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -2667,7 +2667,7 @@ export function createUI(data = {}) {
   _elements['node-120'] = node_120
   node_120.dataset.mirrorId = 'node-120'
   node_120.dataset.mirrorName = 'Label'
-  node_120.textContent = "Kritische Fälle"
+  node_120.innerHTML = formatInlineMarkdown("Kritische Fälle")
   Object.assign(node_120.style, {
     'width': 'fit-content',
   })
@@ -2747,7 +2747,7 @@ export function createUI(data = {}) {
   _elements['node-124'] = node_124
   node_124.dataset.mirrorId = 'node-124'
   node_124.dataset.mirrorName = 'Text'
-  node_124.textContent = "3"
+  node_124.innerHTML = formatInlineMarkdown("3")
   node_124.dataset.component = 'Text'
   node_123.appendChild(node_124)
   
@@ -2774,7 +2774,7 @@ export function createUI(data = {}) {
   _elements['node-126'] = node_126
   node_126.dataset.mirrorId = 'node-126'
   node_126.dataset.mirrorName = 'Text'
-  node_126.textContent = "Sofortige Aufmerksamkeit erforderlich"
+  node_126.innerHTML = formatInlineMarkdown("Sofortige Aufmerksamkeit erforderlich")
   node_126.dataset.component = 'Text'
   node_125.appendChild(node_126)
   
@@ -2864,7 +2864,7 @@ export function createUI(data = {}) {
   _elements['node-132'] = node_132
   node_132.dataset.mirrorId = 'node-132'
   node_132.dataset.mirrorName = 'Text'
-  node_132.textContent = "Patientenaufkommen"
+  node_132.innerHTML = formatInlineMarkdown("Patientenaufkommen")
   Object.assign(node_132.style, {
     'font-size': '16px',
     'font-weight': '600',
@@ -2878,7 +2878,7 @@ export function createUI(data = {}) {
   _elements['node-133'] = node_133
   node_133.dataset.mirrorId = 'node-133'
   node_133.dataset.mirrorName = 'Text'
-  node_133.textContent = "Einweisungen pro Stunde (letzte 24h)"
+  node_133.innerHTML = formatInlineMarkdown("Einweisungen pro Stunde (letzte 24h)")
   Object.assign(node_133.style, {
     'color': 'var(--text-secondary)',
     'font-size': '12px',
@@ -2907,7 +2907,7 @@ export function createUI(data = {}) {
   _elements['node-135'] = node_135
   node_135.dataset.mirrorId = 'node-135'
   node_135.dataset.mirrorName = 'ChipActive'
-  node_135.textContent = "24h"
+  node_135.innerHTML = formatInlineMarkdown("24h")
   Object.assign(node_135.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -2930,7 +2930,7 @@ export function createUI(data = {}) {
   _elements['node-136'] = node_136
   node_136.dataset.mirrorId = 'node-136'
   node_136.dataset.mirrorName = 'Chip'
-  node_136.textContent = "7 Tage"
+  node_136.innerHTML = formatInlineMarkdown("7 Tage")
   Object.assign(node_136.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -2953,7 +2953,7 @@ export function createUI(data = {}) {
   _elements['node-137'] = node_137
   node_137.dataset.mirrorId = 'node-137'
   node_137.dataset.mirrorName = 'Chip'
-  node_137.textContent = "30 Tage"
+  node_137.innerHTML = formatInlineMarkdown("30 Tage")
   Object.assign(node_137.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -3076,7 +3076,7 @@ export function createUI(data = {}) {
   _elements['node-142'] = node_142
   node_142.dataset.mirrorId = 'node-142'
   node_142.dataset.mirrorName = 'Text'
-  node_142.textContent = "Einweisungsgrund"
+  node_142.innerHTML = formatInlineMarkdown("Einweisungsgrund")
   Object.assign(node_142.style, {
     'font-size': '16px',
     'font-weight': '600',
@@ -3090,7 +3090,7 @@ export function createUI(data = {}) {
   _elements['node-143'] = node_143
   node_143.dataset.mirrorId = 'node-143'
   node_143.dataset.mirrorName = 'Text'
-  node_143.textContent = "Verteilung heute"
+  node_143.innerHTML = formatInlineMarkdown("Verteilung heute")
   Object.assign(node_143.style, {
     'color': 'var(--text-secondary)',
     'font-size': '12px',
@@ -3221,7 +3221,7 @@ export function createUI(data = {}) {
   _elements['node-150'] = node_150
   node_150.dataset.mirrorId = 'node-150'
   node_150.dataset.mirrorName = 'Text'
-  node_150.textContent = "Unfall/Trauma"
+  node_150.innerHTML = formatInlineMarkdown("Unfall/Trauma")
   Object.assign(node_150.style, {
     'font-size': '13px',
     'color': 'var(--text-secondary)',
@@ -3234,7 +3234,7 @@ export function createUI(data = {}) {
   _elements['node-151'] = node_151
   node_151.dataset.mirrorId = 'node-151'
   node_151.dataset.mirrorName = 'Text'
-  node_151.textContent = "14"
+  node_151.innerHTML = formatInlineMarkdown("14")
   Object.assign(node_151.style, {
     'font-size': '13px',
     'font-weight': '600',
@@ -3284,7 +3284,7 @@ export function createUI(data = {}) {
   _elements['node-154'] = node_154
   node_154.dataset.mirrorId = 'node-154'
   node_154.dataset.mirrorName = 'Text'
-  node_154.textContent = "Kardio"
+  node_154.innerHTML = formatInlineMarkdown("Kardio")
   Object.assign(node_154.style, {
     'font-size': '13px',
     'color': 'var(--text-secondary)',
@@ -3297,7 +3297,7 @@ export function createUI(data = {}) {
   _elements['node-155'] = node_155
   node_155.dataset.mirrorId = 'node-155'
   node_155.dataset.mirrorName = 'Text'
-  node_155.textContent = "9"
+  node_155.innerHTML = formatInlineMarkdown("9")
   Object.assign(node_155.style, {
     'font-size': '13px',
     'font-weight': '600',
@@ -3347,7 +3347,7 @@ export function createUI(data = {}) {
   _elements['node-158'] = node_158
   node_158.dataset.mirrorId = 'node-158'
   node_158.dataset.mirrorName = 'Text'
-  node_158.textContent = "Intern"
+  node_158.innerHTML = formatInlineMarkdown("Intern")
   Object.assign(node_158.style, {
     'font-size': '13px',
     'color': 'var(--text-secondary)',
@@ -3360,7 +3360,7 @@ export function createUI(data = {}) {
   _elements['node-159'] = node_159
   node_159.dataset.mirrorId = 'node-159'
   node_159.dataset.mirrorName = 'Text'
-  node_159.textContent = "7"
+  node_159.innerHTML = formatInlineMarkdown("7")
   Object.assign(node_159.style, {
     'font-size': '13px',
     'font-weight': '600',
@@ -3410,7 +3410,7 @@ export function createUI(data = {}) {
   _elements['node-162'] = node_162
   node_162.dataset.mirrorId = 'node-162'
   node_162.dataset.mirrorName = 'Text'
-  node_162.textContent = "Sonstige"
+  node_162.innerHTML = formatInlineMarkdown("Sonstige")
   Object.assign(node_162.style, {
     'font-size': '13px',
     'color': 'var(--text-secondary)',
@@ -3423,7 +3423,7 @@ export function createUI(data = {}) {
   _elements['node-163'] = node_163
   node_163.dataset.mirrorId = 'node-163'
   node_163.dataset.mirrorName = 'Text'
-  node_163.textContent = "4"
+  node_163.innerHTML = formatInlineMarkdown("4")
   Object.assign(node_163.style, {
     'font-size': '13px',
     'font-weight': '600',
@@ -3493,7 +3493,7 @@ export function createUI(data = {}) {
   _elements['node-167'] = node_167
   node_167.dataset.mirrorId = 'node-167'
   node_167.dataset.mirrorName = 'Text'
-  node_167.textContent = "Aktuelle Patienten"
+  node_167.innerHTML = formatInlineMarkdown("Aktuelle Patienten")
   Object.assign(node_167.style, {
     'font-size': '16px',
     'font-weight': '600',
@@ -3507,7 +3507,7 @@ export function createUI(data = {}) {
   _elements['node-168'] = node_168
   node_168.dataset.mirrorId = 'node-168'
   node_168.dataset.mirrorName = 'Text'
-  node_168.textContent = "34 Patienten in Behandlung"
+  node_168.innerHTML = formatInlineMarkdown("34 Patienten in Behandlung")
   Object.assign(node_168.style, {
     'color': 'var(--text-secondary)',
     'font-size': '12px',
@@ -3522,7 +3522,7 @@ export function createUI(data = {}) {
   _elements['node-169'] = node_169
   node_169.dataset.mirrorId = 'node-169'
   node_169.dataset.mirrorName = 'BtnSecondary'
-  node_169.textContent = "Alle anzeigen"
+  node_169.innerHTML = formatInlineMarkdown("Alle anzeigen")
   Object.assign(node_169.style, {
     'display': 'flex',
     'flex-direction': 'row',
@@ -3573,7 +3573,7 @@ export function createUI(data = {}) {
   _elements['node-171'] = node_171
   node_171.dataset.mirrorId = 'node-171'
   node_171.dataset.mirrorName = 'Text'
-  node_171.textContent = "Patient"
+  node_171.innerHTML = formatInlineMarkdown("Patient")
   Object.assign(node_171.style, {
     'width': '200px',
     'flex-shrink': '0',
@@ -3590,7 +3590,7 @@ export function createUI(data = {}) {
   _elements['node-172'] = node_172
   node_172.dataset.mirrorId = 'node-172'
   node_172.dataset.mirrorName = 'Text'
-  node_172.textContent = "Status"
+  node_172.innerHTML = formatInlineMarkdown("Status")
   Object.assign(node_172.style, {
     'width': '100px',
     'flex-shrink': '0',
@@ -3607,7 +3607,7 @@ export function createUI(data = {}) {
   _elements['node-173'] = node_173
   node_173.dataset.mirrorId = 'node-173'
   node_173.dataset.mirrorName = 'Text'
-  node_173.textContent = "Einweisungsgrund"
+  node_173.innerHTML = formatInlineMarkdown("Einweisungsgrund")
   Object.assign(node_173.style, {
     'width': '180px',
     'flex-shrink': '0',
@@ -3624,7 +3624,7 @@ export function createUI(data = {}) {
   _elements['node-174'] = node_174
   node_174.dataset.mirrorId = 'node-174'
   node_174.dataset.mirrorName = 'Text'
-  node_174.textContent = "Behandelnder Arzt"
+  node_174.innerHTML = formatInlineMarkdown("Behandelnder Arzt")
   Object.assign(node_174.style, {
     'width': '140px',
     'flex-shrink': '0',
@@ -3641,7 +3641,7 @@ export function createUI(data = {}) {
   _elements['node-175'] = node_175
   node_175.dataset.mirrorId = 'node-175'
   node_175.dataset.mirrorName = 'Text'
-  node_175.textContent = "Wartezeit"
+  node_175.innerHTML = formatInlineMarkdown("Wartezeit")
   Object.assign(node_175.style, {
     'width': '80px',
     'flex-shrink': '0',
@@ -3658,7 +3658,7 @@ export function createUI(data = {}) {
   _elements['node-176'] = node_176
   node_176.dataset.mirrorId = 'node-176'
   node_176.dataset.mirrorName = 'Text'
-  node_176.textContent = "Raum"
+  node_176.innerHTML = formatInlineMarkdown("Raum")
   Object.assign(node_176.style, {
     'width': '120px',
     'flex-shrink': '0',
@@ -3745,7 +3745,7 @@ export function createUI(data = {}) {
   _elements['node-181'] = node_181
   node_181.dataset.mirrorId = 'node-181'
   node_181.dataset.mirrorName = 'Text'
-  node_181.textContent = "EM"
+  node_181.innerHTML = formatInlineMarkdown("EM")
   Object.assign(node_181.style, {
     'color': 'var(--text-secondary)',
     'font-weight': '600',
@@ -3774,7 +3774,7 @@ export function createUI(data = {}) {
   _elements['node-183'] = node_183
   node_183.dataset.mirrorId = 'node-183'
   node_183.dataset.mirrorName = 'Text'
-  node_183.textContent = "Elisabeth Müller"
+  node_183.innerHTML = formatInlineMarkdown("Elisabeth Müller")
   Object.assign(node_183.style, {
     'color': 'var(--text-primary)',
     'font-weight': '500',
@@ -3787,7 +3787,7 @@ export function createUI(data = {}) {
   _elements['node-184'] = node_184
   node_184.dataset.mirrorId = 'node-184'
   node_184.dataset.mirrorName = 'Text'
-  node_184.textContent = "#P-2024-0847"
+  node_184.innerHTML = formatInlineMarkdown("#P-2024-0847")
   Object.assign(node_184.style, {
     'color': 'var(--text-muted)',
     'font-size': '12px',
@@ -3857,7 +3857,7 @@ export function createUI(data = {}) {
   _elements['node-188'] = node_188
   node_188.dataset.mirrorId = 'node-188'
   node_188.dataset.mirrorName = 'Text'
-  node_188.textContent = "Kritisch"
+  node_188.innerHTML = formatInlineMarkdown("Kritisch")
   node_188.dataset.component = 'Text'
   node_186.appendChild(node_188)
   
@@ -3870,7 +3870,7 @@ export function createUI(data = {}) {
   _elements['node-189'] = node_189
   node_189.dataset.mirrorId = 'node-189'
   node_189.dataset.mirrorName = 'Text'
-  node_189.textContent = "Akutes Koronarsyndrom"
+  node_189.innerHTML = formatInlineMarkdown("Akutes Koronarsyndrom")
   Object.assign(node_189.style, {
     'width': '180px',
     'flex-shrink': '0',
@@ -3917,7 +3917,7 @@ export function createUI(data = {}) {
   _elements['node-192'] = node_192
   node_192.dataset.mirrorId = 'node-192'
   node_192.dataset.mirrorName = 'Text'
-  node_192.textContent = "MW"
+  node_192.innerHTML = formatInlineMarkdown("MW")
   Object.assign(node_192.style, {
     'color': 'white',
     'font-weight': '600',
@@ -3933,7 +3933,7 @@ export function createUI(data = {}) {
   _elements['node-193'] = node_193
   node_193.dataset.mirrorId = 'node-193'
   node_193.dataset.mirrorName = 'Text'
-  node_193.textContent = "Dr. Weber"
+  node_193.innerHTML = formatInlineMarkdown("Dr. Weber")
   Object.assign(node_193.style, {
     'color': 'var(--text-primary)',
   })
@@ -3947,7 +3947,7 @@ export function createUI(data = {}) {
   _elements['node-194'] = node_194
   node_194.dataset.mirrorId = 'node-194'
   node_194.dataset.mirrorName = 'Text'
-  node_194.textContent = "5 min"
+  node_194.innerHTML = formatInlineMarkdown("5 min")
   Object.assign(node_194.style, {
     'width': '80px',
     'flex-shrink': '0',
@@ -3961,7 +3961,7 @@ export function createUI(data = {}) {
   _elements['node-195'] = node_195
   node_195.dataset.mirrorId = 'node-195'
   node_195.dataset.mirrorName = 'RoomBadge'
-  node_195.textContent = "Reanimation 1"
+  node_195.innerHTML = formatInlineMarkdown("Reanimation 1")
   Object.assign(node_195.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -4037,7 +4037,7 @@ export function createUI(data = {}) {
   _elements['node-199'] = node_199
   node_199.dataset.mirrorId = 'node-199'
   node_199.dataset.mirrorName = 'Text'
-  node_199.textContent = "TK"
+  node_199.innerHTML = formatInlineMarkdown("TK")
   Object.assign(node_199.style, {
     'color': 'var(--text-secondary)',
     'font-weight': '600',
@@ -4066,7 +4066,7 @@ export function createUI(data = {}) {
   _elements['node-201'] = node_201
   node_201.dataset.mirrorId = 'node-201'
   node_201.dataset.mirrorName = 'Text'
-  node_201.textContent = "Thomas Krüger"
+  node_201.innerHTML = formatInlineMarkdown("Thomas Krüger")
   Object.assign(node_201.style, {
     'color': 'var(--text-primary)',
     'font-weight': '500',
@@ -4079,7 +4079,7 @@ export function createUI(data = {}) {
   _elements['node-202'] = node_202
   node_202.dataset.mirrorId = 'node-202'
   node_202.dataset.mirrorName = 'Text'
-  node_202.textContent = "#P-2024-0852"
+  node_202.innerHTML = formatInlineMarkdown("#P-2024-0852")
   Object.assign(node_202.style, {
     'color': 'var(--text-muted)',
     'font-size': '12px',
@@ -4149,7 +4149,7 @@ export function createUI(data = {}) {
   _elements['node-206'] = node_206
   node_206.dataset.mirrorId = 'node-206'
   node_206.dataset.mirrorName = 'Text'
-  node_206.textContent = "Kritisch"
+  node_206.innerHTML = formatInlineMarkdown("Kritisch")
   node_206.dataset.component = 'Text'
   node_204.appendChild(node_206)
   
@@ -4162,7 +4162,7 @@ export function createUI(data = {}) {
   _elements['node-207'] = node_207
   node_207.dataset.mirrorId = 'node-207'
   node_207.dataset.mirrorName = 'Text'
-  node_207.textContent = "Polytrauma (Verkehrsunfall)"
+  node_207.innerHTML = formatInlineMarkdown("Polytrauma (Verkehrsunfall)")
   Object.assign(node_207.style, {
     'width': '180px',
     'flex-shrink': '0',
@@ -4209,7 +4209,7 @@ export function createUI(data = {}) {
   _elements['node-210'] = node_210
   node_210.dataset.mirrorId = 'node-210'
   node_210.dataset.mirrorName = 'Text'
-  node_210.textContent = "SK"
+  node_210.innerHTML = formatInlineMarkdown("SK")
   Object.assign(node_210.style, {
     'color': 'white',
     'font-weight': '600',
@@ -4225,7 +4225,7 @@ export function createUI(data = {}) {
   _elements['node-211'] = node_211
   node_211.dataset.mirrorId = 'node-211'
   node_211.dataset.mirrorName = 'Text'
-  node_211.textContent = "Dr. Koch"
+  node_211.innerHTML = formatInlineMarkdown("Dr. Koch")
   Object.assign(node_211.style, {
     'color': 'var(--text-primary)',
   })
@@ -4239,7 +4239,7 @@ export function createUI(data = {}) {
   _elements['node-212'] = node_212
   node_212.dataset.mirrorId = 'node-212'
   node_212.dataset.mirrorName = 'Text'
-  node_212.textContent = "2 min"
+  node_212.innerHTML = formatInlineMarkdown("2 min")
   Object.assign(node_212.style, {
     'width': '80px',
     'flex-shrink': '0',
@@ -4253,7 +4253,7 @@ export function createUI(data = {}) {
   _elements['node-213'] = node_213
   node_213.dataset.mirrorId = 'node-213'
   node_213.dataset.mirrorName = 'RoomBadge'
-  node_213.textContent = "Schockraum"
+  node_213.innerHTML = formatInlineMarkdown("Schockraum")
   Object.assign(node_213.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -4329,7 +4329,7 @@ export function createUI(data = {}) {
   _elements['node-217'] = node_217
   node_217.dataset.mirrorId = 'node-217'
   node_217.dataset.mirrorName = 'Text'
-  node_217.textContent = "AF"
+  node_217.innerHTML = formatInlineMarkdown("AF")
   Object.assign(node_217.style, {
     'color': 'var(--text-secondary)',
     'font-weight': '600',
@@ -4358,7 +4358,7 @@ export function createUI(data = {}) {
   _elements['node-219'] = node_219
   node_219.dataset.mirrorId = 'node-219'
   node_219.dataset.mirrorName = 'Text'
-  node_219.textContent = "Anna Fischer"
+  node_219.innerHTML = formatInlineMarkdown("Anna Fischer")
   Object.assign(node_219.style, {
     'color': 'var(--text-primary)',
     'font-weight': '500',
@@ -4371,7 +4371,7 @@ export function createUI(data = {}) {
   _elements['node-220'] = node_220
   node_220.dataset.mirrorId = 'node-220'
   node_220.dataset.mirrorName = 'Text'
-  node_220.textContent = "#P-2024-0845"
+  node_220.innerHTML = formatInlineMarkdown("#P-2024-0845")
   Object.assign(node_220.style, {
     'color': 'var(--text-muted)',
     'font-size': '12px',
@@ -4441,7 +4441,7 @@ export function createUI(data = {}) {
   _elements['node-224'] = node_224
   node_224.dataset.mirrorId = 'node-224'
   node_224.dataset.mirrorName = 'Text'
-  node_224.textContent = "Kritisch"
+  node_224.innerHTML = formatInlineMarkdown("Kritisch")
   node_224.dataset.component = 'Text'
   node_222.appendChild(node_224)
   
@@ -4454,7 +4454,7 @@ export function createUI(data = {}) {
   _elements['node-225'] = node_225
   node_225.dataset.mirrorId = 'node-225'
   node_225.dataset.mirrorName = 'Text'
-  node_225.textContent = "Apoplex (Schlaganfall)"
+  node_225.innerHTML = formatInlineMarkdown("Apoplex (Schlaganfall)")
   Object.assign(node_225.style, {
     'width': '180px',
     'flex-shrink': '0',
@@ -4501,7 +4501,7 @@ export function createUI(data = {}) {
   _elements['node-228'] = node_228
   node_228.dataset.mirrorId = 'node-228'
   node_228.dataset.mirrorName = 'Text'
-  node_228.textContent = "MW"
+  node_228.innerHTML = formatInlineMarkdown("MW")
   Object.assign(node_228.style, {
     'color': 'white',
     'font-weight': '600',
@@ -4517,7 +4517,7 @@ export function createUI(data = {}) {
   _elements['node-229'] = node_229
   node_229.dataset.mirrorId = 'node-229'
   node_229.dataset.mirrorName = 'Text'
-  node_229.textContent = "Dr. Weber"
+  node_229.innerHTML = formatInlineMarkdown("Dr. Weber")
   Object.assign(node_229.style, {
     'color': 'var(--text-primary)',
   })
@@ -4531,7 +4531,7 @@ export function createUI(data = {}) {
   _elements['node-230'] = node_230
   node_230.dataset.mirrorId = 'node-230'
   node_230.dataset.mirrorName = 'Text'
-  node_230.textContent = "8 min"
+  node_230.innerHTML = formatInlineMarkdown("8 min")
   Object.assign(node_230.style, {
     'width': '80px',
     'flex-shrink': '0',
@@ -4545,7 +4545,7 @@ export function createUI(data = {}) {
   _elements['node-231'] = node_231
   node_231.dataset.mirrorId = 'node-231'
   node_231.dataset.mirrorName = 'RoomBadge'
-  node_231.textContent = "CT"
+  node_231.innerHTML = formatInlineMarkdown("CT")
   Object.assign(node_231.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -4621,7 +4621,7 @@ export function createUI(data = {}) {
   _elements['node-235'] = node_235
   node_235.dataset.mirrorId = 'node-235'
   node_235.dataset.mirrorName = 'Text'
-  node_235.textContent = "HS"
+  node_235.innerHTML = formatInlineMarkdown("HS")
   Object.assign(node_235.style, {
     'color': 'var(--text-secondary)',
     'font-weight': '600',
@@ -4650,7 +4650,7 @@ export function createUI(data = {}) {
   _elements['node-237'] = node_237
   node_237.dataset.mirrorId = 'node-237'
   node_237.dataset.mirrorName = 'Text'
-  node_237.textContent = "Hans Schmidt"
+  node_237.innerHTML = formatInlineMarkdown("Hans Schmidt")
   Object.assign(node_237.style, {
     'color': 'var(--text-primary)',
     'font-weight': '500',
@@ -4663,7 +4663,7 @@ export function createUI(data = {}) {
   _elements['node-238'] = node_238
   node_238.dataset.mirrorId = 'node-238'
   node_238.dataset.mirrorName = 'Text'
-  node_238.textContent = "#P-2024-0839"
+  node_238.innerHTML = formatInlineMarkdown("#P-2024-0839")
   Object.assign(node_238.style, {
     'color': 'var(--text-muted)',
     'font-size': '12px',
@@ -4732,7 +4732,7 @@ export function createUI(data = {}) {
   _elements['node-242'] = node_242
   node_242.dataset.mirrorId = 'node-242'
   node_242.dataset.mirrorName = 'Text'
-  node_242.textContent = "Stabil"
+  node_242.innerHTML = formatInlineMarkdown("Stabil")
   node_242.dataset.component = 'Text'
   node_240.appendChild(node_242)
   
@@ -4745,7 +4745,7 @@ export function createUI(data = {}) {
   _elements['node-243'] = node_243
   node_243.dataset.mirrorId = 'node-243'
   node_243.dataset.mirrorName = 'Text'
-  node_243.textContent = "Verdacht Appendizitis"
+  node_243.innerHTML = formatInlineMarkdown("Verdacht Appendizitis")
   Object.assign(node_243.style, {
     'width': '180px',
     'flex-shrink': '0',
@@ -4792,7 +4792,7 @@ export function createUI(data = {}) {
   _elements['node-246'] = node_246
   node_246.dataset.mirrorId = 'node-246'
   node_246.dataset.mirrorName = 'Text'
-  node_246.textContent = "LB"
+  node_246.innerHTML = formatInlineMarkdown("LB")
   Object.assign(node_246.style, {
     'color': 'white',
     'font-weight': '600',
@@ -4808,7 +4808,7 @@ export function createUI(data = {}) {
   _elements['node-247'] = node_247
   node_247.dataset.mirrorId = 'node-247'
   node_247.dataset.mirrorName = 'Text'
-  node_247.textContent = "Dr. Braun"
+  node_247.innerHTML = formatInlineMarkdown("Dr. Braun")
   Object.assign(node_247.style, {
     'color': 'var(--text-primary)',
   })
@@ -4822,7 +4822,7 @@ export function createUI(data = {}) {
   _elements['node-248'] = node_248
   node_248.dataset.mirrorId = 'node-248'
   node_248.dataset.mirrorName = 'Text'
-  node_248.textContent = "18 min"
+  node_248.innerHTML = formatInlineMarkdown("18 min")
   Object.assign(node_248.style, {
     'width': '80px',
     'flex-shrink': '0',
@@ -4836,7 +4836,7 @@ export function createUI(data = {}) {
   _elements['node-249'] = node_249
   node_249.dataset.mirrorId = 'node-249'
   node_249.dataset.mirrorName = 'RoomBadge'
-  node_249.textContent = "Sono 2"
+  node_249.innerHTML = formatInlineMarkdown("Sono 2")
   Object.assign(node_249.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -4912,7 +4912,7 @@ export function createUI(data = {}) {
   _elements['node-253'] = node_253
   node_253.dataset.mirrorId = 'node-253'
   node_253.dataset.mirrorName = 'Text'
-  node_253.textContent = "MW"
+  node_253.innerHTML = formatInlineMarkdown("MW")
   Object.assign(node_253.style, {
     'color': 'var(--text-secondary)',
     'font-weight': '600',
@@ -4941,7 +4941,7 @@ export function createUI(data = {}) {
   _elements['node-255'] = node_255
   node_255.dataset.mirrorId = 'node-255'
   node_255.dataset.mirrorName = 'Text'
-  node_255.textContent = "Maria Wagner"
+  node_255.innerHTML = formatInlineMarkdown("Maria Wagner")
   Object.assign(node_255.style, {
     'color': 'var(--text-primary)',
     'font-weight': '500',
@@ -4954,7 +4954,7 @@ export function createUI(data = {}) {
   _elements['node-256'] = node_256
   node_256.dataset.mirrorId = 'node-256'
   node_256.dataset.mirrorName = 'Text'
-  node_256.textContent = "#P-2024-0841"
+  node_256.innerHTML = formatInlineMarkdown("#P-2024-0841")
   Object.assign(node_256.style, {
     'color': 'var(--text-muted)',
     'font-size': '12px',
@@ -5023,7 +5023,7 @@ export function createUI(data = {}) {
   _elements['node-260'] = node_260
   node_260.dataset.mirrorId = 'node-260'
   node_260.dataset.mirrorName = 'Text'
-  node_260.textContent = "Gut"
+  node_260.innerHTML = formatInlineMarkdown("Gut")
   node_260.dataset.component = 'Text'
   node_258.appendChild(node_260)
   
@@ -5036,7 +5036,7 @@ export function createUI(data = {}) {
   _elements['node-261'] = node_261
   node_261.dataset.mirrorId = 'node-261'
   node_261.dataset.mirrorName = 'Text'
-  node_261.textContent = "Fraktur Unterarm"
+  node_261.innerHTML = formatInlineMarkdown("Fraktur Unterarm")
   Object.assign(node_261.style, {
     'width': '180px',
     'flex-shrink': '0',
@@ -5083,7 +5083,7 @@ export function createUI(data = {}) {
   _elements['node-264'] = node_264
   node_264.dataset.mirrorId = 'node-264'
   node_264.dataset.mirrorName = 'Text'
-  node_264.textContent = "SK"
+  node_264.innerHTML = formatInlineMarkdown("SK")
   Object.assign(node_264.style, {
     'color': 'white',
     'font-weight': '600',
@@ -5099,7 +5099,7 @@ export function createUI(data = {}) {
   _elements['node-265'] = node_265
   node_265.dataset.mirrorId = 'node-265'
   node_265.dataset.mirrorName = 'Text'
-  node_265.textContent = "Dr. Koch"
+  node_265.innerHTML = formatInlineMarkdown("Dr. Koch")
   Object.assign(node_265.style, {
     'color': 'var(--text-primary)',
   })
@@ -5113,7 +5113,7 @@ export function createUI(data = {}) {
   _elements['node-266'] = node_266
   node_266.dataset.mirrorId = 'node-266'
   node_266.dataset.mirrorName = 'Text'
-  node_266.textContent = "12 min"
+  node_266.innerHTML = formatInlineMarkdown("12 min")
   Object.assign(node_266.style, {
     'width': '80px',
     'flex-shrink': '0',
@@ -5127,7 +5127,7 @@ export function createUI(data = {}) {
   _elements['node-267'] = node_267
   node_267.dataset.mirrorId = 'node-267'
   node_267.dataset.mirrorName = 'RoomBadge'
-  node_267.textContent = "Gips 1"
+  node_267.innerHTML = formatInlineMarkdown("Gips 1")
   Object.assign(node_267.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -5203,7 +5203,7 @@ export function createUI(data = {}) {
   _elements['node-271'] = node_271
   node_271.dataset.mirrorId = 'node-271'
   node_271.dataset.mirrorName = 'Text'
-  node_271.textContent = "PB"
+  node_271.innerHTML = formatInlineMarkdown("PB")
   Object.assign(node_271.style, {
     'color': 'var(--text-secondary)',
     'font-weight': '600',
@@ -5232,7 +5232,7 @@ export function createUI(data = {}) {
   _elements['node-273'] = node_273
   node_273.dataset.mirrorId = 'node-273'
   node_273.dataset.mirrorName = 'Text'
-  node_273.textContent = "Peter Bauer"
+  node_273.innerHTML = formatInlineMarkdown("Peter Bauer")
   Object.assign(node_273.style, {
     'color': 'var(--text-primary)',
     'font-weight': '500',
@@ -5245,7 +5245,7 @@ export function createUI(data = {}) {
   _elements['node-274'] = node_274
   node_274.dataset.mirrorId = 'node-274'
   node_274.dataset.mirrorName = 'Text'
-  node_274.textContent = "#P-2024-0853"
+  node_274.innerHTML = formatInlineMarkdown("#P-2024-0853")
   Object.assign(node_274.style, {
     'color': 'var(--text-muted)',
     'font-size': '12px',
@@ -5314,7 +5314,7 @@ export function createUI(data = {}) {
   _elements['node-278'] = node_278
   node_278.dataset.mirrorId = 'node-278'
   node_278.dataset.mirrorName = 'Text'
-  node_278.textContent = "Gut"
+  node_278.innerHTML = formatInlineMarkdown("Gut")
   node_278.dataset.component = 'Text'
   node_276.appendChild(node_278)
   
@@ -5327,7 +5327,7 @@ export function createUI(data = {}) {
   _elements['node-279'] = node_279
   node_279.dataset.mirrorId = 'node-279'
   node_279.dataset.mirrorName = 'Text'
-  node_279.textContent = "Schnittwunde Hand"
+  node_279.innerHTML = formatInlineMarkdown("Schnittwunde Hand")
   Object.assign(node_279.style, {
     'width': '180px',
     'flex-shrink': '0',
@@ -5374,7 +5374,7 @@ export function createUI(data = {}) {
   _elements['node-282'] = node_282
   node_282.dataset.mirrorId = 'node-282'
   node_282.dataset.mirrorName = 'Text'
-  node_282.textContent = "LB"
+  node_282.innerHTML = formatInlineMarkdown("LB")
   Object.assign(node_282.style, {
     'color': 'white',
     'font-weight': '600',
@@ -5390,7 +5390,7 @@ export function createUI(data = {}) {
   _elements['node-283'] = node_283
   node_283.dataset.mirrorId = 'node-283'
   node_283.dataset.mirrorName = 'Text'
-  node_283.textContent = "Dr. Braun"
+  node_283.innerHTML = formatInlineMarkdown("Dr. Braun")
   Object.assign(node_283.style, {
     'color': 'var(--text-primary)',
   })
@@ -5404,7 +5404,7 @@ export function createUI(data = {}) {
   _elements['node-284'] = node_284
   node_284.dataset.mirrorId = 'node-284'
   node_284.dataset.mirrorName = 'Text'
-  node_284.textContent = "25 min"
+  node_284.innerHTML = formatInlineMarkdown("25 min")
   Object.assign(node_284.style, {
     'width': '80px',
     'flex-shrink': '0',
@@ -5418,7 +5418,7 @@ export function createUI(data = {}) {
   _elements['node-285'] = node_285
   node_285.dataset.mirrorId = 'node-285'
   node_285.dataset.mirrorName = 'RoomBadge'
-  node_285.textContent = "Wartebereich"
+  node_285.innerHTML = formatInlineMarkdown("Wartebereich")
   Object.assign(node_285.style, {
     'display': 'flex',
     'flex-direction': 'column',
@@ -5491,7 +5491,7 @@ export function createUI(data = {}) {
   _elements['node-289'] = node_289
   node_289.dataset.mirrorId = 'node-289'
   node_289.dataset.mirrorName = 'Text'
-  node_289.textContent = "Personal im Dienst"
+  node_289.innerHTML = formatInlineMarkdown("Personal im Dienst")
   Object.assign(node_289.style, {
     'font-size': '16px',
     'font-weight': '600',
@@ -5505,7 +5505,7 @@ export function createUI(data = {}) {
   _elements['node-290'] = node_290
   node_290.dataset.mirrorId = 'node-290'
   node_290.dataset.mirrorName = 'Text'
-  node_290.textContent = "12 von 15 geplant"
+  node_290.innerHTML = formatInlineMarkdown("12 von 15 geplant")
   Object.assign(node_290.style, {
     'color': 'var(--text-secondary)',
     'font-size': '12px',
@@ -5568,7 +5568,7 @@ export function createUI(data = {}) {
   _elements['node-294'] = node_294
   node_294.dataset.mirrorId = 'node-294'
   node_294.dataset.mirrorName = 'Text'
-  node_294.textContent = "MW"
+  node_294.innerHTML = formatInlineMarkdown("MW")
   Object.assign(node_294.style, {
     'color': 'white',
     'font-weight': '600',
@@ -5598,7 +5598,7 @@ export function createUI(data = {}) {
   _elements['node-296'] = node_296
   node_296.dataset.mirrorId = 'node-296'
   node_296.dataset.mirrorName = 'Text'
-  node_296.textContent = "Dr. Maria Weber"
+  node_296.innerHTML = formatInlineMarkdown("Dr. Maria Weber")
   Object.assign(node_296.style, {
     'color': 'var(--text-primary)',
     'font-weight': '500',
@@ -5612,7 +5612,7 @@ export function createUI(data = {}) {
   _elements['node-297'] = node_297
   node_297.dataset.mirrorId = 'node-297'
   node_297.dataset.mirrorName = 'Text'
-  node_297.textContent = "Oberärztin"
+  node_297.innerHTML = formatInlineMarkdown("Oberärztin")
   Object.assign(node_297.style, {
     'color': 'var(--text-muted)',
     'font-size': '12px',
@@ -5627,7 +5627,7 @@ export function createUI(data = {}) {
   _elements['node-298'] = node_298
   node_298.dataset.mirrorId = 'node-298'
   node_298.dataset.mirrorName = 'StaffStatusBusy'
-  node_298.textContent = "3 Patienten"
+  node_298.innerHTML = formatInlineMarkdown("3 Patienten")
   Object.assign(node_298.style, {
     'font-size': '12px',
     'font-weight': '500',
@@ -5678,7 +5678,7 @@ export function createUI(data = {}) {
   _elements['node-301'] = node_301
   node_301.dataset.mirrorId = 'node-301'
   node_301.dataset.mirrorName = 'Text'
-  node_301.textContent = "SK"
+  node_301.innerHTML = formatInlineMarkdown("SK")
   Object.assign(node_301.style, {
     'color': 'white',
     'font-weight': '600',
@@ -5708,7 +5708,7 @@ export function createUI(data = {}) {
   _elements['node-303'] = node_303
   node_303.dataset.mirrorId = 'node-303'
   node_303.dataset.mirrorName = 'Text'
-  node_303.textContent = "Dr. Stefan Koch"
+  node_303.innerHTML = formatInlineMarkdown("Dr. Stefan Koch")
   Object.assign(node_303.style, {
     'color': 'var(--text-primary)',
     'font-weight': '500',
@@ -5722,7 +5722,7 @@ export function createUI(data = {}) {
   _elements['node-304'] = node_304
   node_304.dataset.mirrorId = 'node-304'
   node_304.dataset.mirrorName = 'Text'
-  node_304.textContent = "Assistenzarzt"
+  node_304.innerHTML = formatInlineMarkdown("Assistenzarzt")
   Object.assign(node_304.style, {
     'color': 'var(--text-muted)',
     'font-size': '12px',
@@ -5737,7 +5737,7 @@ export function createUI(data = {}) {
   _elements['node-305'] = node_305
   node_305.dataset.mirrorId = 'node-305'
   node_305.dataset.mirrorName = 'StaffStatusBusy'
-  node_305.textContent = "2 Patienten"
+  node_305.innerHTML = formatInlineMarkdown("2 Patienten")
   Object.assign(node_305.style, {
     'font-size': '12px',
     'font-weight': '500',
@@ -5788,7 +5788,7 @@ export function createUI(data = {}) {
   _elements['node-308'] = node_308
   node_308.dataset.mirrorId = 'node-308'
   node_308.dataset.mirrorName = 'Text'
-  node_308.textContent = "LB"
+  node_308.innerHTML = formatInlineMarkdown("LB")
   Object.assign(node_308.style, {
     'color': 'white',
     'font-weight': '600',
@@ -5818,7 +5818,7 @@ export function createUI(data = {}) {
   _elements['node-310'] = node_310
   node_310.dataset.mirrorId = 'node-310'
   node_310.dataset.mirrorName = 'Text'
-  node_310.textContent = "Dr. Lisa Braun"
+  node_310.innerHTML = formatInlineMarkdown("Dr. Lisa Braun")
   Object.assign(node_310.style, {
     'color': 'var(--text-primary)',
     'font-weight': '500',
@@ -5832,7 +5832,7 @@ export function createUI(data = {}) {
   _elements['node-311'] = node_311
   node_311.dataset.mirrorId = 'node-311'
   node_311.dataset.mirrorName = 'Text'
-  node_311.textContent = "Assistenzärztin"
+  node_311.innerHTML = formatInlineMarkdown("Assistenzärztin")
   Object.assign(node_311.style, {
     'color': 'var(--text-muted)',
     'font-size': '12px',
@@ -5847,7 +5847,7 @@ export function createUI(data = {}) {
   _elements['node-312'] = node_312
   node_312.dataset.mirrorId = 'node-312'
   node_312.dataset.mirrorName = 'StaffStatusActive'
-  node_312.textContent = "Verfügbar"
+  node_312.innerHTML = formatInlineMarkdown("Verfügbar")
   Object.assign(node_312.style, {
     'font-size': '12px',
     'font-weight': '500',
@@ -5898,7 +5898,7 @@ export function createUI(data = {}) {
   _elements['node-315'] = node_315
   node_315.dataset.mirrorId = 'node-315'
   node_315.dataset.mirrorName = 'Text'
-  node_315.textContent = "JH"
+  node_315.innerHTML = formatInlineMarkdown("JH")
   Object.assign(node_315.style, {
     'color': 'white',
     'font-weight': '600',
@@ -5928,7 +5928,7 @@ export function createUI(data = {}) {
   _elements['node-317'] = node_317
   node_317.dataset.mirrorId = 'node-317'
   node_317.dataset.mirrorName = 'Text'
-  node_317.textContent = "Julia Hoffmann"
+  node_317.innerHTML = formatInlineMarkdown("Julia Hoffmann")
   Object.assign(node_317.style, {
     'color': 'var(--text-primary)',
     'font-weight': '500',
@@ -5942,7 +5942,7 @@ export function createUI(data = {}) {
   _elements['node-318'] = node_318
   node_318.dataset.mirrorId = 'node-318'
   node_318.dataset.mirrorName = 'Text'
-  node_318.textContent = "Pflegefachkraft"
+  node_318.innerHTML = formatInlineMarkdown("Pflegefachkraft")
   Object.assign(node_318.style, {
     'color': 'var(--text-muted)',
     'font-size': '12px',
@@ -5957,7 +5957,7 @@ export function createUI(data = {}) {
   _elements['node-319'] = node_319
   node_319.dataset.mirrorId = 'node-319'
   node_319.dataset.mirrorName = 'StaffStatusBreak'
-  node_319.textContent = "Pause"
+  node_319.innerHTML = formatInlineMarkdown("Pause")
   Object.assign(node_319.style, {
     'font-size': '12px',
     'font-weight': '500',
@@ -6007,7 +6007,7 @@ export function createUI(data = {}) {
   _elements['node-322'] = node_322
   node_322.dataset.mirrorId = 'node-322'
   node_322.dataset.mirrorName = 'Text'
-  node_322.textContent = "OP-Auslastung"
+  node_322.innerHTML = formatInlineMarkdown("OP-Auslastung")
   Object.assign(node_322.style, {
     'font-size': '16px',
     'font-weight': '600',
@@ -6021,7 +6021,7 @@ export function createUI(data = {}) {
   _elements['node-323'] = node_323
   node_323.dataset.mirrorId = 'node-323'
   node_323.dataset.mirrorName = 'Text'
-  node_323.textContent = "2 von 4 Sälen aktiv"
+  node_323.innerHTML = formatInlineMarkdown("2 von 4 Sälen aktiv")
   Object.assign(node_323.style, {
     'color': 'var(--text-secondary)',
     'font-size': '12px',
@@ -6081,7 +6081,7 @@ export function createUI(data = {}) {
   _elements['node-327'] = node_327
   node_327.dataset.mirrorId = 'node-327'
   node_327.dataset.mirrorName = 'Text'
-  node_327.textContent = "OP Saal 1"
+  node_327.innerHTML = formatInlineMarkdown("OP Saal 1")
   Object.assign(node_327.style, {
     'font-weight': '600',
     'font-size': '13px',
@@ -6117,7 +6117,7 @@ export function createUI(data = {}) {
   _elements['node-329'] = node_329
   node_329.dataset.mirrorId = 'node-329'
   node_329.dataset.mirrorName = 'Text'
-  node_329.textContent = "Appendektomie"
+  node_329.innerHTML = formatInlineMarkdown("Appendektomie")
   Object.assign(node_329.style, {
     'font-size': '12px',
     'color': 'var(--text-secondary)',
@@ -6130,7 +6130,7 @@ export function createUI(data = {}) {
   _elements['node-330'] = node_330
   node_330.dataset.mirrorId = 'node-330'
   node_330.dataset.mirrorName = 'Text'
-  node_330.textContent = "Noch ca. 45 min"
+  node_330.innerHTML = formatInlineMarkdown("Noch ca. 45 min")
   Object.assign(node_330.style, {
     'font-size': '11px',
     'color': 'var(--text-muted)',
@@ -6178,7 +6178,7 @@ export function createUI(data = {}) {
   _elements['node-333'] = node_333
   node_333.dataset.mirrorId = 'node-333'
   node_333.dataset.mirrorName = 'Text'
-  node_333.textContent = "OP Saal 2"
+  node_333.innerHTML = formatInlineMarkdown("OP Saal 2")
   Object.assign(node_333.style, {
     'font-weight': '600',
     'font-size': '13px',
@@ -6214,7 +6214,7 @@ export function createUI(data = {}) {
   _elements['node-335'] = node_335
   node_335.dataset.mirrorId = 'node-335'
   node_335.dataset.mirrorName = 'Text'
-  node_335.textContent = "Osteosynthese Femur"
+  node_335.innerHTML = formatInlineMarkdown("Osteosynthese Femur")
   Object.assign(node_335.style, {
     'font-size': '12px',
     'color': 'var(--text-secondary)',
@@ -6227,7 +6227,7 @@ export function createUI(data = {}) {
   _elements['node-336'] = node_336
   node_336.dataset.mirrorId = 'node-336'
   node_336.dataset.mirrorName = 'Text'
-  node_336.textContent = "Noch ca. 90 min"
+  node_336.innerHTML = formatInlineMarkdown("Noch ca. 90 min")
   Object.assign(node_336.style, {
     'font-size': '11px',
     'color': 'var(--text-muted)',
@@ -6275,7 +6275,7 @@ export function createUI(data = {}) {
   _elements['node-339'] = node_339
   node_339.dataset.mirrorId = 'node-339'
   node_339.dataset.mirrorName = 'Text'
-  node_339.textContent = "OP Saal 3"
+  node_339.innerHTML = formatInlineMarkdown("OP Saal 3")
   Object.assign(node_339.style, {
     'font-weight': '600',
     'font-size': '13px',
@@ -6310,7 +6310,7 @@ export function createUI(data = {}) {
   _elements['node-341'] = node_341
   node_341.dataset.mirrorId = 'node-341'
   node_341.dataset.mirrorName = 'Text'
-  node_341.textContent = "Verfügbar"
+  node_341.innerHTML = formatInlineMarkdown("Verfügbar")
   Object.assign(node_341.style, {
     'font-size': '12px',
     'color': 'var(--text-secondary)',
@@ -6323,7 +6323,7 @@ export function createUI(data = {}) {
   _elements['node-342'] = node_342
   node_342.dataset.mirrorId = 'node-342'
   node_342.dataset.mirrorName = 'Text'
-  node_342.textContent = "—"
+  node_342.innerHTML = formatInlineMarkdown("—")
   Object.assign(node_342.style, {
     'font-size': '11px',
     'color': 'var(--text-muted)',
@@ -6371,7 +6371,7 @@ export function createUI(data = {}) {
   _elements['node-345'] = node_345
   node_345.dataset.mirrorId = 'node-345'
   node_345.dataset.mirrorName = 'Text'
-  node_345.textContent = "OP Saal 4"
+  node_345.innerHTML = formatInlineMarkdown("OP Saal 4")
   Object.assign(node_345.style, {
     'font-weight': '600',
     'font-size': '13px',
@@ -6406,7 +6406,7 @@ export function createUI(data = {}) {
   _elements['node-347'] = node_347
   node_347.dataset.mirrorId = 'node-347'
   node_347.dataset.mirrorName = 'Text'
-  node_347.textContent = "Verfügbar"
+  node_347.innerHTML = formatInlineMarkdown("Verfügbar")
   Object.assign(node_347.style, {
     'font-size': '12px',
     'color': 'var(--text-secondary)',
@@ -6419,7 +6419,7 @@ export function createUI(data = {}) {
   _elements['node-348'] = node_348
   node_348.dataset.mirrorId = 'node-348'
   node_348.dataset.mirrorName = 'Text'
-  node_348.textContent = "—"
+  node_348.innerHTML = formatInlineMarkdown("—")
   Object.assign(node_348.style, {
     'font-size': '11px',
     'color': 'var(--text-muted)',
@@ -6569,6 +6569,25 @@ function sanitizeSVG(svgText) {
 		console.warn("[Security] SVG sanitization failed:", err);
 		return null;
 	}
+}
+
+// Inline-markdown formatter (stamped from compiler/runtime/inline-markdown.ts).
+// Converts `**bold**` and `*italic*` inside Text content to <strong>/<em>.
+// HTML-escapes input first, so user data can never inject tags.
+function formatInlineMarkdown(text) {
+	// Coerce non-strings (numbers from arithmetic, booleans, null/undefined)
+	// to a string the way `el.textContent = X` would. Skipping this returned
+	// '' for `Text $a * $b` and similar expressions whose result is a number.
+	if (text === null || text === undefined) return "";
+	const str = typeof text === "string" ? text : String(text);
+	// 1) Escape HTML special chars so any tag-looking content from data
+	//    becomes literal text instead of injected markup.
+	let html = str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+	// 2) Bold first (non-greedy so multiple bold spans on one line don't
+	//    merge), italic second on what remains.
+	html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+	html = html.replace(/\*([^*]+?)\*/g, "<em>$1</em>");
+	return html;
 }
 
 // Scroll helpers (stamped from compiler/runtime/scroll.ts via .toString())
@@ -8387,12 +8406,12 @@ const _runtime = {
             // Re-evaluate expression template with new data
             try {
               const result = el._textTemplate()
-              el.textContent = result ?? ''
+              el.innerHTML = formatInlineMarkdown(result ?? '')
             } catch (e) {
-              el.textContent = value ?? ''
+              el.innerHTML = formatInlineMarkdown(value ?? '')
             }
           } else {
-            el.textContent = value ?? ''
+            el.innerHTML = formatInlineMarkdown(value ?? '')
           }
         }
       }
