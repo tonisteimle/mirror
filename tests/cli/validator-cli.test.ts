@@ -326,6 +326,70 @@ describe('applyIgnore', () => {
   })
 })
 
+describe('validator CLI runner — --unused', () => {
+  it('does NOT emit W501 by default', () => {
+    const tokens = path.join(tmpDir, 'tokens.tok')
+    const app = path.join(tmpDir, 'app.mir')
+    writeFile(tokens, 'primary.bg: #2271C1\nunused.col: white')
+    writeFile(app, `canvas mobile\nText "x", col $primary`)
+
+    const result = runValidator({ inputs: [tokens, app] })
+    const warnings = result.fileResults.flatMap(fr => fr.warnings.map(w => w.code))
+    expect(warnings).not.toContain('W501')
+  })
+
+  it('emits W501 with reportUnused: true', () => {
+    const tokens = path.join(tmpDir, 'tokens.tok')
+    const app = path.join(tmpDir, 'app.mir')
+    writeFile(tokens, 'primary.bg: #2271C1\nunused.col: white')
+    writeFile(app, `canvas mobile\nText "x", col $primary`)
+
+    const result = runValidator({ inputs: [tokens, app], reportUnused: true })
+    const warnings = result.fileResults.flatMap(fr => fr.warnings)
+    const unusedTokens = warnings.filter(w => w.code === 'W501')
+    expect(unusedTokens.length).toBeGreaterThan(0)
+    expect(unusedTokens[0].message).toContain('unused.col')
+  })
+
+  it('emits W503 for unused components', () => {
+    const components = path.join(tmpDir, 'components.com')
+    const app = path.join(tmpDir, 'app.mir')
+    writeFile(components, 'Used: pad 10\nUnused: pad 20')
+    writeFile(app, `canvas mobile\nUsed`)
+
+    const result = runValidator({ inputs: [components, app], reportUnused: true })
+    const warnings = result.fileResults.flatMap(fr => fr.warnings)
+    const unusedComps = warnings.filter(w => w.code === 'W503')
+    expect(unusedComps.some(w => w.message.includes('Unused'))).toBe(true)
+    expect(unusedComps.some(w => w.message.includes('Used'))).toBe(false)
+  })
+
+  it('counts a component used as `as Base` as not unused', () => {
+    const components = path.join(tmpDir, 'components.com')
+    const app = path.join(tmpDir, 'app.mir')
+    writeFile(components, 'BaseBtn: pad 10\nDangerBtn as BaseBtn: bg #ef4444')
+    writeFile(app, `canvas mobile\nDangerBtn`)
+
+    const result = runValidator({ inputs: [components, app], reportUnused: true })
+    const warnings = result.fileResults.flatMap(fr => fr.warnings)
+    const baseUnused = warnings.find(w => w.message.includes('BaseBtn'))
+    expect(baseUnused).toBeUndefined()
+  })
+
+  it('counts a token used via base-name shorthand ($primary for primary.bg)', () => {
+    const tokens = path.join(tmpDir, 'tokens.tok')
+    const app = path.join(tmpDir, 'app.mir')
+    writeFile(tokens, 'primary.bg: #2271C1\nprimary.col: white')
+    writeFile(app, `canvas mobile\nFrame bg $primary`)
+
+    const result = runValidator({ inputs: [tokens, app], reportUnused: true })
+    const warnings = result.fileResults.flatMap(fr => fr.warnings)
+    // Both family entries are "used" because $primary covers them.
+    const unusedTokens = warnings.filter(w => w.code === 'W501')
+    expect(unusedTokens.length).toBe(0)
+  })
+})
+
 describe('crossFileCodeToErrorCode', () => {
   it('maps undefined-token to W500', () => {
     expect(crossFileCodeToErrorCode('undefined-token')).toBe('W500')

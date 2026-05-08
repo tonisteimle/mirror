@@ -22,7 +22,8 @@ import { validate, ValidateOptions } from './index'
 import type { ValidationError, ValidationResult } from './types'
 import { validateProject, type CrossFileError } from '../loader/cross-file-validator'
 import type { ProjectFile } from '../loader/project-loader'
-import { parse } from '../parser'
+import { parse, parseWithDiagnostics } from '../parser'
+import type { AST, Instance, Property } from '../parser/ast'
 import { classify, isPlainToken, isPropertySet } from '../loader/classify'
 import { FILE_EXTENSIONS, isMirrorCodeFile, isDataFile, getAllMirrorExtensions } from '../cli/types'
 import { listMirrorCodeFiles, listDataFiles } from '../cli/files'
@@ -45,6 +46,13 @@ export interface RunnerOptions {
   maxWarnings?: number
   /** Strict-mode: treat all warnings as errors (exit non-zero on any warning). */
   strict?: boolean
+  /**
+   * Emit W501/W503 warnings for tokens/components that are defined
+   * somewhere in the project but never referenced. Off by default: a
+   * shared `tokens.tok` legitimately contains entries used only in
+   * downstream projects.
+   */
+  reportUnused?: boolean
 }
 
 /**
@@ -333,6 +341,37 @@ export function runValidator(opts: RunnerOptions): RunnerResult {
       )
     : []
 
+  // Cross-file unused detection (W501/W503). Only emitted in project
+  // mode + when explicitly opted in via `--unused`. Otherwise a
+  // tokens.tok shared across multiple downstream apps would emit a
+  // wall of warnings every run.
+  if (projectMode && opts.reportUnused) {
+    const unused = detectUnused(
+      codeFiles.filter(f => isMirrorCodeFile(f.filename)),
+      prelude.proseComponents
+    )
+    for (const u of unused) {
+      const code = u.kind === 'token' ? 'W501' : 'W503'
+      if (opts.ignoreCodes?.has(code)) continue
+      const fr = fileResults.find(f => f.filename === u.filename)
+      if (!fr) continue
+      fr.warnings.push({
+        severity: 'warning',
+        code,
+        message:
+          u.kind === 'token'
+            ? `Token "${u.name}" is defined but never used`
+            : `Component "${u.name}" is defined but never used`,
+        line: u.line,
+        column: u.column,
+        suggestion:
+          u.kind === 'token'
+            ? `Remove unused token or add a reference with $${u.name.split('.')[0]}`
+            : `Remove unused component or create an instance`,
+      })
+    }
+  }
+
   // Tally
   const errorCount =
     fileResults.reduce((acc, fr) => acc + fr.errors.length, 0) + crossFileErrors.length
@@ -374,6 +413,203 @@ export function crossFileCodeToErrorCode(code: CrossFileError['code']): string {
     case 'duplicate-token':
       return 'E603'
   }
+}
+
+// ============================================================================
+// Cross-file unused detection
+// ============================================================================
+
+/**
+ * Walk every Property in an Instance + its children, collecting token-ref
+ * names. Mirrors the visit logic in cross-file-validator but in this file
+ * so we can additionally collect component usages and base-class refs.
+ */
+function collectUsages(
+  files: Array<{ filename: string; content: string }>,
+  proseComponentPrelude: ReadonlySet<string>
+): {
+  usedTokens: Set<string>
+  usedComponents: Set<string>
+  /** Components referenced via `as Base` inheritance — also count as "used". */
+  usedAsBase: Set<string>
+} {
+  const usedTokens = new Set<string>()
+  const usedComponents = new Set<string>()
+  const usedAsBase = new Set<string>()
+
+  for (const f of files) {
+    let ast
+    try {
+      ast = parseWithDiagnosticsForUsage(f.content, proseComponentPrelude)
+    } catch {
+      continue
+    }
+
+    // Component definitions: track `as Base` inheritance. The parser
+    // stores the `as XX` target in `primitive` even when XX is a
+    // user-defined component (not a built-in). `extends` field is
+    // present but unused in current AST.
+    for (const comp of ast.components) {
+      if (comp.type === 'Component') {
+        if (comp.extends) usedAsBase.add(comp.extends)
+        if (comp.primitive) usedAsBase.add(comp.primitive)
+      }
+      // Properties of the definition can carry token refs.
+      for (const prop of comp.properties) {
+        for (const name of tokenRefsInProperty(prop)) usedTokens.add(name)
+      }
+      // Also walk the body — a component's children carry refs.
+      for (const child of comp.children ?? []) {
+        if (child.type === 'Instance') walkInstanceForUsage(child, usedTokens, usedComponents)
+      }
+    }
+
+    // Top-level instances.
+    for (const inst of ast.instances) {
+      if (inst.type === 'Instance') {
+        walkInstanceForUsage(inst, usedTokens, usedComponents)
+      }
+    }
+  }
+
+  return { usedTokens, usedComponents, usedAsBase }
+}
+
+/**
+ * Parse with prose-prelude so synthesized prose children don't get
+ * walked as "real" component refs.
+ */
+function parseWithDiagnosticsForUsage(
+  source: string,
+  proseComponentPrelude: ReadonlySet<string>
+): AST {
+  return parseWithDiagnostics(source, { proseComponentPrelude }).ast
+}
+
+function walkInstanceForUsage(
+  node: Instance,
+  usedTokens: Set<string>,
+  usedComponents: Set<string>
+): void {
+  usedComponents.add(node.component)
+  for (const prop of node.properties) {
+    for (const name of tokenRefsInProperty(prop)) usedTokens.add(name)
+  }
+  for (const child of node.children) {
+    if (child.type === 'Instance') walkInstanceForUsage(child, usedTokens, usedComponents)
+  }
+}
+
+function tokenRefsInProperty(prop: Property): string[] {
+  const refs: string[] = []
+  for (const v of prop.values) {
+    if (typeof v === 'object' && v !== null && 'kind' in v) {
+      if (v.kind === 'token') refs.push(v.name)
+      else if (v.kind === 'expression') {
+        for (const part of v.parts) {
+          if (
+            typeof part === 'object' &&
+            part !== null &&
+            'kind' in part &&
+            part.kind === 'token'
+          ) {
+            refs.push(part.name)
+          }
+        }
+      }
+    }
+  }
+  return refs
+}
+
+/**
+ * Result of cross-file unused detection. Emitted as W501/W503 warnings
+ * by `runValidator` when `reportUnused: true`.
+ */
+export interface UnusedDefinition {
+  kind: 'token' | 'component'
+  name: string
+  filename: string
+  line: number
+  column: number
+}
+
+/**
+ * Detect tokens and components defined in any file but never referenced
+ * across the project. Token-family base names (e.g. `primary` for
+ * `primary.bg`/`primary.col`) count as a single unit — if the base name
+ * is used anywhere, none of the family entries are "unused".
+ */
+export function detectUnused(
+  files: Array<{ filename: string; content: string }>,
+  proseComponentPrelude: ReadonlySet<string>
+): UnusedDefinition[] {
+  const unused: UnusedDefinition[] = []
+
+  // Collect definitions with location info.
+  type DefInfo = { name: string; filename: string; line: number; column: number }
+  const tokenDefs: DefInfo[] = []
+  const componentDefs: DefInfo[] = []
+  for (const f of files) {
+    let ast
+    try {
+      ast = parseWithDiagnosticsForUsage(f.content, proseComponentPrelude)
+    } catch {
+      continue
+    }
+    const cls = classify(ast)
+    for (const t of cls.tokens) {
+      if (isPlainToken(t) || isPropertySet(t)) {
+        tokenDefs.push({ name: t.name, filename: f.filename, line: t.line, column: t.column })
+      }
+    }
+    for (const comp of cls.components) {
+      if (comp.type === 'Component') {
+        componentDefs.push({
+          name: comp.name,
+          filename: f.filename,
+          line: comp.line,
+          column: comp.column,
+        })
+      }
+    }
+  }
+
+  const { usedTokens, usedComponents, usedAsBase } = collectUsages(files, proseComponentPrelude)
+
+  // For tokens, also count the base-name (`primary`) as covering all
+  // family members (`primary.bg`, `primary.col`).
+  const usedTokenBases = new Set<string>()
+  for (const name of usedTokens) {
+    const dot = name.indexOf('.')
+    usedTokenBases.add(dot > 0 ? name.slice(0, dot) : name)
+  }
+
+  for (const def of tokenDefs) {
+    const dot = def.name.indexOf('.')
+    const base = dot > 0 ? def.name.slice(0, dot) : def.name
+    if (usedTokens.has(def.name) || usedTokenBases.has(base)) continue
+    unused.push({
+      kind: 'token',
+      name: def.name,
+      filename: def.filename,
+      line: def.line,
+      column: def.column,
+    })
+  }
+
+  for (const def of componentDefs) {
+    if (usedComponents.has(def.name) || usedAsBase.has(def.name)) continue
+    unused.push({
+      kind: 'component',
+      name: def.name,
+      filename: def.filename,
+      line: def.line,
+      column: def.column,
+    })
+  }
+
+  return unused
 }
 
 // ============================================================================

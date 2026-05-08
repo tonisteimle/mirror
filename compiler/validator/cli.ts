@@ -73,6 +73,7 @@ interface ParsedArgs {
   ignoreCodes: Set<string>
   maxWarnings: number | undefined
   projectMode: boolean | undefined
+  reportUnused: boolean
 }
 
 function parseArgs(argv: string[]): ParsedArgs {
@@ -89,6 +90,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     ignoreCodes: new Set(),
     maxWarnings: undefined,
     projectMode: undefined,
+    reportUnused: false,
   }
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -99,6 +101,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     else if (arg === '--verbose' || arg === '-v') out.verbose = true
     else if (arg === '--quiet' || arg === '-q') out.quiet = true
     else if (arg === '--strict') out.strict = true
+    else if (arg === '--unused') out.reportUnused = true
     else if (arg === '--no-color') out.noColor = true
     else if (arg === '--project') out.projectMode = true
     else if (arg === '--no-project') out.projectMode = false
@@ -165,6 +168,9 @@ Options:
   --verbose, -v       Show all files (including valid ones)
   --quiet, -q         Suppress success messages, only print errors/warnings
   --strict            Treat warnings as errors (exit non-zero on any warning)
+  --unused            Report unused tokens (W501) and components (W503)
+                      across the whole project. Off by default — a shared
+                      tokens file legitimately contains unused entries.
   --ignore <codes>    Suppress specific error codes (comma-separated)
                       e.g., --ignore=E014,W110
   --max-warnings <N>  Exit non-zero if warnings exceed N
@@ -327,6 +333,7 @@ function runOnce(args: ParsedArgs): number {
     ignoreCodes: args.ignoreCodes,
     maxWarnings: args.maxWarnings,
     strict: args.strict,
+    reportUnused: args.reportUnused,
   }
 
   const result = runValidator(runnerOpts)
