@@ -40,11 +40,22 @@ describe('Parser Bug T4/T5: Reserved keywords as token names', () => {
 // T10/T11: Canvas position
 // ============================================================================
 describe('Parser Bug T10/T11: Canvas placement', () => {
-  it('canvas mid-document is NOT recognized as canvas (must be first)', () => {
+  it('canvas after a leading definition / element is still captured (multi-file prelude support)', () => {
+    // Phase: multi-file Studio compiles prepend tokens.tok / components.com
+    // as a prelude before app.mir. The parser must therefore accept
+    // canvas declared after non-canvas statements — otherwise the
+    // canvas line in app.mir gets silently dropped and every primitive
+    // descendant inherits mirror-defaults.css's dark theme (cf. the
+    // tests/integration/personas-canvas-colors.test.ts regression
+    // that motivated this relaxation).
+    //
+    // The earlier strict "canvas-must-be-first" rule (Bug T10/T11) was
+    // relaxed in commit c3e6cde5; this test pins the new contract so
+    // future tightening doesn't silently re-break the prelude path.
     const ast = parse(`Frame
 canvas mobile`)
-    // canvas mid-document should not become program.canvas
-    expect(ast.canvas).toBeUndefined()
+    expect(ast.canvas).toBeDefined()
+    expect(ast.canvas?.device).toBe('mobile')
   })
 
   it('canvas declared twice — first or last wins, but at least one is set', () => {

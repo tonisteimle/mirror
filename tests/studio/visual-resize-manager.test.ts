@@ -4,7 +4,11 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { JSDOM } from 'jsdom'
-import { ResizeManager, createResizeManager, type ResizeHandle } from '../../studio/visual/resize-manager'
+import {
+  ResizeManager,
+  createResizeManager,
+  type ResizeHandle,
+} from '../../studio/visual/resize-manager'
 import { OverlayManager, createOverlayManager } from '../../studio/visual/overlay-manager'
 
 // Setup JSDOM
@@ -15,6 +19,11 @@ global.document = dom.window.document
 global.HTMLElement = dom.window.HTMLElement
 global.window = dom.window as unknown as Window & typeof globalThis
 global.MouseEvent = dom.window.MouseEvent
+// resize-manager → grid-detector calls bare `getComputedStyle` to detect
+// `display: grid` on the resize element's parent chain. Without this
+// global, the mousedown handler throws ReferenceError and `events.emit`
+// never fires.
+global.getComputedStyle = dom.window.getComputedStyle.bind(dom.window)
 
 // Mock core module
 vi.mock('../../studio/core', () => ({
@@ -176,7 +185,12 @@ describe('ResizeManager', () => {
       element1.dataset.mirrorId = 'node-1'
       container.appendChild(element1)
       element1.getBoundingClientRect = vi.fn().mockReturnValue({
-        left: 50, top: 30, width: 100, height: 80, right: 150, bottom: 110,
+        left: 50,
+        top: 30,
+        width: 100,
+        height: 80,
+        right: 150,
+        bottom: 110,
       })
 
       // Second element
@@ -184,11 +198,21 @@ describe('ResizeManager', () => {
       element2.dataset.mirrorId = 'node-2'
       container.appendChild(element2)
       element2.getBoundingClientRect = vi.fn().mockReturnValue({
-        left: 200, top: 100, width: 150, height: 100, right: 350, bottom: 200,
+        left: 200,
+        top: 100,
+        width: 150,
+        height: 100,
+        right: 350,
+        bottom: 200,
       })
 
       container.getBoundingClientRect = vi.fn().mockReturnValue({
-        left: 0, top: 0, width: 800, height: 600, right: 800, bottom: 600,
+        left: 0,
+        top: 0,
+        width: 800,
+        height: 600,
+        right: 800,
+        bottom: 600,
       })
 
       // Show handles for first element
@@ -213,10 +237,20 @@ describe('ResizeManager', () => {
       element.dataset.mirrorId = 'test-node'
       container.appendChild(element)
       element.getBoundingClientRect = vi.fn().mockReturnValue({
-        left: 50, top: 30, width: 100, height: 80, right: 150, bottom: 110,
+        left: 50,
+        top: 30,
+        width: 100,
+        height: 80,
+        right: 150,
+        bottom: 110,
       })
       container.getBoundingClientRect = vi.fn().mockReturnValue({
-        left: 0, top: 0, width: 800, height: 600, right: 800, bottom: 600,
+        left: 0,
+        top: 0,
+        width: 800,
+        height: 600,
+        right: 800,
+        bottom: 600,
       })
 
       resizeManager.showHandles('test-node')
@@ -233,17 +267,32 @@ describe('ResizeManager', () => {
       element.dataset.mirrorId = 'test-node'
       container.appendChild(element)
       element.getBoundingClientRect = vi.fn().mockReturnValue({
-        left: 50, top: 30, width: 100, height: 80, right: 150, bottom: 110,
+        left: 50,
+        top: 30,
+        width: 100,
+        height: 80,
+        right: 150,
+        bottom: 110,
       })
       container.getBoundingClientRect = vi.fn().mockReturnValue({
-        left: 0, top: 0, width: 800, height: 600, right: 800, bottom: 600,
+        left: 0,
+        top: 0,
+        width: 800,
+        height: 600,
+        right: 800,
+        bottom: 600,
       })
 
       resizeManager.showHandles('test-node')
 
       // Modify element position
       element.getBoundingClientRect = vi.fn().mockReturnValue({
-        left: 100, top: 60, width: 120, height: 90, right: 220, bottom: 150,
+        left: 100,
+        top: 60,
+        width: 120,
+        height: 90,
+        right: 220,
+        bottom: 150,
       })
 
       resizeManager.refresh()
@@ -266,10 +315,20 @@ describe('ResizeManager', () => {
       element.dataset.mirrorId = 'test-node'
       container.appendChild(element)
       element.getBoundingClientRect = vi.fn().mockReturnValue({
-        left: 50, top: 30, width: 100, height: 80, right: 150, bottom: 110,
+        left: 50,
+        top: 30,
+        width: 100,
+        height: 80,
+        right: 150,
+        bottom: 110,
       })
       container.getBoundingClientRect = vi.fn().mockReturnValue({
-        left: 0, top: 0, width: 800, height: 600, right: 800, bottom: 600,
+        left: 0,
+        top: 0,
+        width: 800,
+        height: 600,
+        right: 800,
+        bottom: 600,
       })
 
       resizeManager.showHandles('test-node')
@@ -336,10 +395,20 @@ describe('ResizeManager Sizing Logic', () => {
     parent.appendChild(element)
 
     element.getBoundingClientRect = vi.fn().mockReturnValue({
-      left: 50, top: 30, width: 100, height: 80, right: 150, bottom: 110,
+      left: 50,
+      top: 30,
+      width: 100,
+      height: 80,
+      right: 150,
+      bottom: 110,
     })
     container.getBoundingClientRect = vi.fn().mockReturnValue({
-      left: 0, top: 0, width: 800, height: 600, right: 800, bottom: 600,
+      left: 0,
+      top: 0,
+      width: 800,
+      height: 600,
+      right: 800,
+      bottom: 600,
     })
 
     resizeManager.showHandles('test-node')
@@ -353,9 +422,12 @@ describe('ResizeManager Sizing Logic', () => {
     })
     seHandle.dispatchEvent(mousedownEvent)
 
-    expect(mockEvents.emit).toHaveBeenCalledWith('resize:start', expect.objectContaining({
-      nodeId: 'test-node',
-      handle: 'se',
-    }))
+    expect(mockEvents.emit).toHaveBeenCalledWith(
+      'resize:start',
+      expect.objectContaining({
+        nodeId: 'test-node',
+        handle: 'se',
+      })
+    )
   })
 })

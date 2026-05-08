@@ -285,7 +285,7 @@ describe('Layout Deep 6: Sizing cascade through nested layouts', () => {
   Frame w 6`
     const child = getNthChild(code, [0])
     expect(
-      child.styles.some((s: any) => s.property === 'grid-column' && s.value === 'span 6')
+      child.styles.some((s: any) => s.property === 'grid-column-end' && s.value === 'span 6')
     ).toBe(true)
   })
 

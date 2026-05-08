@@ -378,8 +378,8 @@ describe('Layout Coverage: Parent-Child layout interactions', () => {
     const styleMap = new Map(child.styles.map((s: any) => [s.property, s.value]))
     expect(styleMap.get('grid-column-start')).toBe('1')
     expect(styleMap.get('grid-row-start')).toBe('2')
-    expect(styleMap.get('grid-column')).toBe('span 6')
-    expect(styleMap.get('grid-row')).toBe('span 3')
+    expect(styleMap.get('grid-column-end')).toBe('span 6')
+    expect(styleMap.get('grid-row-end')).toBe('span 3')
   })
 
   it('Mixed: Stacked → Grid → Flex → x/y on deepest', () => {

@@ -58,11 +58,18 @@ describe('Canvas Parser', () => {
     expect(ast.canvas).toBeUndefined()
   })
 
-  test('canvas must be first non-empty line', () => {
-    // Canvas after elements should NOT be parsed as canvas
+  test('canvas after non-canvas statements is still captured (multi-file prelude support)', () => {
+    // The earlier "canvas must be first non-empty line" rule was relaxed
+    // in commit c3e6cde5 so multi-file Studio compiles can prepend
+    // tokens.tok / components.com as a prelude before app.mir's canvas.
+    // Without the relaxation the canvas line silently drops and
+    // mirror-defaults.css's dark-theme rules paint every primitive.
+    // (See tests/integration/personas-canvas-colors.test.ts for the
+    // visual regression that this contract guards against.)
     const ast = parse(`Text "Hello"
 canvas bg #1a1a1a`)
-    expect(ast.canvas).toBeUndefined()
+    expect(ast.canvas).toBeDefined()
+    expect(ast.canvas?.properties.find(p => p.name === 'bg')?.values?.[0]).toBe('#1a1a1a')
   })
 
   test('canvas with blank lines before', () => {

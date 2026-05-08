@@ -12,8 +12,8 @@
  * Datei-Repräsentation
  */
 export interface StorageFile {
-  name: string           // "button.mir"
-  path: string           // "components/button.mir" (relativ)
+  name: string // "button.mir"
+  path: string // "components/button.mir" (relativ)
   type: 'file'
   updatedAt?: Date
 }
@@ -22,8 +22,8 @@ export interface StorageFile {
  * Ordner-Repräsentation
  */
 export interface StorageFolder {
-  name: string           // "components"
-  path: string           // "components" (relativ)
+  name: string // "components"
+  path: string // "components" (relativ)
   type: 'folder'
   children: StorageItem[]
 }
@@ -37,8 +37,8 @@ export type StorageItem = StorageFile | StorageFolder
  * Projekt-Metadaten
  */
 export interface StorageProject {
-  id: string             // Eindeutige ID (Tauri: Pfad, Server: UUID)
-  name: string           // Anzeigename
+  id: string // Eindeutige ID (Tauri: Pfad, Server: UUID)
+  name: string // Anzeigename
   createdAt?: Date
   updatedAt?: Date
 }
@@ -54,7 +54,9 @@ export const FILE_EXTENSIONS = {
   layout: ['.mir', '.mirror'],
   tokens: ['.tok', '.tokens'],
   component: ['.com', '.components'],
-  data: ['.yaml', '.yml']
+  // `.data` is the canonical Mirror-data extension (mirrors `.tok`/`.com`
+  // for tokens/components); .yaml/.yml stay as cross-tool sidecars.
+  data: ['.data', '.yaml', '.yml'],
 } as const
 
 export type MirrorFileType = 'layout' | 'tokens' | 'component' | 'data' | 'unknown'
@@ -140,7 +142,7 @@ export interface StorageEventMap {
   'tree:changed': { tree: StorageItem[] }
   'project:opened': { project: StorageProject }
   'project:closed': Record<string, never>
-  'error': { error: Error; operation: string; path?: string; recoverable: boolean }
+  error: { error: Error; operation: string; path?: string; recoverable: boolean }
 }
 
 // =============================================================================

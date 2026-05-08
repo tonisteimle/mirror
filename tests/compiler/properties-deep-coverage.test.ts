@@ -307,8 +307,17 @@ describe('Properties Coverage 7: Conditional values across property types', () =
   })
 
   it('Final DOM backend resolves ternary to runtime expression', () => {
+    // The runtime helper bundle DOES contain a string `__conditional:` —
+    // it's the prefix used to filter internal markers in the property
+    // setter. We need to assert that the marker doesn't leak into user
+    // style assignments, not that the literal string is absent overall.
     const js = generateDOM(parse('Frame bg active ? red : blue'))
-    expect(js).not.toContain('__conditional')
+    const userCodeMatch =
+      js.match(
+        /(?:\.style\.[a-zA-Z]+\s*=|setProperty\([^)]+\))[\s\S]*?(?=\}\s*\n|\n\s*function\b|$)/g
+      ) ?? []
+    const userCode = userCodeMatch.join('\n')
+    expect(userCode).not.toContain('__conditional:')
     expect(js).toMatch(/\?\s*"red"\s*:\s*"blue"/)
   })
 })

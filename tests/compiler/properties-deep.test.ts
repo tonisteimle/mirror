@@ -65,9 +65,17 @@ describe('Properties Deep D2: Conditional value pipeline (IR marker → backend 
   })
 
   it('final DOM backend output resolves the marker to a runtime ternary', () => {
-    // The marker MUST be gone by the time the backend emits JavaScript.
+    // The marker MUST be gone from the user-emitted style assignments by the
+    // time the backend emits JavaScript. The runtime helper bundle DOES
+    // mention `__conditional:` as a known prefix to filter, so we can't
+    // grep the whole output — only the user-code section needs to be clean.
     const js = generateDOM(parse('Frame bg active ? red : blue'))
-    expect(js).not.toContain('__conditional')
+    const userCodeMatch =
+      js.match(
+        /(?:\.style\.[a-zA-Z]+\s*=|setProperty\([^)]+\))[\s\S]*?(?=\}\s*\n|\n\s*function\b|$)/g
+      ) ?? []
+    const userCode = userCodeMatch.join('\n')
+    expect(userCode).not.toContain('__conditional:')
     // Should contain runtime ternary based on the condition
     expect(js).toMatch(/\?\s*"red"\s*:\s*"blue"/)
   })

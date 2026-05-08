@@ -100,12 +100,12 @@ describe('File Delete - Event Handling', () => {
   })
 
   it('should remove file from cache after delete', async () => {
-    await controller.selectFile('index.mir')
-    expect(controller.filesCache['index.mir']).toBeDefined()
+    await controller.selectFile('app.mir')
+    expect(controller.filesCache['app.mir']).toBeDefined()
 
-    await controller.deleteItem('index.mir', false)
+    await controller.deleteItem('app.mir', false)
 
-    expect(controller.filesCache['index.mir']).toBeUndefined()
+    expect(controller.filesCache['app.mir']).toBeUndefined()
   })
 })
 
@@ -115,13 +115,13 @@ describe('File Delete - Event Handling', () => {
 
 describe('File Delete - Current File Handling', () => {
   it('should clear currentFile when deleted file was selected', async () => {
-    await controller.selectFile('index.mir')
-    expect(controller.currentFile).toBe('index.mir')
+    await controller.selectFile('app.mir')
+    expect(controller.currentFile).toBe('app.mir')
 
-    await controller.deleteItem('index.mir', false)
+    await controller.deleteItem('app.mir', false)
 
     // currentFile should be cleared (or switched to another file)
-    expect(controller.currentFile).not.toBe('index.mir')
+    expect(controller.currentFile).not.toBe('app.mir')
   })
 
   it('should auto-select next file after deleting current', async () => {
@@ -146,11 +146,11 @@ describe('File Delete - Current File Handling', () => {
   it('should not affect currentFile when deleting different file', async () => {
     await storage.writeFile('other.mir', 'content')
 
-    await controller.selectFile('index.mir')
+    await controller.selectFile('app.mir')
     await controller.deleteItem('other.mir', false)
 
     // currentFile should still be the same
-    expect(controller.currentFile).toBe('index.mir')
+    expect(controller.currentFile).toBe('app.mir')
   })
 })
 
@@ -179,14 +179,14 @@ describe('File Delete - Error Handling', () => {
   })
 
   it('should not modify cache when delete fails', async () => {
-    await controller.selectFile('index.mir')
-    const cachedContent = controller.filesCache['index.mir']
+    await controller.selectFile('app.mir')
+    const cachedContent = controller.filesCache['app.mir']
 
     // Try to delete non-existent file
     await controller.deleteItem('nonexistent.mir', false)
 
     // Cache should be unchanged
-    expect(controller.filesCache['index.mir']).toBe(cachedContent)
+    expect(controller.filesCache['app.mir']).toBe(cachedContent)
   })
 })
 

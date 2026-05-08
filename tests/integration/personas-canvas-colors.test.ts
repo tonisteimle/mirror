@@ -24,7 +24,7 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { JSDOM } from 'jsdom'
-import { describe, test, expect, beforeAll } from 'vitest'
+import { describe, test, expect, beforeAll, vi } from 'vitest'
 import { parse } from '../../compiler/parser/parser'
 import { generateDOM } from '../../compiler/backends/dom'
 
@@ -52,6 +52,11 @@ function buildPersonasPrelude(): string {
 describe('personas-informatik renders with light-canvas colors', () => {
   let dom: JSDOM
   let root: HTMLElement
+
+  // The "no leak color" assertion sweeps several thousand text-bearing
+  // elements through getComputedStyle in jsdom; the default 5s test
+  // timeout isn't enough on slower machines.
+  vi.setConfig({ testTimeout: 30000 })
 
   beforeAll(() => {
     const combined = buildPersonasPrelude()

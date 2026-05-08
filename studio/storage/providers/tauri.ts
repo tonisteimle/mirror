@@ -18,7 +18,9 @@ interface TauriBridgeStorage {
   fs: {
     readFile(path: string): Promise<string>
     writeFile(path: string, content: string): Promise<void>
-    listDirectory(path: string): Promise<{ path: string; files: Array<{ name: string; is_dir: boolean }> }>
+    listDirectory(
+      path: string
+    ): Promise<{ path: string; files: Array<{ name: string; is_dir: boolean }> }>
     createDirectory(path: string): Promise<void>
     deletePath(path: string): Promise<void>
     renamePath(from: string, to: string): Promise<void>
@@ -69,7 +71,7 @@ export class TauriProvider implements StorageProvider {
         id: path,
         name: this.basename(path),
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       }))
     } catch (error) {
       log.error('Failed to list projects:', error)
@@ -101,7 +103,7 @@ App bg #18181b, pad 24
       id: projectPath,
       name,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     }
   }
 
@@ -112,6 +114,12 @@ App bg #18181b, pad 24
   }
 
   async openProject(id: string): Promise<void> {
+    // Inform the Rust backend (AppState.basePath) FIRST. Without this,
+    // every subsequent fs.readFile / fs.listDirectory hits guard_path on
+    // the Rust side and is rejected — the file tree appears empty and
+    // the project "doesn't open". The setTitle call below is a best-
+    // effort cosmetic; only the open_project call is load-bearing.
+    await this.bridge.project.openProject(id)
     this.basePath = id
 
     // Fenster-Titel aktualisieren
@@ -146,7 +154,9 @@ App bg #18181b, pad 24
     if (depth > this.MAX_DEPTH) {
       // Warn user once about depth limit
       if (!this.depthWarningShown) {
-        log.warn(`Maximum folder depth (${this.MAX_DEPTH}) reached. Some nested folders may not be shown.`)
+        log.warn(
+          `Maximum folder depth (${this.MAX_DEPTH}) reached. Some nested folders may not be shown.`
+        )
         this.depthWarningShown = true
       }
       return []
@@ -170,13 +180,13 @@ App bg #18181b, pad 24
             type: 'folder',
             name: entry.name,
             path: relativePath,
-            children
+            children,
           })
         } else if (isMirrorFile(entry.name)) {
           items.push({
             type: 'file',
             name: entry.name,
-            path: relativePath
+            path: relativePath,
           })
         }
       }
@@ -305,5 +315,8 @@ App bg #18181b, pad 24
  * Prüft ob Tauri verfügbar ist
  */
 export function isTauri(): boolean {
-  return typeof window !== 'undefined' && (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ !== undefined
+  return (
+    typeof window !== 'undefined' &&
+    (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ !== undefined
+  )
 }
