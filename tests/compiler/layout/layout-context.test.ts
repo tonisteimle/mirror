@@ -329,7 +329,7 @@ Frame grid 12
       Frame w full, bg blue`)
 
       // Grid child: w 6 = span 6
-      expect(getIRStyle(children[0], 'grid-column')).toBe('span 6')
+      expect(getIRStyle(children[0], 'grid-column-end')).toBe('span 6')
 
       // Flex container inside grid
       const flexContainer = children[0].children[0]
@@ -469,9 +469,9 @@ Frame grid 3, gap-x 16, gap-y 24
     expect(getIRStyle(parent, 'row-gap')).toBe('24px')
 
     // All children span 1 column
-    expect(getIRStyle(children[0], 'grid-column')).toBe('span 1')
-    expect(getIRStyle(children[1], 'grid-column')).toBe('span 1')
-    expect(getIRStyle(children[2], 'grid-column')).toBe('span 1')
+    expect(getIRStyle(children[0], 'grid-column-end')).toBe('span 1')
+    expect(getIRStyle(children[1], 'grid-column-end')).toBe('span 1')
+    expect(getIRStyle(children[2], 'grid-column-end')).toBe('span 1')
   })
 })
 
@@ -537,7 +537,7 @@ Frame grid 3, gap 16
 
       // All cards span 2 rows
       for (const child of children) {
-        expect(getIRStyle(child, 'grid-row')).toBe('span 2')
+        expect(getIRStyle(child, 'grid-row-end')).toBe('span 2')
       }
     })
   })

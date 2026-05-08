@@ -448,13 +448,13 @@ export const CHILD_IN_PARENT_MATRIX: Array<{
   {
     parent: 'Frame grid 12',
     child: 'Frame w 4',
-    expectedCSS: { 'grid-column': 'span 4', width: '100%' },
+    expectedCSS: { 'grid-column-end': 'span 4', width: '100%' },
     description: 'w in grid child is column span + fills cell width',
   },
   {
     parent: 'Frame grid 12',
     child: 'Frame h 2',
-    expectedCSS: { 'grid-row': 'span 2', height: '100%' },
+    expectedCSS: { 'grid-row-end': 'span 2', height: '100%' },
     description: 'h in grid child is row span + fills cell height',
   },
   {
@@ -475,8 +475,8 @@ export const CHILD_IN_PARENT_MATRIX: Array<{
     expectedCSS: {
       'grid-column-start': '2',
       'grid-row-start': '3',
-      'grid-column': 'span 4',
-      'grid-row': 'span 2',
+      'grid-column-end': 'span 4',
+      'grid-row-end': 'span 2',
       width: '100%',
       height: '100%',
     },

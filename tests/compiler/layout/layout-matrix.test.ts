@@ -573,7 +573,7 @@ Frame grid 12
   Frame w 4`)
     )
     const child = ir.nodes[0].children[0]
-    expect(hasIRStyle(child, 'grid-column', 'span 4')).toBe(true)
+    expect(hasIRStyle(child, 'grid-column-end', 'span 4')).toBe(true)
   })
 
   it('grid child h 2 → grid-row: span 2', () => {
@@ -583,7 +583,7 @@ Frame grid 12
   Frame h 2`)
     )
     const child = ir.nodes[0].children[0]
-    expect(hasIRStyle(child, 'grid-row', 'span 2')).toBe(true)
+    expect(hasIRStyle(child, 'grid-row-end', 'span 2')).toBe(true)
   })
 
   it('grid child x 2 → grid-column-start: 2', () => {
@@ -747,14 +747,14 @@ Frame grid 12, gap 16
 
     // First child: column 1, span 3
     expect(getIRStyle(container.children[0], 'grid-column-start')).toBe('1')
-    expect(getIRStyle(container.children[0], 'grid-column')).toBe('span 3')
+    expect(getIRStyle(container.children[0], 'grid-column-end')).toBe('span 3')
 
     // Second child: column 4, span 6
     expect(getIRStyle(container.children[1], 'grid-column-start')).toBe('4')
-    expect(getIRStyle(container.children[1], 'grid-column')).toBe('span 6')
+    expect(getIRStyle(container.children[1], 'grid-column-end')).toBe('span 6')
 
     // Third child: column 10, span 3
     expect(getIRStyle(container.children[2], 'grid-column-start')).toBe('10')
-    expect(getIRStyle(container.children[2], 'grid-column')).toBe('span 3')
+    expect(getIRStyle(container.children[2], 'grid-column-end')).toBe('span 3')
   })
 })

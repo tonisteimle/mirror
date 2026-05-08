@@ -135,10 +135,12 @@ describe('Grid Container', () => {
 describe('Grid Positioning (x, y)', () => {
   describe('IR Level', () => {
     test('x in grid child generates grid-column-start', () => {
-      const ir = toIR(parse(`
+      const ir = toIR(
+        parse(`
 Frame grid 12
   Frame x 2
-`))
+`)
+      )
       const child = ir.nodes[0].children[0]
       expect(hasStyle(child, 'grid-column-start', '2')).toBe(true)
       // Should NOT have position: absolute
@@ -146,20 +148,24 @@ Frame grid 12
     })
 
     test('y in grid child generates grid-row-start', () => {
-      const ir = toIR(parse(`
+      const ir = toIR(
+        parse(`
 Frame grid 3
   Frame y 2
-`))
+`)
+      )
       const child = ir.nodes[0].children[0]
       expect(hasStyle(child, 'grid-row-start', '2')).toBe(true)
       expect(hasStyle(child, 'position', 'absolute')).toBe(false)
     })
 
     test('x y combined', () => {
-      const ir = toIR(parse(`
+      const ir = toIR(
+        parse(`
 Frame grid 12
   Frame x 3 y 4
-`))
+`)
+      )
       const child = ir.nodes[0].children[0]
       expect(getStyle(child, 'grid-column-start')).toBe('3')
       expect(getStyle(child, 'grid-row-start')).toBe('4')
@@ -197,33 +203,39 @@ Frame grid 3
 describe('Grid Span (w, h)', () => {
   describe('IR Level', () => {
     test('w 4 in grid generates grid-column: span 4', () => {
-      const ir = toIR(parse(`
+      const ir = toIR(
+        parse(`
 Frame grid 12
   Frame w 4
-`))
+`)
+      )
       const child = ir.nodes[0].children[0]
-      expect(hasStyle(child, 'grid-column', 'span 4')).toBe(true)
+      expect(hasStyle(child, 'grid-column-end', 'span 4')).toBe(true)
     })
 
     test('h 3 in grid generates grid-row: span 3', () => {
-      const ir = toIR(parse(`
+      const ir = toIR(
+        parse(`
 Frame grid 4
   Frame h 3
-`))
+`)
+      )
       const child = ir.nodes[0].children[0]
-      expect(hasStyle(child, 'grid-row', 'span 3')).toBe(true)
+      expect(hasStyle(child, 'grid-row-end', 'span 3')).toBe(true)
     })
 
     test('x y w h combined', () => {
-      const ir = toIR(parse(`
+      const ir = toIR(
+        parse(`
 Frame grid 12
   Frame x 2 y 3 w 4 h 2
-`))
+`)
+      )
       const child = ir.nodes[0].children[0]
       expect(getStyle(child, 'grid-column-start')).toBe('2')
       expect(getStyle(child, 'grid-row-start')).toBe('3')
-      expect(getStyle(child, 'grid-column')).toBe('span 4')
-      expect(getStyle(child, 'grid-row')).toBe('span 2')
+      expect(getStyle(child, 'grid-column-end')).toBe('span 4')
+      expect(getStyle(child, 'grid-row-end')).toBe('span 2')
     })
   })
 
@@ -234,7 +246,7 @@ Frame grid 12
   Frame w 4
 `)
       const child = el.firstElementChild as HTMLElement
-      expect(getStyleFromElement(child, 'grid-column')).toBe('span 4')
+      expect(getStyleFromElement(child, 'grid-column-end')).toBe('span 4')
       expect(getStyleFromElement(child, 'width')).not.toBe('4px')
     })
 
@@ -244,7 +256,7 @@ Frame grid 4
   Frame h 2
 `)
       const child = el.firstElementChild as HTMLElement
-      expect(getStyleFromElement(child, 'grid-row')).toBe('span 2')
+      expect(getStyleFromElement(child, 'grid-row-end')).toBe('span 2')
       expect(getStyleFromElement(child, 'height')).not.toBe('2px')
     })
   })
@@ -257,58 +269,68 @@ Frame grid 4
 describe('Grid Cell Fill', () => {
   describe('IR Level - Grid children get width/height 100% to fill cells', () => {
     test('w 4 in grid also adds width: 100%', () => {
-      const ir = toIR(parse(`
+      const ir = toIR(
+        parse(`
 Frame grid 12
   Frame w 4
-`))
+`)
+      )
       const child = ir.nodes[0].children[0]
-      expect(hasStyle(child, 'grid-column', 'span 4')).toBe(true)
+      expect(hasStyle(child, 'grid-column-end', 'span 4')).toBe(true)
       expect(hasStyle(child, 'width', '100%')).toBe(true)
     })
 
     test('h 3 in grid also adds height: 100%', () => {
-      const ir = toIR(parse(`
+      const ir = toIR(
+        parse(`
 Frame grid 4
   Frame h 3
-`))
+`)
+      )
       const child = ir.nodes[0].children[0]
-      expect(hasStyle(child, 'grid-row', 'span 3')).toBe(true)
+      expect(hasStyle(child, 'grid-row-end', 'span 3')).toBe(true)
       expect(hasStyle(child, 'height', '100%')).toBe(true)
     })
 
     test('w and h in grid add both 100%', () => {
-      const ir = toIR(parse(`
+      const ir = toIR(
+        parse(`
 Frame grid 12
   Frame w 6 h 2
-`))
+`)
+      )
       const child = ir.nodes[0].children[0]
-      expect(hasStyle(child, 'grid-column', 'span 6')).toBe(true)
-      expect(hasStyle(child, 'grid-row', 'span 2')).toBe(true)
+      expect(hasStyle(child, 'grid-column-end', 'span 6')).toBe(true)
+      expect(hasStyle(child, 'grid-row-end', 'span 2')).toBe(true)
       expect(hasStyle(child, 'width', '100%')).toBe(true)
       expect(hasStyle(child, 'height', '100%')).toBe(true)
     })
 
     test('x y w h combined all have fill', () => {
-      const ir = toIR(parse(`
+      const ir = toIR(
+        parse(`
 Frame grid 12
   Frame x 2 y 3 w 4 h 2
-`))
+`)
+      )
       const child = ir.nodes[0].children[0]
       expect(getStyle(child, 'grid-column-start')).toBe('2')
       expect(getStyle(child, 'grid-row-start')).toBe('3')
-      expect(getStyle(child, 'grid-column')).toBe('span 4')
-      expect(getStyle(child, 'grid-row')).toBe('span 2')
+      expect(getStyle(child, 'grid-column-end')).toBe('span 4')
+      expect(getStyle(child, 'grid-row-end')).toBe('span 2')
       expect(getStyle(child, 'width')).toBe('100%')
       expect(getStyle(child, 'height')).toBe('100%')
     })
 
     test('w 12 (full width) fills entire row', () => {
-      const ir = toIR(parse(`
+      const ir = toIR(
+        parse(`
 Frame grid 12
   Frame w 12
-`))
+`)
+      )
       const child = ir.nodes[0].children[0]
-      expect(hasStyle(child, 'grid-column', 'span 12')).toBe(true)
+      expect(hasStyle(child, 'grid-column-end', 'span 12')).toBe(true)
       expect(hasStyle(child, 'width', '100%')).toBe(true)
     })
   })
@@ -320,7 +342,7 @@ Frame grid 12
   Frame w 6, bg #f00
 `)
       const child = el.firstElementChild as HTMLElement
-      expect(getStyleFromElement(child, 'grid-column')).toBe('span 6')
+      expect(getStyleFromElement(child, 'grid-column-end')).toBe('span 6')
       expect(getStyleFromElement(child, 'width')).toBe('100%')
     })
 
@@ -330,7 +352,7 @@ Frame grid 4, row-height 50
   Frame h 2, bg #f00
 `)
       const child = el.firstElementChild as HTMLElement
-      expect(getStyleFromElement(child, 'grid-row')).toBe('span 2')
+      expect(getStyleFromElement(child, 'grid-row-end')).toBe('span 2')
       expect(getStyleFromElement(child, 'height')).toBe('100%')
     })
 
@@ -353,13 +375,13 @@ Frame grid 12, gap 8
       const children = Array.from(el.children) as HTMLElement[]
 
       // All children should have width: 100% to fill their cells
-      expect(getStyleFromElement(children[0], 'grid-column')).toBe('span 12')
+      expect(getStyleFromElement(children[0], 'grid-column-end')).toBe('span 12')
       expect(getStyleFromElement(children[0], 'width')).toBe('100%')
 
-      expect(getStyleFromElement(children[1], 'grid-column')).toBe('span 6')
+      expect(getStyleFromElement(children[1], 'grid-column-end')).toBe('span 6')
       expect(getStyleFromElement(children[1], 'width')).toBe('100%')
 
-      expect(getStyleFromElement(children[3], 'grid-column')).toBe('span 4')
+      expect(getStyleFromElement(children[3], 'grid-column-end')).toBe('span 4')
       expect(getStyleFromElement(children[3], 'width')).toBe('100%')
     })
 
@@ -373,20 +395,20 @@ Frame grid 12, gap 8, row-height 35
       const children = Array.from(el.children) as HTMLElement[]
 
       // Hero section: full width, 2 rows
-      expect(getStyleFromElement(children[0], 'grid-column')).toBe('span 12')
-      expect(getStyleFromElement(children[0], 'grid-row')).toBe('span 2')
+      expect(getStyleFromElement(children[0], 'grid-column-end')).toBe('span 12')
+      expect(getStyleFromElement(children[0], 'grid-row-end')).toBe('span 2')
       expect(getStyleFromElement(children[0], 'width')).toBe('100%')
       expect(getStyleFromElement(children[0], 'height')).toBe('100%')
 
       // Sidebar: 3 columns, 3 rows
-      expect(getStyleFromElement(children[1], 'grid-column')).toBe('span 3')
-      expect(getStyleFromElement(children[1], 'grid-row')).toBe('span 3')
+      expect(getStyleFromElement(children[1], 'grid-column-end')).toBe('span 3')
+      expect(getStyleFromElement(children[1], 'grid-row-end')).toBe('span 3')
       expect(getStyleFromElement(children[1], 'width')).toBe('100%')
       expect(getStyleFromElement(children[1], 'height')).toBe('100%')
 
       // Content: 9 columns, 3 rows
-      expect(getStyleFromElement(children[2], 'grid-column')).toBe('span 9')
-      expect(getStyleFromElement(children[2], 'grid-row')).toBe('span 3')
+      expect(getStyleFromElement(children[2], 'grid-column-end')).toBe('span 9')
+      expect(getStyleFromElement(children[2], 'grid-row-end')).toBe('span 3')
       expect(getStyleFromElement(children[2], 'width')).toBe('100%')
       expect(getStyleFromElement(children[2], 'height')).toBe('100%')
     })
@@ -394,34 +416,38 @@ Frame grid 12, gap 8, row-height 35
 
   describe('Nested Grids - Cell fill at each level', () => {
     test('Nested grid children each fill their respective cells', () => {
-      const ir = toIR(parse(`
+      const ir = toIR(
+        parse(`
 Frame grid 12
   Frame x 1 w 6 grid 2
     Frame w 1
     Frame w 1
-`))
+`)
+      )
       const innerGrid = ir.nodes[0].children[0]
       const innerChild1 = innerGrid.children[0]
       const innerChild2 = innerGrid.children[1]
 
       // Inner grid fills its cell in outer grid
-      expect(getStyle(innerGrid, 'grid-column')).toBe('span 6')
+      expect(getStyle(innerGrid, 'grid-column-end')).toBe('span 6')
       expect(getStyle(innerGrid, 'width')).toBe('100%')
 
       // Inner grid children fill their cells in inner grid
-      expect(getStyle(innerChild1, 'grid-column')).toBe('span 1')
+      expect(getStyle(innerChild1, 'grid-column-end')).toBe('span 1')
       expect(getStyle(innerChild1, 'width')).toBe('100%')
-      expect(getStyle(innerChild2, 'grid-column')).toBe('span 1')
+      expect(getStyle(innerChild2, 'grid-column-end')).toBe('span 1')
       expect(getStyle(innerChild2, 'width')).toBe('100%')
     })
   })
 
   describe('Edge Cases - Cell fill only for numeric w/h in grid', () => {
     test('w full in Grid does NOT get cell fill (already 100%)', () => {
-      const ir = toIR(parse(`
+      const ir = toIR(
+        parse(`
 Frame grid 12
   Frame w full
-`))
+`)
+      )
       const child = ir.nodes[0].children[0]
       // w full should NOT be interpreted as span
       expect(getStyle(child, 'grid-column')).toBeUndefined()
@@ -430,20 +456,24 @@ Frame grid 12
     })
 
     test('w hug in Grid does NOT get cell fill', () => {
-      const ir = toIR(parse(`
+      const ir = toIR(
+        parse(`
 Frame grid 12
   Frame w hug
-`))
+`)
+      )
       const child = ir.nodes[0].children[0]
       expect(getStyle(child, 'grid-column')).toBeUndefined()
       expect(getStyle(child, 'width')).toBe('fit-content')
     })
 
     test('w outside grid does NOT get cell fill', () => {
-      const ir = toIR(parse(`
+      const ir = toIR(
+        parse(`
 Frame
   Frame w 200
-`))
+`)
+      )
       const child = ir.nodes[0].children[0]
       expect(getStyle(child, 'width')).toBe('200px')
       expect(getStyle(child, 'grid-column')).toBeUndefined()
@@ -457,10 +487,12 @@ Frame
 
 describe('x/y Outside Grid (Backward Compatibility)', () => {
   test('x in pos context generates position: absolute + left', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame pos
   Frame x 50
-`))
+`)
+    )
     const child = ir.nodes[0].children[0]
     expect(hasStyle(child, 'position', 'absolute')).toBe(true)
     expect(hasStyle(child, 'left', '50px')).toBe(true)
@@ -468,10 +500,12 @@ Frame pos
   })
 
   test('w outside grid generates width in px', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame
   Frame w 200
-`))
+`)
+    )
     const child = ir.nodes[0].children[0]
     expect(getStyle(child, 'width')).toBe('200px')
     expect(getStyle(child, 'grid-column')).toBeUndefined()
@@ -583,43 +617,47 @@ describe('Row Height', () => {
 
 describe('Nested Grids', () => {
   test('Grid child with own grid - x/y refers to parent', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame grid 12
   Frame x 3 w 6 grid 4
     Frame w 2
-`))
+`)
+    )
     const innerGrid = ir.nodes[0].children[0]
     expect(getStyle(innerGrid, 'grid-column-start')).toBe('3')
-    expect(getStyle(innerGrid, 'grid-column')).toBe('span 6')
+    expect(getStyle(innerGrid, 'grid-column-end')).toBe('span 6')
     expect(hasStyle(innerGrid, 'display', 'grid')).toBe(true)
 
     // Grandchild: w 2 refers to inner grid 4 (span 2)
     const grandchild = innerGrid.children[0]
-    expect(getStyle(grandchild, 'grid-column')).toBe('span 2')
+    expect(getStyle(grandchild, 'grid-column-end')).toBe('span 2')
   })
 
   test('Triple nested grids - context stack', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame grid 12
   Frame x 1 w 12 grid 6
     Frame x 1 w 6 grid 3
       Frame x 2 w 2
-`))
+`)
+    )
     const level2 = ir.nodes[0].children[0]
     const level3 = level2.children[0]
     const level4 = level3.children[0]
 
     // Level 2: positioned in grid 12
     expect(getStyle(level2, 'grid-column-start')).toBe('1')
-    expect(getStyle(level2, 'grid-column')).toBe('span 12')
+    expect(getStyle(level2, 'grid-column-end')).toBe('span 12')
 
     // Level 3: positioned in grid 6
     expect(getStyle(level3, 'grid-column-start')).toBe('1')
-    expect(getStyle(level3, 'grid-column')).toBe('span 6')
+    expect(getStyle(level3, 'grid-column-end')).toBe('span 6')
 
     // Level 4: positioned in grid 3
     expect(getStyle(level4, 'grid-column-start')).toBe('2')
-    expect(getStyle(level4, 'grid-column')).toBe('span 2')
+    expect(getStyle(level4, 'grid-column-end')).toBe('span 2')
   })
 
   it('HTML: Grid in Grid works correctly', () => {
@@ -632,9 +670,9 @@ Frame grid 12
     const innerChild = innerGrid.firstElementChild as HTMLElement
 
     expect(getStyleFromElement(innerGrid, 'grid-column-start')).toBe('1')
-    expect(getStyleFromElement(innerGrid, 'grid-column')).toBe('span 6')
+    expect(getStyleFromElement(innerGrid, 'grid-column-end')).toBe('span 6')
     expect(getStyleFromElement(innerGrid, 'display')).toBe('grid')
-    expect(getStyleFromElement(innerChild, 'grid-column')).toBe('span 2')
+    expect(getStyleFromElement(innerChild, 'grid-column-end')).toBe('span 2')
   })
 })
 
@@ -644,11 +682,13 @@ Frame grid 12
 
 describe('Grid > Flex > Element Context Switching', () => {
   test('x in Flex child (inside Grid) should NOT be grid-column', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame grid 12
   Frame x 3 w 6 hor
     Frame x 50
-`))
+`)
+    )
     const flexContainer = ir.nodes[0].children[0]
     const flexChild = flexContainer.children[0]
 
@@ -660,12 +700,14 @@ Frame grid 12
   })
 
   test('Grid > Flex > Grid - context switches back', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame grid 12
   Frame x 1 w 12 hor
     Frame w 200 grid 4
       Frame x 2 w 2
-`))
+`)
+    )
     const flexContainer = ir.nodes[0].children[0]
     const innerGrid = flexContainer.children[0]
     const gridChild = innerGrid.children[0]
@@ -678,7 +720,7 @@ Frame grid 12
     expect(getStyle(innerGrid, 'grid-column')).toBeUndefined()
 
     // GridChild: w 2 = span 2 (parent is grid 4)
-    expect(getStyle(gridChild, 'grid-column')).toBe('span 2')
+    expect(getStyle(gridChild, 'grid-column-end')).toBe('span 2')
   })
 })
 
@@ -693,27 +735,33 @@ describe('Grid Edge Cases', () => {
   })
 
   test('x 1 - first column', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame grid 12
   Frame x 1
-`))
+`)
+    )
     expect(getStyle(ir.nodes[0].children[0], 'grid-column-start')).toBe('1')
   })
 
   test('x 13 in grid 12 - exceeds bounds (valid CSS)', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame grid 12
   Frame x 13
-`))
+`)
+    )
     // CSS Grid allows this - element placed outside
     expect(getStyle(ir.nodes[0].children[0], 'grid-column-start')).toBe('13')
   })
 
   test('w full in Grid should NOT be span', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame grid 3
   Frame w full
-`))
+`)
+    )
     const child = ir.nodes[0].children[0]
     // w full should NOT be interpreted as span
     expect(getStyle(child, 'grid-column')).toBeUndefined()
@@ -731,56 +779,62 @@ Frame grid 3
 
 describe('Real-World Grid Patterns', () => {
   test('12-column dashboard layout', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame grid 12 gap 16
   Frame x 1 w 3
   Frame x 4 w 6
   Frame x 10 w 3
-`))
+`)
+    )
     const container = ir.nodes[0]
     expect(hasStyle(container, 'display', 'grid')).toBe(true)
     expect(hasStyle(container, 'gap', '16px')).toBe(true)
 
     expect(getStyle(container.children[0], 'grid-column-start')).toBe('1')
-    expect(getStyle(container.children[0], 'grid-column')).toBe('span 3')
+    expect(getStyle(container.children[0], 'grid-column-end')).toBe('span 3')
 
     expect(getStyle(container.children[1], 'grid-column-start')).toBe('4')
-    expect(getStyle(container.children[1], 'grid-column')).toBe('span 6')
+    expect(getStyle(container.children[1], 'grid-column-end')).toBe('span 6')
 
     expect(getStyle(container.children[2], 'grid-column-start')).toBe('10')
-    expect(getStyle(container.children[2], 'grid-column')).toBe('span 3')
+    expect(getStyle(container.children[2], 'grid-column-end')).toBe('span 3')
   })
 
   test('Dashboard with rows and columns', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame grid 12 gap-x 16 gap-y 24 row-height 100
   Frame x 1 y 1 w 8 h 2
   Frame x 9 y 1 w 4 h 1
   Frame x 9 y 2 w 4 h 1
-`))
+`)
+    )
     const mainContent = ir.nodes[0].children[0]
     expect(getStyle(mainContent, 'grid-column-start')).toBe('1')
     expect(getStyle(mainContent, 'grid-row-start')).toBe('1')
-    expect(getStyle(mainContent, 'grid-column')).toBe('span 8')
-    expect(getStyle(mainContent, 'grid-row')).toBe('span 2')
+    expect(getStyle(mainContent, 'grid-column-end')).toBe('span 8')
+    expect(getStyle(mainContent, 'grid-row-end')).toBe('span 2')
   })
 
   test('Holy Grail Layout', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame grid 12 gap 16
   Frame x 1 w 12 h 1
   Frame x 1 w 2 y 2 h 1
   Frame x 3 w 8 y 2 h 1
   Frame x 11 w 2 y 2 h 1
   Frame x 1 w 12 y 3 h 1
-`))
+`)
+    )
     const container = ir.nodes[0]
     expect(container.children.length).toBe(5)
 
     // Main content
     const main = container.children[2]
     expect(getStyle(main, 'grid-column-start')).toBe('3')
-    expect(getStyle(main, 'grid-column')).toBe('span 8')
+    expect(getStyle(main, 'grid-column-end')).toBe('span 8')
     expect(getStyle(main, 'grid-row-start')).toBe('2')
   })
 })
@@ -807,14 +861,16 @@ GridContainer
   })
 
   test('Component definition contains Grid', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 GridSection: = Frame grid 4 gap 8
 
 Frame ver gap 24
   GridSection
     Frame x 1 w 2
     Frame x 3 w 2
-`))
+`)
+    )
     const section = ir.nodes[0].children[0]
     expect(hasStyle(section, 'display', 'grid')).toBe(true)
     expect(getStyle(section.children[0], 'grid-column-start')).toBe('1')
@@ -843,16 +899,18 @@ describe('All Grid Properties Combined', () => {
   })
 
   test('Grid child with all positioning properties', () => {
-    const ir = toIR(parse(`
+    const ir = toIR(
+      parse(`
 Frame grid 12
   Frame x 3 y 2 w 4 h 3 bg #f00 pad 16 rad 8
-`))
+`)
+    )
     const child = ir.nodes[0].children[0]
 
     expect(hasStyle(child, 'grid-column-start', '3')).toBe(true)
     expect(hasStyle(child, 'grid-row-start', '2')).toBe(true)
-    expect(hasStyle(child, 'grid-column', 'span 4')).toBe(true)
-    expect(hasStyle(child, 'grid-row', 'span 3')).toBe(true)
+    expect(hasStyle(child, 'grid-column-end', 'span 4')).toBe(true)
+    expect(hasStyle(child, 'grid-row-end', 'span 3')).toBe(true)
     expect(hasStyle(child, 'padding', '16px')).toBe(true)
     expect(hasStyle(child, 'border-radius', '8px')).toBe(true)
   })
