@@ -40,7 +40,7 @@ function getStructure(el: Element): any {
   return {
     name,
     childCount: children.length,
-    children: children.length > 0 ? children : undefined
+    children: children.length > 0 ? children : undefined,
   }
 }
 
@@ -58,7 +58,10 @@ function hasChildren(el: Element, expectedNames: string[]): boolean {
 /**
  * Prüft die Kinder-Reihenfolge
  */
-function checkChildOrder(el: Element, expectedOrder: string[]): { ok: boolean; actual: string[]; expected: string[] } {
+function checkChildOrder(
+  el: Element,
+  expectedOrder: string[]
+): { ok: boolean; actual: string[]; expected: string[] } {
   const actual = Array.from(el.children)
     .filter(child => child.hasAttribute('data-mirror-name'))
     .map(child => child.getAttribute('data-mirror-name') || '')
@@ -73,21 +76,34 @@ function checkChildOrder(el: Element, expectedOrder: string[]): { ok: boolean; a
 // ============================================================
 // GRUNDLEGENDE STRUKTUR-TESTS
 // ============================================================
-// Skip list for examples that use advanced features not fully implemented
-// These use custom functions, undefined data, or advanced syntax
+// Per-example skip list for cases that depend on browser-runtime features
+// the inline jsdom runtime can't provide (IntersectionObserver,
+// setupInViewAnimation) or use syntax/data the renderer can't smoke-test
+// without significant scaffolding (custom JS functions, scoped each-loops).
 const SKIP_EXAMPLES: Record<string, number[]> = {
-  '06 - states': [10, 11], // Uses IntersectionObserver (not available in JSDOM)
-  '07 - animationen': [8, 9, 10, 12, 13], // Uses setupInViewAnimation/setupScrollAnimation (not in test runtime)
-  '09 - daten': [9], // Produktliste with each/in loop - $product scope issue
-  '14 - tables': [20], // Uses $users, $selected, select(), custom methods
-  '15 - charts': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21], // Charts not in inline runtime yet
-  '16 - forms': [11],  // Uses isValidEmail(), 'and not' syntax, register()
+  '06 - states': [10, 11], // IntersectionObserver
+  '07 - animationen': [8, 9, 10, 12, 13], // setupInViewAnimation / setupScrollAnimation
+  '09 - daten': [9], // each/in scope edge case
+  '14 - tables': [20], // user-defined JS (select(), custom methods)
+  '16 - forms': [11], // user-defined JS (isValidEmail, register)
 }
+
+// Whole chapters skipped because the inline runtime doesn't ship the
+// underlying machinery — adding 20+ skipped per-example entries is noise.
+const SKIP_CHAPTERS = new Set([
+  '15 - charts', // chart renderers not wired to inline runtime
+])
 
 describe('DOM Structure: Basic Rendering', () => {
   const chapters = extractTutorialExamples()
 
   chapters.forEach(({ name, examples }) => {
+    if (SKIP_CHAPTERS.has(name)) {
+      describe.skip(name, () => {
+        it('skipped — inline runtime missing chart support', () => {})
+      })
+      return
+    }
     describe(name, () => {
       examples.forEach((code, index) => {
         const exampleNum = index + 1
@@ -113,7 +129,6 @@ describe('DOM Structure: Basic Rendering', () => {
 // SPEZIFISCHE SLOT-ORDERING TESTS
 // ============================================================
 describe('DOM Structure: Slot Ordering', () => {
-
   it('Slots appear in definition order (Icon before Title)', () => {
     const code = `
 Card: bg #1a1a1a, pad 16, rad 8, gap 8
@@ -132,7 +147,9 @@ Card
     expect(card).toBeTruthy()
 
     const result = checkChildOrder(card!, ['Icon', 'Title', 'Body'])
-    expect(result.ok, `Expected order [Icon, Title, Body], got [${result.actual.join(', ')}]`).toBe(true)
+    expect(result.ok, `Expected order [Icon, Title, Body], got [${result.actual.join(', ')}]`).toBe(
+      true
+    )
   })
 
   it('Nested slots maintain order', () => {
@@ -152,7 +169,9 @@ Layout
     expect(layout).toBeTruthy()
 
     const result = checkChildOrder(layout!, ['Sidebar', 'Main'])
-    expect(result.ok, `Expected order [Sidebar, Main], got [${result.actual.join(', ')}]`).toBe(true)
+    expect(result.ok, `Expected order [Sidebar, Main], got [${result.actual.join(', ')}]`).toBe(
+      true
+    )
   })
 
   it('FeatureCard with Icon slot (the actual bug case)', () => {
@@ -176,7 +195,9 @@ FeatureCard
 
     // Icon sollte VOR Title und Body kommen (wie im Code definiert)
     const result = checkChildOrder(card!, ['Icon', 'Title', 'Body'])
-    expect(result.ok, `Expected order [Icon, Title, Body], got [${result.actual.join(', ')}]`).toBe(true)
+    expect(result.ok, `Expected order [Icon, Title, Body], got [${result.actual.join(', ')}]`).toBe(
+      true
+    )
   })
 })
 
@@ -184,7 +205,6 @@ FeatureCard
 // KOMPONENTEN-STRUKTUR TESTS
 // ============================================================
 describe('DOM Structure: Component Integrity', () => {
-
   it('Inherited component has all slots from parent', () => {
     const code = `
 BaseCard: pad 16, bg #1a1a1a
@@ -225,7 +245,9 @@ Frame hor, gap 8
   Frame w full, bg blue
 `
     const { root } = renderWithRuntime(code, container)
-    const sidebar = root.querySelector('[data-mirror-name="Frame"] > [data-mirror-name="Frame"]') as HTMLElement
+    const sidebar = root.querySelector(
+      '[data-mirror-name="Frame"] > [data-mirror-name="Frame"]'
+    ) as HTMLElement
 
     expect(sidebar.style.width).toBe('100px')
     expect(sidebar.style.flexShrink).toBe('0')
@@ -236,7 +258,6 @@ Frame hor, gap 8
 // TOKEN TESTS
 // ============================================================
 describe('DOM Structure: Tokens', () => {
-
   it('Token creates CSS variable', () => {
     const code = `
 $primary.bg: #2563eb
