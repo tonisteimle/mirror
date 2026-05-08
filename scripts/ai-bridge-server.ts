@@ -10,19 +10,23 @@
  * brought back, reshaped to match the Tauri command contract verbatim so
  * the browser shim can drop in as a `window.TauriBridge` replacement.
  *
- * Endpoints (mirror tauri commands check_claude_cli + run_agent):
+ * Endpoints:
  *   GET  /agent/check  →  { available: boolean }
  *   POST /agent/run    →  { session_id, success, output, error }
  *     body: { prompt: string, agentType?: string, projectPath?: string,
  *             sessionId?: string | null }
+ *   POST /export       →  application/x-ndjson stream of phase events
+ *     body: { files: Record<path, content>, target, snapshot, projectName? }
+ *     events: init → write-files → export [→ snapshot] → done | error
  *
  * Run with:  npm run ai-bridge
  */
 
 import { spawn } from 'child_process'
-import { createServer } from 'http'
+import { createServer, type ServerResponse } from 'http'
 import { existsSync } from 'fs'
 import { join } from 'path'
+import { runExportPipeline, type PhaseEvent } from './ai-bridge/run-export'
 
 const PORT = parseInt(process.env.AI_BRIDGE_PORT || '3456', 10)
 
@@ -172,8 +176,56 @@ const server = createServer(async (req, res) => {
     return
   }
 
+  // POST /export — NDJSON-streamed Mirror project → spec bundle
+  if (req.method === 'POST' && req.url === '/export') {
+    let body = ''
+    req.on('data', chunk => (body += chunk))
+    req.on('end', async () => {
+      let parsed: {
+        files?: Record<string, string>
+        target?: string
+        snapshot?: boolean
+        projectName?: string
+      }
+      try {
+        parsed = JSON.parse(body)
+      } catch {
+        res.writeHead(400, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ error: 'invalid JSON body' }))
+        return
+      }
+
+      res.writeHead(200, {
+        'Content-Type': 'application/x-ndjson',
+        'Cache-Control': 'no-store',
+        'Transfer-Encoding': 'chunked',
+      })
+      const emit = (e: PhaseEvent) => writeNdjson(res, e)
+      try {
+        await runExportPipeline(
+          {
+            files: parsed.files ?? {},
+            // runExportPipeline validates target itself — pass through.
+            target: (parsed.target ?? 'react') as 'react' | 'vue' | 'svelte' | 'vanilla',
+            snapshot: !!parsed.snapshot,
+            projectName: parsed.projectName,
+          },
+          emit
+        )
+      } catch (err) {
+        emit({ phase: 'error', error: (err as Error).message })
+      }
+      res.end()
+    })
+    return
+  }
+
   res.writeHead(404).end('Not Found')
 })
+
+function writeNdjson(res: ServerResponse, event: PhaseEvent): void {
+  res.write(JSON.stringify(event) + '\n')
+}
 
 server.listen(PORT, () => {
   console.log(`[AI Bridge Server] listening on http://localhost:${PORT}`)
@@ -181,6 +233,8 @@ server.listen(PORT, () => {
   console.log('  GET  /agent/check         → { available }')
   console.log('  POST /agent/run           → { session_id, success, output, error }')
   console.log('       body: { prompt, sessionId? }')
+  console.log('  POST /export              → application/x-ndjson stream')
+  console.log('       body: { files, target, snapshot, projectName? }')
 })
 
 // Clean shutdown
