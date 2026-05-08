@@ -97,6 +97,15 @@ export function initNotifications(config: NotificationInitConfig): () => void {
         insertionIndex: target.insertionIndex,
         absolutePosition: target.position || undefined,
         alignment: target.mode === 'aligned' ? { zone: target.alignmentProperty } : undefined,
+        gridPlacement:
+          target.mode === 'grid' && target.gridX != null && target.gridY != null
+            ? {
+                x: target.gridX,
+                y: target.gridY,
+                w: target.gridW ?? 1,
+                h: target.gridH ?? 1,
+              }
+            : undefined,
       }
       handleStudioDropNew(dropResult, getDropGlobals())
       return
