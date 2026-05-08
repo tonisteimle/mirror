@@ -11,37 +11,47 @@ import {
   type SectionData,
   type EventHandlerMap,
 } from '../base/section'
+import { DSL, getAllEvents, getAllActions, getEvent } from '../../../../compiler/schema/dsl'
 
 /**
- * Available events for the dropdown
+ * Build the dropdown list from the DSL schema. Single source of truth —
+ * if the schema gains a new event (e.g. `onswipe`), it appears here
+ * automatically. We sort common interaction events first, then keyboard
+ * shorthand, then everything else.
  */
-const AVAILABLE_EVENTS = [
-  { name: 'onclick', label: 'Click' },
-  { name: 'onhover', label: 'Hover' },
-  { name: 'onfocus', label: 'Focus' },
-  { name: 'onblur', label: 'Blur' },
-  { name: 'onchange', label: 'Change' },
-  { name: 'oninput', label: 'Input' },
-  { name: 'onenter', label: 'Enter Key' },
-  { name: 'onescape', label: 'Escape Key' },
-] as const
+const COMMON_FIRST = [
+  'onclick',
+  'onhover',
+  'onchange',
+  'oninput',
+  'onfocus',
+  'onblur',
+  'onenter',
+  'onescape',
+]
 
-/**
- * Common actions for autocomplete hints
- */
-const COMMON_ACTIONS = [
-  'toggle()',
-  'show()',
-  'hide()',
-  'open()',
-  'close()',
-  'navigate()',
-  'increment()',
-  'decrement()',
-  'set()',
-  'focus()',
-  'submit()',
-] as const
+function eventLabel(name: string): string {
+  // Friendly label: strip "on", split on dashes, title-case
+  const stripped = name.replace(/^on/, '').replace(/-/g, ' ')
+  return stripped.charAt(0).toUpperCase() + stripped.slice(1)
+}
+
+function buildAvailableEvents(): { name: string; label: string; acceptsKey: boolean }[] {
+  const all = getAllEvents()
+  const common = COMMON_FIRST.filter(n => all.includes(n))
+  const rest = all.filter(n => !COMMON_FIRST.includes(n)).sort()
+  return [...common, ...rest].map(name => {
+    const def = DSL.events[name]
+    return { name, label: eventLabel(name), acceptsKey: !!def?.acceptsKey }
+  })
+}
+
+/** Action names sourced from the schema, presented as `name()` for the datalist. */
+function buildActionHints(): string[] {
+  return getAllActions()
+    .sort()
+    .map(a => `${a}()`)
+}
 
 /**
  * Extended SectionData with events
@@ -86,9 +96,9 @@ export class EventsSection extends BaseSection {
     // Render existing events
     const eventRows = events.map((event, index) => this.renderEventRow(event, index)).join('')
 
-    // Get events not yet added for the "Add" dropdown
+    // Get events not yet added for the "Add" dropdown — sourced from schema.
     const usedEvents = new Set(events.map(e => e.name))
-    const availableToAdd = AVAILABLE_EVENTS.filter(e => !usedEvents.has(e.name))
+    const availableToAdd = buildAvailableEvents().filter(e => !usedEvents.has(e.name))
 
     return `
       <div class="section">
@@ -117,11 +127,16 @@ export class EventsSection extends BaseSection {
     },
     index: number
   ): string {
-    const eventDef = AVAILABLE_EVENTS.find(e => e.name === event.name)
-    const label = eventDef?.label || event.name.replace('on', '')
+    const def = getEvent(event.name)
+    const label = def ? eventLabel(event.name) : event.name.replace('on', '')
 
     // Format actions as string
     const actionsStr = this.formatActions(event.actions)
+
+    // Keyboard events accept a key modifier — hint the syntax in the placeholder.
+    const placeholder = def?.acceptsKey
+      ? 'toggle(), show(Menu) — for keys: onkeydown(arrow-down)'
+      : 'toggle(), show(Menu)...'
 
     return `
       <div class="prop-row pp-event-row" data-event-index="${index}">
@@ -132,7 +147,7 @@ export class EventsSection extends BaseSection {
                  value="${this.deps.escapeHtml(actionsStr)}"
                  data-event-name="${event.name}"
                  data-event-index="${index}"
-                 placeholder="toggle(), show(Menu)..."
+                 placeholder="${this.deps.escapeHtml(placeholder)}"
                  autocomplete="off"
                  list="pp-action-hints">
           <button class="pp-event-delete" data-delete-event="${event.name}" title="Remove event">
@@ -146,13 +161,15 @@ export class EventsSection extends BaseSection {
   /**
    * Render the "Add event" row
    */
-  private renderAddEventRow(availableToAdd: (typeof AVAILABLE_EVENTS)[number][]): string {
+  private renderAddEventRow(
+    availableToAdd: { name: string; label: string; acceptsKey: boolean }[]
+  ): string {
     if (availableToAdd.length === 0) {
       return '' // All events already added
     }
 
     const options = availableToAdd
-      .map(e => `<option value="${e.name}">${e.label}</option>`)
+      .map(e => `<option value="${e.name}">${this.deps.escapeHtml(e.label)}</option>`)
       .join('')
 
     return `
@@ -165,7 +182,9 @@ export class EventsSection extends BaseSection {
         </div>
       </div>
       <datalist id="pp-action-hints">
-        ${COMMON_ACTIONS.map(a => `<option value="${a}">`).join('')}
+        ${buildActionHints()
+          .map(a => `<option value="${this.deps.escapeHtml(a)}">`)
+          .join('')}
       </datalist>
     `
   }

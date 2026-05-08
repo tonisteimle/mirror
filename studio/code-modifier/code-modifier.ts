@@ -339,6 +339,7 @@ export class CodeModifier {
   addEvent = eventOps.addEvent
   removeEvent = eventOps.removeEvent
   updateEvent = eventOps.updateEvent
+  setEventActions = eventOps.setEventActions
 
   /**
    * Create an error result

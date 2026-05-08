@@ -223,3 +223,57 @@ export function updateEvent(
 
   return { success: true, newSource, change: { from, to, insert: newLine } }
 }
+
+/**
+ * Replace the FULL action chain of an event with a user-typed string.
+ * Supports multi-action chains like `toggle(), show(Menu)`.
+ *
+ * Unlike `updateEvent` (which rewrites a single action and leaves any
+ * chained `, …` suffix dangling), this matches the entire chain so the
+ * source stays consistent.
+ */
+export function setEventActions(
+  this: CodeModifier,
+  nodeId: string,
+  eventName: string,
+  actionsString: string,
+  key?: string
+): ModificationResult {
+  const nodeMapping = this.sourceMap.getNodeById(nodeId)
+  if (!nodeMapping) return this.errorResult(`Node not found: ${nodeId}`)
+
+  const nodeLine = nodeMapping.position.line
+  const line = this.lines[nodeLine - 1]
+  if (!line) return this.errorResult(`Line not found: ${nodeLine}`)
+
+  // Match `eventName [key] action(args)[, action(args)]*` greedily — so
+  // multi-action chains don't leave dangling tails after replacement.
+  const escEvent = eventName.replace(/-/g, '\\-')
+  const chainPattern = new RegExp(
+    `\\b${escEvent}(?:\\s+[a-z-]+)?\\s+[a-zA-Z_][a-zA-Z0-9_]*\\([^)]*\\)(?:\\s*,\\s*[a-zA-Z_][a-zA-Z0-9_]*\\([^)]*\\))*`
+  )
+  const match = line.match(chainPattern)
+  if (!match) {
+    return this.errorResult(`Event not found: ${eventName}`)
+  }
+
+  const keyPart = key ? ` ${key}` : ''
+  const newChain = `${eventName}${keyPart} ${actionsString.trim()}`
+  const startIdx = match.index!
+  const endIdx = startIdx + match[0].length
+  const newLine = line.substring(0, startIdx) + newChain + line.substring(endIdx)
+
+  const lineStartOffset = this.getCharacterOffset(nodeLine, 1)
+  const newLines = [...this.lines]
+  newLines[nodeLine - 1] = newLine
+  const newSource = newLines.join('\n')
+
+  this.source = newSource
+  this.lines = newLines
+
+  return {
+    success: true,
+    newSource,
+    change: { from: lineStartOffset, to: lineStartOffset + line.length, insert: newLine },
+  }
+}

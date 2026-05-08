@@ -2173,6 +2173,11 @@ function initStudio() {
   setupPropertyPanelEventListeners({
     getCodeModifier: () => studioCodeModifier,
     onCodeChange: result => handleStudioCodeChange(result),
+    notify: (level, message) => {
+      ;(studio.events.emit as (e: string, p: unknown) => void)(`notification:${level}`, {
+        message,
+      })
+    },
   })
 
   // Initialize play mode button (delegated to studio/preview/play-mode.ts)
