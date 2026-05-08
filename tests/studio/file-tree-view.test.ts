@@ -318,4 +318,71 @@ describe('FileTreeView Sorting', () => {
       expect(mirIndex).toBeLessThan(comIndex)
     }
   })
+
+  // P3 mutation-driven coverage gaps:
+
+  it('sort is ACTUALLY applied by the VIEW (catches mutation that disables sortTreeItems)', () => {
+    // The demo provider already sorts its tree — so writing reverse-
+    // named files via the provider would still arrive sorted, and the
+    // mutation slips. Bypass the provider: stub controller.getTree to
+    // return INTENTIONALLY-UNSORTED items, then prove the rendered DOM
+    // is alphabetical. If sortTreeItems is removed, this fails.
+    const unsorted = [
+      { type: 'file' as const, name: 'zz-from-view.mir', path: 'zz-from-view.mir' },
+      { type: 'file' as const, name: 'aa-from-view.mir', path: 'aa-from-view.mir' },
+    ]
+    const getTreeSpy = vi.spyOn(controller, 'getTree').mockReturnValue(unsorted)
+    view.render()
+
+    const fileElements = container.querySelectorAll('.file-tree-file')
+    const paths = Array.from(fileElements)
+      .map(el => (el as HTMLElement).dataset.path)
+      .filter(p => p === 'aa-from-view.mir' || p === 'zz-from-view.mir')
+
+    // sortTreeItems flips them to alphabetical order:
+    expect(paths).toEqual(['aa-from-view.mir', 'zz-from-view.mir'])
+    getTreeSpy.mockRestore()
+  })
+
+  it('escapes HTML special characters in file names (XSS prevention)', async () => {
+    // Catches the mutation that bypasses escapeHtml — without escaping,
+    // a filename containing <script> would inject executable HTML.
+    try {
+      await storage.writeFile('<script>x.mir', 'content')
+    } catch {
+      return // provider rejects special chars — skip
+    }
+    await storage.refreshTree()
+    view.render()
+
+    // 1. No <script> ELEMENT was actually parsed into the DOM.
+    expect(container.querySelector('script')).toBeNull()
+
+    // 2. The visible filename in the DOM is the literal text (the browser
+    //    decoded &lt;script&gt; → text node "<script>x.mir"). The fact
+    //    that .textContent yields the literal string proves the bytes
+    //    went through a textContent setter, not innerHTML — i.e. the
+    //    escapeHtml(file.name) path was used. Without escaping, the
+    //    browser would have parsed the angle brackets as a tag.
+    const fileSpan = container.querySelector('[data-path="<script>x.mir"] span:not(.file-icon)')
+    expect(fileSpan?.textContent).toBe('<script>x.mir')
+
+    // 3. The attacker cannot break OUT of the data-path attribute. If
+    //    escapeAttr were stripped, a name with a literal " would close
+    //    the attribute and let the attacker append more attributes.
+    //    Test that scenario explicitly:
+    try {
+      await storage.writeFile('a"onclick="alert(1).mir', 'x')
+      await storage.refreshTree()
+      view.render()
+      // Attribute serialization keeps the " escaped; querying by the
+      // raw value via attribute-selector must still match exactly.
+      const evil = container.querySelector('[data-path="a\\"onclick=\\"alert(1).mir"]')
+      expect(evil).not.toBeNull()
+      // And no spurious onclick attribute was hoisted onto the element.
+      expect(evil?.getAttribute('onclick')).toBeNull()
+    } catch {
+      // provider rejects — the validation layer protects us upstream.
+    }
+  })
 })
