@@ -58,6 +58,9 @@ export {
 // Re-export context menu
 export { ContextMenu, createContextMenu, type ContextMenuConfig } from './context-menu'
 
+// Re-export export-button initializer (Studio toolbar → AI bridge export dialog)
+export { initExportButton } from './export-button'
+
 // Re-export visual code system
 export {
   OverlayManager,
