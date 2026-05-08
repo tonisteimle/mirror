@@ -151,6 +151,101 @@
 
 
     <!-- ============================================================ -->
+    <section>
+      <h2>App-Shell: SideNav + Content</h2>
+      <p>In echten Apps lebt SideNav nie für sich allein – sie steht links, rechts daneben kommt der eigentliche View-Bereich. Das klassische Layout ist <code>hor</code> + <code>w full, h full</code>:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, h 360, bg #0a0a0a, col white
+  SideNav defaultValue "dashboard", w 200, bg #1a1a1a
+    NavItem "Dashboard", icon "home", value "dashboard"
+    NavItem "Projects", icon "folder", value "projects"
+    NavItem "Messages", icon "mail", value "messages", badge "3"
+
+  Frame grow, pad 24
+    Text "Dashboard", fs 22, weight 600
+    Text "Hier sind deine Daten.", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Das Pattern:</strong></p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li>Outer <code>Frame hor</code> – horizontale Anordnung</li>
+        <li><code>SideNav</code> mit fester <code>w</code> – feste Sidebar-Breite</li>
+        <li>Content-Frame mit <code>grow</code> – nimmt restlichen Platz</li>
+      </ul>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Navigation + show: Routing zwischen Views</h2>
+      <p>Die statischen Beispiele oben zeigen die Navigation, aber wechseln den Content nicht. Mit <code>show</code> aus <a href="10-seiten.html">Kapitel&nbsp;10</a> wird daraus echtes Routing – jedes <code>NavItem</code> referenziert einen View:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, h 360, bg #0a0a0a, col white
+  SideNav defaultValue "Dashboard", w 200, bg #1a1a1a
+    NavItem "Dashboard", icon "home", show DashboardView
+    NavItem "Projects", icon "folder", show ProjectsView
+    NavItem "Settings", icon "settings", show SettingsView
+
+  Frame grow, pad 24
+    DashboardView: Frame name DashboardView
+      Text "Dashboard", fs 22, weight 600
+      Text "Übersicht und Kennzahlen.", col #888
+    ProjectsView: Frame name ProjectsView, hidden
+      Text "Projects", fs 22, weight 600
+      Text "12 aktive Projekte.", col #888
+    SettingsView: Frame name SettingsView, hidden
+      Text "Settings", fs 22, weight 600
+      Text "App-Konfiguration.", col #888</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert:</strong> Klick auf ein NavItem → der zugehörige View wird sichtbar, die anderen werden ausgeblendet. Die Views liegen im selben Content-Frame nebeneinander; <code>hidden</code> auf den nicht-aktiven Views macht sie unsichtbar bis zur Auswahl.</p>
+
+      <p>Für richtig große Apps lebt jeder View in einer eigenen Datei. Statt lokaler Definitionen referenzierst du sie via <code>show ViewName from Datei</code> – siehe <a href="10-seiten.html">Kapitel&nbsp;10 → "Komplettes Beispiel: App in vier Dateien"</a>.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Tabs mit show: Content auslagern</h2>
+      <p>Genauso funktioniert <code>show</code> in Tabs. Wenn der Tab-Inhalt komplex ist (Forms, Listen, Sub-Komponenten), holst du ihn aus einer benannten View statt ihn inline im Tab zu schreiben:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Tabs defaultValue "Account"
+  Tab "Account", show AccountView
+  Tab "Notifications", show NotifyView
+  Tab "Privacy", show PrivacyView
+
+AccountView: Frame name AccountView, gap 12, pad 16
+  Input placeholder "Name"
+  Input placeholder "Email"
+  Button "Speichern", bg #2271C1, col white, pad 10 20, rad 6
+
+NotifyView: Frame name NotifyView, gap 12, pad 16, hidden
+  Switch "E-Mail-Digest", checked
+  Switch "Push-Benachrichtigungen", checked
+  Switch "Wöchentliche Zusammenfassung"
+
+PrivacyView: Frame name PrivacyView, gap 12, pad 16, hidden
+  Switch "Profil öffentlich"
+  Switch "Aktivitäten-Verlauf"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Wann inline, wann show?</strong> Wenn der Tab-Inhalt zwei, drei Zeilen ist – inline. Wenn er ein eigenes Mini-Formular oder eine Liste ist – ausgelagert. Lange Tabs mit inline-Content machen die Tab-Definition unlesbar.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
     <div class="summary">
       <h2>Das Wichtigste</h2>
 

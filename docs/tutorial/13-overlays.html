@@ -188,6 +188,68 @@
 
 
     <!-- ============================================================ -->
+    <section>
+      <h2>Praxis: Dialog + Formular + Toast</h2>
+      <p>In echten Apps stehen Overlays selten allein. Ein typisches Muster: ein Dialog enthält ein Formular, der Submit-Button schließt den Dialog und gibt dem Nutzer per <code>toast()</code> Bestätigung. Mehr zu Toast in <a href="08-functions.html">Kapitel&nbsp;8 → Funktionen</a>:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Dialog
+  Trigger: Button "Kontakt hinzufügen", bg #2271C1, col white, pad 10 20, rad 6
+  Backdrop: bg rgba(0,0,0,0.5)
+  Content: Frame ver, gap 16, pad 24, bg #1a1a1a, rad 12, w 360
+    Text "Neuer Kontakt", weight bold, fs 18, col white
+    Frame ver, gap 12
+      Frame ver, gap 4
+        Text "Name", fs 12, col #888
+        Input placeholder "Max Mustermann"
+      Frame ver, gap 4
+        Text "E-Mail", fs 12, col #888
+        Input placeholder "max@example.com", type "email"
+    Frame hor, gap 8
+      CloseTrigger: Button "Abbrechen", bg #333, col white, pad 10 20, rad 6, grow
+      CloseTrigger: Button "Speichern", bg #2271C1, col white, pad 10 20, rad 6, grow, toast("Kontakt gespeichert")</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Was passiert:</strong> Klick auf "Speichern" macht zwei Dinge gleichzeitig — der <code>CloseTrigger:</code>-Slot schließt den Dialog, und <code>toast(...)</code> zeigt eine Bestätigung am Bildschirmrand. Der Nutzer sieht: Dialog weg + grüne Bestätigung.</p>
+
+      <p>Form-Inputs siehe <a href="11-eingabe.html">Kapitel&nbsp;11 → Eingabe</a>; <code>toast()</code> und andere Funktionen siehe <a href="08-functions.html">Kapitel&nbsp;8 → Funktionen</a>.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Tooltips auf Icons in Navigation</h2>
+      <p>Tooltips kommen besonders häufig in Navigation vor — Icons ohne Text brauchen einen Hover-Hinweis, damit der Nutzer ihre Bedeutung versteht. Ein häufiges Muster aus <a href="12-navigation.html">Kapitel&nbsp;12 → SideNav</a>:</p>
+
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>Frame hor, gap 0, bg #1a1a1a, pad 8, rad 8
+  Tooltip positioning "bottom"
+    Trigger: Frame pad 8, rad 6, cursor pointer
+      Icon "home", ic #888, is 18
+    Content: Text "Dashboard", fs 12
+
+  Tooltip positioning "bottom"
+    Trigger: Frame pad 8, rad 6, cursor pointer
+      Icon "folder", ic #888, is 18
+    Content: Text "Projekte", fs 12
+
+  Tooltip positioning "bottom"
+    Trigger: Frame pad 8, rad 6, cursor pointer
+      Icon "settings", ic #888, is 18
+    Content: Text "Einstellungen", fs 12</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+
+      <p><strong>Faustregel:</strong> Jedes klickbare Icon ohne Label sollte einen Tooltip haben. Ein nacktes Icon ohne Text und ohne Tooltip ist im Zweifel Verständnis-Reibung.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
     <div class="summary">
       <h2>Das Wichtigste</h2>
 

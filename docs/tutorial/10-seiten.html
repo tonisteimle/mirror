@@ -262,6 +262,197 @@ Frame gap 16
       </div>
 
       <p><code>use</code> importiert Komponenten-Definitionen. <code>show</code> zeigt Content an. Beides ergänzt sich.</p>
+
+      <h3>Was wird importiert?</h3>
+      <p><code>use</code> liest die ganze Ziel-Datei und übernimmt aus ihr:</p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><strong>Komponenten-Definitionen</strong> (<code>Card:</code>, <code>PrimaryBtn as Button:</code>) – das ist der Hauptzweck.</li>
+        <li><strong>Tokens</strong> (<code>primary.bg: #2271C1</code>) – auch verfügbar nach <code>use</code>, du kannst sie via <code>$primary</code> referenzieren.</li>
+        <li><strong>Daten</strong> (<code>users: ...</code>) – ebenfalls importiert, falls die Datei Daten-Blöcke enthält.</li>
+      </ul>
+      <p>Was <em>nicht</em> importiert wird: Top-Level-UI-Bäume (<code>Frame ...</code> ohne Definition). Die werden gerendert wenn du die Datei via <code>show</code> einbindest, nicht wenn du sie via <code>use</code> importierst.</p>
+
+      <h3>Mehrere uses kombinieren</h3>
+      <p>Du kannst beliebig viele Dateien importieren — sie werden vor dem ersten UI-Element aufgelistet:</p>
+      <div class="code-block">
+        <pre>// app.mirror
+use tokens
+use components
+use data
+
+Frame pad 20, gap 16
+  Card
+    Title "Letzte Aktivität"
+    each event in $events
+      Text event.message, col $muted</pre>
+      </div>
+
+      <p><strong>Konvention:</strong> <code>use</code>-Zeilen ganz oben, dann optionale Tokens/Komponenten der aktuellen Datei, dann der UI-Baum.</p>
+
+      <h3>show vs. use im Vergleich</h3>
+      <table class="ref-table">
+        <tr><th></th><th><code>use Datei</code></th><th><code>show Datei</code></th></tr>
+        <tr><td>Zweck</td><td>Definitionen verfügbar machen</td><td>Content rendern</td></tr>
+        <tr><td>Wo platziert</td><td>Oben in der Datei</td><td>Innerhalb des UI-Baums</td></tr>
+        <tr><td>Was passiert</td><td>Components/Tokens/Data lokal verfügbar</td><td>UI-Baum der Ziel-Datei wird hier eingefügt</td></tr>
+        <tr><td>Mehrfach erlaubt</td><td>Ja (mehrere Imports)</td><td>Ja (gleicher Content an mehreren Stellen)</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Komplettes Beispiel: App in vier Dateien</h2>
+      <p>Eine kleine Task-App, aufgeteilt in eine Token-, eine Components-, zwei View- und eine App-Datei. So sieht eine echte Mirror-Projekt-Struktur aus:</p>
+
+      <div class="code-block">
+        <pre>my-app/
+├── tokens.tok          ← Farben, Abstände, Radien
+├── components.com      ← Card, PrimaryBtn, Pill
+├── tasks.mir           ← TasksView (mit Daten)
+├── settings.mir        ← SettingsView
+└── app.mir             ← Entry: SideNav + show</pre>
+      </div>
+
+      <p><strong>1. Tokens</strong> – das Design-System:</p>
+      <div class="code-block">
+        <pre>// tokens.tok
+ink.col: #f5f5f5
+muted.col: #888
+surface.bg: #1a1a1a
+page.bg: #0a0a0a
+border.boc: #2a2a2a
+brand.bg: #2271C1
+brand.col: white</pre>
+      </div>
+
+      <p><strong>2. Komponenten</strong> – wiederverwendbar:</p>
+      <div class="code-block">
+        <pre>// components.com
+use tokens
+
+Card: bg $surface, pad 16, rad 8, gap 8, bor 1, boc $border
+  Title: col $ink, fs 15, weight 500
+  Body: col $muted, fs 13
+
+PrimaryBtn as Button: bg $brand, col $brand, pad 10 20, rad 6, cursor pointer
+Pill: pad 4 10, rad 99, fs 11, weight 500</pre>
+      </div>
+
+      <p><strong>3. Tasks-View</strong> – mit lokalen Daten:</p>
+      <div class="code-block">
+        <pre>// tasks.mir
+use tokens
+use components
+
+tasks:
+  t1:
+    title: "Design Review"
+    status: "Open"
+  t2:
+    title: "Mirror-Tutorial fertig"
+    status: "Done"
+
+TasksView: Frame name TasksView, gap 12, pad 20
+  Title "Tasks", fs 20, weight 600
+  each t in $tasks
+    Card
+      Frame hor, spread, ver-center
+        Title t.title
+        Pill bg $surface, col $muted, t.status</pre>
+      </div>
+
+      <p><strong>4. Settings-View</strong>:</p>
+      <div class="code-block">
+        <pre>// settings.mir
+use tokens
+use components
+
+SettingsView: Frame name SettingsView, gap 12, pad 20
+  Title "Einstellungen", fs 20, weight 600
+  Card
+    Switch "Dark Mode", checked
+    Switch "E-Mail-Benachrichtigungen"
+  PrimaryBtn "Speichern"</pre>
+      </div>
+
+      <p><strong>5. App-Entry</strong> – Navigation + Routing:</p>
+      <div class="code-block">
+        <pre>// app.mir
+use tokens
+use components
+
+Frame hor, h full, bg $page, col $ink
+  SideNav defaultValue "Tasks", w 200, bg $surface
+    NavItem "Tasks", icon "list", show TasksView from tasks
+    NavItem "Settings", icon "settings", show SettingsView from settings
+
+  Frame grow, pad 24
+    // Hier wird der jeweilige View gerendert</pre>
+      </div>
+
+      <p><strong>Was hier passiert:</strong></p>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><code>app.mir</code> ist der Entry-Point – die Datei, die der Compiler lädt.</li>
+        <li><code>use tokens</code> + <code>use components</code> machen das Design-System überall verfügbar – auch in <code>tasks.mir</code> und <code>settings.mir</code>, wo dieselben Imports stehen.</li>
+        <li><code>show TasksView from tasks</code> referenziert das benannte <code>TasksView</code>-Element aus <code>tasks.mir</code>.</li>
+        <li>Die Daten (<code>tasks: ...</code>) leben bei der View, die sie braucht – nicht in einer globalen Daten-Datei.</li>
+      </ul>
+
+      <p><strong>Skaliert:</strong> Mehr Views? Eine neue <code>.mir</code>-Datei + ein <code>NavItem</code> in <code>app.mir</code>. Mehr Komponenten? In <code>components.com</code> definieren – sie sind sofort in allen Dateien mit <code>use components</code> verfügbar.</p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Datei-Organisations-Patterns</h2>
+      <p>Mirror erzwingt keine Verzeichnisstruktur. Drei Patterns, die sich in der Praxis bewährt haben:</p>
+
+      <h3>Flat – für kleine Apps (≤ 5 Screens)</h3>
+      <div class="code-block">
+        <pre>my-app/
+├── tokens.tok
+├── components.com
+├── home.mir
+├── settings.mir
+└── app.mir         ← Entry</pre>
+      </div>
+      <p>Jede Seite eine Datei, alles im Root. Schnell, übersichtlich, kein Indirektions-Aufwand.</p>
+
+      <h3>Folders – für mittelgroße Apps</h3>
+      <div class="code-block">
+        <pre>my-app/
+├── tokens/
+│   ├── colors.tok
+│   └── spacing.tok
+├── components/
+│   ├── card.com
+│   └── nav.com
+├── screens/
+│   ├── home.mir
+│   ├── tasks.mir
+│   └── settings.mir
+└── app.mir</pre>
+      </div>
+      <p>Tokens, Components und Screens je eigenes Verzeichnis. Der Compiler lädt im <em>Projekt-Modus</em> automatisch alles aus diesen Standard-Verzeichnissen – siehe CLAUDE.md → "Projekt-Struktur". Du musst sie nicht explizit per <code>use</code> importieren.</p>
+
+      <h3>Feature-based – für große Apps</h3>
+      <div class="code-block">
+        <pre>my-app/
+├── shared/
+│   ├── tokens.tok
+│   └── components.com
+├── tasks/
+│   ├── tasks-view.mir
+│   ├── task-card.com
+│   └── tasks-data.yaml
+├── settings/
+│   └── settings-view.mir
+└── app.mir</pre>
+      </div>
+      <p>Pro Feature ein Verzeichnis mit allem Drum und Dran (View + feature-spezifische Komponenten + Daten). <code>shared/</code> hält das Cross-Feature-Material. Skaliert mit Team-Größe – jeder arbeitet primär in einem Feature-Ordner.</p>
+
+      <p><strong>Faustregel:</strong> Starte flat. Bei mehr als ~5 Screens auf folders. Bei mehr als ~3 Feature-Bereichen auf feature-based.</p>
     </section>
 
 
