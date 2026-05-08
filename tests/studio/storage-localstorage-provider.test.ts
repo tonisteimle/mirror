@@ -85,11 +85,6 @@ describe('LocalStorageProvider Properties', () => {
     expect(provider.type).toBe('localstorage')
   })
 
-  it('should not support projects', () => {
-    const provider = new LocalStorageProvider()
-    expect(provider.supportsProjects).toBe(false)
-  })
-
   it('should not support native dialogs', () => {
     const provider = new LocalStorageProvider()
     expect(provider.supportsNativeDialogs).toBe(false)

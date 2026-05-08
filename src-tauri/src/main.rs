@@ -86,7 +86,6 @@ fn main() {
             commands::fs::delete_path,
             commands::fs::rename_path,
             commands::fs::path_exists,
-            commands::fs::get_file_info,
             // Project
             commands::project::open_project,
             commands::project::create_project,

@@ -105,6 +105,17 @@ Symlink-Tricks werden durch beidseitiges `canonicalize()` aufgelöst.
 Pinning-Tests in `src-tauri/src/state.rs` (`#[cfg(test)] mod tests`):
 inside/outside/dotdot/symlink/non-existent — alle abgedeckt.
 
+### File-Size-Limit
+
+`commands::fs::MAX_FILE_BYTES` (16 MiB) gilt für `read_file` und
+`write_file`. Verhindert, dass eine bösartige oder kaputte WebView den
+Tokio-Worker mit einem Multi-GB-Read/Write blockiert
+(`tokio::fs::read_to_string` würde die ganze Datei in einen einzigen
+String allokieren). Mirror-Sources sind KB-skaliert; das Limit liegt
+~3 Größenordnungen über realer Nutzung. Wenn ein legitimer Use-Case
+mehr braucht: Limit erhöhen UND
+`state::tests::max_file_bytes_constant_is_documented_value` updaten.
+
 ### Content-Security-Policy
 
 Die WebView-CSP ist in `tauri.conf.json` → `app.security.csp` gesetzt

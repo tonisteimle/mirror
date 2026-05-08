@@ -140,11 +140,6 @@ export class StorageService {
     return this.currentProject?.name ?? null
   }
 
-  get supportsProjects(): boolean {
-    this.ensureInitialized()
-    return this.provider!.supportsProjects
-  }
-
   get supportsNativeDialogs(): boolean {
     this.ensureInitialized()
     return this.provider!.supportsNativeDialogs

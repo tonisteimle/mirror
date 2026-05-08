@@ -30,7 +30,6 @@ export { DEFAULT_PROJECT }
 
 export class DemoProvider implements StorageProvider {
   readonly type = 'demo' as const
-  readonly supportsProjects = false
   readonly supportsNativeDialogs = false
 
   private files: Record<string, string>

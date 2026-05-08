@@ -95,7 +95,6 @@ export type ProviderType = 'tauri' | 'localstorage' | 'demo'
 export interface StorageProvider {
   // === Meta ===
   readonly type: ProviderType
-  readonly supportsProjects: boolean
   readonly supportsNativeDialogs: boolean
 
   // === Projekt-Operationen ===

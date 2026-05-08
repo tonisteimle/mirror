@@ -46,7 +46,6 @@ interface TauriBridgeStorage {
 
 export class TauriProvider implements StorageProvider {
   readonly type = 'tauri' as const
-  readonly supportsProjects = false // Arbeitet mit Ordnern
   readonly supportsNativeDialogs = true
 
   private basePath: string | null = null

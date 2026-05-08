@@ -30,7 +30,6 @@ const STORAGE_KEY = 'mirror-files'
 
 export class LocalStorageProvider implements StorageProvider {
   readonly type = 'localstorage' as const
-  readonly supportsProjects = false
   readonly supportsNativeDialogs = false
 
   private files: Record<string, string> = {}

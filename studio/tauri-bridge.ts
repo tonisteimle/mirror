@@ -112,12 +112,6 @@ export const TauriFS = {
     if (!core) throw new Error('Not running in Tauri')
     return core.invoke<boolean>('path_exists', { path })
   },
-
-  async getFileInfo(path: string): Promise<unknown> {
-    const core = await getTauriCore()
-    if (!core) throw new Error('Not running in Tauri')
-    return core.invoke('get_file_info', { path })
-  },
 }
 
 // =============================================================================

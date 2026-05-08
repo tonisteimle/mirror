@@ -4,6 +4,29 @@ use tauri::State;
 
 use crate::state::AppState;
 
+/// Hard cap on file size (read + write). Mirror sources are KB-scale; even
+/// the biggest realistic projects don't approach this. The limit exists to
+/// keep a malicious or buggy WebView from blocking the Tokio runtime with
+/// a multi-GB read/write — `tokio::fs::read_to_string` would happily
+/// allocate the whole file into a single String.
+///
+/// 16 MiB is ~3 orders of magnitude above any real Mirror file. Bump if
+/// a legitimate use case appears (and add a test to pin the new value).
+pub const MAX_FILE_BYTES: u64 = 16 * 1024 * 1024;
+
+/// Pure boundary check — extracted so tests can exercise it without
+/// constructing a full Tauri runtime. `op` is `"read"` or `"write"` for
+/// the error message; the real commands pass their own labels.
+fn check_size(op: &str, path: &str, size: u64) -> Result<(), String> {
+    if size > MAX_FILE_BYTES {
+        Err(format!(
+            "{op}_file({path}): {size} bytes exceeds {MAX_FILE_BYTES}-byte limit"
+        ))
+    } else {
+        Ok(())
+    }
+}
+
 #[derive(Serialize)]
 pub struct DirEntry {
     pub name: String,
@@ -16,17 +39,13 @@ pub struct DirListing {
     pub files: Vec<DirEntry>,
 }
 
-#[derive(Serialize)]
-pub struct FileInfo {
-    pub path: String,
-    pub size: u64,
-    pub is_dir: bool,
-    pub is_file: bool,
-}
-
 #[tauri::command]
 pub async fn read_file(path: String, state: State<'_, AppState>) -> Result<String, String> {
     let resolved = state.guard_path(&path)?;
+    let metadata = tokio::fs::metadata(&resolved)
+        .await
+        .map_err(|e| format!("read_file metadata({path}): {e}"))?;
+    check_size("read", &path, metadata.len())?;
     tokio::fs::read_to_string(&resolved)
         .await
         .map_err(|e| format!("read_file({path}): {e}"))
@@ -38,6 +57,7 @@ pub async fn write_file(
     content: String,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
+    check_size("write", &path, content.len() as u64)?;
     let resolved = state.guard_path(&path)?;
     if let Some(parent) = resolved.parent() {
         tokio::fs::create_dir_all(parent)
@@ -135,19 +155,42 @@ pub async fn path_exists(path: String, state: State<'_, AppState>) -> Result<boo
     Ok(Path::new(&resolved).exists())
 }
 
-#[tauri::command]
-pub async fn get_file_info(
-    path: String,
-    state: State<'_, AppState>,
-) -> Result<FileInfo, String> {
-    let resolved = state.guard_path(&path)?;
-    let metadata = tokio::fs::metadata(&resolved)
-        .await
-        .map_err(|e| format!("get_file_info({path}): {e}"))?;
-    Ok(FileInfo {
-        path,
-        size: metadata.len(),
-        is_dir: metadata.is_dir(),
-        is_file: metadata.is_file(),
-    })
+// `get_file_info` removed — was exposed via the bridge but never called
+// from studio code. If a real consumer appears, restore via git history
+// and add an integration test that pins the actual call site.
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_size_accepts_values_at_or_below_limit() {
+        assert!(check_size("read", "tiny.mir", 0).is_ok());
+        assert!(check_size("read", "small.mir", 1024).is_ok());
+        assert!(check_size("write", "exact.mir", MAX_FILE_BYTES).is_ok());
+    }
+
+    #[test]
+    fn check_size_rejects_one_byte_over_limit() {
+        // Off-by-one matters here — exactly the limit must be allowed,
+        // exactly one byte more must fail.
+        let err = check_size("read", "boundary.mir", MAX_FILE_BYTES + 1).unwrap_err();
+        assert!(err.contains("exceeds"), "got: {err}");
+        assert!(err.contains("16777217"), "got: {err}");
+    }
+
+    #[test]
+    fn check_size_rejects_obvious_dos_payload() {
+        let err = check_size("write", "huge.bin", 5 * 1024 * 1024 * 1024).unwrap_err();
+        assert!(err.contains("write_file(huge.bin)"), "got: {err}");
+        assert!(err.contains("5368709120"), "got: {err}");
+    }
+
+    #[test]
+    fn check_size_labels_op_correctly() {
+        let read_err = check_size("read", "x", MAX_FILE_BYTES + 1).unwrap_err();
+        assert!(read_err.starts_with("read_file"), "got: {read_err}");
+        let write_err = check_size("write", "x", MAX_FILE_BYTES + 1).unwrap_err();
+        assert!(write_err.starts_with("write_file"), "got: {write_err}");
+    }
 }

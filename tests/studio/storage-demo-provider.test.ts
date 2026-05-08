@@ -26,10 +26,6 @@ describe('DemoProvider Properties', () => {
     expect(provider.type).toBe('demo')
   })
 
-  it('should not support projects', () => {
-    expect(provider.supportsProjects).toBe(false)
-  })
-
   it('should not support native dialogs', () => {
     expect(provider.supportsNativeDialogs).toBe(false)
   })

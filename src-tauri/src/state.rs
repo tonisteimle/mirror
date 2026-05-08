@@ -272,4 +272,15 @@ mod tests {
         reloaded.load_recents(dir.path());
         assert_eq!(reloaded.recents(), vec![project]);
     }
+
+    // File-size limits live in commands::fs but their boundary belongs
+    // here in the integration sense — they protect the same surface as
+    // guard_path. Test both halves of the boundary so a future bump of
+    // MAX_FILE_BYTES doesn't accidentally pass through.
+    #[test]
+    fn max_file_bytes_constant_is_documented_value() {
+        // Pin the documented value: 16 MiB. Any change must update both
+        // src-tauri/src/commands/fs.rs and src-tauri/README.md.
+        assert_eq!(crate::commands::fs::MAX_FILE_BYTES, 16 * 1024 * 1024);
+    }
 }
