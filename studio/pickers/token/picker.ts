@@ -188,9 +188,21 @@ export class TokenPicker extends BasePicker {
   private filterTokens(): TokenDefinition[] {
     let tokens = [...this.tokens]
 
-    // Filter by context (property type)
+    // Property-set context-filter (Slice 78 V-4):
+    // - When the editor is inside a typed property context (`bg $`, `pad $`, …)
+    //   the user is choosing a value for that property — only single-value-
+    //   tokens make sense. Property-sets apply *as* a property (`Frame
+    //   $cardstyle`), not *to* a property.
+    // - When the editor is at top-level (`Frame $`, no property context),
+    //   both kinds are applicable.
+    if (this.context?.property) {
+      tokens = tokens.filter(t => t.kind !== 'set')
+    }
+
+    // Filter by context (property type) — only meaningful for single-value
+    // tokens; property-sets carry `type: 'other'` by design.
     if (this.context && this.context.allowedTypes.length > 0) {
-      tokens = tokens.filter(t => this.context!.allowedTypes.includes(t.type))
+      tokens = tokens.filter(t => t.kind === 'set' || this.context!.allowedTypes.includes(t.type))
     }
 
     // Filter by search query
@@ -247,11 +259,19 @@ export class TokenPicker extends BasePicker {
       return container
     }
 
+    // Split into single-value tokens and property-sets (Slice 78 V-3).
+    // Property-sets are visually distinct from single-value tokens — the
+    // user picks them as a *style bundle* applied to the element, not as a
+    // value for one property. A separate section makes the distinction
+    // visible without needing an extra column or icon on every row.
+    const singles = this.filteredTokens.filter(t => t.kind !== 'set')
+    const sets = this.filteredTokens.filter(t => t.kind === 'set')
+
     if (this.groupByCategory) {
-      // Group by category
+      // Group single-value tokens by category
       const groups = new Map<string, TokenDefinition[]>()
 
-      for (const token of this.filteredTokens) {
+      for (const token of singles) {
         const category = token.category || 'Other'
         if (!groups.has(category)) {
           groups.set(category, [])
@@ -259,14 +279,29 @@ export class TokenPicker extends BasePicker {
         groups.get(category)!.push(token)
       }
 
-      for (const [category, tokens] of groups) {
+      for (const [, tokens] of groups) {
         for (const token of tokens) {
           fragment.appendChild(this.renderToken(token))
         }
       }
     } else {
-      // Flat list
-      for (const token of this.filteredTokens) {
+      // Flat list of single-value tokens
+      for (const token of singles) {
+        fragment.appendChild(this.renderToken(token))
+      }
+    }
+
+    // Property-set section (after the single-value tokens), with a header
+    // separator. Only emitted when there are sets — keeps the picker tight
+    // for projects without any property-sets defined.
+    if (sets.length > 0) {
+      if (singles.length > 0) {
+        const header = document.createElement('div')
+        header.className = 'token-picker-section-header'
+        header.textContent = 'Style Bundles'
+        fragment.appendChild(header)
+      }
+      for (const token of sets) {
         fragment.appendChild(this.renderToken(token))
       }
     }
@@ -279,7 +314,9 @@ export class TokenPicker extends BasePicker {
   private renderToken(token: TokenDefinition): HTMLElement {
     const item = document.createElement('button')
     item.className = 'token-picker-item'
+    if (token.kind === 'set') item.classList.add('token-picker-item-set')
     item.setAttribute('data-token', token.name)
+    item.setAttribute('data-token-kind', token.kind ?? 'single')
     item.setAttribute('role', 'option')
 
     // Name (first)
@@ -288,15 +325,19 @@ export class TokenPicker extends BasePicker {
     name.textContent = token.name
     item.appendChild(name)
 
-    // Preview (for colors) - next to value
-    if (this.showPreview && token.type === 'color') {
+    // Color-swatch preview only for single-value color tokens. Property-sets
+    // intentionally don't get a swatch — even if the set contains a `bg`,
+    // the bg is not the set's identity (Slice 78 V-3).
+    if (this.showPreview && token.type === 'color' && token.kind !== 'set') {
       const preview = document.createElement('span')
       preview.className = 'token-picker-preview'
       preview.style.backgroundColor = token.value
       item.appendChild(preview)
     }
 
-    // Value (last)
+    // Value (last) — for sets this is the property-bag preview text built
+    // by parseTokens (`bg #1a1a1a · pad 16 · rad 8`); for single-value
+    // tokens it's the resolved hex / number / token-ref.
     const value = document.createElement('span')
     value.className = 'token-picker-value'
     value.textContent = token.value
