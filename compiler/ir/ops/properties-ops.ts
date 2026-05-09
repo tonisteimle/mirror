@@ -59,10 +59,18 @@ export function getTag(
 
 /**
  * Expand property sets and component style mixins in a list of properties.
- * Delegates to extracted property-set-expander.ts
+ * Delegates to extracted property-set-expander.ts.
+ *
+ * `primitive` gates the unresolved-ref content-fallback: Text/Button/Label/
+ * Link/H1-H6 keep the bare-form `Text $name` substitution; Frame and other
+ * layout containers drop unresolved refs silently (validator W500 covers DX).
  */
-export function expandPropertySets(this: IRTransformer, properties: Property[]): Property[] {
-  return expandPropertySetsExtracted(properties, this.propertySetMap, this.componentMap)
+export function expandPropertySets(
+  this: IRTransformer,
+  properties: Property[],
+  primitive?: string
+): Property[] {
+  return expandPropertySetsExtracted(properties, this.propertySetMap, this.componentMap, primitive)
 }
 
 /**
@@ -80,7 +88,7 @@ export function transformProperties(
   childrenInfo?: { hasWidthFull?: boolean }
 ): IRStyle[] {
   // First, expand any property set references
-  const expandedProperties = this.expandPropertySets(properties)
+  const expandedProperties = this.expandPropertySets(properties, primitive)
 
   // Find and expand device property - replace IN PLACE so that explicit w/h after device still wins.
   // Preset values come from schema (getDevicePreset).

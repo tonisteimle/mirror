@@ -291,8 +291,11 @@ export function transformInstance(
 
   // Expand component references in instance properties BEFORE merging
   // This handles syntax like: Input placeholder "...", InputField
-  // where InputField is a component whose properties should be applied
-  const expandedInstanceProps = this.expandPropertySets(instance.properties)
+  // where InputField is a component whose properties should be applied.
+  // Pass the primitive name so unresolved propset refs on content-bearing
+  // primitives (Text/Button/…) get the bare-form `$name` rewritten as
+  // content; Frame/Section/etc. drop unresolved refs silently.
+  const expandedInstanceProps = this.expandPropertySets(instance.properties, primitive)
 
   // Icon size: `is` / `icon-size` from the component or instance is the
   // user's intent for both width and height; the primitive's `w: 20, h: 20`

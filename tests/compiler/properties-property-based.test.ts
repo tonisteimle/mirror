@@ -520,11 +520,16 @@ describe('Property-based: expandPropertySets', () => {
     )
   })
 
-  it('unknown propset reference → rewritten to `content` (Bug #22 fix)', () => {
+  // Slice 25: the content-fallback now requires the primitive arg to be a
+  // content-bearing primitive (Text/Button/Label/Link/H1-H6). Without that
+  // gate, Frame would receive innerHTML — wrong DSL semantics for a layout
+  // container. Validator W500 covers the unresolved-ref DX in both cases.
+  it('unknown propset on content-bearing primitive → rewritten to `content` (Bug #22 fix)', () => {
     fc.assert(
       fc.property(
         fc.string({ minLength: 1, maxLength: 8 }).filter(s => /^[a-z]+$/.test(s)),
-        psName => {
+        fc.constantFrom('text', 'button', 'label', 'link', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'),
+        (psName, primitive) => {
           const ref: Property = {
             type: 'Property',
             name: 'propset',
@@ -532,12 +537,30 @@ describe('Property-based: expandPropertySets', () => {
             line: 0,
             column: 0,
           }
-          // empty propsetMap → unknown name → fall back to `content` so the
-          // value still reaches the user (was silently dropped before #22).
-          const result = expandPropertySets([ref], new Map())
+          const result = expandPropertySets([ref], new Map(), undefined, primitive)
           expect(result).toHaveLength(1)
           expect(result[0].name).toBe('content')
           expect(result[0].values).toEqual([`$${psName}`])
+        }
+      )
+    )
+  })
+
+  it('unknown propset on layout primitive → dropped silently (Slice 25 V-5)', () => {
+    fc.assert(
+      fc.property(
+        fc.string({ minLength: 1, maxLength: 8 }).filter(s => /^[a-z]+$/.test(s)),
+        fc.constantFrom('frame', 'box', 'section', 'article', 'header', 'nav', 'main', 'footer'),
+        (psName, primitive) => {
+          const ref: Property = {
+            type: 'Property',
+            name: 'propset',
+            values: [{ kind: 'token' as const, name: psName }],
+            line: 0,
+            column: 0,
+          }
+          const result = expandPropertySets([ref], new Map(), undefined, primitive)
+          expect(result).toHaveLength(0)
         }
       )
     )
