@@ -46,6 +46,30 @@ export const BOOLEAN_PROPERTIES = new Set<string>([
 ])
 
 /**
+ * Pure-flag properties — properties that ONLY have a _standalone keyword
+ * (no numeric, no color, no other keywords). These reject any value:
+ * `Frame hor 5` is invalid because `hor` is purely a flag.
+ *
+ * Distinct from BOOLEAN_PROPERTIES which also includes hybrid properties
+ * like `grid` (flag-mode `Frame grid` AND value-mode `Frame grid 12`).
+ *
+ * Slice 3 V-2: Validator W120 LAYOUT_FLAG_HAS_VALUE uses this set to
+ * detect `<flag-keyword> <value>` typos.
+ */
+export const PURE_FLAG_PROPERTIES = new Set<string>([
+  ...Object.values(SCHEMA)
+    .filter(prop => {
+      if (!prop.keywords?._standalone) return false
+      if (prop.numeric) return false
+      if (prop.color) return false
+      // Only _standalone, no other named keywords
+      const keywordKeys = Object.keys(prop.keywords)
+      return keywordKeys.length === 1 && keywordKeys[0] === '_standalone'
+    })
+    .flatMap(prop => [prop.name, ...prop.aliases]),
+])
+
+/**
  * Layout boolean properties that should trigger property separation.
  * These are layout modifiers that commonly appear after value-taking properties.
  *

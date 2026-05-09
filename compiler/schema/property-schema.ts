@@ -264,6 +264,18 @@ export const SCHEMA: Record<string, PropertyDef> = {
     keywords: {
       _standalone: {
         description: 'Children arranged horizontally',
+        // The `align-items: center` here matches the size-state-CSS-emit
+        // path (`schemaPropertyToCSS` is consulted for responsive
+        // `wide: hor` etc.) but DIVERGES from the regular IR layout-
+        // transformer which uses FLEX_DEFAULTS (`align-items: flex-start`,
+        // see `compiler/schema/layout-defaults.ts`). Slice 3 V-3a probed
+        // removing this `center` to unify the two paths but found that
+        // the size-state path relies on it for behavior parity with the
+        // pre-Slice-3 era. The drift is genuine but resolving it requires
+        // a Slice that touches both the IR layout-transformer's
+        // FLEX_DEFAULTS and the size-state-CSS-emit path together —
+        // beyond Slice 3 scope. Documented in audit-doc V-3a (status:
+        // verschoben).
         css: [
           { property: 'display', value: 'flex' },
           { property: 'flex-direction', value: 'row' },

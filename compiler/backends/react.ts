@@ -333,14 +333,20 @@ function withLayoutDefaults(
   componentName: string
 ): Record<string, string | number> {
   if (!isLayoutPrimitive(componentName)) return style
-  if (style.display !== undefined) return style
-  return {
-    display: 'flex',
-    flexDirection: 'column',
-    alignSelf: 'stretch',
-    alignItems: 'flex-start',
-    ...style,
-  }
+  // Slice 3 V-1: merge defaults per-key instead of skip-if-display-set.
+  // The old skip-when-display-set behavior dropped `alignSelf: stretch` and
+  // `alignItems: flex-start` whenever `hor`/`ver`/`grid` set display first
+  // — `Frame hor` lost its container stretch/flex-start defaults that the
+  // DOM/IR pipeline always emits. Now each default key only fills in if
+  // the user-explicit style hasn't already chosen a value: `hor` keeps
+  // flexDirection: 'row', `center` keeps alignItems: 'center', and the
+  // container still gets alignSelf: 'stretch' for parent-flex-fill.
+  const merged: Record<string, string | number> = { ...style }
+  if (merged.display === undefined) merged.display = 'flex'
+  if (merged.flexDirection === undefined) merged.flexDirection = 'column'
+  if (merged.alignSelf === undefined) merged.alignSelf = 'stretch'
+  if (merged.alignItems === undefined) merged.alignItems = 'flex-start'
+  return merged
 }
 
 /**
