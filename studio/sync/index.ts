@@ -1,18 +1,12 @@
 /**
- * Sync Module
+ * Sync Module — hexagonal architecture (v2).
+ *
+ * The legacy v1 (`sync-coordinator.ts`) was removed; production has used
+ * `createSyncCoordinatorWithPorts` since the architecture migration.
  */
 
 // ============================================
-// Legacy Exports (v1) - DEPRECATED
-// Production code now uses v2 (hexagonal architecture)
-// These exports are kept for backward compatibility only
-// ============================================
-
-/** @deprecated Use createSyncCoordinatorWithPorts instead */
-export { SyncCoordinator, createSyncCoordinator, type SyncTargets, type SyncCoordinatorOptions } from './sync-coordinator'
-
-// ============================================
-// New Hexagonal Architecture (v2)
+// Hexagonal Architecture (v2)
 // ============================================
 
 // Ports (interfaces)

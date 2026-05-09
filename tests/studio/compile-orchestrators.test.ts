@@ -346,12 +346,14 @@ describe('StudioUpdater', () => {
     expect(deps.studio.sync.triggerInitialSync).toHaveBeenCalled()
   })
 
-  it('handleEmptyCode clears selection + sets default breadcrumb when SelectionManager present', () => {
+  it('handleEmptyCode clears selection + breadcrumb when SelectionManager present', () => {
     const sel = { clearSelection: vi.fn(), setBreadcrumb: vi.fn() }
     const { updater, deps } = makeUpdater({ studioSelectionManager: sel })
     updater.handleEmptyCode()
     expect(sel.clearSelection).toHaveBeenCalled()
-    expect(sel.setBreadcrumb).toHaveBeenCalledWith([{ id: 'node-1', name: 'App' }])
+    // Empty code → empty breadcrumb. The synthetic App-wrapper isn't a node
+    // the user wrote; surfacing it as a breadcrumb entry would mislead.
+    expect(sel.setBreadcrumb).toHaveBeenCalledWith([])
     expect(deps.studio.preview.refresh).toHaveBeenCalled()
   })
 
