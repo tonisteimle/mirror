@@ -291,6 +291,35 @@ const needsPxUnit = needsPxUnitFromSchema
 const tokenToCSSVarName = tokenToCSSVarNameFromSchema
 
 /**
+ * Resolve a chain reference (`accent.bg: $primary`) to the canonical source
+ * token name, so the emitter can emit `var(--source-name)`.
+ *
+ * Resolution rules:
+ *  1. Direct match: `tokenMap.has(rawValue)` (e.g., `primary`)
+ *  2. With target's suffix: `tokenMap.has(rawValue + targetSuffix)`
+ *     (e.g., `primary` + `.bg` → `primary.bg`)
+ *
+ * Returns the canonical source name, or `null` if no match exists. Cycles
+ * are tolerated by CSS itself (cascading `var()` resolution); we only need
+ * to find the first hop.
+ */
+function resolveTokenChainName(
+  rawValue: string,
+  targetName: string,
+  tokenMap: Map<string, string | number | boolean>
+): string | null {
+  if (tokenMap.has(rawValue)) return rawValue
+
+  const targetSuffix = getSuffix(targetName)
+  if (targetSuffix) {
+    const withSuffix = rawValue + targetSuffix
+    if (tokenMap.has(withSuffix)) return withSuffix
+  }
+
+  return null
+}
+
+/**
  * Emit custom user tokens
  */
 function emitCustomTokens(ctx: StyleEmitterContext): void {
@@ -308,12 +337,28 @@ function emitCustomTokens(ctx: StyleEmitterContext): void {
   ctx.emit(':host, :root {')
   ctx.indentIn()
 
+  const tokenMap = ctx.getTokenMap()
+
   for (const token of customTokens) {
     if (token.value === undefined) continue
 
-    let value = ctx.resolveTokenValueWithContext(token.value, token.name)
     const cssVarName = tokenToCSSVarName(token.name)
 
+    // Chain reference: `accent.bg: $primary` → emit `--accent-bg: var(--primary-bg);`
+    // The CSS cascade resolves the chain at render time, preserving designer
+    // intent (theme overrides at the root token propagate downstream).
+    if (typeof token.value === 'string' && token.value.startsWith('$')) {
+      const sourceName = resolveTokenChainName(stripDollar(token.value), token.name, tokenMap)
+      if (sourceName === null) {
+        // Source token not found — skip emission rather than write broken CSS
+        // (literal `$name`). Validator (W500) is the user-facing diagnostic.
+        continue
+      }
+      ctx.emit(`--${cssVarName}: var(--${tokenToCSSVarName(sourceName)});`)
+      continue
+    }
+
+    let value: string | number | boolean = token.value
     if (needsPxUnit(token.name)) {
       if (typeof value === 'number') {
         value = `${value}px`
@@ -351,14 +396,17 @@ function emitCustomTokens(ctx: StyleEmitterContext): void {
 function emitThemeTokens(ctx: StyleEmitterContext): void {
   const astTokens = ctx.getASTTokens()
 
-  const themeTokens = astTokens.filter(t => {
+  const hasThemeTokens = astTokens.some(t => {
     const name = t.name.startsWith('$') ? t.name.slice(1) : t.name
     return isThemeToken(name)
   })
 
-  if (themeTokens.length === 0) return
+  if (!hasThemeTokens) return
 
-  const theme = generateTheme(themeTokens)
+  // Pass ALL user tokens, not just theme-tokens. Otherwise chain references
+  // (e.g., `accent.bg: $primary` where `primary.bg` is a custom token)
+  // can't resolve — generateTheme needs the full name-space to follow chains.
+  const theme = generateTheme(astTokens)
   ctx.emitRaw(theme.css)
   ctx.emit('')
 }

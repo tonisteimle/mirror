@@ -37,6 +37,12 @@ export function generateTheme(userTokens: TokenDefinition[]): GeneratedTheme {
     userValues.set(name, token.value)
   }
 
+  // Resolve any chain references in userValues. Theme tokens drive auto-
+  // generated hover/active variants via color-transforms (darken/lighten),
+  // which need a real hex value — `$primary` literal would break the
+  // transform. Inline-resolve here so downstream code sees concrete values.
+  resolveChainsInPlace(userValues)
+
   // Generate all theme tokens
   const themeTokens: Record<string, string | number> = {}
 
@@ -71,6 +77,73 @@ export function generateTheme(userTokens: TokenDefinition[]): GeneratedTheme {
   const css = generateCSS(themeTokens)
 
   return { css, tokens: themeTokens }
+}
+
+/**
+ * Walk userValues and replace `$xxx` chain references with their resolved
+ * value. Tries direct lookup first, then with the target token's suffix.
+ *
+ * If a chain target is unresolvable (typo, undefined source), the entry is
+ * removed so the theme falls back to its default value rather than emitting
+ * literal `$xxx` (invalid CSS). Validator W500 covers the user-facing diagnostic.
+ *
+ * Cycles terminate after MAX_DEPTH steps to avoid infinite recursion; the
+ * last terminal value (or removal) is taken.
+ */
+function resolveChainsInPlace(userValues: Map<string, string | number>): void {
+  const MAX_DEPTH = 16
+
+  for (const [name, value] of userValues) {
+    if (typeof value !== 'string' || !value.startsWith('$')) continue
+
+    let current = value
+    let resolved: string | number | undefined
+    const visited = new Set<string>()
+
+    for (let i = 0; i < MAX_DEPTH; i++) {
+      if (typeof current !== 'string' || !current.startsWith('$')) {
+        resolved = current
+        break
+      }
+      if (visited.has(current)) break
+      visited.add(current)
+
+      const stripped = current.slice(1)
+
+      // Direct match
+      if (userValues.has(stripped)) {
+        const next = userValues.get(stripped)!
+        if (typeof next === 'string') {
+          current = next
+          continue
+        }
+        resolved = next
+        break
+      }
+
+      // With target suffix
+      const dotIdx = name.lastIndexOf('.')
+      const targetSuffix = dotIdx > 0 ? name.slice(dotIdx) : ''
+      if (targetSuffix && userValues.has(stripped + targetSuffix)) {
+        const next = userValues.get(stripped + targetSuffix)!
+        if (typeof next === 'string') {
+          current = next
+          continue
+        }
+        resolved = next
+        break
+      }
+
+      // Unresolvable
+      break
+    }
+
+    if (resolved !== undefined && (typeof resolved !== 'string' || !resolved.startsWith('$'))) {
+      userValues.set(name, resolved)
+    } else {
+      userValues.delete(name)
+    }
+  }
 }
 
 /**
