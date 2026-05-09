@@ -6,16 +6,33 @@
  */
 
 import type { SourceMap } from '../../compiler/ir/source-map'
-import { SYSTEM_STATES } from '../../compiler/schema/parser-helpers'
+import { SYSTEM_STATES, CUSTOM_STATES } from '../../compiler/schema/parser-helpers'
 
-// Schema-derived regex fragment for system-state names. Captures all 13
-// system states (hover/focus/active/disabled/visited/checked/focus-visible/
-// focus-within/placeholder/placeholder-shown/first-child/last-child/empty).
+// Schema-derived regex fragment for ALL named states — both system and
+// built-in custom. Slice 26 fix covered system states only (`hover` etc.);
+// Slice 28 review found the same bug-family for custom states (`on`,
+// `off`, `selected`, `open`, `closed`, ...) and for author-invented
+// multi-state cycle names (`todo`, `doing`, `done`).
+//
+//   - SYSTEM_STATES: hover/focus/active/disabled/visited/checked/...
+//   - CUSTOM_STATES: on/off/selected/open/closed/loading/error/...
+//   - Author-invented: handled by AUTHOR_STATE_REGEX below.
+//
 // Names are sorted longest-first so e.g. `focus-visible` matches before
-// `focus`. Used by SKIP_PATTERNS and the parent-context detector below to
-// recognize state-block lines after Slice 26 widened the schema from 4 to
-// 13 system states (previously hand-rolled `(hover|focus|active|disabled)`).
-const SYSTEM_STATES_REGEX = [...SYSTEM_STATES].sort((a, b) => b.length - a.length).join('|')
+// `focus` and `placeholder-shown` before `placeholder`.
+const SCHEMA_STATE_NAMES = [...SYSTEM_STATES, ...CUSTOM_STATES]
+const SYSTEM_STATES_REGEX = SCHEMA_STATE_NAMES.sort((a, b) => b.length - a.length).join('|')
+
+// Heuristic fallback for state-block lines whose names aren't in the
+// schema (`todo:`, `doing:`, `done:` for multi-state cycles).
+// Conservative pattern: lowercase identifier + bare colon, optionally
+// followed by trigger/animation modifiers (`onclick`, `0.2s`, `ease-out`).
+// Excludes:
+//   - `bg #f00` — has space + value, no colon at end
+//   - `primary.bg:` — contains a dot
+//   - `onclick exclusive():` — starts with `on` (handled by event branch)
+//   - control flow (`each`, `if`, `else`) — Mirror keywords
+const AUTHOR_STATE_REGEX = /^[a-z][a-zA-Z0-9-]*(\s+[a-zA-Z0-9.\s-]+)?\s*:\s*$/
 
 /**
  * Information about a component found on a line
@@ -154,12 +171,25 @@ export function findParentDefinition(source: string, lineNum: number): ParentCon
         continue
       }
 
-      // Check if it's a pseudo-state (schema-derived list — see Slice 26).
-      // Match the longest system-state name (e.g. focus-visible before focus).
+      // Check if it's a known state-block (system or custom, schema-derived
+      // list — Slice 26 + Slice 28). Match longest name first so e.g.
+      // `focus-visible` matches before `focus`.
       if (new RegExp(`^(${SYSTEM_STATES_REGEX})\\b`).test(trimmed)) {
         const stateMatch = trimmed.match(new RegExp(`^(${SYSTEM_STATES_REGEX})`))
         contextType = 'state'
         contextLabel = stateMatch ? stateMatch[1] : 'state'
+        searchIndent = lineIndent
+        continue
+      }
+
+      // Heuristic for author-invented state-block names (multi-state cycles
+      // like `todo:`/`doing:`/`done:`). Schema doesn't list these; pattern
+      // recognition catches them. See AUTHOR_STATE_REGEX above for the
+      // false-positive analysis.
+      if (AUTHOR_STATE_REGEX.test(trimmed)) {
+        const nameMatch = trimmed.match(/^([a-z][a-zA-Z0-9-]*)/)
+        contextType = 'state'
+        contextLabel = nameMatch ? nameMatch[1] : 'state'
         searchIndent = lineIndent
         continue
       }
@@ -209,9 +239,18 @@ function analyzeNestedLine(line: string): {
     }
   }
 
-  // System states (schema-derived list — Slice 26 widened it to 13)
+  // Known states (schema-derived: SYSTEM_STATES + CUSTOM_STATES — Slice 26 + 28).
   if (new RegExp(`^(${SYSTEM_STATES_REGEX})\\b`).test(trimmed)) {
     const match = trimmed.match(new RegExp(`^(${SYSTEM_STATES_REGEX})`))
+    return {
+      childType: 'state',
+      childLabel: match ? match[1] : 'state',
+    }
+  }
+
+  // Author-invented state-block names (multi-state cycles).
+  if (AUTHOR_STATE_REGEX.test(trimmed)) {
+    const match = trimmed.match(/^([a-z][a-zA-Z0-9-]*)/)
     return {
       childType: 'state',
       childLabel: match ? match[1] : 'state',

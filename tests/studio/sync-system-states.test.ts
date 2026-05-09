@@ -19,7 +19,7 @@ import {
   extractComponentFromLine,
   findParentDefinition,
 } from '../../studio/sync/component-line-parser'
-import { SYSTEM_STATES } from '../../compiler/schema/parser-helpers'
+import { SYSTEM_STATES, CUSTOM_STATES } from '../../compiler/schema/parser-helpers'
 
 describe('Studio sync — Slice 26 schema-derived state recognition', () => {
   describe('parent-context detection (cursor inside state block)', () => {
@@ -73,6 +73,89 @@ describe('Studio sync — Slice 26 schema-derived state recognition', () => {
         const ctx = findParentDefinition(source, 2)
         expect(ctx?.childType, `state ${name} not recognized`).toBe('state')
       }
+    })
+  })
+
+  // ===================================================================
+  // Slice 28 — Multi-State-Cycle additions: built-in custom states +
+  // author-invented multi-state cycle names. Cross-Slice-Probe per
+  // Step 7 in 00-plan.md found these gaps; locking them in now.
+  // ===================================================================
+
+  describe('Slice 28 — built-in custom-state recognition', () => {
+    const cases: Array<[string, string]> = [
+      ['selected', 'tabs/menu items'],
+      ['highlighted', 'autocomplete current'],
+      ['expanded', 'accordion open'],
+      ['collapsed', 'accordion closed'],
+      ['on', 'toggle binary on'],
+      ['off', 'toggle binary off'],
+      ['open', 'dialog/menu open'],
+      ['closed', 'dialog/menu closed'],
+      ['loading', 'async pending'],
+      ['error', 'validation failed'],
+    ]
+    for (const [state, note] of cases) {
+      it(`reports childType='state' for cursor inside \`${state}:\` block (${note})`, () => {
+        const source = ['MyComp: pad 8', `  ${state}:`, '    bg #f00'].join('\n')
+        const ctx = findParentDefinition(source, 2)
+        expect(ctx?.childType).toBe('state')
+        expect(ctx?.childLabel).toBe(state)
+      })
+    }
+  })
+
+  describe('Slice 28 — author-invented multi-state cycle names', () => {
+    it('RT-9 — cursor inside `todo:` (user-invented) → state context', () => {
+      const source = ['Status: pad 8, toggle()', '  todo:', '    bg #333'].join('\n')
+      const ctx = findParentDefinition(source, 2)
+      expect(ctx?.childType).toBe('state')
+      expect(ctx?.childLabel).toBe('todo')
+    })
+
+    it('RT-10 — cursor inside `doing:` → state context', () => {
+      const source = ['Status: toggle()', '  doing:', '    bg #f0f'].join('\n')
+      const ctx = findParentDefinition(source, 2)
+      expect(ctx?.childType).toBe('state')
+      expect(ctx?.childLabel).toBe('doing')
+    })
+
+    it('RT-11 — cursor inside `done:` → state context', () => {
+      const source = ['Status: toggle()', '  done:', '    bg #0f0'].join('\n')
+      const ctx = findParentDefinition(source, 2)
+      expect(ctx?.childType).toBe('state')
+      expect(ctx?.childLabel).toBe('done')
+    })
+
+    it('RT-12 — schema-drift guard: every CUSTOM_STATE recognized', () => {
+      expect(CUSTOM_STATES.size).toBeGreaterThanOrEqual(15)
+      for (const name of CUSTOM_STATES) {
+        const source = ['MyComp: bg #333', `  ${name}:`, '    bg #f00'].join('\n')
+        const ctx = findParentDefinition(source, 2)
+        expect(ctx?.childType, `custom state ${name} not recognized`).toBe('state')
+      }
+    })
+  })
+
+  describe('Slice 28 — false-positive guard for the heuristic', () => {
+    it('property-line `bg #f00` is NOT mis-recognized as a state', () => {
+      const source = ['MyComp: pad 8', '  bg #f00'].join('\n')
+      const ctx = findParentDefinition(source, 1)
+      // bg has a value (not bare colon) → should not be a state
+      expect(ctx?.childType).not.toBe('state')
+    })
+
+    it('child component `MyChild` is NOT mis-recognized as a state', () => {
+      const source = ['Card: pad 8', '  MyChild', '    Text "x"'].join('\n')
+      const ctx = findParentDefinition(source, 2)
+      // MyChild is PascalCase — not a state
+      expect(ctx?.childType).not.toBe('state')
+    })
+
+    it('event handler `onclick toggle()` is NOT mis-recognized as a state', () => {
+      const source = ['Btn: pad 8', '  onclick toggle()', '    Text "x"'].join('\n')
+      const ctx = findParentDefinition(source, 2)
+      expect(ctx?.childType).not.toBe('state')
     })
   })
 })
