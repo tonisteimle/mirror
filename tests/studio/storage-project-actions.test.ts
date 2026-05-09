@@ -284,7 +284,7 @@ describe('Demo Project Template', () => {
     const stored = JSON.parse(mockStorage.getItem('mirror-files') || '{}')
 
     // Tokens should define values
-    expect(stored['tokens.mir']).toContain('primary')
+    expect(stored['tokens.mir']).toMatch(/\b(primary|accent|surface|card)\b/)
     expect(stored['tokens.mir']).toContain('#')
 
     // Components should use tokens

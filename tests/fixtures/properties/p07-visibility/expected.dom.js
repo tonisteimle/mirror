@@ -28,6 +28,7 @@
     'background': 'red',
     'display': 'none',
   })
+  node_2._savedDisplay = 'flex'
   node_2.dataset.component = 'Frame'
   node_1.appendChild(node_2)
   

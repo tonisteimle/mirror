@@ -70,7 +70,7 @@
   node_1.addEventListener('click', (e) => {
     const sm = node_1._stateMachine
     const current = sm.current
-    _runtime.stateMachineToggle(node_1)
+    _runtime.stateMachineToggle(node_1, ['todo', 'doing', 'done'])
   })
   node_1.dataset.component = 'TaskStatus'
   _root.appendChild(node_1)

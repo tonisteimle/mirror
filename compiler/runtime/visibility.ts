@@ -63,6 +63,14 @@ export function toggle(el: MirrorElement | string | null): void {
     setState(target, newState)
     return
   }
+  // For state-machine elements, the toggle action is already wired to
+  // the state-machine's transitionTo via a sibling click listener. Don't
+  // ALSO flip `hidden` here — when the machine has only one state (e.g.
+  // `default ↔ on`), there's no `off` state to apply and the fallback
+  // path simply hides the element. Bug demo: a `RoutineCheck` with
+  // `toggle()` and an `on:` state would vanish on click instead of
+  // turning into a green check.
+  if (target._stateMachine) return
   target.hidden = !target.hidden
   applyState(target, target.hidden ? 'off' : 'on')
 }

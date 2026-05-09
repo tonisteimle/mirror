@@ -467,10 +467,16 @@ export function emitStyles(ctx: StyleEmitterContext): void {
   emitCustomTokens(ctx)
 
   // Base reset
+  // `position: relative` makes the canvas root the containing block for
+  // any descendants positioned with `abs, x 0, y 0, w full, h full`
+  // (overlays, dialogs). Without it, abs walks up to the viewport and
+  // mis-anchors whenever the canvas is smaller than the viewport (Studio
+  // mobile preview, standalone HTML in a wider browser).
   ctx.emit('.mirror-root {')
   ctx.emit(
     "  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;"
   )
+  ctx.emit('  position: relative;')
   ctx.emit('}')
   ctx.emit('.mirror-root * {')
   ctx.emit('  box-sizing: border-box;')

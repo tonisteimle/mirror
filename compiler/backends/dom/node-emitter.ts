@@ -271,6 +271,32 @@ export function emitBaseStyles(ctx: NodeEmitterContext, node: IRNode, varName: s
     }
   }
 
+  // ── Hidden detection: when `hidden` is set on a Frame, the IR emits
+  // both the natural `display: flex` (from `ver`/`hor`/`grid`/etc.) and
+  // an overriding `display: none`. In Object.assign the second wins,
+  // but the first value is then *lost* — show() has nothing to restore
+  // to and falls back to '', which leaves the element with no display
+  // at all (browser default `block` for div, ignoring all flex props).
+  //
+  // Fix: detect the displaced display, write it to `_savedDisplay` after
+  // the Object.assign so the runtime show() function (visibility.ts)
+  // can restore it. Same mechanism already used by state-machine-emitter
+  // for `_baseDisplay` — we reuse the existing `_savedDisplay` slot
+  // that show()/hide() already check.
+  let displacedDisplay: string | null = null
+  let finalDisplay: string | undefined
+  for (const s of staticStyles) {
+    if (s.property === 'display') finalDisplay = s.value
+  }
+  if (finalDisplay === 'none') {
+    for (const s of staticStyles) {
+      if (s.property === 'display' && s.value !== 'none') {
+        displacedDisplay = s.value
+        break
+      }
+    }
+  }
+
   // Emit static styles with Object.assign
   if (staticStyles.length > 0) {
     ctx.emit(`Object.assign(${varName}.style, {`)
@@ -280,6 +306,11 @@ export function emitBaseStyles(ctx: NodeEmitterContext, node: IRNode, varName: s
     }
     ctx.indentOut()
     ctx.emit('})')
+  }
+
+  // Hidden displaced a real display — record it for show() to restore.
+  if (displacedDisplay) {
+    ctx.emit(`${varName}._savedDisplay = '${displacedDisplay}'`)
   }
 
   // Emit conditional styles as separate assignments

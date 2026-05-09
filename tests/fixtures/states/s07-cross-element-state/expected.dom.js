@@ -73,6 +73,7 @@
     'padding': '12px',
     'display': 'none',
   })
+  node_2._savedDisplay = 'flex'
   node_2._stateStyles = {
     '_MenuBtn_open': {
       'display': '',
