@@ -30,26 +30,25 @@
 
 Aus `/tmp/gap-probes.ts` (15 Fälle, alle drei Backends + Validator).
 
-| #   | Eingabe | DOM | React | Framework | Validator | Verdikt |
-| --- | ------- | --- | ----- | --------- | --------- | ------- |
-
 **Tabelle gibt den Post-Fix-Stand wieder** (re-verifiziert mit `/tmp/gap-probes.ts`). Pre-Fix-Stand siehe Git-Log.
 
-| 1 | `Frame gap 12` | `'12px'` | `'12px'` | `12` | ok | ✅ V-1: Cross-Backend px-Einheit, alle drei korrekt |
-| 2 | `Frame gap 0` | `'0px'` | `'0px'` | `0` | ok | ✅ V-1 |
-| 3 | `Frame g 8` (Alias) | `'8px'` | `'8px'` | `8` | ok | ✅ V-1 + Alias |
-| 4 | `Frame gap` (kein Wert) | leer | leer | leer | **E101** | ✅ Validator catched |
-| 5 | `Frame gap "12"` (string) | `'12px'` | `'12px'` | `12` | ok | ✅ V-1 |
-| 6 | `Frame gap -4` (negativ) | `'-4px'` | `'-4px'` | `-4` | **E105** | ✅ Validator E105, Build-CLI exit 1 (Slice 1 B.7); direkter Backend-Aufruf emittiert (Test-API) |
-| 7 | `sp.gap: 12; Frame gap $sp` (Token) | `var(--sp-gap)` | `'12px'` (resolved) | `'var(--sp-gap)'` | ok | ✅ V-2 + V-3 — DOM via CSS-Var, React resolved direkt, Framework keeps full var |
-| 8 | `Frame gap 12.5` (Decimal) | `'12.5px'` | `'12.5px'` | `12` (parseInt) | ok | ✅ V-4 — DOM/React mit decimal+px; Framework reduziert auf int (M-runtime kompatibel) |
-| 9 | `Frame gap 9999` | `'9999px'` | `'9999px'` | `9999` | ok | ✅ V-1 |
-| 10 | `Frame gap 8` (no children) | `'8px'` | `'8px'` | `8` | ok | ⚠️ Kein Warn — Follow-up (Slice 2 V-5, verschoben) |
-| 11 | `Frame hor, gap 8` | `'8px'` | `'8px'` | `8` | ok | ✅ V-1 |
-| 12 | `Frame grid 12, gap 8` | `'8px'` | `'8px'` | `8` | ok | ✅ V-1 |
-| 13 | `Btn: gap 8` + `Btn "X"` | `'8px'` | `'8px'` | `8` | ok | ✅ V-1 — Component-Def-gap fliesst durch |
-| 14 | `Frame gap 8, gap 16` (duplicate) | `'16px'` | `'16px'` | `16` | **W110** | ✅ Last-wins + Warn |
-| 15 | `Frame gap "12px"` (px im String) | `'12px'` | `'12px'` | `12` | **E101** | ✅ Validator E101 + Build-CLI exit 1; Backends rendern korrekt durch Zufall |
+| #   | Eingabe                             | DOM             | React               | Framework         | Validator | Verdikt                                                                                         |
+| --- | ----------------------------------- | --------------- | ------------------- | ----------------- | --------- | ----------------------------------------------------------------------------------------------- |
+| 1   | `Frame gap 12`                      | `'12px'`        | `'12px'`            | `12`              | ok        | ✅ V-1: Cross-Backend px-Einheit, alle drei korrekt                                             |
+| 2   | `Frame gap 0`                       | `'0px'`         | `'0px'`             | `0`               | ok        | ✅ V-1                                                                                          |
+| 3   | `Frame g 8` (Alias)                 | `'8px'`         | `'8px'`             | `8`               | ok        | ✅ V-1 + Alias                                                                                  |
+| 4   | `Frame gap` (kein Wert)             | leer            | leer                | leer              | **E101**  | ✅ Validator catched                                                                            |
+| 5   | `Frame gap "12"` (string)           | `'12px'`        | `'12px'`            | `12`              | ok        | ✅ V-1                                                                                          |
+| 6   | `Frame gap -4` (negativ)            | `'-4px'`        | `'-4px'`            | `-4`              | **E105**  | ✅ Validator E105, Build-CLI exit 1 (Slice 1 B.7); direkter Backend-Aufruf emittiert (Test-API) |
+| 7   | `sp.gap: 12; Frame gap $sp` (Token) | `var(--sp-gap)` | `'12px'` (resolved) | `'var(--sp-gap)'` | ok        | ✅ V-2 + V-3 — DOM via CSS-Var, React resolved direkt, Framework keeps full var                 |
+| 8   | `Frame gap 12.5` (Decimal)          | `'12.5px'`      | `'12.5px'`          | `12` (parseInt)   | ok        | ✅ V-4 — DOM/React mit decimal+px; Framework reduziert auf int (M-runtime kompatibel)           |
+| 9   | `Frame gap 9999`                    | `'9999px'`      | `'9999px'`          | `9999`            | ok        | ✅ V-1                                                                                          |
+| 10  | `Frame gap 8` (no children)         | `'8px'`         | `'8px'`             | `8`               | ok        | ⚠️ Kein Warn — Follow-up (Slice 2 V-5, verschoben)                                              |
+| 11  | `Frame hor, gap 8`                  | `'8px'`         | `'8px'`             | `8`               | ok        | ✅ V-1                                                                                          |
+| 12  | `Frame grid 12, gap 8`              | `'8px'`         | `'8px'`             | `8`               | ok        | ✅ V-1                                                                                          |
+| 13  | `Btn: gap 8` + `Btn "X"`            | `'8px'`         | `'8px'`             | `8`               | ok        | ✅ V-1 — Component-Def-gap fliesst durch                                                        |
+| 14  | `Frame gap 8, gap 16` (duplicate)   | `'16px'`        | `'16px'`            | `16`              | **W110**  | ✅ Last-wins + Warn                                                                             |
+| 15  | `Frame gap "12px"` (px im String)   | `'12px'`        | `'12px'`            | `12`              | **E101**  | ✅ Validator E101 + Build-CLI exit 1; Backends rendern korrekt durch Zufall                     |
 
 **Befunde (priorisiert):**
 
