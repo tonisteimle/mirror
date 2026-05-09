@@ -189,4 +189,132 @@ Frame gap $sp, pad $sp`)
       expect(out).toContain("gap: '8px'")
     })
   })
+
+  // ===========================================================================
+  // Phase 2 RTs — gap-x / gap-y / chain / shorthand (V-5..V-9)
+  // ===========================================================================
+
+  describe('RT-11 — React: gap-x / gap-y emit columnGap / rowGap (V-5)', () => {
+    it("Frame hor, gap-x 16 → React `columnGap: '16px'`", () => {
+      const out = react('Frame hor, gap-x 16\n  Text "A"\n  Text "B"')
+      expect(out).toContain("columnGap: '16px'")
+    })
+
+    it("Frame gap-y 24 → React `rowGap: '24px'`", () => {
+      const out = react('Frame gap-y 24\n  Text "A"\n  Text "B"')
+      expect(out).toContain("rowGap: '24px'")
+    })
+
+    it('alias gx → columnGap', () => {
+      expect(react('Frame hor, gx 12\n  Text "A"')).toContain("columnGap: '12px'")
+    })
+
+    it('alias gy → rowGap', () => {
+      expect(react('Frame gy 4\n  Text "A"')).toContain("rowGap: '4px'")
+    })
+
+    it('grid + gap-x + gap-y all three React', () => {
+      const out = react('Frame grid 12, gap-x 8, gap-y 16\n  Frame w 6\n  Frame w 6')
+      expect(out).toContain("columnGap: '8px'")
+      expect(out).toContain("rowGap: '16px'")
+    })
+  })
+
+  describe('RT-12 — Framework: gap-x / gap-y branches (V-5)', () => {
+    it('Frame hor, gap-x 16 → Framework `gap-x: 16`', () => {
+      const out = fw('Frame hor, gap-x 16\n  Text "A"')
+      expect(out).toContain("'gap-x': 16")
+    })
+
+    it('Frame gap-y 24 → Framework `gap-y: 24`', () => {
+      const out = fw('Frame gap-y 24\n  Text "A"')
+      expect(out).toContain("'gap-y': 24")
+    })
+  })
+
+  describe('RT-13 — Mixed gap + gap-x precedence (V-5)', () => {
+    it("DOM: emits both `gap: '8px'` and `column-gap: '16px'` (per-axis defaults)", () => {
+      const out = dom('Frame hor, gap 8, gap-x 16\n  Text "A"\n  Text "B"')
+      expect(out).toContain("'gap': '8px'")
+      expect(out).toContain("'column-gap': '16px'")
+    })
+
+    it('React: emits both — CSS specificity merges per axis', () => {
+      const out = react('Frame hor, gap 8, gap-x 16\n  Text "A"\n  Text "B"')
+      expect(out).toContain("gap: '8px'")
+      expect(out).toContain("columnGap: '16px'")
+    })
+
+    it('wrap-grid: `gap 8, gap-x 16` keeps row-gap=8 via unified gap (regression-pin)', () => {
+      // Pre-V-5 this dropped unified gap entirely → row-gap was 0.
+      const out = dom('Frame hor, wrap, gap 8, gap-x 16\n  Frame w 100\n  Frame w 100')
+      expect(out).toContain("'gap': '8px'")
+      expect(out).toContain("'column-gap': '16px'")
+    })
+  })
+
+  describe('RT-14 — React tokenMap chain-resolution suffix-aware (V-6)', () => {
+    it('big.gap: $base; base.gap: 8; Frame gap $big → React resolves to 8px', () => {
+      const out = react('base.gap: 8\nbig.gap: $base\nFrame gap $big\n  Text "A"')
+      expect(out).toContain("gap: '8px'")
+      expect(out).not.toContain("gap: '$base'") // literal-bug from before V-6
+    })
+
+    it('3-hop chain: a.gap → b.gap → c.gap → 4', () => {
+      const out = react('c.gap: 4\nb.gap: $c\na.gap: $b\nFrame gap $a\n  Text "A"')
+      expect(out).toContain("gap: '4px'")
+    })
+
+    it('cycle a:$b; b:$a terminates without crash', () => {
+      // Both tokens reference each other; the visited-set guard must stop the
+      // recursion without throwing. Result: literal `$a`/`$b` since chain
+      // never resolves to a terminal value.
+      const out = react('a.gap: $b\nb.gap: $a\nFrame gap $a\n  Text "A"')
+      // Should not throw; falls back to original literal in React-style
+      expect(typeof out).toBe('string')
+      expect(out).toContain('export default function App')
+    })
+  })
+
+  describe('RT-15 — Multi-Value Shorthand (V-7)', () => {
+    it("DOM: `Frame gap 12 8` → `gap: '12px 8px'`", () => {
+      expect(dom('Frame gap 12 8\n  Text "A"\n  Text "B"')).toContain("'gap': '12px 8px'")
+    })
+
+    it("React: `Frame gap 12 8` → `gap: '12px 8px'`", () => {
+      expect(react('Frame gap 12 8\n  Text "A"\n  Text "B"')).toContain("gap: '12px 8px'")
+    })
+
+    it("Framework: `Frame gap 12 8` → `gap: '12px 8px'`", () => {
+      expect(fw('Frame gap 12 8\n  Text "A"\n  Text "B"')).toContain("gap: '12px 8px'")
+    })
+  })
+
+  describe('RT-16 — Framework decimal preserves float (V-9)', () => {
+    it('Frame gap 12.5 → Framework `gap: 12.5` (parseFloat, not parseInt)', () => {
+      expect(fw('Frame gap 12.5\n  Text "A"')).toContain('gap: 12.5')
+    })
+  })
+
+  describe('RT-17 — Cross-Backend Differential for gap-x / gap-y', () => {
+    it('all three backends emit gap-x for `Frame hor, gap-x 16`', () => {
+      const src = 'Frame hor, gap-x 16\n  Text "A"\n  Text "B"'
+      expect(dom(src)).toContain("'column-gap': '16px'")
+      expect(react(src)).toContain("columnGap: '16px'")
+      expect(fw(src)).toContain("'gap-x': 16")
+    })
+
+    it('all three backends emit gap-y for `Frame gap-y 24`', () => {
+      const src = 'Frame gap-y 24\n  Text "A"\n  Text "B"'
+      expect(dom(src)).toContain("'row-gap': '24px'")
+      expect(react(src)).toContain("rowGap: '24px'")
+      expect(fw(src)).toContain("'gap-y': 24")
+    })
+
+    it('chain-token resolves equivalently across DOM (cascade) and React (inline)', () => {
+      const src = 'base.gap: 8\nbig.gap: $base\nFrame gap $big\n  Text "A"'
+      expect(dom(src)).toMatch(/--big-gap:\s*var\(--base-gap\)/) // cascade
+      expect(react(src)).toContain("gap: '8px'") // inline-resolved
+    })
+  })
 })

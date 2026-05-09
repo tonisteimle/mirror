@@ -1,12 +1,13 @@
 # 09 — Slice 2: Vertical Stack (`gap N`)
 
 **Datum:** 2026-05-09
-**Status:** Phase 1 (V-1..V-4) erledigt · **Phase 2 (V-5..V-9) offen** — zweiter Probe-Pass deckt fünf zusätzliche Cross-Backend-Bugs auf (gap-x/gap-y in React+Framework, Chain in React, Shorthand)
+**Status:** Phase 1 (V-1..V-4) erledigt · Phase 2 (V-5..V-9) erledigt · **Quality-Gate-Pass: erledigt** — 49 RTs grün, 14864/14887 Vitest-Tests grün
 
 > **Honest update (Phase 2 audit, 2026-05-09):** Eine zweite Probe-Reihe gegen
-> den committed Stand (Phase 1, `67f108f2`) hat fünf weitere Cross-Backend-Bugs
-> aufgedeckt, die im ersten Pass nicht waren — siehe Sektion **5 — Phase 2 Findings**.
-> Quality-Gate (Step 8): Slice 2 ist nicht „fertig" bis V-5..V-9 zu sind.
+> den committed Stand (Phase 1, `67f108f2`) hatte fünf weitere Cross-Backend-Bugs
+> aufgedeckt — siehe Sektion **5 — Phase 2 Findings**. Phase 2 hat alle fünf
+> geschlossen plus den IR-Layout-Transformer-Bug, der unified `gap` bei
+> gleichzeitiger `gap-x`-Definition silently droppte.
 
 ## Inhalt
 
@@ -300,29 +301,43 @@ String durchreichen wie var(--…)).
 
 ## Umsetzungsplan (Phase 2)
 
-| ID    | Sub-Task                                                                                   | Aus | Aufwand | Status |
-| ----- | ------------------------------------------------------------------------------------------ | --- | ------- | ------ |
-| 2-A.1 | React: `gap-x`/`gx` → `columnGap` + `gap-y`/`gy` → `rowGap` in `generateStyles`            | V-5 | S       | offen  |
-| 2-A.2 | React: Mixed-precedence — `gap-x` überschreibt nur column-axis, `gap` bleibt für row       | V-5 | S       | offen  |
-| 2-A.3 | Framework: gap-x/gap-y/gx/gy Branches in property-mapper                                   | V-5 | S       | offen  |
-| 2-B.1 | React: `resolveTokenChain(name, value, tokens, visited)` — suffix-aware, 8-hop, cycle-safe | V-6 | M       | offen  |
-| 2-B.2 | React: tokenMap-Builder ruft chain-resolver pro `value.startsWith('$')`                    | V-6 | S       | offen  |
-| 2-C.1 | React `pxify` multi-value-aware                                                            | V-7 | S       | offen  |
-| 2-C.2 | Framework `parsePxValue` multi-value-aware                                                 | V-7 | S       | offen  |
-| 2-D.1 | Framework `parsePxValue` decimal-aware                                                     | V-9 | S       | offen  |
-| 2-E.1 | RT-11..RT-15 in `tests/compiler/slice-2-gap.test.ts` ergänzen                              | -   | M       | offen  |
-| 2-E.2 | Cross-Backend-Differential für `gap-x`/`gap-y` (`tests/differential/layout.test.ts`)       | -   | S       | offen  |
-| 2-F.1 | Probe-Tabelle (Phase 2) Post-Fix-Spiegelung                                                | -   | S       | offen  |
-| 2-F.2 | Quality-Gate Status-Update (Audit + 00-plan)                                               | -   | S       | offen  |
+| ID    | Sub-Task                                                                                                     | Aus | Aufwand | Status   |
+| ----- | ------------------------------------------------------------------------------------------------------------ | --- | ------- | -------- |
+| 2-A.1 | React: `gap-x`/`gx` → `columnGap` + `gap-y`/`gy` → `rowGap` in `generateStyles`                              | V-5 | S       | erledigt |
+| 2-A.2 | React: Mixed-precedence — beide gaps emittieren, CSS-Specificity übernimmt per-axis-merge                    | V-5 | S       | erledigt |
+| 2-A.3 | Framework: gap-x/gap-y Branches (`column-gap`→`gap-x`, `row-gap`→`gap-y`)                                    | V-5 | S       | erledigt |
+| 2-A.4 | IR layout-transformer: unified `gap` nicht droppen wenn columnGap/rowGap zusätzlich gesetzt (Beifang)        | V-5 | S       | erledigt |
+| 2-B.1 | React: `resolveTokenChain(name, value, visited)` — suffix-aware, 8-hop, cycle-safe                           | V-6 | M       | erledigt |
+| 2-B.2 | React: tokenMap-Builder ruft chain-resolver pro `value.startsWith('$')`                                      | V-6 | S       | erledigt |
+| 2-C.1 | React `pxify` multi-value-aware (split on whitespace, alle Numerics pxifizieren)                             | V-7 | S       | erledigt |
+| 2-C.2 | React property-loop joined `prop.values.join(' ')` für Multi-String-Values                                   | V-7 | S       | erledigt |
+| 2-C.3 | Framework `parsePxValue` Multi-Value-Pass-through (`/\s/.test(value.trim())`)                                | V-7 | S       | erledigt |
+| 2-D.1 | Framework `parsePxValue` decimal-aware (`parseFloat` statt `parseInt`)                                       | V-9 | S       | erledigt |
+| 2-E.1 | RT-11..RT-17 in `tests/compiler/slice-2-gap.test.ts` ergänzen (20 neue Sub-Tests)                            | -   | M       | erledigt |
+| 2-E.2 | Cross-Backend-Differential für `gap-x`/`gap-y` (in RT-17 abgedeckt)                                          | -   | S       | erledigt |
+| 2-F.1 | Probe-Tabelle (Phase 2) Post-Fix-Spiegelung                                                                  | -   | S       | erledigt |
+| 2-F.2 | Quality-Gate Status-Update (Audit + 00-plan)                                                                 | -   | S       | erledigt |
+| 2-F.3 | Bestand-Tests anpassen (GA3 in `layout-bugs.test.ts`, gap-precedence in `properties-property-based.test.ts`) | -   | S       | erledigt |
 
 ## Neue Tests (Phase 2)
 
-| ID    | Test                                                                                                        | Aus   | Status |
-| ----- | ----------------------------------------------------------------------------------------------------------- | ----- | ------ |
-| RT-11 | React: `Frame hor, gap-x 16` → JSX style hat `columnGap: '16px'`                                            | 2-A.1 | offen  |
-| RT-12 | React: `Frame gap-y 24` + Aliases gx/gy                                                                     | 2-A.1 | offen  |
-| RT-13 | React: Mixed `gap 8, gap-x 16` → both `gap: '8px'` AND `columnGap: '16px'` (oder per Konsens nur columnGap) | 2-A.2 | offen  |
-| RT-14 | React: `base.gap: 8; big.gap: $base; Frame gap $big` → `gap: '8px'` (Chain resolved)                        | 2-B.1 | offen  |
-| RT-15 | React + Framework: `Frame gap 12 8` → `gap: '12px 8px'` (Multi-Value)                                       | 2-C.1 | offen  |
-| RT-16 | Framework: gap-x/gap-y emittieren                                                                           | 2-A.3 | offen  |
-| RT-17 | Differential: alle Phase-2-Probes DOM ≡ React (oder dokumentierte Abweichung mit Begründung)                | 2-E.2 | offen  |
+| ID    | Test                                                                                | Aus   | Status   |
+| ----- | ----------------------------------------------------------------------------------- | ----- | -------- |
+| RT-11 | React: gap-x / gap-y emittieren columnGap / rowGap (5 Sub-Tests inkl. gx/gy + grid) | 2-A.1 | erledigt |
+| RT-12 | Framework: gap-x / gap-y Branches                                                   | 2-A.3 | erledigt |
+| RT-13 | Mixed gap+gap-x: DOM und React emittieren beide; wrap-grid-Regression-Pin           | 2-A.4 | erledigt |
+| RT-14 | React tokenMap chain-resolution: 1-hop, 3-hop, cycle-safe                           | 2-B.1 | erledigt |
+| RT-15 | Multi-Value Shorthand: DOM/React/Framework emittieren `'12px 8px'`                  | 2-C.1 | erledigt |
+| RT-16 | Framework decimal: `gap 12.5` → `12.5` (parseFloat)                                 | 2-D.1 | erledigt |
+| RT-17 | Cross-Backend Differential für gap-x / gap-y / chain                                | 2-E.2 | erledigt |
+
+## Quality-Gate-Pass (Phase 2)
+
+- ✅ Probe-Tabelle gegen Post-Fix-Stand gespiegelt — alle 🔴 Phase-2-Befunde grün
+- ✅ Cross-Backend-Konsistenz (DOM ≡ React ≡ Framework) verifiziert für gap, gap-x, gap-y, chain, shorthand, decimal
+- ✅ 49 Slice-2-RTs grün (29 Phase 1 + 20 Phase 2)
+- ✅ Vitest-Suite gesamt 14864 / 14887 (23 skipped, 0 failed)
+- ✅ Audit-Doc spiegelt ehrlich den Post-Fix-Stand (Status, Probe-Tabelle, Plan-Tabellen)
+- ✅ 00-plan Audit-Status auf "erledigt" gesetzt
+- ⚠️ V-8 (Studio gap-x/gap-y Surface) bewusst verschoben — eigener Studio-Slice
+- ⚠️ Browser-CDP-E2E für gap-x/gap-y existiert in `studio/test-api/suites/layout/extended.test.ts` (4 Tests; benötigt Studio-Bundle-Build, ähnlich Slice 26/27/29 — separates Gate)

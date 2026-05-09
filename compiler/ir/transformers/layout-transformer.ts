@@ -340,16 +340,20 @@ export function generateLayoutStyles(ctx: LayoutContext, primitive: string): IRS
     } else if (ctx.rowHeight) {
       styles.push({ property: 'grid-auto-rows', value: ctx.rowHeight })
     }
-    // Handle gaps: specific gaps take precedence over general gap
+    // Handle gaps. Slice 2 V-5: emit unified `gap` first as the per-axis
+    // default; column-gap / row-gap then override their respective axis via
+    // CSS-specificity. Previously dropped the unified gap whenever any
+    // specific gap was set, which meant `grid 12, gap 8, gap-x 16` had
+    // row-gap=0 instead of row-gap=8. Cross-backend symmetry with React/
+    // Framework, which already keep all three present.
+    if (ctx.gap) {
+      styles.push({ property: 'gap', value: ctx.gap })
+    }
     if (ctx.columnGap) {
       styles.push({ property: 'column-gap', value: ctx.columnGap })
     }
     if (ctx.rowGap) {
       styles.push({ property: 'row-gap', value: ctx.rowGap })
-    }
-    // Use general gap only if no specific gaps are set
-    if (ctx.gap && !ctx.columnGap && !ctx.rowGap) {
-      styles.push({ property: 'gap', value: ctx.gap })
     }
     return styles
   }
@@ -454,16 +458,22 @@ export function generateLayoutStyles(ctx: LayoutContext, primitive: string): IRS
     styles.push({ property: 'flex-wrap', value: ctx.flexWrap })
   }
 
-  // Add gaps (gap-x and gap-y work in flex too)
+  // Add gaps (gap-x and gap-y work in flex too).
+  // Slice 2 V-5: emit unified `gap` first as the per-axis default, then
+  // `column-gap` / `row-gap` override their respective axis. CSS specificity
+  // handles the merge correctly (column-gap > gap for x-axis, row-gap > gap
+  // for y-axis). Previously the unified `gap` was dropped entirely whenever
+  // either specific gap was set — `Frame hor, wrap, gap 8, gap-x 16` lost
+  // the row-gap (became 0 instead of 8). Cross-backend divergence with
+  // React resolved by emitting all three when present.
+  if (ctx.gap) {
+    styles.push({ property: 'gap', value: ctx.gap })
+  }
   if (ctx.columnGap) {
     styles.push({ property: 'column-gap', value: ctx.columnGap })
   }
   if (ctx.rowGap) {
     styles.push({ property: 'row-gap', value: ctx.rowGap })
-  }
-  // Use general gap only if no specific gaps are set
-  if (ctx.gap && !ctx.columnGap && !ctx.rowGap) {
-    styles.push({ property: 'gap', value: ctx.gap })
   }
 
   return styles

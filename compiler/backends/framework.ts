@@ -381,6 +381,11 @@ class FrameworkGenerator {
     if (prop === 'flex-direction' && value === 'row') return { name: 'hor', value: true }
     if (prop === 'flex-direction' && value === 'column') return null // Default
     if (prop === 'gap') return { name: 'gap', value: this.parsePxValue(value) }
+    // Slice 2 V-5: gap-x → column-gap, gap-y → row-gap (Aliases gx/gy
+    // map to the same CSS in the IR layout-transformer). Without these
+    // branches, Framework export silently dropped both axes.
+    if (prop === 'column-gap') return { name: 'gap-x', value: this.parsePxValue(value) }
+    if (prop === 'row-gap') return { name: 'gap-y', value: this.parsePxValue(value) }
     if (prop === 'justify-content' && value === 'space-between')
       return { name: 'spread', value: true }
     if (prop === 'flex-wrap' && value === 'wrap') return { name: 'wrap', value: true }
@@ -559,11 +564,20 @@ class FrameworkGenerator {
    * Parse px values to numbers. Pass-through for CSS-vars (`var(--sp-gap)`)
    * and other already-CSS-shaped values — without that guard the value
    * occasionally got truncated by downstream string handling. Slice 2 V-3.
+   *
+   * Multi-value shorthand (`12px 8px`) is preserved as the original CSS
+   * string — the M-runtime accepts space-separated values directly. Slice 2 V-7.
+   *
+   * Decimals (`12.5px`) preserved via parseFloat instead of parseInt — the
+   * old `parseInt` truncated `12.5` to `12`. Slice 2 V-9.
    */
   private parsePxValue(value: string): string | number {
     if (value.startsWith('var(')) return value
+    // Multi-value shorthand: keep as CSS string — the M-runtime understands
+    // `gap: '12px 8px'` literally, no need to convert to a single number.
+    if (/\s/.test(value.trim())) return value
     if (value.endsWith('px')) {
-      const num = parseInt(value)
+      const num = parseFloat(value)
       if (!isNaN(num)) return num
     }
     return value

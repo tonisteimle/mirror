@@ -408,6 +408,34 @@ function generateStyles(
   const style: Record<string, string | number> = {}
   const tokenMap = new Map<string, string | number | boolean>()
 
+  // Slice 2 V-6: chain-resolver follows `$ref` indirections recursively
+  // with a visited set (cycle-safe) and an 8-hop cap. Suffix-aware:
+  // when resolving `big.gap: $base`, candidates are `base.gap` first,
+  // `base` as fallback — matching the DOM-cascade semantics from Slice 24.
+  const resolveTokenChain = (
+    ownerName: string,
+    rawValue: string | number | boolean,
+    visited: Set<string> = new Set()
+  ): string | number | boolean => {
+    if (typeof rawValue !== 'string' || !rawValue.startsWith('$')) return rawValue
+    if (visited.has(ownerName) || visited.size >= 8) return rawValue
+    visited.add(ownerName)
+    const refName = rawValue.slice(1)
+    const dotIdx = ownerName.lastIndexOf('.')
+    const ownerSuffix = dotIdx >= 0 ? ownerName.slice(dotIdx) : ''
+    const candidates = ownerSuffix ? [refName + ownerSuffix, refName] : [refName]
+    for (const cand of candidates) {
+      const found = tokens.find(t => {
+        const n = t.name.startsWith('$') ? t.name.slice(1) : t.name
+        return n === cand
+      })
+      if (found?.value !== undefined) {
+        return resolveTokenChain(cand, found.value, visited)
+      }
+    }
+    return rawValue
+  }
+
   for (const token of tokens) {
     // Skip tokens without a value (data objects)
     if (token.value === undefined) continue
@@ -416,16 +444,10 @@ function generateStyles(
     const nameWithoutPrefix = token.name.startsWith('$') ? token.name.slice(1) : token.name
     const nameWithPrefix = '$' + nameWithoutPrefix
 
-    // Resolve nested token references in the value
-    let resolvedValue: string | number | boolean = token.value
-    if (typeof resolvedValue === 'string' && resolvedValue.startsWith('$')) {
-      const refName = resolvedValue.slice(1)
-      const found = tokens.find(t => {
-        const n = t.name.startsWith('$') ? t.name.slice(1) : t.name
-        return n === refName
-      })
-      if (found?.value !== undefined) resolvedValue = found.value
-    }
+    // Resolve nested token references — Slice 2 V-6: full suffix-aware chain.
+    // Was 1-hop without suffix; failed for `big.gap: $base` where `base.gap`
+    // is the actual target. Recursive resolver follows the chain transitively.
+    const resolvedValue = resolveTokenChain(nameWithoutPrefix, token.value)
 
     tokenMap.set(nameWithoutPrefix, resolvedValue)
     tokenMap.set(nameWithPrefix, resolvedValue)
@@ -450,9 +472,20 @@ function generateStyles(
   // Accepts already-suffixed values (`12px`, `100%`, `var(--…)`) verbatim,
   // and only px-ifies bare numerics.
   const NUMERIC_RE = /^-?\d+(?:\.\d+)?$/
+  // Slice 2 V-7: multi-value-aware. CSS shorthands like `pad 8 16` and
+  // `gap 12 8` (row-gap column-gap) hand multiple bare-numeric tokens through
+  // the pipeline as a space-joined string after the React loop joins
+  // `prop.values`. Each numeric part gets `px`-suffixed; non-numeric parts
+  // (already-suffixed `12px`, `var(--…)`, percent) pass through verbatim.
   const pxify = (v: string | number | boolean | object): string | number => {
     if (typeof v === 'number') return `${v}px`
-    if (typeof v === 'string' && NUMERIC_RE.test(v)) return `${v}px`
+    if (typeof v === 'string') {
+      const parts = v.split(/\s+/)
+      if (parts.length > 1 && parts.every(p => NUMERIC_RE.test(p))) {
+        return parts.map(p => `${p}px`).join(' ')
+      }
+      if (NUMERIC_RE.test(v)) return `${v}px`
+    }
     return v as string | number
   }
   // `propertyName` lets the resolver apply the same suffix-mapping the IR
@@ -528,7 +561,13 @@ function generateStyles(
       continue
     }
 
-    const rawValue = prop.values[0]
+    // Slice 2 V-7: multi-value-shorthand support — `pad 8 16` / `gap 12 8`
+    // arrive as `values: ["8", "16"]` / `["12", "8"]`; join them as a single
+    // space-separated string so `pxify` can multi-px-ify. Single values pass
+    // through unchanged (no array wrapping). Token references and the like
+    // are non-string objects — those bypass the join (only one value).
+    const allBareStrings = prop.values.length > 1 && prop.values.every(v => typeof v === 'string')
+    const rawValue = allBareStrings ? prop.values.join(' ') : prop.values[0]
     const value = resolve(rawValue, prop.name)
 
     switch (prop.name) {
@@ -574,6 +613,21 @@ function generateStyles(
       case 'gap':
       case 'g':
         style.gap = pxify(value)
+        break
+      // Slice 2 V-5: gap-x/gap-y were previously dropped silently — DOM
+      // emitted column-gap/row-gap correctly via the IR layout-transformer,
+      // React's switch-case had no entry. Designers writing `Frame hor,
+      // gap-x 16` saw the right preview in Studio (DOM) but the React
+      // export lost the property. Now both axes emit independently;
+      // CSS handles the merge with unified `gap` correctly (column-gap
+      // / row-gap override the unified gap per axis).
+      case 'gap-x':
+      case 'gx':
+        style.columnGap = pxify(value)
+        break
+      case 'gap-y':
+      case 'gy':
+        style.rowGap = pxify(value)
         break
       case 'pad':
       case 'padding':

@@ -233,10 +233,15 @@ describe('Layout: Gap edge cases', () => {
     expect(all[all.length - 1].value).toBe('12px')
   })
 
-  it('GA3: "Frame gap 4, gap-x 8" — gap-x wins, general gap suppressed (current behavior)', () => {
+  it('GA3: "Frame gap 4, gap-x 8" — gap-x wins for x-axis; gap stays for y-axis (Slice 2 V-5)', () => {
+    // Per Slice 2 V-5: emit BOTH unified gap and column-gap. CSS specificity
+    // applies — column-gap overrides gap on x-axis, unified gap remains the
+    // y-axis (row-gap) default. Wrap-grid layouts depend on this: with the
+    // old "suppress general gap when specific is set" behavior, wrap-Frames
+    // lost their row-gap silently.
     const code = 'Frame gap 4, gap-x 8'
     expect(findStyle(code, 'column-gap')?.value).toBe('8px')
-    expect(findStyle(code, 'gap')).toBeUndefined()
+    expect(findStyle(code, 'gap')?.value).toBe('4px')
   })
 })
 

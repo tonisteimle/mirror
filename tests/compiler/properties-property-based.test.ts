@@ -599,15 +599,18 @@ describe('Property-based: generateLayoutStyles', () => {
     )
   })
 
-  it('grid: specific column-gap/row-gap takes precedence over general gap', () => {
+  it('grid: column-gap overrides x-axis but unified gap stays for y-axis (Slice 2 V-5)', () => {
+    // Per Slice 2 V-5: emit BOTH unified gap and column-gap. CSS specificity
+    // handles the merge — column-gap wins x-axis, unified gap is the y-axis
+    // (row-gap) default. Without this, `grid 12, gap 10, gap-x 5` had no
+    // row-gap because the unified gap got dropped.
     const ctx = createLayoutContext()
     ctx.isGrid = true
     ctx.gap = '10px'
     ctx.columnGap = '5px'
     const styles = generateLayoutStyles(ctx, 'Frame')
     expect(styles.some(s => s.property === 'column-gap' && s.value === '5px')).toBe(true)
-    // when columnGap is set, general gap should not be emitted
-    expect(styles.some(s => s.property === 'gap' && s.value === '10px')).toBe(false)
+    expect(styles.some(s => s.property === 'gap' && s.value === '10px')).toBe(true)
   })
 
   it('applyAlignmentsToContext: last hor/ver wins for direction', () => {
