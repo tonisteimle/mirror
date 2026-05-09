@@ -13,6 +13,7 @@
 
 import type { IRNode, IRStateMachine, IRStateTransition, IRStateAnimation } from '../../ir/types'
 import type { StateMachineEmitterContext, DeferredWhenWatcher } from './base-emitter-context'
+import { isToggleableStateName } from '../../schema/parser-helpers'
 
 // Re-export for backwards compatibility
 export type { StateMachineEmitterContext, DeferredWhenWatcher } from './base-emitter-context'
@@ -51,12 +52,14 @@ function emitStateChildNested(
   // Set HTML properties
   for (const prop of node.properties) {
     if (prop.name === 'textContent') {
-      const value = typeof prop.value === 'string' ? `"${ctx.escapeString(prop.value)}"` : prop.value
+      const value =
+        typeof prop.value === 'string' ? `"${ctx.escapeString(prop.value)}"` : prop.value
       ctx.emit(`${varName}.textContent = ${value}`)
     } else if (prop.name === 'disabled' || prop.name === 'hidden') {
       ctx.emit(`${varName}.${prop.name} = ${prop.value}`)
     } else {
-      const value = typeof prop.value === 'string' ? `"${ctx.escapeString(String(prop.value))}"` : prop.value
+      const value =
+        typeof prop.value === 'string' ? `"${ctx.escapeString(String(prop.value))}"` : prop.value
       ctx.emit(`${varName}.setAttribute('${prop.name}', ${value})`)
     }
   }
@@ -107,12 +110,14 @@ function emitStateChild(ctx: StateMachineEmitterContext, node: IRNode, index: nu
   // Set HTML properties
   for (const prop of node.properties) {
     if (prop.name === 'textContent') {
-      const value = typeof prop.value === 'string' ? `"${ctx.escapeString(prop.value)}"` : prop.value
+      const value =
+        typeof prop.value === 'string' ? `"${ctx.escapeString(prop.value)}"` : prop.value
       ctx.emit(`${varName}.textContent = ${value}`)
     } else if (prop.name === 'disabled' || prop.name === 'hidden') {
       ctx.emit(`${varName}.${prop.name} = ${prop.value}`)
     } else {
-      const value = typeof prop.value === 'string' ? `"${ctx.escapeString(String(prop.value))}"` : prop.value
+      const value =
+        typeof prop.value === 'string' ? `"${ctx.escapeString(String(prop.value))}"` : prop.value
       ctx.emit(`${varName}.setAttribute('${prop.name}', ${value})`)
     }
   }
@@ -197,12 +202,20 @@ function emitStateMachineListeners(
       const animArg = t.animation ? `, ${serializeAnimation(t.animation)}` : ''
 
       if (t.modifier === 'toggle') {
-        // Check if this is multi-state cycle or binary toggle
-        // Multi-state: 2+ custom states (excluding 'default')
-        const customStates = Object.keys(sm.states).filter(s => s !== 'default')
-        if (customStates.length >= 2) {
-          // Multi-state cycle: use stateMachineToggle to cycle through states
-          ctx.emit(`_runtime.stateMachineToggle(${varName})`)
+        // Toggle path. Cycle order is decided at compile time using the
+        // schema-derived `isToggleableStateName` filter — runtime never
+        // gets to guess. (Slice 27 audit found three layers each picking
+        // their own filter; this is the single source of truth.)
+        const toggleableStates = Object.keys(sm.states).filter(name => {
+          const def = sm.states[name]
+          const hasStyles = !!def?.styles && def.styles.length > 0
+          return isToggleableStateName(name, hasStyles)
+        })
+        if (toggleableStates.length >= 2) {
+          // Multi-state cycle: pass the order explicitly so the runtime
+          // doesn't need its own schema knowledge.
+          const orderLiteral = toggleableStates.map(s => `'${s}'`).join(', ')
+          ctx.emit(`_runtime.stateMachineToggle(${varName}, [${orderLiteral}])`)
         } else {
           // Binary toggle: switch between target state and 'default'
           // Note: We use 'default' directly, not sm.initial, because initial
@@ -348,17 +361,25 @@ export function emitStateMachine(
   ctx.emit(`${varName}.dataset.state = '${effectiveInitial}'`)
 
   // Apply initial state styles
-  ctx.emit(`Object.assign(${varName}.style, ${varName}._stateMachine.states['${effectiveInitial}'].styles)`)
+  ctx.emit(
+    `Object.assign(${varName}.style, ${varName}._stateMachine.states['${effectiveInitial}'].styles)`
+  )
 
   // Apply initial state children if present (like Figma Variants)
   // Only call the factory if the initial state is NOT 'default'
   // When initial state is 'default', the children are rendered normally (not via factory)
   const initialStateDef = sm.states[effectiveInitial]
-  if (effectiveInitial !== 'default' && initialStateDef?.children && initialStateDef.children.length > 0) {
+  if (
+    effectiveInitial !== 'default' &&
+    initialStateDef?.children &&
+    initialStateDef.children.length > 0
+  ) {
     ctx.emit(`// Render initial state children`)
     ctx.emit(`{`)
     ctx.indentIn()
-    ctx.emit(`const _initStateChildren = ${varName}._stateMachine.states['${effectiveInitial}'].children()`)
+    ctx.emit(
+      `const _initStateChildren = ${varName}._stateMachine.states['${effectiveInitial}'].children()`
+    )
     ctx.emit(`for (const child of _initStateChildren) {`)
     ctx.indentIn()
     ctx.emit(`${varName}.appendChild(child)`)
@@ -399,8 +420,12 @@ export function emitWhenWatcher(
   }
 
   // Generate the check function
-  ctx.emit(`// When dependency: ${transition.to} when ${targets.map(t => `${t.target} ${t.state}`).join(` ${condition} `)}`)
-  ctx.emit(`_runtime.watchStates(${varName}, '${transition.to}', '${sm.initial}', '${condition}', [`)
+  ctx.emit(
+    `// When dependency: ${transition.to} when ${targets.map(t => `${t.target} ${t.state}`).join(` ${condition} `)}`
+  )
+  ctx.emit(
+    `_runtime.watchStates(${varName}, '${transition.to}', '${sm.initial}', '${condition}', [`
+  )
   ctx.indentIn()
   for (const t of targets) {
     ctx.emit(`{ target: '${t.target}', state: '${t.state}' },`)

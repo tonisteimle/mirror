@@ -1685,9 +1685,26 @@ const _runtime = {
   stateMachineToggle(el, stateOrder) {
     if (!el?._stateMachine) return
     const sm = el._stateMachine
-    // Get custom states (exclude 'default' and CSS pseudo-states)
-    // CSS pseudo-states are browser-triggered, not toggle targets
-    const cssStates = ['default', 'hover', 'focus', 'active', 'disabled']
+    // The compiler always passes an explicit stateOrder (Slice 27).
+    // This fallback list is a defensive default for direct callers and
+    // must mirror DSL.states with system:true — adding a new system
+    // state in the schema means adding it here too.
+    const cssStates = [
+      'default',
+      'hover',
+      'focus',
+      'focus-visible',
+      'focus-within',
+      'active',
+      'disabled',
+      'visited',
+      'checked',
+      'placeholder',
+      'placeholder-shown',
+      'first-child',
+      'last-child',
+      'empty',
+    ]
     const order = stateOrder || Object.keys(sm.states).filter(s => !cssStates.includes(s))
     if (order.length === 0) return
 

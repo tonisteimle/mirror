@@ -217,6 +217,39 @@ export const CUSTOM_STATES = new Set<string>(
     .map(([name]) => name)
 )
 
+/**
+ * System states that authors are allowed to *re-purpose* as custom toggle
+ * targets when they attach styles. `:active` (tabs, menu items) and
+ * `:disabled` (form-state UIs) are the historical exceptions; all other
+ * system states are CSS-only and never participate in `toggle()` cycles.
+ *
+ * The single decision point: is this state name a valid toggle target?
+ * `getToggleableStateName` is the answer; nothing else should hand-roll
+ * this filter.
+ */
+const SYSTEM_STATES_ALLOWED_AS_CUSTOM = new Set(['active', 'disabled'])
+
+/**
+ * Decide whether a state name should participate in `toggle()` / `cycle()` /
+ * multi-state cycle as a target.
+ *
+ *   - Custom states (`on`, `open`, `selected`, …) — always toggleable.
+ *   - System states (`hover`, `focus`, `visited`, `checked`, `placeholder`, …)
+ *     — NOT toggleable (they're browser-driven).
+ *   - `active` / `disabled` — toggleable IFF the author defined styles for
+ *     them (the legacy "I want a custom :active" carve-out).
+ *
+ * @param name   State name (e.g. `'on'`, `'visited'`)
+ * @param hasStyles `true` when the state has at least one styling property
+ *                  defined in the source. Used only for `active`/`disabled`.
+ */
+export function isToggleableStateName(name: string, hasStyles: boolean): boolean {
+  if (name === 'default') return false
+  if (!SYSTEM_STATES.has(name)) return true
+  if (SYSTEM_STATES_ALLOWED_AS_CUSTOM.has(name)) return hasStyles
+  return false
+}
+
 // ============================================================================
 // SIZE STATES - from DSL.sizeStates
 // ============================================================================

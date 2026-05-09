@@ -46,6 +46,7 @@ Vertikale, end2end prüfbare User-Fähigkeiten („Capability-Slices"). Jeder Sl
 | 25  | Property-Set-Token                   | erledigt                          | [03-slice-25-property-set-tokens.md](03-slice-25-property-set-tokens.md) |
 | 21  | Komponenten-Definition & -Verwendung | Phase A erledigt · B/C verschoben | [04-slice-21-komponenten.md](04-slice-21-komponenten.md)                 |
 | 26  | System-States                        | erledigt                          | [05-slice-26-system-states.md](05-slice-26-system-states.md)             |
+| 27  | Custom-State `toggle()`              | erledigt                          | [06-slice-27-toggle.md](06-slice-27-toggle.md)                           |
 
 ---
 

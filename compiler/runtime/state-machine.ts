@@ -111,7 +111,28 @@ export function toggleState(el: MirrorElement | null, state1: string, state2?: s
 // STATE MACHINE TOGGLE
 // ============================================
 
-const CSS_PSEUDO_STATES = ['default', 'hover', 'focus', 'active', 'disabled']
+// Defensive default for direct callers that don't pass a stateOrder.
+// The compiler always passes an explicit stateOrder (Slice 27 audit:
+// schema-derived filtering lives in the emitter, not in the runtime).
+// This list exists so test-API and ad-hoc callers don't accidentally
+// cycle through CSS pseudo-classes; it must mirror DSL.states with
+// `system: true` (compiler/schema/dsl.ts).
+const CSS_PSEUDO_STATES = [
+  'default',
+  'hover',
+  'focus',
+  'focus-visible',
+  'focus-within',
+  'active',
+  'disabled',
+  'visited',
+  'checked',
+  'placeholder',
+  'placeholder-shown',
+  'first-child',
+  'last-child',
+  'empty',
+]
 
 /**
  * Get custom states from state machine (excluding CSS pseudo-states)
