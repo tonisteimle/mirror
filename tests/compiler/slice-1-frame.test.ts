@@ -136,6 +136,34 @@ describe('Slice 1 — Frame primitive', () => {
     })
   })
 
+  describe('RT-13 — React-Backend emits Frame-default styles (Phase B.3)', () => {
+    it('bare Frame carries display/flex-direction/align-self/align-items', () => {
+      const tsx = generateReact(parse('Frame'))
+      expect(tsx).toContain('display:')
+      expect(tsx).toContain("'flex'")
+      expect(tsx).toContain('flexDirection:')
+      expect(tsx).toContain("'column'")
+      expect(tsx).toContain('alignSelf:')
+      expect(tsx).toContain("'stretch'")
+      expect(tsx).toContain('alignItems:')
+      expect(tsx).toContain("'flex-start'")
+    })
+
+    it('explicit `Frame hor` overrides flex-direction, keeps display flex', () => {
+      const tsx = generateReact(parse('Frame hor'))
+      // hor → flex-direction: row (overrides column default)
+      expect(tsx).toContain("flexDirection: 'row'")
+      // No vestigial column default after the override
+      expect(tsx).not.toContain("'column'")
+    })
+
+    it('user component (Btn) does NOT get Frame defaults — keeps explicit choices', () => {
+      const tsx = generateReact(parse('Btn: pad 10\nBtn "X"'))
+      // Btn uses heuristic to become <button>; no flex defaults injected
+      expect(tsx).not.toMatch(/<button[^>]*flexDirection/)
+    })
+  })
+
   describe('RT-5 — React-Backend skips content & emits Mirror data-* attributes', () => {
     it('Frame "hello" renders no JSX text child', () => {
       const tsx = generateReact(parse('Frame "hello"'))

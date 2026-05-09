@@ -85,12 +85,15 @@ describe('React Backend — Style object emission', () => {
     expect(out.toLowerCase()).toContain('#2271c1')
   })
 
-  it('Frame without props omits style attribute', () => {
+  it('Frame emits Frame-default flex styles', () => {
     const out = react(`Frame`)
-    // No style attribute on the bare Frame. Mirror data-* markers
-    // (data-component, data-mirror-name) are still emitted by the backend
-    // so studio tooling can resolve the element.
-    expect(out).not.toContain('style={')
+    // Bare Frame carries the same flex-column defaults the DOM backend
+    // gets via the IR transformer (Phase B.3 — Slice 1). Mirror data-*
+    // markers are also emitted so studio tooling can resolve the element.
+    expect(out).toContain('display:')
+    expect(out).toContain("'flex'")
+    expect(out).toContain('flexDirection:')
+    expect(out).toContain('data-component="Frame"')
     expect(out).toMatch(/<div\b[^>]*\/>/)
   })
 })

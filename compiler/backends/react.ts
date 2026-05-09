@@ -143,8 +143,11 @@ function generateJSX(
   // Merge properties: component defaults + instance overrides
   const allProps = [...expandedComp, ...expandedInst]
 
-  // Generate style object
-  const style = generateStyles(allProps, tokens)
+  // Generate style object. Layout primitives (Frame/Box and the table family)
+  // get the same flex-column defaults the DOM backend's IR transformer
+  // injects — without these the React render is an unstyled `<div />` while
+  // the DOM render is a properly-laid-out flex container.
+  const style = withLayoutDefaults(generateStyles(allProps, tokens), instance.component)
   const styleStr = Object.keys(style).length > 0 ? ` style={${formatStyleObject(style)}}` : ''
 
   // HTML attributes from properties (placeholder, type, href, src, etc.)
@@ -265,6 +268,33 @@ const HTML_ATTR_PROPS: Record<string, string> = {
   disabled: 'disabled',
   checked: 'defaultChecked',
   readonly: 'readOnly',
+}
+
+/**
+ * Merge Frame-default flex styles into the style object for layout primitives
+ * that don't already carry an explicit display rule. The DOM backend gets
+ * these for free via the IR transformer (see compiler/ir/transformers/
+ * property-transformer.ts) — the React backend bypasses the IR, so we have
+ * to prepend the same defaults here. User-component instances that resolve
+ * to a layout primitive (e.g. `Btn: pad 10`) keep the defaults too, so
+ * `<button>`-based components still flex-column unless they say otherwise.
+ *
+ * Skipped if the user has already set `display` (`hor`, `ver`, `center`,
+ * `grid`, etc. all set it) — those layouts are intentional choices.
+ */
+function withLayoutDefaults(
+  style: Record<string, string | number>,
+  componentName: string
+): Record<string, string | number> {
+  if (!isLayoutPrimitive(componentName)) return style
+  if (style.display !== undefined) return style
+  return {
+    display: 'flex',
+    flexDirection: 'column',
+    alignSelf: 'stretch',
+    alignItems: 'flex-start',
+    ...style,
+  }
 }
 
 /**
