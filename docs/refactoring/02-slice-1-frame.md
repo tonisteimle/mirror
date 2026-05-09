@@ -1,7 +1,7 @@
 # 02 — Slice 1: Frame-Container
 
 **Datum:** 2026-05-09
-**Status:** Audit erledigt · Umsetzung in Runden (Phasen A.1, A.2, A.3, A.4, A.5, A.6, B.1, B.2, B.3, B.5 fertig)
+**Status:** Audit erledigt · Umsetzung in Runden (Phasen A.1–A.6, B.1, B.2, B.3, B.5, C.1 fertig)
 
 ## Inhalt
 
@@ -256,10 +256,10 @@ Aus V-1 (Backend-No-Op-Pfad) + V-6 (React-Parität). Hängt teilweise von Phase 
 
 ## Phase C — Migration + Cleanup
 
-| ID  | Sub-Task                                                                            | Aufwand | Status |
-| --- | ----------------------------------------------------------------------------------- | ------- | ------ |
-| C.1 | `npm run validate examples/**` und Migration der gefundenen `Frame "..."`-Verstösse | M       | offen  |
-| C.2 | Migrations-Snippet in CHANGELOG (für externe Mirror-Files)                          | S       | offen  |
+| ID  | Sub-Task                                                                            | Aufwand | Status                                                                                                                                       |
+| --- | ----------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| C.1 | `npm run validate examples/**` und Migration der gefundenen `Frame "..."`-Verstösse | M       | erledigt — Scan über alle 21 example-Files: 0 W112-Violations, 0 W004-Violations. 2 E002 sind cross-file refs (Project-Mode), nicht Slice 1. |
+| C.2 | Migrations-Snippet in CHANGELOG (für externe Mirror-Files)                          | S       | offen — kein Bedarf in den eigenen Examples, aber externe Mirror-Files könnten Frame "..." nutzen; Snippet als kleiner Follow-up.            |
 
 Status-Werte: `offen` · `in-arbeit` · `review` · `erledigt` · `verworfen`.
 Aufwand: `S` (≤30min) · `M` (≤2h) · `L` (≤1d).
