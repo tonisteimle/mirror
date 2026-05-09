@@ -1,7 +1,12 @@
 # 09 — Slice 2: Vertical Stack (`gap N`)
 
 **Datum:** 2026-05-09
-**Status:** Audit erledigt · Umsetzung erledigt · Review-Pass erledigt
+**Status:** Phase 1 (V-1..V-4) erledigt · **Phase 2 (V-5..V-9) offen** — zweiter Probe-Pass deckt fünf zusätzliche Cross-Backend-Bugs auf (gap-x/gap-y in React+Framework, Chain in React, Shorthand)
+
+> **Honest update (Phase 2 audit, 2026-05-09):** Eine zweite Probe-Reihe gegen
+> den committed Stand (Phase 1, `67f108f2`) hat fünf weitere Cross-Backend-Bugs
+> aufgedeckt, die im ersten Pass nicht waren — siehe Sektion **5 — Phase 2 Findings**.
+> Quality-Gate (Step 8): Slice 2 ist nicht „fertig" bis V-5..V-9 zu sind.
 
 ## Inhalt
 
@@ -9,6 +14,7 @@
 2. [Entscheidungen](#2-entscheidungen)
 3. [Umsetzungsplan & Status](#3-umsetzungsplan--status)
 4. [Tests](#4-tests)
+5. [Phase 2 Findings (gap-x/gap-y + Chain + Shorthand)](#5-phase-2-findings)
 
 ---
 
@@ -155,3 +161,168 @@ Aus `/tmp/gap-probes.ts` (15 Fälle, alle drei Backends + Validator).
 | RT-10 | Component-Def-gap (Btn: gap 8) fliesst zu Use-Site (Btn "X") in DOM und React                    | compiler-unit | A     | erledigt |
 
 **Test-Status:** 29 Sub-Tests in `tests/compiler/slice-2-gap.test.ts`, alle grün. Vitest gesamt nach Slice 2: 14844 / 14867 (23 skipped, 0 failed).
+
+---
+
+# 5. Phase 2 Findings
+
+Phase 1 hat den `gap`-Pfad sauber durchgereicht — alle px-Properties haben jetzt
+korrekten React-Output, Suffix-Lookup, Decimal-px, Var-Pass-through. Aber der
+zweite Probe-Pass hat sechs **weitere** Cross-Backend-Defizite gefunden,
+die vom ersten Audit nicht erfasst waren. Honest disclosure per Quality-Gate
+(00-plan Schritt 8): solange diese offen sind, ist Slice 2 nicht „erledigt".
+
+## Probe-Tabelle (Phase 2)
+
+Fokus: `gap-x` / `gap-y` (column-gap / row-gap), Chain-Tokens in React, und
+das CSS-Multi-Value-Shorthand `gap N M`. Probe-Skript:
+`_slice2_recheck.ts` (post-Phase-1 state).
+
+| #   | Eingabe                                       | DOM                                | React                        | Framework                 | Verdikt                      |
+| --- | --------------------------------------------- | ---------------------------------- | ---------------------------- | ------------------------- | ---------------------------- |
+| B1  | `Frame hor, gap-x 16`                         | `column-gap: 16px` ✓               | **(nichts)**                 | **(nichts)**              | 🔴 B-1 React + B-2 Framework |
+| B2  | `Frame gap-y 24`                              | `row-gap: 24px` ✓                  | **(nichts)**                 | **(nichts)**              | 🔴 B-1 + B-2                 |
+| B3  | `Frame hor, gap 8, gap-x 16`                  | `column-gap: 16px` (gap-x wins)    | `gap: '8px'` (gap-x dropped) | **(nichts)**              | 🔴 B-3 (Mixed-Precedence)    |
+| B4  | `Frame hor, gx 12, gy 4` (Aliases)            | `column-gap: 12px, row-gap: 4px` ✓ | **(nichts)**                 | **(nichts)**              | 🔴 B-1 + B-2                 |
+| C2  | `Frame grid 12, gap-x 8, gap-y 16`            | `column-gap: 8px, row-gap: 16px` ✓ | **(nichts)**                 | **(nichts)**              | 🔴 B-1 + B-2                 |
+| D2  | `base.gap: 8; big.gap: $base; Frame gap $big` | `var(--big-gap)` (cascade) ✓       | `gap: '$base'` (literal!)    | `gap: 'var(--big-gap)'` ✓ | 🔴 B-4 (Chain in React)      |
+| E1  | `Frame gap 12 8` (Shorthand)                  | `gap: 12px 8px` ✓                  | `gap: '12px'` (truncated)    | `gap: 12` (truncated)     | 🔴 B-5 (Multi-Value)         |
+| E2  | `Frame gap 12.5` (Decimal)                    | `gap: 12.5px` ✓ (Phase 1)          | `gap: '12.5px'` ✓ (Phase 1)  | `gap: 12` (parseInt)      | 🟠 B-6 (Framework decimal)   |
+
+## Befunde
+
+- **B-1 (CRITICAL)**: React-Backend `generateStyles` switch-case
+  (`compiler/backends/react.ts:574-577`) hat nur `gap`/`g`. **Keine Cases für
+  `gap-x`/`gap-y`/`gx`/`gy`** — sie fallen durch die Switch und emittieren
+  nichts. Designer schreibt `Frame hor, gap-x 16`, sieht im Studio (DOM)
+  korrekten Abstand, exportiert nach React → der gap-x ist weg.
+- **B-2 (CRITICAL)**: Framework-Backend `compiler/backends/framework.ts:383`
+  hat denselben Pfad-Block wie React und mappt nur `gap`. Cross-Backend-Bruch
+  identisch.
+- **B-3 (HIGH)**: React's Property-Loop iteriert sequenziell durch die
+  Properties; bei `Frame hor, gap 8, gap-x 16` wird zuerst `gap: 8px`
+  gesetzt, dann `gap-x` ignoriert (kein Case). DOM hat die Precedence in
+  `layout-transformer.ts:457-467` (specific gap → general gap). React fehlt
+  diese Logik.
+- **B-4 (HIGH)**: Chain-Token-Resolution in React's `tokenMap`-Builder
+  (`compiler/backends/react.ts:419-428`) macht **nur 1-Hop OHNE Suffix-Match**.
+  Bei `big.gap: $base; base.gap: 8` sucht der Builder `base` (kein Suffix) —
+  findet nicht — bleibt `$base` literal. Die Phase-1 V-2-Reform (`lookupWithSuffix`)
+  fixed nur den Use-Site-Lookup, nicht den Chain-Build.
+- **B-5 (MED)**: `Frame gap 12 8` ist CSS-Shorthand für row-gap+column-gap
+  (`gap: <row-gap> <column-gap>`). DOM emittiert das korrekt. React/Framework
+  truncaten auf den ersten Wert (8 fällt verloren). Mirror-DSL erlaubt das
+  ausdrücklich für `pad N M`/`mar N M`/`bor N M N M` — `gap N M` sollte
+  konsistent funktionieren.
+- **B-6 (LOW)**: Framework `parsePxValue` macht `parseInt(value)` was Decimals
+  truncatet — `12.5` → `12`. Phase-1-V-3 (var(--…)-Pass-through) hat das nicht
+  abgedeckt. Niedrige Prio: Decimal-Spacing ist selten.
+
+## Verdikt pro Dimension (Phase 2)
+
+| #   | Dimension               | Vor Phase 1    | Nach Phase 1                                    | Nach Phase 2 (geplant)                                |
+| --- | ----------------------- | -------------- | ----------------------------------------------- | ----------------------------------------------------- |
+| 1   | Architektur             | schwach        | mittel — Helper-Konsolidierung in React         | gut — auch gap-x/gap-y schema-derived                 |
+| 2   | Codequalität            | mittel         | gut — pxify, lookupWithSuffix Helpers           | gut                                                   |
+| 3   | Testqualität            | schwach        | mittel — 29 RTs                                 | gut — +RT für gap-x/gap-y, Chain, Shorthand           |
+| 4   | Testabdeckung           | schwach        | schwach — gap-x/gap-y differential = 0          | gut — Cross-Backend-Differential für 13 px-Properties |
+| 5   | Funktionale Korrektheit | 4 Bugs         | 0 Bugs für `gap` core; 6 Bugs für gap-x/y/chain | 0 Bugs                                                |
+| 6   | Studio-Roundtrip        | n/a (DOM only) | n/a                                             | n/a (V-8 verschoben — eigener Studio-Slice)           |
+
+## Touchpoint-Map (Phase 2)
+
+| Layer             | Datei                                                 | Befund                                                         |
+| ----------------- | ----------------------------------------------------- | -------------------------------------------------------------- |
+| Backend-React     | `compiler/backends/react.ts:574-577`                  | switch-case nur `gap`/`g` — **gap-x/gap-y/gx/gy fehlen** (B-1) |
+| Backend-React     | `compiler/backends/react.ts:419-428` tokenMap-Build   | 1-Hop chain ohne Suffix-Match (B-4)                            |
+| Backend-React     | (neu) `pxify` Multi-Value-Aware                       | `'12 8'` → `'12px 8px'` (B-5)                                  |
+| Backend-Framework | `compiler/backends/framework.ts:383` property-mapper  | nur `gap`-Branch — **gap-x/gap-y fehlen** (B-2)                |
+| Backend-Framework | `compiler/backends/framework.ts:556-565` parsePxValue | `parseInt` truncatet decimal (B-6)                             |
+
+## Entscheidungen (Phase 2)
+
+### V-5 — `gap-x` / `gap-y` in React + Framework — **Status: offen**
+
+React `generateStyles` switch-case ergänzen:
+
+```ts
+case 'gap-x': case 'gx':
+  style.columnGap = pxify(value); break
+case 'gap-y': case 'gy':
+  style.rowGap = pxify(value); break
+```
+
+Framework property-mapper analog. Mixed-precedence (B-3): Reihenfolge
+respektieren; wenn `gap-x` nach `gap` kommt, überschreibt es nur die
+column-axis (NICHT den unified gap droppen).
+
+### V-6 — Chain-Resolution suffix-aware in React — **Status: offen**
+
+`tokenMap`-Builder muss bei `big.gap: $base` mit context `big.gap`:
+
+1. extrahiere Suffix: `.gap`
+2. suche `base.gap` zuerst (suffix-aware), `base` als Fallback
+3. rekursiv mit visited-Set, 8-Hop-Cap (Slice-78-Pattern)
+
+Ähnlich Slice 78 V-5 für den Picker-Parser, jetzt portiert ins React-Backend.
+
+### V-7 — Multi-Value Shorthand `gap N M` — **Status: offen**
+
+`pxify(value)` muss multi-value-aware werden — wenn `value` mehrere
+whitespace-getrennte Tokens enthält, jedes pxifizieren:
+
+```ts
+const pxify = v => {
+  if (typeof v === 'number') return `${v}px`
+  if (typeof v === 'string') {
+    const parts = v.split(/\s+/)
+    if (parts.every(p => NUMERIC_RE.test(p))) {
+      return parts.map(p => `${p}px`).join(' ')
+    }
+    if (NUMERIC_RE.test(v)) return `${v}px`
+  }
+  return v
+}
+```
+
+Cross-Slice-Probe: gilt auch für `pad`, `mar`, `bor` (alle erlauben Multi-Value).
+
+### V-8 — Studio-Surface für gap-x/gap-y — **Status: verschoben**
+
+Studio property-panel + visual gap-handles unterstützen kein gap-x/gap-y.
+Eigener Slice (Studio-Roundtrip-Erweiterung). Out-of-scope für Slice 2
+Compile-Layer.
+
+### V-9 — Framework `parsePxValue` decimal-aware — **Status: offen (low prio)**
+
+`parseInt(value)` durch `parseFloat(value)` ersetzen (oder Decimals als
+String durchreichen wie var(--…)).
+
+## Umsetzungsplan (Phase 2)
+
+| ID    | Sub-Task                                                                                   | Aus | Aufwand | Status |
+| ----- | ------------------------------------------------------------------------------------------ | --- | ------- | ------ |
+| 2-A.1 | React: `gap-x`/`gx` → `columnGap` + `gap-y`/`gy` → `rowGap` in `generateStyles`            | V-5 | S       | offen  |
+| 2-A.2 | React: Mixed-precedence — `gap-x` überschreibt nur column-axis, `gap` bleibt für row       | V-5 | S       | offen  |
+| 2-A.3 | Framework: gap-x/gap-y/gx/gy Branches in property-mapper                                   | V-5 | S       | offen  |
+| 2-B.1 | React: `resolveTokenChain(name, value, tokens, visited)` — suffix-aware, 8-hop, cycle-safe | V-6 | M       | offen  |
+| 2-B.2 | React: tokenMap-Builder ruft chain-resolver pro `value.startsWith('$')`                    | V-6 | S       | offen  |
+| 2-C.1 | React `pxify` multi-value-aware                                                            | V-7 | S       | offen  |
+| 2-C.2 | Framework `parsePxValue` multi-value-aware                                                 | V-7 | S       | offen  |
+| 2-D.1 | Framework `parsePxValue` decimal-aware                                                     | V-9 | S       | offen  |
+| 2-E.1 | RT-11..RT-15 in `tests/compiler/slice-2-gap.test.ts` ergänzen                              | -   | M       | offen  |
+| 2-E.2 | Cross-Backend-Differential für `gap-x`/`gap-y` (`tests/differential/layout.test.ts`)       | -   | S       | offen  |
+| 2-F.1 | Probe-Tabelle (Phase 2) Post-Fix-Spiegelung                                                | -   | S       | offen  |
+| 2-F.2 | Quality-Gate Status-Update (Audit + 00-plan)                                               | -   | S       | offen  |
+
+## Neue Tests (Phase 2)
+
+| ID    | Test                                                                                                        | Aus   | Status |
+| ----- | ----------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| RT-11 | React: `Frame hor, gap-x 16` → JSX style hat `columnGap: '16px'`                                            | 2-A.1 | offen  |
+| RT-12 | React: `Frame gap-y 24` + Aliases gx/gy                                                                     | 2-A.1 | offen  |
+| RT-13 | React: Mixed `gap 8, gap-x 16` → both `gap: '8px'` AND `columnGap: '16px'` (oder per Konsens nur columnGap) | 2-A.2 | offen  |
+| RT-14 | React: `base.gap: 8; big.gap: $base; Frame gap $big` → `gap: '8px'` (Chain resolved)                        | 2-B.1 | offen  |
+| RT-15 | React + Framework: `Frame gap 12 8` → `gap: '12px 8px'` (Multi-Value)                                       | 2-C.1 | offen  |
+| RT-16 | Framework: gap-x/gap-y emittieren                                                                           | 2-A.3 | offen  |
+| RT-17 | Differential: alle Phase-2-Probes DOM ≡ React (oder dokumentierte Abweichung mit Begründung)                | 2-E.2 | offen  |

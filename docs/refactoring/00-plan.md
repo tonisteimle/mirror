@@ -48,18 +48,18 @@ Vertikale, end2end prüfbare User-Fähigkeiten („Capability-Slices"). Jeder Sl
 
 ## Audit-Status
 
-| #   | Slice                                | Status                                                     | Dokument                                                                 |
-| --- | ------------------------------------ | ---------------------------------------------------------- | ------------------------------------------------------------------------ |
-| 24  | Single-Value-Token                   | erledigt                                                   | [01-slice-24-tokens.md](01-slice-24-tokens.md)                           |
-| 1   | Frame-Container                      | erledigt                                                   | [02-slice-1-frame.md](02-slice-1-frame.md)                               |
-| 25  | Property-Set-Token                   | erledigt                                                   | [03-slice-25-property-set-tokens.md](03-slice-25-property-set-tokens.md) |
-| 21  | Komponenten-Definition & -Verwendung | Phase A erledigt · B/C verschoben                          | [04-slice-21-komponenten.md](04-slice-21-komponenten.md)                 |
-| 26  | System-States                        | DOM+Sync erledigt · Browser-CDP+Studio-Roundtrip offen     | [05-slice-26-system-states.md](05-slice-26-system-states.md)             |
-| 27  | Custom-State `toggle()`              | DOM+Sync erledigt · Browser-CDP+Studio-Roundtrip offen     | [06-slice-27-toggle.md](06-slice-27-toggle.md)                           |
-| 78  | Token-Picker (Studio)                | erledigt                                                   | [07-slice-78-token-picker.md](07-slice-78-token-picker.md)               |
-| 29  | `exclusive()`                        | DOM+Sync erledigt · Browser-CDP+Studio-Roundtrip offen     | [08-slice-29-exclusive.md](08-slice-29-exclusive.md)                     |
-| 28  | Multi-State-Cycle                    | Compile+Sync erledigt · Browser-CDP+Studio-Roundtrip offen | [10-slice-28-multi-state-cycle.md](10-slice-28-multi-state-cycle.md)     |
-| 2   | Vertical Stack (`gap N`)             | erledigt                                                   | [09-slice-2-vertical-stack.md](09-slice-2-vertical-stack.md)             |
+| #   | Slice                                | Status                                                                               | Dokument                                                                 |
+| --- | ------------------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| 24  | Single-Value-Token                   | erledigt                                                                             | [01-slice-24-tokens.md](01-slice-24-tokens.md)                           |
+| 1   | Frame-Container                      | erledigt                                                                             | [02-slice-1-frame.md](02-slice-1-frame.md)                               |
+| 25  | Property-Set-Token                   | erledigt                                                                             | [03-slice-25-property-set-tokens.md](03-slice-25-property-set-tokens.md) |
+| 21  | Komponenten-Definition & -Verwendung | Phase A erledigt · B/C verschoben                                                    | [04-slice-21-komponenten.md](04-slice-21-komponenten.md)                 |
+| 26  | System-States                        | DOM+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                               | [05-slice-26-system-states.md](05-slice-26-system-states.md)             |
+| 27  | Custom-State `toggle()`              | DOM+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                               | [06-slice-27-toggle.md](06-slice-27-toggle.md)                           |
+| 78  | Token-Picker (Studio)                | erledigt                                                                             | [07-slice-78-token-picker.md](07-slice-78-token-picker.md)               |
+| 29  | `exclusive()`                        | DOM+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                               | [08-slice-29-exclusive.md](08-slice-29-exclusive.md)                     |
+| 28  | Multi-State-Cycle                    | Compile+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                           | [10-slice-28-multi-state-cycle.md](10-slice-28-multi-state-cycle.md)     |
+| 2   | Vertical Stack (`gap N`)             | Phase 1 (V-1..V-4) erledigt · Phase 2 (gap-x/gap-y, Chain in React, Shorthand) offen | [09-slice-2-vertical-stack.md](09-slice-2-vertical-stack.md)             |
 
 ---
 
