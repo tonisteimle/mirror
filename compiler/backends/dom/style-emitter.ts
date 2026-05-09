@@ -7,7 +7,11 @@
 
 import type { IRNode, IRStyle, IRToken } from '../../ir/types'
 import { generateTheme, isThemeToken } from '../../schema/theme-generator'
-import { getSizeStateThresholds, SIZE_STATES } from '../../schema/parser-helpers'
+import {
+  getSizeStateThresholds,
+  SIZE_STATES,
+  SYSTEM_STATES as SCHEMA_SYSTEM_STATES,
+} from '../../schema/parser-helpers'
 import {
   needsPxUnit as needsPxUnitFromSchema,
   tokenToCSSVarName as tokenToCSSVarNameFromSchema,
@@ -125,28 +129,64 @@ function groupBySizeState(styles: IRStyle[]): Record<string, IRStyle[]> {
 // SYSTEM STATE CSS
 // ============================================
 
-const SYSTEM_STATES = ['hover', 'focus', 'active', 'disabled']
+// Schema is the single source of truth (compiler/schema/dsl.ts → states with
+// system: true). Hardcoding here would silently drop new system-states added
+// to the schema (Slice 26 audit found exactly this drift).
+const SYSTEM_STATES = SCHEMA_SYSTEM_STATES
+
+// Selector-form per state. CSS distinguishes three concepts:
+//   - pseudo-class  → `:hover`, `:focus`, `:focus-visible`, `:checked`, ...
+//   - attribute     → `[disabled]` (matches the HTML attribute, not :disabled
+//                     pseudo-class — gives Mirror authors symmetry with how
+//                     forms handle the disabled attribute)
+//   - pseudo-element → `::placeholder` (styles a sub-part of the element)
+const ATTRIBUTE_STATES = new Set(['disabled'])
+const PSEUDO_ELEMENT_STATES = new Set(['placeholder'])
+
+// `:hover`, `:focus`, `:active` don't fire reliably under headless Chrome /
+// jsdom, so the runtime sets `data-{state}="true"` programmatically and we
+// emit a paired attribute selector. Passive states (visited, checked,
+// structural) don't need this — they're either browser-history (visited),
+// form-state (checked), or layout-derived (first/last/empty).
+const PROGRAMMATIC_FALLBACK_STATES = new Set(['hover', 'focus', 'active'])
+
+/**
+ * Build the CSS selectors for a given system-state on a given node.
+ * Returns one or two selectors (joined by `,` when emitting).
+ */
+function selectorsForSystemState(nodeId: string, state: string): string[] {
+  const base = `[data-mirror-id="${nodeId}"]`
+
+  if (PSEUDO_ELEMENT_STATES.has(state)) {
+    return [`${base}::${state}`]
+  }
+  if (ATTRIBUTE_STATES.has(state)) {
+    return [`${base}[${state}]`]
+  }
+
+  const primary = `${base}:${state}`
+  if (PROGRAMMATIC_FALLBACK_STATES.has(state)) {
+    return [primary, `${base}[data-${state}="true"]`]
+  }
+  return [primary]
+}
 
 /**
  * Emit CSS for a single node's system states
  */
 function emitNodeStateCSS(ctx: StyleEmitterContext, node: IRNode): void {
-  const stateStyles = node.styles.filter(s => s.state && SYSTEM_STATES.includes(s.state))
+  const stateStyles = node.styles.filter(s => s.state && SYSTEM_STATES.has(s.state))
 
   if (stateStyles.length > 0) {
     const byState = groupByState(stateStyles)
 
     for (const [state, styles] of Object.entries(byState)) {
-      const pseudoClass = state === 'disabled' ? '[disabled]' : `:${state}`
+      const selectors = selectorsForSystemState(node.id, state)
       ctx.emit('')
-      // For focus/hover/active, also add attribute selector for headless browser support
-      // In headless Chrome, :focus doesn't work but data-focus="true" does
-      if (state === 'focus' || state === 'hover' || state === 'active') {
-        ctx.emit(`[data-mirror-id="${node.id}"]${pseudoClass},`)
-        ctx.emit(`[data-mirror-id="${node.id}"][data-${state}="true"] {`)
-      } else {
-        ctx.emit(`[data-mirror-id="${node.id}"]${pseudoClass} {`)
+      for (let i = 0; i < selectors.length - 1; i++) {
+        ctx.emit(`${selectors[i]},`)
       }
+      ctx.emit(`${selectors[selectors.length - 1]} {`)
       ctx.indentIn()
       for (const style of styles) {
         ctx.emit(`${style.property}: ${style.value} !important;`)
