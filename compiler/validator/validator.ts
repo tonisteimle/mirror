@@ -164,6 +164,28 @@ export class Validator {
           component.column
         )
       }
+      // Empty definition: `Btn:` with no properties, children, states, events,
+      // no `as`-inheritance and no `extends` gives the component no semantic
+      // content beyond a flex-column <div>. Almost certainly a mistake
+      // (interrupted edit, leftover from a refactor, or AI hallucination).
+      // `as Primitive` sets `component.primitive` away from the default
+      // 'Frame' — that's a semantic narrowing and counts as content.
+      const isEmpty =
+        (component.properties?.length ?? 0) === 0 &&
+        (component.children?.length ?? 0) === 0 &&
+        (component.states?.length ?? 0) === 0 &&
+        (component.events?.length ?? 0) === 0 &&
+        !component.extends &&
+        (!component.primitive || component.primitive === 'Frame')
+      if (isEmpty) {
+        this.addWarning(
+          ERROR_CODES.EMPTY_COMPONENT_DEFINITION,
+          `Component "${component.name}" has an empty definition`,
+          component.line,
+          component.column,
+          'Add properties, children, or `as <Primitive>` — or remove the definition.'
+        )
+      }
       userDefined.add(component.name)
       this.definedComponents.add(component.name)
       // Track definition location for unused warnings
@@ -909,12 +931,25 @@ export class Validator {
           ...this.rules.validPrimitives,
           ...this.rules.primitiveAliases.keys(),
         ])
+        // If the name starts lowercase but matches a Pascal-Case component
+        // or primitive when capitalised, the user almost certainly forgot
+        // the casing. Surface that as the suggestion.
+        let hint = suggestion ? `Did you mean "${suggestion}"?` : undefined
+        if (!hint && name.length > 0 && name[0] === name[0].toLowerCase()) {
+          const capitalised = name[0].toUpperCase() + name.slice(1)
+          if (
+            this.definedComponents.has(capitalised) ||
+            this.rules.validPrimitives.has(capitalised.toLowerCase())
+          ) {
+            hint = `Did you mean "${capitalised}"? (Component names are Pascal-Case.)`
+          }
+        }
         this.addError(
           ERROR_CODES.UNDEFINED_COMPONENT,
           `Component "${name}" is not defined`,
           pos.line,
           pos.column,
-          suggestion ? `Did you mean "${suggestion}"?` : undefined
+          hint
         )
       }
     }
@@ -1068,12 +1103,19 @@ export class Validator {
   }
 
   /**
-   * Check for duplicate property definitions
+   * Check for duplicate property definitions.
+   *
+   * `propset` is a parser-internal property name produced for `$cardstyle`-
+   * style references. Multi-spread (`Frame $a, $b`) is documented Mirror
+   * syntax — both refs land as separate `propset` properties, expanded by the
+   * IR. Treating them as a duplicate would fire on every documented multi-
+   * spread.
    */
   private checkDuplicateProperties(properties: Property[]): void {
     const seen = new Map<string, Property>()
 
     for (const prop of properties) {
+      if (prop.name === 'propset') continue
       const name = prop.name.toLowerCase()
       const existing = seen.get(name)
 

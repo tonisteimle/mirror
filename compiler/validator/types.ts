@@ -136,6 +136,7 @@ export const ERROR_CODES = {
   UNUSED_TOKEN: 'W501',
   INVALID_TOKEN_TYPE: 'W502',
   UNUSED_COMPONENT: 'W503',
+  EMPTY_COMPONENT_DEFINITION: 'W504',
 
   // Structure (E6xx)
   INVALID_NESTING: 'E600',
@@ -144,4 +145,4 @@ export const ERROR_CODES = {
   DUPLICATE_DEFINITION: 'E603',
 } as const
 
-export type ErrorCode = typeof ERROR_CODES[keyof typeof ERROR_CODES]
+export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES]
