@@ -13,6 +13,8 @@
  *   - RT-2  Box ≡ Frame at the DOM-emit level (modulo data-component)
  *   - RT-3  `Frame "hello"` (and Box / Spacer) emits validator W112
  *   - RT-4  DOM-Backend skips innerHTML for direct layout-primitive use
+ *   - RT-6  lowercase / non-canonical primitive name canonicalised + W004 warn
+ *   - RT-7  Top-level unknown component emits E002
  *   - RT-8  lowercase non-state child does not silently fold to initialState
  *   - RT-9  DSL state name still folds to initialState
  *   - RT-10 Frame name X emits dataset.mirrorName exactly once (Phase B.5)
@@ -130,6 +132,46 @@ describe('Slice 1 — Frame primitive', () => {
     it('user component (Btn "Speichern") still emits innerHTML — slot/template pattern', () => {
       const js = compileToCreateUI('Btn: pad 10 20\nBtn "Speichern"')
       expect(js).toMatch(/node_\d+\.innerHTML\s*=\s*formatInlineMarkdown/)
+    })
+  })
+
+  describe('RT-6 — primitive name canonicalisation + W004 casing warning', () => {
+    it('lowercase `frame` is canonicalised to `Frame` in AST, emits W004 warn', () => {
+      const ast = parse('frame')
+      const inst = ast.instances[0]!
+      expect(inst.component).toBe('Frame')
+      expect(inst.originalName).toBe('frame')
+
+      const result = validate('frame')
+      expect(result.warnings ?? []).toHaveLength(1)
+      expect(result.warnings?.[0]?.code).toBe('W004')
+    })
+
+    it('uppercase `BOX` is canonicalised to alias-canonical `Box`, emits W004', () => {
+      const ast = parse('BOX')
+      const inst = ast.instances[0]!
+      expect(inst.component).toBe('Box')
+      expect(inst.originalName).toBe('BOX')
+
+      const result = validate('BOX')
+      expect(result.warnings?.[0]?.code).toBe('W004')
+    })
+
+    it('canonical `Frame` and `Box` carry no `originalName` and no W004', () => {
+      for (const src of ['Frame', 'Box']) {
+        const ast = parse(src)
+        expect(ast.instances[0]?.originalName).toBeUndefined()
+        const result = validate(src)
+        expect(result.warnings?.filter(w => w.code === 'W004')).toHaveLength(0)
+      }
+    })
+  })
+
+  describe('RT-7 — top-level unknown component emits E002', () => {
+    it('`unknown` is not canonicalised and surfaces E002', () => {
+      const result = validate('unknown')
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === 'E002')).toBe(true)
     })
   })
 

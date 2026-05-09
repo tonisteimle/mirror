@@ -428,6 +428,20 @@ export class Validator {
     // 2. The DROP operation correctly sets alignment on parent (via parentProperty)
     // 3. Existing code with child alignment should still work (backward compat)
 
+    // Casing: parser canonicalised the primitive name (`frame` → `Frame`)
+    // and stashed the user's spelling on `originalName`. Surface a warning
+    // so the editor underlines the typo, but keep the AST canonical so the
+    // backends don't have to lowercase-compare on every node.
+    if (instance.originalName) {
+      this.addWarning(
+        ERROR_CODES.PRIMITIVE_CASING,
+        `Primitive "${instance.originalName}" should be "${instance.component}" (PascalCase).`,
+        instance.line,
+        instance.column,
+        instance.component
+      )
+    }
+
     // Layout primitives don't render `content` — `Frame "hi"` etc. are
     // a no-op visually but a real DSL violation. Warn so the editor
     // surfaces the smell; backends still skip the render (Phase B.1).

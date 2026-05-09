@@ -24,7 +24,7 @@ import {
   STATE_MODIFIERS,
   EVENT_NAMES,
 } from '../../schema/parser-helpers'
-import { isPrimitive } from '../../schema/dsl'
+import { isPrimitive, canonicalPrimitiveName } from '../../schema/dsl'
 import { isZagPrimitive } from '../../schema/zag-primitives'
 import { getChartSlot } from '../../schema/chart-primitives'
 import type { ChartSlotNode } from '../ast'
@@ -252,9 +252,17 @@ export function parseInstance(this: Parser, name: Token): Instance | Slot | ZagN
     return this.parseZagComponentWithContext(name)
   }
 
+  // Canonicalise primitive names: `frame` / `BOX` → `Frame` / `Box`. The
+  // AST always carries the canonical spelling so backends and the
+  // validator don't need to lowercase-compare. The original spelling is
+  // preserved on `originalName` so the validator can flag casing
+  // violations against the canonical form.
+  const canonical = canonicalPrimitiveName(name.value)
+  const componentName = canonical ?? name.value
+
   const instance: Instance = {
     type: 'Instance',
-    component: name.value,
+    component: componentName,
     name: null,
     properties: [],
     children: [],
@@ -262,6 +270,9 @@ export function parseInstance(this: Parser, name: Token): Instance | Slot | ZagN
     events: [],
     line: name.line,
     column: name.column,
+  }
+  if (canonical && canonical !== name.value) {
+    instance.originalName = name.value
   }
 
   // Named instance: Component named instanceName

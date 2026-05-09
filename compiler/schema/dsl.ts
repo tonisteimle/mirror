@@ -601,6 +601,31 @@ export function isLayoutPrimitive(name: string): boolean {
 }
 
 /**
+ * Return the canonical PascalCase spelling of a primitive (or alias) name,
+ * or `undefined` if it isn't a primitive. `frame` → `Frame`, `box` → `Box`,
+ * `IMG` → `Img`. Aliases keep their own canonical casing — `box` does not
+ * collapse into `Frame`, because the AST still carries `data-component="Box"`.
+ */
+export function canonicalPrimitiveName(name: string): string | undefined {
+  // Direct PascalCase hit
+  if (DSL.primitives[name]) return name
+
+  // Case-folded primitive lookup
+  const lower = name.toLowerCase()
+  for (const key of Object.keys(DSL.primitives)) {
+    if (key.toLowerCase() === lower) return key
+  }
+
+  // Alias lookup — return the alias's canonical spelling, not the primitive's.
+  for (const prim of Object.values(DSL.primitives)) {
+    const alias = prim.aliases?.find(a => a.toLowerCase() === lower)
+    if (alias) return alias
+  }
+
+  return undefined
+}
+
+/**
  * Get primitive definition. Follows aliases — `getPrimitiveDef('Box')`
  * returns the Frame definition.
  */

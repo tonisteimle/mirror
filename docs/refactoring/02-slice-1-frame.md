@@ -1,7 +1,7 @@
 # 02 — Slice 1: Frame-Container
 
 **Datum:** 2026-05-09
-**Status:** Audit erledigt · Umsetzung in Runden (Phasen A.1, A.2, A.4, A.5, B.1, B.5 fertig)
+**Status:** Audit erledigt · Umsetzung in Runden (Phasen A.1, A.2, A.3, A.4, A.5, B.1, B.5 fertig)
 
 ## Inhalt
 
@@ -237,7 +237,7 @@ Voraussetzung für alles weitere. Aus V-1, V-2, V-3, V-4, V-7.
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | A.1 | DSL-Schema: pro Primitive deklarieren ob `content` zulässig ist. Frame/Box/Spacer/Divider/Table-Familie: `content: false`. Section/Header/Nav/Main/Article/Aside/Footer dual-use als Slot-Namen → bewusst NICHT geflaggt (würde `Card: \n  Header: ...` brechen). | M       | erledigt — `PrimitiveDef.content` + `isLayoutPrimitive(name)`                                                                  |
 | A.2 | Validator-Pass: `content` auf Layout-Primitive → Warn (V-1)                                                                                                                                                                                                       | S       | erledigt — `W112 CONTENT_ON_LAYOUT` in `validateInstance`                                                                      |
-| A.3 | Parser: Component-Namen canonicalisieren auf Pascal-Case in AST; Validator-Warn bei Casing-Verstoss (V-2)                                                                                                                                                         | M       | offen                                                                                                                          |
+| A.3 | Parser: Component-Namen canonicalisieren auf Pascal-Case in AST; Validator-Warn bei Casing-Verstoss (V-2)                                                                                                                                                         | M       | erledigt — `canonicalPrimitiveName()` + `Instance.originalName`; Validator-Warn `W004 PRIMITIVE_CASING`                        |
 | A.4 | Validator: Top-Level Instance ohne bekannten Component-Namen → E002 zuverlässig feuern (V-3)                                                                                                                                                                      | S       | erledigt — funktionierte bereits, Audit-Probe-#9 falsch dokumentiert                                                           |
 | A.5 | Parser: Single-Word-Child gegen State-Token-Liste prüfen, sonst nicht in `initialState` konsumieren (V-4)                                                                                                                                                         | M       | erledigt — STATE_NAMES-Gate in `parseInstanceBody`; impliziter `onclick`-Pfad ergänzt (Tutorial 08, Bsp. 8 funktioniert jetzt) |
 | A.6 | Tutorial-Update: Frame-Default-Styles dokumentieren (V-7)                                                                                                                                                                                                         | S       | offen                                                                                                                          |
@@ -294,8 +294,8 @@ Aufwand: `S` (≤30min) · `M` (≤2h) · `L` (≤1d).
 | RT-3  | `Frame "hello"` löst Validator-Warn `W112` aus (Box / Spacer ebenfalls; User-Komponente `Btn "X"` NICHT)                      | validator                 | A.2          | erledigt |
 | RT-4  | `Frame "hello"` rendert KEIN `innerHTML` im DOM-Backend; `Text "X"` / `Btn "X"` weiterhin schon                               | compiler-unit             | B.1          | erledigt |
 | RT-5  | `Frame "hello"` rendert KEIN content im React-Backend (kein `{"hello"}`)                                                      | compiler-unit             | B.1          | offen    |
-| RT-6  | `frame` (lowercase) löst Validator-Warn aus, Parser canonicalisiert auf `Frame` in AST                                        | validator + compiler-unit | A.3          | offen    |
-| RT-7  | `unknown` (kein Primitive, keine Component-Definition) löst E002 aus                                                          | validator                 | A.4          | offen    |
+| RT-6  | `frame` / `BOX` löst `W004` aus; Parser canonicalisiert auf `Frame` / `Box`; `originalName` hält das Original                 | validator + compiler-unit | A.3          | erledigt |
+| RT-7  | `unknown` (kein Primitive, keine Component-Definition) löst E002 aus                                                          | validator                 | A.4          | erledigt |
 | RT-8  | `Frame\n  unknown` / `Frame\n  todo` werden NICHT als initialState konsumiert; Validator feuert E002 für `unknown`            | validator + compiler-unit | A.5          | erledigt |
 | RT-9  | `Frame\n  open/closed/selected/expanded/collapsed/on` setzt `initialState` korrekt — Gate darf DSL-State-Tokens nicht brechen | compiler-unit             | A.5          | erledigt |
 | RT-10 | `Frame name MyFrame` emittiert `data-mirror-name="MyFrame"` GENAU EINMAL                                                      | compiler-unit             | B.5          | erledigt |

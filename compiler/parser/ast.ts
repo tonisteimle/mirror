@@ -203,6 +203,13 @@ export interface ComponentDefinition extends BaseNode {
 export interface Instance extends BaseNode {
   type: 'Instance'
   component: string
+  /**
+   * The user's original spelling, when it differs from the canonical
+   * primitive name. `frame` / `BOX` get canonicalised to `Frame` / `Box`
+   * in `component`; the original lives here so the validator can warn
+   * about casing without re-doing the lookup.
+   */
+  originalName?: string
   name: string | null // named instance
   properties: Property[]
   states?: State[] // inline states: "hover: bg light"
