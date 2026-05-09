@@ -28,7 +28,13 @@ import { ZAG_RUNTIME } from './parts/zag-runtime'
 // emitted runtime — no hand-sync.
 import { PROP_MAP } from '../../../runtime/dom-runtime'
 import { ALIGN_MAP } from '../../../runtime/alignment'
-import { FALLBACK_ICON, LUCIDE_CDN, sanitizeIconName, sanitizeSVG } from '../../../runtime/icons'
+import {
+  FALLBACK_ICON,
+  LUCIDE_CDN,
+  applyIconToElement,
+  sanitizeIconName,
+  sanitizeSVG,
+} from '../../../runtime/icons'
 import { formatInlineMarkdown } from '../../../runtime/inline-markdown'
 import {
   resolveElement,
@@ -135,6 +141,11 @@ export function stamp(fn: { toString(): string }): string {
 // as the typed module that has dedicated unit tests.
 const SANITIZE_ICON_NAME_SRC = stamp(sanitizeIconName)
 const SANITIZE_SVG_SRC = stamp(sanitizeSVG)
+// applyIconToElement is the canonical "apply fetched SVG to host element"
+// helper. Stamping it lets the runtime template's loadIcon call a single
+// source instead of carrying an inline duplicate that previously drifted
+// (the `var(--foo)px` bug existed in both copies and had to be fixed twice).
+const APPLY_ICON_TO_ELEMENT_SRC = stamp(applyIconToElement)
 const FORMAT_INLINE_MARKDOWN_SRC = stamp(formatInlineMarkdown)
 
 // Stamp the typed scroll helpers. resolveElement is the shared lookup;
@@ -263,9 +274,10 @@ export const DOM_RUNTIME_CODE = `
 // themselves; this only masks the build-tool helper.)
 function __name(fn, _name) { return fn }
 
-// Security helpers (stamped from compiler/runtime/icons.ts via .toString())
+// Icon helpers (stamped from compiler/runtime/icons.ts via .toString()).
 ${SANITIZE_ICON_NAME_SRC}
 ${SANITIZE_SVG_SRC}
+${APPLY_ICON_TO_ELEMENT_SRC}
 
 // Inline-markdown formatter (stamped from compiler/runtime/inline-markdown.ts).
 // Converts \`**bold**\` and \`*italic*\` inside Text content to <strong>/<em>.
@@ -1962,10 +1974,6 @@ ${ZAG_RUNTIME}
     const safeName = sanitizeIconName(iconName)
     if (!safeName) return
     iconName = safeName
-    const size = el.dataset.iconSize || '16'
-    const color = el.dataset.iconColor || 'currentColor'
-    const strokeWidth = el.dataset.iconWeight || '2'
-    const isFilled = el.dataset.iconFill === 'true'
 
     // Custom icons (via $icons:) take precedence over Lucide
     const custom = this._customIcons.get(iconName)
@@ -1976,7 +1984,13 @@ ${ZAG_RUNTIME}
         .filter(p => p.length > 0)
         .map(d => \`<path d="\${d}"/>\`)
         .join('')
-      el.innerHTML = \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="\${custom.viewBox}" fill="\${isFilled ? 'currentColor' : 'none'}" stroke="\${isFilled ? 'none' : 'currentColor'}" stroke-width="\${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" style="width:\${size}px;height:\${size}px;color:\${color};display:block;">\${paths}</svg>\`
+      // Build a minimal SVG (no inline width/height/color — those would
+      // clash with CSS-var values like \`var(--hero-is)\`) and let
+      // applyIconToElement size/colour it from the host's data-icon-*
+      // attributes, exactly like the Lucide path. Same source of truth for
+      // both code paths.
+      const svgText = \`<svg xmlns="http://www.w3.org/2000/svg" viewBox="\${custom.viewBox}" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">\${paths}</svg>\`
+      applyIconToElement(el, svgText)
       return
     }
 
@@ -1998,30 +2012,10 @@ ${ZAG_RUNTIME}
       }
     }
 
-    el.innerHTML = svgText
-    const svg = el.querySelector('svg')
-    if (svg) {
-      // Bare numbers get a px suffix; CSS-var refs and 1.5rem etc. pass
-      // through. Without this, is $hero -> size = "var(--hero-is)" produced
-      // width: "var(--hero-is)px" which CSS rejects, so the SVG stayed at
-      // its 24px intrinsic size.
-      let isBareNum = size.length > 0
-      for (let i = 0; i < size.length && isBareNum; i++) {
-        const c = size.charCodeAt(i)
-        if (!((c >= 48 && c <= 57) || c === 46)) isBareNum = false
-      }
-      const cssSize = isBareNum ? size + 'px' : size
-      svg.style.width = cssSize
-      svg.style.height = cssSize
-      svg.style.color = color
-      svg.style.display = 'block'
-      if (isFilled) {
-        svg.setAttribute('fill', 'currentColor')
-        svg.setAttribute('stroke', 'none')
-      } else {
-        svg.setAttribute('stroke-width', strokeWidth)
-      }
-    }
+    // applyIconToElement is stamped from compiler/runtime/icons.ts. It
+    // sets innerHTML, sizes the SVG (handling raw numbers vs. CSS-var
+    // values) and applies fill/stroke from the host's data-icon-* attrs.
+    applyIconToElement(el, svgText)
   },
 
   async _fetchIcon(iconName) {

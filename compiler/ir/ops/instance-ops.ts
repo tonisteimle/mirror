@@ -284,7 +284,7 @@ export function transformInstance(
   }
 
   // Get primitive defaults and convert to Property format
-  const primitiveDefaults = convertDefaultsToProperties(getPrimitiveDefaults(primitive))
+  let primitiveDefaults = convertDefaultsToProperties(getPrimitiveDefaults(primitive))
 
   // Determine HTML tag
   const tag = this.getTag(instance.component, resolvedComponent)
@@ -293,6 +293,19 @@ export function transformInstance(
   // This handles syntax like: Input placeholder "...", InputField
   // where InputField is a component whose properties should be applied
   const expandedInstanceProps = this.expandPropertySets(instance.properties)
+
+  // Icon size: `is` / `icon-size` from the component or instance is the
+  // user's intent for both width and height; the primitive's `w: 20, h: 20`
+  // defaults would otherwise emit redundant inline styles that
+  // `Object.assign` only happens to override last-wins. Filter them upfront.
+  if (primitive === 'icon') {
+    const hasIconSize = [...(resolvedComponent?.properties ?? []), ...expandedInstanceProps].some(
+      p => p.name === 'is' || p.name === 'icon-size'
+    )
+    if (hasIconSize) {
+      primitiveDefaults = primitiveDefaults.filter(p => p.name !== 'w' && p.name !== 'h')
+    }
+  }
 
   // Merge properties: Primitive Defaults < Component Defaults < Expanded Instance Properties
   let properties = mergeProperties(

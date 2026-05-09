@@ -138,19 +138,35 @@ function cacheIcon(name: string, svg: string): void {
 // ICON APPLICATION
 // ============================================
 
-function applyIconToElement(el: MirrorElement, svgText: string): void {
-  el.innerHTML = svgText
+/**
+ * Apply a fetched SVG to an icon-host element: sets innerHTML, sizes the
+ * SVG, and applies fill/stroke from the host's `data-icon-*` attributes.
+ *
+ * Self-contained (nested helpers, no external function refs) so
+ * `.toString()` yields a runnable snippet that the DOM-runtime template
+ * stamps verbatim. Without that, the runtime template carried a hand-
+ * maintained inline duplicate that drifted (the size-vs-CSS-var bug
+ * lived in BOTH copies and had to be fixed twice). Exported so the
+ * runtime template can stamp a single source of truth.
+ */
+export function applyIconToElement(el: MirrorElement, svgText: string): void {
+  function isBareIconSize(value: string): boolean {
+    if (value.length === 0) return false
+    for (let i = 0; i < value.length; i++) {
+      const c = value.charCodeAt(i)
+      if (!((c >= 48 && c <= 57) || c === 46)) return false
+    }
+    return true
+  }
 
+  el.innerHTML = svgText
   const svg = el.querySelector('svg')
   if (!svg) return
 
-  applySvgStyles(svg, el)
-  applyFillMode(svg, el.dataset.iconFill === 'true', el.dataset.iconWeight || '2')
-}
-
-function applySvgStyles(svg: SVGElement, el: MirrorElement): void {
   const size = el.dataset.iconSize || '16'
   const color = el.dataset.iconColor || 'currentColor'
+  const strokeWidth = el.dataset.iconWeight || '2'
+  const isFilled = el.dataset.iconFill === 'true'
 
   // Bare numbers get a `px` suffix; CSS-variable references (`var(--foo)`)
   // and already-suffixed values pass through. Without this, `is $hero`
@@ -161,18 +177,7 @@ function applySvgStyles(svg: SVGElement, el: MirrorElement): void {
   svg.style.height = cssSize
   svg.style.color = color
   svg.style.display = 'block'
-}
 
-function isBareIconSize(value: string): boolean {
-  if (value.length === 0) return false
-  for (let i = 0; i < value.length; i++) {
-    const c = value.charCodeAt(i)
-    if (!((c >= 48 && c <= 57) || c === 46)) return false
-  }
-  return true
-}
-
-function applyFillMode(svg: SVGElement, isFilled: boolean, strokeWidth: string): void {
   if (isFilled) {
     svg.setAttribute('fill', 'currentColor')
     svg.setAttribute('stroke', 'none')
