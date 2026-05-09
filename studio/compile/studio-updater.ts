@@ -72,7 +72,7 @@ export class StudioUpdater {
   handleEmptyCode(): void {
     if (this.deps.studioSelectionManager) {
       this.deps.studioSelectionManager.clearSelection()
-      this.deps.studioSelectionManager.setBreadcrumb([{ id: 'node-1', name: 'App' }])
+      this.deps.studioSelectionManager.setBreadcrumb([])
     }
     this.refreshPreview()
   }

@@ -418,6 +418,34 @@ describe('computeBreadcrumbFromDOM', () => {
     const names = state.get().breadcrumb.map(c => c.name)
     expect(names).toEqual(['Frame', 'Button'])
   })
+
+  // Regression: the user-written root element carries `data-mirror-root="true"`
+  // (set by the DOM emitter so live drag can detect the canvas-root). A naive
+  // filter on that attribute would hide the user's actual root from the
+  // breadcrumb. Make sure the root *is* part of the path when selected.
+  it('includes the user root even when it carries data-mirror-root="true"', () => {
+    sourceMap._setNode('node-1', { componentName: 'Frame' })
+    sourceMap._setNode('node-2', { componentName: 'Text' })
+
+    document.body.innerHTML = `
+      <div id="preview">
+        <div class="mirror-root">
+          <div data-mirror-id="node-1" data-mirror-root="true">
+            <span data-mirror-id="node-2">hello</span>
+          </div>
+        </div>
+      </div>
+    `
+
+    // Select inner Text — full path should be Frame › Text.
+    actions.setSelection('node-2', 'editor')
+    expect(state.get().breadcrumb.map(c => c.name)).toEqual(['Frame', 'Text'])
+
+    // Select root Frame directly — breadcrumb is just [Frame], not empty.
+    actions.setSelection('node-1', 'editor')
+    expect(state.get().breadcrumb.map(c => c.name)).toEqual(['Frame'])
+    expect(state.get().breadcrumb).toHaveLength(1)
+  })
 })
 
 // =============================================================================

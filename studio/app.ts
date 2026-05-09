@@ -1249,7 +1249,7 @@ function compile(code: string) {
     // Clear selection and update studio state for empty code
     if (studioSelectionManager) {
       studioSelectionManager.clearSelection()
-      studioSelectionManager.setBreadcrumb([{ nodeId: 'node-1', name: 'App' }])
+      studioSelectionManager.setBreadcrumb([])
     }
     // Clear component palette user components
     const userComponentsList = document.querySelector('.user-components-list')
