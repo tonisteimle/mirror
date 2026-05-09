@@ -43,12 +43,7 @@
   // Load Lucide icon
   _runtime.loadIcon(node_3, "info")
   Object.assign(node_3.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
     'color': '#888',
-    'font-size': '20px',
     'width': '20px',
     'height': '20px',
   })

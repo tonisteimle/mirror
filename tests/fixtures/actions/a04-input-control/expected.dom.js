@@ -16,9 +16,8 @@
   const node_2 = document.createElement('input')
   _elements['node-2'] = node_2
   node_2.dataset.mirrorId = 'node-2'
-  node_2.dataset.mirrorName = 'Input'
-  _elements['SearchField'] = node_2
   node_2.dataset.mirrorName = 'SearchField'
+  _elements['SearchField'] = node_2
   node_2.setAttribute('name', "SearchField")
   node_2.setAttribute('placeholder', "Search...")
   Object.assign(node_2.style, {

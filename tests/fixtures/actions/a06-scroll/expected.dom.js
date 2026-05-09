@@ -62,9 +62,8 @@
   const node_4 = document.createElement('div')
   _elements['node-4'] = node_4
   node_4.dataset.mirrorId = 'node-4'
-  node_4.dataset.mirrorName = 'Frame'
-  _elements['Section1'] = node_4
   node_4.dataset.mirrorName = 'Section1'
+  _elements['Section1'] = node_4
   Object.assign(node_4.style, {
     'display': 'flex',
     'flex-direction': 'column',

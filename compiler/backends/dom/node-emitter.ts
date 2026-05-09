@@ -39,8 +39,7 @@ export function emitElementCreation(
   emitCreateElement(ctx, node, varName)
   emitElementRegistration(ctx, node, varName)
   emitMainRootMarker(ctx, varName, isMainRoot)
-  emitComponentNameMarker(ctx, node, varName)
-  emitInstanceNameRegistration(ctx, node, varName)
+  emitNameMarkers(ctx, node, varName)
 }
 
 function emitElementComment(ctx: NodeEmitterContext, node: IRNode): void {
@@ -62,20 +61,20 @@ function emitMainRootMarker(ctx: NodeEmitterContext, varName: string, isMainRoot
   }
 }
 
-function emitComponentNameMarker(ctx: NodeEmitterContext, node: IRNode, varName: string): void {
-  if (node.name) {
-    ctx.emit(`${varName}.dataset.mirrorName = '${node.name}'`)
+/**
+ * Emit `data-mirror-name` exactly once and (if present) the cross-element
+ * registry entry. A user-provided instance name (`Frame name MyFrame`) wins
+ * over the component-type name — historical code emitted both in sequence,
+ * which produced cleaner-looking output but two redundant DOM writes.
+ */
+function emitNameMarkers(ctx: NodeEmitterContext, node: IRNode, varName: string): void {
+  const finalName = node.instanceName ?? node.name
+  if (finalName) {
+    ctx.emit(`${varName}.dataset.mirrorName = '${finalName}'`)
   }
-}
-
-function emitInstanceNameRegistration(
-  ctx: NodeEmitterContext,
-  node: IRNode,
-  varName: string
-): void {
-  if (!node.instanceName) return
-  ctx.emit(`_elements['${node.instanceName}'] = ${varName}`)
-  ctx.emit(`${varName}.dataset.mirrorName = '${node.instanceName}'`)
+  if (node.instanceName) {
+    ctx.emit(`_elements['${node.instanceName}'] = ${varName}`)
+  }
 }
 
 // ============================================

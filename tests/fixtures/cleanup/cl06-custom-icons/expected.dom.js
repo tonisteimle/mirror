@@ -31,11 +31,6 @@
   // Load Lucide icon
   _runtime.loadIcon(node_2, "hbox")
   Object.assign(node_2.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '24px',
     'width': '24px',
     'height': '24px',
     'color': '#2271C1',
@@ -61,11 +56,6 @@
   // Load Lucide icon
   _runtime.loadIcon(node_3, "vbox")
   Object.assign(node_3.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '24px',
     'width': '24px',
     'height': '24px',
     'color': '#888',
@@ -91,11 +81,6 @@
   // Load Lucide icon
   _runtime.loadIcon(node_4, "check")
   Object.assign(node_4.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
-    'font-size': '24px',
     'width': '24px',
     'height': '24px',
     'color': '#10b981',

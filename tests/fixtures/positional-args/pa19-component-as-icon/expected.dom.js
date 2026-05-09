@@ -17,12 +17,7 @@
   // Load Lucide icon
   _runtime.loadIcon(node_1, "trash")
   Object.assign(node_1.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
     'color': '#ff0000',
-    'font-size': '32px',
     'width': '32px',
     'height': '32px',
   })

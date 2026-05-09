@@ -17,12 +17,7 @@
   // Load Lucide icon
   _runtime.loadIcon(node_1, "loader")
   Object.assign(node_1.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
     'animation': 'mirror-spin 1s linear infinite',
-    'font-size': '24px',
     'width': '24px',
     'height': '24px',
     'color': '#2271C1',

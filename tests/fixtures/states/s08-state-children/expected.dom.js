@@ -45,7 +45,6 @@
           _sc0.style['flex-shrink'] = '0'
           _sc0.style['height'] = '20px'
           _sc0.style['flex-shrink'] = '0'
-          _sc0.style['font-size'] = '18px'
           _sc0.style['width'] = '18px'
           _sc0.style['height'] = '18px'
           _sc0.dataset.iconSize = '16'
@@ -69,12 +68,7 @@
           _sc0.textContent = "heart"
           _sc0.setAttribute('data-icon-color', "#888")
           _sc0.setAttribute('data-icon-size', "18")
-          _sc0.style['width'] = '20px'
-          _sc0.style['flex-shrink'] = '0'
-          _sc0.style['height'] = '20px'
-          _sc0.style['flex-shrink'] = '0'
           _sc0.style['color'] = '#888'
-          _sc0.style['font-size'] = '18px'
           _sc0.style['width'] = '18px'
           _sc0.style['height'] = '18px'
           _sc0.dataset.iconSize = '16'
@@ -127,12 +121,7 @@
   // Load Lucide icon
   _runtime.loadIcon(node_2, "heart")
   Object.assign(node_2.style, {
-    'width': '20px',
-    'flex-shrink': '0',
-    'height': '20px',
-    'flex-shrink': '0',
     'color': '#888',
-    'font-size': '18px',
     'width': '18px',
     'height': '18px',
   })
