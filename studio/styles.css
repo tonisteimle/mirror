@@ -674,6 +674,36 @@
       color: var(--white-70);
     }
 
+    /* Slice 78 — separator + visual variant for property-set entries */
+
+    .token-picker-section-header {
+      font-size: var(--font-xs);
+      color: var(--syntax-comment);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-wide);
+      padding: var(--space-3) var(--space-3) var(--space-2);
+      margin-top: var(--space-2);
+      border-top: 1px solid var(--white-10);
+      background: var(--bg-panel);
+    }
+
+    /* Property-set rows: no swatch column, but a thin left-border accent so the
+       eye picks up the kind-difference at a glance. The value column is the
+       property-bag preview text (`bg #1a1a1a · pad 16 · …`), which can be a
+       little wider than a single hex — relax the truncation. */
+    .token-picker-item.token-picker-item-set {
+      border-left: 2px solid var(--syntax-comment);
+      padding-left: calc(var(--space-3) - 2px);
+    }
+
+    .token-picker-item.token-picker-item-set .token-picker-value {
+      flex: 1;
+      text-align: right;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     /* Icon Picker - unified with Token Picker */
     .icon-picker {
       position: fixed;

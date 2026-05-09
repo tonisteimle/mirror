@@ -63,3 +63,6 @@ export {
 
 // Editor file-tabs (Daten / Tokens / Komponenten / Anwendung)
 export { editorFileTabsTests } from './file-tabs.test'
+
+// Slice 78 — Token-Picker (browser CDP gates: render + CSS + click-insert)
+export { slice78TokenPickerTests } from './slice-78-token-picker.test'

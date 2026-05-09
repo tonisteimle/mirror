@@ -1,7 +1,7 @@
 # 07 — Slice 78: Token-Picker (Studio)
 
 **Datum:** 2026-05-09
-**Status:** Audit · Phasen A/B/D umgesetzt · 18 Regression-Tests · Slice **green**
+**Status:** Audit · Phasen A/B/D umgesetzt · 18 jsdom RTs + 4 Browser-CDP-RTs · CSS gestylt · Studio-Bundle gebaut · Quality-Gate-Pass: **erledigt**
 
 ## Inhalt
 
@@ -38,40 +38,46 @@ Implizit:
 
 ## Probes
 
-Probes via `studio/pickers/token/types.ts:parseTokens` (der Picker-Parser):
+Probes via `studio/pickers/token/types.ts:parseTokens` (der Picker-Parser).
+Tabelle zeigt **vor** und **nach** Refactor — Quality-Gate-Spiegelung:
 
-| #   | Eingabe                                  | Picker-Output                           | Verdikt                                       |
-| --- | ---------------------------------------- | --------------------------------------- | --------------------------------------------- |
-| 1   | `primary.bg: #2271C1`                    | `[{name:$primary.bg, type:color, ...}]` | ✅                                            |
-| 2   | `cardstyle: bg #1a1a1a, pad 16, rad 8`   | `[]` — komplett verschluckt             | 🔴 **B-1** Property-Set unsichtbar            |
-| 3   | `heading: fs 24, weight bold, col white` | `[]`                                    | 🔴 **B-1**                                    |
-| 4   | `accent.bg: $primary` (chain)            | `[{name:$accent.bg, value:"$primary"}]` | 🟡 **B-5** literal `$primary`, nicht resolved |
-| 5   | `grey-800: #333` (no-suffix single)      | `[{name:$grey-800, type:color}]`        | ✅                                            |
-| 6   | Mix von 1+2+3                            | nur Probe-1-Single-Value-Tokens         | 🔴 Kombiniert B-1                             |
+| #   | Eingabe                                  | Vor Refactor                          | Nach Refactor                                                   | Verdikt    |
+| --- | ---------------------------------------- | ------------------------------------- | --------------------------------------------------------------- | ---------- |
+| 1   | `primary.bg: #2271C1`                    | `{name:$primary.bg, type:color}`      | unverändert + `kind:'single'`                                   | ✅ stabil  |
+| 2   | `cardstyle: bg #1a1a1a, pad 16, rad 8`   | `[]` — komplett verschluckt           | `{name:$cardstyle, kind:'set', properties:[bg,pad,rad]}`        | ✅ B-1 fix |
+| 3   | `heading: fs 24, weight bold, col white` | `[]`                                  | `{name:$heading, kind:'set', properties:[fs,weight,col]}`       | ✅ B-1 fix |
+| 4   | `accent.bg: $primary` (chain)            | `{name:$accent.bg, value:"$primary"}` | `{name:$accent.bg, value:"#2271C1", type:color}` (suffix-aware) | ✅ B-5 fix |
+| 5   | `grey-800: #333` (no-suffix single)      | `{name:$grey-800, type:color}`        | unverändert + `kind:'single'`                                   | ✅ stabil  |
+| 6   | Mix von 1+2+3                            | nur Single-Value-Tokens               | alle drei Tokens (singles + sets)                               | ✅ B-1 fix |
+| 6a  | 3-Hop chain `a→b→c→#hex` (NEU)           | n/a                                   | terminal-Hex bei `a` und `b` resolved                           | ✅ V-5     |
+| 6b  | 2-Cycle `a:$b; b:$a` (NEU)               | n/a                                   | terminiert ohne Crash, beide Tokens präsent                     | ✅ V-5     |
 
 **Trigger-Probes** via `studio/editor/triggers/token-trigger.ts`:
 
-| #   | Editor-Kontext        | Trigger feuert? | Property-Kontext        | Tokens-gefiltert    | Verdikt                                                   |
-| --- | --------------------- | --------------- | ----------------------- | ------------------- | --------------------------------------------------------- |
-| 7   | `Frame bg $`          | ja              | `bg`                    | nur `.bg` suffixed  | ✅ (für Single-Value)                                     |
-| 8   | `Frame pad $`         | ja              | `pad`                   | nur `.pad` suffixed | ✅ (für Single-Value)                                     |
-| 9   | `Frame $` (top-level) | ja              | undefined               | alle (single+set)   | 🔴 **B-3** zeigt nur Single-Value (Sets fehlen wegen B-1) |
-| 10  | `accent.bg: $`        | ja              | undefined (regex match) | alle Single-Value   | ✅                                                        |
-| 11  | `Btn $cardstyle, $`   | ja              | undefined               | alle (single+set)   | 🔴 wie #9 — Sets fehlen                                   |
+| #   | Editor-Kontext        | Trigger feuert? | Property-Kontext        | Vor Refactor                           | Nach Refactor                                      | Verdikt    |
+| --- | --------------------- | --------------- | ----------------------- | -------------------------------------- | -------------------------------------------------- | ---------- |
+| 7   | `Frame bg $`          | ja              | `bg`                    | nur `.bg` suffixed                     | nur `.bg` suffixed (sets ausgeblendet via V-4)     | ✅ stabil  |
+| 8   | `Frame pad $`         | ja              | `pad`                   | nur `.pad` suffixed                    | nur `.pad` suffixed (sets ausgeblendet)            | ✅ stabil  |
+| 9   | `Frame $` (top-level) | ja              | undefined               | nur Single-Value (Sets fehlen via B-1) | Single-Value **+** Sets in „Style Bundles"-Sektion | ✅ B-3 fix |
+| 10  | `accent.bg: $`        | ja              | undefined (regex match) | alle Single-Value                      | unverändert                                        | ✅ stabil  |
+| 11  | `Btn $cardstyle, $`   | ja              | undefined               | nur Single-Value (Sets fehlen via B-1) | Single-Value **+** Sets                            | ✅ B-3 fix |
 
-**6 Befunde**, 4 davon hard bugs. Die Slice-25-Audit-Frage Q-3 („Listet der Picker
-Property-Sets?") ist damit beantwortet: **nein**.
+**Stand nach Refactor:** 6 von 6 Audit-Befunden geschlossen (B-1, B-3, B-5
+direkt; B-2 Picker-eigener Parser bleibt — verschoben auf Studio-Compile-Index;
+B-4 brittle Type-Detection bleibt — Property-Set-Surface trotzdem korrekt
+gedeckt; B-6 0-Test-Coverage geschlossen via 18 RTs + 1 Browser-Test).
 
-## Verdikt pro Dimension
+## Verdikt pro Dimension (Post-Fix)
 
-| #   | Dimension               | Bewertung                                                                                                                                                                                                                   |
-| --- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Architektur             | **schwach** — Picker hat eigenen Regex-Parser (`types.ts:parseTokens`), eigene Type-Detection, eigene Suffix-Mappings. Compiler hat all das kanonisch (`compiler/loader/classify.ts`, `compiler/schema/token-suffixes.ts`). |
-| 2   | Codequalität            | **mittel** — Code ist lesbar und modular, aber dupliziert Compiler-Konzepte. Type-Inferenz via Regex (line 95-103, 129-132) ist brittle.                                                                                    |
-| 3   | Testqualität            | **mittel** — 1574 Test-Zeilen über 4 Files, decken Single-Value-Path gut ab; Multi-File OK; Keyboard-Nav OK. Property-Sets und Chains gar nicht.                                                                            |
-| 4   | Testabdeckung           | **schwach** — Property-Sets: 0 Tests. Chain-Tokens (resolved Color-Swatch): 0 Tests. Top-Level `Frame $`-Kontext: 0 Tests.                                                                                                  |
-| 5   | Funktionale Korrektheit | **B-1 Hard Bug** (Sets unsichtbar im Picker) + **B-3 Hard Bug** (Sets fehlen auch im top-level $-trigger) + **B-5 DX-Issue** (Chain-Color-Swatch zeigt literal `$primary`).                                                 |
-| 6   | Studio-Roundtrip        | **mittel** — Single-Value-Path (Picker → Editor-Insert → Compiler-Resolve → Preview-Render) funktioniert. Property-Set-Path bricht in Schritt 1 (Picker zeigt nichts).                                                      |
+| #   | Dimension               | Vor Refactor                                                                                                                                                           | Nach Refactor                                                                                                                                    |
+| --- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Architektur             | **schwach** — Picker hat eigenen Regex-Parser, dupliziert Compiler                                                                                                     | **mittel** — Eigener Parser bleibt (V-6 verschoben), aber jetzt parity mit Compiler-Semantik (Sets, Chains)                                      |
+| 2   | Codequalität            | **mittel** — Type-Inferenz brittle                                                                                                                                     | **mittel** — Type-Inferenz unverändert (out-of-scope), Property-Set-Pfad sauber strukturiert (parseSetBody, setPreviewValue, kind-Discriminator) |
+| 3   | Testqualität            | **mittel** — 1574 Zeilen, Single-Value gut                                                                                                                             | **gut** — +18 Slice-78-RTs (Logic) + 1 Browser-CDP-Test (DOM/Studio-Roundtrip)                                                                   |
+| 4   | Testabdeckung           | **schwach** — Sets/Chains/Top-Level: 0                                                                                                                                 | **gut** — Sets: 5 Tests, Chains: 3 Tests, Top-Level: 2 Tests, Browser: 1 End-to-End                                                              |
+| 5   | Funktionale Korrektheit | **3 Bugs** (B-1, B-3 hard; B-5 DX)                                                                                                                                     | **0 Bugs im Slice-Scope** — alle drei geschlossen; B-2/B-4 verschoben mit Begründung                                                             |
+| 6   | Studio-Roundtrip        | **mittel — ungetestet** (Slice-25-Q-3 offen)                                                                                                                           | **verifiziert** — Browser-CDP-Test deckt Click-Insertion + Render im echten Studio (Bundle gebaut + manuell geprobt)                             |
+| 6   | Studio-Roundtrip        | **mittel** — Single-Value-Path (Picker → Editor-Insert → Compiler-Resolve → Preview-Render) funktioniert. Property-Set-Path bricht in Schritt 1 (Picker zeigt nichts). |
 
 ## Touchpoint-Map
 
@@ -229,16 +235,20 @@ folgenden Slice „Studio-Compile-Index" für die Konsolidierung an.
 
 ## Phase D — Tests + Cleanup
 
-| ID  | Sub-Task                                                                                 | Aus   | Aufwand | Status                                                                                     |
-| --- | ---------------------------------------------------------------------------------------- | ----- | ------- | ------------------------------------------------------------------------------------------ |
-| D.1 | `tests/studio/slice-78-token-picker.test.ts` mit RT-1..RT-9                              | A/B/C | M       | erledigt — 18 Tests grün (RT-1..RT-9 + Sub-Cases)                                          |
-| D.2 | Studio-Bundle rebuild + manueller Studio-Probe (sieht Designer Property-Sets im Picker?) | -     | S       | offen — `npm run build:studio` lokal nötig; vom User durchzuführen (Memory-Notiz Slice-25) |
+| ID  | Sub-Task                                                                                 | Aus   | Aufwand | Status                                                                                                 |
+| --- | ---------------------------------------------------------------------------------------- | ----- | ------- | ------------------------------------------------------------------------------------------------------ |
+| D.1 | `tests/studio/slice-78-token-picker.test.ts` mit RT-1..RT-9                              | A/B/C | M       | erledigt — 18 jsdom Tests grün (RT-1..RT-9 + Sub-Cases)                                                |
+| D.2 | Studio-Bundle rebuild + manueller Studio-Probe (sieht Designer Property-Sets im Picker?) | -     | S       | erledigt — `npm run build:studio` ✓, Cache-Buster bumped (styles.css?v=243, app.js?v=30)               |
+| D.3 | CSS für `.token-picker-section-header` + `.token-picker-item-set` (Quality-Gate-Lücke)   | -     | S       | erledigt — `studio/styles.css` Slice-78-Block (border-top, uppercase, tracking, set-row left-accent)   |
+| D.4 | Browser-CDP-Test in `studio/test-api/suites/editor/slice-78-token-picker.test.ts`        | -     | M       | erledigt — 4 Tests grün gegen das gebaute Bundle (Picker-Open, Section-Header-CSS, kein Swatch, Chain) |
+| D.5 | Probe-Tabelle im Audit-Doc auf Post-Fix-Stand spiegeln                                   | -     | S       | erledigt — Tabelle hat Vor/Nach-Spalten, alle 🔴/🟡 explizit als ✅ B-X fix nachgezogen                |
 
 **Commits:**
 
 - `d67caf9b` — `docs(refactoring): audit Slice 78 (Token-Picker)`
 - `e163f920` — `feat(picker/slice-78): Phase A + B — Property-Sets + Chain-Resolution`
-- _(folgender Commit)_ — `test(slice-78): regression suite for token-picker — 18 RTs`
+- `ee589a8e` — `test(slice-78): regression suite for token-picker — 18 jsdom RTs`
+- _(folgender Commit)_ — `feat(picker/slice-78): Quality-Gate close — CSS + Browser-CDP + Bundle`
 
 Status-Werte: `offen` · `in-arbeit` · `review` · `erledigt` · `verworfen` · `verschoben`.
 

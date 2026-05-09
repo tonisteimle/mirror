@@ -115,6 +115,7 @@ import { allIndentationTests } from './editor/indentation.test'
 import { allEditorDropTests } from './editor/editor-drop.test'
 import { allLinterTests } from './editor/linter.test'
 import { editorFileTabsTests } from './editor/file-tabs.test'
+import { slice78TokenPickerTests } from './editor/slice-78-token-picker.test'
 import { allInlineEditTests } from './inline-edit'
 
 // Data (Data Binding, Actions, Events, Responsive, Charts)
@@ -282,6 +283,7 @@ export const editorTests: TestCase[] = [
   ...allEditorDropTests,
   ...allLinterTests,
   ...editorFileTabsTests,
+  ...slice78TokenPickerTests,
   ...allInlineEditTests,
 ]
 
