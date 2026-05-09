@@ -603,6 +603,18 @@ export class Validator {
       return
     }
 
+    // Property-set reference (`Frame $cardstyle` parses as `propset:{token:cardstyle}`).
+    // The IR expander resolves it; if the name isn't a defined token, the
+    // user gets the same W500 surface as for single-value tokens — Mirror's
+    // user-facing concept is "Token", not "property-set token".
+    if (prop.name === 'propset' && prop.values.length === 1) {
+      const val = prop.values[0]
+      if (typeof val === 'object' && val !== null && 'kind' in val && val.kind === 'token') {
+        this.validateTokenReference('$' + (val as TokenReference).name, prop.line, prop.column)
+      }
+      return
+    }
+
     // Check for unknown property
     if (!propDef) {
       // Check if it's a known non-schema property, OR a defined component

@@ -375,22 +375,22 @@ export class Parser {
           // Check for Property Set: name: propertyName value, ...
           // Property Set has a valid property name after the colon (not followed by another colon or equals)
           // Note: If position 3 is EQUALS, it's legacy syntax: name: type = value
-          // The first item after `:` may also be a `$other` propset-reference
-          // (`b: $a, bg #f00`), so we accept identifiers starting with $ here.
+          //
+          // The first item after `:` may also be a `$other` propset-reference:
+          //   - Multi-prop:  `b: $a, bg #f00`     → set `b` containing [propset:a, bg #f00]
+          //   - Single-ref:  `b: $a`              → set `b` containing [propset:a]
+          //
+          // We're inside the `isLowercase && hasNoDot` block, so the
+          // single-value-token chain form `accent.bg: $primary` (which has a
+          // dot on the left) is handled by an earlier branch and never reaches
+          // here — no exclusion needed for that case.
           const afterColon = this.peekAt(2)?.value
           const afterColonIsRef = !!afterColon && afterColon.startsWith('$')
           if (
             afterColon &&
             (isValidProperty(afterColon) || afterColonIsRef) &&
             !this.checkAt(3, 'COLON') &&
-            !this.checkAt(3, 'EQUALS') &&
-            // For $-ref form, only treat as property-set if the line continues
-            // beyond the single ref (otherwise it's a token-reference like
-            // `accent.bg: $primary` which the earlier branch handles).
-            !(
-              afterColonIsRef &&
-              (this.checkAt(3, 'NEWLINE') || this.checkAt(3, 'EOF') || this.checkAt(3, 'COMMENT'))
-            )
+            !this.checkAt(3, 'EQUALS')
           ) {
             const propSet = this.parsePropertySet(currentSection)
             if (propSet) program.tokens.push(propSet)
