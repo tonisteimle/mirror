@@ -41,13 +41,13 @@ import { PX_PROPERTY_NAMES } from '../../schema/property-schema'
  */
 export function formatCSSValue(property: string, value: string): string {
   if (PX_PROPERTY_NAMES.has(property)) {
-    // Handle multi-value properties (e.g., "8 16" → "8px 16px")
+    // Handle multi-value properties (e.g., "8 16" → "8px 16px"). Accepts
+    // both integers (`12`) and decimals (`12.5`) — the previous regex was
+    // integer-only so `Frame gap 12.5` lost its px-unit (Slice 2 V-4).
     return value
       .split(' ')
       .map(v => {
-        // Only add px to integer values (incl. negatives), not values with existing units
-        // (%, vh, vw, vmin, vmax, em, rem, etc.)
-        if (/^-?\d+$/.test(v)) {
+        if (/^-?\d+(?:\.\d+)?$/.test(v)) {
           return `${v}px`
         }
         return v

@@ -17,6 +17,7 @@ import type {
 } from '../parser/ast'
 import { expandPropertySets } from '../ir/transformers/property-set-expander'
 import { isLayoutPrimitive } from '../schema/dsl'
+import { getTokenSuffix } from '../schema/token-suffixes'
 
 export interface ReactExportOptions {
   /** Include token values as CSS variables */
@@ -440,20 +441,52 @@ function generateStyles(
     if (typeof result === 'boolean') return result ? 1 : 0
     return result
   }
-  const resolve = (value: string | number | boolean | object): string | number => {
+
+  // Append `px` to numeric values for CSS-pixel properties (gap, pad, w, h,
+  // bor, rad, fs, …). The Mirror parser hands every numeric DSL literal in
+  // as a STRING (`gap 12` → values: ["12"]), so the long-standing
+  // `typeof value === 'number'` check never matched and React emitted
+  // `gap: '12'` — invalid CSS the browser silently dropped. Slice 2 V-1.
+  // Accepts already-suffixed values (`12px`, `100%`, `var(--…)`) verbatim,
+  // and only px-ifies bare numerics.
+  const NUMERIC_RE = /^-?\d+(?:\.\d+)?$/
+  const pxify = (v: string | number | boolean | object): string | number => {
+    if (typeof v === 'number') return `${v}px`
+    if (typeof v === 'string' && NUMERIC_RE.test(v)) return `${v}px`
+    return v as string | number
+  }
+  // `propertyName` lets the resolver apply the same suffix-mapping the IR
+  // does (`gap $sp` with `sp.gap: 12` → look up `sp.gap` first, fall back
+  // to `sp`). Without this, React emitted the raw `$sp` literal while the
+  // DOM backend correctly resolved via `var(--sp-gap)`. Slice 2 V-2.
+  const lookupWithSuffix = (
+    cleanName: string,
+    propertyName?: string
+  ): string | number | boolean | undefined => {
+    if (propertyName) {
+      const suffix = getTokenSuffix(propertyName)
+      if (suffix) {
+        const suffixed = cleanName + suffix
+        const hit = tokenMap.get(suffixed) ?? tokenMap.get('$' + suffixed)
+        if (hit !== undefined) return hit
+      }
+    }
+    return tokenMap.get(cleanName) ?? tokenMap.get('$' + cleanName)
+  }
+  const resolve = (
+    value: string | number | boolean | object,
+    propertyName?: string
+  ): string | number => {
     // Handle TokenReference objects
     if (typeof value === 'object' && value !== null && 'name' in value) {
       const tokenName = (value as { name: string }).name
       const cleanName = tokenName.startsWith('$') ? tokenName.slice(1) : tokenName
-      return resolveFromMap(
-        tokenMap.get(cleanName) ?? tokenMap.get('$' + cleanName),
-        `$${cleanName}`
-      )
+      return resolveFromMap(lookupWithSuffix(cleanName, propertyName), `$${cleanName}`)
     }
     // Handle string token references
     if (typeof value === 'string' && value.startsWith('$')) {
       const cleanName = value.slice(1)
-      return resolveFromMap(tokenMap.get(cleanName) ?? tokenMap.get(value), value)
+      return resolveFromMap(lookupWithSuffix(cleanName, propertyName), value)
     }
     if (typeof value === 'boolean') return value ? 1 : 0
     return value as string | number
@@ -496,7 +529,7 @@ function generateStyles(
     }
 
     const rawValue = prop.values[0]
-    const value = resolve(rawValue)
+    const value = resolve(rawValue, prop.name)
 
     switch (prop.name) {
       // Layout (with values - less common)
@@ -540,16 +573,17 @@ function generateStyles(
       // Spacing
       case 'gap':
       case 'g':
-        style.gap = typeof value === 'number' ? `${value}px` : value
+        style.gap = pxify(value)
         break
       case 'pad':
       case 'padding':
       case 'p':
-        style.padding = typeof value === 'number' ? `${value}px` : value
+        style.padding = pxify(value)
         break
       case 'margin':
+      case 'mar':
       case 'm':
-        style.margin = typeof value === 'number' ? `${value}px` : value
+        style.margin = pxify(value)
         break
 
       // Size
@@ -560,7 +594,7 @@ function generateStyles(
         } else if (value === 'hug') {
           style.width = 'fit-content'
         } else {
-          style.width = typeof value === 'number' ? `${value}px` : value
+          style.width = pxify(value)
         }
         break
       case 'h':
@@ -570,24 +604,24 @@ function generateStyles(
         } else if (value === 'hug') {
           style.height = 'fit-content'
         } else {
-          style.height = typeof value === 'number' ? `${value}px` : value
+          style.height = pxify(value)
         }
         break
       case 'minw':
       case 'min-width':
-        style.minWidth = typeof value === 'number' ? `${value}px` : value
+        style.minWidth = pxify(value)
         break
       case 'maxw':
       case 'max-width':
-        style.maxWidth = typeof value === 'number' ? `${value}px` : value
+        style.maxWidth = pxify(value)
         break
       case 'minh':
       case 'min-height':
-        style.minHeight = typeof value === 'number' ? `${value}px` : value
+        style.minHeight = pxify(value)
         break
       case 'maxh':
       case 'max-height':
-        style.maxHeight = typeof value === 'number' ? `${value}px` : value
+        style.maxHeight = pxify(value)
         break
 
       // Colors
@@ -604,7 +638,12 @@ function generateStyles(
       // Border
       case 'bor':
       case 'border':
-        style.border = typeof value === 'number' ? `${value}px solid` : String(value)
+        // bor wants `<n>px solid` — pxify alone wouldn't add the solid keyword.
+        if (typeof value === 'number' || (typeof value === 'string' && NUMERIC_RE.test(value))) {
+          style.border = `${value}px solid`
+        } else {
+          style.border = String(value)
+        }
         break
       case 'boc':
       case 'border-color':
@@ -612,13 +651,13 @@ function generateStyles(
         break
       case 'rad':
       case 'radius':
-        style.borderRadius = typeof value === 'number' ? `${value}px` : value
+        style.borderRadius = pxify(value)
         break
 
       // Typography
       case 'font-size':
       case 'fs':
-        style.fontSize = typeof value === 'number' ? `${value}px` : value
+        style.fontSize = pxify(value)
         break
       case 'weight':
         style.fontWeight = value

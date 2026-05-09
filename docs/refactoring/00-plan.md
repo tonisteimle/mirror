@@ -59,6 +59,7 @@ Vertikale, end2end prüfbare User-Fähigkeiten („Capability-Slices"). Jeder Sl
 | 78  | Token-Picker (Studio)                | erledigt                                                   | [07-slice-78-token-picker.md](07-slice-78-token-picker.md)               |
 | 29  | `exclusive()`                        | DOM+Sync erledigt · Browser-CDP+Studio-Roundtrip offen     | [08-slice-29-exclusive.md](08-slice-29-exclusive.md)                     |
 | 28  | Multi-State-Cycle                    | Compile+Sync erledigt · Browser-CDP+Studio-Roundtrip offen | [10-slice-28-multi-state-cycle.md](10-slice-28-multi-state-cycle.md)     |
+| 2   | Vertical Stack (`gap N`)             | erledigt                                                   | [09-slice-2-vertical-stack.md](09-slice-2-vertical-stack.md)             |
 
 ---
 

@@ -556,9 +556,12 @@ class FrameworkGenerator {
   }
 
   /**
-   * Parse px values to numbers
+   * Parse px values to numbers. Pass-through for CSS-vars (`var(--sp-gap)`)
+   * and other already-CSS-shaped values — without that guard the value
+   * occasionally got truncated by downstream string handling. Slice 2 V-3.
    */
   private parsePxValue(value: string): string | number {
+    if (value.startsWith('var(')) return value
     if (value.endsWith('px')) {
       const num = parseInt(value)
       if (!isNaN(num)) return num

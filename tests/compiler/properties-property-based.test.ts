@@ -338,7 +338,7 @@ describe('Property-based: formatCSSValue', () => {
     )
   })
 
-  it('decimals (without units) on px-properties stay un-suffixed (only integers get px)', () => {
+  it('decimals on px-properties get px suffix just like integers (Slice 2 V-4)', () => {
     fc.assert(
       fc.property(
         fc.constantFrom(...PX_PROPS),
@@ -347,13 +347,11 @@ describe('Property-based: formatCSSValue', () => {
           .filter(x => !Number.isInteger(x)),
         (prop, n) => {
           const value = String(n)
-          // Only integer regex matches; floats stay unchanged
+          // Both integers and decimals are unitless numerics → both get px.
+          // Pre-Slice-2 the regex was integer-only; `Frame gap 12.5` then
+          // emitted `gap: 12.5` which the browser silently dropped.
           const result = formatCSSValue(prop, value)
-          if (/^-?\d+$/.test(value)) {
-            expect(result).toBe(`${value}px`)
-          } else {
-            expect(result).toBe(value)
-          }
+          expect(result).toBe(`${value}px`)
         }
       )
     )

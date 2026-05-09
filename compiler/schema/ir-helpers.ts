@@ -403,9 +403,12 @@ export function simplePropertyToCSS(propName: string, value: string | number): C
     return { styles: [], handled: false }
   }
 
-  // Format value (add px for numeric properties, but not unitless ones like z-index, opacity)
+  // Format value (add px for numeric properties, but not unitless ones like z-index, opacity).
+  // The regex accepts both integers and decimals — `Frame gap 12.5` previously
+  // lost its px-unit because the old `/^\d+$/` pattern only matched whole
+  // numbers (Slice 2 V-4).
   let cssValue = String(value)
-  if (typeof value === 'number' || /^\d+$/.test(cssValue)) {
+  if (typeof value === 'number' || /^-?\d+(?:\.\d+)?$/.test(cssValue)) {
     const needsPx = new Set([
       'padding',
       'pad',
