@@ -1,7 +1,7 @@
 # 02 — Slice 1: Frame-Container
 
 **Datum:** 2026-05-09
-**Status:** Audit erledigt · Umsetzung in Runden (Phasen A.1, A.2, A.3, A.4, A.5, B.1, B.5 fertig)
+**Status:** Audit erledigt · Umsetzung in Runden (Phasen A.1, A.2, A.3, A.4, A.5, B.1, B.2, B.5 fertig)
 
 ## Inhalt
 
@@ -246,13 +246,13 @@ Voraussetzung für alles weitere. Aus V-1, V-2, V-3, V-4, V-7.
 
 Aus V-1 (Backend-No-Op-Pfad) + V-6 (React-Parität). Hängt teilweise von Phase A ab (DSL-Schema-Flag aus A.1).
 
-| ID  | Sub-Task                                                                                             | Aufwand | Status                                                                                                                                    |
-| --- | ---------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| B.1 | DOM-Backend: `content` auf Layout-Primitive nicht via `formatInlineMarkdown` rendern (V-1)           | S       | erledigt — Skip in `emitProperties` gated über `isLayoutPrimitive(node.name)`, sodass User-Komponenten (`Btn "X"`) weiterhin Text rendern |
-| B.2 | React-Backend: `data-mirror-name`, `data-component`, `data-mirror-id`, `data-state` emittieren (V-6) | M       | offen                                                                                                                                     |
-| B.3 | React-Backend: Frame-Default-Styles als style-prop emittieren (V-6)                                  | M       | offen                                                                                                                                     |
-| B.4 | React-Backend: Element-Registry via `useRef` + `useEffect` für `name`-Property (V-6)                 | L       | offen                                                                                                                                     |
-| B.5 | DOM-Emitter: `dataset.mirrorName` nur einmal setzen (V-5)                                            | S       | erledigt — `b5dd1170`                                                                                                                     |
+| ID  | Sub-Task                                                                                             | Aufwand | Status                                                                                                                                                           |
+| --- | ---------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B.1 | DOM-Backend: `content` auf Layout-Primitive nicht via `formatInlineMarkdown` rendern (V-1)           | S       | erledigt — Skip in `emitProperties` gated über `isLayoutPrimitive(node.name)`, sodass User-Komponenten (`Btn "X"`) weiterhin Text rendern                        |
+| B.2 | React-Backend: `data-mirror-name`, `data-component`, `data-mirror-id`, `data-state` emittieren (V-6) | M       | erledigt — `generateMirrorAttributes()` in `react.ts` emittiert `data-component` / `data-mirror-name` / `data-state`. `data-mirror-id` bleibt offen (siehe B.4). |
+| B.3 | React-Backend: Frame-Default-Styles als style-prop emittieren (V-6)                                  | M       | offen                                                                                                                                                            |
+| B.4 | React-Backend: Element-Registry via `useRef` + `useEffect` für `name`-Property (V-6)                 | L       | offen                                                                                                                                                            |
+| B.5 | DOM-Emitter: `dataset.mirrorName` nur einmal setzen (V-5)                                            | S       | erledigt — `b5dd1170`                                                                                                                                            |
 
 ## Phase C — Migration + Cleanup
 
@@ -287,23 +287,23 @@ Aufwand: `S` (≤30min) · `M` (≤2h) · `L` (≤1d).
 
 ## Neue Regression-Tests (RT)
 
-| ID    | Test                                                                                                                          | Layer                     | Aus          | Status   |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------ | -------- |
-| RT-1  | `Frame` allein rendert `<div>` mit Frame-Default-Flex (`display:flex; flex-direction:column`)                                 | compiler-unit             | A.1          | erledigt |
-| RT-2  | `Box` ≡ `Frame` (gleicher DOM-Output bis auf `data-component`)                                                                | compiler-unit             | A.3          | erledigt |
-| RT-3  | `Frame "hello"` löst Validator-Warn `W112` aus (Box / Spacer ebenfalls; User-Komponente `Btn "X"` NICHT)                      | validator                 | A.2          | erledigt |
-| RT-4  | `Frame "hello"` rendert KEIN `innerHTML` im DOM-Backend; `Text "X"` / `Btn "X"` weiterhin schon                               | compiler-unit             | B.1          | erledigt |
-| RT-5  | `Frame "hello"` rendert KEIN content im React-Backend (kein `{"hello"}`)                                                      | compiler-unit             | B.1          | offen    |
-| RT-6  | `frame` / `BOX` löst `W004` aus; Parser canonicalisiert auf `Frame` / `Box`; `originalName` hält das Original                 | validator + compiler-unit | A.3          | erledigt |
-| RT-7  | `unknown` (kein Primitive, keine Component-Definition) löst E002 aus                                                          | validator                 | A.4          | erledigt |
-| RT-8  | `Frame\n  unknown` / `Frame\n  todo` werden NICHT als initialState konsumiert; Validator feuert E002 für `unknown`            | validator + compiler-unit | A.5          | erledigt |
-| RT-9  | `Frame\n  open/closed/selected/expanded/collapsed/on` setzt `initialState` korrekt — Gate darf DSL-State-Tokens nicht brechen | compiler-unit             | A.5          | erledigt |
-| RT-10 | `Frame name MyFrame` emittiert `data-mirror-name="MyFrame"` GENAU EINMAL                                                      | compiler-unit             | B.5          | erledigt |
-| RT-11 | Differential: `Frame name MyFrame` ergibt äquivalente Element-Registry in DOM und React                                       | differential              | B.4          | offen    |
-| RT-12 | Differential: `Frame\n  selected` ergibt äquivalentes State-Setup in DOM und React                                            | differential              | B.2          | offen    |
-| RT-13 | Differential: `Frame gap 12, pad 16` ergibt äquivalente Default-Styles in DOM und React                                       | differential              | B.3          | offen    |
-| RT-14 | Studio-E2E: Click auf `<div data-component="Frame">` → Property-Panel zeigt Frame-Properties                                  | browser                   | (regression) | offen    |
-| RT-15 | Studio-E2E: `data-component="frame"` (lowercase) wird im Property-Panel als Frame erkannt (oder löst Lint-Warn aus)           | browser                   | A.3          | offen    |
+| ID    | Test                                                                                                                                     | Layer                     | Aus          | Status   |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------ | -------- |
+| RT-1  | `Frame` allein rendert `<div>` mit Frame-Default-Flex (`display:flex; flex-direction:column`)                                            | compiler-unit             | A.1          | erledigt |
+| RT-2  | `Box` ≡ `Frame` (gleicher DOM-Output bis auf `data-component`)                                                                           | compiler-unit             | A.3          | erledigt |
+| RT-3  | `Frame "hello"` löst Validator-Warn `W112` aus (Box / Spacer ebenfalls; User-Komponente `Btn "X"` NICHT)                                 | validator                 | A.2          | erledigt |
+| RT-4  | `Frame "hello"` rendert KEIN `innerHTML` im DOM-Backend; `Text "X"` / `Btn "X"` weiterhin schon                                          | compiler-unit             | B.1          | erledigt |
+| RT-5  | React: `Frame "hello"` rendert KEIN `{"hello"}`; jedes Element trägt `data-component`/`data-mirror-name`; `data-state` bei Initial-State | compiler-unit             | B.1 + B.2    | erledigt |
+| RT-6  | `frame` / `BOX` löst `W004` aus; Parser canonicalisiert auf `Frame` / `Box`; `originalName` hält das Original                            | validator + compiler-unit | A.3          | erledigt |
+| RT-7  | `unknown` (kein Primitive, keine Component-Definition) löst E002 aus                                                                     | validator                 | A.4          | erledigt |
+| RT-8  | `Frame\n  unknown` / `Frame\n  todo` werden NICHT als initialState konsumiert; Validator feuert E002 für `unknown`                       | validator + compiler-unit | A.5          | erledigt |
+| RT-9  | `Frame\n  open/closed/selected/expanded/collapsed/on` setzt `initialState` korrekt — Gate darf DSL-State-Tokens nicht brechen            | compiler-unit             | A.5          | erledigt |
+| RT-10 | `Frame name MyFrame` emittiert `data-mirror-name="MyFrame"` GENAU EINMAL                                                                 | compiler-unit             | B.5          | erledigt |
+| RT-11 | Differential: `Frame name MyFrame` ergibt äquivalente Element-Registry in DOM und React                                                  | differential              | B.4          | offen    |
+| RT-12 | Differential: `Frame\n  selected` ergibt äquivalentes State-Setup in DOM und React                                                       | differential              | B.2          | offen    |
+| RT-13 | Differential: `Frame gap 12, pad 16` ergibt äquivalente Default-Styles in DOM und React                                                  | differential              | B.3          | offen    |
+| RT-14 | Studio-E2E: Click auf `<div data-component="Frame">` → Property-Panel zeigt Frame-Properties                                             | browser                   | (regression) | offen    |
+| RT-15 | Studio-E2E: `data-component="frame"` (lowercase) wird im Property-Panel als Frame erkannt (oder löst Lint-Warn aus)                      | browser                   | A.3          | offen    |
 
 ## Test-Status
 

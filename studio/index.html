@@ -23,7 +23,7 @@
 
   <!-- Tom Select CSS -->
   <link rel="stylesheet" href="https://esm.sh/tom-select@2.4.3/dist/css/tom-select.default.min.css">
-  <link rel="stylesheet" href="styles.css?v=239">
+  <link rel="stylesheet" href="styles.css?v=242">
   <!-- Mirror Default Styles (for preview) -->
   <link rel="stylesheet" href="dist/mirror-defaults.css?v=1">
 </head>
@@ -104,8 +104,9 @@
           <div class="editor-action-divider"></div>
           <button id="reset-demo-btn" class="editor-action-btn" title="Demo-Projekt laden – verwirft aktuelle Änderungen">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="1 4 1 10 7 10"></polyline>
-              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+              <rect width="18" height="7" x="3" y="3" rx="1"/>
+              <rect width="9" height="7" x="3" y="14" rx="1"/>
+              <rect width="5" height="7" x="16" y="14" rx="1"/>
             </svg>
           </button>
         </div>
@@ -147,6 +148,7 @@
               <polygon points="5,3 19,12 5,21"></polygon>
             </svg>
           </button>
+          <div class="preview-toolbar-divider"></div>
           <button class="export-toolbar-btn" id="export-btn" title="Export → React/Vue/Svelte/Vanilla via AI">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
               <path d="M16.5 9.4 7.55 4.24"/>
@@ -184,10 +186,10 @@
 
   <!-- Settings and Auth modals removed - Desktop app uses native system -->
 
-  <script src="dist/browser/index.global.js?v=96"></script>
+  <script src="dist/browser/index.global.js?v=98"></script>
   <script type="module" src="dist/dialog.js?v=2"></script>
   <script type="module" src="dist/tauri-bridge.js?v=2"></script>
   <script type="module" src="dist/desktop-files.js?v=2"></script>
-  <script type="module" src="dist/app.js?v=21"></script>
+  <script type="module" src="dist/app.js?v=29"></script>
 </body>
 </html>

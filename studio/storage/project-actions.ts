@@ -52,151 +52,408 @@ export const EMPTY_PROJECT: Record<string, string> = {
 // =============================================================================
 
 // Multi-file demo project: each file maps 1:1 to one editor tab.
-// Multi-File-Roadmap: all files use the unified `.mir` extension; the
-// compiler classifies definitions by content (token-suffix, capitalized
-// component definition, lowercase data object, element instance) and
-// loads them in the canonical phase order (data → tokens → components →
-// layouts). The four canonical names are convention; users can rename or
-// add files freely.
+// "Tagesroutine" — daily-routine tracker. Showcases every Mirror
+// technique we want a generated app to be able to use:
+// data tables, each-loops, ternary conditionals, exclusive()
+// bottom-nav, grid (7-day Verlauf, 2-col KPI), aggregations,
+// custom toggle states, increment/decrement, Input bind, Dialog
+// with overlay+backdrop, anim pulse/bounce, toast feedback.
+//
+// Five-Prinzipien-Check: tokens drive every value (no hex in
+// components.mir or app.mir), no Frame in layout (sprechende
+// Namen via `as Frame`), slot-names are roles (Title/StreakIcon/…),
+// layout flat (no single-child wrappers).
 export const DEFAULT_PROJECT: Record<string, string> = {
-  'data.mir': `// Cards for the Daten tab — table form: header row + data rows.
-// Position-based parsing means values can be unquoted identifiers
-// (home, layers, eye) or multi-word strings (Live Preview).
-features:
-  icon    title           desc
-  home    Willkommen      Dies ist ein Demo-Projekt.
-  layers  Komponenten     Baue wiederverwendbare UI-Bausteine.
-  eye     Live Preview    Änderungen sofort sehen.
+  'data.mir': `// 6 tägliche Routinen mit aktuellem Status
+routines:
+  med:
+    icon: sparkles
+    title: Meditation
+    goal: 10
+    done: true
+    streak: 12
+  run:
+    icon: activity
+    title: Sport
+    goal: 30
+    done: false
+    streak: 3
+  morn:
+    icon: sun
+    title: Morgenroutine
+    goal: 5
+    done: true
+    streak: 28
+  read:
+    icon: book-open
+    title: Lesen
+    goal: 20
+    done: false
+    streak: 7
+  walk:
+    icon: trees
+    title: Spaziergang
+    goal: 15
+    done: true
+    streak: 2
+  diary:
+    icon: pen-line
+    title: Tagebuch
+    goal: 5
+    done: false
+    streak: 4
 
-// Counter state used by the Interactive detail view.
-count: 0`,
+// 7-Tage Verlauf
+history:
+  mo:
+    day: Mo
+    count: 5
+  di:
+    day: Di
+    count: 4
+  mi:
+    day: Mi
+    count: 6
+  do:
+    day: Do
+    count: 3
+  fr:
+    day: Fr
+    count: 5
+  sa:
+    day: Sa
+    count: 6
+  so:
+    day: So
+    count: 2
 
-  'tokens.mir': `// Design Tokens
+// Einstellungen
+notifications: true
+weekStartsMonday: true
+goalPerDay: 5
+remindHour: 7
 
-// Background Colors
-primary.bg: #2271C1
-surface.bg: #1a1a1a
-card.bg: #27272a
+// UI-State
+showAddDialog: false
+newRoutineName: ""`,
 
-// Icon Colors
-primary.ic: #2271C1
-muted.ic: #888
+  'tokens.mir': `// Warm Dark Palette — dunkel, aber wärmer als pure Tech-Blue.
 
-// Text Colors
-muted.col: #888
+// Backgrounds (warm tones)
+surface.bg: #1a1410
+card.bg: #2a201a
+elev.bg: #322820
+nav.bg: #1a1410
+glow.bg: #f59e0b22
+
+// Accent — sun amber (col + ic = amber; bg also amber for buttons)
+accent.bg: #f59e0b
+accent.col: #f59e0b
+accent.ic: #f59e0b
+
+// "Auf-Accent" = Text/Inhalt auf accent-bg (z. B. Button-Label).
+onAccent.col: #1a1410
+
+// Status
+success.bg: #10b981
+success.ic: #10b981
+danger.ic: #ef4444
+
+// Text
+text.col: #fef3c7
+muted.col: #a8a29e
+dim.col: #57534e
+
+// Typography sizes
+hero.fs: 28
+title.fs: 22
+heading.fs: 16
+body.fs: 14
+small.fs: 12
+counter.fs: 32
+
+// Weights
+medium.weight: 500
+bold.weight: 700
 
 // Spacing
-m.pad: 16
-m.gap: 12
+view.pad: 20
+card.pad: 16
+gap.gap: 12
+small.gap: 6
+nav.pad: 10
 
 // Radius
-radius.rad: 8`,
+radius.rad: 12
+ctrl.rad: 8
+pill.rad: 99
 
-  'components.mir': `// Reusable component definitions.
+// Sizes
+icon.is: 22
+big.is: 28
+hero.is: 48
+daycell.h: 88
+kpi.h: 84
 
-// Card — surface for grouped content.
-Card: bg $card, pad $m, rad $radius, gap 8
+// Effects
+dim.opacity: 0.85
+press.scale: 0.97`,
 
-// Btn — primary button on top of the Button primitive.
-Btn as Button: bg $primary, col white, pad 10 16, rad 6, cursor pointer
+  'components.mir': `// ── App-Shell (Screens + Bottom-Nav) ──────────────────────────────────
+
+App as Frame: ver, h full
+Screen as Frame: grow, scroll, pad $view, gap $gap
+
+// ── Container (Frame mit sprechendem Namen) ──────────────────────────
+
+View as Frame: pad $view, gap $gap, h full
+Hero as Frame: gap $small, ver-center
+TopBar as Frame: hor, ver-center, spread, gap $gap
+
+// ── Cards & Rows ──────────────────────────────────────────────────────
+
+Card as Frame: bg $card, pad $card, rad $radius, gap $gap
+RoutineRow as Frame: hor, gap $gap, ver-center
+RoutineMeta as Frame: gap $small, grow
+
+// ── Typography (Text mit Rolle) ───────────────────────────────────────
+
+H1 as Text: fs $hero, weight $bold, col $text
+H2 as Text: fs $title, weight $bold, col $text
+H3 as Text: fs $heading, weight $medium, col $text
+Body as Text: fs $body, col $text
+Hint as Text: fs $small, col $muted
+
+// ── Icons ─────────────────────────────────────────────────────────────
+
+RoutineIcon as Icon: ic $accent, is $icon
+HeroIcon as Icon: ic $accent, is $hero
+NavIcon as Icon: is $icon
+
+// ── Buttons ───────────────────────────────────────────────────────────
+
+Btn as Button: bg $accent, col $onAccent, pad $nav, rad $ctrl, weight $medium, cursor pointer
   hover:
-    opacity 0.9
+    opacity $dim
 
-// TabBtn — exclusive() keeps only one TabBtn selected at a time.
-TabBtn: pad 8 14, rad 6, bg transparent, col $muted, cursor pointer, weight 500, exclusive()
+GhostBtn as Button: bg transparent, col $muted, pad $nav, rad $ctrl, cursor pointer
   hover:
-    col white
+    col $text
+
+// ── Bottom-Nav (exclusive, nur ein Tab gleichzeitig aktiv) ────────────
+
+BottomNav as Frame: hor, gap $small, bg $nav, pad $nav, bor 1 0 0 0, boc $card
+
+NavBtn as Frame: ver, gap $small, hor-center, ver-center, pad $small, rad $ctrl, col $muted, cursor pointer, exclusive(), grow
+  hover:
+    col $text
   selected:
-    bg $card, col white`,
+    col $accent
 
-  'app.mir': `canvas mobile, bg $surface, col white
+NavLabel as Text: fs $small, weight $medium
 
-// Home view: two tabs (Daten / Navigation) above two stacked frames;
-// show()/hide() flips between them.
-//   Daten      = three cards rendered from \$features via each-loop.
-//   Navigation = three hardcoded cards with distinct nav targets.
-Frame name HomeView, pad 24, gap $m, h full
-  Text "Demo App", fs 20, weight bold
+// ── Check-Circle (toggleable) ─────────────────────────────────────────
 
-  Frame hor, gap 4, bg #1a1a1a, pad 4, rad 8
-    TabBtn "Daten", show(DataView), hide(NavView), selected
-    TabBtn "Navigation", show(NavView), hide(DataView)
+RoutineCheck as Frame: w 28, h 28, rad $pill, bor 2, boc $muted, cursor pointer, center, toggle()
+  on 0.2s ease-out:
+    bg $success
+    boc $success
+    Icon "check", ic $text, is 16
+    anim bounce
 
-  Frame name DataView, gap $m
-    each feature in $features
+// ── Streak-Pill (Flame-Icon + Tage) ───────────────────────────────────
+
+StreakPill as Frame: hor, gap $small, ver-center, bg $glow, pad 4 8, rad $pill, w hug
+StreakIcon as Icon: ic $accent, is 14, anim pulse
+StreakText as Text: fs $small, col $accent, weight $medium
+
+// ── Verlauf-Grid (7 Tages-Zellen) ────────────────────────────────────
+
+WeekGrid as Frame: grid 7, gap $small
+DayCell as Frame: ver, ver-center, hor-center, gap $small, h $daycell, bg $card, rad $ctrl
+DayLabel as Text: fs $small, col $muted, weight $medium
+DayCount as Text: fs $heading, weight $bold, col $accent
+
+// ── Stats KPI-Grid (2 Spalten) ───────────────────────────────────────
+
+KpiGrid as Frame: grid 2, gap $gap
+KpiTile as Frame: ver, gap $small, bg $card, pad $card, rad $radius, h $kpi
+KpiLabel as Text: fs $small, col $muted, weight $medium
+KpiValue as Frame: hor, gap $small, ver-center
+KpiNumber as Text: fs $counter, weight $bold, col $accent
+KpiUnit as Text: fs $small, col $muted
+
+// ── Top-Routinen-Zeile (sortiert nach Streak) ───────────────────────
+
+TopRow as Frame: hor, spread, ver-center, pad $small 0
+TopName as Text: fs $body, col $text, grow
+TopStreak as Text: fs $body, col $accent, weight $medium
+
+// ── Settings-Zeile (Label + Control) ─────────────────────────────────
+
+SettingRow as Frame: hor, spread, ver-center, pad $small 0
+SettingLabel as Text: fs $body, col $text, grow
+
+// ── Toggle-Pille (eigener Switch — toggle() Frame) ─────────────────
+
+TogglePill as Frame: w 44, h 24, rad $pill, bg $card, bor 1, boc $muted, cursor pointer, toggle()
+  on:
+    bg $accent
+    boc $accent
+
+// ── Stepper (− / Wert / +) ───────────────────────────────────────────
+
+Stepper as Frame: hor, gap $gap, ver-center
+StepperBtn as Button: w 36, h 36, rad $pill, bg $card, col $text, cursor pointer, center, fs $heading, weight $bold
+  hover:
+    bg $elev
+StepperValue as Text: fs $title, weight $bold, col $accent, w 48, center
+
+// ── Icon-Button (rund, für + / − etc.) ──────────────────────────────
+
+IconBtn as Button: w 40, h 40, rad $pill, bg $accent, col $onAccent, cursor pointer, center, fs $title, weight $bold
+  hover:
+    opacity $dim
+
+// ── Dialog (Overlay + Panel + Actions) ───────────────────────────────
+
+DialogOverlay as Frame: abs, x 0, y 0, w full, h full, hor-center, ver-center, bg rgba(0,0,0,0.7)
+DialogPanel as Frame: bg $elev, pad $card, rad $radius, gap $gap, w 280, shadow lg
+DialogActions as Frame: hor, gap $small`,
+
+  'app.mir': `canvas mobile, bg $surface, col $text, font sans
+
+App
+  Screen name HeuteScreen
+    TopBar
+      RoutineMeta
+        H1 "Heute"
+        Hint "Mittwoch, 7. Mai"
+      IconBtn "+", show(NewRoutineDialog)
+
+    each routine in $routines
       Card
-        Frame hor, gap $m, ver-center
-          Icon feature.icon, ic $primary, is 20
-          Text feature.title, fs 16, weight 500
-        Text feature.desc, col $muted, fs 14
+        RoutineRow
+          RoutineIcon routine.icon, ic routine.done ? $success : $accent
+          RoutineMeta
+            H3 routine.title, col routine.done ? $muted : $text
+            StreakPill
+              StreakIcon "flame"
+              StreakText "$routine.streak Tage"
+          RoutineCheck
 
-  Frame name NavView, gap $m, hidden
+  Screen name VerlaufScreen, hidden
+    H1 "Verlauf"
+    Hint "Letzte 7 Tage"
+
+    WeekGrid
+      each day in $history
+        DayCell
+          DayLabel day.day
+          DayCount day.count
+
     Card
-      Frame hor, gap $m, ver-center
-        Icon "home", ic $primary, is 20
-        Text "Willkommen", fs 16, weight 500
-      Text "Mehr Informationen anzeigen.", col $muted, fs 14
-      Btn "Mehr", navigate(WelcomeDetail)
+      H3 "Diese Woche"
+      Hint "31 von 42 Routinen erledigt — 74% Quote"
+
+  Screen name StatsScreen, hidden
+    H1 "Stats"
+    Hint "Deine Routinen-Übersicht"
+
+    KpiGrid
+      KpiTile
+        KpiLabel "Routinen aktiv"
+        KpiValue
+          KpiNumber "$routines.count"
+          KpiUnit "Stück"
+      KpiTile
+        KpiLabel "Längste Serie"
+        KpiValue
+          KpiNumber "28"
+          KpiUnit "Tage"
+      KpiTile
+        KpiLabel "Diese Woche"
+        KpiValue
+          KpiNumber "31"
+          KpiUnit "von 42"
+      KpiTile
+        KpiLabel "Quote"
+        KpiValue
+          KpiNumber "74"
+          KpiUnit "%"
 
     Card
-      Frame hor, gap $m, ver-center
-        Icon "layers", ic $primary, is 20
-        Text "Komponenten", fs 16, weight 500
-      Text "Komponenten ansehen.", col $muted, fs 14
-      Btn "Mehr", navigate(ComponentsDetail)
+      H3 "Top Routinen"
+      Hint "Sortiert nach Streak"
+      each routine in $routines
+        TopRow
+          TopName routine.title
+          TopStreak "$routine.streak Tage"
+
+  Screen name MehrScreen, hidden
+    H1 "Mehr"
+    Hint "Einstellungen & Profil"
 
     Card
-      Frame hor, gap $m, ver-center
-        Icon "eye", ic $primary, is 20
-        Text "Live Preview", fs 16, weight 500
-      Text "Interaktive Demo.", col $muted, fs 14
-      Btn "Mehr", navigate(InteractiveDetail)
+      H3 "Benachrichtigungen"
+      SettingRow
+        SettingLabel "Tägliche Erinnerung"
+        TogglePill on
+      SettingRow
+        SettingLabel "Streak-Warnung"
+        TogglePill on
+      SettingRow
+        SettingLabel "Wochenrückblick"
+        TogglePill
 
-// Detail: Welcome
-Frame name WelcomeDetail, pad 24, gap $m, h full, hidden
-  Frame hor, gap $m, ver-center
-    Btn "← Zurück", navigate(HomeView)
-    Text "Willkommen", fs 20, weight bold
+    Card
+      H3 "Tagesziel"
+      Hint "Wieviele Routinen pro Tag?"
+      Stepper
+        StepperBtn "−", decrement(goalPerDay)
+        StepperValue "$goalPerDay"
+        StepperBtn "+", increment(goalPerDay)
 
-  Frame center, gap $m, grow
-    Icon "home", ic $primary, is 64
-    Text "Schön, dass du da bist!", fs 18, weight 500
-    Text "Mirror ist eine DSL für AI-unterstütztes UI-Design.", col $muted, fs 14
+    Card
+      H3 "Profil"
+      SettingLabel "Name"
+      Input bind newRoutineName, placeholder "Dein Name…"
 
-// Detail: Komponenten
-Frame name ComponentsDetail, pad 24, gap $m, h full, hidden
-  Frame hor, gap $m, ver-center
-    Btn "← Zurück", navigate(HomeView)
-    Text "Komponenten", fs 20, weight bold
+    Card
+      H3 "Über"
+      Hint "Tagesroutine v1.0 · gebaut mit Mirror DSL"
 
-  Card
-    Text "Button", fs 12, col $muted
-    Btn "Aktion auslösen"
+  BottomNav
+    NavBtn show(HeuteScreen), hide(VerlaufScreen), hide(StatsScreen), hide(MehrScreen), selected
+      NavIcon "home"
+      NavLabel "Heute"
+    NavBtn show(VerlaufScreen), hide(HeuteScreen), hide(StatsScreen), hide(MehrScreen)
+      NavIcon "calendar"
+      NavLabel "Verlauf"
+    NavBtn show(StatsScreen), hide(HeuteScreen), hide(VerlaufScreen), hide(MehrScreen)
+      NavIcon "bar-chart-3"
+      NavLabel "Stats"
+    NavBtn show(MehrScreen), hide(HeuteScreen), hide(VerlaufScreen), hide(StatsScreen)
+      NavIcon "settings"
+      NavLabel "Mehr"
 
-  Card
-    Text "Switch", fs 12, col $muted
-    Switch "Benachrichtigungen"
+// "Neue Routine" Dialog — Overlay deckt Bildschirm, Panel zentriert.
+DialogOverlay name NewRoutineDialog, hidden
+  DialogPanel
+    H2 "Neue Routine"
+    Hint "Was willst du täglich tun?"
+    Input bind newRoutineName, placeholder "z. B. Yoga"
 
-  Card
-    Text "Input", fs 12, col $muted
-    Input placeholder "Dein Name…"
+    SettingRow
+      SettingLabel "Tagesziel"
+      Stepper
+        StepperBtn "−", decrement(goalPerDay)
+        StepperValue "$goalPerDay"
+        StepperBtn "+", increment(goalPerDay)
 
-// Detail: Interaktiv (Counter + Toast)
-Frame name InteractiveDetail, pad 24, gap $m, h full, hidden
-  Frame hor, gap $m, ver-center
-    Btn "← Zurück", navigate(HomeView)
-    Text "Live Preview", fs 20, weight bold
-
-  Card
-    Text "Counter", fs 12, col $muted
-    Frame hor, gap $m, ver-center
-      Btn "−", decrement(count)
-      Text "$count", fs 24, w 60, center
-      Btn "+", increment(count)
-
-  Card
-    Text "Toast", fs 12, col $muted
-    Btn "Anzeigen", toast("Hallo aus Mirror!", "success")`,
+    DialogActions
+      GhostBtn "Abbrechen", hide(NewRoutineDialog), grow
+      Btn "Hinzufügen", hide(NewRoutineDialog), toast("Routine hinzugefügt!", "success"), grow`,
 }
 
 // =============================================================================

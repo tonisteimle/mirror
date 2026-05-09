@@ -87,8 +87,11 @@ describe('React Backend — Style object emission', () => {
 
   it('Frame without props omits style attribute', () => {
     const out = react(`Frame`)
-    // No style attribute on the bare Frame
-    expect(out).toMatch(/<div\s*\/?>|<div>/)
+    // No style attribute on the bare Frame. Mirror data-* markers
+    // (data-component, data-mirror-name) are still emitted by the backend
+    // so studio tooling can resolve the element.
+    expect(out).not.toContain('style={')
+    expect(out).toMatch(/<div\b[^>]*\/>/)
   })
 })
 

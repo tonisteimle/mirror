@@ -24,6 +24,7 @@ import { describe, it, expect } from 'vitest'
 import { parse } from '../../compiler/parser'
 import { validate } from '../../compiler/validator'
 import { generateDOM } from '../../compiler/backends/dom'
+import { generateReact } from '../../compiler/backends/react'
 
 function compileToCreateUI(source: string): string {
   return generateDOM(parse(source))
@@ -132,6 +133,30 @@ describe('Slice 1 — Frame primitive', () => {
     it('user component (Btn "Speichern") still emits innerHTML — slot/template pattern', () => {
       const js = compileToCreateUI('Btn: pad 10 20\nBtn "Speichern"')
       expect(js).toMatch(/node_\d+\.innerHTML\s*=\s*formatInlineMarkdown/)
+    })
+  })
+
+  describe('RT-5 — React-Backend skips content & emits Mirror data-* attributes', () => {
+    it('Frame "hello" renders no JSX text child', () => {
+      const tsx = generateReact(parse('Frame "hello"'))
+      expect(tsx).not.toContain('{"hello"}')
+    })
+
+    it('every emitted element carries data-component and data-mirror-name', () => {
+      const tsx = generateReact(parse('Frame name MyFrame'))
+      expect(tsx).toContain('data-component="Frame"')
+      expect(tsx).toContain('data-mirror-name="MyFrame"')
+    })
+
+    it('initial state surfaces as data-state', () => {
+      const tsx = generateReact(parse('Frame\n  selected'))
+      expect(tsx).toContain('data-state="selected"')
+    })
+
+    it('user-component name flows through data-component', () => {
+      const tsx = generateReact(parse('Btn: pad 10\nBtn "X"'))
+      expect(tsx).toContain('data-component="Btn"')
+      expect(tsx).toContain('{"X"}') // user components keep their text content
     })
   })
 
