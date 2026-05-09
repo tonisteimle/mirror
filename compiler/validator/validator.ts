@@ -35,6 +35,7 @@ import {
   ZONE_ALIGNMENT_PROPS,
 } from './validation-config'
 import { CHART_PRIMITIVES } from '../schema/chart-primitives'
+import { getPrimitiveDef } from '../schema/dsl'
 
 const CHART_PRIMITIVE_NAMES = new Set(Object.keys(CHART_PRIMITIVES))
 
@@ -426,6 +427,23 @@ export class Validator {
     // 1. `center` on a child can mean "center this element's OWN children" (valid)
     // 2. The DROP operation correctly sets alignment on parent (via parentProperty)
     // 3. Existing code with child alignment should still work (backward compat)
+
+    // Layout primitives don't render `content` — `Frame "hi"` etc. are
+    // a no-op visually but a real DSL violation. Warn so the editor
+    // surfaces the smell; backends still skip the render (Phase B.1).
+    const primitiveDef = getPrimitiveDef(instance.component)
+    if (primitiveDef && primitiveDef.content === false) {
+      const contentProp = instance.properties.find(p => p.name === 'content')
+      if (contentProp && contentProp.values.length > 0) {
+        this.addWarning(
+          ERROR_CODES.CONTENT_ON_LAYOUT,
+          `${instance.component} doesn't render text content — wrap it in a Text/Button/Label child instead.`,
+          contentProp.line,
+          contentProp.column,
+          `${instance.component}\n  Text "..."`
+        )
+      }
+    }
 
     // Validate property set (layout conflicts, duplicates, required, ranges)
     this.validatePropertySet(

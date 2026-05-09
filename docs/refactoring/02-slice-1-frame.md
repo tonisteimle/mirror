@@ -1,7 +1,7 @@
 # 02 — Slice 1: Frame-Container
 
 **Datum:** 2026-05-09
-**Status:** Audit erledigt · Umsetzung in Runden (Phasen A.4 + A.5 + B.5 fertig)
+**Status:** Audit erledigt · Umsetzung in Runden (Phasen A.1, A.2, A.4, A.5, B.1, B.5 fertig)
 
 ## Inhalt
 
@@ -233,26 +233,26 @@ Drei Phasen mit Abhängigkeiten. Sub-Tasks fein-granular. Phasen sind die natür
 
 Voraussetzung für alles weitere. Aus V-1, V-2, V-3, V-4, V-7.
 
-| ID  | Sub-Task                                                                                                                                                         | Aufwand | Status                                                                                                                         |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| A.1 | DSL-Schema: pro Primitive deklarieren ob `content` zulässig ist. Frame/Box/Section/Article/Header/Nav/Main/Footer/Aside: nein. Text/Button/Label/Link/H1-H6: ja. | M       | offen                                                                                                                          |
-| A.2 | Validator-Pass: `content` auf Layout-Primitive → Warn (V-1)                                                                                                      | S       | offen                                                                                                                          |
-| A.3 | Parser: Component-Namen canonicalisieren auf Pascal-Case in AST; Validator-Warn bei Casing-Verstoss (V-2)                                                        | M       | offen                                                                                                                          |
-| A.4 | Validator: Top-Level Instance ohne bekannten Component-Namen → E002 zuverlässig feuern (V-3)                                                                     | S       | erledigt — funktionierte bereits, Audit-Probe-#9 falsch dokumentiert                                                           |
-| A.5 | Parser: Single-Word-Child gegen State-Token-Liste prüfen, sonst nicht in `initialState` konsumieren (V-4)                                                        | M       | erledigt — STATE_NAMES-Gate in `parseInstanceBody`; impliziter `onclick`-Pfad ergänzt (Tutorial 08, Bsp. 8 funktioniert jetzt) |
-| A.6 | Tutorial-Update: Frame-Default-Styles dokumentieren (V-7)                                                                                                        | S       | offen                                                                                                                          |
+| ID  | Sub-Task                                                                                                                                                                                                                                                          | Aufwand | Status                                                                                                                         |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| A.1 | DSL-Schema: pro Primitive deklarieren ob `content` zulässig ist. Frame/Box/Spacer/Divider/Table-Familie: `content: false`. Section/Header/Nav/Main/Article/Aside/Footer dual-use als Slot-Namen → bewusst NICHT geflaggt (würde `Card: \n  Header: ...` brechen). | M       | erledigt — `PrimitiveDef.content` + `isLayoutPrimitive(name)`                                                                  |
+| A.2 | Validator-Pass: `content` auf Layout-Primitive → Warn (V-1)                                                                                                                                                                                                       | S       | erledigt — `W112 CONTENT_ON_LAYOUT` in `validateInstance`                                                                      |
+| A.3 | Parser: Component-Namen canonicalisieren auf Pascal-Case in AST; Validator-Warn bei Casing-Verstoss (V-2)                                                                                                                                                         | M       | offen                                                                                                                          |
+| A.4 | Validator: Top-Level Instance ohne bekannten Component-Namen → E002 zuverlässig feuern (V-3)                                                                                                                                                                      | S       | erledigt — funktionierte bereits, Audit-Probe-#9 falsch dokumentiert                                                           |
+| A.5 | Parser: Single-Word-Child gegen State-Token-Liste prüfen, sonst nicht in `initialState` konsumieren (V-4)                                                                                                                                                         | M       | erledigt — STATE_NAMES-Gate in `parseInstanceBody`; impliziter `onclick`-Pfad ergänzt (Tutorial 08, Bsp. 8 funktioniert jetzt) |
+| A.6 | Tutorial-Update: Frame-Default-Styles dokumentieren (V-7)                                                                                                                                                                                                         | S       | offen                                                                                                                          |
 
 ## Phase B — Backend-Konsistenz
 
 Aus V-1 (Backend-No-Op-Pfad) + V-6 (React-Parität). Hängt teilweise von Phase A ab (DSL-Schema-Flag aus A.1).
 
-| ID  | Sub-Task                                                                                             | Aufwand | Status                |
-| --- | ---------------------------------------------------------------------------------------------------- | ------- | --------------------- |
-| B.1 | DOM-Backend: `content` auf Layout-Primitive nicht via `formatInlineMarkdown` rendern (V-1)           | S       | offen                 |
-| B.2 | React-Backend: `data-mirror-name`, `data-component`, `data-mirror-id`, `data-state` emittieren (V-6) | M       | offen                 |
-| B.3 | React-Backend: Frame-Default-Styles als style-prop emittieren (V-6)                                  | M       | offen                 |
-| B.4 | React-Backend: Element-Registry via `useRef` + `useEffect` für `name`-Property (V-6)                 | L       | offen                 |
-| B.5 | DOM-Emitter: `dataset.mirrorName` nur einmal setzen (V-5)                                            | S       | erledigt — `b5dd1170` |
+| ID  | Sub-Task                                                                                             | Aufwand | Status                                                                                                                                    |
+| --- | ---------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| B.1 | DOM-Backend: `content` auf Layout-Primitive nicht via `formatInlineMarkdown` rendern (V-1)           | S       | erledigt — Skip in `emitProperties` gated über `isLayoutPrimitive(node.name)`, sodass User-Komponenten (`Btn "X"`) weiterhin Text rendern |
+| B.2 | React-Backend: `data-mirror-name`, `data-component`, `data-mirror-id`, `data-state` emittieren (V-6) | M       | offen                                                                                                                                     |
+| B.3 | React-Backend: Frame-Default-Styles als style-prop emittieren (V-6)                                  | M       | offen                                                                                                                                     |
+| B.4 | React-Backend: Element-Registry via `useRef` + `useEffect` für `name`-Property (V-6)                 | L       | offen                                                                                                                                     |
+| B.5 | DOM-Emitter: `dataset.mirrorName` nur einmal setzen (V-5)                                            | S       | erledigt — `b5dd1170`                                                                                                                     |
 
 ## Phase C — Migration + Cleanup
 
@@ -289,10 +289,10 @@ Aufwand: `S` (≤30min) · `M` (≤2h) · `L` (≤1d).
 
 | ID    | Test                                                                                                                          | Layer                     | Aus          | Status   |
 | ----- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------ | -------- |
-| RT-1  | `Frame` allein rendert `<div>` mit Frame-Default-Flex (`display:flex; flex-direction:column`)                                 | compiler-unit             | A.1          | offen    |
-| RT-2  | `Box` ≡ `Frame` (gleicher DOM-Output bis auf `data-component`)                                                                | compiler-unit             | A.3          | offen    |
-| RT-3  | `Frame "hello"` löst Validator-Warn aus (kein Compile-Error, aber sichtbar)                                                   | validator                 | A.2          | offen    |
-| RT-4  | `Frame "hello"` rendert KEIN content im DOM-Backend (kein `innerHTML`-Set)                                                    | compiler-unit             | B.1          | offen    |
+| RT-1  | `Frame` allein rendert `<div>` mit Frame-Default-Flex (`display:flex; flex-direction:column`)                                 | compiler-unit             | A.1          | erledigt |
+| RT-2  | `Box` ≡ `Frame` (gleicher DOM-Output bis auf `data-component`)                                                                | compiler-unit             | A.3          | erledigt |
+| RT-3  | `Frame "hello"` löst Validator-Warn `W112` aus (Box / Spacer ebenfalls; User-Komponente `Btn "X"` NICHT)                      | validator                 | A.2          | erledigt |
+| RT-4  | `Frame "hello"` rendert KEIN `innerHTML` im DOM-Backend; `Text "X"` / `Btn "X"` weiterhin schon                               | compiler-unit             | B.1          | erledigt |
 | RT-5  | `Frame "hello"` rendert KEIN content im React-Backend (kein `{"hello"}`)                                                      | compiler-unit             | B.1          | offen    |
 | RT-6  | `frame` (lowercase) löst Validator-Warn aus, Parser canonicalisiert auf `Frame` in AST                                        | validator + compiler-unit | A.3          | offen    |
 | RT-7  | `unknown` (kein Primitive, keine Component-Definition) löst E002 aus                                                          | validator                 | A.4          | offen    |

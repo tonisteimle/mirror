@@ -140,6 +140,13 @@ export interface PrimitiveDef {
   aliases?: string[]
   /** Description */
   description: string
+  /**
+   * Whether the primitive carries text content via the positional first
+   * argument (`Btn "label"`, `Text "hi"`). Layout containers don't render
+   * `content`; setting this to `false` lets the validator surface a warning
+   * and the backends skip the no-op rendering. Defaults to true.
+   */
+  content?: boolean
 }
 
 export interface EventDef {
@@ -218,11 +225,12 @@ export const DSL = {
   // Primitives (Parser needs these)
   // ---------------------------------------------------------------------------
   primitives: {
-    // Layout primitives
+    // Layout primitives — no positional text content; child elements only.
     Frame: {
       html: 'div',
       aliases: ['Box'],
       description: 'Container with vertical layout (default)',
+      content: false,
     },
     Text: { html: 'span', description: 'Text element' },
 
@@ -240,10 +248,14 @@ export const DSL = {
 
     // Structural
     Slot: { html: 'div', description: 'Slot placeholder for composition' },
-    Divider: { html: 'hr', description: 'Horizontal divider line' },
-    Spacer: { html: 'div', description: 'Flexible spacer element' },
+    Divider: { html: 'hr', description: 'Horizontal divider line', content: false },
+    Spacer: { html: 'div', description: 'Flexible spacer element', content: false },
 
-    // Semantic HTML elements
+    // Semantic HTML elements. These names double as common slot identifiers
+    // inside component definitions (`Card: \n  Header: ... \n  Body: ...`),
+    // so we deliberately don't flag positional content here — the slot
+    // pattern needs `Header "Title"` to render. Use Frame/Box for the
+    // pure-layout case if a warning is desired.
     Header: { html: 'header', description: 'Page or section header' },
     Nav: { html: 'nav', description: 'Navigation section' },
     Main: { html: 'main', description: 'Main content area' },
@@ -260,11 +272,11 @@ export const DSL = {
     H5: { html: 'h5', description: 'Heading level 5' },
     H6: { html: 'h6', description: 'Heading level 6' },
 
-    // Table primitives (now standard components, not compound)
-    Table: { html: 'div', description: 'Table container' },
-    TableHeader: { html: 'div', description: 'Table header row' },
-    TableRow: { html: 'div', description: 'Table row' },
-    TableFooter: { html: 'div', description: 'Table footer' },
+    // Table primitives — pure layout containers.
+    Table: { html: 'div', description: 'Table container', content: false },
+    TableHeader: { html: 'div', description: 'Table header row', content: false },
+    TableRow: { html: 'div', description: 'Table row', content: false },
+    TableFooter: { html: 'div', description: 'Table footer', content: false },
     TableCell: { html: 'div', description: 'Table cell' },
     TableHeaderCell: { html: 'div', description: 'Table header cell' },
   } as Record<string, PrimitiveDef>,
@@ -578,12 +590,34 @@ export function isPrimitive(name: string): boolean {
 }
 
 /**
- * Get primitive definition
+ * True if the primitive does NOT carry positional text content. Backends
+ * use this to skip the no-op `innerHTML = formatInlineMarkdown(...)` emit;
+ * the validator uses it to surface W112 on `Frame "hello"` and friends.
+ *
+ * Accepts both PascalCase (`Frame`) and lowercase IR-form (`frame`).
+ */
+export function isLayoutPrimitive(name: string): boolean {
+  return getPrimitiveDef(name)?.content === false
+}
+
+/**
+ * Get primitive definition. Follows aliases — `getPrimitiveDef('Box')`
+ * returns the Frame definition.
  */
 export function getPrimitiveDef(name: string): PrimitiveDef | undefined {
-  // Normalize to PascalCase
+  // Normalize to PascalCase first
   const normalizedName = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
-  return DSL.primitives[normalizedName]
+  if (DSL.primitives[normalizedName]) return DSL.primitives[normalizedName]
+
+  // Follow aliases (Box → Frame, Img → Image)
+  const lower = name.toLowerCase()
+  for (const prim of Object.values(DSL.primitives)) {
+    if (prim.aliases?.some(a => a.toLowerCase() === lower)) {
+      return prim
+    }
+  }
+
+  return undefined
 }
 
 /**

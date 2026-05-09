@@ -11,6 +11,8 @@
  * Currently locks:
  *   - RT-1  Frame default flex
  *   - RT-2  Box ≡ Frame at the DOM-emit level (modulo data-component)
+ *   - RT-3  `Frame "hello"` (and Box / Spacer) emits validator W112
+ *   - RT-4  DOM-Backend skips innerHTML for direct layout-primitive use
  *   - RT-8  lowercase non-state child does not silently fold to initialState
  *   - RT-9  DSL state name still folds to initialState
  *   - RT-10 Frame name X emits dataset.mirrorName exactly once (Phase B.5)
@@ -88,6 +90,46 @@ describe('Slice 1 — Frame primitive', () => {
       // The visible difference is the component-name marker.
       expect(frameJs).toContain("node_1.dataset.component = 'Frame'")
       expect(boxJs).toContain("node_1.dataset.component = 'Box'")
+    })
+  })
+
+  describe('RT-3 — content on layout primitive emits W112 warning', () => {
+    for (const src of ['Frame "hello"', 'Box "world"', 'Spacer "x"']) {
+      it(`${src}: validator emits W112`, () => {
+        const result = validate(src)
+        expect(result.valid).toBe(true) // warning, not error
+        expect(result.warnings ?? []).toHaveLength(1)
+        expect(result.warnings?.[0]?.code).toBe('W112')
+      })
+    }
+
+    it('content-bearing primitives (Text/Button/Label/Link/H1) do NOT emit W112', () => {
+      for (const src of ['Text "ok"', 'Button "ok"', 'Label "ok"', 'Link "ok"', 'H1 "ok"']) {
+        const result = validate(src)
+        expect(result.warnings?.filter(w => w.code === 'W112')).toHaveLength(0)
+      }
+    })
+
+    it('user component resolving to Frame does NOT emit W112 (slot/template pattern)', () => {
+      const result = validate('Btn: pad 10 20\nBtn "Speichern"')
+      expect(result.warnings?.filter(w => w.code === 'W112')).toHaveLength(0)
+    })
+  })
+
+  describe('RT-4 — DOM-Backend skips innerHTML for direct layout-primitive use', () => {
+    it('Frame "hello" emits no innerHTML assignment', () => {
+      const js = compileToCreateUI('Frame "hello"')
+      expect(js).not.toMatch(/node_\d+\.innerHTML\s*=\s*formatInlineMarkdown/)
+    })
+
+    it('Text "hello" still emits innerHTML', () => {
+      const js = compileToCreateUI('Text "hello"')
+      expect(js).toMatch(/node_\d+\.innerHTML\s*=\s*formatInlineMarkdown/)
+    })
+
+    it('user component (Btn "Speichern") still emits innerHTML — slot/template pattern', () => {
+      const js = compileToCreateUI('Btn: pad 10 20\nBtn "Speichern"')
+      expect(js).toMatch(/node_\d+\.innerHTML\s*=\s*formatInlineMarkdown/)
     })
   })
 

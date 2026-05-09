@@ -6,6 +6,7 @@
  */
 
 import type { IRNode, IRStyle, IRProperty } from '../../ir/types'
+import { isLayoutPrimitive } from '../../schema/dsl'
 
 // ============================================
 // TYPES
@@ -91,10 +92,17 @@ export function emitProperties(
 ): { isIcon: boolean; iconName: string | null; isSlot: boolean } {
   const isIcon = node.primitive === 'icon'
   const isSlot = node.primitive === 'slot'
+  // Direct use of a layout primitive (`Frame "hi"`, `Box "x"`, `Section "y"`)
+  // doesn't render text content — skip the assignment entirely. User
+  // components that happen to resolve to `frame` (e.g. `Btn: pad 10 20`,
+  // `Item as frame: pad 8`) still render content because that's the standard
+  // pattern for templating buttons/list items.
+  const skipTextContent = isLayoutPrimitive(node.name)
   let iconName: string | null = null
 
   for (const prop of node.properties) {
     if (prop.name === 'textContent') {
+      if (skipTextContent) continue
       iconName = emitTextContent(ctx, prop, varName, isIcon, isSlot)
     } else if (isDisabledOrHidden(prop.name)) {
       emitBooleanProperty(ctx, prop, varName)
