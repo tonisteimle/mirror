@@ -11,6 +11,7 @@ import { CodeGenerator } from './code-generator'
 import { PreviewRenderer } from './preview-renderer'
 import { StudioUpdater } from './studio-updater'
 import { PerfLogger } from './perf-logger'
+import { renderEmptyPreview } from './empty-state'
 
 export class CompileService {
   private preludeBuilder: PreludeBuilder
@@ -82,19 +83,7 @@ export class CompileService {
   }
 
   private renderEmptyPreview(): void {
-    const preview = document.getElementById('preview')!
-    preview.innerHTML = this.createEmptyAppHTML()
-    preview.className = ''
-  }
-
-  private createEmptyAppHTML(): string {
-    return `<div class="mirror-root" style="width: 100%; height: 100%;">
-      <div data-mirror-id="node-1" data-mirror-root="true"
-           data-mirror-name="App" data-component="App"
-           style="display: flex; flex-direction: column;
-                  width: 100%; height: 100%; min-height: 200px;">
-      </div>
-    </div>`
+    renderEmptyPreview(document.getElementById('preview')!)
   }
 
   private clearUserComponents(): void {

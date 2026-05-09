@@ -5,22 +5,13 @@
  */
 
 import type { AST, SourceMap, Studio, Component } from './types'
+import { resetSelectionForEmptyCode, type SelectionManager } from './empty-state'
 
 export interface UpdaterDeps {
   studio: Studio
   studioSelectionManager?: SelectionManager
   updateStudio: (ast: AST, ir: unknown, sourceMap: SourceMap, code: string) => void
   setIconTriggerPrimitives: (map: Map<string, string>) => void
-}
-
-interface SelectionManager {
-  clearSelection: () => void
-  setBreadcrumb: (items: BreadcrumbItem[]) => void
-}
-
-interface BreadcrumbItem {
-  id: string
-  name: string
 }
 
 export class StudioUpdater {
@@ -70,10 +61,7 @@ export class StudioUpdater {
   }
 
   handleEmptyCode(): void {
-    if (this.deps.studioSelectionManager) {
-      this.deps.studioSelectionManager.clearSelection()
-      this.deps.studioSelectionManager.setBreadcrumb([])
-    }
+    resetSelectionForEmptyCode(this.deps.studioSelectionManager)
     this.refreshPreview()
   }
 }

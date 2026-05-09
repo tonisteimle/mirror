@@ -49,6 +49,7 @@ import {
   renderEditorFileTabs as renderEditorFileTabsImpl,
 } from './init'
 import { debounce } from './core/debounce'
+import { renderEmptyPreview, resetSelectionForEmptyCode } from './compile/empty-state'
 
 // New architecture imports
 import {
@@ -1239,18 +1240,8 @@ function compile(code: string) {
   }
 
   if (!compileCode.trim()) {
-    // Render empty App container for drop target support
-    preview.innerHTML = `<div class="mirror-root" style="width: 100%; height: 100%;">
-      <div data-mirror-id="node-1" data-mirror-root="true" data-mirror-name="App" data-component="App"
-           style="display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 200px;">
-      </div>
-    </div>`
-    preview.className = ''
-    // Clear selection and update studio state for empty code
-    if (studioSelectionManager) {
-      studioSelectionManager.clearSelection()
-      studioSelectionManager.setBreadcrumb([])
-    }
+    renderEmptyPreview(preview)
+    resetSelectionForEmptyCode(studioSelectionManager)
     // Clear component palette user components
     const userComponentsList = document.querySelector('.user-components-list')
     if (userComponentsList) {
