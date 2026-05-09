@@ -22,6 +22,16 @@ import {
   type ViewUpdate,
 } from '@codemirror/view'
 import { RangeSetBuilder } from '@codemirror/state'
+import { SYSTEM_STATES, CUSTOM_STATES } from '../../compiler/schema/parser-helpers'
+
+// Schema-derived state regex. Includes both system states (from
+// `DSL.states.*.system === true`) and a curated subset of custom states
+// the highlighter previously listed inline. `state` is the explicit
+// keyword. Sorted longest-first so multi-word names match before their
+// substrings.
+const ALL_STATE_NAMES = ['state', ...SYSTEM_STATES, ...CUSTOM_STATES].sort(
+  (a, b) => b.length - a.length
+)
 
 interface TokenPattern {
   regex: RegExp
@@ -35,7 +45,7 @@ const patterns: TokenPattern[] = [
   { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, class: 'mir-number' },
   { regex: /\b(as|extends|named|each|in|if|else|where|then|data)\b/g, class: 'mir-keyword' },
   {
-    regex: /\b(hover|focus|active|disabled|filled|state|selected|highlighted|on|off)\b/g,
+    regex: new RegExp(`\\b(${ALL_STATE_NAMES.join('|')})\\b`, 'g'),
     class: 'mir-state',
   },
   {

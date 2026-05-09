@@ -6,6 +6,16 @@
  */
 
 import type { SourceMap } from '../../compiler/ir/source-map'
+import { SYSTEM_STATES } from '../../compiler/schema/parser-helpers'
+
+// Schema-derived regex fragment for system-state names. Captures all 13
+// system states (hover/focus/active/disabled/visited/checked/focus-visible/
+// focus-within/placeholder/placeholder-shown/first-child/last-child/empty).
+// Names are sorted longest-first so e.g. `focus-visible` matches before
+// `focus`. Used by SKIP_PATTERNS and the parent-context detector below to
+// recognize state-block lines after Slice 26 widened the schema from 4 to
+// 13 system states (previously hand-rolled `(hover|focus|active|disabled)`).
+const SYSTEM_STATES_REGEX = [...SYSTEM_STATES].sort((a, b) => b.length - a.length).join('|')
 
 /**
  * Information about a component found on a line
@@ -37,15 +47,15 @@ export interface ParentContext {
  * Skip patterns for lines that are not components
  */
 const SKIP_PATTERNS = [
-  /^\s*$/,                    // Empty lines
-  /^\s*\/\//,                 // Comments
-  /^\s*\$/,                   // Token definitions
-  /^\s*---/,                  // Section headers
-  /^\s*(state|hover|focus|active|disabled)\s/,  // State blocks
-  /^\s*on(click|hover|change|input|keydown|keyup|focus|blur)\b/,  // Event handlers
-  /^\s*keys\b/,               // Keyboard shortcuts
-  /^\s*(each|if|else)\b/,     // Control flow
-  /^\s*(show|hide|animate|data)\b/,  // Action keywords
+  /^\s*$/, // Empty lines
+  /^\s*\/\//, // Comments
+  /^\s*\$/, // Token definitions
+  /^\s*---/, // Section headers
+  new RegExp(`^\\s*(state|${SYSTEM_STATES_REGEX})\\s`), // State blocks (schema-derived)
+  /^\s*on(click|hover|change|input|keydown|keyup|focus|blur)\b/, // Event handlers
+  /^\s*keys\b/, // Keyboard shortcuts
+  /^\s*(each|if|else)\b/, // Control flow
+  /^\s*(show|hide|animate|data)\b/, // Action keywords
 ]
 
 /**
@@ -144,9 +154,10 @@ export function findParentDefinition(source: string, lineNum: number): ParentCon
         continue
       }
 
-      // Check if it's a pseudo-state (hover, focus, etc.)
-      if (/^(hover|focus|active|disabled)\b/.test(trimmed)) {
-        const stateMatch = trimmed.match(/^(\w+)/)
+      // Check if it's a pseudo-state (schema-derived list — see Slice 26).
+      // Match the longest system-state name (e.g. focus-visible before focus).
+      if (new RegExp(`^(${SYSTEM_STATES_REGEX})\\b`).test(trimmed)) {
+        const stateMatch = trimmed.match(new RegExp(`^(${SYSTEM_STATES_REGEX})`))
         contextType = 'state'
         contextLabel = stateMatch ? stateMatch[1] : 'state'
         searchIndent = lineIndent
@@ -174,7 +185,10 @@ export function findParentDefinition(source: string, lineNum: number): ParentCon
 /**
  * Analyze a nested line to determine its type
  */
-function analyzeNestedLine(line: string): { childType: ParentContext['childType']; childLabel: string } {
+function analyzeNestedLine(line: string): {
+  childType: ParentContext['childType']
+  childLabel: string
+} {
   const trimmed = line.trim()
 
   // State declaration
@@ -195,9 +209,9 @@ function analyzeNestedLine(line: string): { childType: ParentContext['childType'
     }
   }
 
-  // Hover/focus/active states
-  if (/^(hover|focus|active|disabled)\b/.test(trimmed)) {
-    const match = trimmed.match(/^(\w+)/)
+  // System states (schema-derived list — Slice 26 widened it to 13)
+  if (new RegExp(`^(${SYSTEM_STATES_REGEX})\\b`).test(trimmed)) {
+    const match = trimmed.match(new RegExp(`^(${SYSTEM_STATES_REGEX})`))
     return {
       childType: 'state',
       childLabel: match ? match[1] : 'state',
