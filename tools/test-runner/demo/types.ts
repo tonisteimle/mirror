@@ -86,6 +86,7 @@ export type DemoAction =
   | CommentAction
   | ExecuteAction
   | ClearEditorAction
+  | SetEditorCursorAction
   | CreateFileAction
   | SwitchFileAction
   | ValidateAction
@@ -93,6 +94,7 @@ export type DemoAction =
   | ExpectCodeMatchesAction
   | ExpectDomAction
   | DropFromPaletteAction
+  | DrawInGridAction
   | MoveElementAction
   | DragResizeAction
   | DragPaddingAction
@@ -103,6 +105,7 @@ export type DemoAction =
   | PickColorAction
   | AiPromptAction
   | ExpectUiStateAction
+  | WaitForLlmStatusAction
 
 interface NavigateAction {
   action: 'navigate'
@@ -210,6 +213,37 @@ interface ClearEditorAction {
   comment?: string
 }
 
+/**
+ * Position the CodeMirror cursor at a specific line / column. Used before
+ * `type` to inject a multi-line draft at a known location (LLM-edit-flow
+ * demos: cursor → type rough draft → Cmd+Enter). Lines and columns are
+ * 1-indexed; out-of-range values clamp to the line bounds. Also focuses
+ * the editor so subsequent `pressKey`s route through it.
+ */
+interface SetEditorCursorAction {
+  action: 'setEditorCursor'
+  /** 1-indexed line number. */
+  line: number
+  /** 1-indexed column. Defaults to 1 (start of line). */
+  col?: number
+  comment?: string
+}
+
+/**
+ * Wait until the LLM-edit-flow status indicator reaches the given state.
+ * Status DOM is `.cm-llm-status` with class `cm-llm-status-<state>`.
+ * `hidden` means the indicator is gone (no class match / element absent —
+ * happens after a no-change result). Default timeout 30s to cover real
+ * `claude` CLI latency; bump explicitly for slow scenarios.
+ */
+interface WaitForLlmStatusAction {
+  action: 'waitForLlmStatus'
+  status: 'thinking' | 'ready' | 'error' | 'warning' | 'hidden'
+  /** Default 30000 ms. */
+  timeoutMs?: number
+  comment?: string
+}
+
 interface CreateFileAction {
   action: 'createFile'
   /** File path (e.g., 'tokens.tok', 'components.com') */
@@ -244,7 +278,7 @@ export type Selector =
   | { byId: string }
   | { byText: string | RegExp; nth?: number }
   | { byTag: string; nth?: number }
-  | { byPath: string }
+  | { byPath: string; nth?: number }
   | { byRole: string; nth?: number }
   | { byTestId: string }
 
@@ -388,6 +422,34 @@ interface MoveElementAction {
   source: Selector
   target: Selector
   index: number
+  comment?: string
+  expectCode?: InlineExpectCode
+}
+
+/**
+ * Draw a component into a grid container by clicking the palette item
+ * (entering draw mode), then dragging from cell `from` to cell `to`.
+ *
+ * Cells are 1-indexed and match the Mirror DSL (`x N, y M`). The drag
+ * dispatches real mousedown/move/up events at the cell-center pixels of
+ * the live grid, so DrawManager's grid-aware path runs end-to-end and
+ * writes `Frame x A, y B, w C, h D` into the source.
+ *
+ * Used by demos that exercise the "click palette → draw rectangles into
+ * grid cells" workflow. For absolute containers, use `dragToPosition` /
+ * legacy paths (not yet exposed as a demo action).
+ */
+interface DrawInGridAction {
+  action: 'drawInGrid'
+  /** Palette component name, e.g. 'Frame', 'Button'. Resolved to
+   *  `[data-id="comp-<lowercase>"]` in the components panel. */
+  component: string
+  /** The grid container that the draw happens inside of. */
+  target: Selector
+  /** 1-indexed start cell. A draw of from === to creates a 1×1 frame. */
+  from: { x: number; y: number }
+  /** 1-indexed end cell, inclusive. Bounding range becomes w/h. */
+  to: { x: number; y: number }
   comment?: string
   expectCode?: InlineExpectCode
 }

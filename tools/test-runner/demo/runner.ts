@@ -381,6 +381,31 @@ function getInlineDemoAPI(timings: ActionTimings): string {
       // Check if we're in CodeMirror
       const cmEditor = window.editor;
       if (cmEditor && cmEditor.state && cmEditor.dispatch) {
+        // Route through CodeMirror's keymap for any key press that has
+        // a binding (Mod-Enter, Mod-Shift-Enter, Mod-Alt-Enter for the
+        // LLM-edit-flow; Tab/Escape for ghost-diff accept/dismiss). The
+        // codemirror test API exposes runScopeHandlers; if the key is
+        // bound, the binding consumes the event and we return early.
+        // Falls through to the legacy Enter/Backspace shortcuts below
+        // when no binding handles the key.
+        const cmTest = window.__mirrorTest && window.__mirrorTest.codemirror;
+        const hasModifier = !!(modifiers && modifiers.length);
+        const useKeymap = cmTest && cmTest.executeKeyBinding && (
+          hasModifier || key === 'Tab' || key === 'Escape'
+        );
+        if (useKeymap) {
+          const parts = [];
+          if (modifiers?.includes('Meta')) parts.push('Mod');
+          else if (modifiers?.includes('Ctrl')) parts.push('Ctrl');
+          if (modifiers?.includes('Alt')) parts.push('Alt');
+          if (modifiers?.includes('Shift')) parts.push('Shift');
+          parts.push(key);
+          const handled = cmTest.executeKeyBinding(parts.join('-'));
+          await this.delay(keyMs);
+          if (handled) return;
+          // Binding didn't fire — fall through to legacy handling.
+        }
+
         // Handle special CodeMirror commands
         const isMeta = modifiers?.includes('Meta') || modifiers?.includes('Ctrl');
 
@@ -992,6 +1017,60 @@ const MIRROR_ACTIONS_API = `
     await window.__dragTest.waitForCompile();
   }
 
+  /**
+   * Draw a component into a grid container by clicking the palette item
+   * (which puts DrawManager into 'ready' mode) and then dragging from
+   * cell \`from\` to cell \`to\` with real mouse events.
+   *
+   * Cells are 1-indexed; \`from\` and \`to\` are both inclusive, so a draw
+   * with from = to produces a 1x1 frame. Cell-center math comes from
+   * Studio's own grid-cell-snap module (exposed at window.__mirrorGrid)
+   * so this stays in sync with how DrawManager itself reads grids — no
+   * second parser to drift from the source of truth.
+   */
+  async function drawInGrid(componentName, targetSel, fromCell, toCell) {
+    const lower = componentName.toLowerCase();
+    const paletteEl = document.querySelector('#components-panel [data-id="comp-' + lower + '"]')
+      || document.querySelector('#components-panel [data-id="' + lower + '"]');
+    if (!paletteEl) {
+      throw new Error('Palette item for ' + componentName + ' not found');
+    }
+    await visitElement(paletteEl);
+    paletteEl.click();
+    await delay(140);
+
+    const targetId = resolveSelector(targetSel);
+    if (!targetId) throw new Error('Grid target not resolvable');
+    const grid = document.querySelector('[data-mirror-id="' + targetId + '"]');
+    if (!grid) throw new Error('Grid element ' + targetId + ' not in DOM');
+
+    const gridApi = window.__mirrorGrid;
+    if (!gridApi) {
+      throw new Error('window.__mirrorGrid not initialized — Studio test API must be loaded');
+    }
+    const geo = gridApi.readGridGeometry(grid);
+    if (!geo) {
+      throw new Error('Grid ' + targetId + ' has no readable geometry (display=' + getComputedStyle(grid).display + ')');
+    }
+
+    // Cell-center = inner-rect origin + cellCenterOffset on each axis.
+    // 1-indexed cells map to 0-indexed track positions via -1.
+    const cellCenter = (cell) => ({
+      x: geo.rect.left + gridApi.cellCenterOffset(geo.columnSizes, geo.columnGap, cell.x - 1),
+      y: geo.rect.top + gridApi.cellCenterOffset(geo.rowSizes, geo.rowGap, cell.y - 1),
+    });
+
+    const startPoint = cellCenter(fromCell);
+    const endPoint = cellCenter(toCell);
+
+    // Mousedown should fire on whatever element actually sits under the
+    // start cursor — usually the grid itself, but might be an existing
+    // child in already-populated cells.
+    const sourceEl = document.elementFromPoint(startPoint.x, startPoint.y) || grid;
+    await manualDrag(sourceEl, startPoint, endPoint, { durationMs: 700 });
+    await delay(180);
+  }
+
   async function moveElement(sourceSel, targetSel, index) {
     const sourceId = resolveSelector(sourceSel);
     const targetId = resolveSelector(targetSel);
@@ -1385,6 +1464,7 @@ const MIRROR_ACTIONS_API = `
     snapshotElement,
     snapshotAllByPreviewOrder,
     dropFromPalette,
+    drawInGrid,
     moveElement,
     dragResize,
     dragPadding,
@@ -1983,6 +2063,10 @@ export class DemoRunner {
         return step.text.substring(0, 30) + (step.text.length > 30 ? '...' : '')
       case 'execute':
         return step.comment
+      case 'setEditorCursor':
+        return `L${step.line}:C${step.col ?? 1}${step.comment ? ` ${step.comment}` : ''}`
+      case 'waitForLlmStatus':
+        return `${step.status}${step.timeoutMs ? ` (${step.timeoutMs}ms)` : ''}`
       case 'validate':
         return step.comment || `${step.checks.length} checks`
       case 'createFile':
@@ -2000,6 +2084,8 @@ export class DemoRunner {
         )
       case 'dropFromPalette':
         return `${step.component} → ${JSON.stringify(step.target)}`
+      case 'drawInGrid':
+        return `${step.component} → ${JSON.stringify(step.target)} (${step.from.x},${step.from.y})→(${step.to.x},${step.to.y})`
       case 'moveElement':
         return `${JSON.stringify(step.source)} → ${JSON.stringify(step.target)}@${step.index}`
       case 'dragResize':
@@ -2554,6 +2640,69 @@ export class DemoRunner {
         `)
         break
 
+      case 'setEditorCursor': {
+        const col = step.col ?? 1
+        console.log(
+          `${prefix} 🎯 Cursor → L${step.line}:C${col}${step.comment ? ` (${step.comment})` : ''}`
+        )
+        // Prefer the test API (clamps + focuses); fall back to a direct
+        // dispatch when the studio's test surface isn't loaded.
+        await this.evaluate(`
+          (async () => {
+            const cm = window.__mirrorTest && window.__mirrorTest.codemirror;
+            if (cm && cm.setCursor && cm.focus) {
+              cm.focus();
+              cm.setCursor(${step.line}, ${col});
+              return;
+            }
+            const editor = window.editor;
+            if (!editor) return;
+            try {
+              const lineInfo = editor.state.doc.line(${step.line});
+              const offset = lineInfo.from + Math.min(${col} - 1, lineInfo.length);
+              editor.focus();
+              editor.dispatch({ selection: { anchor: offset } });
+            } catch (e) { /* line out of range */ }
+          })()
+        `)
+        break
+      }
+
+      case 'waitForLlmStatus': {
+        const timeoutMs = step.timeoutMs ?? 30_000
+        console.log(
+          `${prefix} ⏳ Wait LLM status=${step.status} (${timeoutMs}ms)${step.comment ? ` — ${step.comment}` : ''}`
+        )
+        const result = await this.evaluate(`
+          (async () => {
+            const target = ${JSON.stringify(step.status)};
+            const deadline = Date.now() + ${timeoutMs};
+            const read = () => {
+              const el = document.querySelector('.cm-llm-status');
+              if (!el) return 'hidden';
+              if (el.classList.contains('cm-llm-status-thinking')) return 'thinking';
+              if (el.classList.contains('cm-llm-status-ready')) return 'ready';
+              if (el.classList.contains('cm-llm-status-error')) return 'error';
+              if (el.classList.contains('cm-llm-status-warning')) return 'warning';
+              return 'hidden';
+            };
+            while (Date.now() < deadline) {
+              if (read() === target) return { ok: true, state: target };
+              await new Promise(r => setTimeout(r, 150));
+            }
+            return { ok: false, state: read() };
+          })()
+        `)
+        const r = result as { ok: boolean; state: string } | undefined
+        if (!r || !r.ok) {
+          const got = r?.state ?? 'undefined'
+          throw new Error(
+            `waitForLlmStatus: timeout waiting for "${step.status}" — last seen "${got}" after ${timeoutMs}ms`
+          )
+        }
+        break
+      }
+
       case 'createFile':
         console.log(`${prefix} 📄 Create file: ${step.path}`)
         // storage is module-internal — re-import dist/index.js to access it
@@ -2619,6 +2768,9 @@ export class DemoRunner {
         break
       case 'dropFromPalette':
         await this.runDropFromPalette(step, prefix)
+        break
+      case 'drawInGrid':
+        await this.runDrawInGrid(step, prefix)
         break
       case 'moveElement':
         await this.runMoveElement(step, prefix)
@@ -2744,6 +2896,7 @@ export class DemoRunner {
       case 'switchFile':
       case 'clearEditor':
       case 'dropFromPalette':
+      case 'drawInGrid':
       case 'moveElement':
       case 'dragResize':
       case 'dragPadding':
@@ -3127,6 +3280,26 @@ export class DemoRunner {
         `window.__mirrorActions.dropFromPalette(${JSON.stringify(step.component)}, ${JSON.stringify(step.target)}, ${JSON.stringify(step.at)})`
       )
     }
+    await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
+  }
+
+  /**
+   * Click a palette item to enter draw mode, then drag across grid cells
+   * to define position+size. The actual mouse driving happens in the
+   * browser-side `drawInGrid` (in MIRROR_ACTIONS_API).
+   */
+  private async runDrawInGrid(
+    step: Extract<DemoAction, { action: 'drawInGrid' }>,
+    prefix: string
+  ): Promise<void> {
+    console.log(
+      `${prefix} ✏️  Draw ${step.component} → ${this.describeSelector(step.target)} ` +
+        `from (${step.from.x},${step.from.y}) to (${step.to.x},${step.to.y})` +
+        (step.comment ? ` — ${step.comment}` : '')
+    )
+    await this.evaluate(
+      `window.__mirrorActions.drawInGrid(${JSON.stringify(step.component)}, ${JSON.stringify(step.target)}, ${JSON.stringify(step.from)}, ${JSON.stringify(step.to)})`
+    )
     await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
   }
 
