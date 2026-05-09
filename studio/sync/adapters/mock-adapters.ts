@@ -196,6 +196,8 @@ export interface MockDOMElement {
   parent?: MockDOMElement
   isRoot?: boolean
   isBoundary?: boolean
+  /** Marks this element as the synthetic empty-state wrapper. */
+  isSynthetic?: boolean
 }
 
 export interface MockDOMQueryPortState {
@@ -252,6 +254,11 @@ export function createMockDOMQueryPort(): MockDOMQueryPort {
     isPreviewBoundary(element: PreviewElement): boolean {
       const mockElement = element._ref as MockDOMElement | undefined
       return mockElement?.isBoundary ?? false
+    },
+
+    isSyntheticRoot(element: PreviewElement): boolean {
+      const mockElement = element._ref as MockDOMElement | undefined
+      return mockElement?.isSynthetic ?? false
     },
 
     // ----------------------------------------

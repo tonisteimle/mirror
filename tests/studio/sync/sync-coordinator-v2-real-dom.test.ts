@@ -91,17 +91,34 @@ describe('breadcrumb (real DOM via production adapters)', () => {
     expect(state.get().breadcrumb.map(c => c.name)).toEqual(['Frame'])
   })
 
-  it('drops the synthetic empty-state wrapper (not in SourceMap)', () => {
-    // When code is empty, compile-service emits a synthetic <div data-mirror-id="node-1"
-    // data-mirror-root="true" data-mirror-name="App" data-component="App"> as a drop
-    // target. That node is *not* in the SourceMap. The walk must skip it
-    // implicitly via the SourceMap-presence check; otherwise the breadcrumb
-    // would show "App" even though the user wrote nothing.
+  it('drops the synthetic empty-state wrapper (data-mirror-synthetic="true")', () => {
+    // When code is empty, compile-service emits a synthetic wrapper with
+    // data-mirror-synthetic="true". The walk must skip it; otherwise "App"
+    // shows up as a phantom breadcrumb entry even though the user wrote
+    // nothing.
     document.body.innerHTML = `
       <div id="preview">
         <div class="mirror-root">
-          <div data-mirror-id="node-1" data-mirror-root="true"
+          <div data-mirror-id="node-1" data-mirror-root="true" data-mirror-synthetic="true"
                data-mirror-name="App" data-component="App"></div>
+        </div>
+      </div>
+    `
+
+    actions.setSelection('node-1', 'editor')
+    expect(state.get().breadcrumb).toEqual([])
+  })
+
+  it('explicitly skips data-mirror-synthetic="true" even if SourceMap has the node', () => {
+    // Defense-in-depth: even if the SourceMap *does* have node-1 registered
+    // (say after a stale compile or test misconfiguration), the synthetic
+    // attribute alone must cause the walk to skip the wrapper. The
+    // SourceMap-absence filter is no longer the only line of defense.
+    sourceMap._setNode('node-1', { componentName: 'App' })
+    document.body.innerHTML = `
+      <div id="preview">
+        <div class="mirror-root">
+          <div data-mirror-id="node-1" data-mirror-root="true" data-mirror-synthetic="true"></div>
         </div>
       </div>
     `

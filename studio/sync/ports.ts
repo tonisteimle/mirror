@@ -124,6 +124,13 @@ export interface DOMQueryPort {
    * Check if element is the preview container boundary.
    */
   isPreviewBoundary(element: PreviewElement): boolean
+
+  /**
+   * Check if element is the synthetic empty-state wrapper. Marker is
+   * `data-mirror-synthetic="true"`; see `compile/empty-state.ts`. Default
+   * implementations may return `false` if they don't model the attribute.
+   */
+  isSyntheticRoot?(element: PreviewElement): boolean
 }
 
 export interface PreviewElement {

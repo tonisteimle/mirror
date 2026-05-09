@@ -540,9 +540,18 @@ export class SyncCoordinator {
     let current = element
 
     while (current) {
-      const node = this.ports.sourceMap.getNodeById(current.nodeId)
-      if (node) {
-        path.unshift({ nodeId: current.nodeId, name: node.componentName })
+      // Skip the synthetic empty-state App-wrapper (see compile/empty-state.ts).
+      // It carries the same data-mirror-root="true" marker as a real user-root,
+      // so we disambiguate via the dedicated isSyntheticRoot port method.
+      // Without this skip, the breadcrumb walk would surface "App" as a phantom
+      // entry even though the user wrote nothing.
+      const isSynthetic = this.ports.domQuery.isSyntheticRoot?.(current) ?? false
+
+      if (!isSynthetic) {
+        const node = this.ports.sourceMap.getNodeById(current.nodeId)
+        if (node) {
+          path.unshift({ nodeId: current.nodeId, name: node.componentName })
+        }
       }
 
       const parent = this.ports.domQuery.getParentWithMirrorId(current)

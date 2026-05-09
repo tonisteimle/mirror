@@ -29,6 +29,7 @@ describe('EMPTY_PREVIEW_HTML', () => {
   it('includes the synthetic App marker attributes the sync-coordinator depends on', () => {
     expect(EMPTY_PREVIEW_HTML).toContain('data-mirror-id="node-1"')
     expect(EMPTY_PREVIEW_HTML).toContain('data-mirror-root="true"')
+    expect(EMPTY_PREVIEW_HTML).toContain('data-mirror-synthetic="true"')
     expect(EMPTY_PREVIEW_HTML).toContain('data-component="App"')
     expect(EMPTY_PREVIEW_HTML).toContain('data-mirror-name="App"')
     expect(EMPTY_PREVIEW_HTML).toContain('class="mirror-root"')

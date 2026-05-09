@@ -130,6 +130,11 @@ export function createDOMQueryPort(config: DOMQueryPortConfig = {}): DOMQueryPor
         domElement.classList.contains(boundaryClass)
       )
     },
+
+    isSyntheticRoot(element: PreviewElement): boolean {
+      const domElement = element._ref as Element | undefined
+      return domElement?.getAttribute('data-mirror-synthetic') === 'true'
+    },
   }
 }
 
