@@ -2,7 +2,7 @@
 /**
  * Slice 28 — Multi-State-Cycle regression suite.
  *
- * Audit: `docs/refactoring/09-slice-28-multi-state-cycle.md`. Slice 27's
+ * Audit: `docs/refactoring/10-slice-28-multi-state-cycle.md`. Slice 27's
  * helper covered the compile pipeline; the Slice 28 audit pinned that
  * coverage with end-to-end probes (cycle order, wrap, mid-cycle initial,
  * each-loop) and uncovered residual Studio-Sync drift for both built-in

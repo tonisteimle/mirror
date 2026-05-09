@@ -28,6 +28,7 @@ import { createDOMBridge } from './dom-bridge'
 import { createPanelAPI } from './panel-api'
 import { createZagAPI } from './zag-api'
 import { createStudioAPI } from './studio-api'
+import { CUSTOM_STATES } from '../../compiler/schema/parser-helpers'
 import { createFixturesAPI } from './fixtures'
 import { createCodeMirrorTestAPI, createEventTestAPI } from './codemirror-api'
 
@@ -385,12 +386,12 @@ class StateAPIImpl implements StateAPI {
     const element = preview?.querySelector(`[data-mirror-id="${nodeId}"]`)
     if (!element) return null
 
-    // Check for custom state classes
+    // Check for custom state classes. The 'state-' prefix covers user-
+    // invented multi-state cycle names; CUSTOM_STATES is the schema-
+    // derived list of built-in custom states (Slice 28 review-pass:
+    // hardcoded 6-element list missed loading/error/highlighted/etc.).
     const classList = Array.from(element.classList)
-    const stateClasses = classList.filter(
-      c =>
-        c.startsWith('state-') || ['on', 'off', 'open', 'closed', 'selected', 'active'].includes(c)
-    )
+    const stateClasses = classList.filter(c => c.startsWith('state-') || CUSTOM_STATES.has(c))
 
     return stateClasses[0] || null
   }
