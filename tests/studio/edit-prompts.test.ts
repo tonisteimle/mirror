@@ -108,8 +108,19 @@ describe('EditPrompts — buildEditPrompt', () => {
            - **Doppelte Properties** auf einem Element (\`Frame ver, ver\` oder \`Button bg blue, bg red\`) → Duplikat entfernen.
            - **Wrapper-Frames ohne Properties** die nur ein Kind enthalten (\`Frame > Frame > Text\` wo der innere Frame leer ist) → den Wrapper auflösen, das Kind direkt einhängen.
            - **Re-Spezifikation von canvas-vererbten Properties.** \`canvas col white\` macht \`col white\` zum Default für alle Kinder. Ein \`Text "X", col white\` ist redundant. Gilt für \`col\`, \`font\`, \`fs\`. Ausnahme: wenn das Kind bewusst überschreibt (anderer Wert), dann nicht entfernen.
-        7. **Wenn der Source bereits richtig/vollständig ist UND keine Idiom-Verstösse enthält** → gib gar keinen Block zurück (Stille ist heilig). „Stille" gilt NUR wenn Token-, Component- und Redundanz-Pflicht erfüllt sind.
-        8. **Output: NUR Patches.** Keine Erklärung davor oder danach. Keine Code-Fences (\`\`\`mirror), keine Vorrede, keine Nachrede."
+        7. **Wenn der Source bereits richtig/vollständig ist UND keine Idiom-Verstösse enthält** → gib gar keinen Block zurück (Stille ist heilig). „Stille" gilt NUR wenn Token-, Component- und Redundanz-Pflicht erfüllt sind UND keine Sketch-Blocks (siehe nächste Regel) im Source vorhanden sind.
+        8. **Sketch-Pflicht.** Der User markiert mit \`--\` einen Bereich als „nicht-Mirror, mach was draus". Vier Formen erlaubt:
+           - **Block** (\`--\\n<Inhalt>\\n--\`) — zwei \`--\`-Zeilen, Inhalt dazwischen.
+           - **Single-line** (\`-- <Inhalt>\`) — Zeile beginnt mit \`--\` + Inhalt.
+           - **Inline-Start-Block** (\`-- <Inhalt>\\n<weiter>\\n--\`) — Open-Marker mit Inhalt + Folgezeilen + schliessender \`--\`.
+           - **Trailing** (\`<code> -- <Inhalt>\`) — \`--\` HINTER echtem Code auf derselben Zeile. Die Anweisung bezieht sich aufs Element davor.
+
+           **Zwei Modi**, du entscheidest anhand des Sketch-Inhalts:
+           - **Generative** (Inhalt beschreibt was Neues, z.B. „card mit titel"): ersetze den GESAMTEN Sketch (Marker + Inhalt) per Patch durch echten Mirror-Code. Behalte die Einrückung des öffnenden \`--\` für den ersten Output-Token bei.
+           - **Imperative** (Inhalt ist Anweisung an existierenden Code, z.B. „mach rot", „entferne", „verschiebe nach oben"): liefere ZWEI Patches — einer löscht den Sketch-Marker komplett, ein zweiter modifiziert das Target-Element. **Bei Trailing-Sketches ist das Target IMMER das Element auf derselben Zeile vor dem \`--\`** (deterministisch, kein Raten). Bei Block/Single ist das Target das nächst-passende Element (typisch direkt darüber oder darunter im selben Eltern-Frame).
+
+           Bei Trailing-Imperative: dein Lösch-Patch entfernt den \`--\`-Suffix VON der Code-Zeile, NICHT die ganze Zeile. \`@@FIND\` muss den vorherigen Code + den Suffix enthalten, \`@@REPLACE\` nur den vorherigen Code (ohne Trailing-Whitespace). Sketch-Inhalt kann natürliche Sprache, Pseudocode oder Mischformen sein — interpretiere wohlwollend.
+        9. **Output: NUR Patches.** Keine Erklärung davor oder danach. Keine Code-Fences (\`\`\`mirror), keine Vorrede, keine Nachrede."
       `)
     })
 
@@ -405,14 +416,14 @@ describe('EditPrompts — buildEditPrompt', () => {
   })
 
   describe('Critical rules content', () => {
-    it('rules 1-8 are all present (no rule silently dropped)', () => {
+    it('rules 1-9 are all present (no rule silently dropped)', () => {
       // The ruleset is the contract with the LLM. A regression that
       // accidentally drops a rule (e.g. via a bad merge) would silently
       // weaken the LLM's behavior. Lock in the count.
       const prompt = buildEditPrompt(baseCtx())
       // Rule numbers appear at the start of `\d. **`-prefixed lines.
       const ruleHeads = prompt.match(/^\d\. \*\*/gm) ?? []
-      expect(ruleHeads).toHaveLength(8)
+      expect(ruleHeads).toHaveLength(9)
     })
 
     it('rule about "Stille ist heilig" (no-op response policy) is present', () => {

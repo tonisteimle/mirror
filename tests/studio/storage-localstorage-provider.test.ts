@@ -188,7 +188,7 @@ describe('LocalStorageProvider File Operations', () => {
       const provider = new LocalStorageProvider()
       const content = await provider.readFile('app.mir')
 
-      expect(content).toContain('Frame')
+      expect(content).toContain('canvas ')
     })
 
     it('should throw on non-existent file', async () => {
@@ -507,7 +507,7 @@ describe('LocalStorageProvider Utilities', () => {
 
       // Verify demo files are back
       const content = await provider.readFile('app.mir')
-      expect(content).toContain('Frame')
+      expect(content).toContain('canvas ')
       await expect(provider.readFile('custom.mir')).rejects.toThrow()
     })
 

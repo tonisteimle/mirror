@@ -142,7 +142,9 @@ describe('DemoProvider File Operations', () => {
     it('should read existing file', async () => {
       const content = await provider.readFile('app.mir')
 
-      expect(content).toContain('Frame')
+      // Every Mirror layout starts with `canvas` — stable across demo
+      // refactors, unlike a specific element name.
+      expect(content).toContain('canvas ')
     })
 
     it('should throw on non-existent file', async () => {
@@ -382,7 +384,7 @@ describe('DemoProvider State', () => {
 
     // Default file should be back
     const content = await provider.readFile('app.mir')
-    expect(content).toContain('Frame')
+    expect(content).toContain('canvas ')
 
     // Modifications flag should be reset
     expect(provider.hasModifications()).toBe(false)

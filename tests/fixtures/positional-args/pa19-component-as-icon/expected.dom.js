@@ -5,8 +5,17 @@
   node_1.dataset.mirrorRoot = 'true'
   node_1.dataset.mirrorName = 'DangerIcon'
   node_1.setAttribute('data-icon-color', "#ff0000")
-  node_1.innerHTML = formatInlineMarkdown("trash")
   node_1.setAttribute('data-icon-size', "32")
+  // Icon default styles
+  Object.assign(node_1.style, {
+    'display': 'inline-flex',
+    'align-items': 'center',
+    'justify-content': 'center',
+    'flex-shrink': '0',
+    'line-height': '0',
+  })
+  // Load Lucide icon
+  _runtime.loadIcon(node_1, "trash")
   Object.assign(node_1.style, {
     'width': '20px',
     'flex-shrink': '0',

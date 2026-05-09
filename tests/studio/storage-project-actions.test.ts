@@ -158,7 +158,7 @@ describe('newProject', () => {
     await newProject('demo')
 
     const stored = JSON.parse(mockStorage.getItem('mirror-files') || '{}')
-    expect(stored['app.mir']).toContain('Frame')
+    expect(stored['app.mir']).toContain('canvas ')
   })
 })
 

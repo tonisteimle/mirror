@@ -64,7 +64,7 @@ describe('StorageService File Operations', () => {
   describe('readFile', () => {
     it('should read file from provider', async () => {
       const content = await service.readFile('app.mir')
-      expect(content).toContain('Frame')
+      expect(content).toContain('canvas ')
     })
 
     it('should cache file content', async () => {
