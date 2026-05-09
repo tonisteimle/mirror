@@ -159,6 +159,22 @@ export function propertyToCSS(
     }
   }
 
+  // `is X` / `icon-size X` on an Icon must size the parent <span>, not just
+  // emit `data-icon-size`. Without this, the primitive defaults
+  // (`w: 20, h: 20`) clamp the span and the SVG inside, so
+  // `Icon "home", is 64` always rendered at 20px regardless of `is`.
+  // The data-attribute branch lives in value-resolver.ts; this branch
+  // overrides w/h so both the span and the SVG follow `is`. We use the
+  // already-resolved `value` so `is $hero` → `var(--hero-is)` survives.
+  if (primitive === 'icon' && (name === 'is' || name === 'icon-size')) {
+    const resolved = String(value)
+    const px = /^\d+(\.\d+)?$/.test(resolved) ? `${resolved}px` : resolved
+    return [
+      { property: 'width', value: px },
+      { property: 'height', value: px },
+    ]
+  }
+
   // Handle size property - context-dependent
   // For text: size = font-size
   // For icon: size = width/height (icons are sized via dimensions)

@@ -263,8 +263,12 @@ export function transformInstance(
   }
   const resolvedComponent = component ? resolveComponentExtracted(component, resolverCtx) : null
 
-  // Determine primitive for defaults and layout context
-  const primitive = resolvedComponent?.primitive || instance.component.toLowerCase()
+  // Determine primitive for defaults and layout context.
+  // Always lowercase: without this, `MyIcon as Icon: …` propagated
+  // `primitive: 'Icon'` (capitalized from the AST) and the DOM emitter's
+  // `node.primitive === 'icon'` check failed, so the icon-name parameter
+  // landed in `innerHTML` instead of triggering `_runtime.loadIcon`.
+  const primitive = (resolvedComponent?.primitive || instance.component).toLowerCase()
 
   // Handle Zag primitives (Select, Accordion, etc.)
   // Check both direct usage (e.g., "Select") and inheritance (e.g., "MySelect as Select:")

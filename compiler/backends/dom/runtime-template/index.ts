@@ -2001,8 +2001,18 @@ ${ZAG_RUNTIME}
     el.innerHTML = svgText
     const svg = el.querySelector('svg')
     if (svg) {
-      svg.style.width = size + 'px'
-      svg.style.height = size + 'px'
+      // Bare numbers get a px suffix; CSS-var refs and 1.5rem etc. pass
+      // through. Without this, is $hero -> size = "var(--hero-is)" produced
+      // width: "var(--hero-is)px" which CSS rejects, so the SVG stayed at
+      // its 24px intrinsic size.
+      let isBareNum = size.length > 0
+      for (let i = 0; i < size.length && isBareNum; i++) {
+        const c = size.charCodeAt(i)
+        if (!((c >= 48 && c <= 57) || c === 46)) isBareNum = false
+      }
+      const cssSize = isBareNum ? size + 'px' : size
+      svg.style.width = cssSize
+      svg.style.height = cssSize
       svg.style.color = color
       svg.style.display = 'block'
       if (isFilled) {

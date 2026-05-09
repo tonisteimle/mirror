@@ -152,10 +152,24 @@ function applySvgStyles(svg: SVGElement, el: MirrorElement): void {
   const size = el.dataset.iconSize || '16'
   const color = el.dataset.iconColor || 'currentColor'
 
-  svg.style.width = size + 'px'
-  svg.style.height = size + 'px'
+  // Bare numbers get a `px` suffix; CSS-variable references (`var(--foo)`)
+  // and already-suffixed values pass through. Without this, `is $hero`
+  // resolved to `"var(--hero-is)"` and we wrote `width: "var(--hero-is)px"`,
+  // which the browser rejects — the SVG stayed at its 24px intrinsic size.
+  const cssSize = isBareIconSize(size) ? size + 'px' : size
+  svg.style.width = cssSize
+  svg.style.height = cssSize
   svg.style.color = color
   svg.style.display = 'block'
+}
+
+function isBareIconSize(value: string): boolean {
+  if (value.length === 0) return false
+  for (let i = 0; i < value.length; i++) {
+    const c = value.charCodeAt(i)
+    if (!((c >= 48 && c <= 57) || c === 46)) return false
+  }
+  return true
 }
 
 function applyFillMode(svg: SVGElement, isFilled: boolean, strokeWidth: string): void {
