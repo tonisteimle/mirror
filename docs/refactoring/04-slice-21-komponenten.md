@@ -1,7 +1,7 @@
 # 03 — Slice 21: Komponenten-Definition & -Verwendung
 
 **Datum:** 2026-05-09
-**Status:** Audit erledigt · Untersuchung abgeschlossen · Entscheidungen offen · Umsetzung nicht begonnen
+**Status:** Audit · Untersuchung · Entscheidungen · Phase A umgesetzt (V-2 + V-7) · Phase B/C deferred
 
 ## Inhalt
 
@@ -104,98 +104,55 @@ Btn "Abbrechen", bg #333
 
 ---
 
-# 3. Entscheidungen (Vorschläge, offen)
+# 3. Entscheidungen
 
-## V-1 — Use-without-Definition: Compile-Pipeline-Hook für Validator
+## V-1 — Use-without-Definition: Compile-strict — **Status: verschoben (Phase B)**
 
-**Frage:** Compiler emittiert silent `<div>`-Fallback bei `Btn "X"` ohne `Btn:` Definition. Validator-E002 ist da, wird aber im Build-Pfad nicht zwingend ausgelöst. Wie schliessen?
+**Vorschlag:** A. Compiler bricht ab statt Frame-Fallback.
 
-**Optionen:**
+**Begründung:** Validator-E002 fängt es schon. Bestand-Check: `examples/task-app/main.mirror` triggert E002 wegen Cross-File-References — legit (Project-Mode löst es). Single-File-Compile sollte aber fehlschlagen.
 
-- **A:** Compiler bricht ab bei undefined component (Validator-Equivalence)
-- **B:** Compiler emittiert weiter UND emittiert `console.warn(...)` im erzeugten JS
-- **C:** Compiler emittiert weiter, aber Studio-Pipeline ruft Validator vor Compile auf (UI-Linter)
-- **D:** Status quo
+**Verschoben** weil: ist eigener Build-Pfad-Refactor, betrifft Studio-Pipeline + CLI-Verhalten. Eigener Slice.
 
-**Vorschlag:** **A** — strikter wäre besser. Mirror DSL-Versprechen: Components müssen definiert sein. Silent fallback ist Design-Bug.
+## V-2 — Lowercase Component-Name: E002 Pascal-Case-Hint — **Status: erledigt**
 
-**Risiko:** Bestehende Mirror-Files könnten `Btn "X"` nutzen ohne `Btn:` Definition (= versehentliche Frame-Verwendung). Migration-Aufwand niedrig (kein Treffer in `examples/` oder `studio/storage/` per grep).
+**Entscheidung:** B (Hilfetext bei E002).
 
-**Status:** offen.
+**Implementiert in `compiler/validator/validator.ts:906–928`** — wenn Use-Site `mybtn` undefined und `MyBtn` defined, Suggestion ist „Did you mean \"MyBtn\"? (Component names are Pascal-Case.)".
 
-## V-2 — Lowercase Component-Name: Validator-Warn + Parser-Disambiguation
+**Begründung:** Token-System-Pfad bleibt für Property-Sets legit; nur die Use-Site-Diagnose verbessert sich.
 
-**Frage:** `btn: bg #f00` parsed als Token, `btn "X"` als Component-Use. Beide leben in getrennten Systemen. User merkt nichts.
+## V-3 — Self-Recursion: explizite Diagnose — **Status: verschoben**
 
-**Optionen:**
+**Befund:** IR-Transformer hat bereits eine Warning (`compiler/ir/ops/instance-ops.ts:253`), die aber im Validator-Output nicht erscheint. Test `validator-error-codes.test.ts:70` bezeugt: Self-Recursion ist intentional valid. Ein Validator-Error würde Test brechen.
 
-- **A:** Parser hebt lowercase-name in Component-System wenn Use-Site mit Positional-Argument (= `btn "X"` ist eine Instanz, nicht ein Token) → Component-Definition wird daraus
-- **B:** Validator-Warn bei lowercase Component-Use (E002 schon da, aber als Hilfetext „Component-Name muss Pascal-Case sein, oder das ist ein Token")
-- **C:** Status quo (Validator E002 unverändert)
+**Vorschlag (verschoben):** IR-Warnings als Bridge in `mirror-validate`-Output surfacen — separater Slice „IR-Warning-Bridge". Plus DOM-Backend Marker `data-recursion-stopped="Tree"` statt generischem `Unknown`.
 
-**Vorschlag:** **B** + Pascal-Case-Canonicalization (siehe Slice 1 V-2). Erstmal nicht heben — der Token-System-Pfad ist legit für Property-Sets.
+## V-4 — Nested Definition: Parser-Reject — **Status: verschoben**
 
-**Status:** offen.
+**Befund:** Parser interpretiert `Outer:\n  Inner: bg #f00` als Instance + Property. Detection braucht Parser-Level-Hook (AST hat die Definition-Information bereits verloren).
 
-## V-3 — Self-Recursion: explizite Diagnose statt Unknown-Fallback
+**Vorschlag (verschoben):** Parser detected nested-`Name:` mit `:` als Definition-Marker und meldet E600. Komplexität: Parser muss Definition-vs-Instance-Disambiguation in nested-Context erzwingen. Eigener Slice.
 
-**Frage:** `Tree:\n  Tree\nTree` produziert `data-component="Unknown"` für die innere Tree-Referenz. Silent.
+## V-5 — Primitive-Shadow: keine Warnung — **Status: verworfen**
 
-**Optionen:**
+**Befund:** Bestand-Check zeigt `examples/task-app/components.mirror:131` nutzt `Section: gap 16, w full` — legitime „Re-Brand" der Section-Primitive für Projekt-Defaults. Pattern ist real und sinnvoll.
 
-- **A:** Compiler erzeugt Validator-Error/Warn bei detected Self-Recursion
-- **B:** Compiler emittiert explicit `data-recursion-stopped="true"` Marker
-- **C:** Status quo (Unknown-Fallback)
+**Verworfen:** Keine Warnung. User-Intent ist klar: „Section heisst in MEINEM Projekt das".
 
-**Vorschlag:** **A** — Self-Recursion ist seltener Fall, aber wenn er auftritt sollte er sichtbar sein. Validator-Warn (W-Code), nicht Error.
+## V-6 — Doppel-Definition: E603 — **Status: erledigt (bereits implementiert)**
 
-**Status:** offen.
+**Befund:** Existiert als `E603 DUPLICATE_DEFINITION`, feuert in `validator.ts:161`. Probe-Test bestätigt.
 
-## V-4 — Nested Definition: Validator-Warn + Parser-Reject
+**Keine Änderung nötig.**
 
-**Frage:** `Outer:\n  Inner: bg #f00` wird zu Instance reinterpretiert. Definition-Status verloren.
+## V-7 — Empty Definition: W504 — **Status: erledigt**
 
-**Optionen:**
+**Entscheidung:** A. W-Code `W504 EMPTY_COMPONENT_DEFINITION`.
 
-- **A:** Parser detected nested-`Name:` und erzeugt Validator-Error
-- **B:** Parser erlaubt nested Definitions als lokale Components (Scope: nur innerhalb Outer)
-- **C:** Status quo (silent reinterpret)
+**Implementiert in `compiler/validator/validator.ts:166–188`** — feuert wenn Definition keine props/children/states/events hat, kein `as`-Inheritance, kein `extends`, kein non-Frame primitive.
 
-**Vorschlag:** **A** — Mirror DSL-Versprechen: top-level Definitionen. Lokale Scopes sind nicht im Versprechen. A schliesst die Stille.
-
-**Risiko:** Selten genutzt? `examples/` durchsuchen vor Implementierung.
-
-**Status:** offen.
-
-## V-5 — Primitive-Shadow: Validator-Warn
-
-**Frage:** `Frame: bg #f00` redefiniert die Primitive Frame. Funktioniert, aber undokumentiert.
-
-**Optionen:**
-
-- **A:** Verbieten (Error)
-- **B:** Warnen (Validator-W-Code „Component shadows primitive")
-- **C:** Erlauben + dokumentieren
-
-**Vorschlag:** **B** — schlecht für AI-Generierung (Halluzinationen mit Primitive-Namen) und für Code-Lesbarkeit. Warnung gibt Lautstärke ohne Bruch.
-
-**Status:** offen.
-
-## V-6 — Doppel-Definition: Validator-Warn
-
-**Frage:** `Btn: bg #f00\nBtn: bg #0f0` — last wins, AST behält beide. Doku schweigt.
-
-**Vorschlag:** Validator-Warn „Component re-defined". AST darf beide Einträge behalten (für Studio-Tooling), Codepfad nutzt last.
-
-**Status:** offen.
-
-## V-7 — Empty Definition: Validator-Warn
-
-**Frage:** `Btn:` (leer) erlaubt. Sinn-frei aber legal.
-
-**Vorschlag:** Validator-Warn „Empty component definition". Niedrige Priorität.
-
-**Status:** offen.
+**Begründung:** Empty Defs sind fast sicher Tippfehler oder unvollständige Edits. Bestand-Check: kein Treffer in `examples/`, kein Bruch.
 
 ---
 
@@ -213,21 +170,21 @@ Btn "Abbrechen", bg #333
 
 # 5. Umsetzungsplan & Status
 
-| ID                                                                                         | Sub-Task                                                                           | Aus V    | Status |
-| ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | -------- | ------ |
+| ID                                                                                         | Sub-Task                                                                    | Aus V    | Status             |
+| ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | -------- | ------------------ |
 | **Phase A — Validator schärfen** (no-op compiler-side, sichtbar im `mirror-validate`-Lauf) |
-| A.1                                                                                        | Validator-Warn bei Self-Recursion (W-Code)                                         | V-3      | offen  |
-| A.2                                                                                        | Validator-Warn bei Component-Doppel-Definition                                     | V-6      | offen  |
-| A.3                                                                                        | Validator-Warn bei Empty Component-Definition                                      | V-7      | offen  |
-| A.4                                                                                        | Validator-Warn bei Component-shadows-Primitive                                     | V-5      | offen  |
-| A.5                                                                                        | Validator-Error bei nested Component-Definition                                    | V-4      | offen  |
-| A.6                                                                                        | E002-Hilfetext: bei lowercase Component-Use „Component-Name muss Pascal-Case sein" | V-2      | offen  |
-| **Phase B — Compiler stricter (Build-Time-Reject)**                                        |
-| B.1                                                                                        | Compiler: undefined Component → Compile-Error (statt silent Frame-Fallback)        | V-1      | offen  |
-| B.2                                                                                        | Compiler: Self-Recursion → Compile-Warn statt Unknown-Fallback                     | V-3      | offen  |
-| B.3                                                                                        | Compiler: nested Component-Definition → Compile-Error                              | V-4      | offen  |
-| **Phase C — Studio-Pipeline-Hook**                                                         |
-| C.1                                                                                        | Studio: Validator vor Compile aufrufen, Errors als Linter im Editor                | V-1, Q-A | offen  |
+| A.1                                                                                        | Validator-Warn bei Self-Recursion (W-Code)                                  | V-3      | verschoben         |
+| A.2                                                                                        | E603 Component-Doppel-Definition                                            | V-6      | erledigt (existed) |
+| A.3                                                                                        | W504 Empty Component-Definition                                             | V-7      | erledigt           |
+| A.4                                                                                        | Validator-Warn bei Component-shadows-Primitive                              | V-5      | verworfen          |
+| A.5                                                                                        | Validator-Error bei nested Component-Definition                             | V-4      | verschoben         |
+| A.6                                                                                        | E002-Hilfetext: bei lowercase Component-Use Pascal-Case-Hint                | V-2      | erledigt           |
+| **Phase B — Compiler stricter (Build-Time-Reject)** — verschoben (eigener Slice)           |
+| B.1                                                                                        | Compiler: undefined Component → Compile-Error (statt silent Frame-Fallback) | V-1      | verschoben         |
+| B.2                                                                                        | Compiler: Self-Recursion → Compile-Warn statt Unknown-Fallback              | V-3      | verschoben         |
+| B.3                                                                                        | Compiler: nested Component-Definition → Compile-Error                       | V-4      | verschoben         |
+| **Phase C — Studio-Pipeline-Hook** — verschoben (eigener Slice)                            |
+| C.1                                                                                        | Studio: Validator vor Compile aufrufen, Errors als Linter im Editor         | V-1, Q-A | verschoben         |
 
 Status-Werte: `offen` · `in-arbeit` · `review` · `erledigt` · `verworfen`.
 
@@ -248,18 +205,25 @@ Status-Werte: `offen` · `in-arbeit` · `review` · `erledigt` · `verworfen`.
 
 ## Neue Regression-Tests (RT)
 
-| ID    | Test                                                                            | Layer     | Aus        | Status |
-| ----- | ------------------------------------------------------------------------------- | --------- | ---------- | ------ |
-| RT-1  | `Btn "X"` ohne Definition → Compile-Error oder explicit Diagnostik              | compiler  | B.1        | offen  |
-| RT-2  | `btn "X"` (lowercase) → Validator-E002 mit Pascal-Case-Hinweis                  | validator | A.6        | offen  |
-| RT-3  | `Btn "Abbrechen", bg #333` mit `Btn: bg #2271C1` → Override wirkt (Smoke-Probe) | compiler  | regression | offen  |
-| RT-4  | Tree → Tree → ... Self-Recursion löst Validator-Warn aus                        | validator | A.1        | offen  |
-| RT-5  | `Outer:\n  Inner:\n  Inner` (nested def) löst Validator-Error aus               | validator | A.5        | offen  |
-| RT-6  | `Frame: bg #f00` (Primitive-Shadow) löst Validator-Warn aus                     | validator | A.4        | offen  |
-| RT-7  | `Btn:\nBtn:` (Empty + redefine) löst Validator-Warn aus                         | validator | A.2/A.3    | offen  |
-| RT-8  | Forward-Ref: `Btn "X"\nBtn: ...` rendert Properties korrekt                     | compiler  | regression | offen  |
-| RT-9  | Multi-Definition: `Btn: bg #f00\nBtn: bg #0f0\nBtn "X"` → last wins (`#0f0`)    | compiler  | regression | offen  |
-| RT-10 | Studio-E2E: Component-Picker drop → Definition + Use beide entstehen            | browser   | C.1        | offen  |
+| ID    | Test                                                   | Layer     | Aus        | Status     |
+| ----- | ------------------------------------------------------ | --------- | ---------- | ---------- |
+| RT-1  | `mybtn "X"` mit `MyBtn:` → E002 mit Pascal-Case-Hint   | validator | A.6        | erledigt   |
+| RT-2  | `Btn:` empty → W504                                    | validator | A.3        | erledigt   |
+| RT-3  | `Btn: bg #f00` (props) → KEIN W504                     | validator | A.3        | erledigt   |
+| RT-4  | `Card:\n  Text "Title"` (children) → KEIN W504         | validator | A.3        | erledigt   |
+| RT-5  | `PrimaryBtn as Button:` (`as` inheritance) → KEIN W504 | validator | A.3        | erledigt   |
+| RT-6  | W504-Suggestion enthält "Add properties..."            | validator | A.3        | erledigt   |
+| RT-7  | W504-Position zeigt korrekte Line                      | validator | A.3        | erledigt   |
+| RT-8  | E002-Hint verwendet suggestSimilar wenn vorhanden      | validator | A.6        | erledigt   |
+| RT-9  | E002-Hint nicht für uppercase-already                  | validator | A.6        | erledigt   |
+| RT-10 | Forward-Ref validiert clean                            | validator | regression | erledigt   |
+| RT-11 | Multi-Definition triggert E603                         | validator | regression | erledigt   |
+| RT-12 | Component-Composition validiert clean                  | validator | regression | erledigt   |
+| RT-13 | `Btn "X"` ohne Definition → Compile-Error              | compiler  | B.1        | verschoben |
+| RT-14 | Tree-Recursion löst Validator-Warn aus                 | validator | A.1        | verschoben |
+| RT-15 | Nested def löst Validator-Error aus                    | validator | A.5        | verschoben |
+
+**Implementiert:** `tests/compiler/validation/slice-21-components.test.ts` (14 Tests grün).
 
 ---
 
