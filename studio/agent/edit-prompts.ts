@@ -15,6 +15,7 @@
  */
 
 import { formatProjectFileSection } from './prompt-utils'
+import { findSketchBlocks } from './sketch-blocks'
 
 export interface EditCaptureCtx {
   /** Vollständiger Source der aktuellen Datei. */
@@ -94,8 +95,9 @@ const RULES = `### Regeln (kritisch)
    - **Doppelte Properties** auf einem Element (\`Frame ver, ver\` oder \`Button bg blue, bg red\`) → Duplikat entfernen.
    - **Wrapper-Frames ohne Properties** die nur ein Kind enthalten (\`Frame > Frame > Text\` wo der innere Frame leer ist) → den Wrapper auflösen, das Kind direkt einhängen.
    - **Re-Spezifikation von canvas-vererbten Properties.** \`canvas col white\` macht \`col white\` zum Default für alle Kinder. Ein \`Text "X", col white\` ist redundant. Gilt für \`col\`, \`font\`, \`fs\`. Ausnahme: wenn das Kind bewusst überschreibt (anderer Wert), dann nicht entfernen.
-7. **Wenn der Source bereits richtig/vollständig ist UND keine Idiom-Verstösse enthält** → gib gar keinen Block zurück (Stille ist heilig). „Stille" gilt NUR wenn Token-, Component- und Redundanz-Pflicht erfüllt sind.
-8. **Output: NUR Patches.** Keine Erklärung davor oder danach. Keine Code-Fences (\`\`\`mirror), keine Vorrede, keine Nachrede.`
+7. **Wenn der Source bereits richtig/vollständig ist UND keine Idiom-Verstösse enthält** → gib gar keinen Block zurück (Stille ist heilig). „Stille" gilt NUR wenn Token-, Component- und Redundanz-Pflicht erfüllt sind UND keine Sketch-Blocks (siehe nächste Regel) im Source vorhanden sind.
+8. **Sketch-Pflicht.** Sieht der Source einen Block der Form \`--\\n<beliebiger Inhalt>\\n--\` (zwei Zeilen mit nur \`--\`, dazwischen freier Text), ist das ein **User-Sketch**. Der User hat damit explizit signalisiert: „das ist nicht-Mirror, mach echten Code draus." Du MUSST den gesamten Block (einschliesslich beider \`--\`-Marker-Zeilen) per Patch ersetzen — durch Mirror-Code, der die Absicht des Sketches umsetzt. Behalte die Einrückung des öffnenden \`--\` für den ersten Output-Token bei. Sketch-Inhalt kann natürliche Sprache, Pseudocode oder Mischformen sein — interpretiere wohlwollend.
+9. **Output: NUR Patches.** Keine Erklärung davor oder danach. Keine Code-Fences (\`\`\`mirror), keine Vorrede, keine Nachrede.`
 
 export function buildEditPrompt(ctx: EditCaptureCtx): string {
   const parts: string[] = []
@@ -136,6 +138,21 @@ ${ctx.instruction}`)
 \`\`\`diff
 ${ctx.diffSinceLastCall}
 \`\`\``)
+  }
+
+  const sketchBlocks = findSketchBlocks(ctx.source)
+  if (sketchBlocks.length > 0) {
+    const blockList = sketchBlocks
+      .map(
+        (b, i) =>
+          `### Sketch ${i + 1} (Zeile ${b.startLine}–${b.endLine})\n\n\`\`\`\n${b.text}\n\`\`\``
+      )
+      .join('\n\n')
+    parts.push(`## Sketch-Blocks im Source — Pflicht-Übersetzung
+
+Der User hat ${sketchBlocks.length === 1 ? 'einen Sketch-Block' : `${sketchBlocks.length} Sketch-Blocks`} markiert (\`-- ... --\`). Inhalt ist nicht echtes Mirror — übersetze in echten Mirror-Code und ersetze pro Block die kompletten drei Bestandteile (öffnender \`--\`-Marker, Inhalt, schliessender \`--\`-Marker) durch das Resultat. Behalte die Einrückung der \`--\`-Marker für den ersten Output-Token bei.
+
+${blockList}`)
   }
 
   const siblingSection = formatProjectFileSection(
