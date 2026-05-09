@@ -174,7 +174,15 @@ export function emitAction(ctx: EventEmitterContext, action: IRAction, currentVa
   // Function call syntax: toggle(), exclusive(), show(Menu), animate(FadeIn), customFn()
   if (action.isFunctionCall) {
     if (action.isBuiltinStateFunction) {
-      // Built-in state functions: toggle(), cycle() (alias), exclusive()
+      // Built-in state functions: toggle(), cycle() (alias), exclusive().
+      //
+      // `exclusive` does NOT have a case here. The state-machine
+      // transformer's third pass (state-machine-transformer.ts) folds every
+      // builtin-state-function event into a transition with the correct
+      // schema-aware target, and state-machine-emitter.ts emits the call.
+      // A `case 'exclusive'` here was unreachable dead code and carried the
+      // pre-Slice-27 `Object.keys(...).find(s !== 'default')` filter — the
+      // exact pattern we're trying to eliminate. Removed in Slice 29.
       switch (action.type) {
         case 'toggle':
         case 'cycle': // cycle() is now an alias for toggle()
@@ -184,11 +192,6 @@ export function emitAction(ctx: EventEmitterContext, action: IRAction, currentVa
           } else {
             ctx.emit(`_runtime.stateMachineToggle(${currentVar})`)
           }
-          break
-        case 'exclusive':
-          ctx.emit(
-            `_runtime.exclusiveTransition(${currentVar}, Object.keys(${currentVar}._stateMachine?.states || {}).find(s => s !== 'default') || 'active')`
-          )
           break
       }
     } else {

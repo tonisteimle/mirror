@@ -48,6 +48,7 @@ Vertikale, end2end prüfbare User-Fähigkeiten („Capability-Slices"). Jeder Sl
 | 26  | System-States                        | erledigt                          | [05-slice-26-system-states.md](05-slice-26-system-states.md)             |
 | 27  | Custom-State `toggle()`              | erledigt                          | [06-slice-27-toggle.md](06-slice-27-toggle.md)                           |
 | 78  | Token-Picker (Studio)                | Audit · Entscheidungen            | [07-slice-78-token-picker.md](07-slice-78-token-picker.md)               |
+| 29  | `exclusive()`                        | erledigt                          | [08-slice-29-exclusive.md](08-slice-29-exclusive.md)                     |
 
 ---
 

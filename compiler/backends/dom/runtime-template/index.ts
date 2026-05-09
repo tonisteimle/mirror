@@ -1796,12 +1796,34 @@ const _runtime = {
     }
   },
 
-  // Wrapper for exclusive selection (used by template actions)
+  // Wrapper for exclusive selection (used by template actions in each-loops).
+  // Falls back to picking the first NON-system state when called with one
+  // arg. The 14-element list mirrors DSL.states with system:true (Slice 27 +
+  // Slice 29 — same drift family) so visited/checked/placeholder etc. are
+  // not mistaken for toggle targets just because they're listed first.
   exclusive(el, state) {
     if (!el) return
-    const targetState = state ||
-      (el._stateMachine ? Object.keys(el._stateMachine.states).find(s => s !== 'default') : 'active') ||
-      'active'
+    let targetState = state
+    if (!targetState && el._stateMachine) {
+      const cssStates = [
+        'default',
+        'hover',
+        'focus',
+        'focus-visible',
+        'focus-within',
+        'active',
+        'disabled',
+        'visited',
+        'checked',
+        'placeholder',
+        'placeholder-shown',
+        'first-child',
+        'last-child',
+        'empty',
+      ]
+      targetState = Object.keys(el._stateMachine.states).find(s => !cssStates.includes(s))
+    }
+    targetState = targetState || 'active'
     this.exclusiveTransition(el, targetState)
   },
 
