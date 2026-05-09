@@ -15,6 +15,13 @@ Vertikale, end2end prüfbare User-Fähigkeiten („Capability-Slices"). Jeder Sl
 3. Bewertung pro Dimension (stark / mittel / schwach)
 4. Follow-up-Tickets (Bugs, Architektur, Cleanup)
 5. Ergebnis als `NN-slice-XX-<name>.md` ablegen, Audit-Status-Tabelle aktualisieren
+6. Implementierung in Runden — pro Phase ein Commit
+7. **Review-Pass nach Implementierung** (verbindlich, kein Skip):
+   - Probe-Tabelle im Audit-Doc gegen den Post-Fix-Stand spiegeln (alle 🔴/🟡/🟠 die jetzt grün sind, müssen grün gemacht werden — sonst lügt das Doc)
+   - Jede RT aus dem Audit-Plan effektiv schreiben oder begründet streichen — ein Plan-RT ohne Test ist eine offene Lücke, kein erledigter Punkt
+   - Alle 6 Prüf-Dimensionen gegen den neuen Stand re-verifizieren, **inklusive Cross-Backend-Konsistenz** (DOM ≡ React ≡ Framework-Export — wenn ein Backend ausgelassen wurde, ist der Slice nicht fertig) und **Studio-Roundtrip** (Click im Preview → Property-Panel → Code-Edit → DOM-Update bleibt konsistent)
+   - Audit-Doc-Status auf `erledigt` erst nach diesem Pass; offene Sub-Tasks bleiben nicht als „done" verkleidet stehen — entweder umsetzen oder explizit als Follow-up dokumentieren mit Begründung warum verschoben
+8. **Quality-Gate vor Slice-Abschluss:** Wer fragt „ist das jetzt richtig gut?" muss eine ehrliche Antwort bekommen können. Solange die Antwort „substantiell besser, aber …" lautet, ist der Slice nicht fertig — entweder die Lücken schliessen oder den Status präzise zurücksetzen.
 
 **Reihenfolge:**
 
@@ -42,7 +49,7 @@ Vertikale, end2end prüfbare User-Fähigkeiten („Capability-Slices"). Jeder Sl
 | #   | Slice                                | Status                            | Dokument                                                                 |
 | --- | ------------------------------------ | --------------------------------- | ------------------------------------------------------------------------ |
 | 24  | Single-Value-Token                   | erledigt                          | [01-slice-24-tokens.md](01-slice-24-tokens.md)                           |
-| 1   | Frame-Container                      | Audit · Phase B.5                 | [02-slice-1-frame.md](02-slice-1-frame.md)                               |
+| 1   | Frame-Container                      | Phasen 11/13 · Review-Pass offen  | [02-slice-1-frame.md](02-slice-1-frame.md)                               |
 | 25  | Property-Set-Token                   | erledigt                          | [03-slice-25-property-set-tokens.md](03-slice-25-property-set-tokens.md) |
 | 21  | Komponenten-Definition & -Verwendung | Phase A erledigt · B/C verschoben | [04-slice-21-komponenten.md](04-slice-21-komponenten.md)                 |
 | 26  | System-States                        | erledigt                          | [05-slice-26-system-states.md](05-slice-26-system-states.md)             |
