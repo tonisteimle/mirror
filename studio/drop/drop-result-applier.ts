@@ -7,6 +7,7 @@
 
 import type { ModificationResult } from './types'
 import type { Command, CommandContext, CommandResult } from '../core/commands'
+import { adjustChangeForEditor } from './change-offset'
 
 export interface ApplierDependencies {
   editor: CodeMirrorEditor
@@ -113,105 +114,15 @@ export class DropResultApplier {
   }
 
   private adjustChange(change: Change): Change {
-    const docLength = this.deps.editor.state.doc.length
-    if (this.isFullReplace(change, docLength)) {
-      return this.adjustFullReplace(change, docLength)
-    }
-    return this.adjustStandardChange(change)
-  }
-
-  private isFullReplace(change: Change, docLength: number): boolean {
-    return change.from === 0 && change.to > docLength && this.deps.preludeOffset > 0
-  }
-
-  private adjustFullReplace(change: Change, docLength: number): Change {
-    return {
-      from: 0,
-      to: docLength,
-      insert: change.insert.substring(this.deps.preludeOffset),
-    }
-  }
-
-  private adjustStandardChange(change: Change): Change {
-    // Calculate indent correction separately for `from` and `to`. Both must
-    // count *actual* wrap-indent chars (`'  '` at start of each non-empty
-    // user line) that have been passed by the position. The previous
-    // implementation used `(userLine - 1) * 2` which (a) over-counted when
-    // user lines were empty (empty lines stay empty in the wrap, so they
-    // contribute no indent) and (b) under-counted when `to` was past the
-    // indent on its own line — leaving `to - from` 2 chars too long and
-    // either pushing the change out of bounds (silent reject) or shifting
-    // the user-side replacement forward by 2 chars (corrupted `\n\n`).
-    const fromCorrection = this.calculateIndentCorrection(change.from)
-    const toCorrection = this.calculateIndentCorrection(change.to)
-
-    return {
-      from: change.from - this.deps.preludeOffset - fromCorrection,
-      to: change.to - this.deps.preludeOffset - toCorrection,
-      insert: this.adjustInsertIndent(change.insert),
-    }
-  }
-
-  /**
-   * Calculate the indent correction for a position in the full (resolved)
-   * source. When code is wrapped with `App`, each non-empty user line gets
-   * 2 extra leading spaces inserted at its start. To map a resolved-source
-   * offset back to the user-source offset we must subtract:
-   *   - `preludeOffset` (the `App\n` prefix), plus
-   *   - 2 chars for every wrap-indent the position has *fully passed*.
-   *
-   * "Fully passed" means: the position is at or past the second char of
-   * that line's leading `'  '`. A position that lands exactly at the start
-   * of a line (right after `\n`) has *not* passed that line's indent yet.
-   */
-  private calculateIndentCorrection(fullPosition: number): number {
-    if (!this.deps.isWrappedWithApp || !this.deps.resolvedSource) {
-      return 0
-    }
-    if (fullPosition <= this.deps.preludeOffset) {
-      return 0
-    }
-
-    const region = this.deps.resolvedSource.substring(this.deps.preludeOffset, fullPosition)
-
-    let passed = 0
-    // First user line starts at preludeOffset (offset 0 in `region`).
-    if (region.length >= 2 && region.substring(0, 2) === '  ') {
-      passed++
-    }
-    // Each subsequent line starts after a `\n`.
-    let nlIdx = region.indexOf('\n')
-    while (nlIdx !== -1) {
-      const lineStart = nlIdx + 1
-      if (region.length >= lineStart + 2 && region.substring(lineStart, lineStart + 2) === '  ') {
-        passed++
-      }
-      nlIdx = region.indexOf('\n', lineStart)
-    }
-    return passed * 2
-  }
-
-  /**
-   * Adjust the insert text to remove extra indentation from wrapped code.
-   */
-  private adjustInsertIndent(insert: string): string {
-    if (!this.deps.isWrappedWithApp) {
-      return insert
-    }
-
-    // Remove 2-space indent from each line of the insert
-    return insert
-      .split('\n')
-      .map((line, i) => {
-        // First line might be just newline, keep as-is
-        if (i === 0 && line === '') return line
-        // Remove 2-space indent if present
-        if (line.startsWith('  ')) {
-          return line.substring(2)
-        }
-        return line
-      })
-      .join('\n')
+    return adjustChangeForEditor(
+      change,
+      {
+        preludeOffset: this.deps.preludeOffset,
+        isWrappedWithApp: this.deps.isWrappedWithApp,
+        resolvedSource: this.deps.resolvedSource,
+      },
+      this.deps.editor.state.doc.length
+    )
   }
 
   private isValidChange(change: Change): boolean {

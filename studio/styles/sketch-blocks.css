@@ -1,0 +1,108 @@
+/**
+ * Sketch-Block Decoration
+ *
+ * Hebt User-Sketches im Editor visuell hervor (`-- ... --`-Blocks).
+ * Marker-Zeilen kräftiger als Inhalt-Zeilen, damit Anfang/Ende
+ * eines Sketches klar erkennbar sind. Farbgebung dezent — soll
+ * vom Schreiben nicht ablenken, aber präsent genug sein, dass der
+ * User SIEHT "hier wird AI ran".
+ */
+
+.cm-editor .cm-line.cm-sketch-content {
+  background: rgba(245, 158, 11, 0.07);
+  position: relative;
+  color: var(--text-secondary, #a1a1aa);
+}
+
+/* Sketch-Inhalt ist Pseudocode oder natürliche Sprache — kein
+   Mirror. Mirror-Highlight-Tokens (in/each/if/else/as/named …) und
+   alle anderen `mir-*`-Klassen werden hier neutralisiert, damit
+   z.B. das Wort „in" mitten in einem Satz nicht plötzlich blau ist.
+   Gilt für beide Sketch-Line-Klassen — bei single-line- und
+   inline-start-Sketches steht der freie Text auf der Marker-Zeile. */
+.cm-editor .cm-line.cm-sketch-content [class^="mir-"],
+.cm-editor .cm-line.cm-sketch-content [class*=" mir-"],
+.cm-editor .cm-line.cm-sketch-marker [class^="mir-"],
+.cm-editor .cm-line.cm-sketch-marker [class*=" mir-"] {
+  color: inherit !important;
+  font-weight: inherit !important;
+  font-style: inherit !important;
+}
+
+.cm-editor .cm-line.cm-sketch-marker {
+  background: rgba(245, 158, 11, 0.15);
+  color: rgba(245, 158, 11, 0.9);
+  font-weight: 500;
+  position: relative;
+}
+
+/* Linker Akzent-Balken — visueller Anker, dass der Bereich
+   zusammengehört. Über alle Lines im Block durchgezogen, das
+   Eye trackt vom Anfang bis Ende. */
+.cm-editor .cm-line.cm-sketch-marker::before,
+.cm-editor .cm-line.cm-sketch-content::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: rgba(245, 158, 11, 0.6);
+  background-size: 100% 200%;
+  background-position: 0% 0%;
+}
+
+/* Progress-Animation während der LLM arbeitet:
+   Ein hellerer Spot wandert synchron auf jedem Akzent-Balken
+   von oben nach unten — der Block pulst sichtbar, der User sieht
+   exakt an seinem Sketch, dass die AI dran ist. Plus ein dezenter
+   Glow rechts vom Balken für "Aktivität ausser dem Editor". */
+body.mirror-llm-thinking .cm-editor .cm-line.cm-sketch-marker::before,
+body.mirror-llm-thinking .cm-editor .cm-line.cm-sketch-content::before {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(245, 158, 11, 0.5) 0%,
+    rgba(255, 200, 90, 1) 35%,
+    rgba(255, 200, 90, 1) 65%,
+    rgba(245, 158, 11, 0.5) 100%
+  );
+  background-size: 100% 300%;
+  animation: mirror-sketch-wave 1.4s linear infinite;
+  box-shadow: 0 0 10px 1px rgba(245, 158, 11, 0.45);
+}
+
+@keyframes mirror-sketch-wave {
+  0% {
+    background-position: 0% 100%;
+  }
+  100% {
+    background-position: 0% -200%;
+  }
+}
+
+/* AI-Edit-Button in der Editor-Toolbar.
+   Wenn ein Sketch-Block im aktiven Source steht, bekommt der Button
+   denselben Amber-Akzent wie die Block-Decoration — ein klarer
+   visueller Bezug zwischen "hier wird übersetzt" (Sketch im Code) und
+   "hier klicken zum Übersetzen" (Toolbar-Icon).
+   Während der LLM-Call läuft, wird der Button deaktiviert + dezent
+   gepulst — Doppel-Klicks während des Wartens werden vermieden. */
+.editor-action-btn.ai-edit-btn {
+  transition: color 200ms ease, filter 200ms ease;
+}
+
+body.editor-has-sketch .editor-action-btn.ai-edit-btn {
+  color: rgba(245, 158, 11, 0.95);
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.45));
+}
+
+body.mirror-llm-thinking .editor-action-btn.ai-edit-btn {
+  pointer-events: none;
+  opacity: 0.55;
+  animation: mirror-sketch-button-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes mirror-sketch-button-pulse {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.3)); }
+  50%      { filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.7)); }
+}

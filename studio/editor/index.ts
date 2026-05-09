@@ -148,6 +148,9 @@ export {
 // Re-export indent guides extension (visual indentation guides)
 export { indentGuidesExtension } from './indent-guides'
 
+// Re-export sketch decoration extension (highlights `-- ... --` blocks)
+export { sketchDecorationExtension } from './sketch-decoration'
+
 // Re-export smart paste extension (auto-adjust indentation on paste)
 export { smartPasteExtension } from './smart-paste'
 

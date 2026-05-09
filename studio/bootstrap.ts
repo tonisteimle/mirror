@@ -622,10 +622,27 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   // Component Event Handlers
   // ============================================
 
-  // Handle component insert request (click on component in palette)
+  // Handle component insert request (click on component in palette).
+  //
+  // Primary path: enter draw mode. The user drags inside any absolute or
+  // grid container to define position+size, and the DrawManager writes
+  // `x N, y M, w P, h Q` to the source. Mirrors how Figma's R / Frame
+  // tools work — pick the component, then draw.
+  //
+  // Fallback path (no preview / no draw manager): legacy "insert at
+  // cursor". Keeps headless / detached scenarios working without a
+  // canvas to draw on.
   eventUnsubscribes.push(
     events.on('component:insert-requested', ({ item }) => {
-      // Insert at cursor in editor
+      if (studio.drawManager) {
+        // ComponentItem and ComponentPanelItem share the fields the
+        // DrawManager actually reads (template, textContent), so the
+        // palette item can be passed straight through.
+        studio.drawManager.enterDrawMode(
+          item as Parameters<typeof studio.drawManager.enterDrawMode>[0]
+        )
+        return
+      }
       if (studio.editor) {
         const currentFile = getCurrentFileCallback?.() || 'index.mir'
         const code = generateComponentCodeFromDragData(

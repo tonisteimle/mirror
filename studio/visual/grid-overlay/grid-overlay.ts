@@ -42,7 +42,14 @@ const STROKE_DASH = '3 3'
 /** CSS variable for the line color — falls back to a hard-coded accent if
  *  the token isn't defined (e.g. tests that don't load Studio's theme). */
 const STROKE_VAR = 'var(--accent, #2271C1)'
-const STROKE_OPACITY = 0.45
+/** Two opacity tiers. The grid is shown all the time so the user can
+ *  reason about layout structure without first selecting anything; the
+ *  ambient tier is intentionally barely-there (you should be able to
+ *  ignore it visually, then notice it the moment you look). The
+ *  emphasized tier kicks in during the layout-draw flow, where the
+ *  cells are the user's working surface. */
+const STROKE_OPACITY_AMBIENT = 0.12
+const STROKE_OPACITY_EMPHASIZED = 0.45
 
 export type GridOverlayMode = 'auto' | 'always' | 'off'
 
@@ -91,6 +98,19 @@ export class GridOverlay {
    * leftover hover state.
    */
   private hoveredCell: ActiveCellHint | null = null
+  /**
+   * When true, the overlay still draws cell-boundary lines but skips
+   * the empty-cell hit zones (transparent rects with `pointer-events:
+   * auto` for click-to-insert). Used while DrawManager is in
+   * `ready`/`drawing` so the user's drag can reach the underlying grid
+   * container instead of being swallowed by the overlay.
+   */
+  private suppressEmptyCellHitZones = false
+  /**
+   * Toggle between ambient (default, very faint) and emphasized
+   * (during draw) line opacity. Same lines, different intensity.
+   */
+  private emphasized = false
 
   constructor(config: GridOverlayConfig) {
     this.container = config.container
@@ -129,6 +149,32 @@ export class GridOverlay {
    */
   setActiveCell(hint: ActiveCellHint | null): void {
     this.activeCell = hint
+    this.refresh()
+  }
+
+  /**
+   * Toggle whether empty cells expose pointer-event-grabbing hit zones
+   * for click-to-insert. Used by external coordinators (e.g. the
+   * DrawManager flow) to keep their own drag from being eaten by the
+   * overlay. Lines stay visible either way; the only thing that changes
+   * is whether transparent insert-affordance rects get attached.
+   */
+  setSuppressEmptyCellHitZones(suppress: boolean): void {
+    if (this.suppressEmptyCellHitZones === suppress) return
+    this.suppressEmptyCellHitZones = suppress
+    this.refresh()
+  }
+
+  /**
+   * Switch between ambient (faint, ignorable) and emphasized line
+   * opacity. Default is ambient — grids stay subtly visible all the
+   * time. Coordinators that want users to actively reason about cells
+   * (DrawManager flow, Grid-resize) flip this to true for the duration
+   * of their interaction, then back when it ends.
+   */
+  setEmphasized(emphasized: boolean): void {
+    if (this.emphasized === emphasized) return
+    this.emphasized = emphasized
     this.refresh()
   }
 
@@ -287,11 +333,12 @@ export class GridOverlay {
     // (row boundaries) span the full width. SVG `overflow: visible` keeps any
     // marginally-out-of-bounds lines (subpixel rounding) painted, so we
     // don't filter them.
+    const opacity = this.emphasized ? STROKE_OPACITY_EMPHASIZED : STROKE_OPACITY_AMBIENT
     for (const xPos of geo.columnLines) {
-      record.svg.appendChild(makeLine(xPos, 0, xPos, h))
+      record.svg.appendChild(makeLine(xPos, 0, xPos, h, opacity))
     }
     for (const yPos of geo.rowLines) {
-      record.svg.appendChild(makeLine(0, yPos, w, yPos))
+      record.svg.appendChild(makeLine(0, yPos, w, yPos, opacity))
     }
 
     // Active drop-cell highlight: solid accent fill + outline, sits on top
@@ -328,7 +375,13 @@ export class GridOverlay {
     // route to the insert handler. Lines + filled cells stay
     // pointer-events: none (set on the SVG root) so normal selection
     // clicks pass through unchanged.
-    this.addEmptyCellHitZones(record, geo)
+    //
+    // Skipped while a coordinator (DrawManager flow) has asked us to
+    // suppress the affordance — otherwise the transparent rects would
+    // intercept the drag mousedown that's meant for the grid itself.
+    if (!this.suppressEmptyCellHitZones) {
+      this.addEmptyCellHitZones(record, geo)
+    }
   }
 
   private addEmptyCellHitZones(record: ActiveGrid, geo: GridGeometry): void {
@@ -461,7 +514,7 @@ function trackEnd(sizes: number[], gap: number, i: number): number {
 // Helpers
 // ============================================================================
 
-function makeLine(x1: number, y1: number, x2: number, y2: number): SVGLineElement {
+function makeLine(x1: number, y1: number, x2: number, y2: number, opacity: number): SVGLineElement {
   const line = document.createElementNS(SVG_NS, 'line') as SVGLineElement
   line.setAttribute('x1', String(x1))
   line.setAttribute('y1', String(y1))
@@ -470,7 +523,7 @@ function makeLine(x1: number, y1: number, x2: number, y2: number): SVGLineElemen
   line.setAttribute('stroke', STROKE_VAR)
   line.setAttribute('stroke-width', String(STROKE_WIDTH))
   line.setAttribute('stroke-dasharray', STROKE_DASH)
-  line.setAttribute('opacity', String(STROKE_OPACITY))
+  line.setAttribute('opacity', String(opacity))
   line.setAttribute('shape-rendering', 'crispEdges')
   return line
 }

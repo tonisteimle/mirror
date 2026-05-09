@@ -12,7 +12,7 @@ import { getDevicePreset } from '../../schema/dsl'
 import type { ParentLayoutContext } from '../transformers/transformer-context'
 import {
   createLayoutContext,
-  resolveGridColumns,
+  resolveGrid,
   applyAlignmentsToContext,
   generateLayoutStyles,
 } from '../transformers/layout-transformer'
@@ -195,10 +195,17 @@ export function transformProperties(
       continue
     }
 
-    // Grid (takes precedence over flex)
+    // Grid (takes precedence over flex). The two-arg `grid X Y` count
+    // form expresses *both* axes in one keyword; the resolver hands
+    // back the row count for the IR to pick up the same way an
+    // explicit `rows N` would.
     if (name === 'grid') {
       layoutContext.isGrid = true
-      layoutContext.gridColumns = resolveGridColumns(prop)
+      const resolved = resolveGrid(prop)
+      layoutContext.gridColumns = resolved.columns
+      if (resolved.rowCount !== null) {
+        layoutContext.rowCount = resolved.rowCount
+      }
       continue
     }
 
@@ -278,8 +285,16 @@ export function transformProperties(
     if (name === 'dense' && isBoolean) continue
     if ((name === 'gap-x' || name === 'gx') && !isBoolean) continue
     if ((name === 'gap-y' || name === 'gy') && !isBoolean) continue
-    // Note: row-height is NOT skipped here - it will be handled by propertyToCSS via schema
-    // In grid context, generateLayoutStyles handles it; outside grid, schema handles it
+    // Row tracks: in a grid context, the first pass captured `row-height`
+    // / `rh` / `rows` and `generateLayoutStyles` already emitted the
+    // appropriate `grid-auto-rows` or `grid-template-rows`. Letting the
+    // schema fire here would duplicate the output (and, with `rows N`,
+    // contradict it by re-adding `grid-auto-rows`). Outside grid context
+    // the schema still handles `row-height` for the rare hand-rolled
+    // case, hence the gated check on `isGrid`.
+    if ((name === 'row-height' || name === 'rh') && !isBoolean && layoutContext.isGrid) {
+      continue
+    }
 
     // Skip transform properties (already handled in first pass)
     if (name === 'rotate' || name === 'rot') continue

@@ -9,10 +9,7 @@
 
 import type { Property } from '../../parser/ast'
 import type { IRStyle, IRNode } from '../types'
-import {
-  isContainer as isContainerPrimitive,
-  FLEX_DEFAULTS,
-} from '../../schema/layout-defaults'
+import { isContainer as isContainerPrimitive, FLEX_DEFAULTS } from '../../schema/layout-defaults'
 
 // =============================================================================
 // Types
@@ -30,10 +27,11 @@ export interface LayoutContext {
   gap: string | null
   isGrid: boolean
   gridColumns: string | null
-  gridAutoFlow: string | null      // 'row' | 'column' | 'dense' | 'row dense' | 'column dense'
-  columnGap: string | null         // For gap-x/gx
-  rowGap: string | null            // For gap-y/gy
-  rowHeight: string | null         // For row-height/rh (grid-auto-rows)
+  gridAutoFlow: string | null // 'row' | 'column' | 'dense' | 'row dense' | 'column dense'
+  columnGap: string | null // For gap-x/gx
+  rowGap: string | null // For gap-y/gy
+  rowHeight: string | null // For row-height/rh — uniform per-track height
+  rowCount: number | null // For the second arg of `grid X Y`
   // Internal alignment tracking (before direction-based mapping)
   _hAlign?: 'start' | 'end' | 'center'
   _vAlign?: 'start' | 'end' | 'center'
@@ -60,6 +58,7 @@ export function createLayoutContext(): LayoutContext {
     columnGap: null,
     rowGap: null,
     rowHeight: null,
+    rowCount: null,
   }
 }
 
@@ -68,38 +67,88 @@ export function createLayoutContext(): LayoutContext {
 // =============================================================================
 
 /**
- * Resolve grid column specification from property values.
+ * Resolve grid count specification from property values.
  *
- * @example
- * grid 3         → repeat(3, 1fr)
- * grid auto 250  → repeat(auto-fill, minmax(250px, 1fr))
- * grid 30% 70%   → 30% 70%
+ * Mirror DSL forms:
+ *   grid 4         → 4 equal columns (rows auto-flow)
+ *   grid 4 8       → 4 columns × 8 rows — both axes in one keyword
+ *
+ * Mirror grids are *regular*: every cell is the same size as every
+ * other cell. Cell size is derived from container size (typically `w
+ * full, h full`) divided by the count. If you want fixed track sizes,
+ * use the uniform `row-height N` (which combines with the count form
+ * to produce `repeat(Y, Npx)`).
+ *
+ * Legacy forms still parsed for backwards-compat with older docs/code:
+ *   grid auto 250  → auto-fill columns at minmax(250px, 1fr) — responsive wrap
+ *   grid 30% 70%   → explicit columns by percentage
+ *
+ * Returns:
+ *   columns: the CSS gridTemplateColumns value (or null if not derivable)
+ *   rowCount: count of explicit rows (only set by the `grid X Y` form)
+ *
+ * The row-count channel exists because the count form expresses *both*
+ * axes in one keyword. The transformer reads it into
+ * `layoutContext.rowCount` and assembles `grid-template-rows` from
+ * count + (optional) row-height in `generateLayoutStyles`.
  */
-export function resolveGridColumns(prop: Property): string | null {
+export function resolveGrid(prop: Property): { columns: string | null; rowCount: number | null } {
   const values = prop.values
+
+  // grid auto 250 → auto-fill, minmax(250px, 1fr) (legacy responsive form)
+  if (values.length === 2 && values[0] === 'auto') {
+    const minWidth = /^\d+$/.test(String(values[1])) ? `${values[1]}px` : values[1]
+    return { columns: `repeat(auto-fill, minmax(${minWidth}, 1fr))`, rowCount: null }
+  }
+
+  // grid X Y where both are positive integers → cols × rows count form.
+  // Tracks share the available space equally (CSS `1fr` under the hood).
+  if (values.length === 2 && isCountValue(values[0]) && isCountValue(values[1])) {
+    return {
+      columns: `repeat(${values[0]}, 1fr)`,
+      rowCount: parseInt(String(values[1]), 10),
+    }
+  }
 
   // grid 3 → repeat(3, 1fr)
   if (values.length === 1 && /^\d+$/.test(String(values[0]))) {
-    return `repeat(${values[0]}, 1fr)`
+    return { columns: `repeat(${values[0]}, 1fr)`, rowCount: null }
   }
 
-  // grid auto 250 → auto-fill, minmax(250px, 1fr)
-  if (values.length === 2 && values[0] === 'auto') {
-    const minWidth = /^\d+$/.test(String(values[1])) ? `${values[1]}px` : values[1]
-    return `repeat(auto-fill, minmax(${minWidth}, 1fr))`
-  }
-
-  // grid 30% 70% → explicit columns
+  // grid 30% 70% → explicit columns (legacy form, kept for backwards-compat)
   if (values.length >= 2) {
-    return values.map(v => {
-      const str = String(v)
-      if (/^\d+$/.test(str)) return `${str}px`
-      if (str.endsWith('%')) return str
-      return str
-    }).join(' ')
+    return {
+      columns: values
+        .map(v => {
+          const str = String(v)
+          if (/^\d+$/.test(str)) return `${str}px`
+          if (str.endsWith('%')) return str
+          return str
+        })
+        .join(' '),
+      rowCount: null,
+    }
   }
 
-  return null
+  return { columns: null, rowCount: null }
+}
+
+/**
+ * Backwards-compatible columns-only resolver. New code should call
+ * `resolveGrid` to also receive the row count from the `grid X Y` form.
+ */
+export function resolveGridColumns(prop: Property): string | null {
+  return resolveGrid(prop).columns
+}
+
+/** True if the value parses as a positive integer count (not "auto", not
+ *  a px/% sized string). Bounds the count form so absurd inputs like
+ *  `grid 1000 1000` don't materialize 1M cells. */
+function isCountValue(v: unknown): boolean {
+  const s = String(v)
+  if (!/^\d+$/.test(s)) return false
+  const n = parseInt(s, 10)
+  return n >= 1 && n <= 100
 }
 
 // =============================================================================
@@ -122,7 +171,9 @@ export function applyAlignmentsToContext(values: string[], ctx: LayoutContext): 
   const hasHorizontal = values.some(v => ['left', 'right', 'hor-center'].includes(v))
 
   // Check if explicit direction (hor/ver) is specified - this takes precedence over 9-zone properties
-  const hasExplicitDirection = values.some(v => ['hor', 'horizontal', 'ver', 'vertical'].includes(v))
+  const hasExplicitDirection = values.some(v =>
+    ['hor', 'horizontal', 'ver', 'vertical'].includes(v)
+  )
 
   for (const name of values) {
     switch (name) {
@@ -271,7 +322,22 @@ export function generateLayoutStyles(ctx: LayoutContext, primitive: string): IRS
     if (ctx.gridAutoFlow) {
       styles.push({ property: 'grid-auto-flow', value: ctx.gridAutoFlow })
     }
-    if (ctx.rowHeight) {
+
+    // Rows. Two modes:
+    //   `grid X Y, row-height H`  → grid-template-rows: repeat(Y, Hpx)
+    //   `grid X Y` alone          → grid-template-rows: repeat(Y, 1fr)
+    //   `row-height H` alone      → grid-auto-rows: H (legacy implicit-only)
+    // Mirror grids are *regular* by design — a grid that needs uneven
+    // tracks isn't really a grid. If you need a fixed-size header above
+    // a grid, build a sibling Frame outside the grid container, not a
+    // tall first row inside it.
+    if (ctx.rowCount && ctx.rowCount > 0) {
+      const track = ctx.rowHeight ?? '1fr'
+      styles.push({
+        property: 'grid-template-rows',
+        value: `repeat(${ctx.rowCount}, ${track})`,
+      })
+    } else if (ctx.rowHeight) {
       styles.push({ property: 'grid-auto-rows', value: ctx.rowHeight })
     }
     // Handle gaps: specific gaps take precedence over general gap
@@ -295,8 +361,8 @@ export function generateLayoutStyles(ctx: LayoutContext, primitive: string): IRS
   const direction = ctx.direction || (isContainer ? 'column' : null)
 
   // If no layout properties were set and not a container, skip flex styles
-  const hasLayoutProps = direction || ctx.justifyContent || ctx.alignItems ||
-                        ctx._hAlign || ctx._vAlign || ctx.flexWrap
+  const hasLayoutProps =
+    direction || ctx.justifyContent || ctx.alignItems || ctx._hAlign || ctx._vAlign || ctx.flexWrap
 
   if (!hasLayoutProps && !isContainer) {
     if (ctx.gap) {
@@ -332,7 +398,8 @@ export function generateLayoutStyles(ctx: LayoutContext, primitive: string): IRS
 
   // Containers need align-self: stretch to fill parent width (since parent has align-items: flex-start)
   // Also needed when centering is used or children have w full
-  const needsStretch = (isContainer || hasCenteringThatNeedsWidth || ctx.childHasWidthFull) && !ctx.hasExplicitWidth
+  const needsStretch =
+    (isContainer || hasCenteringThatNeedsWidth || ctx.childHasWidthFull) && !ctx.hasExplicitWidth
   if (needsStretch) {
     styles.push({ property: 'align-self', value: 'stretch' })
   }
@@ -417,8 +484,13 @@ export function generateLayoutStyles(ctx: LayoutContext, primitive: string): IRS
  * @param children - The IRNode children to adjust (modified in place)
  * @param parentStyles - The parent's styles to check for position: relative
  */
-export function applyAbsolutePositioningToChildren(children: IRNode[], parentStyles: IRStyle[]): void {
-  const isRelativeContainer = parentStyles.some(s => s.property === 'position' && s.value === 'relative')
+export function applyAbsolutePositioningToChildren(
+  children: IRNode[],
+  parentStyles: IRStyle[]
+): void {
+  const isRelativeContainer = parentStyles.some(
+    s => s.property === 'position' && s.value === 'relative'
+  )
   if (!isRelativeContainer) return
 
   for (const child of children) {

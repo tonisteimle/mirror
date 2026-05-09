@@ -292,6 +292,14 @@ export interface StudioEvents {
   'layout-inference:error': { group?: unknown; error?: string }
   /** Draw events */
   'draw:error': { error: string; context?: string }
+  /** DrawManager state machine transitions. Listeners use these to drive
+   *  ambient UI affordances: GridOverlay switches to 'always' mode while
+   *  the user is in 'ready' so they can see *which* cells are about to
+   *  receive their drag. */
+  'draw:state-changed': {
+    mode: 'idle' | 'ready' | 'drawing'
+    previous: 'idle' | 'ready' | 'drawing'
+  }
   /** Picker events (for testing) */
   'picker:opened': {
     pickerId: string

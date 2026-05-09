@@ -20,6 +20,7 @@ import { EditorView } from '@codemirror/view'
 import type { Extension } from '@codemirror/state'
 import { ghostDiffField, setGhostDiff, clearGhostDiffEffect } from './ghost-diff'
 import { setEditStatus, hideEditStatus } from './edit-status-indicator'
+import { findSketchBlocks } from '../agent/sketch-blocks'
 import {
   openPromptField as defaultOpenPromptField,
   type PromptFieldHandle,
@@ -143,7 +144,19 @@ export function createEditHandler(config: EditHandlerConfig): EditHandlerHandler
     // belonged to a ghost-diff that the user is now superseding.
     pendingOtherFileChanges = null
 
-    setEditStatus('thinking')
+    // Pre-flight: when the source carries `-- ... --` sketch blocks, the
+    // status message gets concrete so the user sees the system understood
+    // their intent before the LLM round-trip even starts.
+    const sketchBlocks = findSketchBlocks(ctx.source)
+    if (sketchBlocks.length > 0) {
+      const label =
+        sketchBlocks.length === 1
+          ? 'Übersetze Sketch…'
+          : `Übersetze ${sketchBlocks.length} Sketches…`
+      setEditStatus('thinking', label)
+    } else {
+      setEditStatus('thinking')
+    }
 
     let result: EditResult
     try {

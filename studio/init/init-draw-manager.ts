@@ -11,6 +11,7 @@ import { CodeModifier } from '../code-modifier'
 import type { EditorController } from '../editor'
 import type { EditorView } from '@codemirror/view'
 import { createLogger } from '../../compiler/utils/logger'
+import { adjustChangeForEditor } from '../drop/change-offset'
 
 const log = createLogger('DrawManagerInit')
 
@@ -58,38 +59,42 @@ export function initDrawManager(config: DrawManagerInitConfig): DrawManagerInitR
     if (result.success && result.modificationResult) {
       log.info(' Component created:', result.nodeId)
 
-      // Apply code change to editor (adjust for prelude offset)
-      const preludeOffset = state.get().preludeOffset
+      // Apply code change to editor. The CodeModifier produces positions
+      // against the *resolved* source (prelude + wrapped user code); the
+      // editor only displays the un-wrapped user code. Mapping between
+      // them is non-trivial because each user line in `App\n  …` mode
+      // gains 2 leading spaces — the shared `adjustChangeForEditor`
+      // helper (also used by DropResultApplier) handles both the
+      // preludeOffset subtraction and the indent correction so insertion
+      // points line up with the editor doc.
+      const s = state.get()
       const change = result.modificationResult.change
-
-      const adjustedChange = {
-        from: change.from - preludeOffset,
-        to: change.to - preludeOffset,
-        insert: change.insert,
-      }
-
-      // Validate adjusted change range
       const docLength = editorController.getContent().length
+
+      const adjustedChange = adjustChangeForEditor(
+        change,
+        {
+          preludeOffset: s.preludeOffset,
+          isWrappedWithApp: s.isWrappedWithApp,
+          resolvedSource: s.resolvedSource ?? '',
+        },
+        docLength
+      )
+
       if (
         adjustedChange.from >= 0 &&
         adjustedChange.to <= docLength &&
         adjustedChange.from <= adjustedChange.to
       ) {
-        // Apply change to editor
-        editor.dispatch({
-          changes: adjustedChange,
-        })
-
-        // Compile will be triggered automatically by editor change
+        editor.dispatch({ changes: adjustedChange })
         log.info(' Editor updated')
       } else {
         log.warn(' Invalid change range, forcing recompile', {
           original: change,
           adjusted: adjustedChange,
-          preludeOffset,
+          preludeOffset: s.preludeOffset,
           docLength,
         })
-        // Force recompile
         events.emit('compile:requested', {})
       }
     }

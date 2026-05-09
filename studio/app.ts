@@ -109,6 +109,8 @@ import {
   createEditHandler,
   // Indent Guides Extension (visual indentation guides)
   indentGuidesExtension,
+  // Sketch Decoration (highlights `-- ... --` blocks for AI-translation)
+  sketchDecorationExtension,
   // Smart Paste Extension (auto-adjust indentation on paste)
   smartPasteExtension,
   // Validator (for code linting)
@@ -837,6 +839,7 @@ const editorExtensions = [
   // lintGutter() removed - only inline underlines, no gutter markers
   mirrorLinter, // Dynamic diagnostics (updated on compile)
   indentGuidesExtension(), // Visual indent guides (vertical lines)
+  sketchDecorationExtension(), // Highlights `-- ... --` sketch blocks
   smartPasteExtension(), // Auto-adjust indentation on paste
   ghostDiffExtension(), // LLM-Edit-Flow: red/green diff overlay
   editHandler.ghostDiscardOnEditExtension, // Auto-discard ghost on direct edit
@@ -983,6 +986,17 @@ redoBtn?.addEventListener('click', () => {
     redo(editor)
     editor.focus()
   }
+})
+
+// AI-Edit toolbar button: explicit Cmd+Enter trigger via mouse. Routes
+// through the same handler as the keymap, so the user sees the same
+// status indicator + sketch-block-decoration animation regardless of
+// trigger surface.
+const aiEditBtn = document.getElementById('ai-edit-btn') as HTMLButtonElement | null
+aiEditBtn?.addEventListener('click', () => {
+  if (!editor) return
+  editor.focus()
+  editHandler.handleEditFlow(editor)
 })
 
 // Reset to demo project (with confirmation — destructive, wipes editor + storage)
@@ -2148,7 +2162,12 @@ function initStudio() {
   // cells into click-to-insert affordances (Phase 4).
   const previewContainerEl = document.getElementById('preview')
   if (previewContainerEl) {
-    initGridOverlay({ container: previewContainerEl, mode: 'auto' })
+    // Always mode + ambient line opacity (handled inside the overlay):
+    // grids are subtly visible all the time so the user can reason
+    // about layout structure without first selecting anything. The
+    // DrawManager flow temporarily toggles `setEmphasized(true)` for
+    // the duration of a draw so the lines pop while in use.
+    initGridOverlay({ container: previewContainerEl, mode: 'always' })
   }
 }
 

@@ -11863,10 +11863,6 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 8 1`] = `
           "property": "border-radius",
           "value": "8px",
         },
-        {
-          "property": "grid-auto-rows",
-          "value": "40px",
-        },
       ],
       "tag": "div",
     },
@@ -12270,10 +12266,6 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 9 1`] = `
         {
           "property": "border-radius",
           "value": "8px",
-        },
-        {
-          "property": "grid-auto-rows",
-          "value": "35px",
         },
       ],
       "tag": "div",
@@ -12901,10 +12893,6 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 10 1`] = `
         {
           "property": "gap",
           "value": "12px",
-        },
-        {
-          "property": "grid-auto-rows",
-          "value": "25px",
         },
         {
           "property": "height",

@@ -24,6 +24,7 @@ import type {
 } from './types'
 import type { AlignPosition } from './indicator'
 import { lookupComponentByName } from './test-api-helpers'
+import { cellCenterOffset } from '../../visual/snap/grid-cell-snap'
 import type { AnimationConfig, BrowserTestResult } from './test-api-types'
 import { DEFAULT_ANIMATION } from './test-api-types'
 
@@ -1360,11 +1361,4 @@ function parsePx(raw: string): number {
   if (!raw) return 0
   const n = parseFloat(raw)
   return Number.isFinite(n) ? n : 0
-}
-
-/** Center offset (in px) of cell `index` within a track list. 0-indexed. */
-function cellCenterOffset(sizes: number[], gap: number, index: number): number {
-  let off = 0
-  for (let i = 0; i < index; i++) off += sizes[i] + gap
-  return off + sizes[index] / 2
 }

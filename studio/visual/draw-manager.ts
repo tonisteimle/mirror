@@ -15,12 +15,19 @@ import { SnapIntegration, createSnapIntegration } from './snap-integration'
 import { GuideRenderer } from './smart-guides/guide-renderer'
 import { events } from '../core/events'
 import { createLogger } from '../../compiler/utils/logger'
+import { readGridGeometry } from './grid-overlay/grid-detector'
+import { pointerToCell, cellRange, cellRangeToRect, type GridCell } from './snap/grid-cell-snap'
+import type { GridGeometry } from './grid-overlay/grid-detector'
 
 const log = createLogger('DrawManager')
 
 const MIN_SIZE = 10 // Minimum width/height in pixels
 
 export type DrawMode = 'idle' | 'ready' | 'drawing'
+
+/** Which container layout the active draw is happening in. Picked at
+ *  mousedown time; the rest of the lifecycle branches on it. */
+export type DrawTargetType = 'absolute' | 'grid'
 
 export interface Point {
   x: number
@@ -52,6 +59,15 @@ export interface DrawState {
   scale: number
   lastClientX: number
   lastClientY: number
+  /** Which path is active. Absolute: existing px-snap logic. Grid: cell-
+   *  snap, output written as `x A, y B, w C, h D` (1-indexed cells). */
+  targetType: DrawTargetType
+  /** Grid-only: live geometry captured at mousedown so cell-math stays
+   *  consistent across the drag (column/row sizes can shift if siblings
+   *  resize, but for a single drag we want a stable target). */
+  gridGeometry?: GridGeometry
+  startCell?: GridCell
+  currentCell?: GridCell
 }
 
 export interface DrawResult {
@@ -192,7 +208,12 @@ export class DrawManager {
   }
 
   /**
-   * Transition to new state
+   * Transition to new state.
+   *
+   * Emits `draw:state-changed` so peripheral UI (GridOverlay et al.) can
+   * react. We emit *after* applying the local side-effects so that any
+   * synchronous listener observing the new mode also sees the matching
+   * cursor / listener attachments.
    */
   private transitionTo(newMode: DrawMode): void {
     const oldMode = this.mode
@@ -216,6 +237,10 @@ export class DrawManager {
     } else if (newMode === 'idle') {
       this.setCursor('default')
       this.componentToDraw = null
+    }
+
+    if (oldMode !== newMode) {
+      events.emit('draw:state-changed', { mode: newMode, previous: oldMode })
     }
   }
 
@@ -256,7 +281,11 @@ export class DrawManager {
   }
 
   /**
-   * Handle mousedown (start drawing)
+   * Handle mousedown (start drawing).
+   *
+   * Branches on container layout type. Grid containers take the cell-aware
+   * path (snap to cell boundaries, write `x N, y M, w P, h Q`). Absolute
+   * containers take the legacy pixel-based path. Anything else errors.
    */
   private handleMouseDown(e: MouseEvent): void {
     if (this.mode !== 'ready') return
@@ -271,23 +300,32 @@ export class DrawManager {
       return
     }
 
-    // Validate container
-    if (!this.isValidDrawTarget(containerElement)) {
-      this.showError('Can only draw in absolute containers (stacked layout)')
+    const layout = detectLayout(containerElement)
+
+    if (layout.type === 'grid') {
+      this.startGridDraw(e, containerElement)
       return
     }
 
-    // Get container info
+    if (layout.type === 'absolute') {
+      this.startAbsoluteDraw(e, containerElement, layout.scale)
+      return
+    }
+
+    this.showError('Can only draw in absolute or grid containers')
+  }
+
+  /**
+   * Start an absolute-container draw (legacy px-based path).
+   */
+  private startAbsoluteDraw(e: MouseEvent, containerElement: HTMLElement, scale: number): void {
     const containerNodeId = containerElement.dataset.mirrorId!
     const containerRect = containerElement.getBoundingClientRect()
-    const layout = detectLayout(containerElement)
-    const scale = layout.scale
 
-    // Convert to container coordinates
     const startPoint = this.screenToContainerCoords(e.clientX, e.clientY, containerRect, scale)
 
-    // Initialize draw state
     this.drawState = {
+      targetType: 'absolute',
       component: this.componentToDraw!,
       containerElement,
       containerNodeId,
@@ -299,6 +337,48 @@ export class DrawManager {
       scale,
       lastClientX: e.clientX,
       lastClientY: e.clientY,
+    }
+
+    this.transitionTo('drawing')
+  }
+
+  /**
+   * Start a grid-container draw. The cursor's start cell is captured;
+   * subsequent mousemove computes the current cell, and the bounding
+   * cell-range becomes the draft rectangle.
+   *
+   * `gridGeometry` is read once and stashed in the draw state — within a
+   * single drag the grid's track sizes are stable, and re-reading on
+   * every mousemove would just create avoidable layout thrash.
+   */
+  private startGridDraw(e: MouseEvent, containerElement: HTMLElement): void {
+    const gridGeometry = readGridGeometry(containerElement)
+    if (!gridGeometry) {
+      this.showError('Grid geometry could not be read (named lines or non-px tracks?)')
+      return
+    }
+
+    const containerNodeId = containerElement.dataset.mirrorId!
+    const containerRect = containerElement.getBoundingClientRect()
+    const startCell = pointerToCell({ x: e.clientX, y: e.clientY }, gridGeometry)
+
+    this.drawState = {
+      targetType: 'grid',
+      component: this.componentToDraw!,
+      containerElement,
+      containerNodeId,
+      containerRect,
+      // startPoint/currentPoint stay zero; grid path uses startCell/currentCell.
+      startPoint: { x: 0, y: 0 },
+      currentPoint: { x: 0, y: 0 },
+      currentRect: { x: 0, y: 0, width: 0, height: 0 },
+      modifiers: { shift: e.shiftKey, alt: e.altKey, meta: e.metaKey || e.ctrlKey },
+      scale: 1,
+      lastClientX: e.clientX,
+      lastClientY: e.clientY,
+      gridGeometry,
+      startCell,
+      currentCell: startCell,
     }
 
     this.transitionTo('drawing')
@@ -377,7 +457,7 @@ export class DrawManager {
   }
 
   /**
-   * Update drawing
+   * Update drawing — dispatch to the path picked at mousedown.
    */
   private updateDrawing(
     clientX: number,
@@ -387,45 +467,97 @@ export class DrawManager {
     meta: boolean
   ): void {
     if (!this.drawState) return
+    if (this.drawState.targetType === 'grid') {
+      this.updateGridDrawing(clientX, clientY)
+    } else {
+      this.updateAbsoluteDrawing(clientX, clientY, shift, alt, meta)
+    }
+  }
 
+  /**
+   * Absolute-container draw update (legacy px path).
+   */
+  private updateAbsoluteDrawing(
+    clientX: number,
+    clientY: number,
+    shift: boolean,
+    alt: boolean,
+    meta: boolean
+  ): void {
+    if (!this.drawState) return
     const { containerRect, scale, startPoint, containerElement } = this.drawState
 
-    // Cache screen coordinates for keyboard modifier updates
     this.drawState.lastClientX = clientX
     this.drawState.lastClientY = clientY
 
-    // Convert to container coordinates
     const currentPoint = this.screenToContainerCoords(clientX, clientY, containerRect, scale)
     this.drawState.currentPoint = currentPoint
-
-    // Update modifiers
     this.drawState.modifiers = { shift, alt, meta }
 
-    // Calculate rectangle
     let rect = this.calculateRect(startPoint, currentPoint, this.drawState.modifiers)
 
-    // Apply snapping (unless meta key is held)
     const siblings = this.getSiblings(containerElement)
     const snapResult = this.snapIntegration.snap(rect, siblings, containerRect, meta)
     rect = snapResult.rect
     this.drawState.currentRect = rect
 
-    // Render rectangle
     this.renderer.render(rect, containerRect, scale)
-
-    // Render guides
     this.guideRenderer.render(snapResult.guides)
   }
 
   /**
-   * Finish drawing
+   * Grid-container draw update.
+   *
+   * Maps the cursor to a cell, then computes the bounding cell-range
+   * between startCell and currentCell. The preview rectangle snaps
+   * exactly to cell edges — there is no sub-cell precision and there are
+   * no smart-guides (cells are already the snap target).
+   */
+  private updateGridDrawing(clientX: number, clientY: number): void {
+    if (!this.drawState) return
+    const ds = this.drawState
+    const geo = ds.gridGeometry
+    const start = ds.startCell
+    if (!geo || !start) return
+
+    ds.lastClientX = clientX
+    ds.lastClientY = clientY
+
+    const cur = pointerToCell({ x: clientX, y: clientY }, geo)
+    ds.currentCell = cur
+
+    const cellRect = cellRangeToRect(geo, start, cur)
+    ds.currentRect = cellRect
+
+    const range = cellRange(start, cur)
+    // Pass geo.rect (inner content rect, viewport coords) as the
+    // "container" anchor and scale=1: rect coordinates are already in
+    // viewport-pixel offsets relative to that anchor.
+    this.renderer.render(cellRect, geo.rect, 1, range)
+    // Grid path doesn't use smart-guides — cell snapping is the alignment.
+    this.guideRenderer.clear()
+  }
+
+  /**
+   * Finish drawing — dispatch on target type. Grid uses cell-indexed
+   * coordinates; absolute uses pixels.
    */
   private finishDrawing(): void {
     if (!this.drawState) return
+    if (this.drawState.targetType === 'grid') {
+      this.finishGridDrawing()
+    } else {
+      this.finishAbsoluteDrawing()
+    }
+  }
 
+  /**
+   * Absolute path: emit `x N, y N, w N, h N` in pixels (legacy).
+   */
+  private finishAbsoluteDrawing(): void {
+    if (!this.drawState) return
     const { currentRect, containerNodeId, component } = this.drawState
 
-    // Validate minimum size
     if (currentRect.width < this.config.minSize || currentRect.height < this.config.minSize) {
       this.showError(`Element too small (minimum ${this.config.minSize}×${this.config.minSize})`)
       this.cleanup()
@@ -433,16 +565,52 @@ export class DrawManager {
       return
     }
 
-    // Round to integers
     const x = Math.round(currentRect.x)
     const y = Math.round(currentRect.y)
     const w = Math.round(currentRect.width)
     const h = Math.round(currentRect.height)
 
-    // Build properties string
-    const properties = `x ${x}, y ${y}, w ${w}, h ${h}`
+    const properties = mergePaletteWithPosition(
+      component.properties,
+      `x ${x}, y ${y}, w ${w}, h ${h}`
+    )
+    this.commitDraw(containerNodeId, component, properties, { x, y, w, h })
+  }
 
-    // Insert component
+  /**
+   * Grid path: emit `x A, y B, w C, h D` in 1-indexed cells. Even a
+   * click-without-drag (start == current) produces a 1×1 frame — that
+   * keeps the gesture monomorphic: every press/release pair creates one
+   * element.
+   */
+  private finishGridDrawing(): void {
+    if (!this.drawState) return
+    const ds = this.drawState
+    const start = ds.startCell
+    const cur = ds.currentCell
+    if (!start || !cur) {
+      this.cleanup()
+      this.transitionTo('idle')
+      return
+    }
+    const range = cellRange(start, cur)
+    const properties = mergePaletteWithPosition(
+      ds.component.properties,
+      `x ${range.x}, y ${range.y}, w ${range.w}, h ${range.h}`
+    )
+    this.commitDraw(ds.containerNodeId, ds.component, properties, range)
+  }
+
+  /**
+   * Shared insert+notify path. Both drawing branches funnel through here
+   * so error handling and event emission stay in one place.
+   */
+  private commitDraw(
+    containerNodeId: string,
+    component: ComponentItem,
+    properties: string,
+    coords: { x: number; y: number; w: number; h: number }
+  ): void {
     try {
       const codeModifier = this.config.getCodeModifier()
       const result = codeModifier.addChild(containerNodeId, component.template, {
@@ -453,15 +621,12 @@ export class DrawManager {
 
       if (result.success) {
         log.info(' Component created successfully')
-
         this.onDrawComplete?.({
           success: true,
-          // nodeId will be available after recompilation
           nodeId: undefined,
-          properties: { x, y, w, h },
+          properties: coords,
           modificationResult: result,
         })
-
         this.cleanup()
         this.transitionTo('idle')
       } else {
@@ -472,7 +637,6 @@ export class DrawManager {
       this.showError(error instanceof Error ? error.message : 'Failed to create component')
       this.cleanup()
       this.transitionTo('idle')
-
       this.onError?.(error instanceof Error ? error : new Error(String(error)))
     }
   }
@@ -610,21 +774,19 @@ export class DrawManager {
   }
 
   /**
-   * Validate if element is a valid draw target
+   * Validate if element is a valid draw target.
+   *
+   * Both absolute and grid containers can host a draw — they map to
+   * different coordinate systems but the gesture is the same. Flex/block
+   * containers can't represent a "drawn" rectangle without contradicting
+   * their layout rules, so we reject those.
    */
   private isValidDrawTarget(element: HTMLElement): boolean {
-    // Must have mirror-id
     if (!element.dataset.mirrorId) {
       return false
     }
-
-    // Must be absolute container
     const layout = detectLayout(element)
-    if (layout.type !== 'absolute') {
-      return false
-    }
-
-    return true
+    return layout.type === 'absolute' || layout.type === 'grid'
   }
 
   /**
@@ -666,4 +828,39 @@ export class DrawManager {
  */
 export function createDrawManager(config: DrawManagerConfig): DrawManager {
   return new DrawManager(config)
+}
+
+// =============================================================================
+// Property merging
+// =============================================================================
+
+/**
+ * Properties that the drawn x/y/w/h must override on the palette item.
+ *
+ * The palette `Frame` ships with `w 100, h 100, bg #27272a, rad 8` — the
+ * defaults are great for *click-to-insert*, where the user gets a sensible
+ * starting box. But when the user *draws* a rectangle, the drag literally
+ * tells us the size and position, so the defaults would conflict.
+ *
+ * Including alias spellings here matters because the palette source is a
+ * raw user-facing string — `w` and `width` are both valid.
+ */
+const POSITION_OVERRIDDEN_KEYS = new Set(['w', 'width', 'h', 'height', 'x', 'y', 'size'])
+
+/**
+ * Merge the palette item's default properties (e.g. `bg`, `rad`) with the
+ * draw-derived position string. Position wins on conflicts. Returns just
+ * `position` if there are no other defaults to keep.
+ */
+function mergePaletteWithPosition(paletteProperties: string | undefined, position: string): string {
+  if (!paletteProperties || !paletteProperties.trim()) return position
+  const kept: string[] = []
+  for (const raw of paletteProperties.split(',')) {
+    const prop = raw.trim()
+    if (!prop) continue
+    const key = prop.split(/\s+/)[0]
+    if (!POSITION_OVERRIDDEN_KEYS.has(key)) kept.push(prop)
+  }
+  if (kept.length === 0) return position
+  return `${kept.join(', ')}, ${position}`
 }

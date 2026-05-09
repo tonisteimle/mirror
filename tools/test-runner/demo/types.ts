@@ -450,6 +450,10 @@ interface DrawInGridAction {
   from: { x: number; y: number }
   /** 1-indexed end cell, inclusive. Bounding range becomes w/h. */
   to: { x: number; y: number }
+  /** Optional Mirror `name` to set on the drawn element. Lets later
+   *  steps target the region by `byPath: 'YourName'` (resolves via
+   *  `data-mirror-name`) instead of fragile nth-of-type selectors. */
+  name?: string
   comment?: string
   expectCode?: InlineExpectCode
 }

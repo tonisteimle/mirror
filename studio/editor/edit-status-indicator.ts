@@ -66,6 +66,11 @@ export function setEditStatus(status: EditStatus, message?: string): void {
   }
   element.classList.add(STATE_CLASSES[status])
 
+  // Body-class flag: only `thinking` is active (LLM call in flight).
+  // Sketch-block decorations and other UI listen on this to animate
+  // their own progress feedback (e.g. amber accent bars pulsing).
+  document.body.classList.toggle('mirror-llm-thinking', status === 'thinking')
+
   if (messageEl) messageEl.textContent = message ?? DEFAULT_MESSAGES[status]
 
   element.setAttribute('aria-live', status === 'error' ? 'assertive' : 'polite')
@@ -93,6 +98,7 @@ export function setEditStatus(status: EditStatus, message?: string): void {
 export function hideEditStatus(): void {
   stopElapsedCounter()
   currentStatus = 'idle'
+  document.body.classList.remove('mirror-llm-thinking')
   if (!element) return
   element.remove()
   element = null

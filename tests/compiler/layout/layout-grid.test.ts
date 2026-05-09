@@ -612,6 +612,57 @@ describe('Row Height', () => {
 })
 
 // =============================================================================
+// 7b. grid X Y short form — count-only "M cols × N rows"
+// =============================================================================
+
+describe('grid X Y short form', () => {
+  test('grid 4 8 → 4 cols + 8 rows, both equal share', () => {
+    const ir = toIR(parse(`Frame grid 4 8`))
+    expect(hasStyle(ir.nodes[0], 'grid-template-columns', 'repeat(4, 1fr)')).toBe(true)
+    expect(hasStyle(ir.nodes[0], 'grid-template-rows', 'repeat(8, 1fr)')).toBe(true)
+  })
+
+  test('grid 4 8 + row-height 80 → repeat(8, 80px) rows', () => {
+    // The classic "I want 8 fixed-height rows" pattern. row-height
+    // combines with the count form to produce explicit tracks — empty
+    // grids stay visible, perfect for the layout-draw flow.
+    const ir = toIR(parse(`Frame grid 4 8 row-height 80`))
+    expect(hasStyle(ir.nodes[0], 'grid-template-rows', 'repeat(8, 80px)')).toBe(true)
+    expect(hasStyle(ir.nodes[0], 'grid-auto-rows')).toBe(false)
+  })
+
+  test('grid 4 alone keeps the implicit-rows (auto) behavior', () => {
+    // No second arg, no rows-count derived from `grid` — rows still
+    // come from grid-auto-rows when row-height is set, and aren't
+    // declared at all otherwise.
+    const ir = toIR(parse(`Frame grid 4 row-height 80`))
+    expect(hasStyle(ir.nodes[0], 'grid-auto-rows', '80px')).toBe(true)
+    expect(hasStyle(ir.nodes[0], 'grid-template-rows')).toBe(false)
+  })
+
+  test('grid 30% 70% legacy form still works', () => {
+    // The percent-form keeps explicit-tracks semantics. Two-int
+    // detection shouldn't accidentally swallow it.
+    const ir = toIR(parse(`Frame grid 30% 70%`))
+    expect(hasStyle(ir.nodes[0], 'grid-template-columns', '30% 70%')).toBe(true)
+    expect(hasStyle(ir.nodes[0], 'grid-template-rows')).toBe(false)
+  })
+
+  test('grid auto 250 legacy responsive form still works', () => {
+    const ir = toIR(parse(`Frame grid auto 250`))
+    expect(getStyle(ir.nodes[0], 'grid-template-columns')).toMatch(
+      /repeat\(auto-fill,\s*minmax\(250px,\s*1fr\)\)/
+    )
+  })
+
+  test('renders an empty grid with N row tracks visible (jsdom)', () => {
+    const root = render(`Frame grid 4 8, row-height 80`)
+    const tracks = getStyleFromElement(root, 'grid-template-rows')
+    expect(tracks).toMatch(/repeat\(8,\s*80px\)/)
+  })
+})
+
+// =============================================================================
 // 8. NESTED GRIDS - Context Isolation
 // =============================================================================
 

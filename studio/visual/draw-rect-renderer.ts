@@ -19,9 +19,20 @@ export class DrawRectRenderer {
   }
 
   /**
-   * Render rectangle with labels
+   * Render rectangle with labels.
+   *
+   * `cellInfo` switches the labels into grid-cell mode: instead of
+   * showing px size and px position, they show the user-meaningful
+   * `x N, y M` / `w P, h Q` that will end up in the source. The
+   * positioning math is unchanged — `rect` is still in container-local
+   * coordinates and gets scaled+offset onto the screen.
    */
-  render(rect: Rect, containerRect: DOMRect, scale: number): void {
+  render(
+    rect: Rect,
+    containerRect: DOMRect,
+    scale: number,
+    cellInfo?: { x: number; y: number; w: number; h: number }
+  ): void {
     this.ensureElements()
 
     // Convert to screen coordinates for positioning
@@ -36,11 +47,13 @@ export class DrawRectRenderer {
     this.rectElement!.style.width = screenWidth + 'px'
     this.rectElement!.style.height = screenHeight + 'px'
 
-    // Update dimension label
-    this.dimensionLabel!.textContent = `${Math.round(rect.width)} × ${Math.round(rect.height)}`
-
-    // Update position label
-    this.positionLabel!.textContent = `x: ${Math.round(rect.x)}, y: ${Math.round(rect.y)}`
+    if (cellInfo) {
+      this.dimensionLabel!.textContent = `w ${cellInfo.w}, h ${cellInfo.h}`
+      this.positionLabel!.textContent = `x ${cellInfo.x}, y ${cellInfo.y}`
+    } else {
+      this.dimensionLabel!.textContent = `${Math.round(rect.width)} × ${Math.round(rect.height)}`
+      this.positionLabel!.textContent = `x: ${Math.round(rect.x)}, y: ${Math.round(rect.y)}`
+    }
 
     // Show overlay
     this.overlayElement!.style.display = 'block'

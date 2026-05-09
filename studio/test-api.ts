@@ -14,6 +14,13 @@ import { getTriggerManager } from './editor/trigger-manager'
 import { createLogger } from '../compiler/utils/logger'
 import { setupBrowserDragTestAPI } from './preview/drag/browser-test-api'
 import { setupMirrorTestAPI } from './test-api/index'
+import { readGridGeometry } from './visual/grid-overlay/grid-detector'
+import {
+  cellRangeToRect,
+  cellCenterOffset,
+  cellRange,
+  pointerToCell,
+} from './visual/snap/grid-cell-snap'
 
 const log = createLogger('TestAPI')
 
@@ -190,6 +197,23 @@ export function initStudioTestAPI(studio: StudioInstance, _dragDrop: unknown): v
       log.info('Mirror Test API initialized at window.__mirrorTest')
     } catch (e) {
       log.warn('Failed to initialize Mirror Test API:', e)
+    }
+
+    // Expose grid-geometry helpers for the headed demo-runner. Sharing
+    // these with Studio's own grid path means the test driver computes
+    // cell-centers from the same source of truth that DrawManager uses
+    // — no separate gridTemplateColumns parser to drift from reality.
+    try {
+      ;(window as Window & { __mirrorGrid?: unknown }).__mirrorGrid = {
+        readGridGeometry,
+        cellRangeToRect,
+        cellCenterOffset,
+        cellRange,
+        pointerToCell,
+      }
+      log.info('Grid Geometry API initialized at window.__mirrorGrid')
+    } catch (e) {
+      log.warn('Failed to initialize Grid Geometry API:', e)
     }
   }
   log.info('Test API initialized')

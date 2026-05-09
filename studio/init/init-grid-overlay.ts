@@ -70,6 +70,26 @@ export function initGridOverlay(config: GridOverlayInitConfig): GridOverlayInitR
     }
   })
 
+  // Layout-Draw flow: while DrawManager is in `ready` or `drawing`, the
+  // user is about to (or actively) place an element into a grid. They
+  // need to *see* the grid — switch the overlay to 'always' so every
+  // grid container in the preview shows its cell boundaries, and
+  // restore the prior mode (typically 'auto') as soon as draw mode
+  // exits.
+  // Layout-Draw flow: while DrawManager is in `ready` or `drawing`,
+  // the grid lines should pop so the user knows where their drag will
+  // land. Two toggles together:
+  //   - emphasized: opacity-bump from ambient (~0.12) → emphasized (~0.45)
+  //   - suppressEmptyCellHitZones: silence the click-to-insert
+  //     transparent rects so the drag mousedown reaches the grid
+  // The mode itself stays at whatever was configured (typically
+  // 'always') — that's already showing every grid, no churn needed.
+  const offDrawState = events.on('draw:state-changed', ({ mode }) => {
+    const inDraw = mode === 'ready' || mode === 'drawing'
+    overlay.setEmphasized(inDraw)
+    overlay.setSuppressEmptyCellHitZones(inDraw)
+  })
+
   log.info('GridOverlay initialized', { mode: config.mode ?? 'auto' })
 
   return {
@@ -79,6 +99,7 @@ export function initGridOverlay(config: GridOverlayInitConfig): GridOverlayInitR
       offCompile()
       offActiveCell()
       offInsertCell()
+      offDrawState()
       overlay.dispose()
     },
   }
