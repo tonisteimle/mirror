@@ -1,7 +1,7 @@
 # 07 — Slice 78: Token-Picker (Studio)
 
 **Datum:** 2026-05-09
-**Status:** Audit · Entscheidungen · offen
+**Status:** Audit · Phasen A/B/D umgesetzt · 18 Regression-Tests · Slice **green**
 
 ## Inhalt
 
@@ -207,32 +207,38 @@ folgenden Slice „Studio-Compile-Index" für die Konsolidierung an.
 
 ## Phase A — Picker-Parser
 
-| ID  | Sub-Task                                                                      | Aus | Aufwand | Status |
-| --- | ----------------------------------------------------------------------------- | --- | ------- | ------ |
-| A.1 | `parseTokens` matcht Property-Set-Form: `name:` + Value mit Property-Liste    | V-1 | M       | offen  |
-| A.2 | `TokenDefinition` erweitert um `kind: 'single' \| 'set'` und `properties?: …` | V-2 | S       | offen  |
-| A.3 | Chain-Token-Resolution für Color-Swatch im Parser                             | V-5 | S       | offen  |
+| ID  | Sub-Task                                                                      | Aus | Aufwand | Status                |
+| --- | ----------------------------------------------------------------------------- | --- | ------- | --------------------- |
+| A.1 | `parseTokens` matcht Property-Set-Form: `name:` + Value mit Property-Liste    | V-1 | M       | erledigt (`e163f920`) |
+| A.2 | `TokenDefinition` erweitert um `kind: 'single' \| 'set'` und `properties?: …` | V-2 | S       | erledigt (`e163f920`) |
+| A.3 | Chain-Token-Resolution für Color-Swatch im Parser (suffix-aware)              | V-5 | S       | erledigt (`e163f920`) |
 
 ## Phase B — Picker-Render
 
-| ID  | Sub-Task                                                                                           | Aus | Aufwand | Status |
-| --- | -------------------------------------------------------------------------------------------------- | --- | ------- | ------ |
-| B.1 | `renderTokenList` rendert Property-Sets in eigener Sektion „Style Bundles"                         | V-3 | M       | offen  |
-| B.2 | `renderToken` für Sets: Property-Bag-Preview statt Color-Swatch                                    | V-3 | S       | offen  |
-| B.3 | `filterTokens` skipt Sets wenn `context.property` gesetzt ist; zeigt sie nur bei top-level Kontext | V-4 | S       | offen  |
+| ID  | Sub-Task                                                                                           | Aus | Aufwand | Status                |
+| --- | -------------------------------------------------------------------------------------------------- | --- | ------- | --------------------- |
+| B.1 | `renderTokenList` rendert Property-Sets in eigener Sektion „Style Bundles"                         | V-3 | M       | erledigt (`e163f920`) |
+| B.2 | `renderToken` für Sets: Property-Bag-Preview statt Color-Swatch                                    | V-3 | S       | erledigt (`e163f920`) |
+| B.3 | `filterTokens` skipt Sets wenn `context.property` gesetzt ist; zeigt sie nur bei top-level Kontext | V-4 | S       | erledigt (`e163f920`) |
 
 ## Phase C — Token-Trigger
 
-| ID  | Sub-Task                                                               | Aus | Aufwand | Status |
-| --- | ---------------------------------------------------------------------- | --- | ------- | ------ |
-| C.1 | `filterTokens`-Helper im Trigger respektiert `kind`-Filter aus Context | V-4 | S       | offen  |
+| ID  | Sub-Task                                                                                                                                                             | Aus | Aufwand | Status                                                              |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | ------- | ------------------------------------------------------------------- |
+| C.1 | `filterTokens`-Helper im Trigger respektiert `kind`-Filter aus Context — bestehender Suffix-Filter droppt Sets schon, Picker-`filterTokens` schließt die Lücke (B.3) | V-4 | S       | erledigt — Trigger-Suffix-Filter + Picker-Filter zusammen schließen |
 
 ## Phase D — Tests + Cleanup
 
-| ID  | Sub-Task                                                                                 | Aus   | Aufwand | Status |
-| --- | ---------------------------------------------------------------------------------------- | ----- | ------- | ------ |
-| D.1 | `tests/studio/slice-78-token-picker.test.ts` mit RT-1..RT-9                              | A/B/C | M       | offen  |
-| D.2 | Studio-Bundle rebuild + manueller Studio-Probe (sieht Designer Property-Sets im Picker?) | -     | S       | offen  |
+| ID  | Sub-Task                                                                                 | Aus   | Aufwand | Status                                                                                     |
+| --- | ---------------------------------------------------------------------------------------- | ----- | ------- | ------------------------------------------------------------------------------------------ |
+| D.1 | `tests/studio/slice-78-token-picker.test.ts` mit RT-1..RT-9                              | A/B/C | M       | erledigt — 18 Tests grün (RT-1..RT-9 + Sub-Cases)                                          |
+| D.2 | Studio-Bundle rebuild + manueller Studio-Probe (sieht Designer Property-Sets im Picker?) | -     | S       | offen — `npm run build:studio` lokal nötig; vom User durchzuführen (Memory-Notiz Slice-25) |
+
+**Commits:**
+
+- `d67caf9b` — `docs(refactoring): audit Slice 78 (Token-Picker)`
+- `e163f920` — `feat(picker/slice-78): Phase A + B — Property-Sets + Chain-Resolution`
+- _(folgender Commit)_ — `test(slice-78): regression suite for token-picker — 18 RTs`
 
 Status-Werte: `offen` · `in-arbeit` · `review` · `erledigt` · `verworfen` · `verschoben`.
 
