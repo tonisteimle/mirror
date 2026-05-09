@@ -260,7 +260,20 @@ export class Validator {
     // definitions used as inline children (`DashboardView: Frame name …`)
     // so usages elsewhere don't false-positive as undefined components.
     const visitInstance = (inst: Instance, depth: number): void => {
+      // The parser sets inst.name only when `name X` precedes the content
+      // string (`Button name MenuBtn, "x"`). The far more common form
+      // (`Button "x", name MenuBtn`) parses `name` as a property — but the
+      // IR transformer still promotes it to a real instanceName, so the
+      // runtime sees `data-mirror-name="MenuBtn"` either way. Mirror both
+      // shapes here so cross-element-state validation matches runtime
+      // behavior. (Slice 30 review-pass: tutorial example 06-states-10
+      // uses the property form.)
       if (inst.name) this.namedInstances.add(inst.name)
+      const nameProp = inst.properties.find(p => p.name === 'name')
+      if (nameProp && nameProp.values.length > 0) {
+        const v = nameProp.values[0]
+        if (typeof v === 'string') this.namedInstances.add(v)
+      }
       // Inline slot definitions. The parser only sets `isDefinition` when
       // a colon is followed by a NEWLINE (`Foo:` on its own line). The
       // inline-child form (`Foo: Bar baz`) parses the same way as
@@ -500,6 +513,15 @@ export class Validator {
       this.validateProperty(prop)
     }
 
+    // Validate inline states (`hover:`, `MenuBtn.open:`, …). The validator
+    // historically only walked component-definition states; instance-level
+    // states slipped through, hiding cross-element-ref typos (Slice 30).
+    if (instance.states) {
+      for (const state of instance.states) {
+        this.validateState(state)
+      }
+    }
+
     // Validate children recursively
     for (const child of instance.children) {
       if (child.type === 'Instance') {
@@ -674,6 +696,15 @@ export class Validator {
       }
       return
     }
+
+    // Slice 3 V-2 deferred: W120 LAYOUT_FLAG_HAS_VALUE was prototyped here,
+    // but the parser already silently drops trailing values for pure-flag
+    // keywords (`Frame hor 5` AST is identical to `Frame hor`), so a
+    // validator-side check has no signal to fire on. A real W120 needs
+    // parser-level support — either preserve the discarded tokens in the
+    // AST or emit the warning during parse. See `docs/refactoring/12-
+    // slice-3-horizontal-stack.md` V-2 (status: deferred to parser-aware
+    // slice).
 
     // Check for unknown property
     if (!propDef) {
@@ -868,7 +899,62 @@ export class Validator {
         state.column
       )
     }
+    if (state.when) this.validateStateDependency(state.when, state)
     state.properties.forEach(prop => this.validateProperty(prop))
+  }
+
+  /**
+   * Validate a cross-element state reference (`MenuBtn.open:` /
+   * `visible when MenuBtn open:`).
+   *
+   * The target element must be reachable — either a `Foo named X` instance
+   * registered via `namedInstances`, or a component definition. The state
+   * itself must be known to the schema (system + custom). User-invented
+   * state names (multi-state cycles like `todo`/`doing`/`done`) are out
+   * of scope — they're checked at the definition site, not at the cross-
+   * element reference site.
+   */
+  private validateStateDependency(
+    dep: import('../parser/ast').StateDependency,
+    state: State
+  ): void {
+    const targetExists =
+      this.namedInstances.has(dep.target) ||
+      this.definedComponents.has(dep.target) ||
+      this.preludeComponents.has(dep.target)
+
+    if (!targetExists) {
+      const candidates = new Set([
+        ...this.namedInstances,
+        ...this.definedComponents,
+        ...this.preludeComponents,
+      ])
+      const suggestion = suggestSimilar(dep.target, candidates)
+      this.addError(
+        ERROR_CODES.UNDEFINED_ELEMENT_REF,
+        `Unknown element "${dep.target}" in state reference "${dep.target}.${dep.state}"`,
+        state.line,
+        state.column,
+        suggestion
+          ? `Did you mean "${suggestion}"? Cross-element refs need a "named X" instance or a component definition.`
+          : `Add "named ${dep.target}" to the target instance, or define a component with that name.`
+      )
+    } else if (!this.rules.validStates.has(dep.state)) {
+      // Target exists; state name is unknown to the schema. User-invented
+      // state names (custom multi-cycle) bypass this — only flag when even
+      // the schema doesn't know the name (catches typos like `oepn`).
+      const suggestion = suggestSimilar(dep.state, this.rules.validStates)
+      this.addError(
+        ERROR_CODES.UNKNOWN_STATE_REF,
+        `Unknown state "${dep.state}" on element "${dep.target}"`,
+        state.line,
+        state.column,
+        suggestion ? `Did you mean "${suggestion}"?` : undefined
+      )
+    }
+
+    // Walk the and/or chain.
+    if (dep.next) this.validateStateDependency(dep.next, state)
   }
 
   private validateEvent(event: Event): void {

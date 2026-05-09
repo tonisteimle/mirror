@@ -34,6 +34,12 @@ const SYSTEM_STATES_REGEX = SCHEMA_STATE_NAMES.sort((a, b) => b.length - a.lengt
 //   - control flow (`each`, `if`, `else`) — Mirror keywords
 const AUTHOR_STATE_REGEX = /^[a-z][a-zA-Z0-9-]*(\s+[a-zA-Z0-9.\s-]+)?\s*:\s*$/
 
+// Cross-element state reference (Slice 30): `MenuBtn.open:`. Pattern is
+// PascalCase identifier + dot + lowercase identifier + colon. No false-
+// positive overlap: tokens are at top-level only (no nested context),
+// components are PascalCase without dots, properties are lowercase.
+const CROSS_ELEMENT_STATE_REGEX = /^([A-Z][a-zA-Z0-9]*)\.([a-z][a-zA-Z0-9-]*)\s*:\s*$/
+
 /**
  * Information about a component found on a line
  */
@@ -194,6 +200,15 @@ export function findParentDefinition(source: string, lineNum: number): ParentCon
         continue
       }
 
+      // Cross-element state reference (Slice 30): `MenuBtn.open:`.
+      const crossMatch = trimmed.match(CROSS_ELEMENT_STATE_REGEX)
+      if (crossMatch) {
+        contextType = 'state'
+        contextLabel = `${crossMatch[1]}.${crossMatch[2]}`
+        searchIndent = lineIndent
+        continue
+      }
+
       // Check if it's an event handler - track and continue searching
       if (/^on\w+/.test(trimmed)) {
         const eventMatch = trimmed.match(/^(on\w+)/)
@@ -254,6 +269,15 @@ function analyzeNestedLine(line: string): {
     return {
       childType: 'state',
       childLabel: match ? match[1] : 'state',
+    }
+  }
+
+  // Cross-element state reference (Slice 30): `MenuBtn.open:`.
+  const crossMatch = trimmed.match(CROSS_ELEMENT_STATE_REGEX)
+  if (crossMatch) {
+    return {
+      childType: 'state',
+      childLabel: `${crossMatch[1]}.${crossMatch[2]}`,
     }
   }
 
