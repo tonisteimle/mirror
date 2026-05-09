@@ -17,7 +17,6 @@ import {
   parseTokenWithSuffixSingleToken as parseTokenWithSuffixSingleTokenExtracted,
   parseTokenWithSuffix as parseTokenWithSuffixExtracted,
   parseTokenReference as parseTokenReferenceExtracted,
-  parseLegacyTokenDefinition as parseLegacyTokenDefinitionExtracted,
 } from '../token-parser'
 import { parseDataObject as parseDataObjectExtracted } from '../data-object-parser'
 import {
@@ -45,10 +44,6 @@ export function parseTokenWithSuffix(this: Parser, section?: string): TokenDefin
 
 export function parseTokenReference(this: Parser, section?: string): TokenDefinition | null {
   return this.withSubParserContext(ctx => parseTokenReferenceExtracted(ctx, section))
-}
-
-export function parseLegacyTokenDefinition(this: Parser, section?: string): TokenDefinition | null {
-  return this.withSubParserContext(ctx => parseLegacyTokenDefinitionExtracted(ctx, section))
 }
 
 /**

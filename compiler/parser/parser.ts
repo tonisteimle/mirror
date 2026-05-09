@@ -99,7 +99,6 @@ export class Parser {
   parseTokenWithSuffixSingleToken = parse_decls.parseTokenWithSuffixSingleToken
   parseTokenWithSuffix = parse_decls.parseTokenWithSuffix
   parseTokenReference = parse_decls.parseTokenReference
-  parseLegacyTokenDefinition = parse_decls.parseLegacyTokenDefinition
   parseSchema = parse_decls.parseSchema
   parseSchemaField = parse_decls.parseSchemaField
   parseIconDefinitions = parse_decls.parseIconDefinitions
@@ -398,18 +397,6 @@ export class Parser {
             continue
           }
         }
-      }
-
-      // Legacy token definition: name: type = value (still supported)
-      if (
-        this.check('IDENTIFIER') &&
-        this.checkNext('COLON') &&
-        this.checkAt(2, 'IDENTIFIER') &&
-        this.checkAt(3, 'EQUALS')
-      ) {
-        const token = this.parseLegacyTokenDefinition(currentSection)
-        if (token) program.tokens.push(token)
-        continue
       }
 
       // Each loop: each item in collection

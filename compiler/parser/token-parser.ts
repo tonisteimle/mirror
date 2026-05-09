@@ -1,15 +1,13 @@
 /**
  * Token Definition Parser
  *
- * Parses Mirror token definitions in their five DSL forms:
+ * Parses Mirror token definitions in their four DSL forms:
  *   primary.bg: #2271C1                  (suffix, single lexer token)
  *   primary . bg: #2271C1                (suffix, three lexer tokens)
  *   accent.bg: $primary                  (token reference)
  *   simple: 42                           (no suffix, infer type from value)
- *   primary: color = #fff                (legacy assign-style)
  *
- * Extracted from parser.ts (Phase 5 — first incremental cut). All five
- * functions are pure — they take a ParserContext, advance pos, and return
+ * All functions are pure — they take a ParserContext, advance pos, and return
  * a TokenDefinition. No circular dependencies, no shared state beyond ctx.
  */
 
@@ -194,32 +192,5 @@ export function parseTokenReference(ctx: ParserContext, section?: string): Token
     section,
     line: nameToken.line,
     column: nameToken.column,
-  }
-}
-
-/**
- * Legacy assign-style syntax (kept for backwards compatibility):
- *
- *   primary: color = #2271C1
- *   maxWidth: size = 1024
- */
-export function parseLegacyTokenDefinition(
-  ctx: ParserContext,
-  section?: string
-): TokenDefinition | null {
-  const name = U.advance(ctx)
-  U.advance(ctx) // :
-  const tokenType = U.advance(ctx)
-  U.advance(ctx) // =
-  const value = U.advance(ctx)
-
-  return {
-    type: 'Token',
-    name: name.value,
-    tokenType: tokenType.value as 'color' | 'size' | 'font' | 'icon',
-    value: parseTokenValue(value),
-    section,
-    line: name.line,
-    column: name.column,
   }
 }

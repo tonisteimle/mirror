@@ -476,11 +476,9 @@ describe('Lexer: Punctuation', () => {
 
 describe('Lexer: Combined Tokens', () => {
   it('parses token definition syntax', () => {
-    expectTokens('primary: color = #3B82F6', [
+    expectTokens('primary: #3B82F6', [
       ['IDENTIFIER', 'primary'],
       ['COLON', ':'],
-      ['IDENTIFIER', 'color'],
-      ['EQUALS', '='],
       ['NUMBER', '#3B82F6'],
     ])
   })

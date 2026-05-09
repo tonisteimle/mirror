@@ -84,7 +84,7 @@ describe('Parser: Token Parsing', () => {
     // Token without = is just skipped
     const ast = parse(`
 primary: color #FFF
-good: color = #000
+good: #000
 `)
     // May or may not find good token depending on parser behavior
     expect(ast.type).toBe('Program')
@@ -93,8 +93,8 @@ good: color = #000
   it('parses valid tokens after comments', () => {
     const ast = parse(`
 // Color tokens
-primary: color = #FFF
-secondary: color = #000
+primary: #FFF
+secondary: #000
 `)
     expect(ast.tokens.length).toBe(2)
   })
@@ -164,7 +164,7 @@ describe('Parser: Partial Document Parsing', () => {
   it('parses complete valid document', () => {
     const ast = parse(`
 // Tokens
-primary: color = #FFF
+primary: #FFF
 
 // Components
 Card as frame:
@@ -192,9 +192,7 @@ Text as text:
   })
 
   it('handles large documents', () => {
-    const components = Array.from({ length: 50 }, (_, i) =>
-      `Component${i} as frame:`
-    ).join('\n')
+    const components = Array.from({ length: 50 }, (_, i) => `Component${i} as frame:`).join('\n')
     const ast = parse(components)
     expect(ast.components.length).toBe(50)
   })

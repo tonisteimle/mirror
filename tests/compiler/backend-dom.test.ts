@@ -66,8 +66,8 @@ Button "Toggle"
 
   it('generates tokens', () => {
     const ast = parse(`
-primary: color = #3B82F6
-spacing: size = 16
+primary: #3B82F6
+spacing: 16
 `)
     const js = generateDOM(ast)
 
@@ -190,7 +190,7 @@ Spread
 describe('DOM Backend: Token References', () => {
   it('resolves token references to CSS variables', () => {
     const ast = parse(`
-primary: color = #3B82F6
+primary: #3B82F6
 
 Button as button:
   bg primary
@@ -218,8 +218,8 @@ Button
 describe('DOM Backend: Design Tokens', () => {
   it('generates tokens object from token definitions', () => {
     const ast = parse(`
-primary: color = #3B82F6
-surface: color = #1a1a23
+primary: #3B82F6
+surface: #1a1a23
 
 Card as frame:
 Card
@@ -234,7 +234,7 @@ Card
 
   it('includes box-sizing reset', () => {
     const ast = parse(`
-primary: color = #FFF
+primary: #FFF
 Card as frame:
 Card
 `)

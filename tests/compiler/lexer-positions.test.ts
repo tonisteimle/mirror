@@ -14,9 +14,7 @@ function allTokens(source: string): Token[] {
 
 // Helper: Find first token of type
 function findToken(source: string, type: string, value?: string): Token | undefined {
-  return allTokens(source).find(t =>
-    t.type === type && (value === undefined || t.value === value)
-  )
+  return allTokens(source).find(t => t.type === type && (value === undefined || t.value === value))
 }
 
 // ============================================================================
@@ -152,7 +150,7 @@ B`
 
   it('tracks position in realistic example', () => {
     const source = `// Tokens
-primary: color = #3B82F6
+primary: #3B82F6
 
 // Components
 Card as frame:

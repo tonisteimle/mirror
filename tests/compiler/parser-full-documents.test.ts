@@ -35,7 +35,7 @@ describe('Integration: Minimal Documents', () => {
   })
 
   it('parses single token', () => {
-    const ast = parse('primary: color = #FFF')
+    const ast = parse('primary: #FFF')
     expect(ast.tokens.length).toBe(1)
   })
 
@@ -56,26 +56,26 @@ describe('Integration: Minimal Documents', () => {
 
 describe('Integration: Tokens Only', () => {
   it('parses multiple tokens', () => {
-    const ast = parse(`primary: color = #3B82F6
-secondary: color = #64748B
-text: color = #E4E4E7
-muted: color = #71717A
+    const ast = parse(`primary: #3B82F6
+secondary: #64748B
+text: #E4E4E7
+muted: #71717A
 
-sm: size = 4
-md: size = 8
-lg: size = 16
-xl: size = 24`)
+sm: 4
+md: 8
+lg: 16
+xl: 24`)
     expect(ast.tokens.length).toBe(8)
   })
 
   it('parses tokens with section headers', () => {
     const ast = parse(`--- Colors ---
-primary: color = #3B82F6
-secondary: color = #64748B
+primary: #3B82F6
+secondary: #64748B
 
 --- Spacing ---
-sm: size = 4
-lg: size = 16`)
+sm: 4
+lg: 16`)
     expect(ast.tokens.length).toBe(4)
   })
 })
@@ -157,7 +157,7 @@ Footer
 describe('Integration: Mixed Content', () => {
   it('parses tokens + components + instances', () => {
     const ast = parse(`// Tokens
-primary: color = #3B82F6
+primary: #3B82F6
 
 // Components
 Card as frame:
@@ -173,9 +173,9 @@ Card
 
   it('parses realistic button system', () => {
     const ast = parse(`// Colors
-primary: color = #3B82F6
-danger: color = #EF4444
-white: color = #FFFFFF
+primary: #3B82F6
+danger: #EF4444
+white: #FFFFFF
 
 // Button base
 Button as button:

@@ -21,8 +21,9 @@ import { buildPrelude } from '../../studio/modules/compiler/prelude-builder'
  * Generate N component definitions
  */
 function generateComponents(count: number): string {
-  return Array.from({ length: count }, (_, i) =>
-    `Component${i} as frame:\n  pad ${i + 1}\n  bg #${String(i).padStart(6, '0')}`
+  return Array.from(
+    { length: count },
+    (_, i) => `Component${i} as frame:\n  pad ${i + 1}\n  bg #${String(i).padStart(6, '0')}`
   ).join('\n\n')
 }
 
@@ -30,9 +31,7 @@ function generateComponents(count: number): string {
  * Generate N instances
  */
 function generateInstances(count: number): string {
-  return Array.from({ length: count }, (_, i) =>
-    `Frame pad ${i}\n  Text "${i}"`
-  ).join('\n')
+  return Array.from({ length: count }, (_, i) => `Frame pad ${i}\n  Text "${i}"`).join('\n')
 }
 
 /**
@@ -50,18 +49,16 @@ function generateNestedStructure(depth: number): string {
  * Generate N siblings
  */
 function generateSiblings(count: number): string {
-  return `Parent\n` + Array.from({ length: count }, (_, i) =>
-    `  Child${i} pad ${i}`
-  ).join('\n')
+  return `Parent\n` + Array.from({ length: count }, (_, i) => `  Child${i} pad ${i}`).join('\n')
 }
 
 /**
  * Generate N tokens
  */
 function generateTokens(count: number): string {
-  return Array.from({ length: count }, (_, i) =>
-    `token${i}: color = #${String(i).padStart(6, '0')}`
-  ).join('\n')
+  return Array.from({ length: count }, (_, i) => `token${i}: #${String(i).padStart(6, '0')}`).join(
+    '\n'
+  )
 }
 
 /**
@@ -232,7 +229,7 @@ describe('Stress: Multi-File Scenarios', () => {
       'main.mirror': 'Frame bg $color1',
     }
     for (let i = 1; i <= 5; i++) {
-      files[`tokens${i}.mirror`] = `color${i}: color = #${String(i).padStart(6, '0')}`
+      files[`tokens${i}.mirror`] = `color${i}: #${String(i).padStart(6, '0')}`
     }
 
     const result = buildPrelude({
@@ -258,7 +255,7 @@ describe('Stress: Multi-File Scenarios', () => {
     const result = buildPrelude({
       files,
       currentFile: 'main.mirror',
-      getFileType: (f) => f.includes('component') ? 'component' : 'layout',
+      getFileType: f => (f.includes('component') ? 'component' : 'layout'),
     })
 
     expect(result.componentCount).toBe(10)
@@ -309,15 +306,17 @@ Card
 
     // 10 token files with 10 tokens each
     for (let i = 0; i < 10; i++) {
-      files[`tokens-${i}.mirror`] = Array.from({ length: 10 }, (_, j) =>
-        `t${i}_${j}: color = #${String(i * 10 + j).padStart(6, '0')}`
+      files[`tokens-${i}.mirror`] = Array.from(
+        { length: 10 },
+        (_, j) => `t${i}_${j}: #${String(i * 10 + j).padStart(6, '0')}`
       ).join('\n')
     }
 
     // 10 component files with 5 components each
     for (let i = 0; i < 10; i++) {
-      files[`components-${i}.component.mirror`] = Array.from({ length: 5 }, (_, j) =>
-        `Comp${i}_${j}: = Frame pad ${i * 5 + j}`
+      files[`components-${i}.component.mirror`] = Array.from(
+        { length: 5 },
+        (_, j) => `Comp${i}_${j}: = Frame pad ${i * 5 + j}`
       ).join('\n\n')
     }
 
@@ -515,11 +514,14 @@ Input as input:
     bor 1 primary
 
 // Extended Components
-${Array.from({ length: 20 }, (_, i) => `
+${Array.from(
+  { length: 20 },
+  (_, i) => `
 Variant${i} extends Card:
   bg $token${i}
   pad ${16 + i}
-`).join('\n')}
+`
+).join('\n')}
 
 // Layout
 App
@@ -529,11 +531,14 @@ App
       ${Array.from({ length: 10 }, (_, i) => `Link "Nav${i}"`).join('\n      ')}
 
   Main ver gap 24 pad 24
-    ${Array.from({ length: 20 }, (_, i) => `
+    ${Array.from(
+      { length: 20 },
+      (_, i) => `
     Card
       Text "Card ${i}"
       Button "Action ${i}"
-    `).join('\n    ')}
+    `
+    ).join('\n    ')}
 
   Footer center pad 16
     Text "Footer"
@@ -572,9 +577,9 @@ ${generateComponents(10).replace(/Component/g, 'After')}
 
   it('handles malformed tokens gracefully', () => {
     const code = `
-validToken: color = #fff
+validToken: #fff
 broken: =
-another: color = #000
+another: #000
 
 Frame bg $validToken
 `
@@ -590,18 +595,14 @@ Frame bg $validToken
 
 describe('Stress: Edge Cases at Scale', () => {
   it('handles many empty lines between elements', () => {
-    const code = Array.from({ length: 50 }, (_, i) =>
-      `Frame${i}\n\n\n\n`
-    ).join('')
+    const code = Array.from({ length: 50 }, (_, i) => `Frame${i}\n\n\n\n`).join('')
 
     const ast = parse(code)
     expect(ast.instances.length).toBe(50)
   })
 
   it('handles long property chains', () => {
-    const props = Array.from({ length: 30 }, (_, i) =>
-      `pad ${i}`
-    ).join(' ')
+    const props = Array.from({ length: 30 }, (_, i) => `pad ${i}`).join(' ')
 
     const code = `Frame ${props}`
     const ast = parse(code)
@@ -621,18 +622,14 @@ describe('Stress: Edge Cases at Scale', () => {
   })
 
   it('handles many comments', () => {
-    const code = Array.from({ length: 100 }, (_, i) =>
-      `// Comment ${i}\nFrame${i}`
-    ).join('\n')
+    const code = Array.from({ length: 100 }, (_, i) => `// Comment ${i}\nFrame${i}`).join('\n')
 
     const ast = parse(code)
     expect(ast.instances.length).toBe(100)
   })
 
   it('handles unicode at scale', () => {
-    const code = Array.from({ length: 50 }, (_, i) =>
-      `Text "äöü ${i} 你好 مرحبا 🎉"`
-    ).join('\n')
+    const code = Array.from({ length: 50 }, (_, i) => `Text "äöü ${i} 你好 مرحبا 🎉"`).join('\n')
 
     const ast = parse(code)
     expect(ast.instances.length).toBe(50)
