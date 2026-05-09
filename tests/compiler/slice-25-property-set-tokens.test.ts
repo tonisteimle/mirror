@@ -282,6 +282,48 @@ Btn "Save"`)
   })
 
   // -------------------------------------------------------------------------
+  // RT-16 — State-body property-set refs (B-5 fix)
+  // -------------------------------------------------------------------------
+  describe('RT-16 — Property-set refs inside state bodies are expanded', () => {
+    it('component-side `hover: \\n $hovered` emits the hover CSS', () => {
+      const js = compileToCreateUI(`hovered: bg #f00
+Btn: bg #333
+  hover:
+    $hovered
+Btn "Click"`)
+      // The hover CSS is generated as a separate stylesheet rule (with
+      // `!important` and a `[data-mirror-id="…"]:hover` selector). Locking
+      // that the rule includes #f00 is enough — exact selector format is a
+      // DOM-backend detail, not a slice-25 contract.
+      expect(js).toMatch(/:hover[^}]*background:\s*#f00/)
+    })
+
+    it('instance-side `hover: \\n $hovered` emits the hover CSS', () => {
+      const js = compileToCreateUI(`hovered: bg #f00
+Btn: bg #333
+Btn "Click"
+  hover:
+    $hovered`)
+      expect(js).toMatch(/:hover[^}]*background:\s*#f00/)
+    })
+
+    it('multi-spread inside state body `hover: \\n $a, $b` merges both', () => {
+      const js = compileToCreateUI(`a: bg #f00
+b: col white
+Btn: bg #333
+Btn "Click"
+  hover:
+    $a, $b`)
+      // Both sets must surface in the hover rule. Don't lock the order —
+      // emitter may sort. Just check both color values are present in a
+      // hover-block.
+      const hoverBlock = js.match(/:hover[^}]*\}/)?.[0] ?? ''
+      expect(hoverBlock).toMatch(/background:\s*#f00/)
+      expect(hoverBlock).toMatch(/color:\s*white/)
+    })
+  })
+
+  // -------------------------------------------------------------------------
   // RT-15 — Name-collision validator-warn (B-6 fix)
   // -------------------------------------------------------------------------
   describe('RT-15 — Property-set name collides with suffixed token → W505', () => {

@@ -466,6 +466,34 @@ export function parseInstanceBody(
             if (U.check(ctx, 'IDENTIFIER')) {
               const propName = U.current(ctx).value
 
+              // Property-set reference inside a state body:
+              //   hover:
+              //     $hovered            ← single-ref form (Slice 25 V-2)
+              //     $hovered, bg #f00   ← multi-spread (Slice 25 V-3)
+              // The line lands in `state.properties` as a `propset:` marker;
+              // the IR expander resolves it before the styles transformer.
+              // Without this branch the `$`-prefix is ambiguous with the
+              // child-override path below (`$` passes the uppercase-test
+              // because `$`.toUpperCase() === `$`).
+              if (propName.startsWith('$')) {
+                const refToken = U.advance(ctx)
+                const refName = refToken.value.slice(1) // strip '$'
+                state.properties.push({
+                  type: 'Property',
+                  name: 'propset',
+                  values: [{ kind: 'token', name: refName }],
+                  line: refToken.line,
+                  column: refToken.column,
+                })
+                // A `$ref` line may continue with `, bg #f00` — let the
+                // shared inline-property loop pick those up.
+                if (U.check(ctx, 'COMMA')) {
+                  U.advance(ctx)
+                  callbacks.parseInlineProperties(state.properties, instance.events)
+                }
+                continue
+              }
+
               // Check for enter:/exit: animation pseudo-properties
               if ((propName === 'enter' || propName === 'exit') && U.checkNext(ctx, 'COLON')) {
                 const animType = U.advance(ctx).value as 'enter' | 'exit'
@@ -819,6 +847,26 @@ export function parseComponentBody(
 
           if (U.check(ctx, 'IDENTIFIER')) {
             const propName = U.current(ctx).value
+
+            // Property-set reference inside a component-state body
+            // (parallel branch to the instance-state path above; same
+            // Slice 25 V-2/V-3 reasoning).
+            if (propName.startsWith('$')) {
+              const refToken = U.advance(ctx)
+              const refName = refToken.value.slice(1)
+              state.properties.push({
+                type: 'Property',
+                name: 'propset',
+                values: [{ kind: 'token', name: refName }],
+                line: refToken.line,
+                column: refToken.column,
+              })
+              if (U.check(ctx, 'COMMA')) {
+                U.advance(ctx)
+                callbacks.parseInlineProperties(state.properties)
+              }
+              continue
+            }
 
             // Check for child overrides or children (capitalized names)
             if (propName[0] === propName[0].toUpperCase()) {

@@ -415,14 +415,25 @@ export function transformInstance(
     customSizeStates: this.customSizeStateNames,
   }
 
+  // Expand property-set references inside state bodies before transformation.
+  // Example: `Btn: bg #333 \n hover:\n   $hovered` — the `$hovered` inside the
+  // hover-block is parsed as a `propset:hovered` property on the state. Without
+  // expansion the IR-state-transformer never sees `bg #f00` and the hover style
+  // is silently lost (Slice 25 audit B-5).
+  const expandStates = (states: typeof instance.states | undefined) =>
+    states?.map(state => ({
+      ...state,
+      properties: this.expandPropertySets(state.properties, primitive),
+    }))
+
   // Add state styles from component definition
   const stateResult: StateTransformResult = resolvedComponent?.states
-    ? transformStatesExtracted(resolvedComponent.states, stateCtx)
+    ? transformStatesExtracted(expandStates(resolvedComponent.states)!, stateCtx)
     : { styles: [], hasSizeStates: false }
 
   // Add state styles from instance inline states (e.g., "Frame bg #333 hover: bg light")
   const instanceStateResult: StateTransformResult = instance.states?.length
-    ? transformStatesExtracted(instance.states, stateCtx)
+    ? transformStatesExtracted(expandStates(instance.states)!, stateCtx)
     : { styles: [], hasSizeStates: false }
 
   // Check if this node uses size-states (needs container-type: inline-size)
