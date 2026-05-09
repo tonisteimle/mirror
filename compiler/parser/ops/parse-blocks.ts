@@ -774,6 +774,13 @@ export function parseInstanceBody(this: Parser, instance: Instance): void {
       ctx.pos = this.pos
       return result
     },
+    parseImplicitOnclick: () => {
+      this.pos = ctx.pos
+      const result = this.parseImplicitOnclick()
+      ctx.pos = this.pos
+      return result
+    },
+    isImplicitOnclickCandidate: name => this.isImplicitOnclickCandidate(name),
     createTextChild: token => this.createTextChild(token),
     getComponentDef: name => this.componentDefs.get(name),
     isProseComponent: name => this.proseComponentPrelude?.has(name) ?? false,

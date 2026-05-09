@@ -31442,9 +31442,22 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 8 1`] = `
               "tag": "span",
             },
           ],
-          "events": [],
+          "events": [
+            {
+              "actions": [
+                {
+                  "args": [
+                    "https://mirror-lang.dev",
+                  ],
+                  "isBuiltinStateFunction": false,
+                  "isFunctionCall": true,
+                  "type": "openUrl",
+                },
+              ],
+              "name": "click",
+            },
+          ],
           "id": "node-6",
-          "initialState": "openUrl",
           "isDefinition": false,
           "layoutType": "flex",
           "name": "Button",

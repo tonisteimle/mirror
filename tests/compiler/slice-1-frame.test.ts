@@ -11,11 +11,14 @@
  * Currently locks:
  *   - RT-1  Frame default flex
  *   - RT-2  Box ≡ Frame at the DOM-emit level (modulo data-component)
+ *   - RT-8  lowercase non-state child does not silently fold to initialState
+ *   - RT-9  DSL state name still folds to initialState
  *   - RT-10 Frame name X emits dataset.mirrorName exactly once (Phase B.5)
  */
 
 import { describe, it, expect } from 'vitest'
 import { parse } from '../../compiler/parser'
+import { validate } from '../../compiler/validator'
 import { generateDOM } from '../../compiler/backends/dom'
 
 function compileToCreateUI(source: string): string {
@@ -85,6 +88,50 @@ describe('Slice 1 — Frame primitive', () => {
       // The visible difference is the component-name marker.
       expect(frameJs).toContain("node_1.dataset.component = 'Frame'")
       expect(boxJs).toContain("node_1.dataset.component = 'Box'")
+    })
+  })
+
+  describe('RT-8 — lowercase non-state child does not silently fold to initialState', () => {
+    it('Frame > unknown: validator catches typo with E002', () => {
+      const ast = parse('Frame\n  unknown')
+      expect(ast.instances[0]?.initialState).toBeUndefined()
+      expect(ast.instances[0]?.children).toHaveLength(1)
+
+      const result = validate('Frame\n  unknown')
+      expect(result.valid).toBe(false)
+      expect(result.errors.some(e => e.code === 'E002')).toBe(true)
+    })
+
+    it('Frame > todo (user-defined custom state): falls through to child-instance, not initialState', () => {
+      // `todo` is not a DSL state — it is a custom state a component might
+      // define. Indented form does NOT fold it; use inline form instead.
+      const ast = parse('Frame\n  todo')
+      expect(ast.instances[0]?.initialState).toBeUndefined()
+      expect(ast.instances[0]?.children).toHaveLength(1)
+    })
+  })
+
+  describe('RT-9 — DSL state name still folds to initialState (indented form)', () => {
+    for (const state of ['open', 'closed', 'selected', 'expanded', 'collapsed', 'on']) {
+      it(`Frame > ${state}: folds to initialState`, () => {
+        const ast = parse(`Frame\n  ${state}`)
+        expect(ast.instances[0]?.initialState).toBe(state)
+        expect(ast.instances[0]?.children).toHaveLength(0)
+      })
+    }
+  })
+
+  describe('RT-extra — implicit onclick action on its own line', () => {
+    it('Button > openUrl(...): becomes an onclick event, not initialState', () => {
+      const src = 'Button "Open"\n  openUrl("https://example.com")'
+      const ast = parse(src)
+      const btn = ast.instances[0]!
+      expect(btn.initialState).toBeUndefined()
+      expect(btn.events ?? []).toHaveLength(1)
+      expect(btn.events?.[0]?.name).toBe('onclick')
+
+      const result = validate(src)
+      expect(result.valid).toBe(true)
     })
   })
 })

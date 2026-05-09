@@ -47,6 +47,7 @@ import {
   ALL_BOOLEAN_PROPERTIES,
   KEYBOARD_KEYS,
   STATE_MODIFIERS,
+  STATE_NAMES,
   SYSTEM_STATES,
   EVENT_NAMES,
   ANIMATION_PRESETS,
@@ -195,6 +196,8 @@ export interface InstanceBodyCallbacks {
   parseStateChildOverride(): ChildOverride | null
   parseStateChildInstance(): Instance | null
   parseChartSlot(slotToken: Token): ChartSlotNode | null
+  parseImplicitOnclick(): Event | null
+  isImplicitOnclickCandidate(name: string): boolean
   createTextChild(token: Token): Instance
   /** Look up a previously-defined component by name (for prose-mode propagation). */
   getComponentDef?(name: string): ComponentDefinition | undefined
@@ -576,10 +579,26 @@ export function parseInstanceBody(
         continue
       }
 
-      // Initial state: any lowercase identifier that isn't a known keyword
-      // This allows setting states defined in components: Button selected, Dialog closed
-      // Must be lowercase (PascalCase = child component) and not a known property/event/modifier
+      // Implicit onclick action on its own line: `openUrl(...)`, `toggle()`, etc.
+      // Mirrors the component-body branch — without it the action is consumed by
+      // the lowercase-fold below (or, post-A.5, becomes a phantom child instance
+      // and surfaces as E002 "openUrl is not defined").
+      if (U.checkNext(ctx, 'LPAREN') && callbacks.isImplicitOnclickCandidate(name)) {
+        const implicitEvent = callbacks.parseImplicitOnclick()
+        if (implicitEvent) {
+          if (!instance.events) instance.events = []
+          instance.events.push(implicitEvent)
+          continue
+        }
+      }
+
+      // Initial state: a DSL state name (closed/open/selected/expanded/...) on
+      // its own line in an instance body folds into instance.initialState. Gated
+      // to STATE_NAMES so typos like `Frame\n  frame` don't silently disappear
+      // — those fall through to the child-instance branch where the validator
+      // catches the unknown component (E002).
       if (
+        STATE_NAMES.has(name) &&
         name[0] === name[0].toLowerCase() &&
         !EVENT_NAMES.has(name) &&
         !booleanProperties.has(name) &&
