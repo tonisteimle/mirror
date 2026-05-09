@@ -1,7 +1,7 @@
 # 06 — Slice 27: Custom-State `toggle()`
 
 **Datum:** 2026-05-09
-**Status:** Audit · Untersuchung · Entscheidungen · Umsetzung in Arbeit
+**Status:** DOM-Backend ✅ · Studio-Sync ✅ (gemeinsam mit 26/29) · Browser-CDP-E2E ⚠️ offen · Studio-Roundtrip ⚠️ offen
 
 ## Inhalt
 
@@ -10,6 +10,7 @@
 3. [Entscheidungen](#3-entscheidungen)
 4. [Umsetzungsplan & Status](#4-umsetzungsplan--status)
 5. [Tests](#5-tests)
+6. [Review-Pass-Befunde](#6-review-pass-befunde)
 
 ---
 
@@ -181,17 +182,65 @@ TaskStatus: pad 8 16, toggle()
 
 ## Neue RT-Tests (`tests/compiler/slice-27-toggle.test.ts`)
 
-| ID    | Test                                                                                        | Status   |
-| ----- | ------------------------------------------------------------------------------------------- | -------- |
-| RT-1  | `toggle()` + `on:` → transition target = `on`                                               | erledigt |
-| RT-2  | `toggle()` ohne states → implicit `on` state + binary toggle                                | erledigt |
-| RT-3  | `toggle()` + nur `visited:` → target NICHT `visited`, sondern implicit `on`                 | erledigt |
-| RT-4  | `toggle()` + nur `checked:` → target NICHT `checked`                                        | erledigt |
-| RT-5  | `toggle()` + nur `placeholder:` → target NICHT `placeholder`                                | erledigt |
-| RT-6  | `toggle()` + 3 custom states + `focus-visible:` → cycle 3-er, focus-visible ausgeschlossen  | erledigt |
-| RT-7  | `cycle()` ≡ `toggle()` (Alias-Stabilität)                                                   | erledigt |
-| RT-8  | Instance `, on` mit `toggle()` → initial state = `on`                                       | erledigt |
-| RT-9  | `active:` mit Styles bleibt Custom-Toggle-Target (Allow-List)                               | erledigt |
-| RT-10 | Runtime `stateMachineToggle` direkt mit Schema-Drift-State (`focus-visible` in `sm.states`) | erledigt |
-| RT-11 | Schema-Drift-Schutz: für jedes system-state in DSL ist Toggle-Target-Filter robust          | erledigt |
-| RT-12 | Multi-state cycle: Emitter passt explizite `stateOrder` als 2. Argument                     | erledigt |
+| ID     | Test                                                                                        | Status   |
+| ------ | ------------------------------------------------------------------------------------------- | -------- |
+| RT-1   | `toggle()` + `on:` → transition target = `on`                                               | erledigt |
+| RT-2   | `toggle()` ohne states → implicit `on` state + binary toggle                                | erledigt |
+| RT-3   | `toggle()` + nur `visited:` → target NICHT `visited`, sondern implicit `on`                 | erledigt |
+| RT-4   | `toggle()` + nur `checked:` → target NICHT `checked`                                        | erledigt |
+| RT-5   | `toggle()` + nur `placeholder:` → target NICHT `placeholder`                                | erledigt |
+| RT-6   | `toggle()` + 3 custom states + `focus-visible:` → cycle 3-er, focus-visible ausgeschlossen  | erledigt |
+| RT-7   | `cycle()` ≡ `toggle()` (Alias-Stabilität)                                                   | erledigt |
+| RT-8   | Instance `, on` mit `toggle()` → initial state = `on`                                       | erledigt |
+| RT-9   | `active:` mit Styles bleibt Custom-Toggle-Target (Allow-List)                               | erledigt |
+| RT-10  | Runtime `stateMachineToggle` direkt mit Schema-Drift-State (`focus-visible` in `sm.states`) | erledigt |
+| RT-11  | Schema-Drift-Schutz: für jedes system-state in DSL ist Toggle-Target-Filter robust          | erledigt |
+| RT-12  | Multi-state cycle: Emitter passt explizite `stateOrder` als 2. Argument                     | erledigt |
+| RT-12a | `_stateStyles`-Filter ist schema-derived (4. Drift-Stelle, im Review-Pass nachgezogen)      | erledigt |
+
+---
+
+# 6. Review-Pass-Befunde
+
+Der Review-Pass nach Step 7 in `00-plan.md` hat zwei zusätzliche Drift-Stellen aufgedeckt, die der ursprüngliche Slice-27-Pass übersehen hatte. Beide sind jetzt gefixt; das Doc spiegelt den Stand.
+
+## Was Slice 27 ursprünglich gefixt hat
+
+| Layer            | Stelle                                                      | Status |
+| ---------------- | ----------------------------------------------------------- | ------ |
+| Helper           | `compiler/schema/parser-helpers.ts` `isToggleableStateName` | ✅ neu |
+| IR-Transformer   | `compiler/ir/transformers/state-machine-transformer.ts:216` | ✅     |
+| DOM-Emitter      | `compiler/backends/dom/state-machine-emitter.ts:199-219`    | ✅     |
+| Runtime (TS)     | `compiler/runtime/state-machine.ts:114`                     | ✅     |
+| Runtime-Template | `compiler/backends/dom/runtime-template/index.ts:1685-1708` | ✅     |
+
+## Was der Review-Pass nachgezogen hat
+
+| Stelle                                                   | Drift-Typ                            | Folgeaktion                                   |
+| -------------------------------------------------------- | ------------------------------------ | --------------------------------------------- |
+| `compiler/backends/dom/node-emitter.ts:318`              | 4-State-Liste filtert `_stateStyles` | ✅ schema-derived (RT-12a)                    |
+| `studio/sync/component-line-parser.ts` (3 Regex-Stellen) | 4-State-Liste in Sync-Layer          | ✅ schema-derived (gemeinsam mit Slice 26/29) |
+| `studio/editor/syntax-highlight.ts`                      | 4-State-Liste im Highlighter         | ✅ schema-derived                             |
+
+## Dead Code als Bug-Vorbild
+
+Der Review-Pass hat zusätzlich zwei dead-code-Stellen identifiziert, die zwar nie erreicht wurden, aber das exakte Drift-Pattern eingefroren hatten, das Slice 27 gerade beseitigte. Beide entfernt:
+
+- `compiler/backends/dom/event-emitter.ts:188-191` (`case 'exclusive':` mit `Object.keys.find(s !== 'default')`) — entfernt in Slice 29.
+- (kein zweites — der `event-emitter` `toggle`-Branch ist erreichbar und korrekt)
+
+## Cross-Backend (verbindliche Dimension)
+
+Identisch zu Slice 26: `framework.ts` und `react.ts` sind deklarative Pass-throughs, kein eigener Toggle-Filter, keine Drift möglich. ✅
+
+## Verbleibende Lücken (offen, dokumentiert)
+
+| Lücke                                                                                  | Risiko  | Slice-Scope                                                |
+| -------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------- |
+| Browser-CDP-Smoke-Test eines Klick-Cycles auf einer kompilierten `toggle()`-Komponente | mittel  | Eigener E2E-Pass (nicht Compile-Layer)                     |
+| Studio-Roundtrip — Property-Panel-Toggle für Custom-States                             | mittel  | Slice 69 (Property-Panel-Roundtrip)                        |
+| Doppel-Emission im each-loop (siehe Slice 29 V-3)                                      | niedrig | Bewusst nicht angepackt — Bundle-Bloat, kein Verhaltensbug |
+
+## Methodische Lehre
+
+**Bug-Familien-Audit statt Slice-Audit.** Slice 27 hat den Helper für `toggle()` eingeführt, hätte aber bei Helper-Einführung sofort `exclusive()` (Slice 29) und `cycle()` (Alias) gegen den Helper testen müssen. Der Review-Pass hat genau das nachgeholt — und gefunden, dass Slice 29 schon zu 80% mitprofitiert, aber 2 weitere Stellen nicht. Step 7 enthält daher jetzt explizit die „Cross-Slice-Probe" als verbindlich.

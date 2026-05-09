@@ -1,7 +1,7 @@
-# 07 — Slice 29: `exclusive()` (Tab-Gruppe)
+# 08 — Slice 29: `exclusive()` (Tab-Gruppe)
 
 **Datum:** 2026-05-09
-**Status:** Audit · Untersuchung · Entscheidungen · Umsetzung in Arbeit
+**Status:** DOM-Backend ✅ · Studio-Sync ✅ (gemeinsam mit 26/27) · Browser-CDP-E2E ⚠️ offen · Studio-Roundtrip ⚠️ offen
 
 ## Inhalt
 
@@ -10,6 +10,7 @@
 3. [Entscheidungen](#3-entscheidungen)
 4. [Umsetzungsplan & Status](#4-umsetzungsplan--status)
 5. [Tests](#5-tests)
+6. [Review-Pass-Befunde](#6-review-pass-befunde)
 
 ---
 
@@ -163,3 +164,49 @@ Die Slice-27-Reform (`isToggleableStateName`-Helper + Compile-Time-stateOrder) h
 | RT-6 | `event-emitter.ts:188-191` ist tatsächlich entfernt (Source-grep)                               | erledigt |
 | RT-7 | Runtime `exclusive(el)` wrapper Direkt-Test mit System-State in `sm.states`                     | erledigt |
 | RT-8 | `exclusive(), bind selected` — Bind funktioniert weiterhin                                      | erledigt |
+
+---
+
+# 6. Review-Pass-Befunde
+
+Slice 29 selbst war ein Review-Pass-Output: Slice 27 hatte den Helper `isToggleableStateName` eingeführt, der laut Cross-Slice-Probe (verbindlich pro Step 7) auch `exclusive()` decken sollte. Probe-Ergebnis: 80% gedeckt, 2 Reststellen — daraus wurde Slice 29.
+
+## Was Slice 29 gemacht hat
+
+| Stelle                                                              | Befund                                          | Status                    |
+| ------------------------------------------------------------------- | ----------------------------------------------- | ------------------------- |
+| `runtime-template/index.ts:1800-1806` `exclusive(el, state)`        | 5-State-Liste im Wrapper-Fallback               | ✅ schema-aligned (14-er) |
+| `compiler/backends/dom/event-emitter.ts:188-191` `case 'exclusive'` | Dead code, exakt das Drift-Pattern aus Slice 27 | ✅ entfernt               |
+
+## Probe-Tabelle Post-Fix-Spiegelung
+
+Die ursprünglichen 11 Probes aus Abschnitt 1 — alle Positive Cases bleiben ✅; B-1 (each + exclusive() + visited) ist post-fix ✅, gepinnt durch RT-5.
+
+## Schema-Drift-Grep
+
+Der gemeinsame Grep mit Slice 26+27 hat die **Studio-Sync-Drift** gefunden, die auch `exclusive()` betraf — Cursor in einem `selected:`-Block in der Sync-Layer wurde zwar korrekt erkannt (`selected` ist ein custom-state, nicht system), aber wenn man einen Tab mit `visited:`-Body baut, sah die Sync-Layer auch hier den Block nicht als state. Gemeinsamer Fix in `studio/sync/component-line-parser.ts`.
+
+## Cross-Backend (verbindliche Dimension)
+
+Identisch zu Slice 26/27: pass-through-Backends, keine Drift möglich. ✅
+
+## Doppel-Emission (V-3, bewusst nicht angepackt)
+
+Im each-loop emittieren `state-machine-emitter` UND `emit-events` jeweils einen Call:
+
+- `_runtime.exclusiveTransition(node, 'selected')` (korrekt, mit explizitem Target)
+- `_runtime.exclusive(node)` (Wrapper-Form, nach Slice-29-Fix ebenfalls korrekt)
+
+Beide jetzt korrekt → keine Race-Condition. Aber Bundle-Bloat. Eliminierung wäre eigene Refactor-Slice (Beziehung state-machine-emitter ↔ emit-events neu definieren).
+
+## Verbleibende Lücken
+
+| Lücke                                                            | Risiko  | Slice-Scope             |
+| ---------------------------------------------------------------- | ------- | ----------------------- |
+| Browser-CDP-Smoke-Test eines Tab-Group-Klicks                    | mittel  | E2E-Pass                |
+| Studio-Roundtrip — Tab-Selection im Property-Panel               | mittel  | Slice 69                |
+| Doppel-Emission `exclusive` + `exclusiveTransition` im each-loop | niedrig | Eigene Cleanup-Refactor |
+
+## Methodische Lehre
+
+**Helper-Einführung ohne Cross-Slice-Probe ist eine halbe Reform.** Slice 27's Helper hat 80% `exclusive()` gleich mitgefixt; aber 20% (Wrapper + Dead Code) brauchten einen zweiten Pass. Die Quintessenz: nach jedem Helper hier eine RT pro Nachbar-Slice schreiben (gleicher Edge-Case), dann ist der Slice-Cluster wirklich fertig.

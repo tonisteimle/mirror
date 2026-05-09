@@ -9,7 +9,21 @@ import type { State, Property } from '../../parser/ast'
 import type { IRStyle, IRNode } from '../types'
 import { SIZE_STATES, isSizeState } from '../../schema/parser-helpers'
 
-// System states that are handled by CSS pseudo-classes
+// System states that get a CSS `transition: ...` injected on the BASE element
+// when the author writes `<state> 0.15s:` (Slice 32 — State-Transitions).
+//
+// Subset of the schema's full system-state list (DSL.states with system:true)
+// because not every system state is transition-eligible:
+//   - `:visited` — browsers BLOCK transitions for privacy.
+//   - `:checked`, `:placeholder-shown` — would benefit from transitions; not
+//     yet supported here. Slice 32 territory; do NOT widen this list as part
+//     of Slice 26/27/29 (would expand scope).
+//   - `:placeholder` — pseudo-element; transitions on the parent element
+//     can't reach it.
+//   - `:first-child`/`:last-child`/`:empty` — structural; transition-on-
+//     match isn't a meaningful UX.
+//
+// Slice 27 Review-Pass kept this list intentionally narrow.
 const SYSTEM_STATES = new Set([
   'hover',
   'focus',

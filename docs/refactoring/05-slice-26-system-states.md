@@ -1,7 +1,7 @@
 # 05 — Slice 26: System-States (`hover:`/`focus:`/`active:`/`disabled:`)
 
 **Datum:** 2026-05-09
-**Status:** Audit · Untersuchung · Entscheidungen · Umsetzung in Arbeit
+**Status:** DOM-Backend ✅ · Studio-Sync ✅ (Review-Pass) · Browser-CDP-E2E ⚠️ offen · Studio-Roundtrip ⚠️ offen
 
 ## Inhalt
 
@@ -10,6 +10,7 @@
 3. [Entscheidungen](#3-entscheidungen)
 4. [Umsetzungsplan & Status](#4-umsetzungsplan--status)
 5. [Tests](#5-tests)
+6. [Review-Pass-Befunde](#6-review-pass-befunde)
 
 ---
 
@@ -165,3 +166,48 @@ Btn: bg #333, col white
 | RT-10 | Schema-Drift-Schutz: Backend `SYSTEM_STATES` ≡ Schema-system-states      | erledigt |
 | RT-11 | Multiple states co-existence (`hover:` + `disabled:` + `focus-visible:`) | erledigt |
 | RT-12 | Token-resolved property in advanced state                                | erledigt |
+
+---
+
+# 6. Review-Pass-Befunde
+
+Der Review-Pass (Step 7 in `00-plan.md`) wurde auf Slice 26+27+29 gemeinsam ausgeführt, weil sie alle dieselbe Bug-Familie betreffen (Schema-Erweiterung von 4 → 13 system-states).
+
+## Probe-Tabelle Post-Fix-Spiegelung
+
+Die ursprünglichen 🔴-Befunde aus Abschnitt 1 (P-9..P-13: `focus-visible`, `focus-within`, `visited`, `checked`, `placeholder` emittieren kein CSS) sind alle ✅. Verifiziert durch RT-5..RT-9 in `tests/compiler/slice-26-system-states.test.ts`.
+
+## Schema-Drift-Grep — der entscheidende Schritt
+
+Der Grep nach hardcoded 4-State-Listen (`grep -rEn "['\"]hover['\"].*['\"]focus['\"]" compiler/ studio/`) hat **eine Stelle ausserhalb der Slice-26-Touchpoint-Map** gefunden, die das ursprüngliche Audit übersehen hatte:
+
+| Stelle                                           | Status nach Slice 26    | Status nach Review-Pass |
+| ------------------------------------------------ | ----------------------- | ----------------------- |
+| `studio/sync/component-line-parser.ts` (3 Regex) | 🔴 4-State-Drift        | ✅ schema-derived       |
+| `studio/editor/syntax-highlight.ts`              | 🟡 visueller Gap        | ✅ schema-derived       |
+| `studio/autocomplete/schema-completions.ts`      | ✅ schon schema-derived | ✅ unverändert          |
+
+User-visible-Effekt vor dem Fix: Cursor in einem `visited:` / `checked:` / `focus-visible:` / `placeholder:` Block wurde mit `childType: 'nested'` statt `'state'` gemeldet — Property-Panel-Context, Breadcrumbs und Code-Edit-Operations sahen den State-Block nicht. **27 RTs in `tests/studio/sync-system-states.test.ts` lockeen den Fix ein.**
+
+## Cross-Backend (verbindliche Dimension)
+
+| Backend                          | Stelle mit eigenem System-State-Filter? | Korrekt? |
+| -------------------------------- | --------------------------------------- | -------- |
+| `compiler/backends/dom/`         | ja, mehrere — alle schema-derived       | ✅       |
+| `compiler/backends/framework.ts` | nein, deklarativer Pass-through         | ✅       |
+| `compiler/backends/react.ts`     | nein, deklarativer Pass-through         | ✅       |
+| `studio/react-converter/`        | nein                                    | ✅       |
+
+Die Bug-Familie war korrekt DOM-only — non-DOM Backends emittieren States als Daten und delegieren an die Target-Framework-Runtime.
+
+## Verbleibende Lücken (offen, dokumentiert)
+
+| Lücke                                                                                  | Risiko  | Vermerk                                                                          |
+| -------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------- |
+| Browser-CDP-Smoke-Test eines kompilierten Programms mit `visited:` / `checked:` / etc. | mittel  | jsdom + Schema-Drift-Guard decken die Logik; Browser-Quirks bleiben unentdeckt   |
+| Studio-Roundtrip — Property-Panel-State-Editor für die neuen 9 system-states           | mittel  | Click im Preview → Property-Panel zeigt State-Tabs für alle 13 ist nicht geprüft |
+| `state-styles-transformer.ts:13` — Transition-Eligibility-Liste (6 von 13)             | niedrig | Browser-Limitation für `:visited`; Slice 32 Territory (`hover 0.15s:`)           |
+
+## Methodische Lehre
+
+**Schema-Erweiterung ohne Repo-weiten Grep ist eine halbe Reform.** Slice 26 hat das Compile-Zeit-CSS-Emit erweitert; der Sync-Layer in Studio bleibt aber im Suchradius eines Compiler-Audits unsichtbar. Der Schema-Drift-Grep in Step 7 ist die direkte Konsequenz: vor jedem „erledigt"-Verdikt repo-weit nach den alten enum-Werten suchen.
