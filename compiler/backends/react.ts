@@ -15,6 +15,8 @@ import type {
   Property,
   TokenDefinition,
 } from '../parser/ast'
+import { expandPropertySets } from '../ir/transformers/property-set-expander'
+import { isLayoutPrimitive } from '../schema/dsl'
 
 export interface ReactExportOptions {
   /** Include token values as CSS variables */
@@ -55,6 +57,16 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
     }
   }
 
+  // Build property-set lookup so `Frame $cardstyle`-style references can
+  // expand on the React side too. Property-sets are TokenDefinitions whose
+  // `.properties` is set (vs single-value tokens which carry `.value`).
+  const propertySetMap = new Map<string, Property[]>()
+  for (const token of program.tokens || []) {
+    if (token.properties && token.properties.length > 0) {
+      propertySetMap.set(token.name, token.properties)
+    }
+  }
+
   // Generate main App component
   lines.push(`export default function App() {`)
   lines.push(`  return (`)
@@ -76,7 +88,13 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
         lines.push(`    {/* ${skipped} not supported in React backend */}`)
         continue
       }
-      const jsx = generateJSX(instance as Instance, componentMap, program.tokens || [], '    ')
+      const jsx = generateJSX(
+        instance as Instance,
+        componentMap,
+        program.tokens || [],
+        propertySetMap,
+        '    '
+      )
       lines.push(jsx)
     }
   } else {
@@ -94,13 +112,36 @@ function generateJSX(
   instance: Instance,
   components: Map<string, ComponentDefinition>,
   tokens: TokenDefinition[],
+  propertySetMap: Map<string, Property[]>,
   indent: string
 ): string {
   // Resolve component definition
   const compDef = components.get(instance.component)
 
+  // Determine HTML tag based on component type
+  const tag = getHtmlTag(instance.component, compDef)
+
+  // Expand property-set references on both sides of the merge before joining.
+  // `Btn: $btnbase, bg #f00` (component side) and `Btn $cardstyle` (instance
+  // side) both need their `propset:` markers turned into the underlying
+  // properties before order-merging — otherwise the markers leak through
+  // generateStyles and produce no CSS.
+  const primitive = tag.toLowerCase()
+  const expandedComp = expandPropertySets(
+    compDef?.properties || [],
+    propertySetMap,
+    components,
+    primitive
+  )
+  const expandedInst = expandPropertySets(
+    instance.properties,
+    propertySetMap,
+    components,
+    primitive
+  )
+
   // Merge properties: component defaults + instance overrides
-  const allProps = [...(compDef?.properties || []), ...instance.properties]
+  const allProps = [...expandedComp, ...expandedInst]
 
   // Generate style object
   const style = generateStyles(allProps, tokens)
@@ -109,21 +150,26 @@ function generateJSX(
   // HTML attributes from properties (placeholder, type, href, src, etc.)
   const attrStr = generateHtmlAttributes(allProps)
 
-  // Determine HTML tag based on component type
-  const tag = getHtmlTag(instance.component, compDef)
+  // Mirror data-* attributes (component, mirror-name, mirror-id, state).
+  // Mirrors what the DOM backend emits via dataset.* so studio/editor
+  // tooling can resolve elements identically across both targets.
+  const mirrorAttrStr = generateMirrorAttributes(instance)
 
-  // Get text content
-  const textContent = getTextContent(instance, allProps)
+  // Get text content. Layout primitives don't render positional content
+  // (validator already warned via W112); skip the literal so the React
+  // and DOM backends agree.
+  const skipTextContent = isLayoutPrimitive(instance.component)
+  const textContent = skipTextContent ? null : getTextContent(instance, allProps)
 
   // Has children?
   const hasChildren = instance.children.length > 0 || textContent
 
   if (!hasChildren) {
-    return `${indent}<${tag}${attrStr}${styleStr} />`
+    return `${indent}<${tag}${attrStr}${mirrorAttrStr}${styleStr} />`
   }
 
   const lines: string[] = []
-  lines.push(`${indent}<${tag}${attrStr}${styleStr}>`)
+  lines.push(`${indent}<${tag}${attrStr}${mirrorAttrStr}${styleStr}>`)
 
   // Add text content
   if (textContent) {
@@ -134,7 +180,7 @@ function generateJSX(
   // Add children
   for (const child of instance.children) {
     if (child.type === 'Instance') {
-      lines.push(generateJSX(child, components, tokens, indent + '  '))
+      lines.push(generateJSX(child, components, tokens, propertySetMap, indent + '  '))
     } else if (child.type === 'Text') {
       lines.push(`${indent}  {${JSON.stringify(child.content)}}`)
     }
@@ -219,6 +265,31 @@ const HTML_ATTR_PROPS: Record<string, string> = {
   disabled: 'disabled',
   checked: 'defaultChecked',
   readonly: 'readOnly',
+}
+
+/**
+ * Emit the Mirror data-* attributes the DOM backend writes via `dataset.*`:
+ *
+ *   - `data-component` — original component name (`Frame`, `Btn`, …). Lets
+ *     studio tooling and the property-panel resolve user components.
+ *   - `data-mirror-name` — instance name (`Frame name MyFrame`) when set,
+ *     otherwise the component name. Used by `setState`/cross-element refs.
+ *   - `data-state` — initial state (`Btn "X", on` → `data-state="on"`).
+ *
+ * `data-mirror-id` is omitted for now — React doesn't have stable per-render
+ * ids without `useId()`, and the DOM backend's id (`node-1`) is generated
+ * per emit. Adding it requires the same useRef plumbing as the element-
+ * registry (Phase B.4); skip until then.
+ */
+function generateMirrorAttributes(instance: Instance): string {
+  const attrs: string[] = []
+  attrs.push(`data-component=${JSON.stringify(instance.component)}`)
+  const finalName = instance.name ?? instance.component
+  attrs.push(`data-mirror-name=${JSON.stringify(finalName)}`)
+  if (instance.initialState) {
+    attrs.push(`data-state=${JSON.stringify(instance.initialState)}`)
+  }
+  return ' ' + attrs.join(' ')
 }
 
 function generateHtmlAttributes(properties: Property[]): string {

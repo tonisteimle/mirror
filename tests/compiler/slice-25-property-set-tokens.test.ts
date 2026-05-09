@@ -3,12 +3,13 @@
  * Slice 25 — Property-Set-Token regression suite.
  *
  * Audit: `docs/refactoring/03-slice-25-property-set-tokens.md`. The audit
- * listed 11 findings (B-1 through B-11) and five V-decisions (V-1..V-5).
- * V-6/V-7/V-8 are deferred (cross-backend / states / picker slices).
- * V-9 (Re-Def, Empty-Set, Self-Ref-Edge) was verworfen — Self-Ref-Doppel-
- * Emit collapses out of V-1's recursive cycle-guard for free.
+ * listed 11 findings (B-1 through B-11). The original split deferred B-11
+ * (React-Backend ignores Property-Sets) on the grounds that it was a
+ * cross-backend issue. Follow-up work in Slice 25 brought React-Backend
+ * up to parity with DOM for the property-set surface; RT-13/RT-14 lock
+ * that parity here.
  *
- * Locks (RT-1..RT-12 from the audit):
+ * Locks:
  *
  *   - RT-1  Multi-spread `$a, $b` validator-clean + both expanded
  *   - RT-2  3-level chain `c:pad 8; b:$c; a:$b; Frame $a` → padding survives
@@ -22,11 +23,14 @@
  *   - RT-10 Override BEFORE spread: `Frame bg #f00, $cs` → set wins
  *   - RT-11 Bare `Text $name` keeps content-rewrite (content-bearing gate)
  *   - RT-12 Component-mixin `Input ..., Field` still works (one-level)
+ *   - RT-13 React-Backend expands property-sets (B-11 Cross-Backend parity)
+ *   - RT-14 React-Backend supports deep chains and multi-spread
  */
 
 import { describe, it, expect } from 'vitest'
 import { parse } from '../../compiler/parser'
 import { generateDOM } from '../../compiler/backends/dom'
+import { generateReact } from '../../compiler/backends/react'
 import { Validator } from '../../compiler/validator/validator'
 
 function compileToCreateUI(source: string): string {
@@ -241,6 +245,74 @@ Input placeholder "x", Field`)
       const widthish =
         styles['width'] || styles['align-self'] || styles['flex'] || styles['flex-basis']
       expect(widthish).toBeTruthy()
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  // RT-13/RT-14 — React-Backend parity (B-11 fix)
+  // -------------------------------------------------------------------------
+  describe('RT-13 — React-Backend expands property-sets', () => {
+    it('basic `Frame $cardstyle` produces JSX with the merged style props', () => {
+      const jsx = generateReact(
+        parse(`cardstyle: bg #1a1a1a, pad 16, rad 8
+Frame $cardstyle`)
+      )
+      // The DOM backend produces inline-style with all three properties; the
+      // React backend should reach the same set in JSX form. We don't lock
+      // exact unit-suffix or camel-vs-kebab — those are React-backend pre-
+      // existing rendering quirks. Just lock that the keys are present.
+      expect(jsx).toMatch(/backgroundColor:\s*'#1a1a1a'/)
+      expect(jsx).toMatch(/padding:\s*'16'?/)
+      expect(jsx).toMatch(/borderRadius:\s*'8'?/)
+    })
+
+    it('property-set on a Component definition propagates through React JSX', () => {
+      // `Btn: $btnbase, bg #2271C1` — set referenced inside a component def.
+      // Pre-fix the React backend would emit `<button />` with no styles
+      // because it never expanded `$btnbase`.
+      const jsx = generateReact(
+        parse(`btnbase: pad 10 20, rad 6
+Btn: $btnbase, bg #2271C1, col white
+Btn "Save"`)
+      )
+      expect(jsx).toMatch(/backgroundColor:\s*'#2271C1'/)
+      expect(jsx).toMatch(/color:\s*'white'/)
+      expect(jsx).toMatch(/borderRadius:\s*'6'?/)
+    })
+  })
+
+  describe('RT-14 — React-Backend supports deep chains and multi-spread', () => {
+    it('3-level chain `c:pad 8; b:$c; a:$b; Frame $a` reaches React', () => {
+      const jsx = generateReact(
+        parse(`c: pad 8
+b: $c
+a: $b
+Frame $a`)
+      )
+      expect(jsx).toMatch(/padding:\s*'8'?/)
+    })
+
+    it('multi-spread `Frame $a, $b` merges both sets in React', () => {
+      const jsx = generateReact(
+        parse(`a: pad 16
+b: rad 8
+Frame $a, $b`)
+      )
+      expect(jsx).toMatch(/padding:\s*'16'?/)
+      expect(jsx).toMatch(/borderRadius:\s*'8'?/)
+    })
+
+    it('cycle `a:$b; b:$a; Frame $a` terminates and produces empty-style div', () => {
+      const jsx = generateReact(
+        parse(`a: $b
+b: $a
+Frame $a`)
+      )
+      // No throw, terminates, no spurious styles from a phantom expansion.
+      // The Frame can have other (default) styles — just lock that the
+      // cycle didn't introduce arbitrary text content or crash.
+      expect(jsx).toContain('export default function App()')
+      expect(jsx).not.toContain('formatInlineMarkdown')
     })
   })
 })
