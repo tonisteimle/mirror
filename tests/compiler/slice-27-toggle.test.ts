@@ -212,6 +212,20 @@ describe('Slice 27 — toggle()', () => {
   })
 
   // ---------------------------------------------------------------------
+  // RT-12a — third drift point: `_stateStyles` filter is also schema-derived
+  // ---------------------------------------------------------------------
+  it('RT-12a — system-state styles do NOT ship as runtime _stateStyles', () => {
+    // node-emitter previously hardcoded the same 4-state list. After
+    // Slice 27 it derives from SYSTEM_STATES, so visited/checked/etc.
+    // styles stay in CSS only and don't bloat the bundle as
+    // pseudo-runtime-states.
+    const js = compile(
+      `MyLink as Link: col #2271C1, toggle()\n  visited:\n    col #888\nMyLink "X"`
+    )
+    expect(js).not.toMatch(/_stateStyles\s*=\s*\{[^}]*visited/)
+  })
+
+  // ---------------------------------------------------------------------
   // RT-12 — emitter passes explicit stateOrder
   // ---------------------------------------------------------------------
   it('RT-12 — multi-state cycle emits explicit stateOrder (no runtime guessing)', () => {

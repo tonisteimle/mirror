@@ -7,6 +7,7 @@
 
 import type { IRNode, IRStyle, IRProperty } from '../../ir/types'
 import { isLayoutPrimitive } from '../../schema/dsl'
+import { SYSTEM_STATES } from '../../schema/parser-helpers'
 
 // ============================================
 // TYPES
@@ -315,8 +316,13 @@ export function emitLayoutType(ctx: NodeEmitterContext, node: IRNode, varName: s
  * Emit state styles for runtime
  */
 export function emitStateStyles(ctx: NodeEmitterContext, node: IRNode, varName: string): void {
-  const cssStates = new Set(['hover', 'focus', 'active', 'disabled'])
-  const behaviorStyles = node.styles.filter(s => s.state && !cssStates.has(s.state))
+  // Behavior-styles = state-styles the runtime applies on transitions
+  // (e.g. `on:`, `selected:`, `loading:`). System-states (hover, focus,
+  // visited, checked, placeholder, …) are CSS-only and must be skipped.
+  // Schema-derived — the hand-rolled 4-state set used to drift after
+  // Slice 26 widened the schema to 13 (Slice 27 closed two of three drift
+  // points; this is the third).
+  const behaviorStyles = node.styles.filter(s => s.state && !SYSTEM_STATES.has(s.state))
 
   if (behaviorStyles.length === 0) return
 
