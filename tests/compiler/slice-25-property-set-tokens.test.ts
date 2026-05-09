@@ -281,6 +281,47 @@ Btn "Save"`)
     })
   })
 
+  // -------------------------------------------------------------------------
+  // RT-15 — Name-collision validator-warn (B-6 fix)
+  // -------------------------------------------------------------------------
+  describe('RT-15 — Property-set name collides with suffixed token → W505', () => {
+    it('`card.bg: #111` + `card: pad 16` warns W505 with both line refs', () => {
+      const v = new Validator()
+      const result = v.validate(
+        parse(`card.bg: #111
+card: pad 16, rad 8
+Frame $card`)
+      )
+      const collision = result.warnings.find(w => w.code === 'W505')
+      expect(collision).toBeDefined()
+      expect(collision?.message).toContain('card')
+      expect(collision?.message).toContain('shadow')
+      // The warning fires on the property-set definition (line 2), and
+      // refers back to the suffixed-token line (line 1).
+      expect(collision?.line).toBe(2)
+      expect(collision?.message).toContain('line 1')
+    })
+
+    it('different names → no W505', () => {
+      const v = new Validator()
+      const result = v.validate(
+        parse(`card.bg: #111
+cardstyle: pad 16
+Frame $cardstyle`)
+      )
+      expect(result.warnings.find(w => w.code === 'W505')).toBeUndefined()
+    })
+
+    it('property-set without a colliding suffixed token → no W505', () => {
+      const v = new Validator()
+      const result = v.validate(
+        parse(`card: pad 16
+Frame $card`)
+      )
+      expect(result.warnings.find(w => w.code === 'W505')).toBeUndefined()
+    })
+  })
+
   describe('RT-14 — React-Backend supports deep chains and multi-spread', () => {
     it('3-level chain `c:pad 8; b:$c; a:$b; Frame $a` reaches React', () => {
       const jsx = generateReact(

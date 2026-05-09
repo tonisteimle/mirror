@@ -168,12 +168,16 @@ describe('Components — Framework preserves component types', () => {
 // =============================================================================
 
 describe('Components — React backend documented limits', () => {
-  it('inlines components: definition name does NOT appear in React output', () => {
-    // Current behavior — React inlines `Card` to `<div>` and drops the name.
-    // If/when React backend gains component preservation, update this test.
+  it('inlines components: no `function Card`/`<Card />` in React output', () => {
+    // Current behavior — React inlines `Card` to `<div>` and does NOT emit
+    // a separate React function or JSX component. The component name still
+    // appears in the data-component / data-mirror-name attributes (Slice 1
+    // React-parity), but no `<Card />` or `function Card` is emitted.
+    // If/when React backend gains true component preservation, update this.
     const react = generateReact(parse(`Card: pad 16\n\nCard`))
-    expect(react).not.toContain('Card')
-    // The render still works, the structure is just nameless
+    expect(react).not.toMatch(/function Card\b/)
+    expect(react).not.toMatch(/<Card\b/)
+    // The render still works, just as a plain <div>.
     expect(react).toMatch(/<div[\s>/]/)
   })
 

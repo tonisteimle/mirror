@@ -142,6 +142,14 @@ export class Validator {
 
   private collectDefinitions(ast: AST): void {
     // Collect token definitions
+    //
+    // Track property-set names (no suffix, has `.properties`) and suffixed-
+    // single-value-token roots separately so we can detect name-collisions
+    // afterwards: `card: pad 16` (set) + `card.bg: #111` (single) → `$card`
+    // resolves via the positional resolver to `bg $card.bg`, silently
+    // shadowing the property-set. Designer needs to know.
+    const propertySetNames = new Map<string, { line: number; column: number }>()
+    const suffixedTokenRoots = new Map<string, { line: number; column: number }>()
     for (const token of ast.tokens) {
       const baseName = token.name.startsWith('$') ? token.name.slice(1) : token.name
       // Handle dotted names like $accent.bg
@@ -150,6 +158,26 @@ export class Validator {
       this.definedTokens.add(baseName) // Also add full name
       // Track definition location for unused warnings
       this.tokenDefinitions.set(rootName, { line: token.line, column: token.column })
+
+      const isSuffixed = baseName !== rootName
+      const isPropertySet = !!token.properties && token.value === undefined
+      if (isPropertySet) {
+        propertySetNames.set(rootName, { line: token.line, column: token.column })
+      } else if (isSuffixed) {
+        suffixedTokenRoots.set(rootName, { line: token.line, column: token.column })
+      }
+    }
+    for (const [name, pos] of propertySetNames) {
+      const collision = suffixedTokenRoots.get(name)
+      if (collision) {
+        this.addWarning(
+          ERROR_CODES.TOKEN_NAME_COLLISION,
+          `Property-set "${name}" collides with suffixed token "${name}.*" (defined on line ${collision.line}); the property-set will be silently shadowed when referenced as "$${name}"`,
+          pos.line,
+          pos.column,
+          `Rename the property-set or the suffixed token so each "$" reference is unambiguous.`
+        )
+      }
     }
 
     // First pass: collect all component names. Names already present from
