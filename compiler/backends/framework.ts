@@ -12,6 +12,7 @@
 
 import type { AST } from '../parser/ast'
 import { toIR } from '../ir'
+import { isLayoutPrimitive } from '../schema/dsl'
 import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional } from '../ir/types'
 
 const TAG_TO_TYPE: Record<string, string> = {
@@ -226,9 +227,15 @@ class FrameworkGenerator {
   }
 
   /**
-   * Extract content from node (for Text, Icon, Button, Link)
+   * Extract content from node (for Text, Icon, Button, Link).
+   *
+   * Layout primitives (Frame/Box, Spacer/Divider, Table family) don't
+   * carry positional text content — Slice 1 W112. Skip the content here
+   * so the framework backend doesn't emit `M('Frame', 'hello')` while
+   * DOM and React both refuse to render the literal.
    */
   private getContent(node: IRNode): string | null {
+    if (isLayoutPrimitive(node.name)) return null
     const textContent = node.properties.find(p => p.name === 'textContent')
     if (textContent && typeof textContent.value === 'string') {
       return textContent.value

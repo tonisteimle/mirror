@@ -67,8 +67,23 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
     }
   }
 
+  // Walk the instance tree once to find every `Element name X` — those
+  // get a callback ref that registers into `_elements` so cross-element
+  // state references (`MenuBtn.open: visible`) can reach the node from
+  // any handler without a DOM query. Mirrors the DOM backend's
+  // `_elements['X'] = node_N` registry. Slice 1 Phase B.4.
+  const namedInstances = collectNamedInstances(program.instances ?? [])
+  const hasNamedInstances = namedInstances.length > 0
+
   // Generate main App component
   lines.push(`export default function App() {`)
+  if (hasNamedInstances) {
+    lines.push(`  // Mirror element registry — populated via callback refs as nodes mount.`)
+    lines.push(`  // Mirrors the DOM backend's _elements lookup so cross-element state refs`)
+    lines.push(`  // (e.g. \`MenuBtn.open: visible\`) work identically across both backends.`)
+    lines.push(`  const _elements = React.useRef<Record<string, HTMLElement | null>>({})`)
+    lines.push(``)
+  }
   lines.push(`  return (`)
 
   // Generate JSX for each root instance
@@ -158,6 +173,14 @@ function generateJSX(
   // tooling can resolve elements identically across both targets.
   const mirrorAttrStr = generateMirrorAttributes(instance)
 
+  // Element-Registry callback ref. Only attached when the instance has
+  // an explicit `name X` — that's the only DSL form that can be the
+  // target of a cross-element state reference. Plain `<div />` doesn't
+  // need a ref. Slice 1 Phase B.4.
+  const refStr = instance.name
+    ? ` ref={(el) => { _elements.current[${JSON.stringify(instance.name)}] = el }}`
+    : ''
+
   // Get text content. Layout primitives don't render positional content
   // (validator already warned via W112); skip the literal so the React
   // and DOM backends agree.
@@ -168,11 +191,11 @@ function generateJSX(
   const hasChildren = instance.children.length > 0 || textContent
 
   if (!hasChildren) {
-    return `${indent}<${tag}${attrStr}${mirrorAttrStr}${styleStr} />`
+    return `${indent}<${tag}${attrStr}${mirrorAttrStr}${refStr}${styleStr} />`
   }
 
   const lines: string[] = []
-  lines.push(`${indent}<${tag}${attrStr}${mirrorAttrStr}${styleStr}>`)
+  lines.push(`${indent}<${tag}${attrStr}${mirrorAttrStr}${refStr}${styleStr}>`)
 
   // Add text content
   if (textContent) {
@@ -268,6 +291,28 @@ const HTML_ATTR_PROPS: Record<string, string> = {
   disabled: 'disabled',
   checked: 'defaultChecked',
   readonly: 'readOnly',
+}
+
+/**
+ * Walk the instance tree and collect every `Instance.name` (instance name
+ * set via `Element name X` in the DSL). Used by `generateReact` to decide
+ * whether to declare the `_elements` registry useRef at the top of the
+ * generated App component. Slice 1 Phase B.4.
+ */
+function collectNamedInstances(roots: ReadonlyArray<unknown>): string[] {
+  const names: string[] = []
+  const walk = (node: unknown): void => {
+    if (!node || typeof node !== 'object') return
+    const n = node as { type?: string; name?: string | null; children?: unknown[] }
+    if (n.type === 'Instance' && typeof n.name === 'string' && n.name.length > 0) {
+      names.push(n.name)
+    }
+    if (Array.isArray(n.children)) {
+      for (const child of n.children) walk(child)
+    }
+  }
+  for (const root of roots) walk(root)
+  return names
 }
 
 /**

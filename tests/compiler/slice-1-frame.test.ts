@@ -25,6 +25,7 @@ import { parse } from '../../compiler/parser'
 import { validate } from '../../compiler/validator'
 import { generateDOM } from '../../compiler/backends/dom'
 import { generateReact } from '../../compiler/backends/react'
+import { generateFramework } from '../../compiler/backends/framework'
 
 function compileToCreateUI(source: string): string {
   return generateDOM(parse(source))
@@ -136,6 +137,61 @@ describe('Slice 1 — Frame primitive', () => {
     })
   })
 
+  describe('RT-12 — Framework-Backend cross-backend parity (M() runtime calls)', () => {
+    it("lowercase `frame` flows through canonical `M('Frame')`", () => {
+      const out = generateFramework(parse('frame'))
+      expect(out).toContain("M('Frame')")
+    })
+
+    it('`Frame "hello"` does NOT emit content arg (matches DOM/React)', () => {
+      const out = generateFramework(parse('Frame "hello"'))
+      // No `M('Frame', 'hello')`. Either bare M('Frame') or with a props
+      // object — anything except passing the text positional through.
+      expect(out).not.toMatch(/M\('Frame',\s*'hello'\)/)
+    })
+
+    it('`Text "hi"` keeps its content (text-bearing primitives unchanged)', () => {
+      const out = generateFramework(parse('Text "hi"'))
+      expect(out).toContain("M('Text', 'hi')")
+    })
+
+    it('`Frame name MyFrame` flows through `named` prop', () => {
+      const out = generateFramework(parse('Frame name MyFrame'))
+      expect(out).toContain("named: 'MyFrame'")
+    })
+  })
+
+  describe('RT-11 — React-Backend exposes element-registry parity with DOM (Phase B.4)', () => {
+    it('declares useRef-based _elements registry when any instance has a name', () => {
+      const tsx = generateReact(parse('Frame name MyFrame'))
+      expect(tsx).toContain('React.useRef<Record<string, HTMLElement | null>>({})')
+      expect(tsx).toMatch(/_elements\.current\["MyFrame"\]\s*=\s*el/)
+    })
+
+    it('omits the registry useRef when no instance has a name', () => {
+      const tsx = generateReact(parse('Frame\n  Text "Hi"'))
+      expect(tsx).not.toContain('_elements')
+    })
+
+    it('every named instance gets a callback ref into _elements', () => {
+      const tsx = generateReact(parse(`Button name MenuBtn "Menü"\nFrame name Panel\n  Text "Hi"`))
+      expect(tsx).toMatch(/_elements\.current\["MenuBtn"\]/)
+      expect(tsx).toMatch(/_elements\.current\["Panel"\]/)
+      // Unnamed Text gets no ref
+      expect(tsx).not.toMatch(/_elements\.current\["Text"\]/)
+    })
+
+    it('mirrors DOM-Backend `_elements` registry semantics', () => {
+      // DOM emits `_elements['MenuBtn'] = node_N`; React emits a callback
+      // ref that does the same thing under React's mounting lifecycle.
+      const src = 'Button name MenuBtn "Open"'
+      const dom = generateDOM(parse(src))
+      const react = generateReact(parse(src))
+      expect(dom).toMatch(/_elements\['MenuBtn'\]\s*=/)
+      expect(react).toMatch(/_elements\.current\["MenuBtn"\]\s*=/)
+    })
+  })
+
   describe('RT-13 — React-Backend emits Frame-default styles (Phase B.3)', () => {
     it('bare Frame carries display/flex-direction/align-self/align-items', () => {
       const tsx = generateReact(parse('Frame'))
@@ -225,6 +281,25 @@ describe('Slice 1 — Frame primitive', () => {
       const result = validate('unknown')
       expect(result.valid).toBe(false)
       expect(result.errors.some(e => e.code === 'E002')).toBe(true)
+    })
+
+    it('build CLI rejects E002 — unknown components do not silently emit', async () => {
+      // Probe #9 from the audit: validator says E002 but the DOM backend
+      // used to happily emit `<div data-component="unknown">`. The CLI now
+      // runs the validator before generation and bails on E0xx errors.
+      const { compileFiles } = await import('../../compiler/cli/compile')
+      const fs = await import('fs')
+      const path = await import('path')
+      const tmp = path.join(process.env.TMPDIR ?? '/tmp', `slice1-rt7-${Date.now()}.mirror`)
+      fs.writeFileSync(tmp, 'unknown\n')
+      try {
+        const result = compileFiles([tmp], 'dom', false)
+        expect(result.success).toBe(false)
+        expect(result.error).toMatch(/E002/)
+        expect(result.error).toMatch(/unknown/)
+      } finally {
+        fs.unlinkSync(tmp)
+      }
     })
   })
 

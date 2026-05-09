@@ -5,6 +5,8 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { parse } from '../parser'
+import { Validator } from '../validator/validator'
+import { getBuiltinComponents, getBuiltinTokens } from '../validator/builtin-prelude'
 import { generateDOM } from '../backends/dom'
 import { generateReact } from '../backends/react'
 import { parseDataFile } from '../parser/data-parser'
@@ -114,6 +116,41 @@ export function compileFiles(
     if (ast.errors && ast.errors.length > 0) {
       for (const err of ast.errors) {
         warnings.push(`Parse warning at line ${err.line}: ${err.message}`)
+      }
+    }
+
+    // Run the schema validator. E0xx errors (E002 unknown component, …) are
+    // build-stoppers — emitting JS that references undefined components
+    // would silently render `<div data-component="unknown">` placeholders,
+    // exactly the behaviour Slice 1 Probe #9 flagged. Warnings (W0xx /
+    // W1xx / W5xx) are surfaced but don't fail the build.
+    //
+    // Seed the prelude with built-in components (Checkbox/Switch/Card/…
+    // pure-Mirror templates + Zag primitives + chart slots) so legitimate
+    // template uses don't trip E002.
+    if (verbose) console.error(c('  Validating...', 'dim'))
+    const validator = new Validator()
+    validator.setPrelude(new Set(getBuiltinTokens()), new Set(getBuiltinComponents()))
+    const validation = validator.validate(ast)
+    for (const warning of validation.warnings) {
+      warnings.push(
+        `${warning.code} at line ${warning.line}:${warning.column} — ${warning.message}`
+      )
+    }
+    if (validation.errors.length > 0) {
+      const errorLines = validation.errors.map(
+        e => `${e.code} at line ${e.line}:${e.column} — ${e.message}`
+      )
+      return {
+        success: false,
+        error: `Validation failed (${validation.errors.length} error${validation.errors.length === 1 ? '' : 's'}):\n  ${errorLines.join('\n  ')}`,
+        warnings,
+        stats: {
+          inputFiles: files.length,
+          inputLines: totalLines,
+          outputLines: 0,
+          compileTime: Date.now() - startTime,
+        },
       }
     }
 
