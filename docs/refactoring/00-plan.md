@@ -39,9 +39,11 @@ Vertikale, end2end prüfbare User-Fähigkeiten („Capability-Slices"). Jeder Sl
 
 ## Audit-Status
 
-| #   | Slice              | Status   | Dokument                                       |
-| --- | ------------------ | -------- | ---------------------------------------------- |
-| 24  | Single-Value-Token | erledigt | [01-slice-24-tokens.md](01-slice-24-tokens.md) |
+| #   | Slice              | Status                 | Dokument                                                                 |
+| --- | ------------------ | ---------------------- | ------------------------------------------------------------------------ |
+| 24  | Single-Value-Token | erledigt               | [01-slice-24-tokens.md](01-slice-24-tokens.md)                           |
+| 1   | Frame-Container    | Audit · Phase B.5      | [02-slice-1-frame.md](02-slice-1-frame.md)                               |
+| 25  | Property-Set-Token | Audit · Entscheidungen | [03-slice-25-property-set-tokens.md](03-slice-25-property-set-tokens.md) |
 
 ---
 
