@@ -56,9 +56,21 @@ function highlight(text) {
 }
 
 /**
+ * Static playgrounds: syntax-highlight, no live preview / compile.
+ * Markup: <div class="playground static"><div class="playground-code"><pre>code</pre></div></div>
+ */
+function initializeStaticPlaygrounds() {
+  document.querySelectorAll('.playground.static .playground-code pre').forEach(pre => {
+    const text = pre.textContent
+    pre.innerHTML = highlight(text)
+  })
+}
+
+/**
  * Initialize all playgrounds on the page
  */
 function initializePlaygrounds() {
+  initializeStaticPlaygrounds()
   document.querySelectorAll('.playground[data-playground]').forEach(p => {
     const codeContainer = p.querySelector('.playground-code')
     const textarea = p.querySelector('textarea')
@@ -147,8 +159,10 @@ function initializePlaygrounds() {
  */
 
 // Tutorial Navigation Structure
-// Die Sprache (00-10, 16) + Komponenten-Bibliothek (11-15)
+// Studio (17) + Die Sprache (00-10, 16) + Komponenten-Bibliothek (11-15)
 const tutorialNavigation = [
+  // Studio
+  { num: '17', file: '17-ai-bauen.html', title: 'AI-Bauen', section: 'Studio' },
   // Die Sprache
   { num: '00', file: 'index.html', title: 'Intro', section: 'Sprache' },
   { num: '01', file: '01-elemente.html', title: 'Elemente' },
@@ -184,35 +198,42 @@ function createTutorialSidebar() {
   header.className = 'tutorial-sidebar-header'
   header.innerHTML = `
     <a href="index.html">
-      <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      <img src="logo-mirror.png" alt="Mirror">
+      <span>Mirror</span>
     </a>
   `
   sidebar.appendChild(header)
 
-  // Create navigation list
-  const section = document.createElement('div')
-  section.className = 'tutorial-sidebar-section'
-
+  // Group entries by section. Each entry that carries `section` opens a
+  // new group; subsequent entries without one attach to the most recently
+  // opened group.
+  let currentSection = null
+  let sectionEl = null
   for (const item of tutorialNavigation) {
+    if (item.section) {
+      currentSection = item.section
+      sectionEl = document.createElement('div')
+      sectionEl.className = 'tutorial-sidebar-section'
+      const title = document.createElement('div')
+      title.className = 'tutorial-sidebar-section-title'
+      title.textContent = currentSection
+      sectionEl.appendChild(title)
+      sidebar.appendChild(sectionEl)
+    }
+    if (!sectionEl) continue
     const link = document.createElement('a')
     link.className = 'tutorial-sidebar-link'
     link.href = item.file
-
-    // Mark current page as active
     if (currentFile === item.file) {
       link.classList.add('active')
     }
-
     link.innerHTML = `
       <span class="tutorial-sidebar-link-num">${item.num}</span>
       <span>${item.title}</span>
     `
-    section.appendChild(link)
+    sectionEl.appendChild(link)
   }
 
-  sidebar.appendChild(section)
-
-  // Add sidebar to page
   document.body.insertBefore(sidebar, document.body.firstChild)
   document.body.classList.add('has-sidebar')
 }

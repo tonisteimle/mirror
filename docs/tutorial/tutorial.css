@@ -1,14 +1,14 @@
 /* Tutorial Common Styles */
 
 :root {
-  --bg: #111;
-  --bg-code: #1a1a1a;
-  --bg-code-inline: #333;
-  --bg-preview: #0c0c0c;
-  --text: #909090;
-  --text-bright: #eee;
-  --text-dim: #666;
-  --border: #282828;
+  --bg: #1a1a1a;
+  --bg-code: #242424;
+  --bg-code-inline: #353535;
+  --bg-preview: #0e0e0e;
+  --text: #a1a1a1;
+  --text-bright: #f0f0f0;
+  --text-dim: #707070;
+  --border: #303030;
   --accent: #5BA8F5;
   --accent-dark: #2271C1;
   --font: 'Inter', system-ui, sans-serif;
@@ -38,12 +38,13 @@ body {
 
 /* Layout */
 .page {
-  max-width: 720px;
+  max-width: 840px;
   margin: 0 auto;
   padding: 60px 32px 100px;
 }
 
-/* Page Logo (visible when sidebar is hidden) */
+/* Page Logo (in-page hero — only shown when sidebar is NOT mounted, e.g.
+   playground page or narrow viewports). The sidebar carries its own logo. */
 .page-logo {
   display: flex;
   align-items: center;
@@ -61,7 +62,6 @@ body {
   width: auto;
 }
 
-/* Hide page logo when sidebar is visible */
 @media (min-width: 1100px) {
   body.has-sidebar .page-logo {
     display: none;
@@ -71,11 +71,12 @@ body {
 /* Typography */
 .page > header { margin-bottom: 48px; }
 h1 {
-  font-size: 28px;
+  font-size: 56px;
   font-weight: 500;
   color: var(--text-bright);
-  letter-spacing: -0.5px;
-  margin-bottom: 8px;
+  letter-spacing: -1.5px;
+  line-height: 1.1;
+  margin-bottom: 16px;
 }
 
 section { margin-bottom: 48px; }
@@ -122,19 +123,21 @@ code {
   text-align: center;
 }
 
-/* Hero shot: break out of the 720px text column on wider viewports. */
+/* Hero shot / tutorial-video: break out of the 840px text column on wider viewports. */
 @media (min-width: 1024px) {
-  .studio-shot {
-    margin-left: -160px;
-    margin-right: -160px;
+  .studio-shot,
+  .tutorial-video {
+    margin-left: -100px;
+    margin-right: -100px;
   }
 }
 
 /* Sidebar mode (≥1100px): only break out to the right; sidebar pins the left. */
 @media (min-width: 1100px) {
-  body.has-sidebar .studio-shot {
+  body.has-sidebar .studio-shot,
+  body.has-sidebar .tutorial-video {
     margin-left: 0;
-    margin-right: -300px;
+    margin-right: -200px;
   }
 }
 
@@ -197,6 +200,23 @@ a:hover { text-decoration: underline; }
   justify-content: center;
 }
 
+/* Static playground: same chrome as a regular playground (border, code-bg,
+   syntax highlighting) but no live preview. Used for code samples that
+   wouldn't compile by themselves — e.g. raw sketches with `--`-marker. */
+.playground.static .playground-code {
+  border-bottom: none;
+}
+.playground.static pre {
+  margin: 0;
+  padding: 16px;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  color: #ccc;
+}
+
 .playground-error {
   color: #e55;
   font-family: var(--mono);
@@ -240,6 +260,30 @@ a:hover { text-decoration: underline; }
 .syn-component { color: var(--syn-component); font-weight: 500; }
 .syn-keyword { color: var(--syn-keyword); }
 .syn-token { color: var(--syn-token); }
+
+/* Tutorial Video (auto-loop demo recording) */
+.tutorial-video {
+  margin: 24px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0a0a0a;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+.tutorial-video video {
+  width: 100%;
+  height: auto;
+  display: block;
+  pointer-events: none;
+}
+.tutorial-video-caption {
+  padding: 12px 16px;
+  background: var(--bg-code);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.4;
+  border-top: 1px solid var(--border);
+}
 
 /* Static Code Block (non-interactive, e.g. for JavaScript examples) */
 .code-block {
@@ -478,45 +522,58 @@ details pre {
   padding: 24px 0;
   overflow-y: auto;
   z-index: 100;
+  /* Hide scrollbar while keeping scrollability — the gutter would otherwise
+     show as a darker strip between sidebar and content. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.tutorial-sidebar::-webkit-scrollbar {
+  display: none;
 }
 
 .tutorial-sidebar-header {
-  padding: 0 20px 20px;
+  padding: 0 20px 28px;
   margin-bottom: 16px;
 }
 
 .tutorial-sidebar-header a {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   text-decoration: none;
-  color: var(--text);
+  color: var(--text-bright);
 }
 
 .tutorial-sidebar-header img {
-  height: 20px;
+  height: 32px;
   width: auto;
 }
 
+.tutorial-sidebar-header span {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
 .tutorial-sidebar-section {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .tutorial-sidebar-section-title {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  color: var(--text-dim);
+  color: var(--text-bright);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   padding: 0 20px;
-  margin-bottom: 8px;
+  margin-bottom: 2px;
 }
 
 .tutorial-sidebar-link {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 20px;
+  padding: 2px 20px;
   color: var(--text-dim);
   text-decoration: none;
   font-size: 13px;
@@ -554,6 +611,6 @@ details pre {
   /* Shift main content to the right */
   body.has-sidebar .page {
     margin-left: 240px;
-    max-width: calc(720px + 60px);
+    max-width: calc(840px + 60px);
   }
 }

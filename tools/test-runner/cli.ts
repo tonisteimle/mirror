@@ -79,6 +79,11 @@ interface CLIArgs {
   osMouse?: boolean
   // Frame capture (one PNG per mutating step, for static review)
   framesDir?: string
+  // Video recording (CDP screencast → ffmpeg → WebM)
+  record?: string // Output path for the recorded video (.webm)
+  recordFps?: number // Frame rate (default 24)
+  // Browser viewport size (default 1920x1080 in chrome.ts)
+  windowSize?: string // e.g. "1280x800"
 }
 
 // Panel visibility presets for test categories
@@ -165,6 +170,11 @@ function parseArgs(): CLIArgs {
     demoSnapshotThreshold: getArgValue(args, '--snapshot-threshold')
       ? parseFloat(getArgValue(args, '--snapshot-threshold')!)
       : undefined,
+    record: getArgValue(args, '--record'),
+    recordFps: getArgValue(args, '--record-fps')
+      ? parseInt(getArgValue(args, '--record-fps')!, 10)
+      : undefined,
+    windowSize: getArgValue(args, '--window-size'),
   }
 }
 
@@ -700,6 +710,7 @@ async function runDemoMode(args: CLIArgs): Promise<number> {
       url: args.url,
       verbose: args.verbose,
       silent: args.silent,
+      windowSize: args.windowSize,
     }
 
     const runner = new TestRunner(config)
@@ -793,9 +804,29 @@ async function runDemoMode(args: CLIArgs): Promise<number> {
         throw new Error('Could not access CDP session')
       }
 
+      // Optional video recording (CDP screencast → ffmpeg → WebM).
+      // Started AFTER the navigate + initial wait so the studio is mounted
+      // and the first frame already shows the editor, not chrome:about.
+      let recording: import('./recording').RecordingHandle | null = null
+      if (args.record) {
+        const { startRecording } = await import('./recording')
+        recording = await startRecording(cdp, {
+          outputPath: args.record,
+          fps: args.recordFps ?? 24,
+        })
+        console.log(`🎥 Recording → ${args.record}`)
+      }
+
       // Create and run demo
       const demoRunner = new DemoRunner(cdp, demoConfig)
+      if (recording) demoRunner.recording = recording
       const result = await demoRunner.run(script)
+
+      if (recording) {
+        const frames = recording.framesCaptured()
+        await recording.stop()
+        console.log(`🎥 Saved ${args.record} (${frames} frames)`)
+      }
 
       // Keep browser open for a moment at the end (only in non-validate mode)
       if (!isValidateMode) {

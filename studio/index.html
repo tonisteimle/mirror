@@ -23,7 +23,7 @@
 
   <!-- Tom Select CSS -->
   <link rel="stylesheet" href="https://esm.sh/tom-select@2.4.3/dist/css/tom-select.default.min.css">
-  <link rel="stylesheet" href="styles.css?v=235">
+  <link rel="stylesheet" href="styles.css?v=239">
   <!-- Mirror Default Styles (for preview) -->
   <link rel="stylesheet" href="dist/mirror-defaults.css?v=1">
 </head>
@@ -72,19 +72,21 @@
         -->
         <div class="editor-file-tabs" id="editor-file-tabs"></div>
         <div class="editor-actions">
+          <div class="editor-action-spacer"></div>
           <a href="https://ux-strategy.ch/mirror/tutorial/" target="_blank" class="tutorial-link" title="Mirror Tutorial öffnen">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
               <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
             </svg>
           </a>
-          <div class="editor-action-spacer"></div>
+          <div class="editor-action-divider"></div>
           <button id="ai-edit-btn" class="editor-action-btn ai-edit-btn" title="AI-Edit (⌘⏎) – Sketches im --…-- Block übersetzen, Code polieren">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="ai-edit-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 3l1.9 5.4L19 10l-5.1 1.6L12 17l-1.9-5.4L5 10l5.1-1.6z"></path>
               <path d="M19 4l.6 1.6L21 6l-1.4.6L19 8l-.6-1.4L17 6l1.4-.4z"></path>
               <path d="M5 16l.5 1.3L7 18l-1.5.5L5 20l-.5-1.5L3 18l1.5-.7z"></path>
             </svg>
+            <span class="ai-edit-spinner" aria-hidden="true"></span>
           </button>
           <div class="editor-action-divider"></div>
           <button id="undo-btn" class="editor-action-btn" title="Undo (Cmd+Z)" disabled>
@@ -147,9 +149,10 @@
           </button>
           <button class="export-toolbar-btn" id="export-btn" title="Export → React/Vue/Svelte/Vanilla via AI">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
+              <path d="M16.5 9.4 7.55 4.24"/>
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+              <line x1="12" y1="22.08" x2="12" y2="12"/>
             </svg>
           </button>
         </div>

@@ -18,15 +18,74 @@
    Mirror. Mirror-Highlight-Tokens (in/each/if/else/as/named …) und
    alle anderen `mir-*`-Klassen werden hier neutralisiert, damit
    z.B. das Wort „in" mitten in einem Satz nicht plötzlich blau ist.
-   Gilt für beide Sketch-Line-Klassen — bei single-line- und
-   inline-start-Sketches steht der freie Text auf der Marker-Zeile. */
+   Gilt für alle drei Sketch-Klassen — bei single-line- und inline-
+   start-Sketches steht der freie Text auf der Marker-Zeile, bei
+   Trailing-Sketches im Suffix-Mark. */
 .cm-editor .cm-line.cm-sketch-content [class^="mir-"],
 .cm-editor .cm-line.cm-sketch-content [class*=" mir-"],
 .cm-editor .cm-line.cm-sketch-marker [class^="mir-"],
-.cm-editor .cm-line.cm-sketch-marker [class*=" mir-"] {
+.cm-editor .cm-line.cm-sketch-marker [class*=" mir-"],
+.cm-editor .cm-line .cm-sketch-trailing [class^="mir-"],
+.cm-editor .cm-line .cm-sketch-trailing [class*=" mir-"] {
   color: inherit !important;
   font-weight: inherit !important;
   font-style: inherit !important;
+}
+
+/* Subtree-Hint: dünner Akzent-Streifen auf allen Zeilen, die zum
+   Target-Element eines Trailing-Sketch gehören (Host + Children). Sagt
+   "das ist der Scope der Anweisung", NICHT "das wird ersetzt" — daher
+   bewusst dezenter als Block-Sketch (1.5px statt 3px, transparenter). */
+.cm-editor .cm-line.cm-sketch-subtree {
+  position: relative;
+}
+
+.cm-editor .cm-line.cm-sketch-subtree::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background: rgba(245, 158, 11, 0.35);
+}
+
+body.mirror-llm-thinking .cm-editor .cm-line.cm-sketch-subtree::before {
+  animation: mirror-sketch-subtree-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes mirror-sketch-subtree-pulse {
+  0%, 100% { background: rgba(245, 158, 11, 0.35); }
+  50%      { background: rgba(255, 200, 90, 0.85); }
+}
+
+/* Trailing-Sketch (`code -- inhalt` am Zeilenende). Inline-Mark, nicht
+   Line — das Element davor bleibt unverändert dargestellt, nur die
+   Anweisung selbst wird amber hervorgehoben. */
+.cm-editor .cm-line .cm-sketch-trailing {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--text-secondary, #a1a1aa);
+  padding: 1px 6px 1px 4px;
+  border-radius: 3px;
+  margin-left: 4px;
+  box-shadow: inset 2px 0 0 0 rgba(245, 158, 11, 0.6);
+}
+
+body.mirror-llm-thinking .cm-editor .cm-line .cm-sketch-trailing {
+  animation: mirror-sketch-trailing-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes mirror-sketch-trailing-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 2px 0 0 0 rgba(245, 158, 11, 0.6),
+      0 0 0 0 rgba(245, 158, 11, 0);
+  }
+  50% {
+    box-shadow:
+      inset 2px 0 0 0 rgba(255, 200, 90, 1),
+      0 0 8px 1px rgba(245, 158, 11, 0.4);
+  }
 }
 
 .cm-editor .cm-line.cm-sketch-marker {
@@ -98,11 +157,27 @@ body.editor-has-sketch .editor-action-btn.ai-edit-btn {
 
 body.mirror-llm-thinking .editor-action-btn.ai-edit-btn {
   pointer-events: none;
-  opacity: 0.55;
-  animation: mirror-sketch-button-pulse 1.4s ease-in-out infinite;
+  color: rgba(245, 158, 11, 0.95);
 }
 
-@keyframes mirror-sketch-button-pulse {
-  0%, 100% { filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.3)); }
-  50%      { filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.7)); }
+/* Spinner: hidden by default, takes the icon's place during LLM thinking. */
+.editor-action-btn.ai-edit-btn .ai-edit-spinner {
+  display: none;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: ai-edit-spin 0.7s linear infinite;
+}
+
+body.mirror-llm-thinking .editor-action-btn.ai-edit-btn .ai-edit-icon {
+  display: none;
+}
+body.mirror-llm-thinking .editor-action-btn.ai-edit-btn .ai-edit-spinner {
+  display: inline-block;
+}
+
+@keyframes ai-edit-spin {
+  to { transform: rotate(360deg); }
 }

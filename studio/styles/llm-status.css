@@ -14,11 +14,15 @@
    ============================================================ */
 
 .cm-llm-status {
+  /* Top-right floating indicator. Hidden in production: feedback comes
+     from the in-editor sketch decoration (animated amber bars on the
+     sketch range) plus the Ghost-Diff itself. The element stays mounted
+     so tests / demo helpers can still read its state classes. */
   position: fixed;
   top: 12px;
   right: 16px;
   z-index: 9999;
-  display: inline-flex;
+  display: none !important;
   align-items: center;
   gap: 8px;
   padding: 8px 14px;

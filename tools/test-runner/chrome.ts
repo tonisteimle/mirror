@@ -50,6 +50,8 @@ export interface LaunchOptions {
   headless?: boolean
   userDataDir?: string
   args?: string[]
+  /** "WxH" — overrides default sizing (1920x1080 headless, maximized headed). */
+  windowSize?: string
 }
 
 export async function launchChrome(options: LaunchOptions = {}): Promise<ChromeInstance> {
@@ -106,7 +108,17 @@ function buildChromeArgs(userDataDir: string, options: LaunchOptions): string[] 
     '--disable-notifications',
   ]
 
-  if (options.headless !== false) {
+  // Window-size override applies in BOTH headed and headless. When set,
+  // it suppresses the default `--start-maximized` / `--window-size=1920,1080`
+  // so tutorial recordings get a predictable, frame-able viewport.
+  if (options.windowSize) {
+    const [w, h] = options.windowSize.split('x').map(s => s.trim())
+    if (options.headless !== false) {
+      args.push('--headless=new')
+    }
+    args.push(`--window-size=${w},${h}`)
+    args.push(`--window-position=0,0`)
+  } else if (options.headless !== false) {
     args.push('--headless=new')
     // Large viewport for headless mode (similar to maximized)
     args.push('--window-size=1920,1080')

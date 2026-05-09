@@ -96,7 +96,17 @@ const RULES = `### Regeln (kritisch)
    - **Wrapper-Frames ohne Properties** die nur ein Kind enthalten (\`Frame > Frame > Text\` wo der innere Frame leer ist) → den Wrapper auflösen, das Kind direkt einhängen.
    - **Re-Spezifikation von canvas-vererbten Properties.** \`canvas col white\` macht \`col white\` zum Default für alle Kinder. Ein \`Text "X", col white\` ist redundant. Gilt für \`col\`, \`font\`, \`fs\`. Ausnahme: wenn das Kind bewusst überschreibt (anderer Wert), dann nicht entfernen.
 7. **Wenn der Source bereits richtig/vollständig ist UND keine Idiom-Verstösse enthält** → gib gar keinen Block zurück (Stille ist heilig). „Stille" gilt NUR wenn Token-, Component- und Redundanz-Pflicht erfüllt sind UND keine Sketch-Blocks (siehe nächste Regel) im Source vorhanden sind.
-8. **Sketch-Pflicht.** Sieht der Source einen Block der Form \`--\\n<beliebiger Inhalt>\\n--\` (zwei Zeilen mit nur \`--\`, dazwischen freier Text), ist das ein **User-Sketch**. Der User hat damit explizit signalisiert: „das ist nicht-Mirror, mach echten Code draus." Du MUSST den gesamten Block (einschliesslich beider \`--\`-Marker-Zeilen) per Patch ersetzen — durch Mirror-Code, der die Absicht des Sketches umsetzt. Behalte die Einrückung des öffnenden \`--\` für den ersten Output-Token bei. Sketch-Inhalt kann natürliche Sprache, Pseudocode oder Mischformen sein — interpretiere wohlwollend.
+8. **Sketch-Pflicht.** Der User markiert mit \`--\` einen Bereich als „nicht-Mirror, mach was draus". Vier Formen erlaubt:
+   - **Block** (\`--\\n<Inhalt>\\n--\`) — zwei \`--\`-Zeilen, Inhalt dazwischen.
+   - **Single-line** (\`-- <Inhalt>\`) — Zeile beginnt mit \`--\` + Inhalt.
+   - **Inline-Start-Block** (\`-- <Inhalt>\\n<weiter>\\n--\`) — Open-Marker mit Inhalt + Folgezeilen + schliessender \`--\`.
+   - **Trailing** (\`<code> -- <Inhalt>\`) — \`--\` HINTER echtem Code auf derselben Zeile. Die Anweisung bezieht sich aufs Element davor.
+
+   **Zwei Modi**, du entscheidest anhand des Sketch-Inhalts:
+   - **Generative** (Inhalt beschreibt was Neues, z.B. „card mit titel"): ersetze den GESAMTEN Sketch (Marker + Inhalt) per Patch durch echten Mirror-Code. Behalte die Einrückung des öffnenden \`--\` für den ersten Output-Token bei.
+   - **Imperative** (Inhalt ist Anweisung an existierenden Code, z.B. „mach rot", „entferne", „verschiebe nach oben"): liefere ZWEI Patches — einer löscht den Sketch-Marker komplett, ein zweiter modifiziert das Target-Element. **Bei Trailing-Sketches ist das Target IMMER das Element auf derselben Zeile vor dem \`--\`** (deterministisch, kein Raten). Bei Block/Single ist das Target das nächst-passende Element (typisch direkt darüber oder darunter im selben Eltern-Frame).
+
+   Bei Trailing-Imperative: dein Lösch-Patch entfernt den \`--\`-Suffix VON der Code-Zeile, NICHT die ganze Zeile. \`@@FIND\` muss den vorherigen Code + den Suffix enthalten, \`@@REPLACE\` nur den vorherigen Code (ohne Trailing-Whitespace). Sketch-Inhalt kann natürliche Sprache, Pseudocode oder Mischformen sein — interpretiere wohlwollend.
 9. **Output: NUR Patches.** Keine Erklärung davor oder danach. Keine Code-Fences (\`\`\`mirror), keine Vorrede, keine Nachrede.`
 
 export function buildEditPrompt(ctx: EditCaptureCtx): string {
@@ -142,15 +152,24 @@ ${ctx.diffSinceLastCall}
 
   const sketchBlocks = findSketchBlocks(ctx.source)
   if (sketchBlocks.length > 0) {
+    const sourceLines = ctx.source.split('\n')
     const blockList = sketchBlocks
-      .map(
-        (b, i) =>
-          `### Sketch ${i + 1} (Zeile ${b.startLine}–${b.endLine})\n\n\`\`\`\n${b.text}\n\`\`\``
-      )
+      .map((b, i) => {
+        if (b.kind === 'trailing') {
+          const fullLine = sourceLines[b.startLine - 1]
+          return (
+            `### Sketch ${i + 1} — TRAILING (Zeile ${b.startLine})\n\n` +
+            `Volle Zeile (Target ist der Code VOR dem \`--\`):\n\n\`\`\`mirror\n${fullLine}\n\`\`\`\n\n` +
+            `Anweisung: ${b.text}`
+          )
+        }
+        const kindLabel = b.kind === 'single' ? 'SINGLE-LINE' : 'BLOCK'
+        return `### Sketch ${i + 1} — ${kindLabel} (Zeile ${b.startLine}–${b.endLine})\n\n\`\`\`\n${b.text}\n\`\`\``
+      })
       .join('\n\n')
     parts.push(`## Sketch-Blocks im Source — Pflicht-Übersetzung
 
-Der User hat ${sketchBlocks.length === 1 ? 'einen Sketch-Block' : `${sketchBlocks.length} Sketch-Blocks`} markiert (\`-- ... --\`). Inhalt ist nicht echtes Mirror — übersetze in echten Mirror-Code und ersetze pro Block die kompletten drei Bestandteile (öffnender \`--\`-Marker, Inhalt, schliessender \`--\`-Marker) durch das Resultat. Behalte die Einrückung der \`--\`-Marker für den ersten Output-Token bei.
+Der User hat ${sketchBlocks.length === 1 ? 'einen Sketch' : `${sketchBlocks.length} Sketches`} markiert. Siehe Regel 8 für die zwei Modi (Generative vs. Imperative). Trailing-Sketches sind in der Regel imperativ — Anweisung an das Element auf derselben Zeile.
 
 ${blockList}`)
   }

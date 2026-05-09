@@ -106,6 +106,8 @@ export type DemoAction =
   | AiPromptAction
   | ExpectUiStateAction
   | WaitForLlmStatusAction
+  | RecordingCutStartAction
+  | RecordingCutEndAction
 
 interface NavigateAction {
   action: 'navigate'
@@ -241,6 +243,29 @@ interface WaitForLlmStatusAction {
   status: 'thinking' | 'ready' | 'error' | 'warning' | 'hidden'
   /** Default 30000 ms. */
   timeoutMs?: number
+  comment?: string
+}
+
+/**
+ * Begin a recording-cut zone. Frames captured until the matching
+ * `recordingCutEnd` are dropped from the output video. No effect when
+ * recording is not active. Used to compress dead waits like LLM
+ * thinking out of tutorial captures.
+ */
+interface RecordingCutStartAction {
+  action: 'recordingCutStart'
+  comment?: string
+}
+
+/**
+ * End a recording-cut zone. Optionally hold the pre-cut frame for
+ * `holdSeconds` so the viewer sees a brief still on the moment-of-
+ * action before the timeline jumps forward. Default 0 = hard cut.
+ */
+interface RecordingCutEndAction {
+  action: 'recordingCutEnd'
+  /** Seconds to hold the pre-cut frame before resuming live capture. */
+  holdSeconds?: number
   comment?: string
 }
 

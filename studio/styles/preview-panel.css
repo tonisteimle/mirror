@@ -73,6 +73,31 @@
       background: var(--accent-hover);
     }
 
+    /* Export Button — same chrome as .play-btn (always visible) */
+    .export-toolbar-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .export-toolbar-btn svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .export-toolbar-btn:hover {
+      color: var(--text-secondary);
+      background: var(--bg-hover);
+    }
+
     /* Play Mode Toolbar Button (Reset etc.) */
     .play-toolbar-btn {
       display: none; /* Hidden by default, shown in play mode */

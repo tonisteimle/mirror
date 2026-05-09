@@ -59,7 +59,10 @@ export class TestRunner {
    */
   async start(): Promise<void> {
     this.log('Starting Chrome...')
-    this.chrome = await launchChrome({ headless: this.config.headless })
+    this.chrome = await launchChrome({
+      headless: this.config.headless,
+      windowSize: this.config.windowSize,
+    })
 
     const port = new URL(this.chrome.wsEndpoint).port
     const pageWsUrl = await getPageTarget(parseInt(port))

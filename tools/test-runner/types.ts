@@ -46,6 +46,8 @@ export interface TestConfig {
   // Browser
   headless: boolean
   url: string
+  /** Optional viewport override "WxH" (e.g. "1280x800"). */
+  windowSize?: string
 
   // Test selection
   filter?: string | RegExp

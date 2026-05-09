@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <title>Mirror – AI-unterstütztes Bauen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>AI-unterstütztes Bauen</h1>
+      <p class="subtitle">Sketches in Mirror übersetzen, Code mit einer Anweisung ändern</p>
+    </header>
+
+    <p class="intro">
+      Mirror Studio versteht <strong>Sketch-Marker</strong> — kleine
+      <code>--</code>-Markierungen im Code, mit denen du der AI sagst:
+      „Das ist nicht-fertiger Mirror, mach was draus." Cmd+Enter (oder
+      ein Klick auf das ✦-Icon in der Editor-Toolbar) löst die
+      Übersetzung aus.
+    </p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Sketch-Block: vom Pseudocode zur Card</h2>
+      <p>
+        Setze den Cursor an die gewünschte Stelle, schreibe einen Block
+        mit zwei <code>--</code>-Zeilen und kritzel dazwischen frei rein
+        was du willst — Pseudocode, deutsche Sätze, eine Mischung. Beim
+        Cmd+Enter sieht der Status-Indikator oben rechts „Übersetze
+        Sketch…", und die orangen Striche links am Block pulsen, solange
+        die AI antwortet.
+      </p>
+
+      <div class="tutorial-video">
+        <video src="videos/card-sketch.webm" autoplay loop muted playsinline disablepictureinpicture controlslist="nodownload"></video>
+        <div class="tutorial-video-caption">
+          Block-Sketch mit drei Zeilen Beschreibung →
+          <code>Frame</code>, drei <code>Text</code>/<code>Button</code>-
+          Children, sauberes Mirror-Layout. Tab akzeptiert.
+        </div>
+      </div>
+
+      <p>
+        Der getippte Block sah so aus:
+      </p>
+
+      <div class="playground static">
+        <div class="playground-code">
+          <pre>--
+card mit titel willkommen und untertitel "ein neuer bereich"
+und einem button loslegen in blau
+--</pre>
+        </div>
+      </div>
+
+      <p>
+        Die AI ersetzt die zwei <code>--</code>-Marker und alles dazwischen
+        durch echten Mirror-Code. Wenn du das nicht möchtest, drückst du
+        Esc statt Tab — der Sketch bleibt erhalten und du formulierst um.
+      </p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Trailing-Sketch: ein Element gezielt ändern</h2>
+      <p>
+        Wenn du Code schon hast und nur etwas ändern willst, hänge die
+        Anweisung als <code>-- inhalt</code>-Suffix direkt an die Zeile
+        des Elements. Die AI versteht das als „mach das Element davor
+        so".
+      </p>
+
+      <div class="tutorial-video">
+        <video src="videos/imperative-edit.webm" autoplay loop muted playsinline disablepictureinpicture controlslist="nodownload"></video>
+        <div class="tutorial-video-caption">
+          Trailing-Sketch <code>-- mach grün</code> auf der ersten Card-
+          Zeile. Der amber Streifen markiert den Scope: das ganze
+          Card-Element samt Children. Die zweite Card bleibt unberührt.
+        </div>
+      </div>
+
+      <p>
+        Bei Trailing ist das Target <strong>deterministisch</strong>:
+        immer das Element vor dem <code>--</code>. Wenn das Element
+        Children hat (wie ein Frame mit Text und Button drin), zeigt der
+        dünne linke Streifen den Scope der Anweisung — du siehst sofort,
+        worauf sich „mach grün" bezieht.
+      </p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Vier Sketch-Formen</h2>
+      <p>
+        Je nachdem wie du gerade tippst, ist mal die eine, mal die
+        andere Form bequemer. Alle vier lösen den gleichen Flow aus —
+        die AI entscheidet selbst, ob sie was Neues erzeugt
+        (Generative) oder bestehenden Code ändert (Imperative).
+      </p>
+
+      <table class="ref-table">
+        <tr><th>Form</th><th>Aussehen</th><th>Wann benutzen</th></tr>
+        <tr>
+          <td>Block</td>
+          <td><code>--<br>inhalt<br>--</code></td>
+          <td>Mehrzeilige Beschreibung von etwas Neuem</td>
+        </tr>
+        <tr>
+          <td>Single-line</td>
+          <td><code>-- inhalt</code></td>
+          <td>Eine kurze Beschreibung von etwas Neuem</td>
+        </tr>
+        <tr>
+          <td>Inline-Start-Block</td>
+          <td><code>-- inhalt<br>weiter<br>--</code></td>
+          <td>Block-Variante, wenn dir der Anfang schon einfällt</td>
+        </tr>
+        <tr>
+          <td>Trailing</td>
+          <td><code>code -- inhalt</code></td>
+          <td>Anweisung an ein bestehendes Element</td>
+        </tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Was die AI im Hintergrund tut</h2>
+      <p>
+        Beim Cmd+Enter (oder Klick auf das ✦-Icon) bekommt die AI:
+      </p>
+      <ul>
+        <li>den vollständigen Code der aktuellen Datei</li>
+        <li>deine Cursor-Position und ggf. Selection</li>
+        <li>was du seit dem letzten AI-Aufruf getippt hast (Diff)</li>
+        <li>alle anderen Files im Projekt (Tokens, Components, Layouts)</li>
+        <li>plus eine prominente Liste der erkannten Sketch-Blocks</li>
+      </ul>
+      <p>
+        Sie antwortet mit einem oder mehreren <em>Search/Replace-
+        Patches</em>. Der Editor zeigt das Resultat als Ghost-Diff:
+        rote Zeilen werden gelöscht, grüne dazugefügt. Du akzeptierst
+        mit Tab, verwirfst mit Esc.
+      </p>
+    </section>
+
+
+    <div class="summary">
+      <h2>Das Wichtigste</h2>
+      <table class="ref-table">
+        <tr><th>Aktion</th><th>Wie</th></tr>
+        <tr><td>Sketch-Block markieren</td><td><code>--</code> Zeile öffnen, <code>--</code> Zeile schliessen</td></tr>
+        <tr><td>Single-line Sketch</td><td><code>-- inhalt</code></td></tr>
+        <tr><td>Element gezielt ändern</td><td><code>code -- mach rot</code> am Zeilenende</td></tr>
+        <tr><td>AI auslösen</td><td>Cmd+Enter oder Klick auf das ✦-Icon</td></tr>
+        <tr><td>Diff akzeptieren</td><td>Tab</td></tr>
+        <tr><td>Diff verwerfen</td><td>Esc</td></tr>
+      </table>
+
+      <p><strong>Das Prinzip:</strong> Sketches sind transparent — du siehst im Code selbst, wo die AI eingreifen wird, lange bevor sie es tut. Kein versteckter Modus, kein Zauberkasten.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="16-prosa.html">&larr; Prosa-Mode</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <span class="next disabled">Ende</span>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

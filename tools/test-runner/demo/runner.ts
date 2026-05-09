@@ -1028,7 +1028,7 @@ const MIRROR_ACTIONS_API = `
    * so this stays in sync with how DrawManager itself reads grids — no
    * second parser to drift from the source of truth.
    */
-  async function drawInGrid(componentName, targetSel, fromCell, toCell) {
+  async function drawInGrid(componentName, targetSel, fromCell, toCell, name) {
     const lower = componentName.toLowerCase();
     const paletteEl = document.querySelector('#components-panel [data-id="comp-' + lower + '"]')
       || document.querySelector('#components-panel [data-id="' + lower + '"]');
@@ -1069,6 +1069,42 @@ const MIRROR_ACTIONS_API = `
     const sourceEl = document.elementFromPoint(startPoint.x, startPoint.y) || grid;
     await manualDrag(sourceEl, startPoint, endPoint, { durationMs: 700 });
     await delay(180);
+
+    if (name) {
+      // After DrawManager has committed the new node, the editor source
+      // contains a fresh "Frame ... x N, y M, w P, h Q" line. Find it
+      // (last match in the doc) and prefix with "name X, " so later steps
+      // can target the region by byPath.
+      const editor = window.editor;
+      if (!editor) throw new Error('window.editor not available — cannot apply name');
+      const src = editor.state.doc.toString();
+      const lines = src.split('\\n');
+      let targetLineIdx = -1;
+      for (let i = lines.length - 1; i >= 0; i--) {
+        // Match an indented Frame line ending in x/y/w/h block. Backslashes
+        // are doubled because we are inside MIRROR_ACTIONS_API template
+        // literal (see line ~886 for the same pattern).
+        if (/^\\s+Frame\\b.*\\bx \\d+,\\s*y \\d+,\\s*w \\d+,\\s*h \\d+\\s*$/.test(lines[i])) {
+          targetLineIdx = i;
+          break;
+        }
+      }
+      if (targetLineIdx < 0) {
+        throw new Error('drawInGrid: no Frame line with x/y/w/h found to apply name=' + name);
+      }
+      const oldLine = lines[targetLineIdx];
+      // Insert "name X, " immediately after "Frame ".
+      const newLine = oldLine.replace(/^(\\s+Frame )(.*)$/, '$1name ' + name + ', $2');
+      let lineStart = 0;
+      for (let i = 0; i < targetLineIdx; i++) lineStart += lines[i].length + 1;
+      editor.dispatch({
+        changes: { from: lineStart, to: lineStart + oldLine.length, insert: newLine },
+      });
+      await delay(160);
+      if (window.__dragTest && window.__dragTest.waitForCompile) {
+        await window.__dragTest.waitForCompile();
+      }
+    }
   }
 
   async function moveElement(sourceSel, targetSel, index) {
@@ -1549,6 +1585,10 @@ export class DemoRunner {
   // (human or an LLM) can see the demo unfold without watching the live run.
   private framesDir?: string
   private frameCounter: number = 0
+  // Recording handle (set externally by cli.ts when --record is used).
+  // The demo accesses it via recordingCutStart/recordingCutEnd actions to
+  // trim dead waits out of the captured video.
+  public recording: import('../recording').RecordingHandle | null = null
 
   constructor(cdp: CDPSession, options: DemoRunnerOptions = {}) {
     this.cdp = cdp
@@ -2703,6 +2743,25 @@ export class DemoRunner {
         break
       }
 
+      case 'recordingCutStart':
+        if (this.recording) {
+          console.log(
+            `${prefix} ✂️  Recording cut START${step.comment ? ` — ${step.comment}` : ''}`
+          )
+          this.recording.markCutStart()
+        }
+        break
+
+      case 'recordingCutEnd':
+        if (this.recording) {
+          const hold = step.holdSeconds ?? 0
+          console.log(
+            `${prefix} ✂️  Recording cut END (hold ${hold}s)${step.comment ? ` — ${step.comment}` : ''}`
+          )
+          this.recording.markCutEnd(hold)
+        }
+        break
+
       case 'createFile':
         console.log(`${prefix} 📄 Create file: ${step.path}`)
         // storage is module-internal — re-import dist/index.js to access it
@@ -3295,10 +3354,11 @@ export class DemoRunner {
     console.log(
       `${prefix} ✏️  Draw ${step.component} → ${this.describeSelector(step.target)} ` +
         `from (${step.from.x},${step.from.y}) to (${step.to.x},${step.to.y})` +
+        (step.name ? ` as "${step.name}"` : '') +
         (step.comment ? ` — ${step.comment}` : '')
     )
     await this.evaluate(
-      `window.__mirrorActions.drawInGrid(${JSON.stringify(step.component)}, ${JSON.stringify(step.target)}, ${JSON.stringify(step.from)}, ${JSON.stringify(step.to)})`
+      `window.__mirrorActions.drawInGrid(${JSON.stringify(step.component)}, ${JSON.stringify(step.target)}, ${JSON.stringify(step.from)}, ${JSON.stringify(step.to)}, ${JSON.stringify(step.name ?? null)})`
     )
     await this.runInlineExpectCode(step.expectCode, prefix, step.comment)
   }
