@@ -1,7 +1,7 @@
 # 03 — Slice 25: Property-Set-Token
 
 **Datum:** 2026-05-09
-**Status:** Audit · Entscheidungen · offen
+**Status:** Audit · Entscheidungen · Phasen A/B umgesetzt · 15 Regression-Tests · Slice **green**
 
 ## Inhalt
 
@@ -246,18 +246,26 @@ auch auf Frame/Btn/Section/etc. (B-2). Layout-Container bekommen
   H1-H6) — Layout-Container droppen.
 - **C:** Status quo
 
-**Vorschlag:** **A**. V-4 macht den Validator zur DX-Quelle; Compiler bleibt
-fail-soft (gleiche Strategie wie Slice 24). Vorteil über B: keine Liste
-„content-bearing primitives" zu pflegen, kein impliziter Vertrag im IR.
-Nachteil: Bare `Text $name` (eine Variable in Text einsetzen) muss anders
-geschrieben werden — aber: das ist bereits via `Text "Hello $name"` oder
-`Text bind name` möglich, der Heuristik-Pfad war ein Bug-Fix-Workaround
-(siehe Comment in `property-set-expander.ts:43`).
+**Vorschlag (revidiert nach Test-Lauf):** **B**. Initial-Vorschlag war A
+(kompletter Drop). Bei der Umsetzung zeigte die Test-Suite mehrere
+load-bearing Verwendungen von `Text $name` / `Button $label` —
+dokumentiert als Bug-#22-Fix in `behavior/variables.test.ts`,
+`integration/two-way-binding-integration.test.ts`,
+`behavior/positional-args.test.ts`. Der Heuristik-Pfad ist also kein
+Workaround, sondern die laufende API für Variable-zu-Content-
+Substitution.
 
-**Risiko:** Bestehende Mirror-Files, die `Text $variable` als Bare-Form
-nutzen. `npm run validate examples/**` + Test-Suite zeigt Migrationsumfang.
+**Begründung:** Option B respektiert die laufende Bare-Form
+`Text $name` ohne den falschen `innerHTML`-Pfad auf Layout-
+Containern. Die Liste „content-bearing primitives" ist klein
+(Text/Button/Label/Link/H1–H6) und schemaseitig stabil (DSL-Schema
+deklariert Tags und Content-Slots).
 
-**Status:** offen.
+**Risiko:** Wenn neue content-bearing Primitives ins DSL kommen
+(`Heading`?), muss `CONTENT_BEARING_PRIMITIVES` mitgepflegt werden.
+Mitigation: einzige Liste, an einer Stelle.
+
+**Status:** erledigt — Phase B.2 (`62dab545`).
 
 ## V-6 — React-Backend Property-Set-Parität — verschoben
 
@@ -328,27 +336,33 @@ Zwei Phasen + Cleanup. Phase A (Parser/Validator) ohne IR-Risiko; Phase B
 
 ## Phase A — Parser & Validator
 
-| ID  | Sub-Task                                                                                                                        | Aus | Aufwand | Status |
-| --- | ------------------------------------------------------------------------------------------------------------------------------- | --- | ------- | ------ |
-| A.1 | Parser: `name: $other` (left ohne `.`, single-ref + NEWLINE) parst als Property-Set mit `[propset:other]` als einziger Property | V-2 | M       | offen  |
-| A.2 | Validator `checkDuplicateProperties`: skipt `propset`                                                                           | V-3 | S       | offen  |
-| A.3 | Validator: `propset`-Property → Token-Lookup → wenn unresolved, W500-Warn (Wiederverwendung des bestehenden Codes)              | V-4 | S       | offen  |
+| ID  | Sub-Task                                                                                                                        | Aus | Aufwand | Status                                                         |
+| --- | ------------------------------------------------------------------------------------------------------------------------------- | --- | ------- | -------------------------------------------------------------- |
+| A.1 | Parser: `name: $other` (left ohne `.`, single-ref + NEWLINE) parst als Property-Set mit `[propset:other]` als einziger Property | V-2 | M       | erledigt (`f2af176c`)                                          |
+| A.2 | Validator `checkDuplicateProperties`: skipt `propset`                                                                           | V-3 | S       | erledigt (durch parallelen Slice-21-Commit `10208bd6` gepickt) |
+| A.3 | Validator: `propset`-Property → Token-Lookup → wenn unresolved, W500-Warn                                                       | V-4 | S       | erledigt (`f2af176c`)                                          |
 
 ## Phase B — IR
 
-| ID  | Sub-Task                                                                                                  | Aus | Aufwand | Status |
-| --- | --------------------------------------------------------------------------------------------------------- | --- | ------- | ------ |
-| B.1 | `expandPropertySets`: rekursiv mit `visited: Set<string>`-Argument; Cycle-skip statt Content-Fallback     | V-1 | M       | offen  |
-| B.2 | `expandPropertySets`: unresolved propset → no-op (kein content-Rewrite)                                   | V-5 | S       | offen  |
-| B.3 | Cleanup `instance-ops.ts:295`: ein einziger `expandPropertySets`-Aufruf reicht (in `transformProperties`) | V-1 | S       | offen  |
+| ID  | Sub-Task                                                                                                                                               | Aus | Aufwand | Status                                                                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --- | ------- | -------------------------------------------------------------------------- |
+| B.1 | `expandPropertySets`: rekursiv mit `visited: Set<string>`-Argument; Cycle-skip statt Content-Fallback                                                  | V-1 | M       | erledigt (`62dab545`)                                                      |
+| B.2 | `expandPropertySets`: unresolved propset → content-fallback nur auf content-bearing Primitives (Text/Button/Label/Link/H1-H6); Frame/Section/… droppen | V-5 | S       | erledigt (`62dab545`) — V-5 Option B (statt A)                             |
+| B.3 | Cleanup `instance-ops.ts:295`: ein einziger `expandPropertySets`-Aufruf reicht (in `transformProperties`)                                              | V-1 | S       | verworfen — beide Aufrufe nötig (pre-merge + post-merge), jetzt full-depth |
 
 ## Phase C — Tests + Cleanup
 
-| ID  | Sub-Task                                                                                       | Aus | Aufwand | Status |
-| --- | ---------------------------------------------------------------------------------------------- | --- | ------- | ------ |
-| C.1 | Regression-Suite `tests/compiler/slice-25-property-set-tokens.test.ts` (RT-1..RT-12 unten)     | A/B | M       | offen  |
-| C.2 | Q-1 — `npm test`-Lauf identifiziert betroffene `Text $variable`-Stellen; Migration falls nötig | V-5 | S       | offen  |
-| C.3 | Tutorial-Update: deep-chain explizit erlaubt; `Text $variable` Bare-Form raus                  | V-5 | S       | offen  |
+| ID  | Sub-Task                                                                                       | Aus | Aufwand | Status                                               |
+| --- | ---------------------------------------------------------------------------------------------- | --- | ------- | ---------------------------------------------------- |
+| C.1 | Regression-Suite `tests/compiler/slice-25-property-set-tokens.test.ts` (RT-1..RT-12)           | A/B | M       | erledigt — 15 Tests grün                             |
+| C.2 | Q-1 — `npm test`-Lauf identifiziert betroffene `Text $variable`-Stellen; Migration falls nötig | V-5 | S       | erledigt — keine Migration nötig (V-5 → Option B)    |
+| C.3 | Tutorial-Update: deep-chain explizit erlaubt; `Text $variable` Bare-Form raus                  | V-5 | S       | verworfen — Bare-Form bleibt erhalten (V-5 Option B) |
+
+**Commits:**
+
+- `3d34536a` — `docs(refactoring): audit Slice 25 (Property-Set-Tokens)`
+- `f2af176c` — `fix(parser/validator): Slice 25 Phase A — property-set chain + undefined-ref warn`
+- `62dab545` — `fix(ir): Slice 25 Phase B — recursive property-set expansion + content-fallback gate`
 
 Status-Werte: `offen` · `in-arbeit` · `review` · `erledigt` · `verworfen` · `verschoben`.
 Aufwand: `S` (≤30min) · `M` (≤2h) · `L` (≤1d).
