@@ -1,7 +1,7 @@
 # 03 — Slice 25: Property-Set-Token
 
 **Datum:** 2026-05-09
-**Status:** Audit · Entscheidungen · Phasen A/B umgesetzt · 15 Regression-Tests · Slice **green**
+**Status:** Audit · Phasen A/B + Follow-up V-6/V-7/V-8 umgesetzt · 26 Regression-Tests · Slice **green** · DOM ≡ React
 
 ## Inhalt
 
@@ -267,36 +267,60 @@ Mitigation: einzige Liste, an einer Stelle.
 
 **Status:** erledigt — Phase B.2 (`62dab545`).
 
-## V-6 — React-Backend Property-Set-Parität — verschoben
+## V-6 — React-Backend Property-Set-Parität — erledigt (Follow-up)
 
 **Frage:** React emittiert `<div />` ohne Set-Expansion (B-11).
 
-**Vorschlag:** Verschoben auf Cross-Backend-Slice (Slice-1-Audit V-6 hat das
-gleiche Issue für andere Properties als „React-Parität" geframed).
+**Vorschlag (revidiert):** React-Backend baut eigene `propertySetMap` aus
+`program.tokens` und ruft den geteilten IR-Helper `expandPropertySets` vor
+dem Property-Merge in `generateJSX` auf — Single Source of Truth für die
+Expansions-Semantik, kein dupliziertes Logic.
 
-**Begründung:** Property-Set-Parität ist Symptom; das Wurzelproblem ist
-React-Backend-Architektur. Eigener Slice nötig.
+**Begründung:** Statt auf einen separaten Cross-Backend-Slice zu warten
+direkt unter Slice 25 erledigt — der Helper ist bereits als pure Function
+extrahiert (Phase B), keine grosse React-Architektur nötig. Property-Set-
+Surface ist jetzt DOM ≡ React für: basic, multi-spread, deep chains,
+cycles, Component-side spreads.
 
-**Status:** verschoben.
+**Status:** erledigt — `6f2b6138` (RT-13 + RT-14).
 
-## V-7 — State-Body Property-Set-Refs — verschoben
+## V-7 — State-Body Property-Set-Refs — erledigt (Follow-up)
 
 **Frage:** `hover:` mit `$set`-Body wird verloren (B-5).
 
-**Vorschlag:** Verschoben auf States-Slices (26-30). Die Slice-Ordnung im
-00-plan.md hat States nach Tokens — das State-Compile-Pfad-Refactoring
-gehört dort.
+**Vorschlag (revidiert):** Direkt unter Slice 25 erledigt, nicht in den
+States-Slices. Zwei Pfade nötig:
 
-**Status:** verschoben.
+1. Parser: state-body-Loops (instance + component) hatten `$`-prefix
+   in den child-override-Pfad geroutet (`'$'.toUpperCase() === '$'`),
+   wodurch `$hovered` als `state.childOverrides[].childName` landete.
+   Neuer expliziter `$`-prefix-Branch in beiden Loops macht das zur
+   `propset:`-Property auf `state.properties`.
+2. IR: `transformStates` liess die `propset`-Marker durch — gefixt durch
+   `expandStates`-Wrapper in `instance-ops.ts:419-425`, der die
+   Properties durch `expandPropertySets` führt bevor der State-Styles-
+   Transformer übernimmt.
 
-## V-8 — Name-Kollision Single-Value vs. Property-Set — verschoben
+**Begründung:** Der State-Compile-Pfad benötigt keine Re-Architektur,
+nur die zwei Punkte oben. Beide Slice-25-spezifisch (V-1/V-2 Logic,
+nicht State-Slice-Logic).
+
+**Status:** erledigt — `53e3eacc` (RT-16).
+
+## V-8 — Name-Kollision Single-Value vs. Property-Set — erledigt (Follow-up)
 
 **Frage:** `card.bg: ...` + `card: ...` → Property-Set silent shadowed (B-6).
 
-**Vorschlag:** Verschoben. Nicht slice-blockierend; Designer kollidiert hier
-nur in Edge-Cases. Validator-W (later) reicht.
+**Vorschlag (revidiert):** Validator-Warn W505 TOKEN_NAME_COLLISION
+fires, wenn ein Property-Set-Name = root eines suffixed Single-Value-
+Tokens. Der positional-resolver gewinnt (kein Behavior-Change), aber
+der Designer sieht den Konflikt.
 
-**Status:** verschoben.
+**Begründung:** Behavior-Change wäre invasiv (positional-resolver vs.
+expandPropertySets-Order). Diagnostic-only Pfad respektiert
+Stabilität bestehender Mirror-Files und gibt klares Signal.
+
+**Status:** erledigt — `5974fdeb` (RT-15).
 
 ## V-9 — Re-Definition + Empty-Set + Self-Ref-Edge — verworfen
 
