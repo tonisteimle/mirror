@@ -114,6 +114,7 @@ history:
   mi:
     day: Mi
     count: 6
+    today: true
   do:
     day: Do
     count: 3
@@ -208,11 +209,11 @@ Screen as Frame: grow, scroll, pad $view, gap $gap
 
 View as Frame: pad $view, gap $gap, h full
 Hero as Frame: gap $small, ver-center
-TopBar as Frame: hor, ver-center, spread, gap $gap
+TopBar as Frame: hor, ver-center, spread, gap $gap, w full
 
 // ── Cards & Rows ──────────────────────────────────────────────────────
 
-Card as Frame: bg $card, pad $card, rad $radius, gap $gap
+Card as Frame: bg $card, pad $card, rad $radius, gap $gap, w full
 RoutineRow as Frame: hor, gap $gap, ver-center
 RoutineMeta as Frame: gap $small, grow
 
@@ -227,6 +228,7 @@ Hint as Text: fs $small, col $muted
 // ── Icons ─────────────────────────────────────────────────────────────
 
 RoutineIcon as Icon: ic $accent, is $icon
+RoutineIconDone as Icon: ic $success, is $icon
 HeroIcon as Icon: ic $accent, is $hero
 NavIcon as Icon: is $icon
 
@@ -267,17 +269,22 @@ StreakPill as Frame: hor, gap $small, ver-center, bg $glow, pad 4 8, rad $pill, 
 StreakIcon as Icon: ic $accent, is 14, anim pulse
 StreakText as Text: fs $small, col $accent, weight $medium
 
+// DonePill — Pendant zur StreakPill für erledigte Routinen.
+DonePill as Frame: hor, gap $small, ver-center, bg $success, pad 4 8, rad $pill, w hug
+DoneIcon as Icon: ic $text, is 14
+DoneText as Text: fs $small, col $text, weight $medium
+
 // ── Verlauf-Grid (7 Tages-Zellen) ────────────────────────────────────
 
-WeekGrid as Frame: grid 7, gap $small
-DayCell as Frame: ver, ver-center, hor-center, gap $small, h $daycell, bg $card, rad $ctrl
+WeekGrid as Frame: grid 7, gap $small, w full
+DayCell as Frame: ver, ver-center, hor-center, gap $small, h $daycell, rad $ctrl, pad $small 0
 DayLabel as Text: fs $small, col $muted, weight $medium
 DayCount as Text: fs $heading, weight $bold, col $accent
 
 // ── Stats KPI-Grid (2 Spalten) ───────────────────────────────────────
 
-KpiGrid as Frame: grid 2, gap $gap
-KpiTile as Frame: ver, gap $small, bg $card, pad $card, rad $radius, h $kpi
+KpiGrid as Frame: grid 2, gap $gap, w full
+KpiTile as Frame: ver, gap $small, bg $card, pad $card, rad $radius
 KpiLabel as Text: fs $small, col $muted, weight $medium
 KpiValue as Frame: hor, gap $small, ver-center
 KpiNumber as Text: fs $counter, weight $bold, col $accent
@@ -304,9 +311,9 @@ TogglePill as Frame: w 44, h 24, rad $pill, bg $card, bor 1, boc $muted, cursor 
 // ── Stepper (− / Wert / +) ───────────────────────────────────────────
 
 Stepper as Frame: hor, gap $gap, ver-center
-StepperBtn as Button: w 36, h 36, rad $pill, bg $card, col $text, cursor pointer, center, fs $heading, weight $bold
+StepperBtn as Button: w 36, h 36, rad $pill, bg $elev, col $text, cursor pointer, center, fs $heading, weight $bold
   hover:
-    bg $elev
+    opacity $dim
 StepperValue as Text: fs $title, weight $bold, col $accent, w 48, center
 
 // ── Icon-Button (rund, für + / − etc.) ──────────────────────────────
@@ -334,12 +341,20 @@ App
     each routine in $routines
       Card
         RoutineRow
-          RoutineIcon routine.icon, ic routine.done ? $success : $accent
+          if routine.done
+            RoutineIconDone routine.icon
+          else
+            RoutineIcon routine.icon
           RoutineMeta
             H3 routine.title, col routine.done ? $muted : $text
-            StreakPill
-              StreakIcon "flame"
-              StreakText "$routine.streak Tage"
+            if routine.done
+              DonePill
+                DoneIcon "check"
+                DoneText "Erledigt"
+            else
+              StreakPill
+                StreakIcon "flame"
+                StreakText "$routine.streak Tage"
           RoutineCheck
 
   Screen name VerlaufScreen, hidden
@@ -348,7 +363,7 @@ App
 
     WeekGrid
       each day in $history
-        DayCell
+        DayCell bg day.today ? $glow : $card
           DayLabel day.day
           DayCount day.count
 
@@ -385,7 +400,7 @@ App
     Card
       H3 "Top Routinen"
       Hint "Sortiert nach Streak"
-      each routine in $routines
+      each routine in $routines by streak desc
         TopRow
           TopName routine.title
           TopStreak "$routine.streak Tage"
@@ -417,7 +432,7 @@ App
     Card
       H3 "Profil"
       SettingLabel "Name"
-      Input bind newRoutineName, placeholder "Dein Name…"
+      Input bind newRoutineName, placeholder "Dein Name…", w full
 
     Card
       H3 "Über"
@@ -442,7 +457,7 @@ DialogOverlay name NewRoutineDialog, hidden
   DialogPanel
     H2 "Neue Routine"
     Hint "Was willst du täglich tun?"
-    Input bind newRoutineName, placeholder "z. B. Yoga"
+    Input bind newRoutineName, placeholder "z. B. Yoga", w full
 
     SettingRow
       SettingLabel "Tagesziel"
