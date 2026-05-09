@@ -651,71 +651,9 @@ export function getColorAcceptingProperties(): string[] {
 // Property to Token Suffix Mapping
 // ============================================================================
 
-/**
- * Maps property names to their token suffixes.
- * Used for context-based token resolution.
- * e.g., 'bg' -> '.bg' means 'primary' with property 'bg' looks for 'primary.bg'
- */
-export const PROPERTY_TO_TOKEN_SUFFIX: Record<string, string> = {
-  // Background
-  bg: '.bg',
-  background: '.bg',
-  // Color
-  col: '.col',
-  color: '.col',
-  c: '.col',
-  // Border color
-  boc: '.boc',
-  'border-color': '.boc',
-  // Radius
-  rad: '.rad',
-  radius: '.rad',
-  // Padding
-  pad: '.pad',
-  padding: '.pad',
-  p: '.pad',
-  // Margin
-  mar: '.mar',
-  margin: '.mar',
-  m: '.mar',
-  // Gap
-  gap: '.gap',
-  g: '.gap',
-  // Width/Height
-  w: '.w',
-  width: '.w',
-  h: '.h',
-  height: '.h',
-  // Min/Max sizing — needed so e.g. `Container: maxw $content`
-  // resolves to `var(--content-maxw)` via the schema-defined token.
-  minw: '.minw',
-  'min-width': '.minw',
-  maxw: '.maxw',
-  'max-width': '.maxw',
-  minh: '.minh',
-  'min-height': '.minh',
-  maxh: '.maxh',
-  'max-height': '.maxh',
-  // Font size
-  fs: '.fs',
-  'font-size': '.fs',
-  // Typography that takes token values
-  // (e.g. `weight $weight-bold` → `var(--weight-bold-weight)`).
-  weight: '.weight',
-  'font-weight': '.weight',
-  line: '.line',
-  'line-height': '.line',
-  font: '.font',
-  'font-family': '.font',
-  ls: '.ls',
-  'letter-spacing': '.ls',
-  tracking: '.ls',
-  // Icon
-  ic: '.ic',
-  'icon-color': '.ic',
-  is: '.is',
-  'icon-size': '.is',
-}
+// PROPERTY_TO_TOKEN_SUFFIX has moved to ./token-suffixes.ts. Re-exported here
+// for backwards compatibility — new code should import from token-suffixes.
+export { PROPERTY_TO_TOKEN_SUFFIX } from './token-suffixes'
 
 // ============================================================================
 // Event Mapping

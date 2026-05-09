@@ -22,7 +22,7 @@ type PropertyValue =
   | Conditional
   | ComputedExpression
 import type { IRProperty } from '../types'
-import { PROPERTY_TO_TOKEN_SUFFIX } from '../../schema/ir-helpers'
+import { PROPERTY_TO_TOKEN_SUFFIX } from '../../schema/token-suffixes'
 import { buildExpressionString } from './expression-transformer'
 
 /**

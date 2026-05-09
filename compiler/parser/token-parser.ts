@@ -17,11 +17,9 @@ import type { Token } from './lexer'
 import type { TokenDefinition } from './ast'
 import type { ParserContext } from './parser-context'
 import { ParserUtils } from './parser-context'
+import { inferTokenTypeFromSuffix as inferTypeFromCanonicalSuffix } from '../schema/token-suffixes'
 
 const U = ParserUtils
-
-/** Suffixes that map a token to size semantics. */
-const SIZE_SUFFIXES = new Set(['pad', 'gap', 'margin', 'rad'])
 
 /**
  * Convert a Mirror NUMBER/STRING/IDENTIFIER token to its primitive value.
@@ -43,6 +41,33 @@ function parseTokenValue(token: Token): string | number | boolean {
   return token.value
 }
 
+/**
+ * Read additional value tokens that sit on the same line after the first.
+ * Used by token forms whose property accepts multiple values, e.g.
+ * `btn.pad: 10 16` (CSS shorthand padding-y / padding-x). Returns the joined
+ * string (`"10 16"`) plus how many extra tokens were consumed; if there is no
+ * trailing value, returns `null` so the caller keeps the scalar.
+ */
+function readTrailingValues(
+  ctx: ParserContext,
+  first: Token
+): { joined: string; consumed: number } | null {
+  const VALUE_TYPES: ReadonlyArray<Token['type']> = ['NUMBER', 'IDENTIFIER', 'STRING']
+  const parts: string[] = [String(first.value)]
+  let consumed = 0
+  while (true) {
+    const next = ctx.tokens[ctx.pos + consumed]
+    if (!next) break
+    if (!VALUE_TYPES.includes(next.type)) break
+    parts.push(next.value)
+    consumed++
+  }
+  if (consumed === 0) return null
+  // Advance past the trailing tokens we just claimed.
+  ctx.pos += consumed
+  return { joined: parts.join(' '), consumed }
+}
+
 /** Infer token type from raw value (color #hex, size 12, font "Inter"). */
 export function inferTokenType(
   value: string | number
@@ -54,11 +79,10 @@ export function inferTokenType(
   return undefined
 }
 
-/** Infer token type from a `.suffix` (e.g. `.bg` → color, `.pad` → size). */
+/** Infer token type from a bare `.suffix` (e.g. `bg` → color, `pad` → size). */
 function inferTypeFromSuffix(suffix: string): 'color' | 'size' | 'font' | 'icon' {
-  if (SIZE_SUFFIXES.has(suffix)) return 'size'
-  if (suffix === 'font') return 'font'
-  return 'color'
+  // Schema-canonical helper expects a leading dot.
+  return inferTypeFromCanonicalSuffix('.' + suffix) ?? 'color'
 }
 
 /** Strip a leading `$` (legacy syntax kept for backwards compatibility). */
@@ -102,6 +126,7 @@ export function parseTokenWithSuffixSingleToken(
   const nameToken = U.advance(ctx) // `primary.bg`
   U.advance(ctx) // :
   const value = U.advance(ctx)
+  const trailing = readTrailingValues(ctx, value)
 
   const fullName = stripDollar(nameToken.value)
   const dotIndex = fullName.lastIndexOf('.')
@@ -111,7 +136,7 @@ export function parseTokenWithSuffixSingleToken(
     type: 'Token',
     name: fullName,
     tokenType: inferTypeFromSuffix(suffix),
-    value: parseTokenValue(value),
+    value: trailing ? trailing.joined : parseTokenValue(value),
     section,
     line: nameToken.line,
     column: nameToken.column,
@@ -128,6 +153,7 @@ export function parseTokenWithSuffix(ctx: ParserContext, section?: string): Toke
   const suffix = U.advance(ctx)
   U.advance(ctx) // :
   const value = U.advance(ctx)
+  const trailing = readTrailingValues(ctx, value)
 
   const fullName = `${stripDollar(baseName.value)}.${suffix.value}`
 
@@ -135,7 +161,7 @@ export function parseTokenWithSuffix(ctx: ParserContext, section?: string): Toke
     type: 'Token',
     name: fullName,
     tokenType: inferTypeFromSuffix(suffix.value),
-    value: parseTokenValue(value),
+    value: trailing ? trailing.joined : parseTokenValue(value),
     section,
     line: baseName.line,
     column: baseName.column,
@@ -155,15 +181,10 @@ export function parseTokenReference(ctx: ParserContext, section?: string): Token
 
   const name = stripDollar(nameToken.value)
 
-  // Infer type from any embedded suffix in the name.
-  let tokenType: 'color' | 'size' | 'font' | 'icon' = 'color'
-  if (name.includes('.pad') || name.includes('.gap') || name.includes('.margin')) {
-    tokenType = 'size'
-  } else if (name.includes('.rad')) {
-    tokenType = 'size'
-  } else if (name.includes('.font')) {
-    tokenType = 'font'
-  }
+  // Infer type from any embedded suffix in the name (canonical helper).
+  const dotIndex = name.lastIndexOf('.')
+  const suffix = dotIndex > 0 ? name.slice(dotIndex) : ''
+  const tokenType = inferTypeFromCanonicalSuffix(suffix) ?? 'color'
 
   return {
     type: 'Token',

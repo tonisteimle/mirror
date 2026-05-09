@@ -8,6 +8,12 @@
 import type { IRNode, IRStyle, IRToken } from '../../ir/types'
 import { generateTheme, isThemeToken } from '../../schema/theme-generator'
 import { getSizeStateThresholds, SIZE_STATES } from '../../schema/parser-helpers'
+import {
+  needsPxUnit as needsPxUnitFromSchema,
+  tokenToCSSVarName as tokenToCSSVarNameFromSchema,
+  stripDollar,
+  getSuffix,
+} from '../../schema/token-suffixes'
 import type { TokenDefinition } from '../../parser/ast'
 
 // ============================================
@@ -278,20 +284,11 @@ function emitSizeStateCSS(ctx: StyleEmitterContext): void {
 // TOKEN CSS
 // ============================================
 
-/**
- * Check if token needs px unit
- */
-function needsPxUnit(tokenName: string): boolean {
-  return /\.(pad|gap|rad|radius|margin|size|fs|w|h|is)$/.test(tokenName)
-}
-
-/**
- * Convert token name to CSS variable name
- */
-function tokenToCSSVarName(tokenName: string): string {
-  const name = tokenName.startsWith('$') ? tokenName.slice(1) : tokenName
-  return name.replace(/\./g, '-')
-}
+// needsPxUnit and tokenToCSSVarName are imported from the schema (single
+// source of truth for token-suffix knowledge). Kept as local aliases so the
+// rest of this module reads as before.
+const needsPxUnit = needsPxUnitFromSchema
+const tokenToCSSVarName = tokenToCSSVarNameFromSchema
 
 /**
  * Emit custom user tokens
@@ -320,8 +317,15 @@ function emitCustomTokens(ctx: StyleEmitterContext): void {
     if (needsPxUnit(token.name)) {
       if (typeof value === 'number') {
         value = `${value}px`
-      } else if (typeof value === 'string' && /^\d+$/.test(value)) {
-        value = `${value}px`
+      } else if (typeof value === 'string') {
+        // Single integer (`"16"`) → `"16px"`; multi-value shorthand
+        // (`"10 16"` from `btn.pad: 10 16`) → `"10px 16px"`. Each numeric
+        // segment gets its own unit; non-numeric segments (like CSS keywords
+        // or already-suffixed values) are left alone.
+        value = value
+          .split(/\s+/)
+          .map(part => (/^\d+(\.\d+)?$/.test(part) ? `${part}px` : part))
+          .join(' ')
       }
     }
 
