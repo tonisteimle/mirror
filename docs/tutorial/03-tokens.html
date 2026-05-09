@@ -345,6 +345,180 @@ Card
       </div>
     </section>
 
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Guter Mirror-Code: 5 Prinzipien</h2>
+      <p>Die drei Stufen sind das <em>Werkzeug</em>. Damit ein Mirror-Projekt aber wirklich lesbar bleibt – auch wenn es wächst – kommen fünf konkrete Regeln dazu. Sie unterscheiden Code, der die Sprache nur benutzt, von Code, der sie ausspielt.</p>
+
+      <h3>1. Komponenten basieren auf Tokens, nicht auf Hex-Werten</h3>
+      <p>Jede Komponente hat alle ihre Werte (Farben, Radien, Abstände, Schriftgrößen) als Tokens. Wenn in einer Komponenten-Definition <code>#2271C1</code>, <code>16</code> oder <code>white</code> steht, fehlt der entsprechende Token.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Tokens
+primary.bg: #2271C1
+primary.col: white
+ctrl.pad: 10 20
+ctrl.rad: 6
+
+// ❌ Hex-Werte direkt in der Komponente
+BadBtn: pad 10 20, rad 6, bg #2271C1, col white
+
+// ✅ Komponente baut nur auf Tokens
+Btn: pad $ctrl, rad $ctrl, bg $primary, col $primary
+
+Frame hor, gap 8, bg #0a0a0a, pad 16, rad 8
+  Btn "Speichern"
+  Btn "Senden"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+      <p>Eine Farbe in der Komponente ändern heißt sonst: jede Stelle suchen. Mit Tokens änderst du genau eine Zeile – das ganze Design folgt.</p>
+
+      <h3>2. Layouts enthalten keinerlei Formatierung</h3>
+      <p>Ein Layout (die <em>Verwendungs</em>-Stufe) zeigt <em>was</em> da ist und in welcher Hierarchie. Es zeigt nicht <em>wie</em> es aussieht. Sobald in der Layout-Datei <code>bg</code>, <code>col</code>, <code>pad</code>, <code>fs</code> oder <code>rad</code> auftaucht, gehört das in eine Komponente oder ein Token.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Tokens
+card.bg: #1a1a1a
+card.rad: 8
+card.pad: 16
+text.col: white
+muted.col: #888
+
+// Komponenten tragen die Formatierung
+ProjectList as Frame: gap 12, pad 16
+ProjectCard as Frame: bg $card, rad $card, pad $card, gap 8
+  Title: col $text, fs 16, weight 500
+  Desc: col $muted, fs 14
+
+// ❌ Layout mit Formatierung
+Frame gap 12, pad 16, bg #0a0a0a
+  Frame bg #1a1a1a, rad 8, pad 16, gap 8
+    Text "Alpha", col white, fs 16, weight 500
+    Text "Eine Beschreibung", col #888, fs 14
+
+// ✅ Layout ist nur Struktur und Inhalt
+ProjectList
+  ProjectCard
+    Title "Alpha"
+    Desc "Eine Beschreibung"
+  ProjectCard
+    Title "Beta"
+    Desc "Andere Beschreibung"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+      <p>Wenn das Layout liest wie ein Inhaltsverzeichnis – nur Namen und Texte – ist es richtig. Jedes <code>bg</code> oder <code>pad</code> im Layout ist ein Hinweis auf eine fehlende Komponente.</p>
+
+      <h3>3. Container heißen nicht <code>Frame</code></h3>
+      <p>Mirror erlaubt es, Frames mit <code>as Frame</code> einen sprechenden Namen zu geben. Mach das – immer wenn ein Container eine konzeptuelle Rolle hat. Aus <code>Frame hor, gap 8</code> wird <code>Toolbar</code>; aus <code>Frame gap 12, pad 16</code> wird <code>SettingsPanel</code>. Dann beschreibt der Code die Domäne, nicht das DOM.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Tokens
+panel.bg: #1a1a1a
+panel.pad: 16
+panel.rad: 8
+
+// Sprechende Container statt Frame
+Toolbar as Frame: hor, gap 8, ver-center
+Panel as Frame: bg $panel, pad $panel, rad $panel, gap 12
+PageHeader as Frame: hor, spread, ver-center
+
+// ❌ Generische Frames
+Frame hor, spread, ver-center
+  Text "Einstellungen"
+  Frame hor, gap 8
+    Button "Schließen"
+    Button "Speichern"
+
+// ✅ Container mit sprechenden Namen
+PageHeader
+  Text "Einstellungen"
+  Toolbar
+    Button "Schließen"
+    Button "Speichern"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+      <p><code>Frame</code> ist die generische Hülle – im Quelltext einer Anwendung sollte sie selten direkt vorkommen. Wenn dasselbe <code>Frame …</code>-Muster zweimal auftaucht, ist es eine Komponente, die nur noch keinen Namen hat.</p>
+
+      <h3>4. Alle Kind-Slots haben sprechende Namen</h3>
+      <p>Wenn eine Komponente Kinder enthält, bekommen sie Namen, die ihre <em>Rolle</em> beschreiben – nicht ihren Typ. <code>Title</code>, <code>Desc</code>, <code>Footer</code>, <code>Status</code>, <code>Action</code> – nicht <code>Text1</code>, <code>Text2</code>, <code>BtnSlot</code>. Die Verwendungsstelle liest sich dann wie ein Datensatz.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Tokens
+card.bg: #1a1a1a
+card.pad: 16
+card.rad: 8
+text.col: white
+muted.col: #888
+primary.bg: #2271C1
+
+ProjectCard as Frame: bg $card, pad $card, rad $card, gap 8
+  Title: col $text, fs 16, weight 500
+  Desc: col $muted, fs 14
+  Meta: hor, spread, ver-center, mar-t 8
+    Status: col $muted, fs 12
+    Action: pad 8 16, rad 6, bg $primary, col $text
+
+ProjectCard
+  Title "Mirror Studio"
+  Desc "Visuelles Authoring für Mirror-DSL."
+  Meta
+    Status "In Arbeit"
+    Action "Öffnen"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+      <p>Sprechende Slot-Namen sind selbstdokumentierend. Wer den Code zum ersten Mal liest, sieht sofort, was eine ProjectCard <em>ist</em> – und welche Texte er liefern muss.</p>
+
+      <h3>5. Im Layout flachklopfen — Wrapper nur mit Berechtigung</h3>
+      <p>Eine harte Regel: Ein Wrapper-Frame ist nur erlaubt, wenn er <strong>beides</strong> erfüllt — (a) <strong>mindestens 2 Kinder</strong> UND (b) eine <strong>aktive Layout-Rolle</strong> (<code>hor</code>, <code>gap</code>, <code>pad</code>, <code>center</code>, <code>spread</code>, <code>grid</code>, <code>wrap</code>). Fehlt eines davon, ist der Frame Verpackung ohne Inhalt – streichen, Kinder direkt in den Parent. Klassische Fallen sind ein <code>TopBar</code> um nur einen Titel, ein <code>Hero</code> um zwei Texte (wenn der Parent schon <code>gap</code> hat), oder eine Komponente, die nur eine andere einpackt. Eine TopBar ist erst dann eine TopBar, wenn sie zum Beispiel Back-Button <em>plus</em> Titel <em>plus</em> Action enthält.</p>
+      <div class="playground" data-playground>
+        <div class="playground-code">
+          <textarea>// Tokens
+panel.bg: #1a1a1a
+panel.pad: 16
+panel.rad: 8
+text.col: white
+muted.col: #888
+
+Header as Frame: hor, spread, ver-center
+Page as Frame: bg $panel, pad $panel, rad $panel, gap 16
+Title: col $text, fs 18, weight 500
+Subtitle: col $muted, fs 13
+
+// ❌ Verschachtelt, ohne dass die Schachtelung etwas leistet
+Frame pad 16
+  Frame gap 16
+    Frame hor, spread, ver-center
+      Frame
+        Text "Einstellungen", col white, fs 18
+        Text "Konto verwalten", col #888, fs 13
+      Frame hor, gap 8
+        Button "Abbrechen"
+        Button "Speichern"
+
+// ✅ Flach, jede Ebene hat einen Grund
+Page
+  Header
+    Frame
+      Title "Einstellungen"
+      Subtitle "Konto verwalten"
+    Frame hor, gap 8
+      Button "Abbrechen"
+      Button "Speichern"</textarea>
+        </div>
+        <div class="playground-preview"></div>
+      </div>
+      <p>Faustregel: prüfe jeden Wrapper-Frame mit <strong>zwei Fragen</strong> — hat er ≥2 Kinder? Hat er eine aktive Layout-Rolle? Beides Ja → bleibt. Eines Nein → weg. Wenn dasselbe Wrapper-Muster mehrfach auftaucht, ist es eine Komponente.</p>
+
+      <div class="note">
+        <strong>Diagnose:</strong> Geh durch dein Layout und frage bei jeder Zeile: <em>Beschreibt das Inhalt und Struktur, oder erklärt es Aussehen?</em> Alles aus der zweiten Kategorie wandert in eine Komponente oder einen Token. Wenn am Ende nur noch Komponenten-Namen und Texte übrig sind, ist der Code gut.
+      </div>
+    </section>
+
     <div class="summary">
       <h2>Das Wichtigste</h2>
 
@@ -366,6 +540,15 @@ Card
 
       <p><strong>Drei Stufen:</strong> Tokens → Komponenten → Instanzen</p>
       <p>Tokens abstrahieren Werte, Property Sets bündeln Styles, Komponenten abstrahieren Struktur. Zusammen ergeben sie ein konsistentes Design System.</p>
+
+      <h3>Guter Mirror-Code (Checkliste)</h3>
+      <ol>
+        <li>Komponenten basieren auf Tokens – keine rohen Hex-Werte oder Pixel-Zahlen in Definitionen.</li>
+        <li>Layouts enthalten <em>keine</em> Formatierung – nur Komponenten-Namen, Hierarchie, Inhalt.</li>
+        <li>Container heißen nicht <code>Frame</code> – nutze <code>Toolbar as Frame</code>, <code>Panel as Frame</code>, <code>Header as Frame</code>.</li>
+        <li>Kind-Slots haben sprechende Namen – <code>Title</code>, <code>Desc</code>, <code>Action</code>, nicht <code>Text1</code> oder <code>Slot</code>.</li>
+        <li>Layout flachklopfen – Frames mit nur einem Kind und ohne eigene Layout-Rolle gehören weg.</li>
+      </ol>
     </div>
 
 

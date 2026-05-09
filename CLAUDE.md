@@ -395,6 +395,95 @@ Bei Änderungen an `studio/app.js` oder `studio/styles.css`:
 > Bei tieferen DSL-Fragen, neuen Features oder unklaren Patterns:
 > **`Read docs/MIRROR-TUTORIAL-FULL.md`** (Vollversion, ~140 KB, didaktisch).
 
+### Guter Mirror-Code (5 Prinzipien — verbindlich)
+
+Jeder generierte oder geänderte Mirror-Code muss diese Regeln erfüllen. Sie sind nicht Stilfrage, sondern Kriterium für „fertig":
+
+1. **Komponenten basieren auf Tokens.** Keine rohen Hex-Werte (`#2271C1`), keine nackten Pixel-Zahlen (`16`, `8`) und keine Named-Colors (`white`, `black`) in Komponenten-Definitionen. Stattdessen Tokens: `primary.bg: #2271C1` definieren, `bg $primary` verwenden. Ausnahme: `0`, `1`, `2`, `99` für strukturelle Werte (Border-Width, voller Radius).
+2. **Layouts enthalten keinerlei Formatierung.** Eine Layout-/Verwendungsstelle zeigt nur Komponenten-Namen, Hierarchie und Inhalt. Sobald `bg`, `col`, `pad`, `mar`, `fs`, `rad`, `weight`, `bor` im Layout auftauchen, fehlt eine Komponente oder ein Token. Layouts lesen sich wie ein Inhaltsverzeichnis.
+3. **Container heißen nicht `Frame`.** Jeder Frame mit konzeptueller Rolle bekommt einen sprechenden Namen via `as Frame`: `Toolbar as Frame: hor, gap 8`, `Panel as Frame: bg $panel, pad $panel`, `PageHeader as Frame: hor, spread`. Im Output-Layout sollte `Frame` selten direkt vorkommen.
+4. **Kind-Slots haben sprechende Namen.** Statt generischer `Text1`/`Slot`/`BtnSlot` gehören Rollen-Namen rein: `Title`, `Desc`, `Footer`, `Status`, `Action`, `Meta`, `Header`, `Body`. Der Verwendungs-Code liest sich dann wie ein Datensatz: `ProjectCard\n  Title "X"\n  Desc "Y"\n  Action "Öffnen"`.
+5. **Layout flachklopfen — Wrapper nur mit Berechtigung.** Ein Wrapper-Frame ist nur erlaubt, wenn er **beides** erfüllt: (a) **mindestens 2 Kinder** UND (b) eine **aktive Layout-Rolle** (`hor`, `gap`, `pad`, `center`, `spread`, `grid`, `wrap`). Fehlt eines davon → Frame raus, Kinder direkt in den Parent. Klassische Fallen: `TopBar` um nur einen Titel; `Hero` um zwei Texte, wenn der Parent schon `gap` hat; ein generischer `Frame` der nur eine andere Komponente einpackt; eine Komponente die nur eine andere Komponente rendert. Wiederkehrende Wrapper-Muster (≥3× identisch verschachtelt) werden zu Komponenten. Jede Verschachtelungsebene braucht einen Grund.
+
+**Diagnose-Frage pro Zeile im Layout:** Beschreibt das *Inhalt und Struktur*, oder erklärt es *Aussehen*? Alles aus der zweiten Kategorie wandert in eine Komponente oder einen Token.
+
+**Diagnose-Frage pro Wrapper-Frame:** Hat er ≥2 Kinder UND eine aktive Layout-Rolle (`hor`/`gap`/`pad`/`center`/`spread`/`grid`)? Wenn nein — Frame entfernen, Kinder direkt in den Parent. Eine `TopBar` ist erst dann eine TopBar, wenn sie z. B. Back-Button **plus** Titel enthält.
+
+**Beispiel — schlecht → gut:**
+
+```mirror
+// ❌ Schlecht: Hex-Werte, Formatierung im Layout, generisches Frame, flacher als nötig
+Frame gap 12, pad 16, bg #0a0a0a
+  Frame bg #1a1a1a, rad 8, pad 16, gap 8
+    Text "Alpha", col white, fs 16, weight 500
+    Text "Eine Beschreibung", col #888, fs 14
+    Frame hor, gap 8
+      Button "Abbrechen", pad 8 16, bg #333, col white, rad 6
+      Button "Öffnen", pad 8 16, bg #2271C1, col white, rad 6
+
+// ✅ Gut: Tokens → Komponenten → reines Layout
+panel.bg: #1a1a1a
+panel.pad: 16
+panel.rad: 8
+text.col: white
+muted.col: #888
+primary.bg: #2271C1
+btn.pad: 8 16
+btn.rad: 6
+
+ProjectList as Frame: gap 12, pad 16
+ProjectCard as Frame: bg $panel, rad $panel, pad $panel, gap 8
+  Title: col $text, fs 16, weight 500
+  Desc: col $muted, fs 14
+  Actions: hor, gap 8
+
+GhostBtn as Button: pad $btn, rad $btn, bg #333, col $text
+PrimaryBtn as Button: pad $btn, rad $btn, bg $primary, col $text
+
+ProjectList
+  ProjectCard
+    Title "Alpha"
+    Desc "Eine Beschreibung"
+    Actions
+      GhostBtn "Abbrechen"
+      PrimaryBtn "Öffnen"
+```
+
+**Beispiel Ausflachen — schlecht → gut (Prinzip 5):**
+
+```mirror
+// ❌ Schlecht: TopBar und Hero sind je Wrapper mit nur einem Kind.
+//             View hat ohnehin schon gap — das Hero-Wrapping ist tote Schicht.
+View
+  TopBar
+    Hero
+      H1 "Heute"
+      Hint "Mi, 7. Mai"
+
+  Card
+    Title "Meditation"
+
+// ✅ Gut: H1 und Hint direkt ins View, das schon gap hat.
+//        TopBar/Hero kommen erst rein, wenn sie ≥2 Kinder + Layout-Rolle haben
+//        (z. B. Back-Button + Titel + Action mit hor/spread).
+View
+  H1 "Heute"
+  Hint "Mi, 7. Mai"
+
+  Card
+    Title "Meditation"
+
+// ✅ Hier ist TopBar berechtigt — sie hat 3 Kinder und nutzt hor/spread:
+DetailHeader as Frame: hor, ver-center, spread, gap $gap
+
+DetailHeader
+  GhostBtn "← Zurück"
+  H2 "Meditation"
+  GhostBtn "Bearbeiten"
+```
+
+> **Volle Begründung + mehr Beispiele:** `docs/MIRROR-TUTORIAL-FULL.md` Kapitel „Guter Mirror-Code: 5 Prinzipien".
+
 ### Canvas (App-Basis)
 
 ```mirror
