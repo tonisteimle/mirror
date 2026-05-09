@@ -1,7 +1,7 @@
 # 02 — Slice 1: Frame-Container
 
 **Datum:** 2026-05-09
-**Status:** Audit erledigt · Umsetzung in Runden (Phasen A.1, A.2, A.3, A.4, A.5, B.1, B.2, B.3, B.5 fertig)
+**Status:** Audit erledigt · Umsetzung in Runden (Phasen A.1, A.2, A.3, A.4, A.5, A.6, B.1, B.2, B.3, B.5 fertig)
 
 ## Inhalt
 
@@ -240,7 +240,7 @@ Voraussetzung für alles weitere. Aus V-1, V-2, V-3, V-4, V-7.
 | A.3 | Parser: Component-Namen canonicalisieren auf Pascal-Case in AST; Validator-Warn bei Casing-Verstoss (V-2)                                                                                                                                                         | M       | erledigt — `canonicalPrimitiveName()` + `Instance.originalName`; Validator-Warn `W004 PRIMITIVE_CASING`                        |
 | A.4 | Validator: Top-Level Instance ohne bekannten Component-Namen → E002 zuverlässig feuern (V-3)                                                                                                                                                                      | S       | erledigt — funktionierte bereits, Audit-Probe-#9 falsch dokumentiert                                                           |
 | A.5 | Parser: Single-Word-Child gegen State-Token-Liste prüfen, sonst nicht in `initialState` konsumieren (V-4)                                                                                                                                                         | M       | erledigt — STATE_NAMES-Gate in `parseInstanceBody`; impliziter `onclick`-Pfad ergänzt (Tutorial 08, Bsp. 8 funktioniert jetzt) |
-| A.6 | Tutorial-Update: Frame-Default-Styles dokumentieren (V-7)                                                                                                                                                                                                         | S       | offen                                                                                                                          |
+| A.6 | Tutorial-Update: Frame-Default-Styles dokumentieren (V-7)                                                                                                                                                                                                         | S       | erledigt — Hinweis-Box im Kapitel "Elemente & Hierarchie": Default-Flex, Frame trägt keinen Text (W112), Box ≡ Frame           |
 
 ## Phase B — Backend-Konsistenz
 
