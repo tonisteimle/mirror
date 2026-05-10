@@ -184,6 +184,21 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
+- **Wo:** `studio/agent/types.ts` (19 LOC) +
+  `studio/agent/index.ts:66` Re-Export +
+  `studio/index.ts:120` stale Kollisions-Kommentar
+  **Was:** `studio/agent/types.ts` definiert `FileType` und `FileInfo`
+  als Residue aus einer früheren multi-file `fix()`/`quickFix()`-Flow-
+  Deletion (Doc-Comment des Files dokumentiert das selbst). Konsumenten
+  heute: 0. Die Datei existiert nur, weil das Agent-Barrel sie
+  re-exportiert. Andere `FileType`-Definitionen in `compile/types.ts`
+  und `rename/rename-engine.ts` haben echte Consumer und sind die
+  legitimen Quellen.
+  **Status:** aktiv (Claude-Session, 2026-05-10 ~20:25)
+  **Plan:** `studio/agent/types.ts` löschen, Re-Export aus
+  `agent/index.ts` entfernen, Kommentar in `studio/index.ts:120` um
+  agent-FileType-Mention bereinigen, Tests grün.
+
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
