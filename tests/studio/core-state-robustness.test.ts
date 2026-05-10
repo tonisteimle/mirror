@@ -726,7 +726,6 @@ describe('Deferred Selection (unified API)', () => {
       sourceMap: null,
       compiling: false,
       deferredSelection: null,
-      pendingSelection: null,
       preludeOffset: 0,
     })
   })
@@ -843,14 +842,15 @@ describe('Deferred Selection (unified API)', () => {
     expect(state.get().deferredSelection).toBeNull()
   })
 
-  it('falls through to validate existing selection when pending resolution fails', async () => {
+  it('falls through to validate existing selection when deferred resolution fails', async () => {
     // Existing selection points to a node that won't exist in the new SourceMap.
     actions.setSelection('stale-node', 'editor')
 
-    // Pending selection targets a line that has no node in the new SourceMap
-    // (resolver will return null). With the early-return fix, control should
-    // fall through to selection validation, which should pick a fallback root.
-    actions.setPendingSelection({
+    // Deferred line-selection targets a line that has no matching node in
+    // the new SourceMap (resolver returns null). Control should fall
+    // through to selection validation, which picks a fallback root.
+    actions.setDeferredSelection({
+      type: 'line',
       line: 999,
       componentName: 'Nothing',
       origin: 'editor',
@@ -871,7 +871,7 @@ describe('Deferred Selection (unified API)', () => {
 
     // Stale selection should not survive — validation must have picked the fallback.
     expect(state.get().selection.nodeId).toBe('fresh-root')
-    expect(state.get().pendingSelection).toBeNull()
+    expect(state.get().deferredSelection).toBeNull()
   })
 })
 

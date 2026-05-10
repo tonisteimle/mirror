@@ -17,7 +17,6 @@ import type {
   BreadcrumbItem,
   CompileResult,
   DeferredSelection,
-  PendingSelection,
   PanelVisibility,
   PanelSizes,
   PanelSettings,
@@ -34,7 +33,6 @@ export type {
   BreadcrumbItem,
   CompileResult,
   DeferredSelection,
-  PendingSelection,
   PanelVisibility,
   PanelSizes,
   PanelSettings,
@@ -118,37 +116,14 @@ const loadedPanelSettings = loadPanelSettings()
 // Post-compile selection-resolution phases
 // ============================================================================
 //
-// These three helpers carry the body of `setCompileResult`'s post-emit
+// These two helpers carry the body of `setCompileResult`'s post-emit
 // selection logic. They share state-flag re-reads via `state.get()` so
 // each phase sees the truth as of its turn (compile:completed handlers
-// can mutate pendingSelection / deferredSelection during the emit).
+// can mutate deferredSelection during the emit).
 //
 // Each helper returns `true` when it owned the outcome (success or
 // reported error) and the caller should short-circuit; `false` means
 // "fall through to the next phase".
-
-function resolvePendingPhase(): boolean {
-  if (state.get().pendingSelection === null) return false
-
-  try {
-    const resolvedNodeId = actions.resolvePendingSelection()
-    if (resolvedNodeId) {
-      logState.info('Pending selection resolved after compile:', resolvedNodeId)
-      // Clear any deferred selection that might have been set during compile
-      if (state.get().deferredSelection !== null) {
-        state.set({ deferredSelection: null })
-      }
-      return true
-    }
-    // Resolver returned null — pendingSelection was cleared internally
-    // (line had no node and component-name search missed). Fall through.
-    return false
-  } catch (error) {
-    logState.error('Error resolving pending selection:', error)
-    events.emit('state:error', { error, context: 'pending selection resolution' })
-    return true
-  }
-}
 
 function resolveDeferredPhase(): boolean {
   if (state.get().deferredSelection === null) return false
@@ -220,7 +195,6 @@ const initialState: StudioState = {
   preludeOffset: 0,
   preludeLineOffset: 0,
   isWrappedWithApp: false,
-  pendingSelection: null,
   deferredSelection: null,
   inlineEditActive: false,
   inlineEditNodeId: null,
@@ -292,17 +266,17 @@ export const actions = {
       hasErrors: result.errors.length > 0,
     })
 
-    // Selection flow after a fresh compile is three sequential phases:
-    //   1. resolvePendingSelection (line-based, from drop ops) — wins
-    //      over deferred when present, since it targets an exact line.
-    //   2. resolveDeferredSelection (programmatic, queued during compile).
-    //   3. validateExistingSelection — final fallback if no resolver
+    // Selection flow after a fresh compile is two sequential phases:
+    //   1. resolveDeferredSelection — covers both line-based picks (from
+    //      drop ops, type: 'line') and programmatic nodeId picks
+    //      (type: 'nodeId' / 'lastChildOf'); the resolver routes by
+    //      `deferred.type`.
+    //   2. validateExistingSelection — final fallback if no resolver
     //      took ownership; ensures a stale prior selection doesn't
     //      survive into the new SourceMap.
     //
-    // Each phase short-circuits the rest only on success. Throw means
-    // the user already saw an error event — also short-circuit.
-    if (resolvePendingPhase()) return
+    // The phase short-circuits the validation only on success. Throw
+    // means the user already saw an error event — also short-circuit.
     if (resolveDeferredPhase()) return
     validateExistingSelection(result.sourceMap)
   },
@@ -492,92 +466,8 @@ export const actions = {
     return state.get().compiling
   },
 
-  /**
-   * Set pending selection - call BEFORE compile to queue a selection
-   * The pending selection will be resolved after compile completes
-   */
-  setPendingSelection(pending: PendingSelection): void {
-    state.set({ pendingSelection: pending })
-    logState.info(' Pending selection set:', pending)
-  },
-
-  /**
-   * Clear pending selection without resolving
-   */
-  clearPendingSelection(): void {
-    state.set({ pendingSelection: null })
-  },
-
-  /**
-   * Resolve pending selection using the current SourceMap
-   * Called automatically by setCompileResult after compile completes
-   *
-   * This calls actions.setSelection() which emits selection:changed.
-   * SyncCoordinator listens to this event and automatically syncs:
-   * - Editor scroll (if origin is not editor)
-   * - Preview highlight (if origin is not preview)
-   * - Property panel update
-   *
-   * Returns the nodeId if found, null otherwise
-   */
-  resolvePendingSelection(): string | null {
-    const currentState = state.get()
-    const pending = currentState.pendingSelection
-
-    if (!pending) {
-      return null
-    }
-
-    const sourceMap = currentState.sourceMap
-    if (!sourceMap) {
-      logState.warn('Cannot resolve pending selection: no SourceMap')
-      state.set({ pendingSelection: null })
-      return null
-    }
-
-    // Calculate the line number in resolved source (prelude line offset + current file line)
-    const preludeLines = currentState.preludeLineOffset
-    const resolvedLine = preludeLines + pending.line
-
-    logState.info('Resolving pending selection:', {
-      originalLine: pending.line,
-      preludeLineOffset: preludeLines,
-      resolvedLine,
-      componentName: pending.componentName,
-    })
-
-    // Clear pending selection first
-    state.set({ pendingSelection: null })
-
-    // Find node at the resolved line
-    const node = sourceMap.getNodeAtLine(resolvedLine)
-
-    if (node && node.nodeId) {
-      logState.info('Resolved pending selection to:', node.nodeId)
-      // Set selection - SyncCoordinator will automatically handle sync via event
-      actions.setSelection(node.nodeId, pending.origin)
-      return node.nodeId
-    }
-
-    // Fallback: search by component name in nearby lines
-    logState.info('Node not found at exact line, searching nearby...')
-    for (let offset = -2; offset <= 2; offset++) {
-      const searchLine = resolvedLine + offset
-      const nearbyNode = sourceMap.getNodeAtLine(searchLine)
-      if (nearbyNode && nearbyNode.componentName === pending.componentName) {
-        logState.info('Found node by component name at line', searchLine, ':', nearbyNode.nodeId)
-        // Set selection - SyncCoordinator will automatically handle sync via event
-        actions.setSelection(nearbyNode.nodeId, pending.origin)
-        return nearbyNode.nodeId
-      }
-    }
-
-    logState.warn('Could not resolve pending selection')
-    return null
-  },
-
   // ==========================================================================
-  // Unified Deferred Selection (new API - preferred over pending/queued)
+  // Unified Deferred Selection
   // ==========================================================================
 
   /**

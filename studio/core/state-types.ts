@@ -62,19 +62,6 @@ export type DeferredSelection =
     }
 
 /**
- * @deprecated Use DeferredSelection with type: 'line' instead
- * Kept for backward compatibility
- */
-export interface PendingSelection {
-  /** Line number in the current file (1-based) where the element was inserted */
-  line: number
-  /** Component name that was inserted (e.g., "Frame", "Text") */
-  componentName: string
-  /** Origin of the selection request */
-  origin: SelectionOrigin
-}
-
-/**
  * Panel visibility state for individual panels
  */
 export interface PanelVisibility {
@@ -200,8 +187,6 @@ export interface StudioState {
    * indents in addition to `preludeOffset`.
    */
   isWrappedWithApp: boolean
-  /** Pending selection to be resolved after compile completes (line-based) */
-  pendingSelection: PendingSelection | null
   /** Unified deferred selection — covers both line-based and nodeId-based deferred picks */
   deferredSelection: DeferredSelection | null
   /** Inline text editing state */

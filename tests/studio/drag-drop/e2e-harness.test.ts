@@ -401,8 +401,9 @@ describe('E2E: Event Verification', () => {
       insertionIndex: 0,
     })
 
-    const selection = harness.getPendingSelection() as { componentName: string }
+    const selection = harness.getDeferredSelection() as { componentName: string; type: string }
     expect(selection).not.toBeNull()
+    expect(selection.type).toBe('line')
     expect(selection.componentName).toBe('Button')
   })
 })

@@ -12,7 +12,6 @@ export {
   type BreadcrumbItem,
   type Subscriber,
   type Selector,
-  type PendingSelection,
   type PanelVisibility,
   type LayoutRect,
   type HandleMode,

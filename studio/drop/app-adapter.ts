@@ -53,7 +53,7 @@ export function createApplierDeps(globals: AppGlobals): ApplierDependencies {
     events: globals.events as ApplierDependencies['events'],
     compile: globals.compile,
     save: globals.debouncedSave,
-    setPendingSelection: globals.studioActions.setPendingSelection,
+    setDeferredLineSelection: globals.studioActions.setDeferredSelection,
   }
 }
 
@@ -122,7 +122,7 @@ export interface AppGlobals {
       }
     }
   }
-  studioActions: { setPendingSelection: (sel: unknown) => void }
+  studioActions: { setDeferredSelection: (sel: unknown) => void }
   compile: (code: string) => void
   debouncedSave: (code: string) => void
   isComponentsFile: (file: string) => boolean

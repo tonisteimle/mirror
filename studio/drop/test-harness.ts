@@ -145,7 +145,7 @@ export class StudioTestHarness {
   private dropService: DropService
   private preludeCode: string
   private currentFile: string
-  private pendingSelection: unknown = null
+  private deferredSelection: unknown = null
 
   constructor(config: HarnessConfig) {
     this.editor = new MockEditor(config.initialCode)
@@ -345,8 +345,8 @@ export class StudioTestHarness {
       events: this.events as unknown as ApplierDependencies['events'],
       compile: () => {},
       save: () => {},
-      setPendingSelection: sel => {
-        this.pendingSelection = sel
+      setDeferredLineSelection: sel => {
+        this.deferredSelection = sel
       },
     })
   }
@@ -373,10 +373,12 @@ export class StudioTestHarness {
   }
 
   /**
-   * Get pending selection
+   * Get the deferred line-selection that the applier handed to the
+   * post-compile resolver. Test-only — production code reads
+   * `state.deferredSelection` instead.
    */
-  getPendingSelection(): unknown {
-    return this.pendingSelection
+  getDeferredSelection(): unknown {
+    return this.deferredSelection
   }
 
   /**
@@ -386,7 +388,7 @@ export class StudioTestHarness {
     this.editor = new MockEditor(initialCode || '')
     this.events.clear()
     this.executor.clear()
-    this.pendingSelection = null
+    this.deferredSelection = null
   }
 }
 

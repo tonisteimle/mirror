@@ -22,7 +22,13 @@ export interface ApplierDependencies {
   events: EventBus
   compile: (code: string) => void
   save: (code: string) => void
-  setPendingSelection: (selection: PendingSelection) => void
+  /**
+   * Defer a line-based selection — resolved by setCompileResult after the
+   * post-drop compile finishes. The applier wraps a `{ type: 'line', ... }`
+   * payload around the inserted line; callers (app-adapter / test-harness)
+   * forward this to `actions.setDeferredSelection`.
+   */
+  setDeferredLineSelection: (selection: DeferredLineSelection) => void
 }
 
 interface CodeMirrorEditor {
@@ -82,7 +88,9 @@ class DropChangeCommand implements Command {
   }
 }
 
-interface PendingSelection {
+/** `DeferredSelection` shape for `type: 'line'` — see core/state-types. */
+interface DeferredLineSelection {
+  type: 'line'
   line: number
   componentName: string
   origin: string
@@ -105,7 +113,7 @@ export class DropResultApplier {
     this.applyToEditor(change)
     this.recordForUndo(change)
     this.emitEvent(change)
-    this.setPendingSelection(change, componentName)
+    this.deferLineSelection(change, componentName)
     this.compileAndSave()
   }
 
@@ -177,9 +185,10 @@ export class DropResultApplier {
     })
   }
 
-  private setPendingSelection(change: Change, componentName: string): void {
+  private deferLineSelection(change: Change, componentName: string): void {
     const line = this.deps.editor.state.doc.lineAt(change.from)
-    this.deps.setPendingSelection({
+    this.deps.setDeferredLineSelection({
+      type: 'line',
       line: line.number,
       componentName,
       origin: 'drag-drop',

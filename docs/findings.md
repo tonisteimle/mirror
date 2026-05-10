@@ -116,13 +116,17 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Was:** Drei überlappende Selection-Pfade (queued/pending/deferred) mit
   separaten if/return-Blöcken — schwer zu lesen, fehleranfällig beim
   Erweitern.
-  **Status:** erledigt — `queuedSelection`-Block schon weg (siehe oben).
-  Pending- und Deferred-Resolution + Final-Validation in drei klar
-  benannte Helper extrahiert (`resolvePendingPhase`,
-  `resolveDeferredPhase`, `validateExistingSelection`); jeder gibt
-  `true`/`false` für Short-Circuit zurück. `setCompileResult` hat jetzt
-  drei Zeilen statt 70+ inline-Logik nach dem `compile:completed` Emit.
-  250/250 core+robustness tests pass.
+  **Status:** erledigt — alle drei Pfade konvergiert. (1) `queuedSelection`-
+  Block raus (siehe oben). (2) `pendingSelection` als ebenfalls
+  `@deprecated` markierter Mechanismus auf `deferredSelection` mit
+  `type: 'line'` migriert: 1 Caller in `drop-result-applier.ts`, 1 in
+  `app-adapter.ts`, 1 in `test-harness.ts`; alle drei Pending-Actions
+  (`setPendingSelection`/`clearPendingSelection`/`resolvePendingSelection`),
+  `pendingSelection`-Feld in StudioState, `PendingSelection`-Interface
+  und der `resolvePendingPhase`-Helper komplett entfernt. (3) Bleibt
+  ein `resolveDeferredPhase` + `validateExistingSelection`,
+  `setCompileResult` hat zwei Zeilen statt drei nach dem Emit. 5832/5832
+  studio tests pass.
 
 - **Wo:** `studio/core/state.ts:281-305`
   **Was:** Race-Window: `state.get()` wird **nach** `compile:completed`
