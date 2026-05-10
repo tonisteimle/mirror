@@ -43,6 +43,27 @@ describe('Cleanup — Animations across backends', () => {
     const out = generateDOM(parse(src))
     expect(out).toMatch(new RegExp(name.replace('-', '[-_]?'), 'i'))
   })
+
+  // PIN current behavior: only DOM emits keyframes + animation property.
+  // React and Framework backends silently drop `anim` triggers entirely
+  // — same drift class as Charts. Flipping any of these means a backend
+  // gained animation support.
+  it.each(ANIMATIONS)(
+    'anim %s: DOM wires keyframes; React + Framework drop the trigger',
+    (_name, src) => {
+      const dom = generateDOM(parse(src))
+      const react = generateReact(parse(src))
+      const fw = generateFramework(parse(src))
+
+      expect(dom).toMatch(/@keyframes mirror-/)
+      expect(dom).toMatch(/animation['":\s]+['"]mirror-/)
+
+      expect(react).not.toMatch(/@keyframes/)
+      expect(react).not.toMatch(/animation:/)
+      expect(fw).not.toMatch(/@keyframes/)
+      expect(fw).not.toMatch(/animation:/)
+    }
+  )
 })
 
 describe('Cleanup — Canvas presets across backends', () => {
