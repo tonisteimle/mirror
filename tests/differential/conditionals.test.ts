@@ -208,6 +208,23 @@ describe('Conditionals — Bug #23-#26 fixed: regression pins', () => {
     expect(react).not.toMatch(/{[^}]*"\("/)
   })
 
+  it('DOM: same defense — invalid-JS condition falls back instead of crashing bundle', () => {
+    // PIN: pre-2026-05-10 the DOM emit for prose-mode bullets with
+    // unfortunate punctuation produced
+    // `formatInlineMarkdown(($get("vs.Uni") $get("wie") $get("wird") ... ? "" : ""))`
+    // — adjacent $get calls without operators, which threw at script
+    // load and killed the whole DOM bundle. Same eval-test defense
+    // as React now in `parseTopLevelConditional`.
+    const dom = generateDOM(
+      parse(`Article as Frame: prose
+
+Article
+  - **Key**: FH vs. Uni wie wird das gesehen?`)
+    )
+    // No adjacent $get calls without operators
+    expect(dom).not.toMatch(/\$get\("[^"]+"\)\s+\$get/)
+  })
+
   it('React: invalid-JS conditional condition falls back to literal text', () => {
     // PIN: prose-mode bullet text containing `?` and `:` (e.g.
     // `**Key**: FH vs. Uni — wie wird das gesehen?`) ends up as a

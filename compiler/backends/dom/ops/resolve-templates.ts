@@ -212,7 +212,24 @@ export function resolveConditionalExpression(
     const resolvedThen = parseConditional(thenValue)
     const resolvedElse = parseConditional(elseValue)
 
-    return `(${resolvedCondition} ? ${resolvedThen} : ${resolvedElse})`
+    // Defensive: prose-mode bullet text containing `?` and `:` (e.g.
+    // `**Key**: FH vs. Uni — wie wird das gesehen?`) ends up as a
+    // Conditional with an invalid-JS condition like `vs.Uni wie wird
+    // das gesehen`. After token-resolution that becomes
+    // `$get("vs.Uni") $get("wie") $get("wird") ...` — adjacent function
+    // calls without operators between them, which crashes the bundle
+    // load. Eval-test the rewritten condition through `new Function`
+    // (with a stub `$get` so the body parses) and fall back to the
+    // then-branch literal if the parse fails.
+    const finalExpr = `(${resolvedCondition} ? ${resolvedThen} : ${resolvedElse})`
+    try {
+      new Function('$get', `return ${finalExpr}`)
+    } catch {
+      // Bail to literal then-branch (or else if then is empty/falsy).
+      const fallback = resolvedThen && resolvedThen !== '""' ? resolvedThen : resolvedElse
+      return fallback || '""'
+    }
+    return finalExpr
   }
 
   return parseConditional(value)
@@ -378,7 +395,23 @@ export function parseTopLevelConditional(this: DOMGenerator, str: string): strin
   const resolvedThen = this.parseTopLevelConditional(thenValue)
   const resolvedElse = this.parseTopLevelConditional(elseValue)
 
-  return `(${resolvedCondition} ? ${resolvedThen} : ${resolvedElse})`
+  // Defensive: prose-mode bullet text containing `?` and `:` (e.g.
+  // `**Key**: FH vs. Uni — wie wird das gesehen?`) ends up as a
+  // Conditional with an invalid-JS condition like `vs.Uni wie wird das
+  // gesehen`. After identifier→$get rewriting it becomes
+  // `$get("vs.Uni") $get("wie") $get("wird") ...` — adjacent function
+  // calls without operators between them. The resulting `(cond ? "" : "")`
+  // is unparseable JS and breaks the whole bundle load. Eval-test
+  // through `new Function` (with stub `$get`) and fall back to the
+  // then-branch literal on parse failure.
+  const finalExpr = `(${resolvedCondition} ? ${resolvedThen} : ${resolvedElse})`
+  try {
+    new Function('$get', `return ${finalExpr}`)
+  } catch {
+    const fallback = resolvedThen && resolvedThen !== '""' ? resolvedThen : resolvedElse
+    return fallback || '""'
+  }
+  return finalExpr
 }
 
 export function resolveTopLevelCondition(this: DOMGenerator, condition: string): string {
