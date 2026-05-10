@@ -115,6 +115,38 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
+- **Wo:** `studio/test-api/suites/` — 10 `// TODO: Runtime bug …`-Marker
+  in den Browser-Test-Suiten
+  **Was:** Latente Production-Bugs, die als Test-Workaround dokumentiert
+  sind aber nicht im Findings-Doc geführt wurden. Aufstellung:
+  - `actions/counter.test.ts:92` — `reset()` clears DOM text statt
+    auf initial value zu setzen
+  - `actions/combined.test.ts:9` — `toggle() + increment()` kombiniert
+    führen nicht beide aus
+  - `actions/navigation.test.ts:9` — `navigate() + show/hide`
+    Kombinationen brechen
+  - `actions/scroll.test.ts:9,36` — `scrollToTop()`/`scrollToBottom()`
+    scrollen den Container nicht (in headless-Tests)
+  - `actions/visibility.test.ts:60` — `toggle(ElementName)` arbeitet nicht
+    korrekt
+  - `actions/crud.test.ts:36` — `remove()` aktualisiert das DOM nach
+    Entfernen nicht
+  - `transforms/translate.test.ts:323` — Multi-Transform-Composition
+    (mehrere `rotate`/`scale`/`translate` zusammen)
+  - `responsive/basic.test.ts:73` + `responsive/layout.test.ts:88` —
+    Container-Queries / responsive width changes greifen nicht
+    zuverlässig in headless-Tests (wahrscheinlich jsdom-Limitation,
+    aber nicht verifiziert)
+  - `tutorial/functions-deep.test.ts:70` — `reset()` mit Workaround
+    `set(count, 0)` umgangen (gleicher Bug wie counter.test.ts:92)
+    Plus 6 weitere TODOs in `autocomplete/` und `responsive/` ohne
+    „Runtime bug"-Wording (Context-aware Completions / State Completions
+    / Stress-Tests-Hang).
+    **Status:** offen — als Finding-Bucket. Pro Bug ein eigenes Inkrement
+    wenn aktiv angefasst.
+    **Notiz:** Vor jedem Pick: TODO im Test-File suchen, `// TODO`
+    entfernen wenn Fix landet, Test in Suite-Run pinnen.
+
 - **Wo:** `compiler/ir/ops/instance-ops.ts`, `compiler/ir/ops/properties-ops.ts`,
   `compiler/backends/react.ts`
   **Was:** Lane 2, Inkrement 2 — Folge-Refactor zu Inkrement 1.
