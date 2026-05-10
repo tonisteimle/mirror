@@ -72,15 +72,28 @@ Die folgenden Lehrsätze sind in den Quality-Gate (Step 8) und ins Vorgehen (Ste
 
 12 Slices durch das Iter-2-Protokoll. Geclustert nach gemeinsamem Code-Surface, ein Dev pro Cluster für Cross-Slice-Konsistenz.
 
-### Dev 1 — Layout-Fundament-Sweep (~2 Tage)
+### Hausputz (vor jedem Slice-Claim, ~5 min pro Dev)
 
-| Slice     | Aufgabe                                                                                 |
-| --------- | --------------------------------------------------------------------------------------- |
-| 1 (Frame) | Schema-Drift-Grep für `isLayoutPrimitive`/Primitive-Markers; Studio-Roundtrip explizit  |
-| 2 (gap)   | Re-Probe Cross-Slice (gap-x/gap-y, chain-tokens); Studio-Roundtrip explizit             |
-| 3 (hor)   | V-2 Re-Open-Trigger setzen (W120 → Parser-Strict-Slice), V-3a Schema-Drift-Stand klären |
+Bevor der erste Slice claimed wird:
 
-**Outputs:** je Slice eine Iter-2-Sektion im Audit-Doc, gefundene Drifts gefixt oder mit Ziel-Slice deferred-tracked, vitest grün. Probe-Skripte committen unter `tools/probes/`.
+1. `git status` — alle untracked `_*.ts`/`_slice*.ts`/`_fixt*.ts` Probe-Reste prüfen.
+2. Falls vorhanden: relevante migrieren nach `tools/probes/slice-NN-*.ts` (Konvention `tools/probes/README.md`); irrelevante löschen.
+3. Eigener Commit `chore(probes): hausputz — migrate untracked probes` BEVOR die erste Slice-Iter-2 startet.
+
+Damit ist sichergestellt, dass keine Iter-2 mit „verlorenen" Probe-Files startet.
+
+### Dev 1 — Layout-Fundament-Sweep (~3 Tage)
+
+Reihenfolge: leichte Audit-Slices zuerst (1 → 2 → 3), CDP-Schuld am Schluss (Slice 7), weil CDP-Setup L-Effort und unbekannt ist. Slice 1 etabliert das Iter-2-Sektionsformat als Vorlage für die anderen Devs.
+
+| #   | Slice                            | Aufgabe                                                                                                                                                      | Effort |
+| --- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| 1   | 1 (Frame)                        | Schema-Drift-Grep für `isLayoutPrimitive`/Primitive-Markers; Studio-Roundtrip explizit (CDP nachholen oder Lower-Bar deklarieren); Iter-2-Vorlage etablieren | ~3-4 h |
+| 2   | 2 (gap)                          | Re-Probe Cross-Slice (gap-x/gap-y, chain-tokens); Studio-Roundtrip explizit                                                                                  | ~2-3 h |
+| 3   | 3 (hor)                          | V-2 Re-Open-Trigger setzen (W120 → Parser-Strict-Slice), V-3a Schema-Drift-Stand klären                                                                      | ~2-3 h |
+| 4   | 7 (Grid mit expliziter Position) | **CDP-Run nachholen** (`x`/`y`/`w`/`h` als grid-line-indices im Studio per Browser-CDP) + Iter-2-Pass; Lower-Bar nur wenn CDP-Setup blockiert                | ~4-5 h |
+
+**Outputs:** je Slice eine Iter-2-Sektion im Audit-Doc, gefundene Drifts gefixt oder mit Ziel-Slice deferred-tracked, vitest grün. Probe-Skripte committen unter `tools/probes/`. Slice 7 nimmt die CDP-Schuld vom Limit-Zähler.
 
 ### Dev 2 — Komponenten/Tokens-Sweep (~3 Tage, schwerster Cluster)
 
