@@ -174,6 +174,17 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
+- **Wo:** `studio/panels/components/usage-tracker.ts` (123 LOC)
+  **Was:** Komplettes Modul (`UsageTracker` Klasse + `getUsageTracker()`
+  Singleton + `createUsageTracker()` Factory + `UsageTrackerConfig`
+  Interface, plus localStorage-Persistenz für „recent components") ohne
+  einen einzigen Consumer im Repo. Suche über `*.ts/*.tsx/*.json/*.md`
+  liefert 0 Treffer für `UsageTracker`/`usage-tracker`/`getUsageTracker`/
+  `createUsageTracker`. Vermutlich Vorstufe für ein nie geliefertes
+  Recent-Components-Feature.
+  **Status:** aktiv (Claude-Session, 2026-05-10 ~20:50)
+  **Plan:** Datei löschen, Tests grün halten.
+
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
