@@ -241,8 +241,11 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
   **Was:** `@ts-expect-error` für ESM-URL-Imports von CDN
   (`esm.sh/@tauri-apps`) — bei Interface-Drift kompiliert es weiter,
   crashed zur Laufzeit.
-  **Status:** offen
-  **Notiz:** Lokales Type-Stub-Modul mit `declare module` bauen.
+  **Status:** erledigt — `studio/types/tauri-modules.d.ts` deklariert
+  die drei URL-Module ambient (ohne Body), die existierenden
+  `as TauriCoreApi/TauriEventApi/TauriWindowApi`-Casts verifizieren
+  die Call-Shape lokal. Alle 5 `@ts-expect-error` raus.
+  Interface-Drift schlägt jetzt am Cast-Site an, nicht erst zur Laufzeit.
 
 - **Wo:** `studio/storage/project-actions.ts:632, 641, 655, 665, 721, 722, 729`
   **Was:** 7× `(window as any).__TAURI_BRIDGE__` / `(window as any).JSZip`

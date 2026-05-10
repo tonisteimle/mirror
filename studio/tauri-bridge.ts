@@ -49,9 +49,6 @@ let tauriEvent: TauriEventApi | null = null
 async function getTauriCore(): Promise<TauriCoreApi | null> {
   if (!isTauri()) return null
   if (!tauriCore) {
-    // URL import resolved at runtime via the browser's module loader; TS
-    // can't follow it.
-    // @ts-expect-error - URL module import
     tauriCore = (await import('https://esm.sh/@tauri-apps/api@2/core')) as TauriCoreApi
   }
   return tauriCore
@@ -60,7 +57,6 @@ async function getTauriCore(): Promise<TauriCoreApi | null> {
 async function getTauriEvent(): Promise<TauriEventApi | null> {
   if (!isTauri()) return null
   if (!tauriEvent) {
-    // @ts-expect-error - URL module import
     tauriEvent = (await import('https://esm.sh/@tauri-apps/api@2/event')) as TauriEventApi
   }
   return tauriEvent
@@ -272,7 +268,6 @@ export const TauriWindow = {
   async minimize(): Promise<void> {
     const core = await getTauriCore()
     if (!core) return
-    // @ts-expect-error - URL module import
     const win = (await import('https://esm.sh/@tauri-apps/api@2/window')) as TauriWindowApi
     await win.getCurrentWindow().minimize()
   },
@@ -280,7 +275,6 @@ export const TauriWindow = {
   async maximize(): Promise<void> {
     const core = await getTauriCore()
     if (!core) return
-    // @ts-expect-error - URL module import
     const win = (await import('https://esm.sh/@tauri-apps/api@2/window')) as TauriWindowApi
     await win.getCurrentWindow().toggleMaximize()
   },
@@ -288,7 +282,6 @@ export const TauriWindow = {
   async close(): Promise<void> {
     const core = await getTauriCore()
     if (!core) return
-    // @ts-expect-error - URL module import
     const win = (await import('https://esm.sh/@tauri-apps/api@2/window')) as TauriWindowApi
     await win.getCurrentWindow().close()
   },
