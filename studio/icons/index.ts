@@ -269,7 +269,7 @@ export const PROPERTY_ICONS: Record<string, string> = {
   'max-height': `<path d="M7 5 L4.5 2 L9.5 2 Z" fill="currentColor"/><path d="M7 9 L4.5 12 L9.5 12 Z" fill="currentColor"/><line x1="7" y1="2" x2="7" y2="5" stroke="currentColor" stroke-width="1"/><line x1="7" y1="9" x2="7" y2="12" stroke="currentColor" stroke-width="1"/>`,
 
   // Layout section icon
-  'layout': `<path d="M7 2 L5 4 L6.25 4 L6.25 6.25 L4 6.25 L4 5 L2 7 L4 9 L4 7.75 L6.25 7.75 L6.25 10 L5 10 L7 12 L9 10 L7.75 10 L7.75 7.75 L10 7.75 L10 9 L12 7 L10 5 L10 6.25 L7.75 6.25 L7.75 4 L9 4 L7 2 Z" fill="currentColor"/>`,
+  layout: `<path d="M7 2 L5 4 L6.25 4 L6.25 6.25 L4 6.25 L4 5 L2 7 L4 9 L4 7.75 L6.25 7.75 L6.25 10 L5 10 L7 12 L9 10 L7.75 10 L7.75 7.75 L10 7.75 L10 9 L12 7 L10 5 L10 6.25 L7.75 6.25 L7.75 4 L9 4 L7 2 Z" fill="currentColor"/>`,
 
   // Padding direction icons
   'pad-v': `<path d="M7 2 L4.5 5 L9.5 5 Z" fill="currentColor"/><path d="M7 12 L4.5 9 L9.5 9 Z" fill="currentColor"/><line x1="7" y1="5" x2="7" y2="9" stroke="currentColor" stroke-width="1.5"/>`,
@@ -280,7 +280,7 @@ export const PROPERTY_ICONS: Record<string, string> = {
   'pad-l': `<path d="M2 7 L5 4.5 L5 9.5 Z" fill="currentColor"/><line x1="5" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.5"/>`,
 
   // Border icons
-  'border': `<rect x="2" y="2" width="10" height="10" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>`,
+  border: `<rect x="2" y="2" width="10" height="10" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>`,
   'border-t': `<line x1="2" y1="2" x2="12" y2="2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M2 2 L2 12 L12 12 L12 2" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.3" stroke-linecap="round" stroke-linejoin="round"/>`,
   'border-r': `<line x1="12" y1="2" x2="12" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M12 2 L2 2 L2 12 L12 12" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.3" stroke-linecap="round" stroke-linejoin="round"/>`,
   'border-b': `<line x1="2" y1="12" x2="12" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M2 12 L2 2 L12 2 L12 12" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.3" stroke-linecap="round" stroke-linejoin="round"/>`,
@@ -290,7 +290,7 @@ export const PROPERTY_ICONS: Record<string, string> = {
   'border-solid': `<line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.5"/>`,
   'border-dashed': `<line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 1.5"/>`,
   'border-dotted': `<line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.5" stroke-dasharray="1 1.5" stroke-linecap="round"/>`,
-  'radius': `<path d="M2 10 L2 5 Q2 2 5 2 L10 2" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>`,
+  radius: `<path d="M2 10 L2 5 Q2 2 5 2 L10 2" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>`,
 
   // Typography - Text alignment
   'text-left': `<line x1="2" y1="3" x2="12" y2="3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="7" x2="9" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="11" x2="11" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
@@ -299,11 +299,11 @@ export const PROPERTY_ICONS: Record<string, string> = {
   'text-justify': `<line x1="2" y1="3" x2="12" y2="3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="11" x2="12" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
 
   // Typography - Text styles
-  'italic': `<text x="4" y="11" font-size="10" font-style="italic" font-family="serif" fill="currentColor">I</text>`,
-  'underline': `<text x="4" y="10" font-size="9" font-family="sans-serif" fill="currentColor">U</text><line x1="3" y1="12" x2="11" y2="12" stroke="currentColor" stroke-width="1"/>`,
-  'truncate': `<text x="2" y="9" font-size="8" font-family="sans-serif" fill="currentColor">Ab</text><text x="9" y="9" font-size="8" font-family="sans-serif" fill="currentColor">...</text>`,
-  'uppercase': `<text x="2" y="10" font-size="8" font-weight="bold" font-family="sans-serif" fill="currentColor">AA</text>`,
-  'lowercase': `<text x="2" y="10" font-size="8" font-family="sans-serif" fill="currentColor">aa</text>`,
+  italic: `<text x="4" y="11" font-size="10" font-style="italic" font-family="serif" fill="currentColor">I</text>`,
+  underline: `<text x="4" y="10" font-size="9" font-family="sans-serif" fill="currentColor">U</text><line x1="3" y1="12" x2="11" y2="12" stroke="currentColor" stroke-width="1"/>`,
+  truncate: `<text x="2" y="9" font-size="8" font-family="sans-serif" fill="currentColor">Ab</text><text x="9" y="9" font-size="8" font-family="sans-serif" fill="currentColor">...</text>`,
+  uppercase: `<text x="2" y="10" font-size="8" font-weight="bold" font-family="sans-serif" fill="currentColor">AA</text>`,
+  lowercase: `<text x="2" y="10" font-size="8" font-family="sans-serif" fill="currentColor">aa</text>`,
 
   // Visual - Shadow levels
   'shadow-none': `<rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1" fill="none"/>`,
@@ -312,9 +312,9 @@ export const PROPERTY_ICONS: Record<string, string> = {
   'shadow-lg': `<rect x="5" y="5" width="8" height="8" rx="0.5" fill="currentColor" opacity="0.3"/><rect x="2" y="2" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1" fill="none"/>`,
 
   // Visual - Visibility
-  'hidden': `<line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="3" y1="3" x2="11" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
-  'visible': `<ellipse cx="7" cy="7" rx="5" ry="3.5" stroke="currentColor" stroke-width="1" fill="none"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/>`,
-  'disabled': `<circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1" fill="none"/><line x1="3.5" y1="10.5" x2="10.5" y2="3.5" stroke="currentColor" stroke-width="1"/>`,
+  hidden: `<line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="3" y1="3" x2="11" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`,
+  visible: `<ellipse cx="7" cy="7" rx="5" ry="3.5" stroke="currentColor" stroke-width="1" fill="none"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/>`,
+  disabled: `<circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1" fill="none"/><line x1="3.5" y1="10.5" x2="10.5" y2="3.5" stroke="currentColor" stroke-width="1"/>`,
 } as const
 
 // =============================================================================
@@ -322,37 +322,12 @@ export const PROPERTY_ICONS: Record<string, string> = {
 // Used in: General UI elements
 // =============================================================================
 
-export const UI_ICONS = {
-  /** Chevron down */
-  chevronDown: `<path d="M6 9l6 6 6-6"></path>`,
-
-  /** Chevron right */
-  chevronRight: `<path d="M9 6l6 6-6 6"></path>`,
-
-  /** Plus */
-  plus: `<line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>`,
-
-  /** Close/X */
-  close: `<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>`,
-
-  /** Search */
-  search: `<circle cx="11" cy="11" r="6"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>`,
-
-  /** Folder */
-  folder: `<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>`,
-
-  /** File */
-  file: `<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline>`,
-} as const
-
 // =============================================================================
 // TYPES
 // =============================================================================
 
 export type LayoutIconName = keyof typeof LAYOUT_ICONS
 export type ComponentIconName = keyof typeof COMPONENT_ICONS
-export type PropertyIconName = keyof typeof PROPERTY_ICONS
-export type UIIconName = keyof typeof UI_ICONS
 
 // =============================================================================
 // HELPER FUNCTIONS
@@ -375,20 +350,3 @@ export function getComponentIcon(name: string, className?: string): string {
   const iconPath = COMPONENT_ICONS[name as ComponentIconName] ?? COMPONENT_ICONS.box
   return `<svg${classAttr} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconPath}</svg>`
 }
-
-/**
- * Get property icon SVG (14x14)
- */
-export function getPropertyIcon(name: PropertyIconName, className?: string): string {
-  const classAttr = className ? ` class="${className}"` : ''
-  return `<svg${classAttr} viewBox="0 0 14 14">${PROPERTY_ICONS[name]}</svg>`
-}
-
-/**
- * Get UI icon SVG (24x24, stroke-based)
- */
-export function getUIIcon(name: UIIconName, className?: string): string {
-  const classAttr = className ? ` class="${className}"` : ''
-  return `<svg${classAttr} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${UI_ICONS[name]}</svg>`
-}
-

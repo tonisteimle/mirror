@@ -218,14 +218,3 @@ export function initStudioTestAPI(studio: StudioInstance, _dragDrop: unknown): v
   }
   log.info('Test API initialized')
 }
-
-/**
- * Clean up the Studio Test API.
- * Removes test globals from the window object.
- */
-export function cleanupStudioTestAPI(): void {
-  if (typeof window !== 'undefined') {
-    delete window.__mirrorStudio__
-    delete window.__STUDIO_TEST__
-  }
-}
