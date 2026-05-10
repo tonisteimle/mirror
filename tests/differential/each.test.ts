@@ -71,6 +71,36 @@ describe('Each-Loop — DOM-only runtime semantics', () => {
 // Bug regressions
 // =============================================================================
 
+describe('Each-Loop — React filter + loop-var text resolution', () => {
+  // Pre-2026-05-10 React's `.map()` had no `where`-filter and didn't
+  // resolve `$t.title` text-content interpolation against the loop var.
+  // Both wired now: filter runs as `.filter(t => …)` before the .map();
+  // text content `"$t.title"` becomes `{t.title}` (bare loop-var
+  // expression) instead of literal `"$t.title"`.
+  it('where-filter compiles to `.filter()` before `.map()`', () => {
+    const src = `tasks:\n  t1:\n    done: true\n\neach t in $tasks where t.done\n  Text "X"`
+    const react = generateReact(parse(src))
+    expect(react).toMatch(/\.filter\(\(t\)\s*=>\s*t\.done\)\.map\(/)
+  })
+
+  it('text-content `$t.title` resolves to loop-var expression', () => {
+    const src = `tasks:\n  t1:\n    title: "A"\n\neach t in $tasks\n  Text "$t.title"`
+    const react = generateReact(parse(src))
+    expect(react).toContain('{t.title}')
+    expect(react).not.toContain('"$t.title"')
+  })
+
+  it('loop-var lookup wins over token lookup for in-scope iterators', () => {
+    // The loop variable shadows any (improbable) sibling token of the
+    // same name — a child Text inside the each emits the bare loop-var
+    // path, not a `tokens["t"]` lookup.
+    const src = `t: "outer"\ntasks:\n  t1:\n    title: "A"\n\neach t in $tasks\n  Text "$t.title"`
+    const react = generateReact(parse(src))
+    expect(react).toContain('{t.title}')
+    expect(react).not.toContain('tokens["t"]?.title')
+  })
+})
+
 describe('Each-Loop — React loop-var values in styles', () => {
   // Pre-2026-05-10: a loop-var reference inside a style prop (like
   // `bg $project.color` or `w $project.progress + "%"`) emitted as

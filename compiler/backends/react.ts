@@ -460,7 +460,16 @@ function MirrorIcon({ name, size, color, strokeWidth, fill, style: extraStyle })
  * the React backend bypasses the IR, so we walk the JSX tree manually
  * and pass the parent's layout-type down to children.
  */
-type ParentLayoutContext = { type: 'grid' | 'flex' | null }
+type ParentLayoutContext = {
+  type: 'grid' | 'flex' | null
+  /**
+   * Loop-variable names in scope at this nesting level (the inner `t` of
+   * `each t in $tasks`). Children rendered under this context get to
+   * resolve `$t.title`-shaped interpolations against the loop variable
+   * instead of the (missing) `tokens.t` token.
+   */
+  loopVars?: ReadonlySet<string>
+}
 
 /**
  * Detect a Frame's own layout-type from its properties — used to inform
@@ -612,9 +621,11 @@ function generateJSX(
   const lines: string[] = []
   lines.push(`${indent}<${tag}${attrStr}${mirrorAttrStr}${stateAttr}${refStr}${styleStr}>`)
 
-  // Add text content
+  // Add text content. Pass the in-scope loop-vars (if any) so a Text
+  // inside `each t in $tasks` resolves `"$t.title"` to a JS expression
+  // referring to the iterator rather than to (missing) `tokens.t`.
   if (textContent) {
-    lines.push(renderTextSlot(textContent, indent + '  ', tokens))
+    lines.push(renderTextSlot(textContent, indent + '  ', tokens, parentContext.loopVars))
   }
 
   // Add children. Slice 6 V-2: pass own layout-context so grid-children
@@ -715,6 +726,14 @@ function generateEachJSX(
   const collection = each.collection.startsWith('$') ? each.collection.slice(1) : each.collection
   const item = each.item // 'task'
 
+  // Extend the parent loop-var set with this each's iterator name so any
+  // descendant text-content / property-value referencing `$<item>.X` can
+  // emit a JS expression instead of a literal string.
+  const childContext: ParentLayoutContext = {
+    ...parentContext,
+    loopVars: new Set([...(parentContext.loopVars ?? []), item]),
+  }
+
   const childLines: string[] = []
   for (const child of each.children) {
     if (child.type === 'Instance') {
@@ -725,7 +744,7 @@ function generateEachJSX(
           tokens,
           propertySetMap,
           indent + '    ',
-          parentContext,
+          childContext,
           stateContext
         )
       )
@@ -737,7 +756,7 @@ function generateEachJSX(
           tokens,
           propertySetMap,
           indent + '    ',
-          parentContext,
+          childContext,
           stateContext
         )
       )
@@ -749,8 +768,16 @@ function generateEachJSX(
   // coercion (compiler/backends/dom/ops/emit-loops.ts).
   const coerced = `Array.isArray(tokens[${JSON.stringify(collection)}]) ? tokens[${JSON.stringify(collection)}] : Object.values(tokens[${JSON.stringify(collection)}] || {})`
 
+  // Optional `where` filter (`each t in $tasks where t.done`). The filter
+  // expression is JS-compatible and references the loop variable directly,
+  // so we can pass it through verbatim — same shape as the DOM runtime's
+  // `filterFn`. Compose `.filter(t => t.done).map(...)` ahead of the map.
+  const filterExpr = (each as Each & { filter?: string }).filter
+  const filtered = filterExpr ? `(${coerced}).filter((${item}) => ${filterExpr})` : coerced
+
   const lines: string[] = []
-  lines.push(`${indent}{(${coerced}).map((${item}, _idx) => (`)
+  const mapSource = filterExpr ? filtered : `(${coerced})`
+  lines.push(`${indent}{${mapSource}.map((${item}, _idx) => (`)
   lines.push(`${indent}  <React.Fragment key={_idx}>`)
   for (const line of childLines) lines.push(line)
   lines.push(`${indent}  </React.Fragment>`)
@@ -1169,13 +1196,16 @@ function dataAttributesToJSObject(attrs: DataAttribute[]): string {
 function renderTextSlot(
   content: string | LoopVarReference | Conditional,
   indent: string,
-  tokens: TokenDefinition[] = []
+  tokens: TokenDefinition[] = [],
+  loopVars: ReadonlySet<string> | undefined = undefined
 ): string {
   if (typeof content === 'string') {
     // Mirror string content can carry `$name` / `$user.name` interpolations.
     // Resolve against the `tokens` object so the React emit shows the
-    // actual data instead of a literal `$name`.
-    return `${indent}${interpolateStringForJSX(content, tokens)}`
+    // actual data instead of a literal `$name`. Loop-var references
+    // (`$t.title` inside `each t in …`) emit as JS expressions referring
+    // to the iterator directly.
+    return `${indent}${interpolateStringForJSX(content, tokens, loopVars)}`
   }
   if ('kind' in content && content.kind === 'conditional') {
     const cond = rewriteIdentifiersToTokens(content.condition, tokens)
@@ -1207,8 +1237,12 @@ function renderTextSlot(
  *   "Hi $name"       → `` {`Hi ${tokens["name"]}`} ``
  *   "$user.name"     → `{tokens["user"]?.name}`
  */
-function interpolateStringForJSX(content: string, tokens: TokenDefinition[]): string {
-  if (tokens.length === 0 || !content.includes('$')) {
+function interpolateStringForJSX(
+  content: string,
+  tokens: TokenDefinition[],
+  loopVars: ReadonlySet<string> | undefined = undefined
+): string {
+  if ((tokens.length === 0 && !loopVars) || !content.includes('$')) {
     return `{${JSON.stringify(content)}}`
   }
   const tokenNames = new Set<string>()
@@ -1244,22 +1278,36 @@ function interpolateStringForJSX(content: string, tokens: TokenDefinition[]): st
         }
         const ref = content.slice(start, j)
         const head = ref.includes('.') ? ref.slice(0, ref.indexOf('.')) : ref
-        if (tokenNames.has(head)) {
+        // Loop-var lookup wins over token lookup — inside `each t in $tasks`
+        // the iterator `t` shadows any (improbable) sibling token. Emit the
+        // bare identifier path so it resolves against the .map callback's
+        // parameter.
+        const isLoopVar = loopVars?.has(head) ?? false
+        if (isLoopVar || tokenNames.has(head)) {
           if (textBuf.length > 0) {
             segments.push({ kind: 'text', value: textBuf })
             textBuf = ''
           }
-          // `tokens["head"]` first; chain remaining `.foo.bar` with `?.`
-          let code = `tokens[${JSON.stringify(head)}]`
-          if (ref.includes('.')) {
-            const rest = ref.slice(head.length + 1).split('.')
-            for (const part of rest) code += `?.${part}`
+          // Loop-var: `t.title` (raw chain). Token: `tokens["head"]?.foo`.
+          let code: string
+          if (isLoopVar) {
+            code = head
+            if (ref.includes('.')) {
+              const rest = ref.slice(head.length + 1).split('.')
+              for (const part of rest) code += `.${part}`
+            }
+          } else {
+            code = `tokens[${JSON.stringify(head)}]`
+            if (ref.includes('.')) {
+              const rest = ref.slice(head.length + 1).split('.')
+              for (const part of rest) code += `?.${part}`
+            }
           }
           segments.push({ kind: 'expr', code })
           i = j
           continue
         }
-        // Not a known token — fall through, emit the `$ref` as literal text.
+        // Not a known token or loop var — fall through, emit literal `$ref`.
       }
       textBuf += ch
       i++
