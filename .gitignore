@@ -34,7 +34,7 @@ test-report.html
 # Generated tutorial data (regenerate with `npm run tutorial:extract`)
 tools/tutorial-extracted.json
 
-# Generated example outputs (regenerate with `npx tsx scripts/build-example.ts <file>.mirror`)
+# Generated example outputs (regenerate with `mirror-build <file>.mirror`)
 examples/*-compiled.html
 examples/*-compiled.js
 
