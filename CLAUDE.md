@@ -382,6 +382,7 @@ Bei Änderungen an `studio/app.js` oder `studio/styles.css`:
 
 - **Dateinamen**: Kleinbuchstaben mit Bindestrichen (`interaction-model.md`, nicht `INTERACTION-MODEL.md`)
 - **Projekt-/Konzept-Dokumente**: Werden in `docs/archive/` archiviert. Aktive Doku ist auf wenige Produktdokumente reduziert (siehe `README.md`, `docs/MIRROR-TUTORIAL-FULL.md`, `docs/TEST-FRAMEWORK.md`, `docs/generated/`).
+- **Dead-Feature-Policy**: Ein parsbares DSL-Feature ohne Verwendung in `examples/` ist nach 90 Tagen Kandidat für Löschung. Konkret: `tests/policy/dsl-features-have-examples.test.ts` führt zwei Listen — `KEEP` (Feature behalten, mind. 1 Beispiel pflichtig) und `WATCHLIST` (Feature noch ohne Beispiel, Decision-Deadline gesetzt). Beim Erreichen der Deadline schlägt der Test fehl und erzwingt eine Owner-Entscheidung: Beispiel hinzufügen + zu KEEP promoten ODER Feature löschen (Parser + AST + IR + Backends + Runtime + Tests + Docs). Ein neues DSL-Feature ohne realen Use-Case landet automatisch auf der Watchlist mit 90-Tage-Frist.
 
 ---
 
@@ -405,7 +406,7 @@ Jeder generierte oder geänderte Mirror-Code muss diese Regeln erfüllen. Sie si
 4. **Kind-Slots haben sprechende Namen.** Statt generischer `Text1`/`Slot`/`BtnSlot` gehören Rollen-Namen rein: `Title`, `Desc`, `Footer`, `Status`, `Action`, `Meta`, `Header`, `Body`. Der Verwendungs-Code liest sich dann wie ein Datensatz: `ProjectCard\n  Title "X"\n  Desc "Y"\n  Action "Öffnen"`.
 5. **Layout flachklopfen — Wrapper nur mit Berechtigung.** Ein Wrapper-Frame ist nur erlaubt, wenn er **beides** erfüllt: (a) **mindestens 2 Kinder** UND (b) eine **aktive Layout-Rolle** (`hor`, `gap`, `pad`, `center`, `spread`, `grid`, `wrap`). Fehlt eines davon → Frame raus, Kinder direkt in den Parent. Klassische Fallen: `TopBar` um nur einen Titel; `Hero` um zwei Texte, wenn der Parent schon `gap` hat; ein generischer `Frame` der nur eine andere Komponente einpackt; eine Komponente die nur eine andere Komponente rendert. Wiederkehrende Wrapper-Muster (≥3× identisch verschachtelt) werden zu Komponenten. Jede Verschachtelungsebene braucht einen Grund.
 
-**Diagnose-Frage pro Zeile im Layout:** Beschreibt das *Inhalt und Struktur*, oder erklärt es *Aussehen*? Alles aus der zweiten Kategorie wandert in eine Komponente oder einen Token.
+**Diagnose-Frage pro Zeile im Layout:** Beschreibt das _Inhalt und Struktur_, oder erklärt es _Aussehen_? Alles aus der zweiten Kategorie wandert in eine Komponente oder einen Token.
 
 **Diagnose-Frage pro Wrapper-Frame:** Hat er ≥2 Kinder UND eine aktive Layout-Rolle (`hor`/`gap`/`pad`/`center`/`spread`/`grid`)? Wenn nein — Frame entfernen, Kinder direkt in den Parent. Eine `TopBar` ist erst dann eine TopBar, wenn sie z. B. Back-Button **plus** Titel enthält.
 
