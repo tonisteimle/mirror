@@ -5,11 +5,11 @@
 **Stand 2026-05-10:** Pattern aus React-Backend-Decomp ist erprobt
 (8 Slices, react.ts 3273 → 343 LOC, 89 % Reduktion). Framework-
 Backend trägt dieselbe Monolithik-Krankheit; gleicher Decomp-Ansatz
-mit Anpassung auf die Class-basierte Struktur. Slices 1+2+3 abgehakt
-— framework.ts: 1057 → 495 LOC (53 % Reduktion). Drei Module unter
+mit Anpassung auf die Class-basierte Struktur. Slices 1+2+3+4 abgehakt
+— framework.ts: 1057 → 446 LOC (58 % Reduktion). Vier Module unter
 `compiler/backends/framework/ops/` (helpers.ts 109,
-css-to-mirror.ts 277, style-event.ts 234). Differential-Tests
-384/384 grün, full vitest 15441/15441.
+css-to-mirror.ts 277, style-event.ts 234, props.ts 66).
+Differential-Tests 384/384 grün, full vitest 15441/15441.
 
 ## Ausgangslage
 

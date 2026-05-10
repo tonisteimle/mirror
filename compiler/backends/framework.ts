@@ -16,6 +16,7 @@ import type { IR, IRNode, IREach, IRConditional } from '../ir/types'
 import { isLayoutPrimitive } from '../schema/dsl'
 import { TAG_TO_TYPE, dataValueToJS, escapeString } from './framework/ops/helpers'
 import { eventsToProps, stylesToProps } from './framework/ops/style-event'
+import { propsToString } from './framework/ops/props'
 
 /**
  * Generate M() framework calls from Mirror AST
@@ -188,7 +189,7 @@ class FrameworkGenerator {
 
     // Props
     const props = this.nodeToProps(node)
-    const propsStr = this.propsToString(props)
+    const propsStr = propsToString(props)
 
     // Children
     const children = node.children.map(c => this.nodeToM(c))
@@ -429,56 +430,6 @@ class FrameworkGenerator {
     }
 
     return props
-  }
-
-  /**
-   * Convert props object to string
-   */
-  private propsToString(props: Record<string, any>): string {
-    const entries = Object.entries(props)
-    if (entries.length === 0) return ''
-
-    const parts: string[] = []
-
-    // Quote any key that isn't a valid bare JS identifier. Without this,
-    // CSS-style hyphenated keys like `font-size` become illegal JS:
-    //   `M('X', { font-size: 0 })` ← SyntaxError on the hyphen.
-    const isValidIdent = (k: string) => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k)
-    const fmtKey = (k: string) => (isValidIdent(k) ? k : `'${k}'`)
-
-    for (const [key, value] of entries) {
-      const k = fmtKey(key)
-      if (key === 'states') {
-        // States need special formatting
-        parts.push(`states: ${this.statesToString(value)}`)
-      } else if (typeof value === 'string') {
-        parts.push(`${k}: '${value}'`)
-      } else if (typeof value === 'boolean') {
-        parts.push(`${k}: ${value}`)
-      } else if (typeof value === 'number') {
-        parts.push(`${k}: ${value}`)
-      } else if (Array.isArray(value)) {
-        const arrayStr = value.map(v => (typeof v === 'string' ? `'${v}'` : v)).join(', ')
-        parts.push(`${k}: [${arrayStr}]`)
-      } else {
-        parts.push(`${k}: ${JSON.stringify(value)}`)
-      }
-    }
-
-    return `{ ${parts.join(', ')} }`
-  }
-
-  /**
-   * Convert states object to string
-   */
-  private statesToString(states: Record<string, Record<string, any>>): string {
-    const parts = Object.entries(states).map(([stateName, stateProps]) => {
-      const propParts = Object.entries(stateProps).map(([key, value]) =>
-        typeof value === 'string' ? `${key}: '${value}'` : `${key}: ${value}`
-      )
-      return `${stateName}: { ${propParts.join(', ')} }`
-    })
-    return `{ ${parts.join(', ')} }`
   }
 
   private currentIndent(): string {
