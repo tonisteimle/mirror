@@ -7,7 +7,6 @@
 
 import type {
   PropertyExtractor,
-  ExtractedElement,
   CodeModifier,
   ModificationResult,
 } from '../../../core/compiler-types'
@@ -22,11 +21,6 @@ import type {
   LayoutDetectionPort,
   PanelEventPort,
   PropertyPanelPorts,
-  CleanupFn,
-  PanelSpacingToken,
-  ColorToken,
-  PropertyChange,
-  Rect,
 } from '../ports'
 
 // ============================================

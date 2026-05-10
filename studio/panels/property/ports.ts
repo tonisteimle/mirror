@@ -11,12 +11,7 @@
  * Tests verwenden Mock-Adapters, Produktion verwendet DOM-Adapters.
  */
 
-import type {
-  ExtractedElement,
-  ExtractedProperty,
-  PropertyCategory,
-  ModificationResult,
-} from '../../code-modifier'
+import type { ExtractedElement, ModificationResult } from '../../code-modifier'
 
 // ============================================
 // Common Types

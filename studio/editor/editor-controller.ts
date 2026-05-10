@@ -14,14 +14,7 @@
  * ```
  */
 
-import type {
-  EditorPorts,
-  EditorPort,
-  StatePort,
-  TimerPort,
-  CursorPosition,
-  CleanupFn,
-} from './ports'
+import type { EditorPorts, CursorPosition, CleanupFn } from './ports'
 import { createLogger } from '../../compiler/utils/logger'
 
 const log = createLogger('EditorController')

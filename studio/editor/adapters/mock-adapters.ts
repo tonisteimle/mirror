@@ -9,7 +9,6 @@ import type {
   EditorPort,
   StatePort,
   TimerPort,
-  EditorPorts,
   CursorPosition,
   StateCursor,
   SelectionOrigin,
@@ -226,28 +225,28 @@ export function createMockEditorPort(initialContent = ''): MockEditorPort {
     simulateContentChange(newContent: string): void {
       content = newContent
       contentHistory.push(newContent)
-      handlers.contentChange.forEach((h) => h(newContent))
+      handlers.contentChange.forEach(h => h(newContent))
     },
 
     simulateCursorMove(position: CursorPosition): void {
       cursor = { ...position }
       cursorHistory.push(cursor)
-      handlers.cursorMove.forEach((h) => h(cursor))
+      handlers.cursorMove.forEach(h => h(cursor))
     },
 
     simulateSelectionChange(newSelection: Selection): void {
       selection = { ...newSelection }
-      handlers.selectionChange.forEach((h) => h(selection))
+      handlers.selectionChange.forEach(h => h(selection))
     },
 
     simulateFocus(): void {
       hasFocus = true
-      handlers.focus.forEach((h) => h())
+      handlers.focus.forEach(h => h())
     },
 
     simulateBlur(): void {
       hasFocus = false
-      handlers.blur.forEach((h) => h())
+      handlers.blur.forEach(h => h())
     },
 
     // ----------------------------------------
@@ -447,7 +446,7 @@ export function createMockTimerPort(): MockTimerPort {
     flushFrames(): void {
       const callbacks = [...pendingFrames.values()]
       pendingFrames.clear()
-      callbacks.forEach((cb) => cb())
+      callbacks.forEach(cb => cb())
     },
 
     flushTimeouts(): void {

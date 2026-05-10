@@ -6,14 +6,7 @@
  */
 
 import type { EditorView } from '@codemirror/view'
-import type {
-  EditorPort,
-  ExtendedEditorPort,
-  CursorPosition,
-  Selection,
-  LineInfo,
-  CleanupFn,
-} from '../ports'
+import type { ExtendedEditorPort, CursorPosition, Selection, LineInfo, CleanupFn } from '../ports'
 import { createLogger } from '../../../compiler/utils/logger'
 
 const log = createLogger('CodeMirrorAdapter')
@@ -50,14 +43,14 @@ export function createCodeMirrorAdapter(config: CodeMirrorAdapterConfig): Extend
   const focusTarget = container ?? view.dom
 
   function handleFocusIn(): void {
-    handlers.focus.forEach((h) => h())
+    handlers.focus.forEach(h => h())
   }
 
   function handleFocusOut(e: FocusEvent): void {
     // Only trigger blur if focus left the editor entirely
     const relatedTarget = e.relatedTarget as HTMLElement | null
     if (!relatedTarget || !focusTarget.contains(relatedTarget)) {
-      handlers.blur.forEach((h) => h())
+      handlers.blur.forEach(h => h())
     }
   }
 
@@ -193,10 +186,9 @@ export function createCodeMirrorAdapter(config: CodeMirrorAdapterConfig): Extend
     scrollToLine(lineNumber: number, center = true): void {
       try {
         const lineInfo = view.state.doc.line(lineNumber)
-        const effect = (view.constructor as typeof EditorView).scrollIntoView(
-          lineInfo.from,
-          { y: center ? 'center' : 'start' }
-        )
+        const effect = (view.constructor as typeof EditorView).scrollIntoView(lineInfo.from, {
+          y: center ? 'center' : 'start',
+        })
         view.dispatch({ effects: effect })
       } catch (e) {
         log.warn('scrollToLine failed:', lineNumber, e)

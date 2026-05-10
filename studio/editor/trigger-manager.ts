@@ -17,7 +17,6 @@ import type {
   TriggerConfig,
   TriggerState,
   TriggerContext,
-  TriggerDefinition,
   CharTrigger,
   RegexTrigger,
   ComponentTrigger,

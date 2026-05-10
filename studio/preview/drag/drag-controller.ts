@@ -5,16 +5,7 @@
  * Manages drag state and delegates to CodeExecutor on drop.
  */
 
-import type {
-  Point,
-  DragSource,
-  DropTarget,
-  FlexDropTarget,
-  AbsoluteDropTarget,
-  AlignedDropTarget,
-  GridDropTarget,
-  HitResult,
-} from './types'
+import type { Point, DragSource, DropTarget, GridDropTarget, HitResult } from './types'
 import { events } from '../../core'
 import { findOwningGridContainer, readGridGeometry } from '../../visual/grid-overlay/grid-detector'
 import { pointerToCell, readCurrentSpan } from '../../visual/snap'

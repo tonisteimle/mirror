@@ -18,8 +18,6 @@ import type {
   TokenPort,
   LayoutDetectionPort,
   PanelEventPort,
-  PropertyPanelPorts,
-  CleanupFn,
   PanelSpacingToken,
   ColorToken,
   PropertyChange,
