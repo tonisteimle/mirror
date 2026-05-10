@@ -82,6 +82,11 @@ export class DemoRunner {
   // Auto-validation tracking
   private validationConfig: ValidationConfig
   private autoValidate: boolean = false
+  // Cached active timing profile — set by injectDemoAPI, read by
+  // autoPauseAfter so the execute loop knows which transition values
+  // to apply between steps. (Avoids threading effectiveTimings through
+  // every level of the run() loop.)
+  private activeTimings: import('./timing').ActionTimings | null = null
   private validationIssues: ValidationIssue[] = []
   private consoleErrors: ConsoleError[] = []
   private blockedSteps: number[] = []
@@ -268,6 +273,13 @@ export class DemoRunner {
 
       try {
         await this.executeStep(effectiveStep, stepNum, script.steps.length)
+        // Action-derived auto-pause. ActionTimings.transitions.* defines how
+        // long to dwell between actions of each kind so demo authors don't
+        // have to sprinkle `{ action: 'wait', duration: 300 }` between
+        // every mutating step. The pacing profile already scales these
+        // values, so video runs get a generous breath and instant runs
+        // collapse to ~0.
+        if (this.activeTimings) await this.autoPauseAfter(effectiveStep, this.activeTimings)
         // Frame capture: PNG after every "interesting" step so a reviewer
         // can leaf through the demo run statically.
         if (this.framesDir && DemoRunner.isFrameWorthyAction(effectiveStep.action)) {
@@ -1133,6 +1145,10 @@ export class DemoRunner {
       }
     }
 
+    // Stash for autoPauseAfter so the execute loop knows the timing
+    // profile without having to re-thread it through every step call.
+    this.activeTimings = effectiveTimings
+
     // window.__mirrorDemo is installed by `setupMirrorTestAPI()` at studio
     // bootstrap (see studio/test-api/demo-fx). We pass timings explicitly
     // so the bundled API uses the demo-runner's CLI-derived values
@@ -1258,6 +1274,54 @@ export class DemoRunner {
       comment: { ...base.comment, ...custom.comment },
       transitions: { ...base.transitions, ...custom.transitions },
     }
+  }
+
+  /**
+   * Auto-pause after a step based on its action type. The ActionTimings
+   * profile defines transition values (afterClick / afterType /
+   * afterFileOp / afterNavigate / betweenGroups) — until now they were
+   * declared but never read, so demo authors had to insert manual
+   * `wait` actions between every mutating step. Now the runner derives
+   * a sensible breath from the action type, scaled by pacing.
+   */
+  private async autoPauseAfter(
+    step: DemoAction,
+    timings: import('./timing').ActionTimings
+  ): Promise<void> {
+    const t = timings.transitions
+    let ms = 0
+    switch (step.action) {
+      case 'click':
+      case 'doubleClick':
+      case 'selectInPreview':
+      case 'setProperty':
+      case 'pickColor':
+        ms = t.afterClick
+        break
+      case 'type':
+      case 'inlineEdit':
+        ms = t.afterType
+        break
+      case 'createFile':
+      case 'switchFile':
+      case 'clearEditor':
+        ms = t.afterFileOp
+        break
+      case 'navigate':
+        ms = t.afterNavigate
+        break
+      case 'dropFromPalette':
+      case 'drawInGrid':
+      case 'moveElement':
+      case 'dragResize':
+      case 'dragPadding':
+      case 'dragMargin':
+        ms = t.betweenGroups
+        break
+      default:
+        return
+    }
+    if (ms > 0) await new Promise(r => setTimeout(r, ms))
   }
 
   /**
