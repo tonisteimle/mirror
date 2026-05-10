@@ -6,6 +6,7 @@
  */
 
 import { createLogger } from '../../compiler/utils/logger'
+import { isTauri, TauriFS } from '../tauri-bridge'
 
 const log = createLogger('Zag')
 
@@ -291,9 +292,7 @@ async function writeNewComFile(
   dir: string,
   deps: ZagDependencies
 ): Promise<string | null> {
-  const TauriBridge = (window as any).TauriBridge
-
-  if (TauriBridge?.isTauri?.()) {
+  if (isTauri()) {
     return writeTauriComFile(filePath, content, dir)
   }
   return writeBrowserComFile(filePath, content, deps)
@@ -304,10 +303,13 @@ async function writeTauriComFile(
   content: string,
   dir: string
 ): Promise<string | null> {
-  const TauriBridge = (window as any).TauriBridge,
-    desktopFiles = (window as any).desktopFiles
+  const desktopFiles = window.desktopFiles as
+    | (NonNullable<Window['desktopFiles']> & {
+        loadFolder?: (path: string) => void
+      })
+    | undefined
   try {
-    await TauriBridge.fs.writeFile(filePath, content)
+    await TauriFS.writeFile(filePath, content)
     if (desktopFiles?.getFiles) desktopFiles.getFiles()[filePath] = content
     desktopFiles?.loadFolder?.(dir.slice(0, -1))
     log.debug('[Zag] Created new components file:', filePath)
@@ -349,9 +351,7 @@ async function writeDefinitionToFile(
   filePath: string,
   deps: ZagDependencies
 ): Promise<boolean> {
-  const TauriBridge = (window as any).TauriBridge
-
-  if (TauriBridge?.isTauri?.()) {
+  if (isTauri()) {
     return writeTauriDefinition(content, filePath, deps)
   }
   return writeBrowserDefinition(content, filePath, deps)
@@ -362,12 +362,11 @@ async function writeTauriDefinition(
   filePath: string,
   deps: ZagDependencies
 ): Promise<boolean> {
-  const TauriBridge = (window as any).TauriBridge
-  const desktopFiles = (window as any).desktopFiles
+  const desktopFiles = window.desktopFiles
   const filename = filePath.split('/').pop()
 
   try {
-    await TauriBridge.fs.writeFile(filePath, content)
+    await TauriFS.writeFile(filePath, content)
     if (desktopFiles?.getFiles) {
       desktopFiles.getFiles()[filePath] = content
     }

@@ -217,7 +217,7 @@ let getCurrentFileCallback: (() => string) | null = null
  */
 function getDefaultAllSource(): string {
   // Try to get all files from desktop-files module (includes all preloaded files)
-  const desktopFiles = (window as any).desktopFiles?.getFiles?.()
+  const desktopFiles = window.desktopFiles?.getFiles?.()
   if (desktopFiles && typeof desktopFiles === 'object') {
     // Concatenate all file contents (tokens should be included)
     return Object.values(desktopFiles).filter(Boolean).join('\n')
