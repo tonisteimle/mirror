@@ -98,6 +98,7 @@ describe('Properties — DOM emits expected style values', () => {
   // (value-bearing). Pin a representative sample so regressions surface
   // in CI rather than visual-only noise.
   it.each([
+    ['stacked', `Frame stacked, w 100`, /position:\s*'relative'/],
     ['italic', `Text "Hi", italic`, /fontStyle:\s*'italic'/],
     ['underline', `Text "Hi", underline`, /textDecoration:\s*'underline'/],
     ['uppercase', `Text "Hi", uppercase`, /textTransform:\s*'uppercase'/],

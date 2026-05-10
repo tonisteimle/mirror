@@ -2096,6 +2096,13 @@ function applyFlagProperty(name: string, style: Record<string, string | number>)
       style.position = 'relative'
       return true
 
+    // Stacked overlay container — children with `x`/`y`/`abs` anchor
+    // against this Frame. DOM IR emits `position: relative` for the
+    // same reason; without it, absolute children jump to the viewport.
+    case 'stacked':
+      style.position = 'relative'
+      return true
+
     // Typography flags.
     case 'italic':
       style.fontStyle = 'italic'
