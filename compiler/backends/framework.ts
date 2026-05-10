@@ -73,7 +73,7 @@ function dataValueToJS(value: unknown): string {
     // Skip data-references (`__ref: true` markers) — their resolution
     // happens at runtime; emit as a plain placeholder string for now.
     if ('__ref' in value && (value as { __ref: boolean }).__ref) {
-      const ref = value as { collection: string; entry: string }
+      const ref = value as unknown as { collection: string; entry: string }
       return JSON.stringify(`$${ref.collection}.${ref.entry}`)
     }
     const entries = Object.entries(value as Record<string, unknown>).map(
