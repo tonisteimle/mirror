@@ -360,14 +360,6 @@ describe('EditorController (Hexagonal Architecture)', () => {
       controller = createEditorControllerWithPorts(ports)
     })
 
-    it('should support notifyContentChange for external triggers', () => {
-      const callback = vi.fn()
-      controller.onContentChange(callback)
-
-      controller.notifyContentChange('External content')
-      expect(callback).toHaveBeenCalledWith('External content')
-    })
-
     it('should support notifyCursorMove for external triggers', () => {
       const callback = vi.fn()
       controller.onCursorMove(callback)

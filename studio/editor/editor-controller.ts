@@ -338,16 +338,14 @@ export class EditorController {
   // ============================================
 
   /**
-   * Notify content change (for external triggers).
-   * @deprecated Use ports.editor.simulateContentChange() in tests
-   */
-  notifyContentChange(content: string): void {
-    this.handleContentChange(content)
-  }
-
-  /**
    * Notify cursor move (for external triggers).
-   * @deprecated Use ports.editor.simulateCursorMove() in tests
+   *
+   * Two production callers in `studio/app.ts` push CodeMirror's
+   * cursor position back through the controller after layout-driven
+   * source changes. The port-based `simulateCursorMove()` is the
+   * preferred path for new code (used in tests); this thin wrapper
+   * stays so the legacy app.ts wiring keeps working until the
+   * cursor-update path is migrated end-to-end.
    */
   notifyCursorMove(position: CursorPosition): void {
     this.handleCursorMove(position)
