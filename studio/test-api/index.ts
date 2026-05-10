@@ -59,6 +59,7 @@ import {
 import { createFixturesAPI, type Fixture, type FixturesAPI } from './fixtures'
 import { installCdpInputClient, isCdpInputAvailable, cdpInput } from './cdp-input-client'
 import { installOsMouseClient, isOsMouseAvailable, osMouse } from './os-mouse-client'
+import { installReplayRecorder, replayRecorder } from './replay-recorder'
 import { trustedInteractions, type TrustedInteractionAPI } from './trusted-interactions'
 import { createStudioAPI } from './studio-api'
 import { createSnappingAPI, setupSnappingAPI, type SnappingAPI } from './snapping-api'
@@ -313,11 +314,23 @@ export function initStudioTestAPI(_studio?: unknown, _editor?: unknown): void {
     log.warn('Failed to install OS-mouse client:', e)
   }
 
+  // Replay recorder — passive event listener that captures click/key/
+  // editor-change events when started. Doesn't fire by itself; callers
+  // explicitly call window.__replayRecorder.start() to begin a session.
+  try {
+    installReplayRecorder()
+    log.info('Replay recorder installed at window.__replayRecorder')
+  } catch (e) {
+    log.warn('Failed to install replay recorder:', e)
+  }
+
   // Register on window for Playwright access
   if (typeof window !== 'undefined') {
     ;(window as Window & { __STUDIO_TEST__?: StudioTestAPI }).__STUDIO_TEST__ = api
     ;(window as unknown as { __cdpInput?: typeof cdpInput }).__cdpInput = cdpInput
     ;(window as unknown as { __osMouse?: typeof osMouse }).__osMouse = osMouse
+    ;(window as unknown as { __replayRecorder?: typeof replayRecorder }).__replayRecorder =
+      replayRecorder
   }
 
   // Initialize drag test API (available at window.__testDragDrop)
