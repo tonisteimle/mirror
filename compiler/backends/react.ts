@@ -2678,6 +2678,21 @@ function generateStyles(
       case 'line-height':
         style.lineHeight = value
         break
+      case 'tracking':
+      case 'ls':
+      case 'letter':
+      case 'letter-spacing':
+        // Mirror's `tracking N` is a unitless multiplier — IR emits
+        // `letter-spacing: Nem`. React backend bypasses IR so we
+        // reproduce the same em-suffixed shape here. Pre-2026-05-10 the
+        // entire property dropped silently from React output.
+        style.letterSpacing =
+          typeof value === 'number'
+            ? `${value}em`
+            : /^-?\d+(\.\d+)?$/.test(String(value))
+              ? `${value}em`
+              : String(value)
+        break
 
       // Visual
       case 'opacity':

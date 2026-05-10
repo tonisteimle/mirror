@@ -212,6 +212,18 @@ describe('Properties — DOM emits expected style values', () => {
     expect(fw).toContain("'bor-r': 2")
   })
 
+  it('React: `tracking N` / `ls N` emits letterSpacing in em', () => {
+    // PIN: pre-2026-05-10 `Text "X", tracking 0.05` dropped the
+    // property entirely from React (no `letterSpacing` in style). DOM
+    // emitted `letter-spacing: 0.05em` correctly via IR — only the
+    // React switch was missing the case.
+    const r1 = generateReact(parse(`Text "X", tracking 0.05`))
+    expect(r1).toContain("letterSpacing: '0.05em'")
+
+    const r2 = generateReact(parse(`Text "X", ls -0.02`))
+    expect(r2).toContain("letterSpacing: '-0.02em'")
+  })
+
   it('Framework round-trips `bor 0 0 1 0` (multi-value)', () => {
     // PIN: 4-value `bor` shorthand from `border-style: solid` +
     // `border-width: 0 0 1px 0`. The lone `border-style: solid` is
