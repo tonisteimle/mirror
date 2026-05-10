@@ -12,7 +12,12 @@ import { ValidationRules, ValueValidator, ValueValidationResult } from './types'
 // Color Validation
 // ============================================================================
 
-const HEX_COLOR_REGEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/
+/**
+ * Hex color literal: `#RGB` / `#RGBA` / `#RRGGBB` / `#RRGGBBAA`.
+ * Exported so the strict color-token validator
+ * (`validator.ts:validateColorTokenValue`) doesn't keep its own copy.
+ */
+export const HEX_COLOR_REGEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/
 
 // Gradient keywords that can appear in color values
 const GRADIENT_KEYWORDS = new Set(['grad', 'grad-ver'])

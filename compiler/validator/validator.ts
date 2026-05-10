@@ -18,7 +18,7 @@ import {
   Slot,
   TokenReference,
 } from '../parser/ast'
-import { generateValidationRules } from './generator'
+import { generateValidationRules, HEX_COLOR_REGEX } from './generator'
 import {
   ValidationResult,
   ValidationError,
@@ -351,8 +351,7 @@ export class Validator {
       !token.value.startsWith('#')
     )
       return
-    const hexRegex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/
-    if (!hexRegex.test(token.value)) {
+    if (!HEX_COLOR_REGEX.test(token.value)) {
       this.addError(
         ERROR_CODES.INVALID_COLOR,
         `Invalid color value "${token.value}". Use #RGB, #RGBA, #RRGGBB, or #RRGGBBAA`,
