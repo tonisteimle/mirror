@@ -40,14 +40,14 @@
           _sc0.textContent = "heart"
           _sc0.setAttribute('data-icon-color', "white")
           _sc0.setAttribute('data-icon-size', "18")
-          _sc0.setAttribute('data-icon-fill', true)
-          _sc0.style['width'] = '20px'
+          _sc0.setAttribute('data-icon-fill', "true")
+          _sc0.style['width'] = '24px'
           _sc0.style['flex-shrink'] = '0'
-          _sc0.style['height'] = '20px'
+          _sc0.style['height'] = '24px'
           _sc0.style['flex-shrink'] = '0'
           _sc0.style['width'] = '18px'
           _sc0.style['height'] = '18px'
-          _sc0.dataset.iconSize = '16'
+          _sc0.dataset.iconSize = '24'
           _sc0.dataset.iconColor = 'currentColor'
           _sc0.dataset.iconWeight = '2'
           _runtime.loadIcon(_sc0, 'heart')
@@ -71,7 +71,7 @@
           _sc0.style['color'] = '#888'
           _sc0.style['width'] = '18px'
           _sc0.style['height'] = '18px'
-          _sc0.dataset.iconSize = '16'
+          _sc0.dataset.iconSize = '24'
           _sc0.dataset.iconColor = '#888'
           _sc0.dataset.iconWeight = '2'
           _runtime.loadIcon(_sc0, 'heart')
