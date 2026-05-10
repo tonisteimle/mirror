@@ -1088,7 +1088,7 @@ const preview = ((): HTMLElement => {
 // Zag dependencies builder for Clean Code module
 function getZagDeps() {
   return {
-    getAst: () => (studio.state as unknown as { ast?: unknown })?.ast,
+    getAst: () => studio.state.get().ast,
     getCurrentFile: () => currentFile,
     getFiles: () => window.desktopFiles?.getFiles?.() || files,
     parseCode: (code: string) => MirrorLang.parse(code),

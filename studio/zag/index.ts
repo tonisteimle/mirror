@@ -7,6 +7,17 @@
 
 import { createLogger } from '../../compiler/utils/logger'
 import { isTauri, TauriFS } from '../tauri-bridge'
+import type { AST } from '../../compiler/parser/ast'
+
+/**
+ * Minimal CodeMirror EditorView shape used by the Zag plumbing — just
+ * enough to read the document and dispatch a single replace-all change.
+ * Avoids the full @codemirror/view dep at this seam.
+ */
+export interface ZagEditorView {
+  state: { doc: { toString(): string } }
+  dispatch(spec: { changes: { from: number; to: number; insert: string } }): void
+}
 
 const log = createLogger('Zag')
 
@@ -30,13 +41,13 @@ export interface ZagDefinitionResult {
 }
 
 export interface ZagDependencies {
-  getAst: () => any
+  getAst: () => AST | null | undefined
   getCurrentFile: () => string
   getFiles: () => Record<string, string>
-  parseCode: (code: string) => any
+  parseCode: (code: string) => AST
   isMirrorFile: (filename: string) => boolean
   isComponentsFile: (filename: string) => boolean
-  getEditor: () => any
+  getEditor: () => ZagEditorView | null | undefined
   emitNotification: (type: 'success' | 'error' | 'info', message: string) => void
   updateFileList: () => void
 }
@@ -405,17 +416,18 @@ export function addZagDefinitionToCode(definitionCode: string, deps: ZagDependen
 function findInsertPosition(source: string, deps: ZagDependencies): number {
   const ast = deps.getAst()
   const lines = source.split('\n')
+  if (!ast) return 0
 
-  if (ast?.components?.length > 0) {
+  if (ast.components && ast.components.length > 0) {
     return findPositionAfterComponents(ast, lines)
   }
-  if (ast?.tokens?.length > 0) {
+  if (ast.tokens && ast.tokens.length > 0) {
     return findPositionAfterTokens(ast, lines)
   }
   return 0
 }
 
-function findPositionAfterComponents(ast: any, lines: string[]): number {
+function findPositionAfterComponents(ast: AST, lines: string[]): number {
   const lastComponent = ast.components[ast.components.length - 1]
   let endLine = lastComponent.line
 
@@ -430,7 +442,7 @@ function findPositionAfterComponents(ast: any, lines: string[]): number {
   return lines.slice(0, endLine).join('\n').length
 }
 
-function findPositionAfterTokens(ast: any, lines: string[]): number {
+function findPositionAfterTokens(ast: AST, lines: string[]): number {
   const lastToken = ast.tokens[ast.tokens.length - 1]
   return lines.slice(0, lastToken.line).join('\n').length
 }
@@ -446,7 +458,7 @@ function insertAtPosition(source: string, code: string, position: number): strin
   return source.slice(0, position) + prefix + code + '\n' + source.slice(position)
 }
 
-function applyChange(editor: any, oldSource: string, newSource: string): void {
+function applyChange(editor: ZagEditorView, oldSource: string, newSource: string): void {
   editor.dispatch({
     changes: { from: 0, to: oldSource.length, insert: newSource },
   })
