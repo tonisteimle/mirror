@@ -61,6 +61,7 @@ import { installCdpInputClient, isCdpInputAvailable, cdpInput } from './cdp-inpu
 import { installOsMouseClient, isOsMouseAvailable, osMouse } from './os-mouse-client'
 import { installSnapshotClient, isSnapshotAvailable, snapshotClient } from './snapshot-client'
 import { installMirrorDemo, isMirrorDemoInstalled } from './demo-fx'
+import { installMirrorActions } from './mirror-actions'
 import { installReplayRecorder, replayRecorder } from './replay-recorder'
 import { trustedInteractions, type TrustedInteractionAPI } from './trusted-interactions'
 import { createStudioAPI } from './studio-api'
@@ -1024,6 +1025,13 @@ export function setupMirrorTestAPI(): void {
     installMirrorDemo()
   } catch (e) {
     console.warn('[test-api] Mirror Demo API install failed:', e)
+  }
+  // Bundled MirrorActionsAPI — replaces the demo-runner's MIRROR_ACTIONS_API
+  // inline-eval'd string. Same shape as the legacy IIFE-installed object.
+  try {
+    installMirrorActions()
+  } catch (e) {
+    console.warn('[test-api] Mirror Actions API install failed:', e)
   }
 
   // Also expose test suites for CDP access
