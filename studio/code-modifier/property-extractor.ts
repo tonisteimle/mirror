@@ -220,8 +220,24 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 /**
- * Component-specific categories - which property categories are relevant for each primitive
+ * Component-specific categories - which property categories are relevant
+ * for each primitive. Aliases that share a primitive (Box ≡ Frame, Image
+ * ≡ Img) point at the same array so the lists can never drift apart.
  */
+const CONTAINER_CATEGORIES = [
+  'layout',
+  'position',
+  'alignment',
+  'sizing',
+  'spacing',
+  'color',
+  'border',
+  'visual',
+  'scroll',
+  'hover',
+]
+const IMAGE_CATEGORIES = ['sizing', 'spacing', 'border', 'visual', 'hover']
+
 const COMPONENT_CATEGORIES: Record<string, string[]> = {
   // Text: typography-focused, no layout properties
   text: ['typography', 'color', 'spacing', 'sizing', 'visual', 'hover'],
@@ -229,31 +245,9 @@ const COMPONENT_CATEGORIES: Record<string, string[]> = {
   // Icon: similar to text but with icon category
   icon: ['icon', 'color', 'sizing', 'spacing', 'visual', 'hover'],
 
-  // Box/Frame: full layout capabilities
-  box: [
-    'layout',
-    'position',
-    'alignment',
-    'sizing',
-    'spacing',
-    'color',
-    'border',
-    'visual',
-    'scroll',
-    'hover',
-  ],
-  frame: [
-    'layout',
-    'position',
-    'alignment',
-    'sizing',
-    'spacing',
-    'color',
-    'border',
-    'visual',
-    'scroll',
-    'hover',
-  ],
+  // Box/Frame: full layout capabilities (same set, two primitive names)
+  box: CONTAINER_CATEGORIES,
+  frame: CONTAINER_CATEGORIES,
 
   // Slot: placeholder, sizing and spacing
   slot: ['sizing', 'spacing', 'color', 'border', 'visual'],
@@ -264,9 +258,9 @@ const COMPONENT_CATEGORIES: Record<string, string[]> = {
   // Button: like text but with more visual
   button: ['typography', 'color', 'sizing', 'spacing', 'border', 'visual', 'hover'],
 
-  // Image: sizing focused
-  image: ['sizing', 'spacing', 'border', 'visual', 'hover'],
-  img: ['sizing', 'spacing', 'border', 'visual', 'hover'],
+  // Image / Img: sizing focused (same set, two primitive names)
+  image: IMAGE_CATEGORIES,
+  img: IMAGE_CATEGORIES,
 
   // Default: show all
   default: [
