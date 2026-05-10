@@ -366,14 +366,18 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
 
 - **Wo:** Studio-Keyboard
   **Was:** Cmd+P-Quick-Switch (Fuzzy-Search-File-Palette) ist im
-  Tutorial Kapitel 24 als Loop geplant, **existiert aber nicht im
-  Code**. `switchFile()` als Funktion ja, kein Cmd+P-UI. Suche nach
-  `metaKey && key === 'p'` in `studio/` außer Preview-Play-Mode-
-  Toggle ergibt nichts.
-  **Status:** offen
-  **Notiz:** Vor Tutorial-Kapitel 24 muss entweder das Feature gebaut
-  werden (~150–250 LOC: Floating-Input + Fuzzy-Match + Keyboard-Nav)
-  oder das Tutorial-Skript reduziert auf File-Tree-Click-Switch.
+  Tutorial Kapitel 24 als Loop geplant, existierte aber nicht im
+  Code.
+  **Status:** erledigt (`a00396c9`) — `studio/file-palette/`
+  Modul (Controller + CSS + Tests), in `bootstrap.ts` als globaler
+  Cmd/Ctrl+P-Handler verdrahtet. Keyboard-Vertrag: Cmd+P toggle
+  open/close, ↑/↓ wrappen, Enter switcht + close, Esc/click-out
+  close ohne Switch. Filter rankt startsWith vor contains, beide
+  case-insensitive. 19 Unit-Tests in jsdom pinnen Lifecycle, Filter,
+  Keyboard, Maus, Error-Handling. 5953/5953 studio tests pass.
+  Erste der vier Tutorial-Blocking-Gaps geschlossen — die anderen
+  drei (Demo-Runner-Actions, generischer Picker-Handler, Tutorial-
+  Mode-Selektor-Versionierung) bleiben offen.
 
 - **Wo:** `tools/test-runner/demo/types.ts` (PickColorAction)
   **Was:** `pickColor` ist die einzige Picker-Action im Demo-Runner.
