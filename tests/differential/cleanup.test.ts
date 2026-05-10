@@ -72,8 +72,12 @@ describe('Cleanup — Canvas presets across backends', () => {
 })
 
 describe('Cleanup — Custom Icons across backends', () => {
+  const SINGLE = `$icons:\n  hbox: "M3 3h18v18H3z"\n\nIcon "hbox"`
+  const MULTI = `$icons:\n  hbox: "M3 3h18v18H3z|M9 3v18|M15 3v18"\n\nIcon "hbox"`
+  const MIXED = `$icons:\n  myicon: "M3 3h18v18H3z"\n\nIcon "myicon"\nIcon "check"`
+
   it('$icons: emits registerIcon AFTER const _runtime declaration (Bug #34 fixed)', () => {
-    const out = generateDOM(parse(`$icons:\n  hbox: "M3 3h18v18H3z"\n\nIcon "hbox"`))
+    const out = generateDOM(parse(SINGLE))
     expect(out).toContain('_runtime.registerIcon')
     const idxRegister = out.indexOf('_runtime.registerIcon')
     const idxConst = out.indexOf('const _runtime = {')
@@ -82,10 +86,45 @@ describe('Cleanup — Custom Icons across backends', () => {
     expect(idxRegister).toBeGreaterThan(idxConst)
   })
 
-  it('React/Framework backends compile $icons without throwing', () => {
-    const src = `$icons:\n  hbox: "M3 3h18v18H3z"\n\nIcon "hbox"`
-    expect(() => generateReact(parse(src))).not.toThrow()
-    expect(() => generateFramework(parse(src))).not.toThrow()
+  // Pre-Slice-51 these passed by "compiles without throwing" while React +
+  // Framework silently dropped the custom-icon registry. Strengthened to
+  // assert each backend actually emits the registration in its own dialect.
+  it('all three backends register the icon name and path (single-path)', () => {
+    const dom = generateDOM(parse(SINGLE))
+    const react = generateReact(parse(SINGLE))
+    const fw = generateFramework(parse(SINGLE))
+
+    expect(dom).toMatch(/_runtime\.registerIcon\(\s*['"]hbox['"]/)
+    expect(react).toContain('_MIRROR_CUSTOM_ICONS["hbox"]')
+    expect(fw).toMatch(/M\.registerIcon\(\s*['"]hbox['"]/)
+
+    for (const out of [dom, react, fw]) {
+      expect(out).toContain('M3 3h18v18H3z')
+    }
+  })
+
+  it('all three backends pass through multi-path | separator unchanged', () => {
+    const dom = generateDOM(parse(MULTI))
+    const react = generateReact(parse(MULTI))
+    const fw = generateFramework(parse(MULTI))
+    for (const out of [dom, react, fw]) {
+      expect(out).toContain('M3 3h18v18H3z|M9 3v18|M15 3v18')
+    }
+  })
+
+  it('mixing custom + Lucide registers only the custom path', () => {
+    const dom = generateDOM(parse(MIXED))
+    const react = generateReact(parse(MIXED))
+    const fw = generateFramework(parse(MIXED))
+
+    expect(dom).toMatch(/registerIcon\(\s*['"]myicon['"]/)
+    expect(dom).not.toMatch(/registerIcon\(\s*['"]check['"]/)
+
+    expect(react).toContain('_MIRROR_CUSTOM_ICONS["myicon"]')
+    expect(react).not.toContain('_MIRROR_CUSTOM_ICONS["check"]')
+
+    expect(fw).toMatch(/M\.registerIcon\(\s*['"]myicon['"]/)
+    expect(fw).not.toMatch(/M\.registerIcon\(\s*['"]check['"]/)
   })
 })
 
