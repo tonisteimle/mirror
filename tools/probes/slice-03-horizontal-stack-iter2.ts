@@ -65,7 +65,7 @@ for (const c of standaloneEntries) {
   console.log(`    ${c.property}: ${c.value}`)
 }
 
-const dom = generateDOM(parse('Frame hor\n  Text "x"\n  Text "y"'), { skipPrelude: true } as any)
+const dom = generateDOM(parse('Frame hor\n  Text "x"\n  Text "y"'))
 const domNode1 = dom.match(/Object\.assign\(node_1\.style, \{([^}]*)\}\)/s)?.[1] || ''
 console.log('\n  IR-Pfad (DOM emit, layout-transformer):')
 console.log(
@@ -93,7 +93,7 @@ console.log('\n  Lock: schema-derived. Wenn ein neuer flag-only-property im Sche
 console.log('  taucht er hier automatisch auf — kein hardcode in der Validator-Liste.')
 
 // React-Side check für V-3a: was emittet React für `hor`?
-const reactOut = generateReact(parse('Frame hor\n  Text "x"'), { skipPrelude: true } as any)
+const reactOut = generateReact(parse('Frame hor\n  Text "x"'))
 const reactStyle = reactOut.match(/style=\{\{([^}]*)\}\}/s)?.[1] || ''
 console.log('\n=== Cross-Backend-Lock: React `hor` (V-1 fix from Iter-1) ===')
 console.log(`  React style: ${reactStyle.replace(/\n\s+/g, ' ').slice(0, 200)}`)

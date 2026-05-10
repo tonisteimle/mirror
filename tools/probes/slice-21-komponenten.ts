@@ -68,7 +68,7 @@ for (const [label, src] of cases) {
     console.log('  validator: clean')
   }
   try {
-    const dom = generateDOM(ast, { skipPrelude: true } as any)
+    const dom = generateDOM(ast)
     const top = styleAssign(dom, 1).replace(/\s+/g, ' ').slice(0, 180)
     console.log(`  DOM node_1: ${top}`)
   } catch (e: any) {

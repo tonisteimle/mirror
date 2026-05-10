@@ -113,7 +113,7 @@ const src = `s.mar: 12
 Frame mar $s
   Text "x"`
 const ast = parse(src)
-const dom = generateDOM(ast, { skipPrelude: true } as any)
+const dom = generateDOM(ast)
 const cssVarLine = dom.match(/--s-mar:\s*[^;]+;/)?.[0] ?? '(missing)'
 console.log(`  Compile emits: ${cssVarLine}`)
 

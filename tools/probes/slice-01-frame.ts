@@ -39,9 +39,9 @@ const v = new Validator()
 for (const [label, src] of cases) {
   console.log(`=== ${label} ===`)
   const ast = parse(src)
-  const dom = generateDOM(ast, { skipPrelude: true } as any)
-  const react = generateReact(ast, { skipPrelude: true } as any)
-  const fw = generateFramework(ast, { skipPrelude: true } as any)
+  const dom = generateDOM(ast)
+  const react = generateReact(ast)
+  const fw = generateFramework(ast)
 
   const domNode1 = dom.match(/Object\.assign\(node_1\.style, \{([^}]*)\}\)/s)?.[1] || '(no node_1)'
   const reactJSX = react.match(/<div[^>]*>/s)?.[0] || '(no JSX)'

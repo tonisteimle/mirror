@@ -50,9 +50,9 @@ Frame grid 12
 for (const [label, src] of cases) {
   console.log(`\n=== ${label} ===`)
   const ast = parse(src)
-  const dom = generateDOM(ast, { skipPrelude: true } as any)
-  const react = generateReact(ast, { skipPrelude: true } as any)
-  const fw = generateFramework(ast, { skipPrelude: true } as any)
+  const dom = generateDOM(ast)
+  const react = generateReact(ast)
+  const fw = generateFramework(ast)
 
   const domNode2 = dom.match(/Object\.assign\(node_2\.style, \{([^}]*)\}\)/s)?.[1] || ''
   const reactStyles = Array.from(react.matchAll(/style=\{\{([^}]*)\}\}/gs))

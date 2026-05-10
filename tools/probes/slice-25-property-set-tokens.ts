@@ -52,17 +52,17 @@ for (const [label, src] of cases) {
 
   let dom: string, react: string, fw: string
   try {
-    dom = generateDOM(ast, { skipPrelude: true } as any)
+    dom = generateDOM(ast)
   } catch (e: any) {
     dom = `(error: ${e.message})`
   }
   try {
-    react = generateReact(ast, { skipPrelude: true } as any)
+    react = generateReact(ast)
   } catch (e: any) {
     react = `(error: ${e.message})`
   }
   try {
-    fw = generateFramework(ast, { skipPrelude: true } as any)
+    fw = generateFramework(ast)
   } catch (e: any) {
     fw = `(error: ${e.message})`
   }
