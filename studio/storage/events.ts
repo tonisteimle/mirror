@@ -11,11 +11,16 @@ const log = createLogger('StorageEvents')
 
 type EventCallback<K extends keyof StorageEventMap> = (payload: StorageEventMap[K]) => void
 
+// Storage-set type erased to "some callback for some StorageEventMap key" —
+// the per-key narrowing happens at on()/emit()'s generic signature, so the
+// internal Map can hold any concrete instantiation safely.
+type AnyStorageCallback = (payload: StorageEventMap[keyof StorageEventMap]) => void
+
 /**
  * Typisierter EventEmitter für Storage
  */
 export class StorageEventEmitter {
-  private handlers = new Map<keyof StorageEventMap, Set<EventCallback<any>>>()
+  private handlers = new Map<keyof StorageEventMap, Set<AnyStorageCallback>>()
 
   /**
    * Event-Listener registrieren
@@ -24,11 +29,14 @@ export class StorageEventEmitter {
     if (!this.handlers.has(event)) {
       this.handlers.set(event, new Set())
     }
-    this.handlers.get(event)!.add(callback)
+    // The Map stores an erased AnyStorageCallback per event-key so a single
+    // Set can hold callbacks for different event types. The per-key
+    // narrowing at the generic on()/emit() signature is the contract.
+    this.handlers.get(event)!.add(callback as AnyStorageCallback)
 
     // Unsubscribe-Funktion zurückgeben
     return () => {
-      this.handlers.get(event)?.delete(callback)
+      this.handlers.get(event)?.delete(callback as AnyStorageCallback)
     }
   }
 
@@ -36,7 +44,7 @@ export class StorageEventEmitter {
    * Einmaliger Event-Listener
    */
   once<K extends keyof StorageEventMap>(event: K, callback: EventCallback<K>): () => void {
-    const unsubscribe = this.on(event, (payload) => {
+    const unsubscribe = this.on(event, payload => {
       unsubscribe()
       callback(payload)
     })
