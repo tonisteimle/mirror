@@ -34,11 +34,13 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
     **Status:** offen
     **Notiz:** Architektur-Entscheidung nötig, kein einzelner Refactor.
 
-- **Wo:** `compiler/parser/ops/parse-blocks.ts` (Slice 21 V-1/V-3/V-4)
-  **Was:** Drei silent-failure-Pfade: undefined component → Frame-Fallback
-  ohne Hinweis; nested-`Name:`-Definition wird zu Instance reinterpretiert
-  und Definition geht verloren; self-recursion stoppt mit
-  `data-component="Unknown"`. Validator E002 fängt nur den ersten Fall.
+- **Wo:** `compiler/parser/ops/parse-blocks.ts` (Slice 21 V-1/V-4)
+  **Was:** Zwei silent-failure-Pfade verbleiben: undefined component →
+  Frame-Fallback ohne Hinweis (V-1); nested-`Name:`-Definition wird zu
+  Instance reinterpretiert und Definition geht verloren (V-4). Validator
+  E002 fängt nur den ersten Fall. V-3 (self-recursion `data-component=
+"Unknown"`) erledigt in `e0ba0bda` — Marker ist jetzt
+  `data-recursion-stopped="<Name>"`.
   **Status:** offen
   **Notiz:** Audit in `docs/refactoring/21-komponenten.md` Section 3 (V-1, V-4).
 
@@ -344,6 +346,17 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — Self-Recursion Marker (Slice 21 V-3)
+
+- **Wo:** `compiler/ir/ops/instance-ops.ts`,
+  `compiler/backends/dom/node-emitter.ts`
+  **Was:** Self-rekursive Komponente landete als
+  `data-component="Unknown"` / `data-slot="Unknown"` im DOM. IR-Node
+  trägt jetzt `recursionStopped`-Flag mit dem echten Komponentennamen,
+  DOM emittiert `data-recursion-stopped="<Name>"`. Macht in Devtools/
+  Studio sichtbar, _welche_ Komponente den Cycle gerissen hat.
+  **Status:** erledigt (`e0ba0bda`)
 
 ### 2026-05-10 — Phantom W500 für `$N` in Quoted-Strings
 
