@@ -2,7 +2,7 @@
  * Focus Events — focus border, blur restore, focus cycling
  */
 
-import { testWithSetup, testWithSetupSkip, describe, type TestCase } from '../../test-runner'
+import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 
 export const focusEventTests: TestCase[] = describe('Focus Events', [
@@ -52,8 +52,7 @@ export const focusEventTests: TestCase[] = describe('Focus Events', [
     }
   ),
 
-  // TODO: Runtime bug - focus state styles don't apply correctly in headless tests
-  testWithSetupSkip(
+  testWithSetup(
     'focus cycle between inputs',
     `Frame gap 8, pad 16, bg #1a1a1a
   Input placeholder "First", pad 12, bg #222, col white, rad 6, bor 1, boc #444

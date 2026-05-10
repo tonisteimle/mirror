@@ -239,6 +239,31 @@ describe('States — Behavior Spec', () => {
         )
       ).not.toThrow()
     })
+
+    // PIN: focus state attaches `data-focus="true"` on the focused
+    // element via a delegated `focusin`/`focusout` listener on the
+    // root. This synthetic attribute is the runtime side of the
+    // browser's `:focus` pseudo-class — the emitted CSS rule
+    // `[data-mirror-id=...]:focus, [data-mirror-id=...][data-focus=
+    // "true"]` matches against either, so headless harnesses without
+    // a working :focus pseudo still get the styled result.
+    // (jsdom doesn't apply CSS from `<style>` to computed styles,
+    // so we only pin the attribute toggle here. CDP-Tests in real
+    // Chrome cover the styled-state assertion.)
+    it('focus toggles data-focus attribute on focused mirror element', () => {
+      const root = render(
+        `Input placeholder "First", bor 1, boc #444\n  focus:\n    boc #2271C1`,
+        container
+      )
+      const input = root.querySelector('input') as HTMLInputElement
+      expect(input.getAttribute('data-focus')).toBeNull()
+
+      input.focus()
+      expect(input.getAttribute('data-focus')).toBe('true')
+
+      input.blur()
+      expect(input.getAttribute('data-focus')).toBeNull()
+    })
   })
 
   // ---------------------------------------------------------------------------
