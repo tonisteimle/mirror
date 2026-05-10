@@ -26,6 +26,20 @@ const ANIMATION_REVERSE: Record<string, string> = Object.fromEntries(
   Object.entries(ANIMATION_SHORTHAND).map(([keyword, css]) => [css, keyword])
 )
 
+/**
+ * Parse a `grid-column-end` / `grid-row-end` value into a Mirror-style
+ * span count. Accepts `span N` (number of grid tracks) and
+ * `span var(--token)` (token-resolved span). Returns null when the value
+ * doesn't match either form, which the caller treats as drop-this-prop.
+ */
+function parseGridSpan(value: string): number | string | null {
+  const num = value.match(/^span\s+(\d+)$/)
+  if (num) return parseInt(num[1])
+  const tokenVar = value.match(/^span\s+(var\(--[^)]+\))$/)
+  if (tokenVar) return tokenVar[1]
+  return null
+}
+
 const TAG_TO_TYPE: Record<string, string> = {
   div: 'Box',
   span: 'Text',
@@ -823,18 +837,12 @@ class FrameworkGenerator {
       return { name: 'y', value: value.startsWith('var(') ? value : parseInt(value) }
     }
     if (prop === 'grid-column-end') {
-      const m = value.match(/^span\s+(\d+)$/)
-      if (m) return { name: 'w', value: parseInt(m[1]) }
-      const v = value.match(/^span\s+(var\(--[^)]+\))$/)
-      if (v) return { name: 'w', value: v[1] }
-      return null
+      const span = parseGridSpan(value)
+      return span !== null ? { name: 'w', value: span } : null
     }
     if (prop === 'grid-row-end') {
-      const m = value.match(/^span\s+(\d+)$/)
-      if (m) return { name: 'h', value: parseInt(m[1]) }
-      const v = value.match(/^span\s+(var\(--[^)]+\))$/)
-      if (v) return { name: 'h', value: v[1] }
-      return null
+      const span = parseGridSpan(value)
+      return span !== null ? { name: 'h', value: span } : null
     }
 
     // Slice 6 V-2 / non-grid: `position: absolute` from `x`/`y` outside grid.

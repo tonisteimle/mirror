@@ -55,7 +55,7 @@ import type {
 import * as InlineExtraction from '../transformers/inline-extraction'
 import type { InlineExtractionContext } from '../transformers/inline-extraction'
 import * as ControlFlow from '../transformers/control-flow-transformer'
-import type { ConditionalBlock, ControlFlowContext } from '../transformers/control-flow-transformer'
+import type { ControlFlowContext } from '../transformers/control-flow-transformer'
 import type { IRTransformer } from '../index'
 
 export function createEmptyNode(
@@ -210,11 +210,12 @@ export function transformChartPrimitive(
 export function transformInstance(
   this: IRTransformer,
   // Loose union: callers actually pass Instance | Each | ConditionalNode | Slot.
-  // Tightening this triggers cascading mismatches across transformConditional
-  // (ConditionalBlock vs ConditionalNode), extractInlineStatesAndEvents
-  // ((Instance | Text)[] vs the broader children list) and Slot dispatch —
-  // tracked as a separate finding. `any` documented to allow incremental
-  // fixes without one-shot mega-refactor.
+  // Slice 1 (ConditionalBlock-vs-ConditionalNode) konvergiert. Verbleibende
+  // Mismatches: extractInlineStatesAndEvents ((Instance | Text)[] vs the
+  // broader children list) und Slot-Dispatch in EachChild-Pfad — beides
+  // dead code (Probe `tools/probes/slot-in-each.ts` zeigt: Parser
+  // produziert Slot nie in Each/Conditional-Children). Tracker im
+  // Findings-Doc.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   instance: Instance | Each | any,
   parentId?: string,
@@ -728,7 +729,7 @@ export function transformEach(this: IRTransformer, each: Each): IRNode {
   return ControlFlow.transformEach(each, ctx)
 }
 
-export function transformConditional(this: IRTransformer, cond: ConditionalBlock): IRNode {
+export function transformConditional(this: IRTransformer, cond: ConditionalNode): IRNode {
   const ctx: ControlFlowContext = {
     generateId: () => this.generateId(),
     transformInstance: (inst, pid, isEach, isCond) =>
