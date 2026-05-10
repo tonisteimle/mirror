@@ -148,8 +148,6 @@ import {
   // Full project source (data + tokens + components + layouts) for
   // cross-file token/component lookup
   collectAllProjectSource,
-  // Tokens-only source collector (tokens + data, with localStorage fallback)
-  collectTokensSource,
   // Auto-create-files factory (stubs for `import` / `route` references)
   createAutoCreateFiles,
   // Editor-line offset for prelude (maps merged-source lines back to editor)
@@ -1507,13 +1505,6 @@ function compile(code: string) {
 // - TokenRenderer in studio/compile/token-renderer.ts
 // - ComponentRenderer in studio/compile/component-renderer.ts
 // Access via getTokenRenderer() and getComponentRenderer()
-
-function getTokensSource() {
-  return collectTokensSource({
-    getInMemoryFiles: () => files,
-    getFileType,
-  })
-}
 
 // ============================================
 // Studio Module - Bidirectional Editing
