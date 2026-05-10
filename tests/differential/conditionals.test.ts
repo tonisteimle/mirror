@@ -209,6 +209,32 @@ describe('Conditionals — Bug #23-#26 fixed: regression pins', () => {
     expect(r2).toContain('tokens["id"]')
   })
 
+  it('React: each-loop with body Conditional renders the body', () => {
+    // PIN: pre-2026-05-10 the each-loop renderer iterated only Instance
+    // and Each children — Conditional bodies (`if t.done\n  Text "..."`)
+    // were silently dropped, leaving the loop body an empty Fragment.
+    const src = `tasks:\n  t1:\n    done: true\n    title: "A"\n\neach t in $tasks\n  if t.done\n    Text "$t.title (done)"\n  else\n    Text "$t.title (todo)"`
+    const react = generateReact(parse(src))
+    expect(react).toContain('done')
+    expect(react).toContain('todo')
+    expect(react).toMatch(/t\.done\s*\?\s*\(/)
+  })
+
+  it('React: explicit `visible-when X` property wraps JSX with conditional', () => {
+    // PIN: pre-2026-05-10 the React backend handled the parser-desugared
+    // `visibleWhen` (from `if/else` blocks inside a parent) but ignored
+    // an explicit `Frame visible-when X` property. The Frame rendered
+    // unconditionally.
+    const react = generateReact(
+      parse(`loggedIn: false\n\nFrame visible-when loggedIn\n  Text "Protected"`)
+    )
+    expect(react).toMatch(/tokens\["loggedIn"\]\s*\?/)
+    expect(react).toContain(': null')
+    // Top-level Fragment wrap because the lone root item is now an
+    // expression, not a single JSX element.
+    expect(react).toMatch(/return\s*\(\s*<>/)
+  })
+
   it('Bug #26 fixed: ternary in Text with interpolated string-branches resolves', () => {
     const dom = generateDOM(parse(`count: 3\n\nText count > 0 ? "Items: $count" : "Empty"`))
     // The interpolation now produces a template-literal substitution

@@ -257,18 +257,21 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
         })
         continue
       }
-      rootItems.push({
-        kind: 'jsx',
-        code: generateJSX(
-          instance as Instance,
-          componentMap,
-          program.tokens || [],
-          propertySetMap,
-          rootItems.length === 0 && program.instances.length === 1 ? '    ' : '      ',
-          { type: null },
-          stateContext
-        ),
-      })
+      const code = generateJSX(
+        instance as Instance,
+        componentMap,
+        program.tokens || [],
+        propertySetMap,
+        rootItems.length === 0 && program.instances.length === 1 ? '    ' : '      ',
+        { type: null },
+        stateContext
+      )
+      // Visible-when wrap (`{cond ? <jsx /> : null}`) makes the root
+      // item a JS expression, not a plain JSX element. Mark accordingly
+      // so the top-level Fragment wrap kicks in — `return ({cond ? ... :
+      // null})` is invalid otherwise.
+      const startsWithExpr = /^\s*\{/.test(code)
+      rootItems.push({ kind: startsWithExpr ? 'expr' : 'jsx', code })
     }
   }
 
@@ -815,7 +818,19 @@ function generateJSX(
   // wrap. Same identifier-rewrite as inline ternaries: bare names become
   // `tokens["…"]`. The else-branch sibling carries `!(cond)`, which the
   // rewriter steps through unchanged.
-  const visibleWhen = (instance as Instance & { visibleWhen?: string }).visibleWhen
+  // Two sources of visible-when conditions:
+  //   1. `instance.visibleWhen` — set by the parser when an `if/else`
+  //      block inside a parent gets desugared to per-child conditions.
+  //   2. `visible-when <expr>` written as an explicit property — surfaces
+  //      as a regular Property in `instance.properties`.
+  // Both should wrap the rendered JSX with `{cond ? jsx : null}`.
+  const explicitVisibleProp = instance.properties.find(p => p.name === 'visible-when')
+  const explicitVisible =
+    explicitVisibleProp && typeof explicitVisibleProp.values[0] === 'string'
+      ? (explicitVisibleProp.values[0] as string)
+      : undefined
+  const visibleWhen =
+    (instance as Instance & { visibleWhen?: string }).visibleWhen ?? explicitVisible
 
   if (!hasChildren) {
     const selfClosing = `${indent}<${tag}${attrStr}${mirrorAttrStr}${stateAttr}${refStr}${styleStr} />`
@@ -999,6 +1014,24 @@ function generateEachJSX(
           stateContext
         )
       )
+    } else if (child.type === 'Conditional') {
+      // `each t in $tasks\n  if t.done\n    Text "..."\n  else\n    ...`
+      // Pre-2026-05-10 the each-loop renderer ignored Conditional
+      // children entirely — the loop body was an empty fragment.
+      childLines.push(
+        generateConditionalJSX(
+          child as ConditionalNode,
+          components,
+          tokens,
+          propertySetMap,
+          indent + '    ',
+          childContext,
+          stateContext
+        )
+      )
+    } else if ((child as { type: string }).type === 'Text') {
+      const c = child as unknown as { content: string }
+      childLines.push(`${indent}    {${JSON.stringify(c.content)}}`)
     }
   }
 
