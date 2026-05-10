@@ -719,7 +719,10 @@ class FrameworkGenerator {
     if (prop === 'border-radius') return { name: 'rad', value: this.parsePxValue(value) }
 
     // Typography
-    if (prop === 'font-size') return { name: 'font-size', value: this.parsePxValue(value) }
+    // Prefer Mirror's short alias (`fs`) over the CSS-name form so the
+    // round-tripped M(...) bag uses bare-identifier keys (`fs: 14`)
+    // instead of quoted hyphenated keys (`'font-size': 14`).
+    if (prop === 'font-size') return { name: 'fs', value: this.parsePxValue(value) }
     if (prop === 'font-weight') {
       // Convert numeric weights back to keywords for readability
       const weightKeywords: Record<string, string> = {

@@ -316,6 +316,17 @@ describe('Properties — DOM emits expected style values', () => {
     expect(r).not.toContain('<em>')
   })
 
+  it("Framework prefers Mirror's short alias `fs:` over CSS-form `'font-size':`", () => {
+    // PIN: pre-2026-05-10 the Framework reverse-mapper emitted
+    // `'font-size': N` (quoted key, hyphenated). Mirror DSL accepts
+    // both `font-size N` and `fs N` but the bare-identifier form is
+    // shorter and round-trips through the M(...) bag without quotes.
+    // Saves ~8KB across the example corpus.
+    const fw = generateFramework(parse(`Text "X", fs 14`))
+    expect(fw).toContain('fs: 14')
+    expect(fw).not.toContain("'font-size':")
+  })
+
   it('Framework round-trips `align bottom` (single-axis flex-end in row)', () => {
     // PIN: pre-2026-05-10 `align bottom`/`align right` collapsed to
     // single-axis flex-end with no Mirror-keyword reverse. Now mapped
