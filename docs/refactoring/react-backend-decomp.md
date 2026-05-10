@@ -4,14 +4,14 @@
 
 **Stand 2026-05-10:** Slice 1 (Layout & Component, `a9f52c64`),
 Slice 2 (Events, `fe11e256`), Slice 5 (Chart, `eb046dfa`),
-Slice 6 (Text, `8dd62a42`), Slice 4 (Icon, `262c1e48`) und
-Slice 3 (Attributes) abgehakt. react.ts: 3273 → 1960 LOC
-(40% Reduktion), sechs Module unter `compiler/backends/react/ops/`
-(layout.ts 239, events.ts 149, chart.ts 175, text.ts 490,
-icon.ts 251, attributes.ts 181). Differential-Tests 384/384 grün,
-full vitest 15441/15441. Verbleibend: Slice 7 (JSX, ~470 LOC) und
-Slice 8 (Style, ~830 LOC) — beide groß und tightly coupled,
-brauchen Care.
+Slice 6 (Text, `8dd62a42`), Slice 4 (Icon, `262c1e48`),
+Slice 3 (Attributes, `d7a3f4c2`) und Slice 8 (Style) abgehakt.
+react.ts: 3273 → 932 LOC (71% Reduktion), sieben Module unter
+`compiler/backends/react/ops/` (layout.ts 239, events.ts 149,
+chart.ts 175, text.ts 490, icon.ts 251, attributes.ts 181,
+style.ts 1068). Differential-Tests 384/384 grün, full vitest
+15441/15441. Nur Slice 7 (JSX, ~470 LOC) bleibt — generateJSX +
+generateEachJSX + generateConditionalJSX + wrapWithVisibility.
 
 ## Ausgangslage
 
