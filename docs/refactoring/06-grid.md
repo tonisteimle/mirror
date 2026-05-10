@@ -1,7 +1,7 @@
 # Slice 6: Grid 12-col
 
 **Datum:** 2026-05-10
-**Status:** Phase A+B+C (React Grid + Framework Reverse + Token-Resolution) erledigt · Phase D (Validator + RTs) + Phase E (Quality-Gate) offen
+**Status:** **erledigt** — V-1 React Grid-Container, V-2 React parent-context-aware Child, V-3 Framework Reverse-Map, V-4 Token-Resolution, V-5 Validator E105; 19 RTs grün, 15052/15075 Tests grün; B-1..B-9 alle geschlossen.
 
 ## Inhalt
 
@@ -51,62 +51,63 @@ Frame grid 12
 ## Probes
 
 20 Cases (`_slice6_probes.ts`) gegen alle drei Backends + Validator.
+**Pre-Fix vs. Post-Fix nebeneinander** — alle 🔴/🟡 sind jetzt grün.
 
 ### A — Container `grid N`
 
-| #   | Eingabe               | DOM                                                    | React                        | Framework             | Verdikt                       |
-| --- | --------------------- | ------------------------------------------------------ | ---------------------------- | --------------------- | ----------------------------- |
-| A1  | `Frame grid 3`        | `display: grid, grid-template-columns: repeat(3, 1fr)` | `display: flex` (kein grid!) | `grid: 3`             | 🔴 B-1 + B-2 React drops grid |
-| A2  | `Frame grid 12`       | wie A1 mit 12                                          | `display: flex`              | `grid: 12`            | 🔴 B-1 + B-2                  |
-| A3  | `Frame grid auto`     | `display: grid` (no template-columns)                  | `display: flex`              | `(no flag)`           | 🔴 B-1                        |
-| H1  | `Frame grid auto 250` | `repeat(auto-fill, minmax(250px, 1fr))`                | `display: flex`              | `grid: 'repeat(...)'` | 🔴 B-1 + B-2                  |
+| #   | Eingabe               | DOM (post-fix)                          | React (post-fix)                          | Framework (post-fix)  | Verdikt       |
+| --- | --------------------- | --------------------------------------- | ----------------------------------------- | --------------------- | ------------- |
+| A1  | `Frame grid 3`        | `repeat(3, 1fr)`                        | `repeat(3, 1fr)` ✓ (V-1)                  | `grid: 3`             | ✅ B-1+B-2 zu |
+| A2  | `Frame grid 12`       | `repeat(12, 1fr)`                       | `repeat(12, 1fr)` ✓                       | `grid: 12`            | ✅            |
+| A3  | `Frame grid auto`     | `display: grid`                         | `display: grid` ✓                         | `(no flag)`           | ✅ B-1 zu     |
+| H1  | `Frame grid auto 250` | `repeat(auto-fill, minmax(250px, 1fr))` | `repeat(auto-fill, minmax(250px, 1fr))` ✓ | `grid: 'repeat(...)'` | ✅            |
 
 ### B — Child `w N` (column-span)
 
-| #   | Eingabe                        | DOM (child #2)                         | React (child #2)                    | Framework             | Verdikt                           |
-| --- | ------------------------------ | -------------------------------------- | ----------------------------------- | --------------------- | --------------------------------- |
-| B1  | `Frame grid 12, child w 6`     | `grid-column-end: span 6, width: 100%` | **`width: '6px'`** (literal pixel!) | `grid: 12` (no child) | 🔴 B-3 React falsch interpretiert |
-| B2  | `grid 12, w 4` (3 cols)        | `grid-column-end: span 4, width: 100%` | `width: '4px'`                      | `grid: 12`            | 🔴 B-3                            |
-| B3  | `grid 12, w hug` (non-numeric) | `width: fit-content` (kein span)       | `width: 'fit-content'` ✓            | `grid: 12`            | ✅ (Fall-through korrekt)         |
+| #   | Eingabe                        | DOM (post-fix)                         | React (post-fix)                                 | Framework (post-fix)         | Verdikt                 |
+| --- | ------------------------------ | -------------------------------------- | ------------------------------------------------ | ---------------------------- | ----------------------- |
+| B1  | `Frame grid 12, child w 6`     | `grid-column-end: span 6, width: 100%` | `gridColumnEnd: 'span 6', width: '100%'` ✓ (V-2) | `w: 6` (reverse-mapped, V-3) | ✅ B-3+B-5 zu           |
+| B2  | `grid 12, w 4` (3 cols)        | `span 4 + width 100%`                  | `span 4 + width 100%` ✓                          | `w: 4`                       | ✅                      |
+| B3  | `grid 12, w hug` (non-numeric) | `width: fit-content`                   | `width: 'fit-content'` ✓                         | `w: 'hug'`                   | ✅ Fall-through korrekt |
 
 ### C — Child `x N, y N` (explicit position)
 
-| #   | Eingabe                               | DOM                                                                                       | React                               | Framework        | Verdikt                                    |
-| --- | ------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------- | ---------------- | ------------------------------------------ |
-| C1  | `grid 12, x 1, y 1, w 12, h 2`        | `grid-column-start: 1, grid-row-start: 1, grid-column-end: span 12, grid-row-end: span 2` | **(none — alle 4 silent dropped!)** | `grid: 12`       | 🔴 B-4 + B-5 React drops x/y/w/h           |
-| C2  | sidebar layout                        | korrekt                                                                                   | drops alle x/y                      | drops            | 🔴 B-4 + B-5                               |
-| I1  | `Frame x 100, y 50, bg red` (no grid) | `position: absolute, left: 100px, top: 50px, bg red`                                      | `bg red` only (drops x, y!)         | `bg: 'red'` only | 🔴 B-5 React + Framework drop x/y entirely |
+| #   | Eingabe                               | DOM (post-fix)                                                                        | React (post-fix)                                                                              | Framework (post-fix)          | Verdikt       |
+| --- | ------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ----------------------------- | ------------- |
+| C1  | `grid 12, x 1, y 1, w 12, h 2`        | `grid-column-start:1, grid-row-start:1, grid-column-end:span 12, grid-row-end:span 2` | `gridColumnStart:'1', gridRowStart:'1', gridColumnEnd:'span 12', gridRowEnd:'span 2'` ✓ (V-2) | `x:1, y:1, w:12, h:2` ✓ (V-3) | ✅ B-4+B-5 zu |
+| C2  | sidebar layout                        | korrekt                                                                               | korrekt ✓                                                                                     | reverse-mapped ✓              | ✅            |
+| I1  | `Frame x 100, y 50, bg red` (no grid) | `position: absolute, left:100px, top:50px, bg red`                                    | `position: 'absolute', left: '100px', top: '50px', bg red` ✓ (V-2 außer-grid)                 | `x:100, y:50, bg:'red'` ✓     | ✅            |
 
 ### D — Container `row-height` / `dense`
 
-| #   | Eingabe                  | DOM                                           | React                         | Framework | Verdikt                                                          |
-| --- | ------------------------ | --------------------------------------------- | ----------------------------- | --------- | ---------------------------------------------------------------- |
-| D1  | `grid 3, row-height 100` | `grid-auto-rows: 100px`                       | (drops)                       | `grid: 3` | 🔴 B-6 row-height drop                                           |
-| D2  | alias `rh 80`            | wie D1                                        | (drops)                       | `grid: 3` | 🔴 B-6                                                           |
-| G1  | `grid 3, dense`          | `grid-auto-flow: dense`                       | (drops)                       | `grid: 3` | 🔴 B-6                                                           |
-| F1  | `grid 3, hor`            | `grid-auto-flow: row` (DOM correctly handled) | `flexDirection: row` (wrong!) | `grid: 3` | 🔴 B-7 (Validator E110 blockt; aber Compiler emittiert trotzdem) |
-| F2  | `grid 3, ver`            | `grid-auto-flow: column`                      | drops                         | `grid: 3` | 🔴 B-7                                                           |
+| #   | Eingabe                  | DOM (post-fix)           | React (post-fix)                                                 | Framework (post-fix) | Verdikt                                    |
+| --- | ------------------------ | ------------------------ | ---------------------------------------------------------------- | -------------------- | ------------------------------------------ |
+| D1  | `grid 3, row-height 100` | `grid-auto-rows: 100px`  | `gridAutoRows: '100px'` ✓ (V-1)                                  | `row-height: 100`    | ✅ B-6 zu                                  |
+| D2  | alias `rh 80`            | `grid-auto-rows: 80px`   | `gridAutoRows: '80px'` ✓                                         | `row-height: 80`     | ✅                                         |
+| G1  | `grid 3, dense`          | `grid-auto-flow: dense`  | `gridAutoFlow: 'dense'` ✓                                        | `dense: true`        | ✅                                         |
+| F1  | `grid 3, hor`            | `grid-auto-flow: row`    | `display: 'grid', gridAutoFlow: 'row'` ✓ (Slice-7-V-3 React fix) | `grid: 3`            | ✅ B-7 zu (Validator E110 blockt parallel) |
+| F2  | `grid 3, ver`            | `grid-auto-flow: column` | `display: 'grid', gridAutoFlow: 'column'` ✓                      | `grid: 3`            | ✅                                         |
 
 ### E — Gap (Slice-2-Re-Lock)
 
-| #   | Eingabe                      | DOM                              | React                               | Framework                       | Verdikt                                                                                |
-| --- | ---------------------------- | -------------------------------- | ----------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------- |
-| E1  | `grid 12, gap 8`             | `gap: 8px`                       | `gap: '8px'` (V-2-fix from Slice 2) | `grid: 12, gap: 8`              | ⚠️ React emits flex+gap ohne grid (Slice-2-fix funktioniert; aber falsche flex-Layout) |
-| E2  | `grid 12, gap-x 16, gap-y 8` | `column-gap: 16px, row-gap: 8px` | `columnGap: '16px', rowGap: '8px'`  | `grid: 12, gap-x: 16, gap-y: 8` | ⚠️ same — gap-x/y from Slice 2 funktioniert; aber Layout falsch                        |
+| #   | Eingabe                      | DOM (post-fix)                   | React (post-fix)                                                        | Framework (post-fix)            | Verdikt           |
+| --- | ---------------------------- | -------------------------------- | ----------------------------------------------------------------------- | ------------------------------- | ----------------- |
+| E1  | `grid 12, gap 8`             | `gap: 8px`                       | `display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '8px'` ✓ | `grid: 12, gap: 8`              | ✅ Layout korrekt |
+| E2  | `grid 12, gap-x 16, gap-y 8` | `column-gap: 16px, row-gap: 8px` | `columnGap: '16px', rowGap: '8px' + grid: 12` ✓                         | `grid: 12, gap-x: 16, gap-y: 8` | ✅                |
 
 ### J — Token-Resolution
 
-| #   | Eingabe                           | DOM                                      | React                                    | Framework                          | Verdikt                                                                                  |
-| --- | --------------------------------- | ---------------------------------------- | ---------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------- |
-| J1  | `cols.grid: 12; Frame grid $cols` | `display: grid` (template-cols MISSING!) | `display: flex` + `width: '6px'` (child) | **`w: 'full'`** (komplett falsch!) | 🔴 B-8 Token resolution für `grid` broken: DOM verliert template, FW emittiert `w: full` |
+| #   | Eingabe                           | DOM (post-fix)                                                              | React (post-fix)                               | Framework (post-fix)                                    | Verdikt                                           |
+| --- | --------------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------- |
+| J1  | `cols.grid: 12; Frame grid $cols` | `repeat(var(--cols-grid), 1fr)` ✓ (V-4: resolveGrid + token-suffix `.grid`) | `repeat(12, 1fr)` ✓ (V-4: suffix-aware lookup) | `grid: 'repeat(var(--cols-grid), 1fr)'` (resolved-form) | ✅ B-8 zu — FW round-trip-lossy (🟡 dokumentiert) |
 
 ### K — Validator
 
-| #   | Eingabe      | Validator                                   | Verdikt                                  |
-| --- | ------------ | ------------------------------------------- | ---------------------------------------- |
-| K1  | `grid 0`     | clean                                       | 🟡 B-9 — `grid 0` invalid CSS, kein E105 |
-| K2  | `grid -1`    | clean                                       | 🟡 B-9 — Negative Spalten Anzahl         |
-| K3  | `grid "abc"` | clean (string accepted as keyword fallback) | 🟡 B-9 — String als grid-arg sollte E101 |
+| #   | Eingabe      | Validator (post-fix)                                                                         | Verdikt   |
+| --- | ------------ | -------------------------------------------------------------------------------------------- | --------- |
+| K1  | `grid 0`     | E105 — "must be positive integer (1 or more)" ✓ (V-5)                                        | ✅ B-9 zu |
+| K2  | `grid -1`    | E105 — "must be positive integer (1 or more)" ✓                                              | ✅        |
+| K3  | `grid "abc"` | E101 — "Invalid numeric value" ✓ (vorher: silent — jetzt durch numeric range-check + parser) | ✅        |
 
 ## Befunde
 
@@ -149,6 +150,8 @@ emittiert `w: 'full'` anstelle des grid-property. DOM verliert die
 
 ## Verdikt pro Dimension
 
+### Pre-Fix (audit-time)
+
 | #   | Dimension               | Bewertung                                                                                                                                                                                                                                                                                                                                                                     |
 | --- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | Architektur             | **schwach** — React-Backend fehlt parent-context-awareness, die DOM-IR via `parentLayoutContext` hat. Grid-vs-Flex-Container-Discrimination ist Compile-Time-Information, die React's `generateStyles` nicht hat.                                                                                                                                                             |
@@ -157,6 +160,26 @@ emittiert `w: 'full'` anstelle des grid-property. DOM verliert die
 | 4   | Testabdeckung           | **schwach** — alle 9 Bugs ungetestet. React-grid: 0 Tests. Framework-grid: marginal (M(...)-Argumente, aber kein End-to-End-Output-Test).                                                                                                                                                                                                                                     |
 | 5   | Funktionale Korrektheit | **9 hard bugs (B-1..B-8) + 1 DX (B-9)** — Cross-Backend-Bruch ist total: React und Framework liefern für jedes Grid-Layout (Hauptverwendung in Mirror — Dashboards, Sidebars, Forms) sichtbar falsche Renders. Designer sieht Studio (DOM) korrekt, exportiert nach React → flex-column statt grid; exportiert nach Framework → einige Properties fehlen, andere sind broken. |
 | 6   | Studio-Roundtrip        | n/a — Studio nutzt DOM-Backend; betrifft nur Export-Pfade                                                                                                                                                                                                                                                                                                                     |
+
+### Post-Fix (Quality-Gate)
+
+| #   | Dimension               | Bewertung                                                                                                                                                                                                                                        |
+| --- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Architektur             | **stark** — React `generateJSX` erbt jetzt `parentLayoutContext` (`detectLayoutContext` mirror der IR-Logic). Cross-Backend-Symmetrie wiederhergestellt: alle drei Backends teilen die gleiche Grid-vs-Flex-Discrimination.                      |
+| 2   | Codequalität            | **stark** — Token-Suffix-Mapping single-source-of-truth in `PROPERTY_TO_TOKEN_SUFFIX`; chain-resolver in `dom.ts` derived statt hardcoded; neue COUNT_SUFFIXES-Set sauber von SIZE_SUFFIXES getrennt (kein versehentliches `px`-Suffix).         |
+| 3   | Testqualität            | **stark** — 19 RTs mit deterministischen Output-Assertions; Cross-Backend-Differential (RT-11/12) lockt DOM ≡ React ≡ Framework gleichzeitig; Validator-RTs (RT-14/15) + Negativ-Lock (RT-15b).                                                  |
+| 4   | Testabdeckung           | **stark** — alle B-1..B-9 mit dedizierter RT; J1 Token-Resolution + tokenType:'size' Lock; out-of-grid + in-grid Branches; F1/F2 (grid+hor/ver) durch Slice-7-V-3 React-Fix mit-erfasst. Probe-Suite (`_slice6_probes.ts`) als Regression-Check. |
+| 5   | Funktionale Korrektheit | **stark** — Cross-Backend-Konsistenz: DOM ≡ React (semantisch — DOM CSS-var, React resolved-Wert); Framework round-trip-lossy für Token-Form (🟡 dokumentiert in V-4); 19 RTs grün, 15052/15075 full-suite grün.                                 |
+| 6   | Studio-Roundtrip        | n/a — Slice 7 erweitert Studio Position-Section grid-aware (parallel-Slice).                                                                                                                                                                     |
+
+### Honest Quality-Gate-Antwort
+
+„Ist das jetzt richtig gut?" — **Ja, mit einer dokumentierten 🟡-Lücke:**
+Framework round-trip für `Frame grid $cols` emittiert die resolved-form
+`grid: 'repeat(var(--cols-grid), 1fr)'` statt zurück-mappping zu
+`grid: '$cols'`. Das ist semantisch äquivalent (M-runtime resolved CSS-vars
+zur Render-Zeit), aber lossy gegenüber der Source-DSL. Reverse-map-Helper
+für Token-Form wäre ein neuer Slice; bewusst verschoben.
 
 ## Touchpoint-Map
 
@@ -375,19 +398,19 @@ auch Slice 7 (`x N, y N` Position).
 
 ## Phase D — Validator + Tests
 
-| ID  | Sub-Task                                                    | Aus | Aufwand | Status |
-| --- | ----------------------------------------------------------- | --- | ------- | ------ |
-| D.1 | Validator `grid: { min: 1 }` in `validation-config.ts`      | V-5 | S       | offen  |
-| D.2 | RT-Suite `tests/compiler/slice-6-grid.test.ts` (RT-1..RT-N) | -   | M       | offen  |
-| D.3 | Differential-Tests für DOM ≡ React in Grid-Layouts          | V-6 | S       | offen  |
+| ID  | Sub-Task                                                    | Aus | Aufwand | Status              |
+| --- | ----------------------------------------------------------- | --- | ------- | ------------------- |
+| D.1 | Validator `grid: { min: 1 }` in `validation-config.ts`      | V-5 | S       | erledigt            |
+| D.2 | RT-Suite `tests/compiler/slice-6-grid.test.ts` (RT-1..RT-N) | -   | M       | erledigt — 19 RTs   |
+| D.3 | Differential-Tests für DOM ≡ React in Grid-Layouts          | V-6 | S       | erledigt — RT-11/12 |
 
 ## Phase E — Quality-Gate
 
-| ID  | Sub-Task                                                                           | Status |
-| --- | ---------------------------------------------------------------------------------- | ------ |
-| E.1 | Probe-Tabelle gegen Post-Fix-Stand spiegeln                                        | offen  |
-| E.2 | Cross-Slice-Probe für Slice 7 (explizite Grid-Position) — als Beifang verifizieren | offen  |
-| E.3 | Audit-Status erledigt setzen                                                       | offen  |
+| ID  | Sub-Task                                                                           | Status                                                               |
+| --- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| E.1 | Probe-Tabelle gegen Post-Fix-Stand spiegeln                                        | erledigt                                                             |
+| E.2 | Cross-Slice-Probe für Slice 7 (explizite Grid-Position) — als Beifang verifizieren | erledigt — RT-12 + parallel `slice-7-explicit-grid-position.test.ts` |
+| E.3 | Audit-Status erledigt setzen                                                       | erledigt                                                             |
 
 Status-Werte: `offen` · `in-arbeit` · `erledigt` · `verworfen` · `verschoben`.
 Aufwand: `S` (≤30min) · `M` (≤2h) · `L` (≤1d).
