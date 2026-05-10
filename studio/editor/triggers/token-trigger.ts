@@ -10,11 +10,11 @@ import { Transaction } from '@codemirror/state'
 import {
   TokenPicker,
   createTokenPicker,
-  parseTokensFromFiles,
   filterTokensBySuffix as filterBySuffix,
   filterTokensByType as filterByType,
   type TokenDefinition,
 } from '../../pickers'
+import { parseTokensFromFilesViaAST } from '../../pickers/token/parse-via-ast'
 import type { TriggerConfig, TriggerContext } from './types'
 import { getTriggerManager } from '../trigger-manager'
 
@@ -78,11 +78,16 @@ let tokenState: TokenTriggerState = {
 }
 
 /**
- * Extract tokens from all project files
+ * Extract tokens from all project files. Uses the AST-based parser
+ * (parseTokensFromFilesViaAST) — equivalent to the legacy regex
+ * parseTokensFromFiles for every fixture in the migration test suite,
+ * including the real-world examples/personas-informatik/tokens.tok.
+ * Cut over in the parseTokens migration tracked in docs/findings.md.
+ *
  * @param files - Map of filename to content
  */
 export function extractAllTokens(files: Record<string, string>): TokenDefinition[] {
-  return parseTokensFromFiles(files)
+  return parseTokensFromFilesViaAST(files)
 }
 
 /**

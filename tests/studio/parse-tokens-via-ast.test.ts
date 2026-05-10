@@ -146,19 +146,14 @@ describe('parseTokensFromFilesViaAST: multi-file dedup', () => {
   })
 })
 
-describe('parseTokensViaAST: known divergences from parseTokens', () => {
-  // The regex parser silently skips `name: hello world` (single-segment
-  // non-numeric body). The compiler parses it as a property-set with
-  // one property (depending on parser-context). This is a known regex-
-  // parser quirk; document it explicitly so the cut-over slice can
-  // decide whether to preserve the divergence in a post-pass.
-  it('single-segment non-numeric body — regex skips, AST may emit', () => {
-    const regex = parseTokens('text: hello world')
-    const ast = parseTokensViaAST('text: hello world')
-    expect(regex).toEqual([])
-    // No assertion on `ast` — pinned for awareness only. If a future
-    // change to the AST mapper aligns the two, tighten this then.
-    expect(Array.isArray(ast)).toBe(true)
+describe('parseTokensViaAST: edge cases that matched on inspection', () => {
+  // Earlier audit noted `text: hello world` as a "potential divergence"
+  // (regex parser explicitly skips single-segment non-numeric bodies).
+  // The compiler parser turns out to skip it too — bare-word values
+  // never make it into AST.tokens. Both implementations agree.
+  it('single-segment non-numeric body — both skip', () => {
+    expect(parseTokens('text: hello world')).toEqual([])
+    expect(parseTokensViaAST('text: hello world')).toEqual([])
   })
 
   it('comments and empty lines — both ignore', () => {
