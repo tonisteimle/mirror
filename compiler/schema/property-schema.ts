@@ -1275,7 +1275,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
   weight: {
     name: 'weight',
-    aliases: [],
+    aliases: ['font-weight'],
     category: 'typography',
     description: 'Font weight',
 
@@ -1302,7 +1302,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
   line: {
     name: 'line',
-    aliases: [],
+    aliases: ['line-height'],
     category: 'typography',
     description: 'Line height',
 
@@ -1333,7 +1333,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
 
   font: {
     name: 'font',
-    aliases: [],
+    aliases: ['font-family'],
     category: 'typography',
     description: 'Font family',
 
