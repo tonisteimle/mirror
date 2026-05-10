@@ -155,6 +155,34 @@ describe('Events — Behavior Spec', () => {
         )
       ).not.toThrow()
     })
+
+    // PIN: ArrowDown/ArrowUp keydowns actually fire the bound action
+    // and mutate __mirrorData. Once tracked as „Runtime bug" via TODO
+    // in studio/test-api/suites/events/keyboard.test.ts:86 — root
+    // cause was the test using the non-existent `onkeydown-arrow-down`
+    // syntax (parsed as an inert property). Correct DSL is
+    // `onkeydown(arrow-down) ...` (parens). Probe in
+    // `tools/probes/keyboard-arrow.ts` confirms correctness.
+    it('ArrowDown actually fires increment, ArrowUp fires decrement', () => {
+      const root = render(
+        `selectedIndex: 0\n\nFrame focusable, onkeydown(arrow-down) increment(selectedIndex), onkeydown(arrow-up) decrement(selectedIndex)\n  Text "selected: $selectedIndex"`,
+        container
+      )
+      const frame = findByName(root, 'Frame') as HTMLElement
+      const text = findByName(root, 'Text') as HTMLElement
+
+      expect(text.textContent?.trim()).toBe('selected: 0')
+
+      frame.focus()
+      frame.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))
+      expect(text.textContent?.trim()).toBe('selected: 1')
+
+      frame.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))
+      expect(text.textContent?.trim()).toBe('selected: 2')
+
+      frame.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
+      expect(text.textContent?.trim()).toBe('selected: 1')
+    })
   })
 
   // ---------------------------------------------------------------------------

@@ -2,7 +2,7 @@
  * Keyboard Events — Enter, Escape, Space, arrow keys
  */
 
-import { testWithSetup, testWithSetupSkip, describe, type TestCase } from '../../test-runner'
+import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 
 export const keyboardEventTests: TestCase[] = describe('Keyboard Events', [
@@ -83,12 +83,11 @@ Frame gap 8, pad 16, bg #1a1a1a
     }
   ),
 
-  // TODO: Runtime bug - onkeydown-arrow-* events don't fire correctly in headless tests
-  testWithSetupSkip(
+  testWithSetup(
     'Arrow keys change selected index',
     `selectedIndex: 0
 
-Frame gap 4, pad 16, bg #1a1a1a, focusable, onkeydown-arrow-down increment(selectedIndex), onkeydown-arrow-up decrement(selectedIndex)
+Frame gap 4, pad 16, bg #1a1a1a, focusable, onkeydown(arrow-down) increment(selectedIndex), onkeydown(arrow-up) decrement(selectedIndex)
   Text "Item 1", pad 8, bg selectedIndex == 0 ? #2271C1 : #333, col white, rad 4
   Text "Item 2", pad 8, bg selectedIndex == 1 ? #2271C1 : #333, col white, rad 4
   Text "Item 3", pad 8, bg selectedIndex == 2 ? #2271C1 : #333, col white, rad 4`,
