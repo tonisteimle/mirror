@@ -18,12 +18,10 @@ export interface DropZone {
   element?: HTMLElement
 }
 
-export interface ParseError {
-  message: string
-  line: number
-  column: number
-  hint?: string
-}
+// Re-export the canonical ParseError from compiler so studio code,
+// the events barrel, and downstream consumers share one shape (no drift).
+export type { ParseError } from '../../compiler/parser/ast'
+import type { ParseError } from '../../compiler/parser/ast'
 
 // Re-export the canonical CodeChange so the source:changed event payload
 // shares the same type as the code-modifier output (no drift).

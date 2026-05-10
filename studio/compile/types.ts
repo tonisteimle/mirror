@@ -2,6 +2,10 @@
  * Compile Module Types
  */
 
+// Canonical ParseError from compiler — used inline in AST and re-exported
+// at the bottom so the compile barrel continues to surface the type.
+import type { ParseError } from '../../compiler/parser/ast'
+
 // === File Types ===
 
 export type FileType = 'layout' | 'tokens' | 'component' | 'data'
@@ -45,10 +49,9 @@ export interface Token {
   section?: string
 }
 
-export interface ParseError {
-  line: number
-  message: string
-}
+// Canonical ParseError from compiler — re-export so the compile barrel
+// continues to surface the type without drift.
+export type { ParseError } from '../../compiler/parser/ast'
 
 // === IR Types ===
 
