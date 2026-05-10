@@ -49,8 +49,6 @@ export {
   SetTextContentCommand,
   createCommand,
   parseCommandFromLLM,
-  setCommandContext,
-  getCommandContext,
 } from './commands'
 export {
   executor,

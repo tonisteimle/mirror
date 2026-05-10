@@ -13,8 +13,8 @@ import {
   createLayoutService,
   setLayoutService,
   type LayoutService,
+  type CommandContext,
 } from '../core'
-import { getCommandContext } from '../core/commands'
 import type { SourceMap } from '../../compiler/ir/source-map'
 import { HandleManager, createHandleManager } from './handle-manager'
 import { KeyboardHandler, createKeyboardHandler } from './keyboard-handler'
@@ -133,6 +133,12 @@ export interface PreviewConfig {
   enableContextMenu?: boolean
   /** Enable visual code system (resize handles, drop zones) */
   enableVisualCode?: boolean
+  /**
+   * Provider for the active CommandContext, used by the keyboard handler so
+   * position-arrow keys can dispatch SetPositionCommand. When omitted (e.g.
+   * isolated tests) the keyboard handler silently no-ops on those keys.
+   */
+  getCommandContext?: () => CommandContext | null
 }
 
 export type SelectionCallback = (nodeId: string | null, element: HTMLElement | null) => void
@@ -208,6 +214,7 @@ export class PreviewController {
       enableKeyboardShortcuts: config.enableKeyboardShortcuts ?? false,
       enableContextMenu: config.enableContextMenu ?? false,
       enableVisualCode: config.enableVisualCode ?? false,
+      getCommandContext: config.getCommandContext ?? (() => null),
     }
     this.boundHandleClick = this.handleClick.bind(this)
     this.boundHandleDoubleClick = this.handleDoubleClick.bind(this)
@@ -239,13 +246,7 @@ export class PreviewController {
         // Wire up the command context so position-arrow keys can dispatch
         // SetPositionCommand. Without this, every ArrowKey-on-absolute-
         // element silently no-opped (and surfaced a stale-state warning).
-        getCommandContext: () => {
-          try {
-            return getCommandContext()
-          } catch {
-            return null
-          }
-        },
+        getCommandContext: this.config.getCommandContext,
       })
       this.keyboardHandler.attach()
     }

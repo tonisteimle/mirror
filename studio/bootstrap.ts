@@ -7,8 +7,6 @@ import {
   actions,
   events,
   executor,
-  setCommandContext,
-  getCommandContext,
   getStateSelectionAdapter,
   SetPropertyCommand,
   RemovePropertyCommand,
@@ -228,6 +226,11 @@ function getDefaultAllSource(): string {
 
 // Global studio context
 let studioContext: StudioContext | null = null
+
+// CommandContext is constructed in initStudio and held here so module-scoped
+// callbacks (e.g. updateStudioState's PropertyPanel onApply path) can read
+// it without reaching into a deprecated cross-module global.
+let commandContext: CommandContext | null = null
 
 /**
  * Generate Mirror component code from drag data
@@ -453,6 +456,11 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   // Editor Drop Handler is now handled by createComponentDropExtension in app.js
   // Uses CodeMirror's native extension system for proper drop handling
 
+  // CommandContext is constructed below (after sync is wired) and injected
+  // into the executor + preview keyboard handler. The module-level
+  // `commandContext` slot lets exported callbacks (updateStudioState's
+  // PropertyPanel onApply) read it without a cross-module global.
+
   // Preview (with direct manipulation handles, keyboard shortcuts, context menu, visual code system, and element move)
   const previewController = createPreviewController({
     container: config.previewContainer,
@@ -462,6 +470,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     enableKeyboardShortcuts: true,
     enableContextMenu: true,
     enableVisualCode: true,
+    getCommandContext: () => commandContext,
   })
   previewController.attach()
   setPreviewController(previewController)
@@ -511,7 +520,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   // Command context
   // getSource returns editor content (current file only)
   // getResolvedSource returns prelude + current file (for CodeModifier to match SourceMap)
-  setCommandContext({
+  commandContext = {
     getSourceMap: () => state.get().sourceMap,
     getSource: () => editorController.getContent(),
     getResolvedSource: () => {
@@ -543,12 +552,13 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     },
     compile: () => events.emit('compile:requested', {}),
     clearSelection: origin => syncCoordinator.clearSelection(origin),
-  })
+  }
+  executor.setContext(commandContext)
 
   // Wire events
-  // handle:drag-end calls executor.execute(...) which needs CommandContext —
-  // subscribe AFTER setCommandContext above so an early emit can never see an
-  // uninitialized context.
+  // handle:drag-end calls executor.execute(...) which needs the injected
+  // CommandContext — subscribe AFTER executor.setContext above so an early
+  // emit can never see an uninitialized context.
   eventUnsubscribes.push(
     events.on('handle:drag-end', ({ nodeId, property, value }) => {
       // Use executor to apply property change (supports undo/redo)
@@ -948,7 +958,7 @@ export function updateStudioState(
             // user's source. Use the shared wrap-aware adjuster so this
             // path stays in sync with studio/app.js's
             // handleStudioCodeChange (single source of truth).
-            const ctx = getCommandContext()
+            const ctx = commandContext
             if (ctx?.applyChange) {
               const s = state.get()
               const adjustedChange = adjustChangeForWrap(

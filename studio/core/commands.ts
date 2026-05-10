@@ -43,23 +43,6 @@ export interface CommandContext {
   clearSelection?: (origin: 'keyboard') => void
 }
 
-// Legacy: Global command context for backward compatibility
-// Will be removed in future version - use CommandExecutor with injected context instead
-let legacyCommandContext: CommandContext | null = null
-
-/** @deprecated Use CommandExecutor with injected context instead */
-export function setCommandContext(context: CommandContext): void {
-  legacyCommandContext = context
-}
-
-/** @deprecated Commands now receive context as parameter */
-export function getCommandContext(): CommandContext {
-  if (!legacyCommandContext) {
-    throw new Error('Command context not initialized. Use CommandExecutor with injected context.')
-  }
-  return legacyCommandContext
-}
-
 /**
  * Adjust a CodeModifier change for the editor.
  *

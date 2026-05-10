@@ -10,7 +10,6 @@ import {
   events,
   executor,
   RecordedChangeCommand,
-  setCommandContext,
   type StudioState,
 } from '../../studio/core'
 
@@ -25,10 +24,12 @@ function setupMockContext() {
     },
     compile: () => {},
   }
-  setCommandContext(mockContext)
+  executor.setContext(mockContext)
   return {
     getSource: () => source,
-    setSource: (s: string) => { source = s },
+    setSource: (s: string) => {
+      source = s
+    },
   }
 }
 
@@ -448,18 +449,24 @@ describe('Workflow Scenarios', () => {
 
   it('Scenario: Multiple rapid changes followed by undo', () => {
     // Record several changes
-    executor.execute(new RecordedChangeCommand({
-      change: { from: 0, to: 0, insert: '1' },
-      inverseChange: { from: 0, to: 1, insert: '' },
-    }))
-    executor.execute(new RecordedChangeCommand({
-      change: { from: 0, to: 0, insert: '2' },
-      inverseChange: { from: 0, to: 1, insert: '' },
-    }))
-    executor.execute(new RecordedChangeCommand({
-      change: { from: 0, to: 0, insert: '3' },
-      inverseChange: { from: 0, to: 1, insert: '' },
-    }))
+    executor.execute(
+      new RecordedChangeCommand({
+        change: { from: 0, to: 0, insert: '1' },
+        inverseChange: { from: 0, to: 1, insert: '' },
+      })
+    )
+    executor.execute(
+      new RecordedChangeCommand({
+        change: { from: 0, to: 0, insert: '2' },
+        inverseChange: { from: 0, to: 1, insert: '' },
+      })
+    )
+    executor.execute(
+      new RecordedChangeCommand({
+        change: { from: 0, to: 0, insert: '3' },
+        inverseChange: { from: 0, to: 1, insert: '' },
+      })
+    )
 
     // Undo all
     executor.undo()

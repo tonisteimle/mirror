@@ -3,7 +3,7 @@
  */
 
 import type { Command, CommandResult, CommandContext } from './commands'
-import { BatchCommand, getCommandContext } from './commands'
+import { BatchCommand } from './commands'
 import { events, type StudioEvents } from './events'
 
 interface HistoryEntry {
@@ -19,7 +19,7 @@ interface Session {
 export interface CommandExecutorOptions {
   maxHistory?: number
   emitEvents?: boolean
-  /** Injected context - if not provided, falls back to legacy global context */
+  /** Injected context - required before any command can execute */
   context?: CommandContext
 }
 
@@ -38,14 +38,14 @@ export class CommandExecutor {
     this.injectedContext = options.context ?? null
   }
 
-  /** Get the command context (injected or legacy global) */
   private getContext(): CommandContext {
-    if (this.injectedContext) return this.injectedContext
-    // Fallback to legacy global context for backward compatibility
-    return getCommandContext()
+    if (!this.injectedContext) {
+      throw new Error('CommandExecutor: context not injected. Call executor.setContext(...) first.')
+    }
+    return this.injectedContext
   }
 
-  /** Update the injected context (useful when context changes after construction) */
+  /** Inject the command context (required before execute/undo/redo). */
   setContext(context: CommandContext): void {
     this.injectedContext = context
   }

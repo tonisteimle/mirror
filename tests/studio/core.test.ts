@@ -16,7 +16,6 @@ import {
   DeleteNodeCommand,
   MoveNodeCommand,
   UpdateSourceCommand,
-  setCommandContext,
   type CommandContext,
   type StudioState,
   type Command,
@@ -471,7 +470,7 @@ describe('Command Executor', () => {
   beforeEach(() => {
     executor.clear()
     // Set up command context for executor tests
-    setCommandContext({
+    executor.setContext({
       getSourceMap: () => null,
       getSource: () => 'test source',
       getResolvedSource: () => 'test source',
@@ -919,7 +918,7 @@ describe('RecordedChangeCommand', () => {
       applyChange: applyChangeMock,
       compile: compileMock,
     }
-    setCommandContext(ctx)
+    executor.setContext(ctx)
   })
 
   describe('First Execute', () => {
@@ -1079,7 +1078,7 @@ describe('SetPropertyCommand', () => {
         hasValue: true,
       }),
     }
-    setCommandContext({
+    executor.setContext({
       getSourceMap: () => mockSourceMap,
       getSource: () => 'Box bg #fff',
       applyChange: applyChangeMock,
@@ -1116,7 +1115,7 @@ describe('SetPropertyCommand', () => {
 describe('Integration: Executor with Commands', () => {
   beforeEach(() => {
     executor.clear()
-    setCommandContext({
+    executor.setContext({
       getSourceMap: () => null,
       getSource: () => 'test source',
       applyChange: vi.fn(),
@@ -1126,7 +1125,7 @@ describe('Integration: Executor with Commands', () => {
 
   it('should execute RecordedChangeCommand and allow undo/redo', () => {
     const applyChangeMock = vi.fn()
-    setCommandContext({
+    executor.setContext({
       getSourceMap: () => null,
       getSource: () => 'test source',
       applyChange: applyChangeMock,
@@ -1152,7 +1151,7 @@ describe('Integration: Executor with Commands', () => {
 
   it('should handle multiple commands in sequence', () => {
     const changes: string[] = []
-    setCommandContext({
+    executor.setContext({
       getSourceMap: () => null,
       getSource: () => 'test source',
       applyChange: (c: any) => changes.push(c.insert),
@@ -1194,7 +1193,7 @@ describe('Integration: Executor with Commands', () => {
 
   it('should execute BatchCommand and allow single undo', () => {
     const applyChangeMock = vi.fn()
-    setCommandContext({
+    executor.setContext({
       getSourceMap: () => null,
       getSource: () => 'test source',
       applyChange: applyChangeMock,
