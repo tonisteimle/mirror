@@ -115,6 +115,26 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
+- **Wo:** `compiler/ir/ops/properties-ops.ts:transformProperties`
+  **Was:** Echter Runtime-Bug aus dem TODO-Bucket. `x-offset` und
+  `y-offset` werden vom Schema-Numeric-Handler je als
+  `{property: 'transform', value: 'translateX/Y(Npx)'}` emittiert.
+  `rotate`/`scale` gehen durch transformContext.transforms[] in
+  properties-ops.ts und werden zu `scale(...) rotate(...)` kombiniert.
+  Folge: `Frame x-offset 20, y-offset 15` produziert nur
+  `translateY(15px)` (last-wins overwrite); `Frame x-offset 20, scale 1.2,
+rotate 45` droppt translateX komplett (combined transform überschreibt
+  die Schema-Emit-Variante). Probe `tools/probes/transform-combine.ts`
+  reproduziert deterministisch.
+  **Status:** aktiv (Claude-Session, 2026-05-10 ~23:00)
+  **Plan:** x-offset/y-offset in beide Passes der properties-ops
+  einbauen (analog zu rotate/scale): Pass 1 sammeln in
+  transformContext.transforms[], Pass 2 skippen damit Schema-Emit nicht
+  feuert. Dann combined-Transform am Ende. Pre-Refactor-Pin in
+  `tests/differential/properties.test.ts` (combined-transforms-Block)
+  - Browser-Test `transforms/translate.test.ts:323` Body auf echtes
+    combined Source umschreiben + TODO entfernen.
+
 - **Wo:** `studio/test-api/mirror-actions/index.ts:dropChildIndexPoint`
   - Studios Drop-Target-Detection (`studio/preview/drag/...`)
     **Was:** Drop into a container tight-packed with children (3 children
