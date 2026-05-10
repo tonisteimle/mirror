@@ -17,8 +17,9 @@ import {
   canGroup,
   canUngroup,
 } from './shared-actions'
-import { MIRROR_ID_SELECTOR } from './constants'
 import { createLogger } from '../../compiler/utils/logger'
+
+const MIRROR_ID_SELECTOR = '[data-mirror-id]'
 
 const log = createLogger('ContextMenu')
 
@@ -141,15 +142,19 @@ export class ContextMenu {
       }
 
       if (!item.disabled) {
-        menuItem.addEventListener('click', () => {
-          this.hide()
-          // Execute action in try-catch to ensure cleanup even on error
-          try {
-            item.action()
-          } catch (e) {
-            log.error('Action failed:', e)
-          }
-        }, { signal: this.menuAbortController?.signal })
+        menuItem.addEventListener(
+          'click',
+          () => {
+            this.hide()
+            // Execute action in try-catch to ensure cleanup even on error
+            try {
+              item.action()
+            } catch (e) {
+              log.error('Action failed:', e)
+            }
+          },
+          { signal: this.menuAbortController?.signal }
+        )
       }
 
       this.menuElement.appendChild(menuItem)

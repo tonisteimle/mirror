@@ -889,6 +889,24 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — `studio/preview/constants.ts` 7 dead Re-Exports + Datei gelöscht
+
+- **Wo:** `studio/preview/constants.ts` (34 LOC) +
+  `studio/preview/index.ts` (12 LOC Re-Export-Block)
+  **Was:** Modul war als „centralized constants for data attributes
+  and selectors to avoid magic strings" gedacht; Realität: 7 von 8
+  Exports (`MIRROR_ID_ATTR`, `COMPONENT_ATTR`, `LINE_ATTR`,
+  `NAME_ATTR`, `LAYOUT_ATTR`, `STACKED_ATTR`, `mirrorIdSelector`) hatten
+  0 externe Konsumenten. Repo-weit existieren 154 direkte Verwendungen
+  der String-Literals (`'data-mirror-id'`, etc.) — die Centralization
+  hat nie stattgefunden. Einziger interner Konsumer
+  (`context-menu.ts`) inlined `MIRROR_ID_SELECTOR` jetzt direkt.
+  Datei + Barrel-Block gelöscht. Build grün.
+  **Status:** erledigt
+  **Notiz:** Zukünftiger Refactor („magic strings → konstante
+  Symbole") braucht eigene Lane-Doc — 154 Stellen sind real, aber
+  Big-Bang.
+
 ### 2026-05-10 — 10 orphan scripts/ Throwaway-Probes gelöscht (303 LOC)
 
 - **Wo:** `scripts/{check-{dup-warn,fi,mono,nested-comp,propset,show,

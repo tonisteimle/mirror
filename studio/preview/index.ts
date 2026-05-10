@@ -93,18 +93,6 @@ export {
   type SlotVisibilityConfig,
 } from './slot-visibility'
 
-// Re-export constants
-export {
-  MIRROR_ID_ATTR,
-  MIRROR_ID_SELECTOR,
-  COMPONENT_ATTR,
-  LINE_ATTR,
-  NAME_ATTR,
-  LAYOUT_ATTR,
-  STACKED_ATTR,
-  mirrorIdSelector,
-} from './constants'
-
 // Re-export breadcrumb
 export { PreviewBreadcrumb, createPreviewBreadcrumb, type BreadcrumbConfig } from './breadcrumb'
 
