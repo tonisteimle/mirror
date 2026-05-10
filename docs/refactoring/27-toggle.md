@@ -1,7 +1,7 @@
 # Slice 27: Custom-State `toggle()`
 
-**Datum:** 2026-05-09
-**Status:** DOM-Backend ✅ · Studio-Sync ✅ (gemeinsam mit 26/29) · Browser-CDP-E2E ⚠️ offen · Studio-Roundtrip ⚠️ offen
+**Datum:** 2026-05-09 (Iter-1) · 2026-05-10 (Iter-2 Dev 3)
+**Status:** DOM-Backend ✅ · Studio-Sync ✅ (gemeinsam mit 26/29) · Browser-CDP-E2E ✅ (Iter-2) · Studio-Roundtrip ✅ Lower-Bar (Iter-2)
 
 ## Inhalt
 
@@ -244,3 +244,88 @@ Identisch zu Slice 26: `framework.ts` und `react.ts` sind deklarative Pass-throu
 ## Methodische Lehre
 
 **Bug-Familien-Audit statt Slice-Audit.** Slice 27 hat den Helper für `toggle()` eingeführt, hätte aber bei Helper-Einführung sofort `exclusive()` (Slice 29) und `cycle()` (Alias) gegen den Helper testen müssen. Der Review-Pass hat genau das nachgeholt — und gefunden, dass Slice 29 schon zu 80% mitprofitiert, aber 2 weitere Stellen nicht. Step 7 enthält daher jetzt explizit die „Cross-Slice-Probe" als verbindlich.
+
+---
+
+# 7. Iter-2-Sweep (Dev 3, 2026-05-10)
+
+Iter-1 hat den `isToggleableStateName` Helper plus drei Drift-Layer-Fixes (IR-Transformer, DOM-Emitter, Runtime + Runtime-Template) etabliert. Iter-2 verifiziert (a) Stabilität gegen Bundle-Regression, (b) keine neue hardcoded State-Liste außerhalb des Helpers nachgewachsen, (c) CDP-Schuld eingelöst.
+
+## 7.1 Iter-1-Review (Pre-Iter-2-Stand)
+
+| Layer            | Stelle                                                                         | Helper-Adoption   | Iter-2-Re-Probe              |
+| ---------------- | ------------------------------------------------------------------------------ | ----------------- | ---------------------------- |
+| Helper           | `compiler/schema/parser-helpers.ts:270` `isToggleableStateName`                | ✅ neu            | 16/16 cases ✅               |
+| IR-Transformer   | `compiler/ir/transformers/state-machine-transformer.ts:202`                    | ✅                | E2E B1–B8 ✅                 |
+| DOM-Emitter      | `compiler/backends/dom/state-machine-emitter.ts:210`                           | ✅                | `stateOrder` literal ✅      |
+| Runtime (TS)     | `compiler/runtime/state-machine.ts:120` (CSS_PSEUDO_STATES, defensive default) | ✅ 14 entries     | grep ✅                      |
+| Runtime-Template | `compiler/backends/dom/runtime-template/index.ts:1692, 1808`                   | ✅ 14 entries × 2 | runtime-emit literal-grep ✅ |
+
+`tools/probes/slice-27-toggle.ts` reproduziert alle Cases. Sektion C des Probes inspiziert das emittierte Runtime und bestätigt: 2 cssStates-Literale gefunden, beide 14-Einträge, schema-konform.
+
+## 7.2 Schema-Drift-Grep (Iter-2 — repo-weit)
+
+`grep -rn "'hover'" compiler/ studio/ | grep -v dist/ | grep -v .test.ts` lieferte 4 nicht-triviale Treffer außerhalb des Helpers:
+
+| #   | Stelle                                                                | Befund / Verdikt                                                                                                                                                                                                                                                             |
+| --- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `compiler/ir/transformers/state-styles-transformer.ts:27`             | 6-State-Liste (`hover/focus/active/disabled/focus-within/focus-visible`) für Transition-eligible-States. **Bewusst eng** — Slice 32 territory; Kommentar-Lock vorhanden. **Out-of-scope.** Naming-Konflikt mit `parser-helpers.ts:SYSTEM_STATES` als V-Iter2-3 dokumentiert. |
+| 2   | `compiler/backends/dom/style-emitter.ts:151`                          | `PROGRAMMATIC_FALLBACK_STATES = ['hover', 'focus', 'active']` — **bewusst eng** (nur 3 fallbacken auf `data-{state}="true"` weil pseudo-classes nicht reliably unter headless feuern). Slice 26 territory; Kommentar-Lock vorhanden. **Out-of-scope.**                       |
+| 3   | `studio/agent/generation-pipeline.ts:380` (`STATE_BLOCK_NAMES`)       | **Drift-Bug.** 18-Element-Liste (4 system + 11 custom + 3 size). Schema kennt 13+15+3 = 31. Pre-flight detector verpasst Nested-State-Block-Patterns mit `visited:`/`checked:`/`focus-visible:`/etc. **In-scope-Fix.** ⇒ V-Iter2-1                                           |
+| 4   | `compiler/backends/dom/runtime-template/parts/test-api-runtime.ts:72` | `case 'hover':` für trigger-event-mapping (`api.interact.trigger(el, 'hover')`). Event-Trigger-Switch, kein State-Cycle-Filter. **Out-of-scope.**                                                                                                                            |
+
+## 7.3 V-Iter2-1 — `STATE_BLOCK_NAMES` schema-derived (in-scope-Fix)
+
+**Befund:** `studio/agent/generation-pipeline.ts:380` enthielt eine flach hardcodierte Liste aller Namen, die als State-Block-Header (`name:`) auftreten dürfen. Die Liste war Iter-1 (Slice 26 Schema-Erweiterung 4 → 13 system-states) nicht mitgezogen worden — gleicher Drift-Pattern wie Slice 27 selbst, nur in der LLM-Generation-Pipeline statt in `toggle()`-Targeting.
+
+**Risiko:** Wenn der LLM eine Mirror-Generation mit `visited:` oder `checked:` oder `focus-visible:` als nested State-Block produzierte, fing der Pre-Flight-Check das Pattern nicht ab. Der Parser hängt aber bei nested State-Blocks (Profile-Card-Toggle Smoke-Test 2026-05-05). → Silent infinite-loop möglich.
+
+**Fix:** Schema-derived aus `SYSTEM_STATES ∪ CUSTOM_STATES ∪ SIZE_STATES`. 18 → 31 Namen. Regex-Source robust gegen zukünftige Sonderzeichen (escape).
+
+**Status:** ✅ erledigt. `tests/agent/generation-pipeline.test.ts` 43/43 grün — keine Test-Subtraction.
+
+## 7.4 V-Iter2-2 — CDP-Schuld eingelöst
+
+| RT       | Quelle                                                                                                       | Status   |
+| -------- | ------------------------------------------------------------------------------------------------------------ | -------- |
+| RT-CDP-1 | `Toggle Schema-Drift Safeguards / toggle() + visited: only → click cycles default ↔ on (NOT visited)`        | erledigt |
+| RT-CDP-2 | `Toggle Schema-Drift Safeguards / toggle() + checked: only → click cycles default ↔ on (NOT checked)`        | erledigt |
+| RT-CDP-3 | `Toggle Schema-Drift Safeguards / toggle() + 3 custom + focus-visible: → cycle 3-er, focus-visible excluded` | erledigt |
+| RT-CDP-4 | `Toggle Schema-Drift Safeguards / cycle() ≡ toggle() alias`                                                  | erledigt |
+
+Suite-Lauf:
+
+- `npx tsx tools/test.ts --filter="Toggle|toggle()"` → **66/66 grün** (62 Iter-1-Baseline + 4 RT-CDP-1..4 neu).
+- `npx tsx tools/test.ts --category=states` → **65/65 grün** (Slice 26+27+29+30 zusammen).
+
+CDP-Schuld-Limit-Zähler: -1 (Slice 27 abgeräumt).
+
+## 7.5 V-Iter2-3 — Naming-Konflikt `SYSTEM_STATES` (deferred-lock)
+
+**Befund:** `compiler/ir/transformers/state-styles-transformer.ts:27` deklariert ein **lokales** `SYSTEM_STATES` mit 6 Einträgen (Transition-eligible). Der Name shadowt den schema-derived `SYSTEM_STATES` (13 Einträge) aus `compiler/schema/parser-helpers.ts:228`. Der Kommentar erklärt explicit "Subset of the schema's full system-state list", aber der Namens-Overlap ist eine Drift-Falle — ein zukünftiger Author könnte den lokalen Set für den globalen halten.
+
+**Entscheidung:** Rename auf `TRANSITION_ELIGIBLE_SYSTEM_STATES` (oder Import + Filter) ist Slice 32 territory (State-Transitions). **Deferred-Lock-RT** in `tools/probes/slice-27-toggle.ts` Sektion C dokumentiert es nur als „weiter als Drift-Trap zu beobachten".
+
+**Re-Open-Trigger:** Slice 32 (State-Transitions). Adresse im Re-Open-Tracking.
+
+## 7.6 Studio-Roundtrip — Lower-Bar deklariert
+
+`toggle()` wirkt im Studio über den DOM-Backend-Pfad (Studio-Preview rendert via DOM-Emitter). DOM-Backend ist Iter-1 + Iter-2 voll gelocked (RT-1..RT-12a, plus RT-CDP-1..RT-4). Property-Panel-Toggle für Custom-States bleibt Slice 69 (Property-Panel-Roundtrip) — Re-Open-Trigger steht in Sektion 6.
+
+**Modus:** **Lower-Bar — DOM-Pfad gelocked via RT-1..RT-12a + RT-CDP-1..RT-CDP-4. Studio-Property-Panel-Roundtrip Slice 69.**
+
+## 7.7 9-Punkt-Quality-Gate (Iter-2)
+
+| #   | Check                                                                                            | Status                                                                                                                     |
+| --- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Audit-Doc-Probe-Tabelle: kein 🔴 außer in expliziter „deferred"/„out-of-scope"-Spalte.           | ✅                                                                                                                         |
+| 2   | Phase-Stati ∈ {erledigt, verschoben, verworfen}; kein „pending"/„offen"/„in-arbeit".             | ✅                                                                                                                         |
+| 3   | Jeder RT-Plan-Eintrag hat einen geschriebenen Test (Status `erledigt`).                          | ✅ (RT-1..RT-12a + RT-CDP-1..RT-CDP-4)                                                                                     |
+| 4   | Schema-Drift-Grep ausgeführt; gefundene Stellen gefixt oder dokumentiert.                        | ✅ (4 Stellen geprüft, 1 gefixt, 1 deferred-lock, 2 out-of-scope dokumentiert)                                             |
+| 5   | Cross-Slice-Wirkung geprüft; betroffene Nachbar-Slices haben In-scope-Fix oder Deferred-Lock-RT. | ✅ (Slice 26 already-fixed, Slice 29 already-fixed in Iter-1; Slice 32 deferred-lock V-Iter2-3)                            |
+| 6   | Cross-Backend-Differential-RT existiert pro Property/Verhalten, das ≥ 2 Backends emittieren.     | ✅ (React/Framework deklarativer Pass-through, kein eigener Filter — kein Drift möglich, dokumentiert Section 6)           |
+| 7   | Studio-Roundtrip explizit benannt: „CDP-Run grün" oder „Lower-Bar: DOM gelocked via RT-X".       | ✅ Lower-Bar deklariert (7.6); CDP-Schuld via RT-CDP-1..4 eingelöst                                                        |
+| 8   | Vitest gesamt grün; vor-Slice-Vergleich bestätigt: keine Test-Subtraction.                       | ✅ (`tests/compiler/slice-27-toggle.test.ts` 13/13, `tests/agent/generation-pipeline.test.ts` 43/43, gesamt: 15100 passed) |
+| 9   | Kein „substantiell besser, aber …".                                                              | ✅                                                                                                                         |
+
+Alle 9 ✅. Slice 27 ist Iter-2-fertig.

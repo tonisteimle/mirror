@@ -29,6 +29,7 @@ import {
 } from './generation-prompts'
 import { validate, type ValidationError, type ValidationResult } from '../../compiler/validator'
 import { collectPrelude } from '../../compiler/validator/cli-runner'
+import { SYSTEM_STATES, CUSTOM_STATES, SIZE_STATES } from '../../compiler/schema/parser-helpers'
 
 // ============================================================================
 // API
@@ -377,28 +378,22 @@ function selectBlockingIssues(result: ValidationResult): ValidationError[] {
  * TODO: remove the pre-flight once the parser bug is fixed in
  * `compiler/parser/`. Tracked alongside the canvas-position bug.
  */
-const STATE_BLOCK_NAMES = [
-  'hover',
-  'focus',
-  'active',
-  'disabled',
-  'on',
-  'selected',
-  'highlighted',
-  'expanded',
-  'collapsed',
-  'open',
-  'closed',
-  'filled',
-  'valid',
-  'invalid',
-  'loading',
-  'error',
-  'compact',
-  'regular',
-  'wide',
-]
-const STATE_BLOCK_RE = new RegExp(`^(\\s*)(${STATE_BLOCK_NAMES.join('|')}):\\s*$`)
+// Schema-derived: every name that can legally start a state block (`name:`)
+// must be detected here, otherwise the LLM-pipeline's nested-state-block
+// pre-flight silently misses parser-hanging inputs. Iter-1 hard-coded
+// 4 system states + 11 custom + 3 size = 18 names; Iter-2 (Slice 27)
+// noticed `visited`/`checked`/`focus-visible`/`first-child`/etc. were
+// missing — same drift family as the toggle-target lists. Now derived
+// from DSL.states + DSL.sizeStates so adding a new state in the schema
+// automatically extends the pre-flight detector.
+const STATE_BLOCK_NAMES: readonly string[] = [...SYSTEM_STATES, ...CUSTOM_STATES, ...SIZE_STATES]
+// Regex source must escape names containing characters with regex meaning
+// (e.g. `focus-visible` is fine, but defense in depth: hyphens are literal
+// in character classes only — outside they're harmless. Still, escape for
+// safety in case a future state name carries `.` or `+`.)
+const STATE_BLOCK_RE = new RegExp(
+  `^(\\s*)(${STATE_BLOCK_NAMES.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')}):\\s*$`
+)
 
 function detectPreflightIssues(source: string): ValidationError[] {
   const issues: ValidationError[] = []

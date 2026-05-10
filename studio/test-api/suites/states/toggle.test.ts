@@ -280,8 +280,135 @@ export const toggleMultipleTests: TestCase[] = describe('Multiple Toggle States'
   ),
 ])
 
+/**
+ * Slice 27 Iter-2 (Dev 3, 2026-05-10) — schema-drift safeguards.
+ *
+ * The IR transformer's `isToggleableStateName` helper must exclude system
+ * pseudo-classes (`visited`, `checked`, `placeholder`, `focus-visible`, …)
+ * from `toggle()` cycle targets. Iter-1 verified this in unit tests; the
+ * CDP suite picks it up here so a future bundle regression surfaces with
+ * a real click trace.
+ */
+export const toggleSchemaDriftTests: TestCase[] = describe('Toggle Schema-Drift Safeguards', [
+  testWithSetup(
+    'toggle() + visited: only → click cycles default ↔ on (NOT visited)',
+    `Button "X", bg #333, col white, toggle()
+  visited:
+    bg #f0f`,
+    async (api: TestAPI) => {
+      api.assert.exists('node-1')
+      // initial: default state
+      const el0 = await api.utils.waitForElement('node-1')
+      api.assert.ok(
+        (el0.dataset.state ?? '') !== 'visited',
+        `Initial data-state must not be 'visited' (got "${el0.dataset.state}")`
+      )
+
+      // Click → state becomes 'on' (the implicit toggle target),
+      // not 'visited' (which is a CSS pseudo-class never controlled
+      // by JS state). Background stays #333 because no `on:` styles
+      // were defined; what matters is the data-state attribute.
+      await api.interact.click('node-1')
+      await api.utils.delay(200)
+      const el1 = await api.utils.waitForElement('node-1')
+      api.assert.ok(
+        el1.dataset.state === 'on',
+        `Click must transition to 'on' (got "${el1.dataset.state}")`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'toggle() + checked: only → click cycles default ↔ on (NOT checked)',
+    `Button "X", bg #333, col white, toggle()
+  checked:
+    bg #2271C1`,
+    async (api: TestAPI) => {
+      api.assert.exists('node-1')
+      await api.interact.click('node-1')
+      await api.utils.delay(200)
+      const el = await api.utils.waitForElement('node-1')
+      api.assert.ok(
+        el.dataset.state === 'on',
+        `Click must transition to 'on' (got "${el.dataset.state}")`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'toggle() + 3 custom + focus-visible: → cycle 3-er, focus-visible excluded',
+    `Button "X", bg #333, col white, toggle()
+  todo:
+    bg #aaa
+  doing:
+    bg #f59e0b
+    col white
+  done:
+    bg #10b981
+    col white
+  focus-visible:
+    bg #fff`,
+    async (api: TestAPI) => {
+      api.assert.exists('node-1')
+
+      // Click 1 → todo (first custom state in cycle order)
+      await api.interact.click('node-1')
+      await api.utils.delay(200)
+      const el1 = await api.utils.waitForElement('node-1')
+      api.assert.ok(
+        el1.dataset.state === 'todo',
+        `Click 1 must enter 'todo' (got "${el1.dataset.state}")`
+      )
+
+      // Click 2 → doing
+      await api.interact.click('node-1')
+      await api.utils.delay(200)
+      const el2 = await api.utils.waitForElement('node-1')
+      api.assert.ok(
+        el2.dataset.state === 'doing',
+        `Click 2 must enter 'doing' (got "${el2.dataset.state}")`
+      )
+
+      // Click 3 → done
+      await api.interact.click('node-1')
+      await api.utils.delay(200)
+      const el3 = await api.utils.waitForElement('node-1')
+      api.assert.ok(
+        el3.dataset.state === 'done',
+        `Click 3 must enter 'done' (got "${el3.dataset.state}")`
+      )
+
+      // Click 4 → todo again (wrap, focus-visible never appears in the cycle)
+      await api.interact.click('node-1')
+      await api.utils.delay(200)
+      const el4 = await api.utils.waitForElement('node-1')
+      api.assert.ok(
+        el4.dataset.state === 'todo',
+        `Click 4 must wrap to 'todo' (got "${el4.dataset.state}"); focus-visible MUST NOT participate`
+      )
+    }
+  ),
+
+  testWithSetup(
+    'cycle() ≡ toggle() alias',
+    `Button "X", bg #333, col white, cycle()
+  on:
+    bg #2271C1`,
+    async (api: TestAPI) => {
+      api.assert.exists('node-1')
+      await api.interact.click('node-1')
+      await api.utils.delay(200)
+      api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(34, 113, 193)')
+      await api.interact.click('node-1')
+      await api.utils.delay(200)
+      api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(51, 51, 51)')
+    }
+  ),
+])
+
 export const allToggleTests: TestCase[] = [
   ...toggleBasicTests,
   ...toggleWithContentTests,
   ...toggleMultipleTests,
+  ...toggleSchemaDriftTests,
 ]

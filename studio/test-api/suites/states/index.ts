@@ -16,6 +16,7 @@ import {
   toggleBasicTests,
   toggleWithContentTests,
   toggleMultipleTests,
+  toggleSchemaDriftTests,
 } from './toggle.test'
 
 // Exclusive state tests
@@ -60,6 +61,7 @@ export {
   toggleBasicTests,
   toggleWithContentTests,
   toggleMultipleTests,
+  toggleSchemaDriftTests,
   // Exclusive
   allExclusiveTests,
   exclusiveBasicTests,
