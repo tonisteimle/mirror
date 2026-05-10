@@ -1,28 +1,131 @@
 # Findings
 
-Zentrales Dokument für Architektur- und Code-Probleme, die in Mirror auffallen.
-Jeder Dev (oder Claude-Session) trägt hier ein, was sie/er findet — egal ob
-sofort fixbar oder nur eine Notiz.
+Zentrales Dokument für die schrittweise Beseitigung von Architektur- und
+Code-Defiziten in Mirror — Studio, Schema, Compiler-Layering, Dead-Code,
+Module-Grenzen. Append-only. Geführt nach dem **Architektur-Hunt-Ansatz**
+(unten); die History („Erledigt") bleibt erhalten.
 
-## Wie tragen wir ein?
+## Architektur-Hunt — Ansatz
 
-Pro Befund ein Listeneintrag in der passenden Sektion:
+Ziel ist **rigorose Qualität**, nicht Tempo.
+
+- **Klein inkrementieren.** Ein Befund → eine Probe → ein Fix → ein
+  Commit. Keine Multi-Befund-Bündel. Jeder Schritt isoliert.
+- **Findings-Doc führt.** Jeder Befund landet zuerst unter „Offen",
+  dann fixen, dann nach „Erledigt" mit Commit-Hash verschieben. Auch
+  nicht sofort fixbare Befunde bleiben als offener Eintrag stehen —
+  damit eine spätere Session weiß, was gefunden wurde.
+- **Rigorose Qualität.** Vor jedem Commit: relevante Test-Suite grün
+  (Differential / Smoke / Tutorial / Studio — je nach Berührungs-
+  fläche). Keine Inkremente die „wahrscheinlich okay" sind.
+- **Pre-Refactor-Pin.** Wenn unklar ist ob ein Refactor regression-
+  frei ist: zuerst ein Differential-Pin schreiben, der das gewünschte
+  Verhalten festhält. Refactor erfolgt dann gegen den Pin.
+- **Lieber langsamer.** Wenn ein Befund größer ist als ein Findings-
+  Eintrag (>3 Zeilen Kontext, mehrere Subsysteme), kommt er als eigene
+  Lane-Doc nach `docs/refactoring/` bevor Code geändert wird.
+
+**Was der Ansatz NICHT ist:** kein Quality-Gate-Wiederbeleben, kein
+9-Punkte-Audit pro Slice. Die archivierte Slice-Methodik (88 Capability-
+Slices mit 9-Punkt-Quality-Gate) hat gezeigt, dass Doku-Overhead linear
+mit Slice-Zahl skaliert — bei Slice 21 war's zu 80 % Papierarbeit.
+Findings-Eintrag + Commit + Pin ist die volle Doku-Verpflichtung.
+Slice-Audits in `docs/refactoring/` bleiben als historische Referenz,
+werden nicht aktiv weitergetrieben.
+
+### Eintragsformat
+
+Pro Befund ein Listeneintrag in „Offen" oder „Erledigt":
 
 ```
 - **Wo:** `file:line` oder kurzer Bereich
   **Was:** Ein Satz Beschreibung des Problems.
-  **Status:** offen | erledigt (`commit-hash`) | abgewiesen (kurze Begründung)
+  **Status:** offen | aktiv (Bearbeiter, Beginn) | erledigt (`commit-hash`) | abgewiesen (kurze Begründung)
+  **Plan:** _(nur bei `aktiv` — was als nächstes passiert, damit parallele Sessions nicht doppelt anfassen)_
   **Notiz:** _(optional, max 2–3 Zeilen Kontext)_
 ```
 
-Wenn ein Eintrag mehr als ~3 Zeilen Kontext braucht, ist er kein Eintrag mehr,
-sondern eine eigene Untersuchung — dann separates Dokument, von hier verlinken.
+Mehr als ~3 Zeilen Kontext → eigene Untersuchung als separates Dokument,
+von hier verlinken.
 
-Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
+### Parallelitäts-Regel
+
+Wer einen offenen Eintrag in Bearbeitung nimmt, ändert ihn **vorher** auf
+`Status: aktiv` und füllt den `Plan:`-Block. Damit sieht eine parallel
+laufende Session sofort, dass jemand dran ist, und greift zu einem anderen
+Eintrag. Nach Commit: Status auf `erledigt` mit Hash, Eintrag nach
+„Erledigt" verschieben.
+
+### Lanes (Hunt-Reihenfolge)
+
+1. **Dead-Feature-Watchlist abarbeiten.**
+   `tests/policy/dsl-features-have-examples.test.ts` führt expired
+   Watchlist-Einträge. Per Policy: Beispiel hinzufügen ODER Feature
+   komplett löschen (Parser + AST + IR + Backends + Runtime + Tests +
+   Docs). Reine Deletion-Wins.
+
+2. **Schema-Drift-Audit.** Property-Aliase scattered über Parser, IR,
+   Backends. Es gibt bereits einen Findings-Eintrag
+   (`getTokenTypesForProperty` für 25 Aliases blind). Systematischer
+   Grep über alle Property-Listen, Drift-Pins als Pre-Refactor.
+
+3. **TokenReference-Resolution zentralisieren.** Heute in jedem
+   Transformer dupliziert (padding, margin, border, chart-slot —
+   2026-05-10 in Border + Chart-Slot zugefügt, ohne zentrale Funktion).
+   Eine `resolveTokenReference(tokenRef, propertyContext)`-Funktion
+   ablösen. Pre-Refactor: ein Pin pro existierender Caller.
+
+4. **Compiler-Backend-Layering.** React-Backend bypassed IR; DOM und
+   Framework nutzen IR. Die ~30 React-Bugs der vorherigen Session
+   waren Symptome dieser Drift. Refactor-Prospect groß — eigene
+   Lane-Doc unter `docs/refactoring/` bevor Code geändert wird.
+
+5. **Studio-Modul-Grenzen.** 30+ Subdirs, expliziter „Legacy-IIFE-
+   Wrapper" in `studio/app.ts`. Import-Graph-Analyse (z. B. `madge`)
+   als erster Schritt, dann pro identifiziertem Cluster eine eigene
+   Lane.
+
+Lane 4+5 sind Refactor-Tracks und brauchen Lane-Doc bevor Code-
+Veränderung. Lane 1–3 können als Findings-Einträge laufen.
+
+### Werkzeuge & Prinzipien
+
+- **Tests sind Sicherheitsnetz, nicht Sauberkeits-Werkzeug.** Cross-
+  Backend-Property-Tests fangen Drift, aber gut-getesteter Code kann
+  immer noch schmutzig sein. Sauberkeit kommt aus kohärenten
+  Abstraktionen, klaren Schichten und aggressivem Löschen.
+- **`tools/probes/` als wiederverwendbares Werkzeug.** Re-runnable
+  Schema-Drift- und Cross-Backend-Probes (committet, nicht in `/tmp`)
+  überleben Sessions. Konvention: `tools/probes/slice-NN-*.ts` oder
+  `tools/probes/<topic>.ts`.
 
 ---
 
 ## Offen
+
+- **Wo:** `compiler/ir/transformers/property-transformer.ts` (~17 Stellen),
+  `compiler/ir/ops/instance-ops.ts`, `compiler/ir/ops/properties-ops.ts`,
+  `compiler/backends/react.ts:1317-1319` (mind.)
+  **Was:** Lane 2, Inkrement 1 — Property-Aliase werden mit
+  hardcoded `name === 'pad' || name === 'padding' || name === 'p'`
+  Checks gematcht statt über das Schema. `compiler/schema/parser-helpers.ts:198`
+  exportiert `getCanonicalPropertyName(alias)` — wird aber nur an
+  einer Stelle (`property-utils-transformer.ts`) verwendet. Drift-Pfad:
+  ein neuer Alias in `compiler/schema/properties.ts` wird vom Parser
+  akzeptiert (`getAllSchemaPropertyNames`), aber der IR-Transformer
+  ignoriert ihn → Property silent gedroppt.
+  **Status:** aktiv (Claude-Session, 2026-05-10 ~18:10)
+  **Plan:**
+  1. Pre-Refactor-Pin in `tests/differential/properties.test.ts`:
+     verifizieren dass `pad N`, `padding N` und `p N` denselben IR-
+     Output liefern (ebenso `mar`/`margin`/`m`, `w`/`width`, `h`/
+     `height`).
+  2. Erste Datei umstellen: `compiler/ir/transformers/property-transformer.ts`
+     — alle `name === '<alias>' || ...`-Checks durch
+     `getCanonicalPropertyName(name) === '<canonical>'` ersetzen.
+  3. Pin + Full-Suite grün → commit.
+  4. Folge-Inkremente: `instance-ops.ts`, `properties-ops.ts`,
+     `react.ts` als separate Commits.
 
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
@@ -1294,90 +1397,3 @@ solid` mit, damit die Regel ohne globalen `border-style` rendert.
   hinzugefügt; `.weight` als COUNT_SUFFIXES klassifiziert (war in keiner
   Klassifizierung).
   **Status:** erledigt (in `aa341cdf` mitgebündelt)
-
----
-
-## Notizen
-
-- **Slice-Methodik archiviert (2026-05-10).** 88 Capability-Slices mit
-  Audit-Doc + 9-Punkt-Quality-Gate hat Drift gefunden, aber Doku-Overhead
-  skaliert linear mit Slice-Zahl. Bei Slice 21 war's zu 80 % Papierarbeit.
-  Aktuelle Praxis: Findings hier eintragen, fixen, weiter. Slice-Audits
-  bleiben in `docs/refactoring/` als historische Referenz, werden nicht
-  aktiv weitergetrieben.
-
-- **Tests sind Sicherheitsnetz, nicht Sauberkeits-Werkzeug.** Cross-Backend-
-  Property-Tests fangen Drift, aber gut-getesteter Code kann immer noch
-  schmutzig sein. Sauberkeit kommt aus kohärenten Abstraktionen, klaren
-  Schichten und aggressivem Löschen — Werkzeuge dafür sind Findings-Doc,
-  Schema-Drift-Grep und gelegentliche Architektur-Reviews.
-
-- **`tools/probes/` als wiederverwendbares Werkzeug.** Re-runnable
-  Schema-Drift- und Cross-Backend-Probes (committet, nicht in `/tmp`)
-  überleben Sessions. Konvention: `tools/probes/slice-NN-*.ts` oder
-  `tools/probes/<topic>.ts`.
-
----
-
-## Architektur-Hunt — Modus (ab 2026-05-10)
-
-Verfahren zur schrittweisen Beseitigung von Code- und Architektur-
-Defiziten. Nicht beschränkt auf Compiler-Output: Studio, Schema,
-Layering, Dead-Code, Module-Boundaries gehören dazu. Ziel ist
-**rigorose Qualität**, nicht Tempo.
-
-**Arbeitsweise:**
-
-- **Klein inkrementieren.** Ein Befund → eine Probe → ein Fix → ein
-  Commit. Keine Multi-Befund-Bündel. Komplexität bleibt überschaubar
-  weil jeder Schritt isoliert ist.
-- **Findings-Doc führt.** Jeder Befund landet zuerst hier (Sektion
-  „Offen"), dann fixen, dann nach „Erledigt" mit Commit-Hash. Auch
-  nicht sofort fixbare Befunde bleiben als offener Eintrag stehen —
-  damit eine spätere Session weiß, was gefunden wurde.
-- **Rigorose Qualität.** Vor jedem Commit: relevante Test-Suite grün
-  (Differential / Smoke / Tutorial / Studio — je nach Berührungs-
-  fläche). Keine Inkremente die „wahrscheinlich okay" sind.
-- **Pre-Refactor-Pin.** Wenn unklar ist ob ein Refactor regression-
-  frei ist: zuerst ein Differential-Pin schreiben, der das gewünschte
-  Verhalten festhält. Refactor erfolgt dann gegen den Pin.
-- **Lieber langsamer.** Wenn ein Befund größer ist als ein Findings-
-  Eintrag (>3 Zeilen Kontext, mehrere Subsysteme), kommt er als eigene
-  Lane-Doc nach `docs/refactoring/` bevor Code geändert wird.
-
-**Lanes (in dieser Reihenfolge geplant):**
-
-1. **Dead-Feature-Watchlist abarbeiten.**
-   `tests/policy/dsl-features-have-examples.test.ts` führt expired
-   Watchlist-Einträge. Per Policy: Beispiel hinzufügen ODER Feature
-   komplett löschen (Parser + AST + IR + Backends + Runtime + Tests +
-   Docs). Reine Deletion-Wins.
-
-2. **Schema-Drift-Audit.** Property-Aliase scattered über Parser, IR,
-   Backends. Es gibt bereits einen Findings-Eintrag
-   (`getTokenTypesForProperty` für 25 Aliases blind). Systematischer
-   Grep über alle Property-Listen, Drift-Pins als Pre-Refactor.
-
-3. **TokenReference-Resolution zentralisieren.** Heute in jedem
-   Transformer dupliziert (padding, margin, border, chart-slot —
-   2026-05-10 in Border + Chart-Slot zugefügt, ohne zentrale Funktion).
-   Eine `resolveTokenReference(tokenRef, propertyContext)`-Funktion
-   ablösen. Pre-Refactor: ein Pin pro existierender Caller.
-
-4. **Compiler-Backend-Layering.** React-Backend bypassed IR; DOM und
-   Framework nutzen IR. Die ~30 React-Bugs der vorherigen Session
-   waren Symptome dieser Drift. Refactor-Prospect groß — eigene
-   Lane-Doc unter `docs/refactoring/` bevor Code geändert wird.
-
-5. **Studio-Modul-Grenzen.** 30+ Subdirs, expliziter „Legacy-IIFE-
-   Wrapper" in `studio/app.ts`. Import-Graph-Analyse (z. B. `madge`)
-   als erster Schritt, dann pro identifiziertem Cluster eine eigene
-   Lane.
-
-Lane 4+5 sind Refactor-Tracks und brauchen Lane-Doc bevor Code-
-Veränderung. Lane 1–3 können als Findings-Einträge laufen.
-
-**Was diese Notiz NICHT ist:** kein Quality-Gate-Wiederbeleben, kein
-9-Punkte-Audit pro Slice. Die archivierte Slice-Methodik (siehe oben)
-hat gezeigt, dass Doku-Overhead linear skaliert — die Lehre bleibt.
-Findings-Eintrag + Commit + Pin ist die volle Doku-Verpflichtung.
