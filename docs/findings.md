@@ -116,9 +116,13 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Was:** Drei überlappende Selection-Pfade (queued/pending/deferred) mit
   separaten if/return-Blöcken — schwer zu lesen, fehleranfällig beim
   Erweitern.
-  **Status:** teilweise erledigt — `queuedSelection`-Block entfernt
-  (siehe oben). Bleiben pending+deferred mit zwei Early-Returns; siehe
-  unten unter `state.ts:243-278`.
+  **Status:** erledigt — `queuedSelection`-Block schon weg (siehe oben).
+  Pending- und Deferred-Resolution + Final-Validation in drei klar
+  benannte Helper extrahiert (`resolvePendingPhase`,
+  `resolveDeferredPhase`, `validateExistingSelection`); jeder gibt
+  `true`/`false` für Short-Circuit zurück. `setCompileResult` hat jetzt
+  drei Zeilen statt 70+ inline-Logik nach dem `compile:completed` Emit.
+  250/250 core+robustness tests pass.
 
 - **Wo:** `studio/core/state.ts:281-305`
   **Was:** Race-Window: `state.get()` wird **nach** `compile:completed`

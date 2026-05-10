@@ -114,6 +114,85 @@ function savePanelSettings(visibility: PanelVisibility, sizes: PanelSizes): void
 // Load panel settings once at startup
 const loadedPanelSettings = loadPanelSettings()
 
+// ============================================================================
+// Post-compile selection-resolution phases
+// ============================================================================
+//
+// These three helpers carry the body of `setCompileResult`'s post-emit
+// selection logic. They share state-flag re-reads via `state.get()` so
+// each phase sees the truth as of its turn (compile:completed handlers
+// can mutate pendingSelection / deferredSelection during the emit).
+//
+// Each helper returns `true` when it owned the outcome (success or
+// reported error) and the caller should short-circuit; `false` means
+// "fall through to the next phase".
+
+function resolvePendingPhase(): boolean {
+  if (state.get().pendingSelection === null) return false
+
+  try {
+    const resolvedNodeId = actions.resolvePendingSelection()
+    if (resolvedNodeId) {
+      logState.info('Pending selection resolved after compile:', resolvedNodeId)
+      // Clear any deferred selection that might have been set during compile
+      if (state.get().deferredSelection !== null) {
+        state.set({ deferredSelection: null })
+      }
+      return true
+    }
+    // Resolver returned null — pendingSelection was cleared internally
+    // (line had no node and component-name search missed). Fall through.
+    return false
+  } catch (error) {
+    logState.error('Error resolving pending selection:', error)
+    events.emit('state:error', { error, context: 'pending selection resolution' })
+    return true
+  }
+}
+
+function resolveDeferredPhase(): boolean {
+  if (state.get().deferredSelection === null) return false
+
+  try {
+    const resolvedNodeId = actions.resolveDeferredSelection()
+    if (resolvedNodeId) {
+      logState.info(' Deferred selection resolved after compile:', resolvedNodeId)
+      return true
+    }
+    return false
+  } catch (error) {
+    logState.error(' Error resolving deferred selection:', error)
+    events.emit('state:error', { error, context: 'deferred selection resolution' })
+    return true
+  }
+}
+
+function validateExistingSelection(sourceMap: SourceMap): void {
+  // Re-read selection state — `compile:completed` handlers may have
+  // changed it.
+  const latestState = state.get()
+  const currentSelection = latestState.selection.nodeId
+  if (!currentSelection || !sourceMap) return
+  if (sourceMap.getNodeById(currentSelection) !== null) return
+
+  logState.warn(` Selection ${currentSelection} no longer exists after compile`)
+
+  // Find a fallback selection instead of clearing.
+  const fallbackId = actions.findFirstRootNode(sourceMap)
+  if (fallbackId) {
+    logState.info(` Fallback selection: ${fallbackId}`)
+    state.set({ selection: { nodeId: fallbackId, origin: latestState.selection.origin } })
+    events.emit('selection:changed', {
+      nodeId: fallbackId,
+      origin: latestState.selection.origin,
+    })
+  } else {
+    logState.warn(` No fallback found, clearing selection`)
+    state.set({ selection: { nodeId: null, origin: latestState.selection.origin } })
+  }
+  events.emit('selection:invalidated', { nodeId: currentSelection })
+}
+
 const initialState: StudioState = {
   source: '',
   resolvedSource: '',
@@ -213,81 +292,19 @@ export const actions = {
       hasErrors: result.errors.length > 0,
     })
 
-    // Re-read selection flags AFTER emit: compile:completed handlers may
-    // queue or clear pending/deferred selections, and we need the current
-    // truth, not a pre-emit snapshot.
-    const postEmitState = state.get()
-    const hasPendingSelection = postEmitState.pendingSelection !== null
-    const hasDeferredSelection = postEmitState.deferredSelection !== null
-
-    // Resolve pending selection FIRST (line-based, from drop operations)
-    // This takes priority over deferredSelection because it's more specific
-    // (targeting the exact line where code was inserted)
-    // IMPORTANT: Synchronous resolution to prevent race conditions (PREV-005)
-    // If a resolver succeeds we're done; if it returns null (target not in new
-    // SourceMap) we fall through to the existing-selection validation so a
-    // stale prior selection doesn't survive a failed resolve.
-    if (hasPendingSelection) {
-      try {
-        const resolvedNodeId = actions.resolvePendingSelection()
-        if (resolvedNodeId) {
-          logState.info('Pending selection resolved after compile:', resolvedNodeId)
-          // Clear any deferred selection that might have been set during compile
-          if (hasDeferredSelection) {
-            state.set({ deferredSelection: null })
-          }
-          return
-        }
-      } catch (error) {
-        logState.error('Error resolving pending selection:', error)
-        events.emit('state:error', { error, context: 'pending selection resolution' })
-        return
-      }
-    }
-
-    // Resolve deferred selection (unified API - for programmatic selections during compile)
-    // IMPORTANT: Synchronous resolution to prevent race conditions with rapid compiles
-    // Previously used Promise.resolve().then() which could lose selections (PREV-005)
-    if (hasDeferredSelection) {
-      try {
-        const resolvedNodeId = actions.resolveDeferredSelection()
-        if (resolvedNodeId) {
-          logState.info(' Deferred selection resolved after compile:', resolvedNodeId)
-          return
-        }
-      } catch (error) {
-        logState.error(' Error resolving deferred selection:', error)
-        events.emit('state:error', { error, context: 'deferred selection resolution' })
-        return
-      }
-    }
-
-    // Validate current selection against new SourceMap
-    // IMPORTANT: Re-read selection state here as it may have changed during compile:completed handlers
-    const latestState = state.get()
-    const currentSelection = latestState.selection.nodeId
-    if (currentSelection && result.sourceMap) {
-      const nodeExists = result.sourceMap.getNodeById(currentSelection) !== null
-      if (!nodeExists) {
-        logState.warn(` Selection ${currentSelection} no longer exists after compile`)
-
-        // Find a fallback selection instead of clearing
-        const fallbackId = actions.findFirstRootNode(result.sourceMap)
-
-        if (fallbackId) {
-          logState.info(` Fallback selection: ${fallbackId}`)
-          state.set({ selection: { nodeId: fallbackId, origin: latestState.selection.origin } })
-          events.emit('selection:changed', {
-            nodeId: fallbackId,
-            origin: latestState.selection.origin,
-          })
-        } else {
-          logState.warn(` No fallback found, clearing selection`)
-          state.set({ selection: { nodeId: null, origin: latestState.selection.origin } })
-        }
-        events.emit('selection:invalidated', { nodeId: currentSelection })
-      }
-    }
+    // Selection flow after a fresh compile is three sequential phases:
+    //   1. resolvePendingSelection (line-based, from drop ops) — wins
+    //      over deferred when present, since it targets an exact line.
+    //   2. resolveDeferredSelection (programmatic, queued during compile).
+    //   3. validateExistingSelection — final fallback if no resolver
+    //      took ownership; ensures a stale prior selection doesn't
+    //      survive into the new SourceMap.
+    //
+    // Each phase short-circuits the rest only on success. Throw means
+    // the user already saw an error event — also short-circuit.
+    if (resolvePendingPhase()) return
+    if (resolveDeferredPhase()) return
+    validateExistingSelection(result.sourceMap)
   },
 
   /**
