@@ -77,9 +77,13 @@ export function determineLayoutType(properties: Property[]): LayoutType | undefi
 // =============================================================================
 
 /**
- * Directions recognized for directional properties.
+ * Edge directions for box-model properties (padding, margin, border).
+ * Covers the four cardinal sides + axis shorthands.
+ *
+ * Padding and margin recognize ONLY these — there's no CSS
+ * `padding-top-left`, so corner abbreviations don't apply.
  */
-const DIRECTIONS = new Set([
+export const EDGE_DIRECTIONS = [
   'left',
   'right',
   'top',
@@ -95,11 +99,21 @@ const DIRECTIONS = new Set([
   'vertical',
   'hor',
   'ver',
-  'tl',
-  'tr',
-  'bl',
-  'br',
-])
+] as const
+
+/**
+ * Corner directions for radius/border-radius (and any property that has
+ * a per-corner CSS form like `border-top-left-radius`).
+ */
+export const CORNER_DIRECTIONS = ['tl', 'tr', 'bl', 'br'] as const
+
+/**
+ * Directions recognized for directional properties — union of edges and
+ * corners. Used by `extractDirectionPrefix` and the property-name
+ * normalizer that turns `pad left 8` into `padding-left: 8px` and
+ * `rad tl 8` into `border-top-left-radius: 8px`.
+ */
+const DIRECTIONS = new Set<string>([...EDGE_DIRECTIONS, ...CORNER_DIRECTIONS])
 
 /**
  * Properties that support directional values.

@@ -21,6 +21,7 @@ import {
   hoverPropertyToCSS,
 } from '../../schema/ir-helpers'
 import { SYSTEM_STATES } from '../../schema/parser-helpers'
+import { EDGE_DIRECTIONS } from './property-utils-transformer'
 
 // Schema-derived state-prefix list for inline shorthand
 // (`hover-bg`, `focus-bor`, `focus-visible-bg`, …). Sorted longest-first
@@ -245,24 +246,7 @@ export function propertyToCSS(
 
   // Handle directional padding: pad left 20, pad top 8 bottom 24, pad x 16, pad left right 8
   if ((name === 'pad' || name === 'padding' || name === 'p') && values.length >= 2) {
-    const directions = [
-      'left',
-      'right',
-      'top',
-      'bottom',
-      'down',
-      'l',
-      'r',
-      't',
-      'b',
-      'x',
-      'y',
-      'horizontal',
-      'vertical',
-      'hor',
-      'ver',
-    ]
-    if (directions.includes(String(values[0]))) {
+    if ((EDGE_DIRECTIONS as readonly string[]).includes(String(values[0]))) {
       return parseDirectionalSpacing('padding', values)
     }
     // Multi-value shorthand: pad 16 24 → padding: 16px 24px
@@ -287,24 +271,7 @@ export function propertyToCSS(
 
   // Handle directional margin: margin left 8, margin top 16 bottom 24, margin x 16
   if ((name === 'margin' || name === 'm' || name === 'mar') && values.length >= 2) {
-    const directions = [
-      'left',
-      'right',
-      'top',
-      'bottom',
-      'down',
-      'l',
-      'r',
-      't',
-      'b',
-      'x',
-      'y',
-      'horizontal',
-      'vertical',
-      'hor',
-      'ver',
-    ]
-    if (directions.includes(String(values[0]))) {
+    if ((EDGE_DIRECTIONS as readonly string[]).includes(String(values[0]))) {
       return parseDirectionalSpacing('margin', values)
     }
     // Multi-value shorthand: margin 16 24 → margin: 16px 24px
