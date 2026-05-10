@@ -194,6 +194,21 @@ describe('Conditionals — Bug #23-#26 fixed: regression pins', () => {
     expect(r2).not.toContain('tokens["t"]')
   })
 
+  it('React: computed expressions in HTML attributes resolve too', () => {
+    // PIN: pre-2026-05-10 `Input placeholder "Hi " + $name` and
+    // `Link "View", href "/items/" + $id` dropped the attribute
+    // entirely because `generateHtmlAttributes` only accepted
+    // string/number/boolean values. Computed expressions in attribute
+    // contexts now emit a JSX expression with token references resolved.
+    const r1 = generateReact(parse(`name: "Max"\n\nInput placeholder "Hi " + $name`))
+    expect(r1).toContain('placeholder={')
+    expect(r1).toContain('tokens["name"]')
+
+    const r2 = generateReact(parse(`id: "abc"\n\nLink "View", href "/items/" + $id`))
+    expect(r2).toContain('href={')
+    expect(r2).toContain('tokens["id"]')
+  })
+
   it('Bug #26 fixed: ternary in Text with interpolated string-branches resolves', () => {
     const dom = generateDOM(parse(`count: 3\n\nText count > 0 ? "Items: $count" : "Empty"`))
     // The interpolation now produces a template-literal substitution

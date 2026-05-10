@@ -726,7 +726,7 @@ function generateJSX(
 
   // HTML attributes from properties (placeholder, type, href, src, etc.)
   const attrStr =
-    generateHtmlAttributes(allProps) +
+    generateHtmlAttributes(allProps, tokens, parentContext.loopVars) +
     generateBindAttribute(instance, allProps) +
     generateEventHandlers(instance.events)
 
@@ -1451,7 +1451,11 @@ function generateMirrorAttributes(instance: Instance): string {
   return ' ' + attrs.join(' ')
 }
 
-function generateHtmlAttributes(properties: Property[]): string {
+function generateHtmlAttributes(
+  properties: Property[],
+  tokens: TokenDefinition[] = [],
+  loopVars: ReadonlySet<string> | undefined = undefined
+): string {
   const attrs: string[] = []
   for (const prop of properties) {
     const jsxName = HTML_ATTR_PROPS[prop.name]
@@ -1465,7 +1469,38 @@ function generateHtmlAttributes(properties: Property[]): string {
     if (typeof v === 'boolean') {
       if (v) attrs.push(jsxName)
     } else if (typeof v === 'string' || typeof v === 'number') {
-      attrs.push(`${jsxName}=${JSON.stringify(String(v))}`)
+      // Mirror string attributes can carry `$name` interpolations
+      // (`href "/items/$id"`). Resolve to a JSX expression so the
+      // output isn't a literal `"$id"`.
+      if (typeof v === 'string' && v.includes('$')) {
+        const interp = interpolateStringForJSX(v, tokens, loopVars)
+        // interpolateStringForJSX returns either `{...}` or a quoted
+        // string. Strip outer braces for direct attribute use.
+        const code = interp.startsWith('{') ? interp.slice(1, -1) : interp
+        attrs.push(`${jsxName}={${code}}`)
+      } else {
+        attrs.push(`${jsxName}=${JSON.stringify(String(v))}`)
+      }
+    } else if (v && typeof v === 'object' && 'kind' in v) {
+      // Computed expression on an HTML attribute (`href "/items/" + id`,
+      // `placeholder "Hi " + name`). Pre-2026-05-10 the React backend
+      // dropped these silently because the attribute emitter only
+      // accepted string/number/boolean. Emit a JSX expression so the
+      // attribute reflects the runtime value.
+      const kind = (v as { kind: string }).kind
+      if (kind === 'expression') {
+        const code = expressionPartsToJS(v as ComputedExpression, tokens, loopVars)
+        attrs.push(`${jsxName}={${code}}`)
+      } else if (kind === 'loopVar') {
+        const ref = v as LoopVarReference
+        const head = ref.name.includes('.') ? ref.name.slice(0, ref.name.indexOf('.')) : ref.name
+        const isLoopScoped = loopVars?.has(head) ?? false
+        attrs.push(
+          isLoopScoped
+            ? `${jsxName}={${ref.name}}`
+            : `${jsxName}={tokens[${JSON.stringify(head)}]${ref.name.slice(head.length).replace(/\./g, '?.')}}`
+        )
+      }
     }
   }
   return attrs.length > 0 ? ' ' + attrs.join(' ') : ''
