@@ -154,16 +154,19 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   Aliases). Folgen: kein Schema-Validator-Hint, kein Studio-Picker-
   Support, kein zentrales TypeScript-Type. Klärung: jeden Eintrag
   einzeln: ins Schema aufnehmen (mit Aliases) ODER aus IR entfernen.
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~21:30)
-  **Plan:** Audit zeigt: alle Properties haben IR-Backends + Backend-
-  Emit + sind in CLAUDE.md DSL-Reference dokumentiert + werden in
-  examples/tests verwendet (anim heavy, scale + blur in fixtures).
-  Entscheidung: alle ins Schema aufnehmen statt löschen. Slice:
-  PropertyDefinition-Einträge in `properties.ts` für animation (alias
-  anim), blur, backdrop-blur (alias blur-bg), scale, aspect. Verifizieren
-  dass `getAllSchemaPropertyNames()` jetzt alle akzeptiert. Pre-Refactor-
-  Pin: vitest-Test der jeden IR-Acceptance-Pfad gegen Schema-
-  Membership cross-checkt.
+  **Status:** erledigt — Audit zeigt: alle 5 fehlenden Properties haben
+  IR-Backends + Backend-Emit + sind in CLAUDE.md dokumentiert + werden
+  in examples/tests verwendet. Entscheidung: ins Studio-Schema
+  aufnehmen. PropertyDefinition-Einträge in `properties.ts` für
+  scale, aspect, blur, backdrop-blur (alias blur-bg), animation
+  (alias anim). Pin: neuer Test in
+  `tests/compiler/schema/schema-map-coherence.test.ts` —
+  „every property the IR transformer accepts is in PANEL_PROPERTIES".
+  **Notiz:** Zwei Schema-Files koexistieren: `property-schema.ts` (SCHEMA,
+  IR-Side, hatte alle 5 schon) und `properties.ts` (PANEL_PROPERTIES,
+  Studio-Side, hatte sie nicht). Drift war Studio-Picker-Side. `scroll-*`
+  ist nicht zu konsolidieren — sind 4 verschiedene Properties für 4
+  verschiedene CSS-Targets, keine Aliase.
 
 - **Wo:** `compiler/schema/dsl.ts:213` (`'route' // @deprecated`)
   **Was:** Schema-Annotation widerspricht der Realität. Das
