@@ -7,6 +7,7 @@
 
 import type { ComponentDefinition, Instance, Property, Slot, Text } from '../../parser/ast'
 import { isComponent, isInstance, isSlot } from '../../parser/ast'
+import type { InstanceChild } from '../transformers/inline-extraction'
 import type { IRNode } from '../types'
 import type { ParentLayoutContext } from '../transformers/transformer-context'
 import {
@@ -19,7 +20,7 @@ import type { IRTransformer } from '../index'
 export function resolveChildren(
   this: IRTransformer,
   componentChildren: (Instance | Slot)[],
-  instanceChildren: (Instance | Text | Slot)[],
+  instanceChildren: InstanceChild[],
   parentId?: string,
   parentLayoutContext?: ParentLayoutContext
 ): IRNode[] {

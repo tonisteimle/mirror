@@ -7,10 +7,26 @@
  * - `onclick toggle` as a child Instance with component="onclick"
  */
 
-import type { Instance, Text, Property } from '../../parser/ast'
+import type {
+  Instance,
+  Text,
+  Slot,
+  ZagNode,
+  Each,
+  ConditionalNode,
+  Property,
+} from '../../parser/ast'
 import { isInstance } from '../../parser/ast'
 import type { IRStyle, IREvent, IRAction } from '../types'
 import { mapEventToDom } from '../../schema/ir-helpers'
+
+/**
+ * The full set of nodes that can appear as Instance.children. Inline
+ * state/event extraction operates on a subset (Instance + Text) but
+ * must accept the wider shape because callers pass `instance.children`
+ * verbatim — non-Instance/Text nodes are passed through unchanged.
+ */
+export type InstanceChild = Instance | Slot | Text | ZagNode | Each | ConditionalNode
 
 /**
  * Context for inline extraction
@@ -25,7 +41,7 @@ export interface InlineExtractionContext {
 export interface InlineExtractionResult {
   inlineStateStyles: IRStyle[]
   inlineEvents: IREvent[]
-  remainingChildren: (Instance | Text)[]
+  remainingChildren: InstanceChild[]
 }
 
 /**
@@ -41,12 +57,12 @@ export interface InlineExtractionResult {
  * @returns Extraction result with styles, events, and remaining children
  */
 export function extractInlineStatesAndEvents(
-  children: (Instance | Text)[],
+  children: InstanceChild[],
   ctx: InlineExtractionContext
 ): InlineExtractionResult {
   const inlineStateStyles: IRStyle[] = []
   const inlineEvents: IREvent[] = []
-  const remainingChildren: (Instance | Text)[] = []
+  const remainingChildren: InstanceChild[] = []
 
   for (const child of children) {
     // Only process Instance type

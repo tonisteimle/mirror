@@ -754,7 +754,7 @@ export function transformConditional(this: IRTransformer, cond: ConditionalNode)
 
 export function transformChild(
   this: IRTransformer,
-  child: Instance | Text | Slot,
+  child: InlineExtraction.InstanceChild,
   parentId?: string,
   parentLayoutContext?: ParentLayoutContext
 ): IRNode {
@@ -777,6 +777,7 @@ export function transformChild(
   if (isZagComponent(child)) {
     return this.transformZagComponent(child, parentLayoutContext, parentId)
   }
+  // Each / Conditional / Instance: transformInstance dispatches via type tag.
   return this.transformInstance(child as Instance, parentId, false, false, parentLayoutContext)
 }
 
@@ -786,11 +787,11 @@ export function transformChild(
  */
 export function extractInlineStatesAndEvents(
   this: IRTransformer,
-  children: (Instance | Text)[]
+  children: InlineExtraction.InstanceChild[]
 ): {
   inlineStateStyles: IRStyle[]
   inlineEvents: IREvent[]
-  remainingChildren: (Instance | Text)[]
+  remainingChildren: InlineExtraction.InstanceChild[]
 } {
   const ctx: InlineExtractionContext = {
     propertyToCSS: prop => this.propertyToCSS(prop),
