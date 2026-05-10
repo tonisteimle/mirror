@@ -995,6 +995,8 @@ export interface StudioAPI {
   clearSelection(): void
   /** Get multi-selection */
   getMultiSelection(): string[]
+  /** Add a node to the multi-selection (idempotent). */
+  addToMultiSelection(nodeId: string): void
   /** Clear multi-selection */
   clearMultiSelection(): void
 

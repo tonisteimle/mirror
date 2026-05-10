@@ -32,7 +32,12 @@ const SYNC_SETTLE_MS = 200
 
 const TAB_FILES = ['data.mir', 'tokens.mir', 'components.mir', 'app.mir'] as const
 
-interface MirrorWindow extends Window {
+/**
+ * Window globals used in this test only. Don't `extends Window` — the
+ * narrow `desktopFiles` shape conflicts with the full version declared
+ * globally. Cast via `window as unknown as MirrorWindow`.
+ */
+interface MirrorWindow {
   files: Record<string, string>
   switchFile: (filename: string) => void
   desktopFiles?: { updateFileCache?: (path: string, content: string) => void }

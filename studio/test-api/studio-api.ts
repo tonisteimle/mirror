@@ -456,6 +456,18 @@ export class StudioAPIImpl implements StudioAPI {
     return this.state?.get()?.multiSelection ?? []
   }
 
+  /**
+   * Add a node to the current multi-selection. Maps to actions.toggleMultiSelection
+   * (which adds if absent, removes if present) but skips the toggle when the node
+   * is already in the set so callers can use it as an idempotent "ensure included".
+   */
+  addToMultiSelection(nodeId: string): void {
+    if (this.getMultiSelection().includes(nodeId)) return
+    if (this.actions?.toggleMultiSelection) {
+      this.actions.toggleMultiSelection(nodeId)
+    }
+  }
+
   clearMultiSelection(): void {
     if (this.actions?.clearMultiSelection) {
       this.actions.clearMultiSelection()

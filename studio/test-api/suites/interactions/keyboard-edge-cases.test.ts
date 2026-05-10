@@ -65,13 +65,13 @@ export const keyboardEdgeCaseTests: TestCase[] = describe('Keyboard edge cases',
       api.assert.ok(handles.length > 0, 'Should be in padding mode')
 
       // Selection stays — only the mode goes.
-      const selectionBefore = api.studio.getSelection()?.nodeId
+      const selectionBefore = api.studio.getSelection()
       await api.interact.pressKey('Escape')
       await api.utils.delay(150)
 
       handles = document.querySelectorAll('.padding-handle')
       api.assert.ok(handles.length === 0, 'Padding handles should be hidden')
-      const selectionAfter = api.studio.getSelection()?.nodeId
+      const selectionAfter = api.studio.getSelection()
       api.assert.equals(
         selectionAfter,
         selectionBefore,
@@ -112,7 +112,7 @@ export const keyboardEdgeCaseTests: TestCase[] = describe('Keyboard edge cases',
       )
       // Parent selection should still be node-2 (or wherever the
       // primary cursor was) — Escape didn't navigate up yet.
-      const sel = api.studio.getSelection()?.nodeId
+      const sel = api.studio.getSelection()
       api.assert.ok(
         sel === 'node-2' || sel === null,
         `Selection should be primary or null, got ${sel}`
@@ -129,7 +129,7 @@ export const keyboardEdgeCaseTests: TestCase[] = describe('Keyboard edge cases',
       await api.studio.setSelection('node-2')
       await api.utils.delay(100)
 
-      const before = api.studio.getSelection()?.nodeId
+      const before = api.studio.getSelection()
       if (before !== 'node-2') {
         // Selection setup didn't stick — skip rather than emit a misleading
         // failure (the tier-3 contract is what we want to test, and the
@@ -142,7 +142,7 @@ export const keyboardEdgeCaseTests: TestCase[] = describe('Keyboard edge cases',
       await api.utils.delay(200)
 
       // Escape should select the parent (node-1) — never stay on node-2.
-      const after = api.studio.getSelection()?.nodeId
+      const after = api.studio.getSelection()
       api.assert.ok(
         after !== 'node-2',
         `Escape should change selection from node-2, but it stayed there. After: ${after}`

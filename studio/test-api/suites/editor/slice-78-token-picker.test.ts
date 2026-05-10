@@ -19,7 +19,12 @@
 import { test, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 
-interface MirrorWindow extends Window {
+/**
+ * Window globals used in this test only. Don't `extends Window` — the
+ * narrow `editor` shape conflicts with the full CodeMirror `EditorView`
+ * declared globally elsewhere. Cast via `window as unknown as MirrorWindow`.
+ */
+interface MirrorWindow {
   files: Record<string, string>
   editor: {
     state: { doc: { length: number; toString(): string } }

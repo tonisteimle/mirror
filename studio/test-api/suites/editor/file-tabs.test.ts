@@ -25,7 +25,13 @@ const TAB_FILES = ['data.mir', 'tokens.mir', 'components.mir', 'app.mir'] as con
 // Labels are German because the studio UI is German.
 const TAB_LABELS = ['Daten', 'Tokens', 'Komponenten', 'Anwendung'] as const
 
-interface MirrorWindow extends Window {
+/**
+ * Window globals used in this test only. Don't `extends Window` — the
+ * narrow `editor` shape conflicts with the full CodeMirror `EditorView`
+ * declared globally elsewhere. Cast via `window as unknown as MirrorWindow`
+ * at use sites; we only touch the fields listed here.
+ */
+interface MirrorWindow {
   files: Record<string, string>
   editor: {
     state: { doc: { length: number; toString(): string } }

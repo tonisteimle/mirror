@@ -52,7 +52,7 @@ export {
   type SnapAxis,
   type AlignmentSnapResult,
   type SnapAxisInfo,
-  type Guide,
+  type SnapGuide,
   type SnapConfig,
   type SnapContext,
 } from '../snap'
