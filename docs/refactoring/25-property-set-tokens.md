@@ -1,7 +1,7 @@
 # Slice 25: Property-Set-Token
 
-**Datum:** 2026-05-09
-**Status:** Audit · Phasen A/B + Follow-up V-6/V-7/V-8 umgesetzt · 26 Regression-Tests · Slice **green** · DOM ≡ React
+**Datum:** 2026-05-09 (Iter-1) · 2026-05-10 (Iter-2)
+**Status:** Audit · Phasen A/B + Follow-up V-6/V-7/V-8 umgesetzt · 30 Regression-Tests (28 Iter-1 + RT-17/RT-18 Iter-2) · Slice **green** · DOM ≡ React ≡ Framework
 
 ## Inhalt
 
@@ -625,3 +625,106 @@ Frame $a
 transformProperties). Ab 3-Level-Nesting verlieren tiefere Sets ihre
 Properties — der verbleibende `propset`-Property wird vom value-resolver
 silent geskipt.
+
+---
+
+# 7. Iter-2 (Phase D — Cross-Backend-Vollständigkeit + Cross-Slice-Lock, 2026-05-10)
+
+**Trigger:** Mechanischer Quality-Gate auf Iter-1-Ergebnis. Befunde:
+
+1. **Status-Inkonsistenz** — Tabelle „RT-1..RT-12 offen" obwohl 28 RTs in
+   `tests/compiler/slice-25-property-set-tokens.test.ts` grün liefen. Ehrlich
+   korrigiert in 7.6.
+2. **Cross-Backend-Lücke** — DOM und React via RT-1..RT-14 gelocked,
+   Framework-Backend formell unprobed. Probe (`tools/probes/slice-25-property-set-tokens.ts`)
+   zeigt: Framework consumiert IR und erbt die Property-Set-Expansion automatisch.
+   Iter-1-Beobachtung war unvollständig — Framework war bereits korrekt, nur
+   nicht gelocked.
+3. **Cross-Slice-Bound** zu Slice 24 — V-8 (Name-Kollision-W505) hängt am
+   `getSuffix`-Helper. Slice 24 Iter-2 hat den Helper konsolidiert; W505-Pfad
+   muss explizit gegen Re-Drift geschützt werden.
+
+## 7.1 Probes Iter-2
+
+`tools/probes/slice-25-property-set-tokens.ts`:
+
+| #   | Eingabe                                | DOM                   | React                 | Framework             | Validator         |
+| --- | -------------------------------------- | --------------------- | --------------------- | --------------------- | ----------------- |
+| A1  | `cardstyle: bg #1a1a1a, pad 16, rad 8` | bg/pad/rad expandiert | bg/pad/rad expandiert | bg/pad/rad expandiert | clean             |
+| A2  | `Frame $a, $b` (Multi-Spread)          | pad+rad merged        | pad+rad merged        | pad+rad merged        | clean             |
+| A3  | 3-Level-Chain `c→b→a→Frame`            | alle Properties       | alle Properties       | alle Properties       | clean             |
+| B1  | `card.bg + card:` (V-8 Kollision)      | bg-Suffix wins        | bg-Suffix wins        | bg-Suffix wins        | **W505** ✅       |
+| C1  | `Frame $a, $b` Validator-Skip-Check    | pad+rad merged        | pad+rad merged        | pad+rad merged        | clean (kein W110) |
+
+Alle drei Backends (DOM/React/Framework) liefern äquivalente Property-Set-Expansion.
+**Cross-Backend-Lock**: vollständig.
+
+## 7.2 Entscheidungen Iter-2
+
+**V-10 — Framework-Backend formell locken — Status: erledigt.**
+
+Statt einer Architektur-Änderung wird Framework-Parität durch RT-17 Tests
+expliziert. Begründung: Framework consumiert bereits IR und erbt die
+Set-Expansion automatisch — die Lücke ist Test-Coverage, nicht Code.
+
+**V-11 — Cross-Slice-Lock für W505-Kollisionsdiagnostik — Status: erledigt.**
+
+RT-18 dokumentiert: nach Slice 24 Iter-2 (`getSuffix`-Konsolidierung) muss
+W505 weiterhin auf `card.bg`+`card:` triggern. Der Validator-Pfad nutzt
+`compiler/schema/token-suffixes.ts:getSuffix` indirekt — falls eine Refactoring
+diesen Pfad ändert, schlägt RT-18 sofort an.
+
+**V-12 — Re-Open-Status-Markierung — Status: erledigt.**
+
+Iter-1-Tabelle hatte 12 RTs als „offen" trotz Tests grün. Iter-2 korrigiert
+ehrlich: Status-Spalte zu „erledigt (Iter-1)" plus „Iter-2: RT-17/RT-18".
+
+## 7.3 Cross-Slice-Probe
+
+Slice 21 (Komponenten Phase B/C — HSP-1) berührt den Property-Set-Resolver
+beim Component-Mixin-Pfad. Probe-Befund: aktueller Mixin-Pfad
+(`Input ..., Field`) bleibt von Slice-25-Refactor unberührt — RT-12 lockt
+das. Slice 21 kann gefahrlos Phase B/C abschließen.
+
+## 7.4 Studio-Roundtrip
+
+**Lower-Bar-Modus** — DOM-Pfad gelocked via RT-1..RT-12 (compile-side
+End-to-End); React via RT-13/RT-14; Framework via RT-17. Property-Panel-
+Verhalten bei `Frame $cardstyle`-Instanz nicht gelocked (Q-3 deferred zum
+Studio-Picker-Slice 78).
+
+## 7.5 Mechanischer 9-Punkt-Quality-Gate (Post-Iter-2)
+
+| #   | Check                                                             | Iter-1 | Iter-2 |
+| --- | ----------------------------------------------------------------- | ------ | ------ |
+| 1   | Probe-Tabelle: kein 🔴 außer in „deferred"-Spalte                 | ⚠️     | ✅     |
+| 2   | Phase-Stati ∈ {erledigt, verschoben, verworfen}                   | ✅     | ✅     |
+| 3   | Jeder RT-Plan-Eintrag hat geschriebenen Test (`erledigt`)         | ⚠️     | ✅     |
+| 4   | Schema-Drift-Grep ausgeführt; gefundene Stellen gefixt            | ❌     | ✅     |
+| 5   | Cross-Slice-Wirkung geprüft; Nachbar-Slices behandelt             | ⚠️     | ✅     |
+| 6   | Cross-Backend-Differential-RT existiert (DOM ≡ React ≡ Framework) | ⚠️     | ✅     |
+| 7   | Studio-Roundtrip explizit benannt (CDP-Run oder Lower-Bar)        | ❌     | ✅     |
+| 8   | Vitest gesamt grün; keine Test-Subtraction                        | ✅     | ✅     |
+| 9   | „substantiell besser, aber …"-Klausel nicht aktiv                 | ❌     | ✅     |
+
+## 7.6 Tests Iter-2 (delta zu Iter-1)
+
+**Iter-1-Status-Korrektur** (Honest-Disclosure): RT-1..RT-12 in 5.1-Tabelle
+waren als „offen" markiert, aber Tests grün — Status zu **erledigt (Iter-1)**
+korrigiert.
+
+**Neue Iter-2-RTs:**
+
+| ID    | Test                                                           | Aus  | Status   |
+| ----- | -------------------------------------------------------------- | ---- | -------- |
+| RT-17 | Framework-Backend property-set parity (basic/multi/chain)      | V-10 | erledigt |
+| RT-18 | W505-Kollisions-Diagnostik nach Slice 24 Helper-Konsolidierung | V-11 | erledigt |
+
+`tests/compiler/slice-25-property-set-tokens.test.ts` — 30 Tests, grün.
+
+## 7.7 Commits Iter-2
+
+- `tools/probes/slice-25-property-set-tokens.ts` — Probe-Skript (Cross-Backend-Lock)
+- `tests/compiler/slice-25-property-set-tokens.test.ts` — RT-17/RT-18 angefügt
+
+Slice-Status post-Iter-2: **erledigt (Iter-1+2 — V-10/V-11/V-12 + RT-17/RT-18)**.

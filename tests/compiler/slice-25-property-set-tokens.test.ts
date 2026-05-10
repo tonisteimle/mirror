@@ -31,6 +31,7 @@ import { describe, it, expect } from 'vitest'
 import { parse } from '../../compiler/parser'
 import { generateDOM } from '../../compiler/backends/dom'
 import { generateReact } from '../../compiler/backends/react'
+import { generateFramework } from '../../compiler/backends/framework'
 import { Validator } from '../../compiler/validator/validator'
 
 function compileToCreateUI(source: string): string {
@@ -396,6 +397,78 @@ Frame $a`)
       // cycle didn't introduce arbitrary text content or crash.
       expect(jsx).toContain('export default function App()')
       expect(jsx).not.toContain('formatInlineMarkdown')
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  // Iter-2 RTs — Framework-Backend parity + Cross-Slice with Slice 24.
+  //
+  // Iter-1 covered DOM (RT-1..RT-12) and React (RT-13/RT-14). Framework-Backend
+  // wasn't formally probed; Iter-2 surfaces that it works correctly because
+  // it consumes IR (where `expandPropertySets` already ran). RT-17 locks the
+  // Framework-Backend equivalence so a future re-architecture (e.g. splitting
+  // Framework backend off the IR pipeline) can't re-introduce the B-11 bug.
+  //
+  // RT-18 closes the loop with Slice 24 Iter-2: the suffix-helper consolidation
+  // must not break the W505 collision diagnostic. If `getTokenSuffix` ever
+  // changes, the validator must still detect `card.bg` + `card:` as a collision.
+  // -------------------------------------------------------------------------
+
+  describe('RT-17 (Iter-2) — Framework-Backend property-set parity', () => {
+    it('basic spread: `Frame $cardstyle` emits expanded args to M("Frame", …)', () => {
+      const fw = generateFramework(
+        parse(`cardstyle: bg #1a1a1a, pad 16, rad 8
+Frame $cardstyle`)
+      )
+      const fwArgs = fw.match(/M\('Frame', \{([^}]*)\}/s)?.[1] ?? ''
+      expect(fwArgs).toMatch(/bg:\s*'#1a1a1a'/)
+      expect(fwArgs).toMatch(/pad:\s*16/)
+      expect(fwArgs).toMatch(/rad:\s*8/)
+    })
+
+    it('multi-spread: `Frame $a, $b` merges both', () => {
+      const fw = generateFramework(
+        parse(`a: pad 16
+b: rad 8
+Frame $a, $b`)
+      )
+      const fwArgs = fw.match(/M\('Frame', \{([^}]*)\}/s)?.[1] ?? ''
+      expect(fwArgs).toMatch(/pad:\s*16/)
+      expect(fwArgs).toMatch(/rad:\s*8/)
+    })
+
+    it('3-level chain: properties from every level reach Framework', () => {
+      const fw = generateFramework(
+        parse(`c: pad 8
+b: $c, gap 4
+a: $b, bg #f00
+Frame $a`)
+      )
+      const fwArgs = fw.match(/M\('Frame', \{([^}]*)\}/s)?.[1] ?? ''
+      expect(fwArgs).toMatch(/pad:\s*8/)
+      expect(fwArgs).toMatch(/gap:\s*4/)
+      expect(fwArgs).toMatch(/bg:\s*'#f00'/)
+    })
+  })
+
+  describe('RT-18 (Iter-2) — Cross-Slice collision detection survives Slice 24 helper consolidation', () => {
+    it('`card.bg` + `card:` still triggers W505 after token-suffix consolidation', () => {
+      // After Slice 24 Iter-2 made `studio` and `compiler/parser` delegate to
+      // `compiler/schema/token-suffixes.ts:getTokenSuffix`, the validator's
+      // collision-detector for property-sets must still see the suffixed-token
+      // form on the same root. This test fails if a future refactor moves the
+      // suffix-extraction off `compiler/schema/token-suffixes.ts:getSuffix`
+      // without updating the validator's collision predicate.
+      const v = new Validator()
+      const result = v.validate(
+        parse(`card.bg: #111
+card: pad 16, rad 8
+Frame $card`)
+      )
+      const collision = result.warnings.find(w => w.code === 'W505')
+      expect(collision).toBeDefined()
+      // The runtime bug Slice 25 V-8 documents: positional-resolver wins, set is shadowed.
+      // We assert the diagnostic exists; behavior remains backward-compatible.
     })
   })
 })
