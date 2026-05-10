@@ -29,7 +29,7 @@ import type {
 } from './ports'
 import { LineOffsetService } from './line-offset-service'
 import { logSync } from '../../compiler/utils/logger'
-import type { SourceMapPortWithSetter } from './adapters/production-adapters'
+import type { SourceMap } from '../../compiler/ir/source-map'
 
 // ============================================
 // Configuration
@@ -54,7 +54,7 @@ export interface SyncCoordinatorConfig {
 // ============================================
 
 export interface ExtendedSyncPorts extends SyncPorts {
-  sourceMap: SourceMapPort & { setSourceMap?: (sourceMap: unknown) => void }
+  sourceMap: SourceMapPort & { setSourceMap?: (sourceMap: SourceMap | null) => void }
 }
 
 // ============================================
@@ -135,7 +135,7 @@ export class SyncCoordinator {
   /**
    * Update the SourceMap. Call this after compilation.
    */
-  setSourceMap(sourceMap: unknown): void {
+  setSourceMap(sourceMap: SourceMap | null): void {
     // Increment version to invalidate any in-progress syncs
     this.sourceMapVersion++
 
@@ -157,8 +157,8 @@ export class SyncCoordinator {
     this.lastCursorLine = -1
 
     // Update the SourceMap port if it supports setSourceMap
-    if (this.ports.sourceMap && 'setSourceMap' in this.ports.sourceMap) {
-      ;(this.ports.sourceMap as SourceMapPortWithSetter).setSourceMap(sourceMap as any)
+    if (this.ports.sourceMap.setSourceMap) {
+      this.ports.sourceMap.setSourceMap(sourceMap)
     }
   }
 
