@@ -6,6 +6,7 @@
  */
 
 import type { StorageItem } from './storage'
+import { escapeHtml as escapeHtmlFallback } from '../compiler/utils/escape-html'
 
 // =============================================================================
 // File-type metadata
@@ -55,8 +56,8 @@ export const FILE_TYPES: Record<string, FileTypeConfig> = {
 
 /**
  * Escape HTML entities to prevent XSS in text content. Uses the DOM
- * for parser-correct escaping; in non-DOM environments fall back to a
- * regex-based equivalent.
+ * for parser-correct escaping; in non-DOM environments fall back to the
+ * shared regex-based variant in `compiler/utils/escape-html`.
  */
 export function escapeHtml(text: string): string {
   if (typeof document !== 'undefined') {
@@ -64,19 +65,14 @@ export function escapeHtml(text: string): string {
     div.textContent = text
     return div.innerHTML
   }
-  return escapeAttr(text)
+  return escapeHtmlFallback(text)
 }
 
 /**
  * Escape for use in HTML attributes (escapes quotes too).
  */
 export function escapeAttr(text: string): string {
-  return String(text)
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  return escapeHtmlFallback(text)
 }
 
 /**

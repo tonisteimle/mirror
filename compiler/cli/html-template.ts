@@ -9,6 +9,8 @@
  * references instead.
  */
 
+import { escapeHtml } from '../utils/escape-html'
+
 export interface HtmlOptions {
   /** Document <title>. Default: "Mirror App". */
   title?: string
@@ -41,25 +43,6 @@ export const STANDALONE_BOOTSTRAP = `
 const _ui = createUI()
 document.body.appendChild(_ui)
 `
-
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"']/g, c => {
-    switch (c) {
-      case '&':
-        return '&amp;'
-      case '<':
-        return '&lt;'
-      case '>':
-        return '&gt;'
-      case '"':
-        return '&quot;'
-      case "'":
-        return '&#39;'
-      default:
-        return c
-    }
-  })
-}
 
 function buildStyleTag(opts: HtmlOptions): string {
   if (opts.externalCssPath) {

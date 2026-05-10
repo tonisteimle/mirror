@@ -22,6 +22,7 @@
 
 import { state } from '../core'
 import { createLogger } from '../../compiler/utils/logger'
+import { escapeHtml as escape } from '../../compiler/utils/escape-html'
 
 const log = createLogger('ExportButton')
 
@@ -444,11 +445,4 @@ function derivProjectName(files: Record<string, string>): string {
   if (!layout) return 'mirror-project'
   const parts = layout.split('/').filter(Boolean)
   return parts.length > 1 ? parts[0] : 'mirror-project'
-}
-
-function escape(s: string): string {
-  return s.replace(
-    /[&<>"']/g,
-    c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] || c
-  )
 }
