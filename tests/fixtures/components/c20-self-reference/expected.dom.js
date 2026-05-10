@@ -23,13 +23,12 @@
   node_2.dataset.slot = 'Text'
   node_1.appendChild(node_2)
   
-  // Unknown
+  // TreeNode
   const node_3 = document.createElement('div')
   _elements['node-3'] = node_3
   node_3.dataset.mirrorId = 'node-3'
-  node_3.dataset.mirrorName = 'Unknown'
-  node_3.dataset.component = 'Unknown'
-  node_3.dataset.slot = 'Unknown'
+  node_3.dataset.mirrorName = 'TreeNode'
+  node_3.dataset.recursionStopped = 'TreeNode'
   node_1.appendChild(node_3)
   
   _root.appendChild(node_1)

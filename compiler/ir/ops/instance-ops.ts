@@ -49,13 +49,15 @@ import type { IRTransformer } from '../index'
 
 export function createEmptyNode(
   this: IRTransformer,
-  instance: { line?: number; column?: number } | null | undefined
+  instance: { line?: number; column?: number } | null | undefined,
+  options?: { name?: string; recursionStopped?: boolean }
 ): IRNode {
   return {
     id: this.generateId(),
     tag: 'div',
     primitive: 'box',
-    name: 'Unknown',
+    name: options?.name ?? 'Unknown',
+    recursionStopped: options?.recursionStopped,
     properties: [],
     styles: [],
     events: [],
@@ -243,7 +245,10 @@ export function transformInstance(
       message: `Component '${instance.component}' references itself recursively (cycle: ${[...this.componentInstantiationStack, instance.component].join(' → ')}). Recursion stopped — Mirror does not support self-referential components.`,
       position: instance.position,
     })
-    return this.createEmptyNode(instance)
+    return this.createEmptyNode(instance, {
+      name: instance.component,
+      recursionStopped: true,
+    })
   }
   const resolverCtx: ComponentResolverContext = {
     componentMap: this.componentMap,

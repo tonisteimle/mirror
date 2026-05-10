@@ -92,6 +92,7 @@ export interface IRNode {
   sourcePosition?: SourcePosition // Source position for bidirectional editing
   propertySourceMaps?: PropertySourceMap[] // Per-property source positions
   isDefinition?: boolean // True if this is a component definition (not instance)
+  recursionStopped?: boolean // True if this node represents a self-recursive component whose expansion was halted (DOM marker becomes data-recursion-stopped instead of data-component)
   layoutType?: LayoutType // Explicit layout type (for drop strategy detection)
   valueBinding?: string // Token path for two-way binding (e.g., "user.name")
   mask?: string // Input mask pattern (e.g., "###.####.####.##")

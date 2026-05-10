@@ -538,6 +538,14 @@ export function emitComponentAttributes(
 ): void {
   if (!node.name) return
 
+  // Self-recursive components get halted at expansion time (instance-ops.ts).
+  // Surface that as a distinct dataset key instead of `data-component="Unknown"`
+  // so dev-tools and the Studio see *which* component blew the cycle.
+  if (node.recursionStopped) {
+    ctx.emit(`${varName}.dataset.recursionStopped = '${node.name}'`)
+    return
+  }
+
   ctx.emit(`${varName}.dataset.component = '${node.name}'`)
   if (zagSlotNames.has(node.name) || node.isSlotFiller) {
     ctx.emit(`${varName}.dataset.slot = '${node.name}'`)
