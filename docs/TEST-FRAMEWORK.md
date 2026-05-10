@@ -1,1429 +1,548 @@
 # Mirror Test Framework
 
-Umfassendes Test-Framework für das Mirror Studio mit Browser-basierter End-to-End-Testausführung.
+End-to-End-Tests für Mirror Studio fahren ausschließlich über echte
+Browser-Eingaben — Maus und Tastatur, getrieben durch Chrome DevTools
+Protocol (CDP). Es gibt keine synthetischen Cursor, keine
+`el.dispatchEvent()`-Hacks, keinen direkten Zugriff auf Studio-internes
+State.
 
-## Grundprinzip — Maus und Keyboard, nichts anderes
+> Vorgängerdokument (~1429 Zeilen, beschreibt das alte synthetische
+> Test-Framework) liegt in `docs/archive/TEST-FRAMEWORK-pre-cdp-rewrite.md`.
 
-**Alles, was in der Applikation passiert, wird durch genau zwei Eingabekanäle ausgelöst: Maus und Keyboard.** Tests müssen denselben Pfad nehmen, den ein echter Benutzer nimmt — sonst testen sie etwas anderes als das, was Benutzer erleben.
+## Grundprinzip — Maus und Keyboard, sonst nichts
 
-### Erlaubt (kanonischer Pfad)
+Alles, was in der Applikation passiert, wird durch genau zwei
+Eingabekanäle ausgelöst: **Maus** und **Keyboard**. Tests müssen denselben
+Pfad nehmen, den ein echter Benutzer nimmt — sonst testen sie etwas
+anderes als das, was Benutzer erleben.
 
-- **Maus**: `cdpInput.mouseDown / mouseUp / mouseMove / mouseClick / mouseDoubleClick / wheel` — CDP-getriebene Trusted-Events. Lösen die volle Browser-Pipeline aus (HTML5-Drag mit `dataTransfer`, native Focus, IME, …).
-- **Keyboard**: `cdpInput.keyDown / keyUp / typeText` — Trusted-KeyEvents inklusive `windowsVirtualKeyCode`. Lösen native Shortcut-Handler (Cmd+S, F2, Tab, …) und CodeMirror-Keymaps korrekt aus.
-- **Headed mit echter OS-Maus**: optional via `nut-js` (`tools/test-runner/demo/os-mouse.ts`). Bewegt den realen macOS-Cursor und liefert dieselben Events wie ein Mensch. Braucht Accessibility-Permission.
+### Erlaubt
+
+- **Schicht 1 — `cdpInput.*`**: atomare CDP-Trusted-Events
+  (`mouseDown`, `mouseUp`, `mouseMove`, `mouseClick`, `mouseDoubleClick`,
+  `wheel`, `keyDown`, `keyUp`, `typeText`, `focus`). Lösen die volle
+  Browser-Pipeline aus: native Focus, HTML5-Drag mit `dataTransfer`,
+  IME, Shortcut-Handler, CodeMirror-Keymaps.
+- **Schicht 2 — `trustedInteractions.*`**: dünner Wrapper um
+  `cdpInput.*`, der Selektoren (Node-IDs, Slot-Pseudo-IDs) zu
+  Viewport-Koordinaten auflöst und Sequenzen wie `drag(from, to)` als
+  ein Aufruf bündelt.
+- **Schicht 3 — `__mirrorActions.*`**: high-level Test-Helfer
+  (`dropFromPalette`, `setProperty`, `pickColor`, `inlineEdit`,
+  `dragResize`, `dragPadding`, …). Jeder Helfer ist intern eine
+  Sequenz aus Schicht-1-Aufrufen.
+- **Optional — OS-Maus via nut-js**: bewegt den realen macOS-Cursor.
+  Aktivierung mit `--os-mouse`/`--driver=os`. Liefert dieselben Events
+  wie ein Mensch, braucht Accessibility-Permission.
 
 ### Verboten
 
-- `el.click()` / `el.focus()` / `el.dispatchEvent(new MouseEvent(...))` — synthetische Events mit `isTrusted=false`. Umgehen Focus-Management, HTML5-Drag und native Pipelines.
-- `controller.startDrag()` / `panel.changeProperty()` / `editor.dispatch()` als **Test-Aktion**. Diese sind Studio-interne APIs, kein Bedienpfad.
-- Synthetische Cursor / Keystroke-Overlays / Drop-Indicator-Highlights, die App-Verhalten _vortäuschen_. Was im Test sichtbar wird, muss aus der echten App kommen.
+- `el.click()`, `el.focus()`, `el.dispatchEvent(new MouseEvent(...))`
+  — synthetische Events mit `isTrusted=false`. Umgehen Focus-Management,
+  HTML5-Drag und native Pipelines.
+- `controller.startDrag()`, `panel.changeProperty()`, `editor.dispatch()`
+  als **Test-Aktion**. Das sind Studio-interne APIs, kein Bedienpfad.
+- Synthetische Cursor / Keystroke-Overlays / fake Drop-Indicator-Highlights,
+  die App-Verhalten _vortäuschen_. Was im Test sichtbar wird, muss aus
+  der echten App kommen. Der alte Demo-Runner mit SVG-Cursor ist gelöscht
+  (Commit `8e81387f`).
 
-### Kapselung
+### Daumenregel
 
-Höhere Test-Helfer (`dropFromPalette`, `setProperty`, `pickColor`, `inlineEdit`, …) sind **nur Kapselungen über `cdpInput.*`**. Sie bündeln eine Sequenz von Maus- und Keyboard-Aktionen für Lesbarkeit. Sie umgehen den Eingabepfad nie. Wer einen Helper schreibt, der direkt in Studio's State greift, hat den Test gebrochen.
+Wenn du einen Test-Schritt nicht als Reihe von „Maus klickt da, Keyboard
+tippt das" beschreiben kannst, geht er einen Pfad, den der Benutzer nicht
+nehmen kann.
 
-**Daumenregel:** Wenn du einen Test-Schritt nicht als Reihe von "Maus klickt da, Keyboard tippt das" beschreiben kannst, geht er einen Pfad, den der Benutzer nicht nehmen kann.
+---
 
-## Übersicht
+## Architektur — drei Schichten
 
-Das Framework bietet:
-
-- **Echtes E2E-Testing**: Tests laufen im Browser mit echtem DOM
-- **Extrem schnell**: ~225 Tests in unter 30 Sekunden
-- **Robuster als Playwright**: Keine Flakiness durch direkte API-Integration
-- **Vollständige API-Abdeckung**: Editor, Preview, Panels, Zag-Komponenten, History
-
-## Quick Start
-
-### Browser-Tests ausführen
-
-```javascript
-// In der Browser-Konsole
-
-// Alle Mirror-Tests ausführen (~225 Tests)
-__mirrorTest.runAll()
-
-// Einzelne Kategorie
-__mirrorTest.runCategory('zag')
-
-// Einzelnen Test
-__mirrorTest.run([
-  testWithSetup('Button rendert', 'Button "Click"', async api => {
-    api.assert.exists('node-1')
-    api.dom.expect('node-1', { tag: 'button', text: 'Click' })
-  }),
-])
+```
+┌────────────────────────────────────────────────────────────────┐
+│  Schicht 3 — __mirrorActions (high-level Helfer)               │
+│  studio/test-api/mirror-actions/index.ts                       │
+│                                                                 │
+│  dropFromPalette · drawInGrid · moveElement · dragResize       │
+│  dragPadding · dragMargin · inlineEdit · selectInPreview       │
+│  setProperty · pickColor · aiPrompt                            │
+└────────────────────────────────────────────────────────────────┘
+                            │ baut auf
+                            ▼
+┌────────────────────────────────────────────────────────────────┐
+│  Schicht 2 — trustedInteractions (Selektor-Wrapper)            │
+│  studio/test-api/trusted-interactions.ts                       │
+│                                                                 │
+│  click · doubleClick · drag · focus · press · type · wheel     │
+│  + Selektor-Auflösung (node-id → Viewport-Koordinaten)         │
+└────────────────────────────────────────────────────────────────┘
+                            │ baut auf
+                            ▼
+┌────────────────────────────────────────────────────────────────┐
+│  Schicht 1 — cdpInput (atomare CDP Trusted Events)             │
+│  studio/test-api/cdp-input-client.ts                           │
+│                                                                 │
+│  mouseDown · mouseUp · mouseMove · mouseClick · mouseDoubleClick│
+│  wheel · keyDown · keyUp · typeText · focus                    │
+└────────────────────────────────────────────────────────────────┘
+                            │ Promise-Bridge via Runtime.addBinding
+                            ▼
+┌────────────────────────────────────────────────────────────────┐
+│  Node-Side Bridge                                               │
+│  tools/test-runner/cdp-input-bridge.ts                         │
+│                                                                 │
+│  Empfängt JSON-Calls, ruft echte CDP `Input.dispatchMouseEvent`/│
+│  `Input.dispatchKeyEvent` auf, antwortet via                    │
+│  `window.__cdpInputResponse`.                                   │
+└────────────────────────────────────────────────────────────────┘
+                            │ optional zusätzlich
+                            ▼
+┌────────────────────────────────────────────────────────────────┐
+│  OS-Maus Bridge (optional, --os-mouse)                          │
+│  tools/test-runner/os-mouse-bridge.ts + os-mouse.ts            │
+│                                                                 │
+│  nut-js dreht den realen macOS-Cursor — gleiche Events wie ein  │
+│  Mensch. Braucht Accessibility-Permission.                      │
+└────────────────────────────────────────────────────────────────┘
 ```
 
-### Browser Filter API
+**Lese-APIs** (kein Eingabepfad, deshalb außerhalb der Schichten):
+`PreviewInspector`, `Assertions`, `DOMBridge`, `PanelAPI`, `ZagAPI`,
+`StudioAPI`, `FixturesAPI`, `LayoutAssertions` — sehen den DOM-Stand
+und vergleichen, mutieren aber nichts.
 
-Neue Convenience-Methoden für einfaches Test-Filtering direkt in der Browser-Konsole:
+---
 
-```javascript
-// Tests nach Pattern filtern (case-insensitive)
-__mirrorTest.filter('Button') // Alle Tests mit "Button" im Namen
-__mirrorTest.filter('hover') // Alle Hover-Tests
+## API-Referenz
 
-// Tests nach Kategorie ausführen
-__mirrorTest.category('zag') // Alle Zag-Tests
-__mirrorTest.category('layout') // Alle Layout-Tests
+### Schicht 1 — `cdpInput`
 
-// Einzelnen Test ausführen
-__mirrorTest.only('Checkbox toggle') // Exakter oder partieller Match
+`studio/test-api/cdp-input-client.ts`. Atomare CDP-Calls. Verfügbar
+sobald die Node-Bridge installiert ist (`isCdpInputAvailable() === true`).
+Außerhalb des Test-Runners rejecten alle Methoden mit klarem Fehler.
 
-// Tests auflisten
-__mirrorTest.list() // Alle Kategorien mit Testanzahl
-__mirrorTest.list('drag') // Tests einer Kategorie auflisten
+```typescript
+import { cdpInput, isCdpInputAvailable } from '../cdp-input-client'
+
+interface CdpModifiers { alt?: boolean; ctrl?: boolean; meta?: boolean; shift?: boolean }
+interface CdpMouseArgs { x: number; y: number; button?: 'left'|'middle'|'right'; modifiers?: CdpModifiers; buttons?: number }
+interface CdpKeyArgs   { key: string; code?: string; modifiers?: CdpModifiers }
+
+cdpInput.mouseDown(args: CdpMouseArgs):           Promise<void>
+cdpInput.mouseUp(args: CdpMouseArgs):             Promise<void>
+cdpInput.mouseMove(args: CdpMouseArgs):           Promise<void>
+cdpInput.mouseClick(args: CdpMouseArgs & { clickCount?: number }): Promise<void>
+cdpInput.mouseDoubleClick(args: CdpMouseArgs):    Promise<void>
+cdpInput.keyDown(args: CdpKeyArgs):               Promise<void>
+cdpInput.keyUp(args: CdpKeyArgs):                 Promise<void>
+cdpInput.typeText(args: { text: string; perCharDelay?: number }): Promise<void>
+cdpInput.wheel(args: { x: number; y: number; deltaX: number; deltaY: number }): Promise<void>
+cdpInput.focus(args: { x: number; y: number }):   Promise<void>
+
+isCdpInputAvailable(): boolean   // gate: nur True unter dem CDP-Runner
 ```
 
-### Debug Mode
+`buttons`-Detail: für mid-drag Bewegung zwischen `mouseDown` und
+`mouseUp` muss `buttons: 1` mitgegeben werden, damit Chrome HTML5
+`dragstart`/`dragover` zündet.
 
-Step-by-Step Debugging für einzelne Tests:
+### Schicht 2 — `trustedInteractions`
 
-```javascript
-// Test im Debug-Modus starten
-__mirrorTest.debug('Checkbox toggle')
+`studio/test-api/trusted-interactions.ts`. Wrapped `cdpInput`, löst
+Node-IDs (`node-1`, `node-1:Slot:value`) auf Viewport-Koordinaten auf,
+bündelt Drag-Sequenzen.
 
-// Während Debug:
-__mirrorTest.step() // Weiter zum nächsten Schritt
-__mirrorTest.abort() // Test abbrechen
+```typescript
+import { trustedInteractions } from '../trusted-interactions'
 
-// Output:
-// 🐛 DEBUG MODE: Checkbox toggle
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Controls:
-//   __mirrorTest.step()  - Continue to next step
-//   __mirrorTest.abort() - Abort test
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 📝 Setup: Loading code...
-//    Code loaded. Continue with __mirrorTest.step() or Enter
+interface ViewportPoint { x: number; y: number }
+
+trustedInteractions.isAvailable():                                 boolean
+trustedInteractions.coordsOf(nodeId: string):                      ViewportPoint | null
+
+trustedInteractions.click(target: ViewportPoint | string,
+                          opts?: { modifiers?: CdpModifiers }):     Promise<void>
+trustedInteractions.doubleClick(target: ViewportPoint | string):    Promise<void>
+trustedInteractions.mouseDown(target, opts?):                       Promise<void>
+trustedInteractions.mouseUp(target, opts?):                         Promise<void>
+trustedInteractions.mouseMove(point: ViewportPoint):                Promise<void>
+
+trustedInteractions.drag(from: ViewportPoint | string,
+                         to: ViewportPoint | string,
+                         opts?: { steps?: number }):                Promise<void>
+
+trustedInteractions.focus(target: ViewportPoint | string):          Promise<void>
+
+trustedInteractions.keyDown(key, opts?):                            Promise<void>
+trustedInteractions.keyUp(key, opts?):                              Promise<void>
+trustedInteractions.press(key, opts?):                              Promise<void>   // keyDown + keyUp
+trustedInteractions.type(text, opts?: { perCharDelay?: number }):   Promise<void>
+
+trustedInteractions.wheel(point, deltaX, deltaY):                   Promise<void>
 ```
 
-### CLI Test-Runner
+### Schicht 3 — `__mirrorActions`
+
+`studio/test-api/mirror-actions/index.ts`, registriert auf
+`window.__mirrorActions`. Domain-spezifische Test-Helfer für die
+Studio-Workflows. Jede Methode ist intern eine cdpInput-Sequenz.
+
+```typescript
+type Selector =
+  | { byId: string }
+  | { byTestId: string }
+  | { byText: string | RegExp; nth?: number }
+  | { byTag: string; nth?: number }
+  | { byRole: string; nth?: number }
+  | { byPath: string; nth?: number }
+
+type Selectorish = Selector | string // String-Shorthand: '#node-2' / 'node-2' / '"Save"' / 'Card > Title'
+
+interface MirrorActionsAPI {
+  resolveSelector(sel: Selectorish): string
+  dropChildIndexPoint(targetEl: HTMLElement, index: number): { x: number; y: number }
+  snapshotElement(nodeId: string, extras?: string[]): Record<string, unknown>
+  snapshotAllByPreviewOrder(): Array<{
+    selector: { byId: string }
+    snapshot: Record<string, unknown>
+  }>
+
+  dropFromPalette(
+    component: string,
+    targetSel: Selectorish,
+    at?: { kind: 'index'; index: number } | { kind: 'zone'; zone: string }
+  ): Promise<void>
+
+  drawInGrid(
+    componentName: string,
+    targetSel: Selector,
+    fromCell: { x: number; y: number },
+    toCell: { x: number; y: number },
+    name?: string
+  ): Promise<void>
+
+  moveElement(sourceSel: Selector, targetSel: Selector, index: number): Promise<void>
+
+  dragResize(
+    sel: Selector,
+    position: string,
+    deltaX: number,
+    deltaY: number,
+    opts?: unknown
+  ): Promise<void>
+  dragPadding(
+    sel: Selector,
+    side: string,
+    delta: number,
+    mode: 'all' | 'axis' | 'single',
+    bypassSnap?: boolean
+  ): Promise<void>
+  dragMargin(
+    sel: Selector,
+    side: string,
+    delta: number,
+    mode: 'all' | 'axis' | 'single',
+    bypassSnap?: boolean
+  ): Promise<void>
+
+  inlineEdit(sel: Selector, text: string, charDelay?: number): Promise<void>
+  selectInPreview(sel: Selector): Promise<void>
+  setProperty(sel: Selector, propName: string, value: string): Promise<void>
+  pickColor(sel: Selector, propName: string, color: string): Promise<void>
+
+  aiPrompt(promptText: string, options?: unknown): Promise<unknown>
+  installAiMockListener(): void
+}
+```
+
+Browser-Zugriff in Tests: `(window as any).__mirrorActions` nach
+`installMirrorActions()` (passiert automatisch in `initStudioTestAPI`).
+
+### Lese-APIs (Test-Sicht auf den DOM)
+
+Eine Test-Funktion bekommt ein `TestAPI`-Objekt mit Lese-/Assert-Helfern:
+
+```typescript
+interface TestAPI {
+  editor: EditorAPI // CodeMirror-Inhalte lesen, Cursor-Position
+  preview: PreviewAPI // node-IDs, Element-Inspection, byText
+  assert: AssertionAPI // equals, exists, hasText, hasStyle, codeContains, …
+  dom: DOMAPI // deklarative DOM-Validierung
+  panel: PanelAPI // Property-/Tree-/Files-Panel ablesen
+  zag: ZagAPI // Zag-Komponenten-State ablesen (DatePicker)
+  studio: StudioAPI // History, Viewport, Selection
+  fixtures: FixturesAPI // vordefinierte Mirror-Snippets
+  utils: UtilsAPI // delay, waitFor*, …
+}
+```
+
+> `interact` (alte synthetische Schicht) gibt es immer noch im Code,
+> ist aber **deprecated** für neue Tests. Wer eine Maus- oder
+> Keyboard-Aktion braucht, nutzt Schicht 1/2/3 oben.
+
+Typdefinitionen: `studio/test-api/types.ts`.
+
+---
+
+## Test-File-Template
+
+```typescript
+/**
+ * Preview CDP — Palette drop: Frame ins leere Canvas.
+ *
+ * Maus-/Keyboard-Sequenz:
+ *   1. Maus-Drag von Palette-Item "Frame" zur Mitte des leeren Previews.
+ *
+ * Verifiziert:
+ *   - Editor-Code beginnt mit `Frame`.
+ *   - Genau ein gerendertes Element mit data-mirror-id.
+ *   - Auto-Selection auf den neuen Knoten.
+ */
+import type { TestCase } from '../../../types'
+
+export const frameIntoEmptyCanvasTests: TestCase[] = [
+  {
+    name: 'Palette → leeres Preview: Frame wird Top-Level-Knoten',
+    fixture: '',
+    test: async api => {
+      const actions = (window as any).__mirrorActions
+      await actions.dropFromPalette('Frame', { byPath: 'preview' })
+
+      const code = api.editor.getValue().trim()
+      api.assert.match(code, /^Frame\b/, 'editor source should start with `Frame`')
+
+      const ids = api.preview.getNodeIds()
+      api.assert.equals(ids.length, 1, 'preview has exactly one node')
+      api.assert.equals(api.panel.property.getSelectedNodeId(), ids[0], 'auto-selected')
+    },
+  },
+]
+```
+
+Registrierung pro Wave / Bereich erfolgt in
+`studio/test-api/suites/categories.ts` (eine Kategorie pro Test-Bereich,
+nicht pro File).
+
+---
+
+## Verzeichnisstruktur
+
+### `studio/test-api/` — Browser-Side
+
+| Pfad                      | Zweck                                                     |
+| ------------------------- | --------------------------------------------------------- |
+| `index.ts`                | Bootstrap, registriert `__mirrorTest` / `__mirrorActions` |
+| `cdp-input-client.ts`     | Schicht 1 — `cdpInput.*`                                  |
+| `trusted-interactions.ts` | Schicht 2 — `trustedInteractions.*`                       |
+| `mirror-actions/index.ts` | Schicht 3 — `__mirrorActions.*`                           |
+| `os-mouse-client.ts`      | Optionale OS-Maus-Bridge (nut-js)                         |
+| `snapshot-client.ts`      | Pixel-Diff-Bridge (Snapshots)                             |
+| `cli-bridge-shim.ts`      | Shim, um Node-Helfer im Browser-Kontext aufzurufen        |
+| `codemirror-api.ts`       | CodeMirror-Inspect-Helfer für Editor-Tests                |
+| `interactions.ts`         | **Legacy** synthetische Interactions — nur für Altbestand |
+| `inspector.ts`            | `PreviewInspector` (DOM-Inspektion)                       |
+| `assertions.ts`           | `Assertions` + `AssertionCollector`                       |
+| `dom-bridge.ts`           | Deklarative DOM-Validierung                               |
+| `layout-assertions.ts`    | Pixel-genaue Layout-Checks (`assertActualGap`, …)         |
+| `panel-api.ts`            | Property-/Tree-/Files-Panel-Lesen                         |
+| `zag-api.ts`              | Zag-Komponenten-State (DatePicker)                        |
+| `studio-api.ts`           | History, Viewport, Selection                              |
+| `snapping-api.ts`         | Snap-Service-Inspection für Spacing/Resize-Tests          |
+| `fixtures.ts`             | Vordefinierte Mirror-Snippets                             |
+| `helpers/`                | Wiederverwendbare Helfer (`structure`, `keyboard`)        |
+| `test-runner.ts`          | `TestRunner`, `test`, `testWithSetup`, `describe`         |
+| `types.ts`                | Alle TypeScript-Interfaces                                |
+| `suites/`                 | Test-Suites (siehe unten)                                 |
+| `suites/categories.ts`    | Kategorien-Registry — Eintrag pro Test-Bereich            |
+
+### `studio/test-api/suites/` — Test-Bereiche
+
+```
+ai/                  drag/                  preview-cdp/
+animations/          editor/                primitives/
+autocomplete/        events/                project/
+bidirectional/       export/                property-panel/
+charts/              flex-reorder/          property-robustness/
+compiler/            gradients/             responsive/
+compiler-verification/  inline-edit/        stacked-drag/
+components/          integration/           states/
+core/                interactions/          stress/
+data-binding/        layout/                styling/
+demo-project.test.ts layout-verification/   sync/
+                     playmode/              test-system/
+                     pure-select.test.ts    transforms/
+                                            tutorial/
+                                            ui-builder/
+                                            undo-redo/
+                                            workflow/
+```
+
+Aktuell sind **21 Kategorien** in `categories.ts` registriert: `core`,
+`layout`, `styling`, `visuals`, `states`, `components`, `drag`,
+`handles`, `stepRunner` (leer — Stub), `selection`, `propertyPanel`,
+`editor`, `data`, `project`, `compiler`, `ai`, `ai.realLlm`, `tutorial`,
+`stress`, `headed`, `previewCdp`. Nicht jeder `suites/`-Subdir hat
+einen eigenen Kategorie-Eintrag — viele werden über aggregierende
+Kategorien zugeführt.
+
+### `tools/test-runner/` — Node-Side CDP-Runner
+
+| Datei                   | Zweck                                              |
+| ----------------------- | -------------------------------------------------- |
+| `cli.ts`                | CLI-Entry (geladen via `tools/test.ts`)            |
+| `chrome.ts`             | Chromium-Launch                                    |
+| `cdp.ts`                | CDP-Client (Generic Wire-Protocol)                 |
+| `cdp-input-bridge.ts`   | Bridge für Schicht 1 — empfängt `cdpInput.*`-Calls |
+| `os-mouse-bridge.ts`    | Bridge für Schicht 1 (OS-Maus, optional)           |
+| `os-mouse.ts`           | nut-js-Wrapper für reale macOS-Cursor-Kontrolle    |
+| `snapshot-bridge.ts`    | Pixel-Diff-Bridge (Node-Side)                      |
+| `pixel-diff.ts`         | Pixel-Diff-Algorithmus                             |
+| `recording.ts`          | CDP-Screencast → WebM via ffmpeg                   |
+| `runner.ts`             | Test-Orchestrierung                                |
+| `console-collector.ts`  | Browser-Console-Aufzeichnung                       |
+| `screenshot.ts`         | Screenshots bei Fail                               |
+| `file-explorer.ts`      | `--explore` / `--diagnose` Diagnose                |
+| `reporters/console.ts`  | Konsole                                            |
+| `reporters/junit.ts`    | JUnit-XML                                          |
+| `reporters/html.ts`     | HTML-Report                                        |
+| `reporters/progress.ts` | Live-Fortschrittsbar                               |
+| `types.ts`              | Wire-Protokoll-Typen                               |
+
+### `tools/atomic-input-tests.ts` — Smoke-Tests
+
+Kleine end-to-end-Probes, die direkt prüfen, dass die CDP-`Input.*`-
+Pipeline echtes Vertrauen liefert (Click trifft Button, Keystroke
+landet im Input, Drag zündet HTML5-`dragstart`, …). Laufen ohne Studio.
+
+```bash
+npx tsx tools/atomic-input-tests.ts            # headless
+npx tsx tools/atomic-input-tests.ts --headed   # mit sichtbarem Chrome
+npx tsx tools/atomic-input-tests.ts --studio   # inkl. Studio-Smoke
+```
+
+---
+
+## CLI
 
 ```bash
 # Studio Server starten (Terminal 1)
 npm run studio
 
 # Tests ausführen (Terminal 2)
-npx tsx tools/test.ts                     # Alle Browser Tests
-npx tsx tools/test.ts --category=zag      # Nur Zag-Tests
-npx tsx tools/test.ts --filter="Button"   # Filter nach Name
-npx tsx tools/test.ts --headed            # Mit sichtbarem Browser
-npx tsx tools/test.ts --junit=results.xml # JUnit Report für CI
+npm run test:browser                        # alle Tests
+npm run test:browser:progress               # alle Tests mit Live-Bar
+npm run test:browser:drag                   # nur Drag & Drop
+npm run test:browser:mirror                 # alle Mirror-Tests
+npm run test:browser:headed                 # mit sichtbarem Browser
+npm run test:browser:tutorial               # nur Tutorial-Suite
+npm run test:browser:edit-flow-real         # AI-Realmode (60s timeout)
+
+# Direkt
+npx tsx tools/test.ts --list                # Kategorien anzeigen
+npx tsx tools/test.ts --category=layout
+npx tsx tools/test.ts --filter="Button" --progress
+npx tsx tools/test.ts --test="Drop Avatar" --headed
+npx tsx tools/test.ts --all --progress
+```
+
+### Wichtige Flags
+
+| Flag                                | Zweck                                     |
+| ----------------------------------- | ----------------------------------------- |
+| `--category=NAME`                   | Eine Kategorie laufen lassen              |
+| `--test="NAME"`                     | Einzelnen Test (exakter Name)             |
+| `--filter=PATTERN`                  | Regex-Filter über Test-Namen              |
+| `--all`                             | Alles laufen lassen                       |
+| `--list`                            | Kategorien listen                         |
+| `--headed`                          | Sichtbarer Browser                        |
+| `--os-mouse` / `--driver=os`        | Reale macOS-Maus via nut-js (Permission!) |
+| `--cpu-throttle=N`                  | CPU verlangsamen (CDP Emulation)          |
+| `--network=PROFILE`                 | offline \| slow-3g \| fast-3g \| 4g       |
+| `--window-size=WxH`                 | Viewport-Größe                            |
+| `--bail`                            | Bei erstem Fail stoppen                   |
+| `--retries=N`                       | N Wiederholungen pro Fail                 |
+| `--timeout=MS`                      | Timeout pro Test (Default 30000)          |
+| `--watch`                           | Watch-Mode                                |
+| `--hide-panels=files,components`    | Panels verstecken                         |
+| `--panel-mode=test\|focus\|minimal` | Preset-Panel-Konfiguration                |
+| `--junit=PATH` / `--html=PATH`      | Reports                                   |
+| `--screenshot-dir=DIR`              | Screenshot-Verzeichnis                    |
+| `--no-screenshot`                   | Screenshots deaktivieren                  |
+| `--progress`                        | Live-Fortschrittsbar                      |
+| `--log=PATH`                        | Logfile                                   |
+| `--snapshot-dir=DIR`                | Pixel-Diff-Baseline                       |
+| `--snapshot-baseline=DIR`           | Vergleichs-Baseline                       |
+| `--snapshot-threshold=N`            | Schwellwert (0–1, Default 0.01)           |
+| `--record=PATH`                     | CDP-Screencast → WebM                     |
+| `--record-fps=N`                    | Framerate (Default 24)                    |
+| `--explore` / `--diagnose`          | Diagnose-Lauf (Files, Project-State)      |
+
+---
+
+## Browser-Konsolen-API
+
+Während ein Studio-Browser offen ist (egal ob via `npm run studio`
+oder unter dem Test-Runner), stehen folgende Globals zur Verfügung:
+
+```javascript
+__mirrorTest.list() // alle Kategorien
+__mirrorTest.list('drag') // Tests einer Kategorie
+__mirrorTest.filter('Button') // Pattern-Filter
+__mirrorTest.category('zag') // Kategorie laufen lassen
+__mirrorTest.only('Checkbox toggle') // Einzelner Test (exakt/partial)
+__mirrorTest.runAll() // Alle Tests
+__mirrorTest.debug('Checkbox toggle') // Step-by-step Debug
+__mirrorTest.step() //   weiter
+__mirrorTest.abort() //   abbrechen
+__mirrorTest.inspect('node-1') // Element-Snapshot
+__mirrorTest.expect('node-1').hasText('OK').hasBackground('#2271C1')
+```
+
+CDP-Layer direkt (nur unter dem Test-Runner verfügbar):
+
+```javascript
+window.__cdpInput?.mouseClick({ x: 100, y: 200 })
+window.__mirrorActions?.dropFromPalette('Frame', { byPath: 'preview' })
+window.__osMouse // nur mit --os-mouse
+window.__snapshot // nur mit --snapshot-dir
 ```
 
 ---
 
-## Architektur
+## Test-Plan: Preview-Funktionalitäten
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           CLI Test Runner                                    │
-│                      (tools/drag-test-runner.ts)                            │
-│                                                                              │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐│
-│  │ Chrome      │  │ CDP Client  │  │ Console     │  │ Reporters           ││
-│  │ Launcher    │  │             │  │ Collector   │  │ (Console/JUnit/HTML)││
-│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────────────┘│
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           Browser Test API                                   │
-│                      (studio/test-api/index.ts)                             │
-│                                                                              │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐│
-│  │ TestRunner  │  │ Assertions  │  │ DOM Bridge  │  │ Test Suites         ││
-│  │             │  │             │  │             │  │ (~225 Tests)        ││
-│  │ - runSuite()│  │ - equals()  │  │ - expect()  │  │                     ││
-│  │ - runTest() │  │ - exists()  │  │ - verify()  │  │ - primitives        ││
-│  │             │  │ - hasStyle()│  │ - verifyAll │  │ - layout            ││
-│  └─────────────┘  └─────────────┘  └─────────────┘  │ - styling           ││
-│                                                      │ - zag               ││
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │ - interactions      ││
-│  │ EditorAPI   │  │ PreviewAPI  │  │ InteractAPI │  │ - bidirectional     ││
-│  │             │  │             │  │             │  │ - undo-redo         ││
-│  │ - getCode() │  │ - inspect() │  │ - click()   │  │ - autocomplete      ││
-│  │ - setCode() │  │ - query()   │  │ - hover()   │  └─────────────────────┘│
-│  │ - undo()    │  │ - waitFor() │  │ - type()    │                         │
-│  └─────────────┘  └─────────────┘  └─────────────┘                         │
-│                                                                              │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                         │
-│  │ PanelAPI   │  │ ZagAPI      │  │ StudioAPI   │                         │
-│  │             │  │             │  │             │                         │
-│  │ - property  │  │ - isOpen()  │  │ - history   │                         │
-│  │ - tree      │  │ - isChecked │  │ - viewport  │                         │
-│  │ - files     │  │ - getValue()│  │ - selection │                         │
-│  └─────────────┘  └─────────────┘  └─────────────┘                         │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           Mirror Studio                                      │
-│                                                                              │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐│
-│  │ Editor      │  │ Preview     │  │ Panels      │  │ Compiler            ││
-│  │ (CodeMirror)│  │ (DOM)       │  │ (Property)  │  │                     ││
-│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────────────┘│
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+Der inkrementelle Wave-Plan für die `preview-cdp`-Suite (atomare,
+isolierte Tests pro Preview-Interaktion) liegt in
+`docs/test-plan-preview-cdp.md`. Aktuell ~62 Tests in 13 Waves geplant,
+Status pro Wave dort gepflegt.
 
 ---
 
-## Dateien & Struktur
-
-### Kern-Dateien
-
-| Datei                             | Beschreibung                            |
-| --------------------------------- | --------------------------------------- |
-| `studio/test-api/index.ts`        | Haupt-Export, Browser-Integration       |
-| `studio/test-api/test-runner.ts`  | TestRunner Klasse, Test-Ausführung      |
-| `studio/test-api/types.ts`        | Alle TypeScript-Interfaces              |
-| `studio/test-api/assertions.ts`   | Assertion-Bibliothek                    |
-| `studio/test-api/interactions.ts` | Interaktions-Bibliothek                 |
-| `studio/test-api/inspector.ts`    | Preview-Inspektor                       |
-| `studio/test-api/dom-bridge.ts`   | Deklarative DOM-Validierung             |
-| `studio/test-api/panel-api.ts`    | Property/Tree/Files Panel API           |
-| `studio/test-api/zag-api.ts`      | Zag-Komponenten API                     |
-| `studio/test-api/studio-api.ts`   | Studio-Level API (inkl. Test Isolation) |
-| `studio/test-api/fixtures.ts`     | Test-Fixtures API                       |
-
-### Test-Suites
-
-Die Tests sind in Verzeichnisse organisiert, wobei jede Kategorie eigene `.test.ts` Dateien enthält:
-
-| Verzeichnis              | Tests | Dateien                                                                                                                                                                   |
-| ------------------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `suites/primitives/`     | ~25   | basic.test.ts, semantic.test.ts, headings.test.ts                                                                                                                         |
-| `suites/layout/`         | ~35   | direction.test.ts, alignment.test.ts, gap.test.ts, stacked.test.ts, grid.test.ts, nesting.test.ts                                                                         |
-| `suites/styling/`        | ~50   | colors.test.ts, sizing.test.ts, spacing.test.ts, borders.test.ts, typography.test.ts, effects.test.ts                                                                     |
-| `suites/zag/`            | ~30   | checkbox.test.ts, switch.test.ts, slider.test.ts, select.test.ts, radio-group.test.ts, dialog.test.ts, tooltip.test.ts, tabs.test.ts, date-picker.test.ts, layout.test.ts |
-| `suites/interactions/`   | ~30   | Click, Hover, Focus, Input                                                                                                                                                |
-| `suites/bidirectional/`  | ~20   | Code ↔ Preview Sync                                                                                                                                                       |
-| `suites/undo-redo/`      | ~15   | History Management                                                                                                                                                        |
-| `suites/autocomplete/`   | ~20   | Completions                                                                                                                                                               |
-| `suites/property-panel/` | ~25   | Token-Buttons, Property-Änderungen                                                                                                                                        |
-| `suites/drag/`           | ~46   | Stacked Drag, Flex Reorder                                                                                                                                                |
-| `suites/workflow/`       | ~30   | End-to-End Workflows                                                                                                                                                      |
-| `suites/charts/`         | ~15   | Chart-Komponenten                                                                                                                                                         |
-
-Zusätzliche Test-Dateien:
-
-| Datei                                 | Tests | Beschreibung                                                  |
-| ------------------------------------- | ----- | ------------------------------------------------------------- |
-| `suites/compiler-tests.ts`            | ~20   | Compiler IR & Backend                                         |
-| `suites/layout-verification-tests.ts` | ~15   | Visuelle Layout-Verifikation                                  |
-| `suites/test-system-tests.ts`         | ~20   | Test-Framework Features (Fixtures, Isolation, Keyboard, Wait) |
-
-### CLI Test-Runner
-
-| Datei                          | Beschreibung                  |
-| ------------------------------ | ----------------------------- |
-| `tools/drag-test-runner.ts`    | CLI Entry Point               |
-| `tools/test-runner/chrome.ts`  | Chrome Launcher               |
-| `tools/test-runner/cdp.ts`     | CDP Client                    |
-| `tools/test-runner/runner.ts`  | Test Orchestration            |
-| `tools/test-runner/reporters/` | Console, JUnit, HTML Reporter |
-
----
-
-## Test API Referenz
-
-### TestAPI (Haupt-Interface)
-
-Jeder Test erhält ein `TestAPI`-Objekt mit allen Sub-APIs:
-
-```typescript
-interface TestAPI {
-  editor: EditorAPI // Code-Editor Kontrolle
-  preview: PreviewAPI // DOM-Inspektion
-  interact: InteractionAPI // Benutzer-Interaktionen (inkl. Keyboard)
-  assert: AssertionAPI // Assertions
-  dom: DOMAPI // Deklarative DOM-Validierung
-  state: StateAPI // Anwendungs-State
-  utils: UtilsAPI // Hilfsfunktionen (inkl. Wait-Helpers)
-  panel: PanelAPI // UI-Panels
-  zag: ZagAPI // Zag-Komponenten
-  studio: StudioAPI // Studio-Level Operationen (inkl. Test Isolation)
-  fixtures: FixturesAPI // Test-Fixtures (vordefinierte Szenarien)
-}
-```
-
----
-
-### EditorAPI
-
-Kontrolle des Code-Editors (CodeMirror).
-
-```typescript
-interface EditorAPI {
-  getCode(): string
-  setCode(code: string): Promise<void>
-  insertAt(code: string, line: number, indent?: number): void
-  getCursor(): { line: number; column: number }
-  setCursor(line: number, column: number): void
-  triggerAutocomplete(): void
-  getCompletions(): string[]
-  undo(): void
-  redo(): void
-}
-```
-
-**Beispiele:**
-
-```typescript
-// Code setzen und auf Kompilierung warten
-await api.editor.setCode('Button "Click", bg #2271C1')
-
-// Aktuellen Code prüfen
-const code = api.editor.getCode()
-api.assert.contains(code, 'Button')
-
-// Undo/Redo
-api.editor.undo()
-api.editor.redo()
-
-// Autocomplete testen
-api.editor.setCursor(1, 10)
-api.editor.triggerAutocomplete()
-const completions = api.editor.getCompletions()
-api.assert.ok(completions.includes('bg'), 'Should suggest bg')
-```
-
----
-
-### PreviewAPI
-
-Inspektion des gerenderten DOMs.
-
-```typescript
-interface PreviewAPI {
-  getNodeIds(): string[]
-  inspect(nodeId: string): ElementInfo | null
-  query(selector: string): ElementInfo[]
-  findByText(text: string, options?: { exact?: boolean }): ElementInfo | null
-  getRoot(): ElementInfo | null
-  getChildren(nodeId: string): ElementInfo[]
-  exists(nodeId: string): boolean
-  waitFor(nodeId: string, timeout?: number): Promise<ElementInfo>
-  screenshot(): Promise<string>
-}
-
-interface ElementInfo {
-  nodeId: string
-  tagName: string
-  textContent: string
-  fullText: string
-  styles: ComputedStyles
-  attributes: Record<string, string>
-  dataAttributes: Record<string, string>
-  bounds: DOMRect
-  children: string[]
-  parent: string | null
-  visible: boolean
-  interactive: boolean
-}
-```
-
-**Beispiele:**
-
-```typescript
-// Element inspizieren
-const info = api.preview.inspect('node-1')
-console.log(info.tagName) // 'div'
-console.log(info.styles.backgroundColor) // 'rgb(34, 113, 193)'
-console.log(info.children) // ['node-2', 'node-3']
-
-// Alle Node-IDs
-const nodeIds = api.preview.getNodeIds() // ['node-1', 'node-2', ...]
-
-// Nach Text suchen
-const btn = api.preview.findByText('Click me')
-
-// Auf Element warten
-const element = await api.preview.waitFor('node-5', 2000)
-```
-
----
-
-### InteractionAPI
-
-Simulation von Benutzer-Interaktionen.
-
-```typescript
-interface KeyModifiers {
-  ctrl?: boolean
-  shift?: boolean
-  alt?: boolean
-  meta?: boolean
-}
-
-interface InteractionAPI {
-  // Maus-Events
-  click(nodeId: string): Promise<void>
-  doubleClick(nodeId: string): Promise<void>
-  hover(nodeId: string): Promise<void>
-  unhover(nodeId: string): Promise<void>
-
-  // Fokus
-  focus(nodeId: string): Promise<void>
-  blur(nodeId: string): Promise<void>
-
-  // Text-Eingabe
-  type(nodeId: string, text: string): Promise<void>
-  clear(nodeId: string): Promise<void>
-
-  // Keyboard (mit Modifier-Unterstützung)
-  pressKey(key: string, modifiers?: KeyModifiers): Promise<void>
-  pressKeyOn(nodeId: string, key: string, modifiers?: KeyModifiers): Promise<void>
-  pressSequence(keys: string[], delayBetween?: number): Promise<void>
-  typeText(text: string, delayPerChar?: number): Promise<void>
-
-  // Selection
-  select(nodeId: string): void
-  clearSelection(): void
-
-  // Drag & Drop
-  dragFromPalette(component: string, target: string, index: number): Promise<void>
-  dragToPosition(component: string, target: string, x: number, y: number): Promise<void>
-  moveElement(source: string, target: string, index: number): Promise<void>
-}
-```
-
-**Beispiele:**
-
-```typescript
-// Button klicken
-await api.interact.click('node-1')
-
-// Text eingeben
-await api.interact.type('node-2', 'Hello World')
-await api.interact.clear('node-2')
-
-// Hover
-await api.interact.hover('node-1')
-await api.utils.delay(100)
-await api.interact.unhover('node-1')
-
-// Keyboard mit Modifiern
-await api.interact.pressKey('s', { ctrl: true }) // Ctrl+S
-await api.interact.pressKey('z', { ctrl: true, shift: true }) // Ctrl+Shift+Z
-await api.interact.pressKey('c', { meta: true }) // Cmd+C (Mac)
-
-// Key auf spezifischem Element
-await api.interact.pressKeyOn('node-1', 'Enter')
-await api.interact.pressKeyOn('node-1', 'ArrowDown', { shift: true })
-
-// Key-Sequenz (z.B. für Navigation)
-await api.interact.pressSequence(['ArrowDown', 'ArrowDown', 'Enter'])
-await api.interact.pressSequence(['Tab', 'Tab', 'Space'], 100) // mit Delay
-
-// Text Zeichen für Zeichen tippen
-await api.interact.typeText('Hello World', 20) // 20ms pro Zeichen
-
-// Element selektieren (im Editor)
-api.interact.select('node-2')
-
-// Drag & Drop
-await api.interact.dragFromPalette('Button', 'node-1', 0)
-await api.interact.moveElement('node-3', 'node-1', 0)
-```
-
----
-
-### AssertionAPI
-
-Klassische Assertions für Tests.
-
-```typescript
-interface AssertionAPI {
-  ok(condition: boolean, message?: string): void
-  equals<T>(actual: T, expected: T, message?: string): void
-  matches(actual: string, pattern: RegExp, message?: string): void
-  contains(actual: string, substring: string, message?: string): void
-  hasStyle(nodeId: string, property: keyof ComputedStyles, value: string): void
-  hasText(nodeId: string, text: string, options?: { exact?: boolean }): void
-  exists(nodeId: string, message?: string): void
-  isVisible(nodeId: string, message?: string): void
-  hasChildren(nodeId: string, count: number): void
-  hasAttribute(nodeId: string, attr: string, value?: string): void
-  codeContains(pattern: string | RegExp): void
-  codeEquals(expected: string): void
-  isSelected(nodeId: string): void
-}
-```
-
-**Beispiele:**
-
-```typescript
-// Basis-Assertions
-api.assert.ok(true, 'Should be true')
-api.assert.equals(value, 42, 'Value should be 42')
-api.assert.contains(text, 'hello')
-
-// DOM-Assertions
-api.assert.exists('node-1')
-api.assert.isVisible('node-1')
-api.assert.hasChildren('node-1', 3)
-api.assert.hasText('node-1', 'Hello')
-api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(34, 113, 193)')
-api.assert.hasAttribute('node-1', 'data-testid', 'my-button')
-
-// Code-Assertions
-api.assert.codeContains('Button "Click"')
-api.assert.codeContains(/bg #[0-9a-fA-F]{6}/)
-
-// Selection
-api.assert.isSelected('node-2')
-```
-
----
-
-### DOMAPI (DOM Bridge)
-
-Deklarative DOM-Validierung mit Mirror DSL-Properties.
-
-```typescript
-interface DOMAPI {
-  expect(nodeId: string, expectations: DOMExpectations): void
-  verify(nodeId: string, expectations: DOMExpectations): DOMVerifyResult
-  verifyAll(expectations: Record<string, DOMExpectations>): DOMVerifyResult[]
-  verifyTree(rootId: string, tree: DOMTreeExpectation): DOMVerifyResult[]
-}
-
-interface DOMExpectations {
-  // Element
-  tag?: string
-  exists?: boolean
-  visible?: boolean
-  // Text
-  text?: string
-  textContains?: string
-  // Children
-  children?: number | string[]
-  childTags?: string[]
-  // Layout
-  hor?: boolean
-  ver?: boolean
-  wrap?: boolean
-  center?: boolean
-  spread?: boolean
-  // Dimensions
-  w?: number | 'full' | 'auto'
-  h?: number | 'full' | 'auto'
-  // Spacing
-  pad?: number | [number, number] | [number, number, number, number]
-  gap?: number
-  // Colors
-  bg?: string
-  col?: string
-  boc?: string
-  // Border
-  bor?: number
-  rad?: number
-  // Typography
-  fs?: number
-  weight?: string | number
-  italic?: boolean
-  uppercase?: boolean
-  // Effects
-  shadow?: boolean
-  opacity?: number
-  // Attributes
-  placeholder?: string
-  href?: string
-  src?: string
-}
-```
-
-**Beispiele:**
-
-```typescript
-// Einzelnes Element validieren
-api.dom.expect('node-1', {
-  tag: 'div',
-  bg: '#2271C1',
-  pad: 16,
-  gap: 12,
-  hor: true,
-  children: 3,
-})
-
-// Button mit allen Properties
-api.dom.expect('node-2', {
-  tag: 'button',
-  text: 'Click me',
-  bg: '#2271C1',
-  col: 'white',
-  pad: [12, 24],
-  rad: 6,
-})
-
-// Multiple Elemente
-api.dom.verifyAll({
-  'node-1': { tag: 'div', children: 2 },
-  'node-2': { tag: 'button', text: 'Save' },
-  'node-3': { tag: 'button', text: 'Cancel' },
-})
-
-// Baum-Struktur
-api.dom.verifyTree('node-1', {
-  tag: 'div',
-  children: [
-    { tag: 'span', text: 'Title' },
-    { tag: 'button', text: 'Action' },
-  ],
-})
-```
-
----
-
-### PanelAPI
-
-Kontrolle der UI-Panels.
-
-```typescript
-interface PanelAPI {
-  property: PropertyPanelAPI
-  tree: TreePanelAPI
-  files: FilesPanelAPI
-}
-
-interface PropertyPanelAPI {
-  isVisible(): boolean
-  getSelectedNodeId(): string | null
-  getPropertyValue(name: string): string | null
-  getAllProperties(): Record<string, string>
-  setProperty(name: string, value: string): Promise<boolean>
-  removeProperty(name: string): Promise<boolean>
-  toggleProperty(name: string, enabled: boolean): Promise<boolean>
-  getTokenOptions(property: string): string[]
-  clickToken(property: string, tokenName: string): Promise<boolean>
-  getSections(): string[]
-  isSectionExpanded(sectionName: string): boolean
-  toggleSection(sectionName: string): void
-  getInputValue(inputName: string): string | null
-  setInputValue(inputName: string, value: string): Promise<boolean>
-}
-
-interface TreePanelAPI {
-  getNodes(): TreeNode[]
-  getSelected(): string | null
-  select(nodeId: string): void
-  expand(nodeId: string): void
-  collapse(nodeId: string): void
-  expandAll(): void
-  collapseAll(): void
-}
-
-interface FilesPanelAPI {
-  list(): string[]
-  getContent(filename: string): string | null
-  create(name: string, content?: string): Promise<boolean>
-  open(name: string): Promise<boolean>
-  delete(name: string): Promise<boolean>
-  rename(oldName: string, newName: string): Promise<boolean>
-  getCurrentFile(): string | null
-  getFileType(filename: string): string
-}
-```
-
-**Beispiele:**
-
-```typescript
-// Property Panel
-api.assert.ok(api.panel.property.isVisible(), 'Panel should be visible')
-
-const selectedId = api.panel.property.getSelectedNodeId()
-api.assert.equals(selectedId, 'node-1')
-
-// Property lesen
-const bgValue = api.panel.property.getPropertyValue('bg')
-api.assert.equals(bgValue, '#2271C1')
-
-// Property setzen
-await api.panel.property.setProperty('pad', '24')
-
-// Token verwenden
-const tokens = api.panel.property.getTokenOptions('pad')
-api.assert.ok(tokens.includes('sm'))
-await api.panel.property.clickToken('pad', 'sm')
-
-// Tree Panel
-const nodes = api.panel.tree.getNodes()
-api.panel.tree.select('node-2')
-api.panel.tree.expandAll()
-
-// Files Panel
-const files = api.panel.files.list()
-await api.panel.files.create('new.mir', 'Frame\n  Text "Hello"')
-await api.panel.files.open('new.mir')
-```
-
----
-
-### ZagAPI
-
-Zugriff auf Zag-Komponenten State Machines.
-
-```typescript
-interface ZagAPI {
-  // State Access
-  getState(nodeId: string): ZagState | null
-
-  // Overlay Components (Dialog, Tooltip, Select)
-  isOpen(nodeId: string): boolean
-  open(nodeId: string): Promise<void>
-  close(nodeId: string): Promise<void>
-
-  // Form Controls (Checkbox, Switch)
-  isChecked(nodeId: string): boolean
-  check(nodeId: string): Promise<void>
-  uncheck(nodeId: string): Promise<void>
-  toggle(nodeId: string): Promise<void>
-
-  // Value Components (Slider, Input, Select)
-  getValue(nodeId: string): unknown
-  setValue(nodeId: string, value: unknown): Promise<void>
-
-  // Tabs
-  getActiveTab(nodeId: string): string | null
-  selectTab(nodeId: string, tabValue: string): Promise<void>
-  getAllTabs(nodeId: string): string[]
-
-  // Select/Dropdown
-  getSelectedOption(nodeId: string): string | null
-  selectOption(nodeId: string, optionValue: string): Promise<void>
-  getOptions(nodeId: string): string[]
-
-  // Radio Group
-  getSelectedRadio(nodeId: string): string | null
-  selectRadio(nodeId: string, value: string): Promise<void>
-
-  // Events
-  send(nodeId: string, event: string, payload?: unknown): Promise<void>
-}
-
-interface ZagState {
-  scope: string
-  value: string
-  context: Record<string, unknown>
-}
-```
-
-**Beispiele:**
-
-```typescript
-// Checkbox
-api.assert.ok(!api.zag.isChecked('node-1'), 'Should be unchecked')
-await api.zag.check('node-1')
-api.assert.ok(api.zag.isChecked('node-1'), 'Should be checked')
-await api.zag.toggle('node-1')
-
-// Dialog
-api.assert.ok(!api.zag.isOpen('node-1'), 'Dialog should be closed')
-await api.zag.open('node-1')
-api.assert.ok(api.zag.isOpen('node-1'), 'Dialog should be open')
-await api.zag.close('node-1')
-
-// Slider
-const value = api.zag.getValue('node-1')
-api.assert.equals(value, 50)
-await api.zag.setValue('node-1', 75)
-
-// Tabs
-const activeTab = api.zag.getActiveTab('node-1')
-api.assert.equals(activeTab, 'home')
-await api.zag.selectTab('node-1', 'profile')
-const allTabs = api.zag.getAllTabs('node-1')
-api.assert.ok(allTabs.includes('home'))
-
-// Select
-await api.zag.open('node-1')
-await api.zag.selectOption('node-1', 'Berlin')
-const selected = api.zag.getSelectedOption('node-1')
-api.assert.equals(selected, 'Berlin')
-
-// Radio Group
-const selectedRadio = api.zag.getSelectedRadio('node-1')
-await api.zag.selectRadio('node-1', 'option-b')
-
-// State Machine Details
-const state = api.zag.getState('node-1')
-console.log(state.scope) // 'checkbox'
-console.log(state.value) // 'checked'
-console.log(state.context) // { disabled: false, ... }
-```
-
----
-
-### StudioAPI
-
-Studio-Level Operationen.
-
-```typescript
-interface StudioStateSnapshot {
-  code: string
-  selection: string | null
-  nodeIds: string[]
-  undoStackSize: number
-  redoStackSize: number
-  compileErrors: string[]
-}
-
-interface StudioAPI {
-  history: HistoryAPI
-  viewport: ViewportAPI
-
-  // Test Isolation
-  reset(): Promise<void> // Studio komplett zurücksetzen
-  resetSelection(): void // Nur Selection clearen
-  getStateSnapshot(): StudioStateSnapshot // State-Snapshot für Vergleiche
-
-  // Project Management
-  newProject(): Promise<void>
-  loadExample(name: string): Promise<boolean>
-
-  // Compilation
-  compile(): Promise<void>
-  getAST(): unknown
-  getIR(): unknown
-  getSourceMap(): unknown
-  getCompileErrors(): string[]
-  getGeneratedCode(): string
-
-  // UI State
-  getTheme(): 'light' | 'dark'
-  setTheme(theme: 'light' | 'dark'): void
-  isPanelVisible(panel: string): boolean
-  setPanelVisible(panel: string, visible: boolean): void
-
-  // Selection
-  getSelection(): string | null
-  setSelection(nodeId: string | null): Promise<void>
-  clearSelection(): void
-
-  // Notifications
-  toast(message: string, type?: 'success' | 'error' | 'info'): Promise<void>
-
-  // Wait Helpers
-  waitForCompile(timeout?: number): Promise<void>
-  waitForSelection(timeout?: number): Promise<string>
-}
-
-interface HistoryAPI {
-  canUndo(): boolean
-  canRedo(): boolean
-  getUndoStackSize(): number
-  getRedoStackSize(): number
-  getLastCommand(): string | null
-  undo(): Promise<boolean>
-  redo(): Promise<boolean>
-  clear(): void
-}
-
-interface ViewportAPI {
-  getSize(): { width: number; height: number }
-  setSize(width: number, height: number): Promise<void>
-  getZoom(): number
-  setZoom(zoom: number): Promise<void>
-  scrollTo(x: number, y: number): Promise<void>
-  getScroll(): { x: number; y: number }
-}
-```
-
-**Beispiele:**
-
-```typescript
-// Test Isolation - Vor jedem Test aufrufen
-await api.studio.reset() // Leert Editor, History, Selection
-
-// State-Snapshot für Vergleiche
-const before = api.studio.getStateSnapshot()
-// ... Test-Operationen ...
-const after = api.studio.getStateSnapshot()
-api.assert.ok(after.undoStackSize > before.undoStackSize, 'Undo stack grew')
-
-// Nur Selection clearen
-api.studio.resetSelection()
-
-// Selection
-await api.studio.setSelection('node-2')
-const selection = api.studio.getSelection()
-api.assert.equals(selection, 'node-2')
-api.studio.clearSelection()
-
-// History
-api.assert.ok(api.studio.history.canUndo(), 'Should be able to undo')
-await api.studio.history.undo()
-api.assert.ok(api.studio.history.canRedo(), 'Should be able to redo')
-await api.studio.history.redo()
-api.studio.history.clear()
-
-// Compilation
-await api.studio.compile()
-const errors = api.studio.getCompileErrors()
-api.assert.ok(errors.length === 0, 'No compile errors')
-
-// Theme
-api.studio.setTheme('dark')
-api.assert.equals(api.studio.getTheme(), 'dark')
-
-// Viewport
-await api.studio.viewport.setSize(800, 600)
-await api.studio.viewport.setZoom(1.5)
-
-// Wait Helpers
-await api.studio.waitForCompile(3000)
-const selected = await api.studio.waitForSelection(2000)
-```
-
----
-
-### UtilsAPI
-
-Hilfsfunktionen für Tests.
-
-```typescript
-interface UtilsAPI {
-  delay(ms: number): Promise<void>
-  waitForCompile(timeout?: number): Promise<void>
-  waitUntil(condition: () => boolean, timeout?: number): Promise<void>
-  waitForElement(nodeId: string, timeout?: number): Promise<HTMLElement>
-  waitForStyle(nodeId: string, property: string, value: string, timeout?: number): Promise<void>
-  waitForCount(selector: string, count: number, timeout?: number): Promise<void>
-  waitForAnimation(nodeId?: string, timeout?: number): Promise<void>
-  waitForIdle(timeout?: number): Promise<void>
-  log(message: string): void
-  snapshot(): { code: string; nodeIds: string[]; selection: string | null }
-}
-```
-
-**Beispiele:**
-
-```typescript
-// Basis-Warten
-await api.utils.delay(100)
-await api.utils.waitForCompile()
-await api.utils.waitUntil(() => api.preview.exists('node-5'), 2000)
-
-// Auf Element warten
-const element = await api.utils.waitForElement('node-1')
-console.log(element.tagName)
-
-// Auf Style-Änderung warten
-await api.utils.waitForStyle('node-1', 'backgroundColor', 'rgb(34, 113, 193)')
-
-// Auf Anzahl Elemente warten
-await api.utils.waitForCount('[data-mirror-id]', 5)
-
-// Auf Animation warten
-await api.utils.waitForAnimation('node-1')
-await api.utils.waitForAnimation() // Alle Animationen
-
-// Auf Idle-State warten (keine pending Updates)
-await api.utils.waitForIdle()
-
-// Logging
-api.utils.log('Test checkpoint reached')
-
-// Snapshot
-const snapshot = api.utils.snapshot()
-console.log(snapshot.code)
-console.log(snapshot.nodeIds)
-console.log(snapshot.selection)
-```
-
----
-
-### FixturesAPI
-
-Vordefinierte Test-Szenarien für wiederverwendbares Testing.
-
-```typescript
-interface Fixture {
-  name: string
-  category: 'layout' | 'components' | 'zag' | 'styling' | 'states' | 'test'
-  code: string
-  description?: string
-}
-
-interface FixturesAPI {
-  // Fixture abrufen
-  list(): string[] // Alle verfügbaren Fixtures
-  get(name: string): Fixture | undefined // Fixture nach Name
-  getByCategory(category: string): Fixture[] // Fixtures einer Kategorie
-
-  // Fixture laden
-  load(name: string): Promise<void> // Built-in Fixture laden
-  loadCode(code: string): Promise<void> // Custom Code laden
-
-  // Custom Fixtures
-  register(fixture: Fixture): void // Eigene Fixture registrieren
-}
-```
-
-**Built-in Fixtures:**
-
-| Kategorie    | Name                | Beschreibung                      |
-| ------------ | ------------------- | --------------------------------- |
-| `layout`     | `horizontal-layout` | 3 Texte horizontal mit gap        |
-| `layout`     | `vertical-layout`   | 3 Texte vertikal mit gap          |
-| `layout`     | `grid-layout`       | 12-Spalten Grid                   |
-| `layout`     | `nested-layout`     | Verschachtelte Frames             |
-| `layout`     | `stacked-layout`    | Overlay mit stacked               |
-| `components` | `button-variants`   | Primary, Secondary, Ghost Buttons |
-| `components` | `input-form`        | Input mit Label und Validation    |
-| `components` | `card-layout`       | Card mit Header, Body, Footer     |
-| `components` | `icon-buttons`      | Buttons mit Icons                 |
-| `components` | `navigation-bar`    | Navigation mit Links              |
-| `zag`        | `checkbox-form`     | Checkbox Gruppe                   |
-| `zag`        | `tabs-content`      | Tabs mit Content                  |
-| `zag`        | `dialog-modal`      | Dialog mit Trigger und Content    |
-| `styling`    | `color-palette`     | Verschiedene Farben               |
-| `styling`    | `spacing-scale`     | Spacing-Varianten                 |
-| `styling`    | `shadow-examples`   | Shadow sm, md, lg                 |
-| `states`     | `hover-states`      | Hover-Effekte                     |
-| `states`     | `toggle-states`     | Toggle on/off                     |
-| `states`     | `disabled-states`   | Disabled Elements                 |
-
-**Beispiele:**
-
-```typescript
-// Verfügbare Fixtures auflisten
-const fixtures = api.fixtures.list()
-console.log(fixtures) // ['horizontal-layout', 'button-variants', ...]
-
-// Fixture laden
-await api.fixtures.load('horizontal-layout')
-await api.utils.delay(200)
-
-// Element inspizieren
-const nodeIds = api.preview.getNodeIds()
-api.assert.ok(nodeIds.length >= 4, 'Should have Frame + 3 Text nodes')
-
-// Fixtures einer Kategorie holen
-const layoutFixtures = api.fixtures.getByCategory('layout')
-api.assert.ok(layoutFixtures.length >= 5, 'Should have layout fixtures')
-
-// Custom Code laden
-await api.fixtures.loadCode(`
-Frame gap 12, pad 16, bg #1a1a1a
-  Button "Primary", bg #2271C1, col white
-  Button "Secondary", bg #333, col white
-`)
-
-// Eigene Fixture registrieren
-api.fixtures.register({
-  name: 'my-test-fixture',
-  category: 'test',
-  code: 'Frame gap 8\n  Button "Test"',
-  description: 'Meine Test-Fixture',
-})
-
-// Registrierte Fixture verwenden
-await api.fixtures.load('my-test-fixture')
-```
-
-**Verwendung in Tests:**
-
-```typescript
-export const myTests: TestCase[] = [
-  {
-    name: 'Layout Test mit Fixture',
-    category: 'layout',
-    run: async api => {
-      // Fixture laden statt manuellem Setup
-      await api.fixtures.load('horizontal-layout')
-      await api.utils.delay(200)
-
-      // Testen
-      const root = api.preview.inspect(api.preview.getNodeIds()[0])
-      api.assert.ok(root?.styles.flexDirection === 'row', 'Should be horizontal')
-    },
-  },
-
-  {
-    name: 'Custom Fixture Test',
-    category: 'test',
-    run: async api => {
-      // Custom Code als Fixture
-      await api.fixtures.loadCode(`
-        Frame gap 16, center
-          Text "Hello World", fs 24
-      `)
-      await api.utils.delay(200)
-
-      const text = api.preview.findByText('Hello World')
-      api.assert.ok(text !== null, 'Should find text')
-    },
-  },
-]
-```
-
----
-
-## Tests schreiben
-
-### Test-Helfer
-
-```typescript
-import { test, testWithSetup, testOnly, testSkip, describe } from '../test-runner'
-
-// Einfacher Test
-test('Test name', async api => {
-  // Test code
-})
-
-// Test mit Setup-Code
-testWithSetup('Test name', 'Frame gap 8\n  Button "Click"', async api => {
-  // Test code (setup wird automatisch kompiliert)
-})
-
-// Nur diesen Test ausführen
-testOnly('Test name', async api => {
-  // ...
-})
-
-// Test überspringen
-testSkip('Test name', async api => {
-  // ...
-})
-
-// Tests gruppieren
-const myTests = describe('Category', [
-  testWithSetup('Test 1', '...', async api => {}),
-  testWithSetup('Test 2', '...', async api => {}),
-])
-```
-
-### Beispiel: Kompletter Test
-
-```typescript
-import { testWithSetup, describe, type TestCase } from '../test-runner'
-import type { TestAPI } from '../types'
-
-export const buttonTests: TestCase[] = describe('Button', [
-  testWithSetup(
-    'Button rendert mit korrektem Styling',
-    'Button "Save", bg #2271C1, col white, pad 12 24, rad 6',
-    async (api: TestAPI) => {
-      // 1. Existenz prüfen
-      api.assert.exists('node-1')
-
-      // 2. Deklarative DOM-Validierung
-      api.dom.expect('node-1', {
-        tag: 'button',
-        text: 'Save',
-        bg: '#2271C1',
-        pad: [12, 24],
-        rad: 6,
-      })
-
-      // 3. Interaktion testen
-      await api.interact.click('node-1')
-    }
-  ),
-
-  testWithSetup(
-    'Button mit Hover-State',
-    `Button "Hover me", bg #333
-  hover:
-    bg #444`,
-    async (api: TestAPI) => {
-      api.assert.exists('node-1')
-
-      // Initial background
-      api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(51, 51, 51)')
-
-      // Hover
-      await api.interact.hover('node-1')
-      await api.utils.delay(100)
-      // Hover-State testen...
-    }
-  ),
-])
-
-export const allButtonTests = buttonTests
-```
-
-### Beispiel: Zag-Komponenten testen
-
-```typescript
-export const dialogTests: TestCase[] = describe('Dialog', [
-  testWithSetup(
-    'Dialog öffnet und schließt',
-    `Dialog
-  Trigger: Button "Open"
-  Content: Frame pad 24, bg white
-    Text "Content"`,
-    async (api: TestAPI) => {
-      api.assert.exists('node-1')
-
-      // Initial geschlossen
-      api.assert.ok(!api.zag.isOpen('node-1'), 'Dialog should be closed')
-
-      // Öffnen
-      await api.zag.open('node-1')
-      await api.utils.delay(100)
-      api.assert.ok(api.zag.isOpen('node-1'), 'Dialog should be open')
-
-      // Schließen
-      await api.zag.close('node-1')
-      await api.utils.delay(100)
-      api.assert.ok(!api.zag.isOpen('node-1'), 'Dialog should be closed')
-    }
-  ),
-])
-```
-
-### Beispiel: Property Panel testen
-
-```typescript
-export const propertyPanelTests: TestCase[] = describe('Property Panel', [
-  testWithSetup(
-    'Property-Änderung aktualisiert Code',
-    'Frame pad 16, bg #333',
-    async (api: TestAPI) => {
-      // Element selektieren
-      await api.studio.setSelection('node-1')
-      await api.utils.delay(200)
-
-      // Property Panel prüfen
-      api.assert.ok(api.panel.property.isVisible())
-
-      // Property ändern
-      await api.panel.property.setProperty('pad', '24')
-      await api.utils.delay(200)
-
-      // Code prüfen
-      api.assert.codeContains('pad 24')
-    }
-  ),
-])
-```
-
----
-
-## CLI Test-Runner
-
-### Optionen
+## Vitest-Layer (jsdom)
+
+Tests, die kein Browser-Verhalten brauchen (DSL-rein, IR, Compiler-Output,
+Assertion auf erzeugten Code), laufen über Vitest mit jsdom — siehe
+`docs/archive/test-classification.md` für die Migration-Geschichte und
+`tests/utils/mirror-mount.ts` + `tests/utils/mirror-test-adapter.ts` für
+die Adapter, mit denen Suite-Tests aus `studio/test-api/suites/` 1:1 in
+Vitest laufen können.
 
 ```bash
-npx tsx tools/test.ts [options]
+npm test                       # alle Vitest-Tests
+npm test -- --watch            # Watch-Mode
+npm test -- parser             # nur Parser-Tests
 ```
 
-| Option             | Beschreibung                   |
-| ------------------ | ------------------------------ |
-| `--drag`           | Nur Drag & Drop Tests          |
-| `--mirror`         | Mirror Test Suite (~225 Tests) |
-| `--category=X`     | Einzelne Kategorie             |
-| `--filter=PATTERN` | Filter nach Name (Regex)       |
-| `--headed`         | Browser sichtbar               |
-| `--bail`           | Bei erstem Fehler stoppen      |
-| `--retries=N`      | N Retries bei Failure          |
-| `--timeout=MS`     | Timeout pro Test               |
-| `--junit=PATH`     | JUnit XML Report (für CI)      |
-| `--html=PATH`      | HTML Report                    |
-| `--no-screenshot`  | Keine Screenshots              |
-
-### NPM Scripts
-
-```bash
-npm run test:browser              # Alle Browser Tests (default)
-npm run test:browser:drag         # Nur Drag & Drop Tests
-npm run test:browser:mirror       # Nur Mirror Tests
-npm run test:browser:headed       # Mit sichtbarem Browser
-```
-
-### Kategorien
-
-```bash
---category=primitives    # Frame, Text, Button, etc.
---category=layout        # hor, ver, gap, grid, stacked
---category=styling       # bg, col, pad, rad, shadow
---category=zag           # Dialog, Tabs, Select, Checkbox
---category=interactions  # Click, Hover, Focus, Input
---category=bidirectional # Code ↔ Preview Sync
---category=undoRedo      # History Management
---category=autocomplete  # Completions
---category=testSystem    # Test-Framework Features
-```
-
-### Output
-
-```
-🧪 Running Mirror Tests...
-
-📦 Zag
-  ✅ Checkbox renders with label (45ms)
-  ✅ Checkbox toggle interaction (62ms)
-  ✅ Switch renders (38ms)
-  ✅ Dialog open/close interaction (89ms)
-  ...
-
-📦 Layout
-  ✅ Horizontal layout with gap (42ms)
-  ✅ Grid layout 12 columns (55ms)
-  ...
-
-Results: 225/225 passed (0 failed)
-Duration: 28.4s
-```
+Nicht jeder Browser-Test ist migrierbar — Tests, die echte
+Maus-/Keyboard-Pfade brauchen, bleiben im Browser-Stack. Die Adapter
+erkennen `api.interact.*`-Aufrufe via `needsRuntime()` und überspringen
+diese Suites automatisch.
 
 ---
 
-## Best Practices
+## Verankerungen
 
-### 1. Setup minimal halten
-
-```typescript
-// ✅ Gut: Minimaler Setup
-testWithSetup('Button test', 'Button "Click"', async api => {})
-
-// ❌ Schlecht: Zu viel irrelevanter Setup
-testWithSetup(
-  'Button test',
-  `
-Frame gap 16, pad 24, bg #0a0a0a
-  Frame gap 8, bg #1a1a1a, pad 12, rad 8
-    Icon "star"
-    Text "Featured"
-  Button "Click"
-`,
-  async api => {}
-)
-```
-
-### 2. Deklarative Validierung bevorzugen
-
-```typescript
-// ✅ Gut: Deklarativ mit dom.expect()
-api.dom.expect('node-1', {
-  tag: 'button',
-  bg: '#2271C1',
-  pad: [12, 24],
-  rad: 6,
-})
-
-// ❌ Vermeiden: Viele einzelne Assertions
-api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(34, 113, 193)')
-api.assert.hasStyle('node-1', 'paddingTop', '12px')
-api.assert.hasStyle('node-1', 'paddingRight', '24px')
-api.assert.hasStyle('node-1', 'borderRadius', '6px')
-```
-
-### 3. Richtige API verwenden
-
-```typescript
-// ✅ Gut: Zag API für Zag-Komponenten
-api.assert.ok(api.zag.isChecked('node-1'))
-await api.zag.toggle('node-1')
-
-// ❌ Vermeiden: Direkte DOM-Abfragen
-const el = document.querySelector('[data-mirror-id="node-1"]')
-const isChecked = el.getAttribute('data-state') === 'checked'
-
-// ✅ Gut: Panel API für Property Panel
-const value = api.panel.property.getPropertyValue('bg')
-await api.panel.property.setProperty('bg', '#ff0000')
-
-// ❌ Vermeiden: Direkte DOM-Manipulation
-const input = document.querySelector('.property-panel input[data-prop="bg"]')
-input.value = '#ff0000'
-
-// ✅ Gut: Studio API für Selection
-await api.studio.setSelection('node-2')
-const selection = api.studio.getSelection()
-
-// ❌ Vermeiden: Alte State API
-api.interact.select('node-2')
-const selection = api.state.getSelection()
-```
-
-### 4. Auf Async-Operationen warten
-
-```typescript
-// ✅ Gut: Auf Kompilierung warten
-await api.editor.setCode('Button "New"')
-await api.utils.waitForCompile()
-
-// ✅ Gut: Delay nach Interaktionen
-await api.interact.click('node-1')
-await api.utils.delay(100)
-
-// ❌ Schlecht: Keine Wartezeit
-await api.editor.setCode('Button "New"')
-api.assert.exists('node-1') // Kann fehlschlagen!
-```
-
-### 5. History API für Undo/Redo
-
-```typescript
-// ✅ Gut: History-State prüfen
-api.assert.ok(api.studio.history.canUndo(), 'Should be able to undo')
-api.editor.undo()
-api.assert.ok(api.studio.history.canRedo(), 'Should be able to redo')
-
-// ❌ Vermeiden: Nur Undo aufrufen ohne State-Check
-api.editor.undo()
-api.editor.undo()
-api.editor.undo() // Könnte nichts mehr zum Undo geben
-```
-
----
-
-## Troubleshooting
-
-### Problem: "Element not found"
-
-```typescript
-// Node-IDs prüfen
-const nodeIds = api.preview.getNodeIds()
-console.log(nodeIds) // ['node-1', 'node-2', ...]
-
-// Auf Element warten
-await api.preview.waitFor('node-5', 3000)
-```
-
-### Problem: "Assertion failed" bei Styles
-
-```typescript
-// Computed styles können anders formatiert sein
-// Statt: api.assert.hasStyle('node-1', 'backgroundColor', '#2271C1')
-// Besser: DOM Bridge verwenden
-api.dom.expect('node-1', { bg: '#2271C1' })
-```
-
-### Problem: Tests sind flaky
-
-```typescript
-// Mehr Wartezeit nach Änderungen
-await api.editor.setCode(code)
-await api.utils.waitForCompile()
-await api.utils.delay(100) // Extra Zeit für DOM-Updates
-
-// Oder waitUntil verwenden
-await api.utils.waitUntil(() => api.preview.exists('node-5'), 2000)
-```
-
-### Problem: Zag-Komponente reagiert nicht
-
-```typescript
-// State prüfen
-const state = api.zag.getState('node-1')
-console.log(state) // { scope: 'checkbox', value: 'unchecked', context: {...} }
-
-// Mehr Zeit für Animation
-await api.zag.open('node-1')
-await api.utils.delay(200) // Mehr Zeit für Overlay-Animation
-```
-
----
-
-## Verwandte Dokumentation
-
-- `CLAUDE.md` - Projekt-Übersicht
-- `docs/DRAG-DROP-TESTING.md` - Drag & Drop Test-Dokumentation
-- `studio/test-api/types.ts` - Vollständige Type-Definitionen
+- Grundprinzip: dieses Dokument („Maus und Keyboard, sonst nichts").
+- Memory: `feedback_test_input_principle.md` (User-Quote 2026-05-10).
+- Inkrementeller Test-Plan: `docs/test-plan-preview-cdp.md`.
+- Findings & Hunt-Log: `docs/findings.md`.
+- Vorgängerdokument (zur Referenz): `docs/archive/TEST-FRAMEWORK-pre-cdp-rewrite.md`.
