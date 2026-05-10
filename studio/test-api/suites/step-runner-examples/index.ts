@@ -92,6 +92,7 @@ export {
   tableCrossFileScenarios,
   tableCrossFileStepRunnerTests,
 } from './table-cross-file.scenarios'
+export { headedRealismScenarios, headedRealismStepRunnerTests } from './headed-realism.scenarios'
 
 import { padStepRunnerTests } from './pad.scenarios'
 import { padTStepRunnerTests } from './pad-t.scenarios'
@@ -139,6 +140,7 @@ import { tableStaticStepRunnerTests } from './table-static.scenarios'
 import { tableDataStepRunnerTests } from './table-data.scenarios'
 import { tableFilterSortStepRunnerTests } from './table-filter-sort.scenarios'
 import { tableCrossFileStepRunnerTests } from './table-cross-file.scenarios'
+import { headedRealismStepRunnerTests } from './headed-realism.scenarios'
 
 export const allStepRunnerExampleTests = [
   ...padStepRunnerTests,
@@ -187,4 +189,5 @@ export const allStepRunnerExampleTests = [
   ...tableDataStepRunnerTests,
   ...tableFilterSortStepRunnerTests,
   ...tableCrossFileStepRunnerTests,
+  ...headedRealismStepRunnerTests,
 ]
