@@ -54,9 +54,9 @@ describe('storage/index.ts — public API barrel', () => {
     expect(ev).toBeInstanceOf(StorageEventEmitter)
   })
 
-  it('re-exports getFileType / isMirrorFile / FILE_EXTENSIONS', async () => {
+  it('re-exports getMirrorFileType / isMirrorFile / FILE_EXTENSIONS', async () => {
     const mod = await import('../../studio/storage')
-    expect(typeof mod.getFileType).toBe('function')
+    expect(typeof mod.getMirrorFileType).toBe('function')
     expect(typeof mod.isMirrorFile).toBe('function')
     expect(mod.FILE_EXTENSIONS.layout).toContain('.mir')
   })

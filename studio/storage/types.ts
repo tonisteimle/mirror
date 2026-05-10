@@ -62,9 +62,15 @@ export const FILE_EXTENSIONS = {
 export type MirrorFileType = 'layout' | 'tokens' | 'component' | 'data' | 'unknown'
 
 /**
- * Ermittelt den Dateityp anhand der Extension
+ * Ermittelt den Dateityp anhand der Extension.
+ *
+ * Sibling helpers with similar names (avoid mixing them up):
+ *   - studio/desktop-files-utils.ts:getFileTypeInfo
+ *       — returns the type-key plus icon SVG / display color metadata.
+ *   - studio/app.ts:getFileType (private)
+ *       — extension first, then content-detection fallback for `.mir`.
  */
-export function getFileType(filename: string): MirrorFileType {
+export function getMirrorFileType(filename: string): MirrorFileType {
   for (const [type, extensions] of Object.entries(FILE_EXTENSIONS)) {
     if (extensions.some(ext => filename.endsWith(ext))) {
       return type as MirrorFileType

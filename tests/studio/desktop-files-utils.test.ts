@@ -14,7 +14,7 @@ import {
   escapeHtml,
   escapeAttr,
   validateFilename,
-  getFileType,
+  getFileTypeInfo,
   findFirstFile,
   getExtensionPriority,
   sortTreeItems,
@@ -76,29 +76,29 @@ describe('validateFilename', () => {
   })
 })
 
-describe('getFileType', () => {
+describe('getFileTypeInfo', () => {
   it('detects layout extensions', () => {
-    expect(getFileType('app.mir').type).toBe('layout')
-    expect(getFileType('app.mirror').type).toBe('layout')
+    expect(getFileTypeInfo('app.mir').type).toBe('layout')
+    expect(getFileTypeInfo('app.mirror').type).toBe('layout')
   })
 
   it('detects token extensions', () => {
-    expect(getFileType('design.tok').type).toBe('tokens')
-    expect(getFileType('design.tokens').type).toBe('tokens')
+    expect(getFileTypeInfo('design.tok').type).toBe('tokens')
+    expect(getFileTypeInfo('design.tokens').type).toBe('tokens')
   })
 
   it('detects component extensions', () => {
-    expect(getFileType('btn.com').type).toBe('component')
-    expect(getFileType('btn.components').type).toBe('component')
+    expect(getFileTypeInfo('btn.com').type).toBe('component')
+    expect(getFileTypeInfo('btn.components').type).toBe('component')
   })
 
   it('falls back to layout for unknown', () => {
-    expect(getFileType('readme.txt').type).toBe('layout')
-    expect(getFileType('noext').type).toBe('layout')
+    expect(getFileTypeInfo('readme.txt').type).toBe('layout')
+    expect(getFileTypeInfo('noext').type).toBe('layout')
   })
 
   it('returns the FILE_TYPES color and icon by reference', () => {
-    const info = getFileType('app.mir')
+    const info = getFileTypeInfo('app.mir')
     expect(info.color).toBe(FILE_TYPES.layout.color)
     expect(info.icon).toBe(FILE_TYPES.layout.icon)
   })

@@ -429,9 +429,20 @@ export function getComponentTemplate(
 }
 
 /**
- * Detect file type from filename
+ * Choose between the `.mir` and `.com` template variant for a filename.
+ * Used by `getComponentTemplate(componentId, fileType)` to pick the
+ * full-with-slots template for `.com` definition files vs. the minimal
+ * inline-use template for `.mir` layout files.
+ *
+ * Sibling helpers with similar names (avoid mixing them up):
+ *   - studio/desktop-files-utils.ts:getFileTypeInfo
+ *       — full FileTypeInfo struct with icon SVG + display color.
+ *   - studio/storage/types.ts:getMirrorFileType
+ *       — type-key as a discriminated union (`layout`/`tokens`/…).
+ *   - studio/app.ts:getFileType (private)
+ *       — extension first, then content-detection fallback for `.mir`.
  */
-export function getFileType(filename: string): 'mir' | 'com' {
+export function getComponentTemplateFileType(filename: string): 'mir' | 'com' {
   if (filename.endsWith('.com')) return 'com'
   return 'mir'
 }

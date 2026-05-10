@@ -36,7 +36,11 @@ export {
   BASIC_PRIMITIVES as LAYOUT_PRESETS,
 } from './layout-presets'
 export { parseComponentSections, extractComponentInfo } from './section-parser'
-export { COMPONENT_TEMPLATES, getComponentTemplate, getFileType } from './component-templates'
+export {
+  COMPONENT_TEMPLATES,
+  getComponentTemplate,
+  getComponentTemplateFileType,
+} from './component-templates'
 
 // Auto-add to .com files
 export { isComponentDefined, addComponentToComFile } from './component-auto-add'

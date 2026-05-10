@@ -14,7 +14,7 @@ import {
   escapeHtml,
   escapeAttr,
   validateFilename,
-  getFileType,
+  getFileTypeInfo,
   findFirstFile,
   getExtensionPriority,
   sortTreeItems,
@@ -962,7 +962,7 @@ function startInlineCreate(type: 'file' | 'folder', parentPath: string | null): 
   const depth = parentPath && parentPath !== '.' ? parentPath.split('/').length + 1 : 1
 
   if (isFile) {
-    const fileType = getFileType(defaultName)
+    const fileType = getFileTypeInfo(defaultName)
     tempElement.className = 'file-tree-file creating'
     tempElement.style.paddingLeft = `${16 + depth * 12}px`
     tempElement.innerHTML = `
@@ -1117,7 +1117,7 @@ function renderTreeItems(items: StorageItem[], depth = 1): string {
         </div>
       `
       } else {
-        const fileType = getFileType(item.name)
+        const fileType = getFileTypeInfo(item.name)
         const isActive = currentFile === item.path
         const escapedName = escapeHtml(item.name)
         const escapedPath = escapeAttr(item.path) // Use escapeAttr for data attributes
@@ -1308,5 +1308,6 @@ window.desktopFiles = {
   updateFileCache,
 }
 
-// Also export for testing
-export { getFileType }
+// Also re-export for testing — keeps the test surface stable as the
+// underlying util gets renamed.
+export { getFileTypeInfo }

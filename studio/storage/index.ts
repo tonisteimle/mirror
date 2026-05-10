@@ -78,4 +78,4 @@ export type {
   PreludeFile,
 } from './types'
 
-export { FILE_EXTENSIONS, getFileType, isMirrorFile } from './types'
+export { FILE_EXTENSIONS, getMirrorFileType, isMirrorFile } from './types'

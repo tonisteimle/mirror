@@ -42,7 +42,7 @@ import {
   UserComponentsPanel,
   createUserComponentsPanel,
   getComponentTemplate,
-  getFileType,
+  getComponentTemplateFileType,
   type ComponentDragData,
   type ComponentChild,
 } from './panels/components'
@@ -255,7 +255,7 @@ export function generateComponentCodeFromDragData(
 
   // 2. Try template-based code generation from COMPONENT_TEMPLATES
   if (options?.componentId && options?.filename) {
-    const fileType = getFileType(options.filename)
+    const fileType = getComponentTemplateFileType(options.filename)
     const template = getComponentTemplate(options.componentId, fileType)
     if (template) {
       return template

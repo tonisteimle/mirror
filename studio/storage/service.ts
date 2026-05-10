@@ -12,7 +12,7 @@ import type {
   ProviderType,
   PreludeFile,
 } from './types'
-import { getFileType } from './types'
+import { getMirrorFileType } from './types'
 import { detectFileType } from '../file-types'
 import { StorageEventEmitter } from './events'
 import { detectProvider } from './providers'
@@ -474,7 +474,7 @@ export class StorageService {
 
     for (const c of candidates) {
       // Cheap extension-only check first.
-      const extType = getFileType(c.name)
+      const extType = getMirrorFileType(c.name)
       if (extType === 'tokens' || extType === 'component') {
         try {
           const content = await this.readFile(c.path)

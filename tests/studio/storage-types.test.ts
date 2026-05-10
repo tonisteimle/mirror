@@ -5,86 +5,86 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { getFileType, isMirrorFile, FILE_EXTENSIONS } from '../../studio/storage/types'
+import { getMirrorFileType, isMirrorFile, FILE_EXTENSIONS } from '../../studio/storage/types'
 
 // =============================================================================
 // FILE TYPE DETECTION
 // =============================================================================
 
-describe('getFileType', () => {
+describe('getMirrorFileType', () => {
   describe('layout files', () => {
     it('should detect .mir files as layout', () => {
-      expect(getFileType('index.mir')).toBe('layout')
-      expect(getFileType('app.mir')).toBe('layout')
-      expect(getFileType('pages/home.mir')).toBe('layout')
+      expect(getMirrorFileType('index.mir')).toBe('layout')
+      expect(getMirrorFileType('app.mir')).toBe('layout')
+      expect(getMirrorFileType('pages/home.mir')).toBe('layout')
     })
 
     it('should detect .mirror files as layout', () => {
-      expect(getFileType('main.mirror')).toBe('layout')
-      expect(getFileType('components/button.mirror')).toBe('layout')
+      expect(getMirrorFileType('main.mirror')).toBe('layout')
+      expect(getMirrorFileType('components/button.mirror')).toBe('layout')
     })
   })
 
   describe('token files', () => {
     it('should detect .tok files as tokens', () => {
-      expect(getFileType('theme.tok')).toBe('tokens')
-      expect(getFileType('colors.tok')).toBe('tokens')
+      expect(getMirrorFileType('theme.tok')).toBe('tokens')
+      expect(getMirrorFileType('colors.tok')).toBe('tokens')
     })
 
     it('should detect .tokens files as tokens', () => {
-      expect(getFileType('design-system.tokens')).toBe('tokens')
+      expect(getMirrorFileType('design-system.tokens')).toBe('tokens')
     })
   })
 
   describe('component files', () => {
     it('should detect .com files as component', () => {
-      expect(getFileType('button.com')).toBe('component')
-      expect(getFileType('ui/card.com')).toBe('component')
+      expect(getMirrorFileType('button.com')).toBe('component')
+      expect(getMirrorFileType('ui/card.com')).toBe('component')
     })
 
     it('should detect .components files as component', () => {
-      expect(getFileType('shared.components')).toBe('component')
+      expect(getMirrorFileType('shared.components')).toBe('component')
     })
   })
 
   describe('data files', () => {
     it('should detect .yaml files as data', () => {
-      expect(getFileType('config.yaml')).toBe('data')
+      expect(getMirrorFileType('config.yaml')).toBe('data')
     })
 
     it('should detect .yml files as data', () => {
-      expect(getFileType('settings.yml')).toBe('data')
+      expect(getMirrorFileType('settings.yml')).toBe('data')
     })
   })
 
   describe('unknown files', () => {
     it('should return unknown for non-Mirror files', () => {
-      expect(getFileType('readme.md')).toBe('unknown')
-      expect(getFileType('style.css')).toBe('unknown')
-      expect(getFileType('app.js')).toBe('unknown')
-      expect(getFileType('image.png')).toBe('unknown')
+      expect(getMirrorFileType('readme.md')).toBe('unknown')
+      expect(getMirrorFileType('style.css')).toBe('unknown')
+      expect(getMirrorFileType('app.js')).toBe('unknown')
+      expect(getMirrorFileType('image.png')).toBe('unknown')
     })
 
     it('should return unknown for files without extension', () => {
-      expect(getFileType('Makefile')).toBe('unknown')
-      expect(getFileType('.gitignore')).toBe('unknown')
+      expect(getMirrorFileType('Makefile')).toBe('unknown')
+      expect(getMirrorFileType('.gitignore')).toBe('unknown')
     })
   })
 
   describe('edge cases', () => {
     it('should handle double extensions correctly', () => {
-      expect(getFileType('backup.mir.bak')).toBe('unknown')
-      expect(getFileType('file.tok.old')).toBe('unknown')
+      expect(getMirrorFileType('backup.mir.bak')).toBe('unknown')
+      expect(getMirrorFileType('file.tok.old')).toBe('unknown')
     })
 
     it('should be case-sensitive', () => {
-      expect(getFileType('file.MIR')).toBe('unknown')
-      expect(getFileType('file.TOK')).toBe('unknown')
+      expect(getMirrorFileType('file.MIR')).toBe('unknown')
+      expect(getMirrorFileType('file.TOK')).toBe('unknown')
     })
 
     it('should handle paths with dots in folder names', () => {
-      expect(getFileType('v1.0/index.mir')).toBe('layout')
-      expect(getFileType('test.folder/theme.tok')).toBe('tokens')
+      expect(getMirrorFileType('v1.0/index.mir')).toBe('layout')
+      expect(getMirrorFileType('test.folder/theme.tok')).toBe('tokens')
     })
   })
 })
@@ -158,7 +158,7 @@ describe('isMirrorFile', () => {
 // P2 coverage: locked invariants between getFileType and isMirrorFile
 // =============================================================================
 
-describe('getFileType / isMirrorFile coherence', () => {
+describe('getMirrorFileType / isMirrorFile coherence', () => {
   it('every file isMirrorFile returns true for, getFileType returns non-unknown', () => {
     // Discriminating invariant: a file the predicate accepts must yield
     // a meaningful type. If they ever drift apart, both tests fail and
@@ -175,7 +175,7 @@ describe('getFileType / isMirrorFile coherence', () => {
     ]
     for (const file of samples) {
       expect(isMirrorFile(file)).toBe(true)
-      expect(getFileType(file)).not.toBe('unknown')
+      expect(getMirrorFileType(file)).not.toBe('unknown')
     }
   })
 
@@ -183,7 +183,7 @@ describe('getFileType / isMirrorFile coherence', () => {
     const samples = ['readme.md', 'app.js', 'style.css', 'index.html', '']
     for (const file of samples) {
       expect(isMirrorFile(file)).toBe(false)
-      expect(getFileType(file)).toBe('unknown')
+      expect(getMirrorFileType(file)).toBe('unknown')
     }
   })
 })

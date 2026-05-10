@@ -95,10 +95,17 @@ export function validateFilename(name: string): string | null {
 }
 
 /**
- * Lookup file-type info by filename extension. Defaults to 'layout'
- * for unknown extensions so list rendering always has an icon.
+ * Lookup file-type info (extensions + display color + icon SVG) by
+ * filename extension. Defaults to 'layout' for unknown extensions so
+ * list rendering always has an icon.
+ *
+ * Sibling helpers with similar names (avoid mixing them up):
+ *   - studio/storage/types.ts:getMirrorFileType
+ *       — returns just the type-key as a discriminated union string.
+ *   - studio/app.ts:getFileType (private)
+ *       — extension first, then content-detection fallback for `.mir`.
  */
-export function getFileType(filename: string): FileTypeInfo {
+export function getFileTypeInfo(filename: string): FileTypeInfo {
   for (const [type, config] of Object.entries(FILE_TYPES)) {
     if (config.extensions.some(ext => filename.endsWith(ext))) {
       return { type, ...config }
