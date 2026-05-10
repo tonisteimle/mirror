@@ -46,10 +46,15 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   Instance mit `extends` als Property-Name). body-parser.ts meldet
   jetzt einen Parse-Error und überspringt den Body sauber. Test in
   `parser-nested-state.test.ts`.
-  **Status:** offen — V-1 bleibt; V-4 erledigt.
-  **Notiz:** V-1 ist eigener Build-Pfad-Refactor (CLI-Verhalten
-  - Studio-Pipeline-Validator-Hook). Audit in
-    `docs/refactoring/21-komponenten.md` Section 3 (V-1).
+  **Status:** erledigt — V-1 löst sich an der IR-Schicht: der Resolver
+  in `instance-ops.ts:transformInstance` emittiert jetzt eine
+  `undefined-component`-Warnung, wenn `componentMap` nichts findet
+  UND der Name weder Primitive noch Zag- noch Chart-Primitive ist.
+  Damit greift die Diagnose in beiden Pfaden — Studio (Validator E002)
+  und CLI (IR-Warnings). Neuer `IRWarningType` `undefined-component`
+  in `compiler/ir/types.ts`. 7349/7349 compiler tests pass.
+  **Notiz:** Audit in
+  `docs/refactoring/21-komponenten.md` Section 3 (V-1).
 
 - **Wo:** Dead-feature-Verdacht (zu prüfen vom Owner)
   **Was:** Slices wie Stacked-Overlay (8), Custom-Icons-Registry (51),

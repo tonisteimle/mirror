@@ -17,6 +17,7 @@ import type {
 } from '../types'
 import { calculateSourcePosition } from '../source-map'
 import { getPrimitiveDefaults } from '../../schema/primitives'
+import { isPrimitive } from '../../schema/dsl'
 import { isZagPrimitive } from '../../schema/zag-primitives'
 import { isChartPrimitive } from '../../schema/chart-primitives'
 import * as ChartTransformer from '../transformers/chart-transformer'
@@ -257,6 +258,23 @@ export function transformInstance(
   const resolvedComponent = component
     ? ComponentResolver.resolveComponent(component, resolverCtx)
     : null
+
+  // V-1 (Slice 21): warn on undefined component references. The Studio path's
+  // validator catches this with E002, but CLI compile bypasses the validator
+  // entirely. Without an IR-level warning, `Card "..."` (no Card defined)
+  // silently lowercases to a phantom primitive — confusing and quiet.
+  if (
+    !component &&
+    !isPrimitive(instance.component) &&
+    !isZagPrimitive(instance.component) &&
+    !isChartPrimitive(instance.component)
+  ) {
+    this.addWarning({
+      type: 'undefined-component',
+      message: `Component "${instance.component}" is not defined — falling back to a div.`,
+      position: instance.position,
+    })
+  }
 
   // Determine primitive for defaults and layout context.
   // Always lowercase: without this, `MyIcon as Icon: …` propagated

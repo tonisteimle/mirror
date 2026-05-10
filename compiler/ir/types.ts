@@ -369,6 +369,7 @@ export type IRWarningType =
   | 'invalid-instance'
   | 'circular-inheritance'
   | 'recursive-component'
+  | 'undefined-component'
 
 /**
  * Validation warning
