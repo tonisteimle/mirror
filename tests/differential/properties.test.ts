@@ -164,4 +164,30 @@ describe('Properties — DOM emits expected style values', () => {
     const react = generateReact(parse(src))
     expect(react).toMatch(expectedPattern as RegExp)
   })
+
+  // Framework backend reverse-mappings — pre-2026-05-10 these were silently
+  // dropped because cssPropToMirrorProp had no branch for `aspect-ratio`,
+  // `backdrop-filter`, or `filter`.
+  it('Framework round-trips `aspect square` → aspect-ratio: 1 → aspect: square', () => {
+    const fw = generateFramework(parse(`Frame aspect square, w 100`))
+    expect(fw).toContain("aspect: 'square'")
+  })
+
+  it('Framework round-trips `aspect video`', () => {
+    const fw = generateFramework(parse(`Frame aspect video, w 200`))
+    expect(fw).toContain("aspect: 'video'")
+  })
+
+  it('Framework round-trips `backdrop-blur N` (drops the -webkit- prefix)', () => {
+    const fw = generateFramework(parse(`Frame backdrop-blur 8, bg rgba(0,0,0,0.5), w 100`))
+    expect(fw).toContain("'backdrop-blur': 8")
+    // The duplicate `-webkit-backdrop-filter` companion the IR emits for
+    // Safari is dropped from the M(...) bag.
+    expect(fw).not.toContain('-webkit-backdrop-filter')
+  })
+
+  it('Framework round-trips `blur N`', () => {
+    const fw = generateFramework(parse(`Frame blur 4, w 100`))
+    expect(fw).toContain('blur: 4')
+  })
 })

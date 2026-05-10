@@ -692,6 +692,35 @@ class FrameworkGenerator {
     if (prop === 'cursor') return { name: 'cursor', value: value }
     if (prop === 'z-index') return { name: 'z', value: parseInt(value) }
 
+    // Aspect ratio. The IR's property-transformer maps `aspect square` →
+    // `aspect-ratio: 1`, `aspect video` → `aspect-ratio: 16/9`,
+    // `aspect <num>` → `aspect-ratio: <num>`. Pre-2026-05-10 the
+    // Framework had no reverse mapping and dropped the prop entirely.
+    if (prop === 'aspect-ratio') {
+      if (value === '1' || value === '1 / 1') return { name: 'aspect', value: 'square' }
+      if (value === '16 / 9' || value === '16/9') return { name: 'aspect', value: 'video' }
+      // Numeric / arbitrary ratio passes through verbatim.
+      return { name: 'aspect', value: value }
+    }
+
+    // Filter / backdrop-filter. `blur N` and `backdrop-blur N` are the
+    // documented shorthands; the IR emits `filter: blur(Npx)` /
+    // `backdrop-filter: blur(Npx)` (plus `-webkit-backdrop-filter` for
+    // Safari). Reverse-map both back to the Mirror keyword. The
+    // `-webkit-` prefix is dropped since the unprefixed form already
+    // round-trips.
+    if (prop === '-webkit-backdrop-filter') return null
+    if (prop === 'backdrop-filter') {
+      const m = value.match(/^blur\((\d+(?:\.\d+)?)px\)$/)
+      if (m) return { name: 'backdrop-blur', value: parseFloat(m[1]) }
+      return { name: 'backdrop-filter', value: value }
+    }
+    if (prop === 'filter') {
+      const m = value.match(/^blur\((\d+(?:\.\d+)?)px\)$/)
+      if (m) return { name: 'blur', value: parseFloat(m[1]) }
+      return { name: 'filter', value: value }
+    }
+
     // Scroll
     if (prop === 'overflow-y' && value === 'auto') return { name: 'scroll', value: true }
     if (prop === 'overflow-x' && value === 'auto') return { name: 'scroll-hor', value: true }
