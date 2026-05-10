@@ -27,6 +27,7 @@ import {
   type AutocompleteResult,
 } from './autocomplete'
 import { EditorController, createEditorController } from './editor'
+import { createFilePalette } from './file-palette'
 import {
   PreviewController,
   createPreviewController,
@@ -122,6 +123,8 @@ export interface StudioInstance {
   autocomplete: AutocompleteEngine
   drawManager: DrawManager | null
   inlineEdit: InlineEditController | null
+  /** Cmd+P file palette — null when host didn't wire getFiles + switchToFile. */
+  filePalette: import('./file-palette').FilePaletteController | null
   /** Settings panel for studio configuration */
   settingsPanel: SettingsPanel | null
   /** Cleanup all event subscriptions and resources */
@@ -155,6 +158,7 @@ export const studio: StudioInstance = {
   autocomplete: getAutocompleteEngine(),
   drawManager: null,
   inlineEdit: null,
+  filePalette: null,
   settingsPanel: null,
   dispose: () => {
     // Unsubscribe all event listeners
@@ -614,6 +618,41 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   eventUnsubscribes.push(() => document.removeEventListener('keydown', handleF2Rename))
 
   logBootstrap.info(' F2 Rename Symbol handler initialized')
+
+  // ============================================
+  // Cmd/Ctrl+P File Palette
+  // ============================================
+  // Floating quick-switch overlay — listed in docs/concepts/studio-tutorial.md
+  // (Chapter 24) as a tutorial-blocking gap. The palette only opens when the
+  // host actually wired a multi-file project (getFiles + switchToFile both
+  // provided); single-file callers (test harnesses, isolated playgrounds)
+  // leave the shortcut as a no-op.
+  if (config.getFiles && config.switchToFile) {
+    const filePalette = createFilePalette({
+      getFiles: () => config.getFiles!().map(f => f.name),
+      getCurrentFile: () => config.getCurrentFile?.() ?? state.get().currentFile,
+      switchFile: name => config.switchToFile!(name),
+    })
+    studio.filePalette = filePalette
+
+    const handleCmdP = (e: KeyboardEvent) => {
+      // Browser default Cmd+P is Print — preventDefault is required even
+      // when the palette is already open (toggle behaviour).
+      if (e.key !== 'p' || (!e.metaKey && !e.ctrlKey)) return
+      if (e.altKey || e.shiftKey) return
+      e.preventDefault()
+      e.stopPropagation()
+      if (filePalette.isOpen()) filePalette.close()
+      else filePalette.open()
+    }
+    document.addEventListener('keydown', handleCmdP, true)
+    eventUnsubscribes.push(() => {
+      document.removeEventListener('keydown', handleCmdP, true)
+      filePalette.dispose()
+    })
+
+    logBootstrap.info(' Cmd+P file palette initialized')
+  }
 
   // Initialize DrawManager for component drawing
   const drawManagerResult = initDrawManager({
