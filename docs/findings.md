@@ -115,6 +115,19 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
+- **Wo:** `studio/test-api/suites/actions/navigation.test.ts:9`
+  **Was:** TODO-Bucket-Eintrag — „navigate() + show/hide combinations
+  don't work correctly". Probe `tools/probes/navigation-combined.ts`
+  zeigt: Runtime arbeitet korrekt. Initial: HomeView visible, Settings
+  hidden. Click Settings: HomeView display=none, SettingsView visible.
+  Click Home: zurück. Test-Marker stale wie remove() — Test selbst nie
+  gelaufen, vermutlich aus einer Zeit vor `navigate()`-Runtime
+  (`compiler/runtime/component-navigation.ts`).
+  **Status:** aktiv (Claude-Session, 2026-05-10 ~22:40)
+  **Plan:** Behavior-Pin in `tests/behavior/actions.test.ts` (A11
+  navigate+show/hide combined) für die drei Display-States. Dann
+  Browser-Test `testWithSetupSkip` → `testWithSetup`, TODO entfernen.
+
 - **Wo:** `studio/test-api/mirror-actions/index.ts:dropChildIndexPoint`
   - Studios Drop-Target-Detection (`studio/preview/drag/...`)
     **Was:** Drop into a container tight-packed with children (3 children
