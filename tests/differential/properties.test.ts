@@ -57,6 +57,16 @@ describe('Properties — DOM emits expected style values', () => {
     expect(reactAngle).toContain('linear-gradient(45deg, #10b981, #2271C1)')
   })
 
+  it('React resolves token references in gradient color stops', () => {
+    // Pre-2026-05-10: token-typed gradient stops (`$primary`) leaked
+    // `[object Object]` into the CSS string because the gradient code
+    // path stringified them directly. Now resolves through `resolve()`.
+    const src = `primary.bg: #2271C1\nsecondary.bg: #ec4899\n\nFrame bg grad 135 $primary $secondary, w 100, h 100`
+    const react = generateReact(parse(src))
+    expect(react).not.toContain('[object Object]')
+    expect(react).toContain('linear-gradient(135deg,')
+  })
+
   it('React emits text-gradient pattern for col grad', () => {
     // Text gradient = background + clip-to-text + transparent color.
     const react = generateReact(parse(`Text "Hi", col grad #2271C1 #7c3aed`))

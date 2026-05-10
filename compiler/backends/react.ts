@@ -1627,7 +1627,13 @@ function generateStyles(
           colorStart = 2
         }
       }
-      const colors = effectiveValues.slice(colorStart).map(v => String(v))
+      // Each color slot may be a literal hex (`#2271C1`), a TokenReference
+      // (`$primary`), or a `$primary` source string. Resolve via the same
+      // `resolve()` helper the rest of the switch uses so token-typed
+      // gradient stops don't leak `[object Object]` into the CSS.
+      const colors = effectiveValues
+        .slice(colorStart)
+        .map(v => String(resolve(v as string | number | boolean | object, prop.name)))
       if (colors.length >= 2) {
         const gradientValue = `linear-gradient(${angle}, ${colors.join(', ')})`
         const isTextGradient = prop.name === 'col' || prop.name === 'color' || prop.name === 'c'
