@@ -116,9 +116,10 @@ export class Validator {
     // Phase 4: Check for undefined references
     this.checkUndefinedReferences()
 
-    // Phase 5: Check for unused definitions
-    // DISABLED: Unused definitions are allowed - only undefined references are errors
-    // this.checkUnusedDefinitions()
+    // Phase 5: unused-definition checks live in cli-runner.ts (cross-file
+    // W501/W503), not in this single-file validator — single-file mode
+    // can't tell whether a token/component is used by a sibling file.
+    // The single-file variant was deleted as dead code.
 
     return {
       valid: this.errors.length === 0,
@@ -429,14 +430,16 @@ export class Validator {
       return
     }
 
-    // Check if component exists (primitive, alias, or defined component)
+    // Check if component exists (primitive or alias).
     const isPrimitive = this.rules.validPrimitives.has(compLower)
     const isAlias = this.rules.primitiveAliases.has(compLower)
-    const isDefined = this.definedComponents.has(instance.component)
 
     // Track component usage:
     // - For defined components: track for unused detection
+    //   (checkUnusedDefinitions cross-references this list against
+    //   `definedComponents` after the walk).
     // - For undefined components: track for E002 error reporting
+    //   (checkUndefinedReferences emits the warning post-walk).
     //
     // Skip tracking when the instance carries a `from` hint
     // (`show X from Y` cross-file reference). The component lives in
@@ -586,11 +589,14 @@ export class Validator {
   private validateEventAsInstance(instance: Instance): void {
     const eventName = instance.component
 
-    // The properties of this instance represent the action and target
-    // e.g., Property { name: "close", values: ["Dialog"] } means action=close, target=Dialog
+    // The properties of this instance represent the action and (optional)
+    // target. `prop.name` is the action; `prop.values[0]` is the target
+    // (e.g., `onclick close Dialog` → action=close, target=Dialog). Today
+    // we only validate the action — target validation lives in
+    // ERROR_CODES.INVALID_TARGET (E301), which the action-validator
+    // (validateAction) handles via a different code path.
     for (const prop of instance.properties) {
       const actionName = prop.name
-      const target = prop.values[0]
 
       if (!this.rules.validActions.has(actionName)) {
         const suggestion = suggestSimilar(actionName, this.rules.validActions)
@@ -636,12 +642,10 @@ export class Validator {
     // Check if this looks like a property name
     const propDef = this.rules.validProperties.get(propName)
     if (propDef) {
-      // This is a valid property - validate its "properties" as values
-      // e.g., bg instance with property "#333" or "1 #ccc"
-      for (const prop of instance.properties) {
-        // The prop.name might be the value (e.g., "#333")
-        // This is unusual parsing but we handle it gracefully
-      }
+      // Valid property used in instance position (e.g., `bg #333` parsed as
+      // an instance with `#333` as a property name). Recognised — no
+      // per-value validation here yet; the prop-on-element path catches
+      // value-level mistakes via validateProperty.
       return
     }
 
@@ -850,10 +854,13 @@ export class Validator {
     }
 
     // Validate the inline properties that follow (e.g., "bg #333")
-    // These are property-value pairs within the same property
+    // These are property-value pairs within the same property. Today only
+    // the property name is checked against the schema; per-value
+    // validation lives in validatePropertyValue and isn't reachable from
+    // this string-pair path — the parser doesn't preserve enough type
+    // info here to call it. Tracked as a coverage gap.
     for (let i = 1; i < values.length; i += 2) {
       const propName = values[i]
-      const propValue = values[i + 1]
 
       if (propName) {
         const propDef = this.rules.validProperties.get(propName)
@@ -1105,46 +1112,6 @@ export class Validator {
           pos.line,
           pos.column,
           hint
-        )
-      }
-    }
-  }
-
-  /**
-   * Check for unused token and component definitions.
-   * Reports W501 for unused tokens and W503 for unused components.
-   */
-  private checkUnusedDefinitions(): void {
-    // Check for unused tokens
-    for (const [name, pos] of this.tokenDefinitions) {
-      if (!this.usedTokens.has(name)) {
-        this.addWarning(
-          ERROR_CODES.UNUSED_TOKEN,
-          `Token "${name}" is defined but never used`,
-          pos.line,
-          pos.column,
-          'Remove unused token or add a reference with $' + name
-        )
-      }
-    }
-
-    // Check for unused components
-    // A component is "used" if:
-    // 1. It appears in usedComponents (used as instance)
-    // 2. It's extended by another component (used as base)
-    const usedAsBase = new Set(this.componentExtends.values())
-
-    for (const [name, pos] of this.componentDefinitions) {
-      const isUsedAsInstance = this.usedComponents.has(name)
-      const isUsedAsBase = usedAsBase.has(name)
-
-      if (!isUsedAsInstance && !isUsedAsBase) {
-        this.addWarning(
-          ERROR_CODES.UNUSED_COMPONENT,
-          `Component "${name}" is defined but never used`,
-          pos.line,
-          pos.column,
-          'Remove unused component or create an instance'
         )
       }
     }
