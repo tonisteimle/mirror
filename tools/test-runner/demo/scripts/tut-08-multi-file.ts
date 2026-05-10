@@ -71,10 +71,20 @@ export const demoScript: DemoScript = {
       switchTo: true,
       comment: 'tokens.tok angelegt',
     },
+    {
+      action: 'expectCode',
+      comment: 'tokens.tok contents',
+      code: TOKENS_TOK,
+    },
     { action: 'wait', duration: 1500 },
 
     // Zurück nach index.mir
     { action: 'switchFile', path: 'index.mir', comment: 'zurück nach index.mir' },
+    {
+      action: 'expectCode',
+      comment: 'after switchFile (back to index.mir)',
+      code: INDEX_BASE,
+    },
     { action: 'wait', duration: 800 },
 
     // Eine Card-Zeile mit $primary tippen
@@ -84,6 +94,14 @@ export const demoScript: DemoScript = {
       action: 'type',
       text: '\n\n' + 'Frame bg $primary, pad $card, rad $card, w 240, h 120',
       comment: 'Frame mit Token-Referenzen',
+    },
+    {
+      action: 'expectCode',
+      comment: 'after typing frame',
+      code:
+        'canvas mobile, bg #0f0f0f, col white, font sans\n' +
+        '\n' +
+        'Frame bg $primary, pad $card, rad $card, w 240, h 120',
     },
     { action: 'wait', duration: 1500 },
 

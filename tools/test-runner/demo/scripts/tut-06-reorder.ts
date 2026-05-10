@@ -48,6 +48,17 @@ export const demoScript: DemoScript = {
       index: 0,
       comment: 'Gelb nach vorne',
     },
+    {
+      action: 'expectCode',
+      comment: 'after move yellow',
+      code:
+        'canvas mobile, bg #0f0f0f, col white, font sans\n' +
+        '\n' +
+        'Frame hor, gap 12, pad 24\n' +
+        '  Frame w 60, h 60, bg #f59e0b, rad 8\n' +
+        '  Frame w 60, h 60, bg #ef4444, rad 8\n' +
+        '  Frame w 60, h 60, bg #2271C1, rad 8',
+    },
     { action: 'wait', duration: 1500 },
 
     // Rot (jetzt Index 1) → an Index 2 (Ende)
@@ -57,6 +68,17 @@ export const demoScript: DemoScript = {
       target: { byPath: 'Frame', nth: 0 },
       index: 2,
       comment: 'Rot ans Ende',
+    },
+    {
+      action: 'expectCode',
+      comment: 'after move red',
+      code:
+        'canvas mobile, bg #0f0f0f, col white, font sans\n' +
+        '\n' +
+        'Frame hor, gap 12, pad 24\n' +
+        '  Frame w 60, h 60, bg #f59e0b, rad 8\n' +
+        '  Frame w 60, h 60, bg #2271C1, rad 8\n' +
+        '  Frame w 60, h 60, bg #ef4444, rad 8',
     },
     { action: 'wait', duration: 1500 },
 

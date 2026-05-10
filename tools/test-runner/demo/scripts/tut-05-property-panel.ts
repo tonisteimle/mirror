@@ -18,9 +18,7 @@ import type { DemoScript } from '../types'
 import { resetCanvas } from '../fragments/setup'
 
 const INITIAL_CODE =
-  'canvas mobile, bg #0f0f0f, col white, font sans\n' +
-  '\n' +
-  'Frame w 240, h 160, bg #27272a'
+  'canvas mobile, bg #0f0f0f, col white, font sans\n' + '\n' + 'Frame w 240, h 160, bg #27272a'
 
 export const demoScript: DemoScript = {
   name: 'Tutorial · Property-Panel',
@@ -73,6 +71,14 @@ export const demoScript: DemoScript = {
       value: '24',
       comment: 'padding 24',
     },
+    {
+      action: 'expectCode',
+      comment: 'after padding',
+      code:
+        'canvas mobile, bg #0f0f0f, col white, font sans\n' +
+        '\n' +
+        'Frame w 240, h 160, bg #27272a, padding 24',
+    },
     { action: 'wait', duration: 800 },
 
     // Property 2: Background per Color-Picker
@@ -83,6 +89,14 @@ export const demoScript: DemoScript = {
       color: '#2271C1',
       comment: 'bg → Mirror-Blau',
     },
+    {
+      action: 'expectCode',
+      comment: 'after bg',
+      code:
+        'canvas mobile, bg #0f0f0f, col white, font sans\n' +
+        '\n' +
+        'Frame w 240, h 160, bg #2271C1, padding 24',
+    },
     { action: 'wait', duration: 800 },
 
     // Property 3: Radius
@@ -92,6 +106,14 @@ export const demoScript: DemoScript = {
       prop: 'radius',
       value: '12',
       comment: 'radius 12',
+    },
+    {
+      action: 'expectCode',
+      comment: 'after radius',
+      code:
+        'canvas mobile, bg #0f0f0f, col white, font sans\n' +
+        '\n' +
+        'Frame w 240, h 160, bg #2271C1, padding 24, radius 12',
     },
     { action: 'wait', duration: 1500 },
 

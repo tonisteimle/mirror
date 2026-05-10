@@ -55,6 +55,17 @@ export const demoScript: DemoScript = {
         '  Button "Loslegen", bg #2271C1, col white, pad 10 20, rad 6',
       comment: 'Card Zeile für Zeile bauen',
     },
+    {
+      action: 'expectCode',
+      comment: 'after typing card',
+      code:
+        'canvas mobile, bg #0f0f0f, col white, font sans\n' +
+        '\n' +
+        'Frame bg #1a1a1a, pad 20, rad 12, gap 12, w 280\n' +
+        '  Text "Mirror Studio", fs 18, weight bold\n' +
+        '  Text "Bidirektional editieren", col #888\n' +
+        '  Button "Loslegen", bg #2271C1, col white, pad 10 20, rad 6',
+    },
     { action: 'wait', duration: 1500 },
 
     // Endbild

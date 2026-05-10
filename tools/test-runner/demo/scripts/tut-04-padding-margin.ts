@@ -44,6 +44,14 @@ export const demoScript: DemoScript = {
       delta: 32,
       comment: 'pad-t 32',
     },
+    {
+      action: 'expectCode',
+      comment: 'after padding',
+      code:
+        'canvas mobile, bg #0f0f0f, col white, font sans\n' +
+        '\n' +
+        'Frame w 240, h 200, bg #2271C1, rad 8, center, pad-t 32',
+    },
     { action: 'wait', duration: 1200 },
 
     // Margin-Top per Handle
@@ -53,6 +61,14 @@ export const demoScript: DemoScript = {
       side: 'top',
       delta: 24,
       comment: 'mar-t 24',
+    },
+    {
+      action: 'expectCode',
+      comment: 'after margin',
+      code:
+        'canvas mobile, bg #0f0f0f, col white, font sans\n' +
+        '\n' +
+        'Frame w 240, h 200, bg #2271C1, rad 8, center, pad-t 32, mar-t 24',
     },
     { action: 'wait', duration: 1500 },
 

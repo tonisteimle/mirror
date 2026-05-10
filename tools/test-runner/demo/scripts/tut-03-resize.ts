@@ -46,6 +46,14 @@ export const demoScript: DemoScript = {
       bypassSnap: true,
       comment: 'SE-Drag Δ(160,120) → ~280×200',
     },
+    {
+      action: 'expectCode',
+      comment: 'after SE resize',
+      code:
+        'canvas mobile, bg #0f0f0f, col white, font sans\n' +
+        '\n' +
+        'Frame w 280, h 200, bg #2271C1, rad 8',
+    },
     { action: 'wait', duration: 1000 },
 
     // S-Handle ziehen → noch höher
@@ -57,6 +65,14 @@ export const demoScript: DemoScript = {
       deltaY: 80,
       bypassSnap: true,
       comment: 'S-Drag Δ(0,80) → noch höher',
+    },
+    {
+      action: 'expectCode',
+      comment: 'after S resize',
+      code:
+        'canvas mobile, bg #0f0f0f, col white, font sans\n' +
+        '\n' +
+        'Frame w 280, h 280, bg #2271C1, rad 8',
     },
     { action: 'wait', duration: 1500 },
 

@@ -47,6 +47,14 @@ export const demoScript: DemoScript = {
       at: { kind: 'index', index: 0 },
       comment: 'Frame als Top-Level Element',
     },
+    {
+      action: 'expectCode',
+      comment: 'after Frame drop',
+      code:
+        'canvas mobile, bg #0f0f0f, col white, font sans\n' +
+        '\n' +
+        'Frame w 100, h 100, bg #27272a, rad 8',
+    },
     { action: 'wait', duration: 1200 },
 
     // Drop 2: Button aus Palette → in den eben gedroppten Frame
@@ -62,6 +70,15 @@ export const demoScript: DemoScript = {
       target: { byPath: 'Frame' },
       at: { kind: 'index', index: 0 },
       comment: 'Button in den Frame',
+    },
+    {
+      action: 'expectCode',
+      comment: 'after Button drop',
+      code:
+        'canvas mobile, bg #0f0f0f, col white, font sans\n' +
+        '\n' +
+        'Frame w 100, h 100, bg #27272a, rad 8, center\n' +
+        '  Button "Button", pad 12 24, bg #5BA8F5, col white, rad 6',
     },
     { action: 'wait', duration: 1500 },
 

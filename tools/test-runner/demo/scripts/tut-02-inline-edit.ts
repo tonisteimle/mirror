@@ -31,8 +31,8 @@ export const demoScript: DemoScript = {
     showKeystrokeOverlay: false,
     customTimings: {
       type: {
-        charMs: 50,
-        variance: 0.2,
+        charMs: 90,
+        variance: 0.25,
         wordPauseMs: 0,
         linePauseMs: 0,
         thoughtPauseMs: 0,
@@ -42,7 +42,7 @@ export const demoScript: DemoScript = {
   steps: [
     ...tutorialMode(),
     ...resetCanvas({ baseCode: INITIAL_CODE, comment: 'Frame mit Text' }),
-    { action: 'wait', duration: 800 },
+    { action: 'wait', duration: 1500 },
 
     // Inline-Edit auf den Text
     {
@@ -51,11 +51,20 @@ export const demoScript: DemoScript = {
       text: 'Im Preview editiert',
       comment: 'Text via Doppelklick + Tippen ändern',
     },
-    { action: 'wait', duration: 1500 },
+    {
+      action: 'expectCode',
+      comment: 'after inline-edit',
+      code:
+        'canvas mobile, bg #0f0f0f, col white, font sans\n' +
+        '\n' +
+        'Frame pad 32, gap 16, w full, h full, center\n' +
+        '  Text "Im Preview editiert", fs 20, weight 500',
+    },
+    { action: 'wait', duration: 2500 },
 
     // Endbild
     { action: 'moveTo', target: '#preview' },
-    { action: 'wait', duration: 1500, comment: 'Endbild für Loop' },
+    { action: 'wait', duration: 2000, comment: 'Endbild für Loop' },
   ],
 }
 
