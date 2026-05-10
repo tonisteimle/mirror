@@ -163,6 +163,30 @@ each item in [1, 2]
   })
 })
 
+describe('Each-Loop — Named index + orderBy in React', () => {
+  // PIN: pre-2026-05-10 the React backend hard-coded the second `.map`
+  // parameter as `_idx` and silently dropped both the user-supplied
+  // index variable name (`each task,i in $tasks`) and any `by <key>`
+  // ordering clause. Real-example impact: task lists rendered in
+  // insertion order regardless of `by priority`.
+  it('named index `each task,i in $tasks` binds `i` in the map callback', () => {
+    const src = `tasks:\n  t1:\n    title: "A"\n  t2:\n    title: "B"\n\neach task,i in $tasks\n  Text "$i: $task.title"`
+    const react = generateReact(parse(src))
+    expect(react).toMatch(/\.map\(\(task,\s*i\)\s*=>/)
+    // Both `$i` and `$task.title` resolve.
+    expect(react).toContain('${i}')
+    expect(react).toContain('${task.title}')
+  })
+
+  it('orderBy `by <key>` emits a real .sort() before .map()', () => {
+    const src = `tasks:\n  t1:\n    pri: 2\n  t2:\n    pri: 1\n\neach t in $tasks by pri\n  Text "$t.pri"`
+    const react = generateReact(parse(src))
+    // Sort is composed before the map.
+    expect(react).toMatch(/\.sort\(\(a,\s*b\)\s*=>/)
+    expect(react).toContain('a["pri"]')
+  })
+})
+
 describe('Each-Loop — Bug regressions', () => {
   it('Bug #17 fixed: two parallel each-loops over same collection both render', () => {
     const src = `tasks:\n  t1:\n    title: "Alpha"\n  t2:\n    title: "Beta"\n\neach task in $tasks\n  Text "1: $task.title"\n\neach task in $tasks\n  Text "2: $task.title"`

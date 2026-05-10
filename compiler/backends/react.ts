@@ -944,13 +944,20 @@ function generateEachJSX(
   // tokens are keyed without it so strip before the lookup.
   const collection = each.collection.startsWith('$') ? each.collection.slice(1) : each.collection
   const item = each.item // 'task'
+  // Optional named index (`each task,i in $tasks` → index = 'i').
+  // Without this binding the user's `$i` reference inside the loop body
+  // resolved against missing tokens and emitted literal `"$i: ..."`.
+  const indexVar = (each as Each & { index?: string }).index ?? '_idx'
 
   // Extend the parent loop-var set with this each's iterator name so any
   // descendant text-content / property-value referencing `$<item>.X` can
-  // emit a JS expression instead of a literal string.
+  // emit a JS expression instead of a literal string. Named indexes
+  // (`,i`) join the same set so `$i` resolves too.
+  const loopVarsExt = new Set([...(parentContext.loopVars ?? []), item])
+  if (indexVar !== '_idx') loopVarsExt.add(indexVar)
   const childContext: ParentLayoutContext = {
     ...parentContext,
-    loopVars: new Set([...(parentContext.loopVars ?? []), item]),
+    loopVars: loopVarsExt,
   }
 
   const childLines: string[] = []
@@ -992,12 +999,25 @@ function generateEachJSX(
   // so we can pass it through verbatim — same shape as the DOM runtime's
   // `filterFn`. Compose `.filter(t => t.done).map(...)` ahead of the map.
   const filterExpr = (each as Each & { filter?: string }).filter
-  const filtered = filterExpr ? `(${coerced}).filter((${item}) => ${filterExpr})` : coerced
+  let chain: string = `(${coerced})`
+  if (filterExpr) chain = `${chain}.filter((${item}) => ${filterExpr})`
+
+  // Optional `by <key>` orderBy (`each t in $tasks by priority`). The
+  // sort key names a property on the loop var. DOM uses its `_runtime.sort`
+  // helper; React just needs `.slice().sort((a, b) => ...)` ahead of the
+  // map so the rendered order matches the DOM output. Pre-2026-05-10
+  // the React backend silently ignored the `by` clause and rendered in
+  // insertion order — visible in any task list with `by priority`.
+  const orderBy = (each as Each & { orderBy?: string }).orderBy
+  if (orderBy) {
+    const k = JSON.stringify(orderBy)
+    chain = `[...${chain}].sort((a, b) => { const va = a[${k}], vb = b[${k}]; return va < vb ? -1 : va > vb ? 1 : 0 })`
+  }
 
   const lines: string[] = []
-  const mapSource = filterExpr ? filtered : `(${coerced})`
-  lines.push(`${indent}{${mapSource}.map((${item}, _idx) => (`)
-  lines.push(`${indent}  <React.Fragment key={_idx}>`)
+  const mapSource = chain
+  lines.push(`${indent}{${mapSource}.map((${item}, ${indexVar}) => (`)
+  lines.push(`${indent}  <React.Fragment key={${indexVar}}>`)
   for (const line of childLines) lines.push(line)
   lines.push(`${indent}  </React.Fragment>`)
   lines.push(`${indent}))}`)
@@ -2040,7 +2060,11 @@ function generateStyles(
       'kind' in firstVal &&
       (firstVal as { kind?: string }).kind === 'conditional'
     ) {
-      const cond = firstVal as { condition: string; then: string | number; else: string | number }
+      const cond = firstVal as unknown as {
+        condition: string
+        then: string | number
+        else: string | number
+      }
       const condId = cond.condition.trim()
       // Only static-resolve when the condition is a single bare identifier
       // pointing at a known data token (`active: true`).
@@ -2082,7 +2106,7 @@ function generateStyles(
       'kind' in firstVal &&
       (firstVal as { kind?: string }).kind === 'token'
     ) {
-      const tokenName = (firstVal as { name: string }).name
+      const tokenName = (firstVal as unknown as { name: string }).name
       const head = tokenName.includes('.') ? tokenName.slice(0, tokenName.indexOf('.')) : tokenName
       const headExists = tokenMap.has(head) || tokenMap.has('$' + head)
       const suffixExists =
