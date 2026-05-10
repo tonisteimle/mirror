@@ -928,6 +928,24 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — `tools/image-to-mirror-test/` deletion (~19'000 LOC weg)
+
+- **Wo:** `tools/image-to-mirror-test/` (44 Files, 712 KB) +
+  `package.json` Scripts (`test:image*`)
+  **Was:** Dormant „Bild → Mirror-Code"-Roundtrip-Test-Subsystem.
+  Letzter Code-Commit 2026-04-17, 0 externe Imports, 0 Doku-/CI-
+  Referenzen. 12 npm-Scripts (Steps 0–8 + basic/headed/fonts)
+  zeigten in dieses Verzeichnis, niemand führte sie aus. Importierte
+  weder aus `compiler/` noch aus `studio/` — komplett self-contained.
+  Verzeichnis-Deletion in `3581bce8` (Parallel-Session-Bundle, 20243
+  zeilen weg). Begleit-Commit dieser Session entfernt die 12
+  npm-Scripts aus `package.json`. 15440/15463 vitest grün (23
+  pre-existing skipped).
+  **Status:** erledigt (`3581bce8` Verzeichnis-Delete + nachfolgender
+  Commit für npm-scripts) — Restoration via
+  `git show 3581bce8~1:tools/image-to-mirror-test/` falls jemals
+  wieder benötigt.
+
 ### 2026-05-10 — Runtime-Bug-TODO-Bucket vollständig abgehakt (10/10)
 
 - **Wo:** `studio/test-api/suites/` — 10 `// TODO: Runtime bug …`-Marker
