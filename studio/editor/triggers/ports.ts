@@ -29,18 +29,14 @@ import type {
 
 export type CleanupFn = () => void
 
-export interface CursorPosition {
-  line: number        // 1-indexed line number
-  column: number      // 0-indexed column
-  offset: number      // Character offset from start
-}
+// Re-export the canonical CursorPosition (defined by the editor port).
+export type { CursorPosition } from '../ports'
+import type { CursorPosition } from '../ports'
 
-export interface LineInfo {
-  number: number      // 1-indexed line number
-  text: string        // Line content
-  from: number        // Start offset
-  to: number          // End offset
-}
+// Re-export the canonical LineInfo (defined by the editor port — the
+// upstream subsystem that owns the "editor line" concept).
+export type { LineInfo } from '../ports'
+import type { LineInfo } from '../ports'
 
 export interface ScreenPosition {
   x: number
@@ -94,11 +90,7 @@ export interface TriggerStatePort {
   /**
    * Set trigger as active
    */
-  activate(
-    triggerId: string,
-    startPos: number,
-    context: TriggerContext
-  ): void
+  activate(triggerId: string, startPos: number, context: TriggerContext): void
 
   /**
    * Deactivate the current trigger
@@ -296,10 +288,7 @@ export interface TriggerDetectionPort {
   /**
    * Check if a regex trigger matches
    */
-  checkRegexTrigger(
-    line: LineInfo,
-    pattern: RegExp
-  ): { matches: boolean; match?: RegExpMatchArray }
+  checkRegexTrigger(line: LineInfo, pattern: RegExp): { matches: boolean; match?: RegExpMatchArray }
 
   /**
    * Check if a double-click trigger matches

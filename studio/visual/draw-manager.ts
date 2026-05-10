@@ -18,6 +18,7 @@ import { createLogger } from '../../compiler/utils/logger'
 import { readGridGeometry } from './grid-overlay/grid-detector'
 import { pointerToCell, cellRange, cellRangeToRect, type GridCell } from './snap/grid-cell-snap'
 import type { GridGeometry } from './grid-overlay/grid-detector'
+import type { Point, Rect } from './models/coordinate'
 
 const log = createLogger('DrawManager')
 
@@ -29,17 +30,9 @@ export type DrawMode = 'idle' | 'ready' | 'drawing'
  *  mousedown time; the rest of the lifecycle branches on it. */
 export type DrawTargetType = 'absolute' | 'grid'
 
-export interface Point {
-  x: number
-  y: number
-}
-
-export interface Rect {
-  x: number
-  y: number
-  width: number
-  height: number
-}
+// Re-export the canonical geometry types so existing
+// `import { Rect } from '.../draw-manager'` call-sites stay valid.
+export type { Point, Rect } from './models/coordinate'
 
 export interface Modifiers {
   shift: boolean // Constrain to square

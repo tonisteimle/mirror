@@ -7,12 +7,10 @@
 
 export type DistributionType = 'horizontal' | 'vertical' | 'space-between' | 'space-evenly'
 
-export interface Rect {
-  x: number
-  y: number
-  width: number
-  height: number
-}
+// Re-export the canonical Rect so existing
+// `import { Rect } from '.../preview/distribution'` keeps working.
+export type { Rect } from '../visual/models/coordinate'
+import type { Rect } from '../visual/models/coordinate'
 
 export interface DistributionResult {
   nodeId: string
@@ -187,17 +185,19 @@ export function detectDistributionDirection(
 
   // Calculate average center Y and check vertical alignment
   const avgCenterY = rects.reduce((sum, r) => sum + r.y + r.height / 2, 0) / rects.length
-  const yVariance = rects.reduce((sum, r) => {
-    const centerY = r.y + r.height / 2
-    return sum + Math.abs(centerY - avgCenterY)
-  }, 0) / rects.length
+  const yVariance =
+    rects.reduce((sum, r) => {
+      const centerY = r.y + r.height / 2
+      return sum + Math.abs(centerY - avgCenterY)
+    }, 0) / rects.length
 
   // Calculate average center X and check horizontal alignment
   const avgCenterX = rects.reduce((sum, r) => sum + r.x + r.width / 2, 0) / rects.length
-  const xVariance = rects.reduce((sum, r) => {
-    const centerX = r.x + r.width / 2
-    return sum + Math.abs(centerX - avgCenterX)
-  }, 0) / rects.length
+  const xVariance =
+    rects.reduce((sum, r) => {
+      const centerX = r.x + r.width / 2
+      return sum + Math.abs(centerX - avgCenterX)
+    }, 0) / rects.length
 
   // If elements are more aligned vertically (low Y variance), distribute horizontally
   // If elements are more aligned horizontally (low X variance), distribute vertically

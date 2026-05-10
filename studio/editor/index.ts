@@ -161,11 +161,10 @@ export interface EditorConfig {
   container: HTMLElement
 }
 
-export interface CursorPosition {
-  line: number
-  column: number
-  offset: number
-}
+// Re-export the canonical CursorPosition (defined by the editor port —
+// the upstream subsystem that owns the "editor cursor" concept).
+export type { CursorPosition } from './ports'
+import type { CursorPosition } from './ports'
 
 export type ChangeCallback = (content: string) => void
 export type CursorCallback = (position: CursorPosition) => void

@@ -2,10 +2,10 @@
  * Drag & Drop v3 - Shared Types
  */
 
-export interface Point {
-  x: number
-  y: number
-}
+// Re-export the canonical Point so existing
+// `import { Point } from '.../drag/types'` keeps working.
+export type { Point } from '../../visual/models/coordinate'
+import type { Point } from '../../visual/models/coordinate'
 
 export interface ChildInfo {
   nodeId: string

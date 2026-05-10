@@ -25,18 +25,14 @@ import type { Completion, AutocompleteContext, AutocompleteResult } from './inde
 // Types
 // ============================================
 
-export interface CursorPosition {
-  line: number      // 1-indexed line number
-  column: number    // 0-indexed column
-  offset: number    // Character offset from start
-}
+// Re-export the canonical CursorPosition (defined by the editor port).
+export type { CursorPosition } from '../editor/ports'
+import type { CursorPosition } from '../editor/ports'
 
-export interface LineInfo {
-  number: number    // 1-indexed line number
-  text: string      // Line content
-  from: number      // Start offset
-  to: number        // End offset
-}
+// Re-export the canonical LineInfo (defined by the editor port — the
+// upstream subsystem that owns the "editor line" concept).
+export type { LineInfo } from '../editor/ports'
+import type { LineInfo } from '../editor/ports'
 
 export type CleanupFn = () => void
 

@@ -5,12 +5,10 @@
  * Calculates bounding box for multiple selected elements.
  */
 
-export interface Rect {
-  x: number
-  y: number
-  width: number
-  height: number
-}
+// Re-export the canonical Rect so existing
+// `import { Rect } from '.../multi-selection-bounds'` keeps working.
+export type { Rect } from '../visual/models/coordinate'
+import type { Rect } from '../visual/models/coordinate'
 
 export interface BoundingBox extends Rect {
   /** Node IDs included in this bounding box */

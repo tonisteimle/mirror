@@ -26,11 +26,10 @@ export interface ParseError {
   hint?: string
 }
 
-export interface CodeChange {
-  from: number
-  to: number
-  insert: string
-}
+// Re-export the canonical CodeChange so the source:changed event payload
+// shares the same type as the code-modifier output (no drift).
+export type { CodeChange } from '../code-modifier/code-modifier'
+import type { CodeChange } from '../code-modifier/code-modifier'
 
 export interface StudioEvents {
   'source:changed': {

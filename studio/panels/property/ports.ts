@@ -24,12 +24,10 @@ import type {
 
 export type CleanupFn = () => void
 
-export interface Rect {
-  x: number
-  y: number
-  width: number
-  height: number
-}
+// Re-export the canonical Rect so existing
+// `import { Rect } from '.../property/ports'` keeps working.
+export type { Rect } from '../../visual/models/coordinate'
+import type { Rect } from '../../visual/models/coordinate'
 
 export interface SpacingToken {
   name: string // e.g., "sm", "md", "lg"

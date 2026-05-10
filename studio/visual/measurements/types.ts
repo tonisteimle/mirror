@@ -24,12 +24,9 @@ export interface Measurement {
   direction: 'horizontal' | 'vertical'
 }
 
-export interface Rect {
-  x: number
-  y: number
-  width: number
-  height: number
-}
+// Re-export the canonical Rect so existing
+// `import { Rect } from '.../measurements/types'` keeps working.
+export type { Rect } from '../models/coordinate'
 
 export interface MeasurementConfig {
   /** Minimum distance to show measurement (in px) */
