@@ -42,11 +42,14 @@ export {
   type CoordinateContext,
 } from './coordinate'
 
-// Snap Calculations — re-export via studio/visual/snap barrel
+// Snap Calculations — re-export via studio/visual/snap barrel.
+// (snap exposes its own snapPointToGrid / snapRectToGrid; aliasing
+// them here to *WithResult variants used to disambiguate against the
+// coordinate.ts versions, but no caller imported the aliased names so
+// the aliases were dead. Snap consumers go through studio/visual/snap
+// directly.)
 export {
   calculateSnap,
-  snapPointToGrid as snapPointToGridWithResult,
-  snapRectToGrid as snapRectToGridWithResult,
   createSnapConfig,
   createSnapContext,
   type SnapAxis,
@@ -68,7 +71,7 @@ export {
   validateCoordinate,
   validatePoint,
   validateAndClampCoordinates,
-  snapPointToGrid as snapPointToGridCalc,
+  snapPointToGridClamped,
   snapToGridSafe,
   type ValidatedCoordinates,
 } from './coordinate-calculator'

@@ -242,7 +242,7 @@ import {
   validateCoordinate,
   validatePoint,
   validateAndClampCoordinates,
-  snapPointToGrid as ccSnapPointToGrid,
+  snapPointToGridClamped as ccSnapPointToGrid,
   snapToGridSafe,
 } from '../../studio/visual/models/coordinate-calculator'
 

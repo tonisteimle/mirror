@@ -56,11 +56,7 @@ export function calculateDragDelta(start: Point, current: Point): Point {
  * @param grabOffset - Optional offset from element origin where drag started
  * @returns Ghost position in client coordinates
  */
-export function calculateGhostPosition(
-  elementRect: Rect,
-  delta: Point,
-  grabOffset?: Point
-): Point {
+export function calculateGhostPosition(elementRect: Rect, delta: Point, grabOffset?: Point): Point {
   return {
     x: elementRect.x + delta.x,
     y: elementRect.y + delta.y,
@@ -98,10 +94,7 @@ export function calculateDropPosition(ghostRect: Rect, containerRect: Rect): Poi
  * @param delta - Movement delta from drag
  * @returns New position (clamped to >= 0, rounded to integers)
  */
-export function calculateAbsolutePosition(
-  elementStartPosition: Point,
-  delta: Point
-): Point {
+export function calculateAbsolutePosition(elementStartPosition: Point, delta: Point): Point {
   const x = elementStartPosition.x + delta.x
   const y = elementStartPosition.y + delta.y
 
@@ -120,10 +113,7 @@ export function calculateAbsolutePosition(
  * @param containerRect - Target container's rect
  * @returns Position relative to container (clamped to >= 0, rounded to integers)
  */
-export function calculateFlexToAbsolutePosition(
-  cursorPosition: Point,
-  containerRect: Rect
-): Point {
+export function calculateFlexToAbsolutePosition(cursorPosition: Point, containerRect: Rect): Point {
   const x = cursorPosition.x - containerRect.x
   const y = cursorPosition.y - containerRect.y
 
@@ -199,13 +189,22 @@ export function validateAndClampCoordinates(x: number, y: number): ValidatedCoor
 // ============================================================================
 
 /**
- * Snap a point to grid
+ * Snap a point to grid, clamping the result to non-negative coordinates.
+ * Used by absolute-positioning paths where negative coordinates would
+ * push elements outside the canvas.
+ *
+ * Distinct from the simpler `snapPointToGrid` in `./coordinate.ts` and
+ * `../snap/alignment-snap.ts` — both of those preserve the input value
+ * (and reference, in the snap variant) when `gridSize <= 0`. This one
+ * always rounds to integer and clamps to 0 even when grid is disabled.
+ * Same name in earlier code; renamed to make the divergent semantics
+ * visible at every call-site.
  *
  * @param point - Point to snap
- * @param gridSize - Grid size (must be > 0)
- * @returns Snapped point (clamped to >= 0)
+ * @param gridSize - Grid size (`<= 0` → round + clamp without snapping)
+ * @returns Snapped point clamped to `>= 0`
  */
-export function snapPointToGrid(point: Point, gridSize: number): Point {
+export function snapPointToGridClamped(point: Point, gridSize: number): Point {
   if (gridSize <= 0) {
     return {
       x: Math.max(0, Math.round(point.x)),
@@ -220,7 +219,9 @@ export function snapPointToGrid(point: Point, gridSize: number): Point {
 }
 
 /**
- * Snap a point to grid with validation
+ * Snap a point to grid with validation. Built on top of
+ * `snapPointToGridClamped`, so the result is always non-negative even
+ * when the input or gridSize is degenerate.
  *
  * @param point - Point to snap
  * @param gridSize - Grid size (0 = disabled)
@@ -234,5 +235,5 @@ export function snapToGridSafe(point: Point, gridSize: number): Point {
   }
 
   // Then snap
-  return snapPointToGrid({ x: validated.x, y: validated.y }, gridSize)
+  return snapPointToGridClamped({ x: validated.x, y: validated.y }, gridSize)
 }
