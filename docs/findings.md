@@ -24,15 +24,6 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
 
 ## Offen
 
-- **Wo:** `tests/policy/dsl-features-have-examples.test.ts:WATCHLIST`
-  **Was:** Lane 1, Inkrement 2 — Section-Header-Parsing (`--- Title ---`)
-  steht auf der Watchlist (Deadline 2026-08-10). Vor Decision: prüfen
-  ob das Feature im Parser/IR/Backends überhaupt noch durchverdrahtet
-  ist und welche Semantik geliefert wird (Comment-only? Eigene AST-
-  Node? Reine Sektions-Marker für Studio-Tree?). Erst nach Befund:
-  Beispiel + Promote ODER komplette Löschung.
-  **Status:** offen — pending Investigation
-
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
@@ -685,6 +676,21 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — Lane 1, Inkrement 2: Section-Header von WATCHLIST nach KEEP
+
+- **Wo:** `tests/policy/dsl-features-have-examples.test.ts`,
+  `examples/tokens-with-sections.tok` (neu)
+  **Was:** Investigation: Lexer (`scanSection`), Parser (currentSection
+  threading), AST (`TokenDefinition.section`), Studio
+  (`compile/token-renderer.ts`, `preview/renderer.ts` — Token-
+  Gruppierung in der Preview). Live-Code, nur kein `examples/`
+  Demo-File. Real-world tokens-Datei mit 7 Sections (Brand /
+  Semantic / Surface / Text / Spacing / Radii / Typography) addiert.
+  Eintrag von WATCHLIST nach KEEP promoted. WATCHLIST jetzt leer
+  → Placeholder-Test damit Vitest die `describe` nicht als „No
+  test found" failed.
+  **Status:** erledigt
+
 ### 2026-05-10 — Lane 1, Inkrement 1: `$icons:` von WATCHLIST nach KEEP
 
 - **Wo:** `tests/policy/dsl-features-have-examples.test.ts`,
@@ -694,7 +700,7 @@ Chronologisch absteigend (neueste zuerst).
   Custom/Lucide-Mix in einer Layout-Direction-UI hinzugefügt. Eintrag
   von WATCHLIST nach KEEP promoted. Smoke-Suite zieht das File
   automatisch in die 24-Test-Single-File-Corpora ein.
-  **Status:** erledigt
+  **Status:** erledigt (`8b31a4fe`)
 
 ### 2026-05-10 — IR: TokenReference in border + chart-slot values
 

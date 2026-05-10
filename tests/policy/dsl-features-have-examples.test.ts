@@ -89,6 +89,18 @@ const KEEP: Feature[] = [
     // it. Promoted from WATCHLIST.
     pattern: /^\$icons:/m,
   },
+  {
+    name: 'Section-header parsing (--- Title ---)',
+    // Three or more dashes, identifier word, three or more dashes,
+    // anchored to line start. Live consumers: lexer
+    // (`scanSection`), parser (currentSection threading into
+    // TokenDefinition.section), studio (`token-renderer.ts`,
+    // `preview/renderer.ts` — group tokens visually). Example
+    // `examples/tokens-with-sections.tok` (Lane 1, Inkrement 2)
+    // demonstrates seven sections in a real tokens file. Promoted
+    // from WATCHLIST.
+    pattern: /^---\s+\S.*?---\s*$/m,
+  },
 ]
 
 // =============================================================================
@@ -102,15 +114,7 @@ const KEEP: Feature[] = [
 //       and remove the entry here.
 //
 const WATCHLIST: WatchlistEntry[] = [
-  {
-    name: 'Section-header parsing (--- Title ---)',
-    // Three or more dashes, identifier word, three or more dashes,
-    // anchored to line start. Comments (// ----) are filtered by anchoring
-    // to start-of-line and requiring a letter inside the dashes.
-    pattern: /^---\s+\S.*?---\s*$/m,
-    deadline: '2026-08-10',
-    context: 'docs/findings.md "Dead-feature-Verdacht" → "Section-Header-Parsing"',
-  },
+  // (empty for now — both 2026-05-10 entries promoted to KEEP)
 ]
 
 // =============================================================================
@@ -171,6 +175,14 @@ describe('DSL features must have examples — KEEP list (always enforced)', () =
 })
 
 describe('DSL features must have examples — WATCHLIST (deadline-gated)', () => {
+  // Placeholder so the suite isn't empty when all entries get promoted
+  // to KEEP. Without it Vitest fails the describe block with "No test
+  // found in suite" — empty WATCHLIST would block CI on a green policy.
+  if (WATCHLIST.length === 0) {
+    it('watchlist is empty — no pending decisions', () => {
+      expect(WATCHLIST).toHaveLength(0)
+    })
+  }
   for (const entry of WATCHLIST) {
     it(`${entry.name} — has example OR is within deadline ${entry.deadline}`, () => {
       const hits = findUsages(entry.pattern)

@@ -1,0 +1,52 @@
+// Tokens-Demo mit Section-Headern — Lane 1, Inkrement 2.
+//
+// Section-Header (`--- Title ---`) gruppieren Tokens in der Studio-
+// Token-Preview. Verbraucht von `studio/compile/token-renderer.ts`
+// und `studio/preview/renderer.ts` — Tokens unter einem Header
+// erscheinen in einer eigenen Section in der Token-Übersicht.
+
+--- Brand ---
+
+primary.bg: #2271C1
+primary.col: white
+accent.bg: #f59e0b
+accent.col: white
+
+--- Semantic ---
+
+success.bg: #10b981
+warning.bg: #f59e0b
+danger.bg: #ef4444
+info.bg: #3b82f6
+
+--- Surface ---
+
+bg.bg: #0a0a0a
+panel.bg: #1a1a1a
+elevated.bg: #2a2a2a
+
+--- Text ---
+
+text.col: #e8e8ed
+muted.col: #888888
+faded.col: #555555
+
+--- Spacing ---
+
+space.pad: 16
+space.gap: 12
+space-sm.pad: 8
+space-lg.pad: 24
+
+--- Radii ---
+
+radius.rad: 8
+radius-sm.rad: 4
+radius-lg.rad: 12
+radius-full.rad: 99
+
+--- Typography ---
+
+heading.fs: 24
+body.fs: 14
+caption.fs: 12
