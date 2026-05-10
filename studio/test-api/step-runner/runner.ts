@@ -49,9 +49,17 @@ export function scenarioToTestCase(scenario: Scenario): TestCase {
       ? scenario.setup
       : (scenario.setup.files[scenario.setup.entry] ?? '')
 
+  const compileMode: 'test' | 'real' = scenario.compileMode ?? 'test'
+
   const tc = testWithSetup(scenario.name, initialCode, async (api: TestAPI) => {
     const collector = installConsoleCollector()
     try {
+      // For real-compile scenarios: leave any prior testModeActive flag
+      // off so the production compile path runs. Idempotent if already off.
+      if (compileMode === 'real') {
+        ;(window as { __exitTestMode?: () => void }).__exitTestMode?.()
+      }
+
       // Wipe stale prelude-contributing files (tokens.tok, components.com,
       // …) left behind by an earlier multi-file scenario. Without this,
       // __compileTestCode would prepend that stale content to the
@@ -61,7 +69,7 @@ export function scenarioToTestCase(scenario: Scenario): TestCase {
       // Note: testRunner already called setCode() with the scenario's
       // initial code BEFORE this callback fires, so a __compileTestCode
       // pass already happened with the stale prelude in window.files.
-      // After wiping, re-trigger __compileTestCode so the CodeModifier
+      // After wiping, re-trigger compile so the CodeModifier
       // and sourceMap drop the stale prelude offsets. setupProjectFiles
       // does its own wipe-and-compile dance, so single-file scenarios
       // are the only path that needs this re-trigger.
@@ -69,9 +77,7 @@ export function scenarioToTestCase(scenario: Scenario): TestCase {
       if (typeof scenario.setup !== 'string') {
         await setupProjectFiles(scenario.setup, api)
       } else {
-        const recompile = (window as { __compileTestCode?: (code: string) => unknown })
-          .__compileTestCode
-        if (recompile) recompile(api.editor.getCode())
+        triggerCompile(api.editor.getCode(), compileMode)
         await api.utils.delay(50)
       }
       await runScenario(scenario, api, collector)
@@ -98,6 +104,29 @@ export function scenarioToTestCase(scenario: Scenario): TestCase {
  * `findProjectMatches`) from picking up stale lines an earlier test
  * left behind. Files explicitly in setup.files are recreated normally.
  */
+/**
+ * Drive a recompile via either the synchronous test-mode shortcut
+ * (`__compileTestCode`) or the production compile path
+ * (`__compileRealNow`). Returns true if a compile hook was found
+ * and invoked, false otherwise — caller decides whether absence is
+ * fatal (in practice the shortcut is always present in studio bundles).
+ */
+export function triggerCompile(code: string, mode: 'test' | 'real'): boolean {
+  const w = window as {
+    __compileTestCode?: (code: string) => unknown
+    __compileRealNow?: (code?: string) => void
+  }
+  if (mode === 'real' && typeof w.__compileRealNow === 'function') {
+    w.__compileRealNow(code)
+    return true
+  }
+  if (typeof w.__compileTestCode === 'function') {
+    w.__compileTestCode(code)
+    return true
+  }
+  return false
+}
+
 async function setupProjectFiles(setup: SetupProject, api: TestAPI): Promise<void> {
   // Close any leftover Studio dialogs from a prior scenario. A
   // batch-replace dialog left open because the previous test didn't

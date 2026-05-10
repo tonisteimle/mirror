@@ -248,6 +248,13 @@ declare global {
     __compileMirror?: (code: string) => string
     /** Test/runner hook: compile and execute a Mirror snippet in the preview. */
     __compileTestCode?: (code: string) => unknown
+    /**
+     * Test/runner hook: synchronously run the production compile() path.
+     * Bypasses debounce so tests don't wait 300 ms, but goes through the
+     * real compile (not the test-mode shortcut). See definition for
+     * differences from __compileTestCode.
+     */
+    __compileRealNow?: (code?: string) => void
     /** Test hook — feed a custom prelude line offset into the sync layer. */
     __setPreludeOffset?: (offset: number) => void
     /** Test hook — read the current prelude offset (chars). */
@@ -1574,6 +1581,28 @@ if (typeof window !== 'undefined') {
   window.__exitTestMode = () => {
     log.debug('[Test] Exiting test mode')
     testModeActive = false
+  }
+
+  /**
+   * Test hook — synchronous trigger of the production compile() path.
+   *
+   * Bypasses debouncedCompile so tests don't pay the 300 ms wait, but
+   * still goes through the real compile() function. This is the bridge
+   * the Step-Runner uses for `compileMode: 'real'` scenarios — the goal
+   * is exercising the production prelude-resolution + state-flow, not
+   * the synchronous test-only `__compileTestCode` shortcut.
+   *
+   * Differs from `__compileTestCode`:
+   *   - does NOT set testModeActive (so compile() takes the
+   *     production prelude path)
+   *   - returns void on success, throws on parse error (compile()
+   *     swallows internally; we let it bubble for assertion clarity)
+   */
+  window.__compileRealNow = (code?: string) => {
+    if (debouncedCompile?.cancel) debouncedCompile.cancel()
+    const src = code ?? editor?.state?.doc?.toString() ?? ''
+    if (currentFile && files) files[currentFile] = src
+    compile(src)
   }
 
   /**

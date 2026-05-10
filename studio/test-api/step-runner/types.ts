@@ -341,6 +341,21 @@ export interface Scenario {
   setup: string | SetupProject
   steps: Step[]
   /**
+   * Which compile path the runner exercises between steps.
+   *
+   *   - `'test'` (default) — synchronous `__compileTestCode`. Fast, used by
+   *     virtually all existing scenarios. Sets `testModeActive = true` and
+   *     short-circuits the production prelude logic.
+   *   - `'real'` — `__compileRealNow`, the production `compile()` path
+   *     run synchronously (debounce bypassed). Use when a scenario must
+   *     verify production prelude resolution, full sync flow, or state
+   *     transitions that the test shortcut elides.
+   *
+   * Both paths bump `__compileGeneration`, so `waitForCompile()` works
+   * the same way for either mode.
+   */
+  compileMode?: 'test' | 'real'
+  /**
    * Skip this scenario (don't run any steps). The reason is reported
    * back as a passing-but-skipped result so the test never silently
    * disappears. Used to park scenarios that document a known Studio
