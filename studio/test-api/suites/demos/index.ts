@@ -21,6 +21,10 @@ import { tutorial08 } from './tut-08-multi-file.demo'
 import { stateHoverFocus } from './state-hover-focus.demo'
 import { stateToggle } from './state-toggle.demo'
 import { stateCrossElement } from './state-cross-element.demo'
+import { visualSnap } from './visual-snap.demo'
+import { visualInference } from './visual-inference.demo'
+import { visualGrid } from './visual-grid.demo'
+import { visualPosition } from './visual-position.demo'
 
 export const demoTests: TestCase[] = [
   ...demoTextIntoFrame,
@@ -35,4 +39,8 @@ export const demoTests: TestCase[] = [
   ...stateHoverFocus,
   ...stateToggle,
   ...stateCrossElement,
+  ...visualSnap,
+  ...visualInference,
+  ...visualGrid,
+  ...visualPosition,
 ]
