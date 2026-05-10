@@ -16,7 +16,7 @@
 
 import type { TestCase, TestAPI } from '../types'
 import { testWithSetup } from '../test-runner'
-import type { Scenario, SetupProject, Step, Expectations } from './types'
+import type { Scenario, SetupProject, Step, Expectations, Selector } from './types'
 import { installConsoleCollector, type ConsoleCollector } from './console-collector'
 import { codeDiff, canonicalizeCode } from './diff'
 import { getReader, PROPERTY_READERS, type SourceMapLike } from './properties'
@@ -111,6 +111,114 @@ export function scenarioToTestCase(scenario: Scenario): TestCase {
  * and invoked, false otherwise — caller decides whether absence is
  * fatal (in practice the shortcut is always present in studio bundles).
  */
+// =============================================================================
+// Structural selector resolution
+//
+// Selectors → node-id. Bare strings are taken as node-ids directly (legacy
+// path) so existing scenarios keep working untouched. Structural variants
+// (byText/byTag/byPath/byRole/byTestId) query the rendered preview DOM and
+// read `data-mirror-id` from the match — survives IR re-numbering.
+//
+// Throws on zero matches, on multiple matches without `nth`, and on out-of-
+// range `nth`. Errors include the selector for diagnostics.
+// =============================================================================
+
+function describeSelector(sel: Selector): string {
+  return typeof sel === 'string' ? `"${sel}"` : JSON.stringify(sel)
+}
+
+function allMirrorElements(): HTMLElement[] {
+  return Array.from(document.querySelectorAll<HTMLElement>('#preview [data-mirror-id]'))
+}
+
+function matchByText(needle: string | RegExp, all: HTMLElement[]): HTMLElement[] {
+  if (needle instanceof RegExp) {
+    return all.filter(el => needle.test(el.textContent ?? ''))
+  }
+  return all.filter(el => (el.textContent ?? '').trim() === needle)
+}
+
+function matchByPath(path: string): HTMLElement[] {
+  const segments = path
+    .split('>')
+    .map(s => s.trim())
+    .filter(Boolean)
+  if (segments.length === 0) return []
+  const preview = document.getElementById('preview')
+  if (!preview) return []
+  const matchSegment = (el: HTMLElement, seg: string): boolean => {
+    const lower = seg.toLowerCase()
+    if (el.tagName.toLowerCase() === lower) return true
+    if ((el.getAttribute('data-mirror-name') ?? '').toLowerCase() === lower) return true
+    return false
+  }
+  let candidates = Array.from(preview.querySelectorAll<HTMLElement>('[data-mirror-id]'))
+  candidates = candidates.filter(el => matchSegment(el, segments[0]))
+  for (let i = 1; i < segments.length; i++) {
+    const next: HTMLElement[] = []
+    for (const c of candidates) {
+      const descendants = Array.from(c.querySelectorAll<HTMLElement>('[data-mirror-id]'))
+      for (const d of descendants) {
+        if (matchSegment(d, segments[i])) next.push(d)
+      }
+    }
+    candidates = next
+  }
+  return candidates
+}
+
+export function resolveSelector(sel: Selector): string {
+  // Legacy string form — bare node-id. Returned verbatim; no DOM check.
+  // (Structural selectors check existence implicitly via the query.)
+  if (typeof sel === 'string') return sel
+
+  if ('byId' in sel) return sel.byId
+
+  if ('byTestId' in sel) {
+    const el = document.querySelector(
+      `[data-test-id="${sel.byTestId}"][data-mirror-id]`
+    ) as HTMLElement | null
+    if (!el) throw new Error(`Selector ${describeSelector(sel)} matched 0 elements`)
+    const id = el.getAttribute('data-mirror-id')
+    if (!id)
+      throw new Error(`Selector ${describeSelector(sel)} resolved element has no data-mirror-id`)
+    return id
+  }
+
+  let matches: HTMLElement[]
+  if ('byText' in sel) {
+    matches = matchByText(sel.byText, allMirrorElements())
+  } else if ('byTag' in sel) {
+    matches = allMirrorElements().filter(el => el.tagName.toLowerCase() === sel.byTag.toLowerCase())
+  } else if ('byRole' in sel) {
+    matches = allMirrorElements().filter(
+      el => (el.getAttribute('role') ?? '').toLowerCase() === sel.byRole.toLowerCase()
+    )
+  } else {
+    matches = matchByPath(sel.byPath)
+  }
+
+  const nth = 'nth' in sel ? sel.nth : undefined
+  if (matches.length === 0) {
+    throw new Error(`Selector ${describeSelector(sel)} matched 0 elements`)
+  }
+  if (matches.length > 1 && nth === undefined) {
+    throw new Error(
+      `Selector ${describeSelector(sel)} matched ${matches.length} elements; specify nth (0-based) to disambiguate`
+    )
+  }
+  const target = nth === undefined ? matches[0] : matches[nth]
+  if (!target) {
+    throw new Error(
+      `Selector ${describeSelector(sel)} nth=${nth} out of range (matched ${matches.length})`
+    )
+  }
+  const id = target.getAttribute('data-mirror-id')
+  if (!id)
+    throw new Error(`Selector ${describeSelector(sel)} resolved element has no data-mirror-id`)
+  return id
+}
+
 export function triggerCompile(code: string, mode: 'test' | 'real'): boolean {
   const w = window as {
     __compileTestCode?: (code: string) => unknown
@@ -303,11 +411,11 @@ async function executeAction(step: Step, api: TestAPI): Promise<void> {
       if (step.nodeId === null) {
         api.studio.clearSelection()
       } else {
-        await api.studio.setSelection(step.nodeId)
+        await api.studio.setSelection(resolveSelector(step.nodeId))
       }
       return
     case 'click':
-      await api.interact.click(step.nodeId)
+      await api.interact.click(resolveSelector(step.nodeId))
       return
     case 'pressKey':
       await api.interact.pressKey(step.key, {
@@ -336,16 +444,17 @@ async function executeAction(step: Step, api: TestAPI): Promise<void> {
           `setProperty: no writer for "${step.property}" (supported: ${Object.keys(PROPERTY_READERS).join(', ')})`
         )
       }
+      const targetId = resolveSelector(step.target)
       const ctx = { api }
       switch (step.via) {
         case 'code':
-          await writer.toCode(step.target, step.value, ctx)
+          await writer.toCode(targetId, step.value, ctx)
           return
         case 'panel':
-          await writer.toPanel(step.target, step.value, ctx)
+          await writer.toPanel(targetId, step.value, ctx)
           return
         case 'preview':
-          await writer.toPreview(step.target, step.value, ctx)
+          await writer.toPreview(targetId, step.value, ctx)
           return
       }
       return
@@ -363,8 +472,9 @@ async function executeAction(step: Step, api: TestAPI): Promise<void> {
         getNodeById: (id: string) => { position: { line: number } } | null
       } | null
       if (!sourceMap) throw new Error('editText: SourceMap not available')
-      const node = sourceMap.getNodeById(step.target)
-      if (!node) throw new Error(`editText: node ${step.target} not in SourceMap`)
+      const targetId = resolveSelector(step.target)
+      const node = sourceMap.getNodeById(targetId)
+      if (!node) throw new Error(`editText: node ${targetId} not in SourceMap`)
       const code = api.editor.getCode()
       const lines = code.split('\n')
       const lineIdx = node.position.line - 1
@@ -381,22 +491,23 @@ async function executeAction(step: Step, api: TestAPI): Promise<void> {
       return
     }
     case 'hover':
-      await api.interact.hover(step.target)
+      await api.interact.hover(resolveSelector(step.target))
       return
     case 'unhover':
-      await api.interact.unhover(step.target)
+      await api.interact.unhover(resolveSelector(step.target))
       return
     case 'multiSelect': {
       if (step.nodeIds.length === 0) {
         api.studio.clearMultiSelection()
         return
       }
+      const ids = step.nodeIds.map(resolveSelector)
       // First node: regular click (replaces any existing selection).
-      await api.interact.click(step.nodeIds[0])
+      await api.interact.click(ids[0])
       await api.utils.delay(50)
       // Remaining nodes: shift-click to extend the selection.
-      for (let i = 1; i < step.nodeIds.length; i++) {
-        await api.interact.shiftClick(step.nodeIds[i])
+      for (let i = 1; i < ids.length; i++) {
+        await api.interact.shiftClick(ids[i])
         await api.utils.delay(50)
       }
       return
@@ -516,7 +627,7 @@ type ExtractInput = ComponentExtractInput | TokenExtractInput
  * search in the active editor.
  */
 function resolveTargetLineNumber(
-  target: { nodeId: string } | { searchFor: string },
+  target: { nodeId: Selector } | { searchFor: string },
   api: TestAPI
 ): number {
   if ('nodeId' in target) {
@@ -524,8 +635,9 @@ function resolveTargetLineNumber(
       getNodeById: (id: string) => { position: { line: number } } | null
     } | null
     if (!sourceMap) throw new Error('extract: SourceMap not available')
-    const node = sourceMap.getNodeById(target.nodeId)
-    if (!node) throw new Error(`extract: node ${target.nodeId} not in SourceMap`)
+    const id = resolveSelector(target.nodeId)
+    const node = sourceMap.getNodeById(id)
+    if (!node) throw new Error(`extract: node ${id} not in SourceMap`)
     return node.position.line
   }
   const code = api.editor.getCode()
@@ -996,9 +1108,9 @@ function describeStep(step: Step): string {
   const suffix = step.comment ? ')' : ''
   switch (step.do) {
     case 'select':
-      return `${prefix}select ${formatId(step.nodeId)}${suffix}`
+      return `${prefix}select ${formatSelector(step.nodeId)}${suffix}`
     case 'click':
-      return `${prefix}click ${step.nodeId}${suffix}`
+      return `${prefix}click ${formatSelector(step.nodeId)}${suffix}`
     case 'pressKey': {
       const mods = [
         step.meta && 'Cmd',
@@ -1019,19 +1131,19 @@ function describeStep(step: Step): string {
     case 'panelRemove':
       return `${prefix}panelRemove ${step.property}${suffix}`
     case 'setProperty':
-      return `${prefix}set ${step.property}=${step.value} via ${step.via} on ${step.target}${suffix}`
+      return `${prefix}set ${step.property}=${step.value} via ${step.via} on ${formatSelector(step.target)}${suffix}`
     case 'editorSet':
       return `${prefix}editorSet (${step.code.length} chars)${suffix}`
     case 'editorInsert':
       return `${prefix}editorInsert@${step.line}${suffix}`
     case 'editText':
-      return `${prefix}editText ${step.target}=${JSON.stringify(step.text)}${suffix}`
+      return `${prefix}editText ${formatSelector(step.target)}=${JSON.stringify(step.text)}${suffix}`
     case 'hover':
-      return `${prefix}hover ${step.target}${suffix}`
+      return `${prefix}hover ${formatSelector(step.target)}${suffix}`
     case 'unhover':
-      return `${prefix}unhover ${step.target}${suffix}`
+      return `${prefix}unhover ${formatSelector(step.target)}${suffix}`
     case 'multiSelect':
-      return `${prefix}multiSelect [${step.nodeIds.join(', ')}]${suffix}`
+      return `${prefix}multiSelect [${step.nodeIds.map(formatSelector).join(', ')}]${suffix}`
     case 'switchFile':
       return `${prefix}switchFile ${step.filename}${suffix}`
     case 'replaceFile':
@@ -1053,6 +1165,11 @@ function describeStep(step: Step): string {
 
 function formatId(id: string | null): string {
   return id === null ? '<none>' : id
+}
+
+function formatSelector(sel: Selector | null): string {
+  if (sel === null) return '<none>'
+  return typeof sel === 'string' ? sel : describeSelector(sel)
 }
 
 function formatPanelValue(v: string | null): string {

@@ -7,8 +7,8 @@
  * See ./types.ts for Step/Scenario shape, ./runner.ts for execution.
  */
 
-export type { Scenario, Step, StepAction, Expectations } from './types'
-export { scenarioToTestCase, scenariosToTestCases } from './runner'
+export type { Scenario, Step, StepAction, Expectations, Selector } from './types'
+export { scenarioToTestCase, scenariosToTestCases, resolveSelector } from './runner'
 export { codeDiff, canonicalizeCode } from './diff'
 export { installConsoleCollector, type ConsoleCollector } from './console-collector'
 export { panelSet, codeSet, styleViaPanel } from './fragments'

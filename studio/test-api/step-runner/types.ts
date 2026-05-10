@@ -11,6 +11,28 @@
  */
 
 // =============================================================================
+// Selectors — structural ways to refer to a node
+//
+// IR re-numbering is the rule: insert a node, every later node-id shifts.
+// Bare `node-N` ids in scenarios break the moment the scenario inserts or
+// deletes anything. The Selector union mirrors the Demo-Runner's E1
+// design — `byText`/`byTag`/`byPath` survive renumbering because they
+// resolve via the rendered DOM, not via the IR's positional ids.
+//
+// Bare strings remain valid (the most-used escape hatch) and are
+// resolved as `byId` — the existing 225+ scenarios keep working.
+// =============================================================================
+
+export type Selector =
+  | string
+  | { byId: string }
+  | { byText: string | RegExp; nth?: number }
+  | { byTag: string; nth?: number }
+  | { byPath: string; nth?: number }
+  | { byRole: string; nth?: number }
+  | { byTestId: string }
+
+// =============================================================================
 // Actions — three categories matching the three input methods
 // =============================================================================
 
@@ -18,8 +40,12 @@ export type StepAction =
   // ---------------------------------------------------------------------------
   // Direct manipulation (preview canvas)
   // ---------------------------------------------------------------------------
-  | { do: 'select'; nodeId: string | null }
-  | { do: 'click'; nodeId: string }
+  //
+  // `nodeId`/`target` accept either a structural Selector or a bare string
+  // (resolved as a node-id). New scenarios should prefer structural
+  // selectors so they survive IR re-numbering.
+  | { do: 'select'; nodeId: Selector | null }
+  | { do: 'click'; nodeId: Selector }
   | {
       do: 'pressKey'
       key: string
@@ -46,7 +72,7 @@ export type StepAction =
   | {
       do: 'setProperty'
       via: 'code' | 'panel' | 'preview'
-      target: string
+      target: Selector
       property: string
       value: string
     }
@@ -63,20 +89,20 @@ export type StepAction =
   // action finds and replaces it in source — equivalent to inline-edit
   // with a new value.
   // ---------------------------------------------------------------------------
-  | { do: 'editText'; target: string; text: string }
+  | { do: 'editText'; target: Selector; text: string }
 
   // ---------------------------------------------------------------------------
   // Hover state — triggers/clears the :hover pseudo-class on a node.
   // The element's source `hover:` block (if any) becomes the active state.
   // ---------------------------------------------------------------------------
-  | { do: 'hover'; target: string }
-  | { do: 'unhover'; target: string }
+  | { do: 'hover'; target: Selector }
+  | { do: 'unhover'; target: Selector }
 
   // ---------------------------------------------------------------------------
   // Multi-select — click the first node, then shift-click the rest.
   // Equivalent to the user's Cmd-click / Shift-click selection flow.
   // ---------------------------------------------------------------------------
-  | { do: 'multiSelect'; nodeIds: readonly string[] }
+  | { do: 'multiSelect'; nodeIds: readonly Selector[] }
 
   // ---------------------------------------------------------------------------
   // Project files — switch the editor's active file. The compile target
@@ -117,7 +143,7 @@ export type StepAction =
        * stable across positional resolution) or a verbatim substring
        * that occurs once in the editor's current text.
        */
-      target: { nodeId: string } | { searchFor: string }
+      target: { nodeId: Selector } | { searchFor: string }
     }
   | {
       do: 'extractToken'
@@ -127,7 +153,7 @@ export type StepAction =
       tokenName: string
       /** Verbatim value, no token-prefix (e.g. `#2271C1`). */
       value: string
-      target: { nodeId: string } | { searchFor: string }
+      target: { nodeId: Selector } | { searchFor: string }
     }
 
   // ---------------------------------------------------------------------------
