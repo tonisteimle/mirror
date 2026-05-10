@@ -23,96 +23,111 @@
 
     <header>
       <h1>States im Studio</h1>
-      <p class="subtitle">Hover, Focus, Custom-State und Multi-State im Property-Panel</p>
+      <p class="subtitle">Hover, Focus und Custom-States im Code editieren, im Run-Mode prüfen</p>
     </header>
 
     <p class="intro">
-      Kapitel 6 zeigt die States-Syntax in der DSL — <code>hover:</code>,
-      <code>on:</code>, <code>toggle()</code>. Hier geht es um die
-      Studio-Bedienung dazu: das Property-Panel hat einen <em>State-
-      Reiter</em>, in dem du den aktiven State zum Editieren wählst,
-      und ein Preview-Toggle, mit dem du die States-Wirkung im
-      Preview siehst ohne in den Run-Mode zu wechseln.
+      Kapitel 6 zeigt die States-Syntax in der DSL —
+      <code>hover:</code>, <code>on:</code>, <code>toggle()</code>.
+      Hier geht es um den Studio-Workflow dazu: States schreibst du
+      heute direkt im Code-Editor (das Property-Panel hat dafür noch
+      keine Tabs), und siehst die Wirkung im Run-Mode (Kapitel 26)
+      oder im Browser-Hover.
     </p>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Hover- und Focus-States editieren</h2>
+      <h2>System-States im Code</h2>
       <p>
-        Selektiere ein Element im Preview. Im Property-Panel oben
-        siehst du Tabs: <em>Default</em>, <em>Hover</em>, <em>Focus</em>,
-        <em>Active</em>, <em>Disabled</em>. Klick auf <em>Hover</em>
-        und das Panel zeigt nur die hover-spezifischen Properties.
-        Was du hier änderst, landet im <code>hover:</code>-Block der
-        Code-Zeile.
+        System-States (<em>hover</em>, <em>focus</em>, <em>active</em>,
+        <em>disabled</em>) schreibst du direkt unter die Element- oder
+        Komponenten-Definition. Einrückung zählt: was unter
+        <code>hover:</code> eingerückt ist, gilt nur im Hover-Zustand.
       </p>
+      <div class="code-block">
+        <pre>Btn: bg #333, col white, pad 10 20, rad 6
+  hover:
+    bg #444
+  focus:
+    bor 2, boc #2271C1
+  disabled:
+    opacity 0.5, cursor not-allowed</pre>
+      </div>
       <p>
-        Damit du sofort siehst was passiert, hat das Preview einen
-        <em>State-Trigger</em>: bewegst du den Maus-Cursor über das
-        selektierte Element, wechselt das Preview in den Hover-Zustand,
-        auch wenn die Maus eigentlich über dem Property-Panel ist.
+        Im Preview siehst du Hover sofort beim Maus-Hover; Focus
+        triggerst du mit Tab oder Klick auf ein Input. Disabled
+        setzt du im Code via Instanz-Property: <code>Btn "Senden", disabled</code>.
       </p>
 
       <div class="tutorial-video-placeholder">
-        <em>(Geführtes Video folgt: Hover-State editieren mit Preview-Sync, ~90s)</em>
+        <em>(Video folgt: hover:/focus:-Block schreiben + Preview-Test)</em>
       </div>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Custom-States — eigene Zustände definieren</h2>
+      <h2>Custom-States mit <code>toggle()</code></h2>
       <p>
-        Neben den System-States kannst du eigene definieren. Im
-        State-Tab des Property-Panels klickst du <em>+ State</em>,
-        gibst einen Namen (z. B. <code>active</code>,
-        <code>highlighted</code>, <code>error</code>). Studio fügt
-        einen leeren State-Block in die Definition.
+        Eigene Zustände definierst du genauso — gib dem State einen
+        Namen (z. B. <code>on</code>, <code>active</code>,
+        <code>highlighted</code>) und schreibe einen
+        <code>name:</code>-Block. Damit der State bei Klick wechselt,
+        ergänzt du <code>toggle()</code> als Property auf der
+        Definition:
       </p>
+      <div class="code-block">
+        <pre>LikeBtn: bg #333, col #888, pad 12 20, rad 6, hor, gap 8, toggle()
+  Icon "heart", ic #888, is 18
+  Text "Gefällt mir"
+  on:
+    bg #ef4444
+    col white
+    Icon "heart", ic white, is 18, fill
+    Text "Gefällt mir!"</pre>
+      </div>
       <p>
-        Damit der State auch ausgelöst wird, setzt du
-        <code>toggle()</code> oder <code>exclusive()</code> als
-        Property auf das Element — das Action-Picker-Menü hat diese
-        beiden in der Kategorie <em>State</em>. <code>toggle()</code>
-        wechselt bei Klick zwischen Default und State; bei mehreren
-        Custom-States cyclet er reihum.
-      </p>
-      <p>
-        Cross-Element-State funktioniert mit dem
-        <em>name</em>-Property: gibst du einem Button den Namen
-        <code>MenuBtn</code> und einem anderen Element ein
-        <code>MenuBtn.open: visible</code>, reagiert dieses andere
-        Element auf den State des Buttons.
+        Bei mehreren Custom-States cyclet <code>toggle()</code> reihum.
+        Mit <code>exclusive()</code> statt <code>toggle()</code> bekommst
+        du Tab-/Radio-Verhalten: nur ein Element in der Gruppe ist
+        gleichzeitig aktiv.
       </p>
 
       <div class="tutorial-video-placeholder">
-        <em>(Video folgt: Custom-State definieren + toggle())</em>
+        <em>(Video folgt: LikeBtn mit toggle() + on:-State)</em>
       </div>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Multi-State — Cycle durch mehrere Zustände</h2>
+      <h2>Cross-Element-State</h2>
       <p>
-        Manche UI-Elemente haben drei oder mehr Zustände — eine
-        Task-Liste mit <em>Todo</em>, <em>Doing</em>, <em>Done</em>;
-        ein Audio-Player mit <em>Play</em>, <em>Pause</em>,
-        <em>Loading</em>. Definiere die States nacheinander im
-        State-Tab; <code>toggle()</code> cyclet bei Klick durch die
-        Reihe.
+        Ein Element kann auf den State eines <em>anderen</em> Elements
+        reagieren. Du gibst dem Trigger-Element einen <code>name</code>
+        und das Reaktiv-Element trägt einen
+        <code>Trigger.state:</code>-Block:
       </p>
+      <div class="code-block">
+        <pre>Button name MenuBtn, pad 10 20, bg #333, col white, rad 6, toggle()
+  open:
+    bg #2271C1
+
+Frame bg #1a1a1a, pad 12, rad 8, gap 4, hidden
+  MenuBtn.open:
+    visible
+  Text "Menü Item 1", col white
+  Text "Menü Item 2", col white</pre>
+      </div>
       <p>
-        Im State-Tab siehst du alle States als Reiter. Reihenfolge
-        per Drag ändern — das ändert die Cycle-Reihenfolge. Mit
-        <em>exclusive()</em> statt <em>toggle()</em> bekommst du
-        Tab-/Radio-Verhalten: nur einer in der Gruppe ist aktiv, alle
-        anderen springen automatisch in Default zurück.
+        Der Validator prüft, dass der Name existiert und der State auf
+        dem Trigger definiert ist — sonst zeigt das Lint-Underline im
+        Editor einen Fehler.
       </p>
 
       <div class="tutorial-video-placeholder">
-        <em>(Video folgt: Multi-State Cycle mit todo/doing/done)</em>
+        <em>(Video folgt: Menü-Toggle mit Cross-Element-State)</em>
       </div>
     </section>
 
@@ -120,16 +135,16 @@
     <div class="summary">
       <h2>Das Wichtigste</h2>
       <table class="ref-table">
-        <tr><th>Aktion</th><th>Wo</th></tr>
-        <tr><td>Hover/Focus/Active editieren</td><td>State-Tabs im Property-Panel</td></tr>
-        <tr><td>Custom-State definieren</td><td>State-Tab → <em>+ State</em> → Name</td></tr>
-        <tr><td>State triggern</td><td><code>toggle()</code> oder <code>exclusive()</code> als Property</td></tr>
-        <tr><td>Multi-State-Cycle</td><td>Mehrere States definieren, <code>toggle()</code> cyclet reihum</td></tr>
-        <tr><td>Cross-Element-State</td><td><code>name SomeId</code> + <code>SomeId.state:</code> auf anderem Element</td></tr>
-        <tr><td>State-Preview ohne Klick</td><td>Hover über selektiertes Element triggert Hover-Preview</td></tr>
+        <tr><th>Aktion</th><th>So</th></tr>
+        <tr><td>System-State editieren</td><td><code>hover:</code> / <code>focus:</code> / <code>active:</code> / <code>disabled:</code> als Block unter dem Element</td></tr>
+        <tr><td>Custom-State definieren</td><td>Eigener Name: <code>highlighted:</code>, <code>on:</code>, …</td></tr>
+        <tr><td>State triggern</td><td><code>toggle()</code> (cycle) oder <code>exclusive()</code> (Radio) als Property</td></tr>
+        <tr><td>Cross-Element-State</td><td><code>name SomeId</code> auf Trigger + <code>SomeId.state:</code> auf Reaktion</td></tr>
+        <tr><td>State im Preview testen</td><td>Hover/Klick im Preview, oder Run-Mode (Kapitel 26)</td></tr>
+        <tr><td>Property-Panel-State-Tabs</td><td><em>Roadmap — heute States im Code</em></td></tr>
       </table>
 
-      <p><strong>Das Prinzip:</strong> States sind keine Ausnahmen vom Default — sie sind weitere Schichten Property-Values. Der State-Tab im Property-Panel ist die Eingabe; <code>toggle()</code> oder <code>exclusive()</code> ist der Trigger.</p>
+      <p><strong>Das Prinzip:</strong> States sind keine Ausnahmen vom Default — sie sind weitere Schichten Property-Values, eingerückt unter dem Element. Heute schreibst du sie direkt; ein State-Tab im Property-Panel ist geplant.</p>
     </div>
 
 

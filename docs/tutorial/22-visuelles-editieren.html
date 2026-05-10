@@ -67,21 +67,20 @@
         Droppst du nacheinander mehrere Elemente in einen vertikal
         ausgerichteten Container (Default), erkennt Studio nach dem
         zweiten oder dritten Drop, dass die Children nebeneinander
-        stehen sollten, und schlägt vor: <em>„Container auf
-        horizontal umstellen?"</em> Mit <kbd>Enter</kbd> bestätigst du,
-        Studio fügt <code>hor, gap 8</code> in die Container-Zeile.
-        <kbd>Esc</kbd> verwirft den Vorschlag.
+        stehen sollten, und blendet beim Container einen kleinen
+        Vorschlags-Button ein — z. B. <em>„→ HStack, gap 8"</em>.
+        Klick auf den Button übernimmt den Vorschlag, Studio fügt
+        <code>hor, gap 8</code> in die Container-Zeile. Klick
+        irgendwo anders verwirft.
       </p>
       <p>
-        Die Inferenz arbeitet auch andersrum: bei vielen Drops in
-        einen <code>hor</code>-Container schlägt sie <code>wrap</code>
-        vor, damit die Elemente bei Container-Verkleinerung umbrechen.
-        Ähnlich für <code>grid 12</code> bei strukturierten
-        Mehrfachdrops.
+        Die Inferenz erkennt auch <code>wrap</code> und
+        <code>grid 12</code> als sinnvolle Vorschläge — je nachdem
+        wie viele und wie strukturiert die Drops eintreffen.
       </p>
 
       <div class="tutorial-video-placeholder">
-        <em>(Video folgt: Drei Drops → Inference-Dialog → hor)</em>
+        <em>(Video folgt: Drei Drops → Inference-Vorschlag → Klick → hor)</em>
       </div>
     </section>
 

@@ -30,9 +30,8 @@
       Studio nutzt CodeMirror 6 als Editor — schnell, mit Mirror-
       Syntax-Highlighting und context-aware Autocomplete. Dazu kommt
       die übliche IDE-Tastatur: <kbd>Cmd</kbd>+<kbd>P</kbd> für
-      Datei-Switch, <kbd>Cmd</kbd>+<kbd>F</kbd> für Find/Replace,
-      <kbd>F2</kbd> für Rename. Wer aus VS Code kommt, fühlt sich
-      sofort zu Hause.
+      Datei-Switch und <kbd>F2</kbd> für cross-file Rename.
+      Wer aus VS Code kommt, fühlt sich schnell zurecht.
     </p>
 
 
@@ -117,20 +116,19 @@
       <p>
         Cursor auf einen Komponenten-Namen, einen Token-Namen oder
         einen Element-Namen (<code>name</code>-Property), dann
-        <kbd>F2</kbd>. Studio öffnet eine Inline-Rename-Surface und
-        zeigt rechts in einem Diff-Panel alle Stellen, die geändert
-        würden — über alle Projekt-Files hinweg.
+        <kbd>F2</kbd>. Studio öffnet eine Inline-Rename-Surface,
+        sucht alle Vorkommen über alle Projekt-Files und benennt
+        sie in einem Schritt um.
       </p>
       <p>
-        Tippe den neuen Namen, <kbd>Enter</kbd> bestätigt — alle
-        Vorkommen in einem Schritt umbenannt. <kbd>Esc</kbd> bricht
-        ab. Wenn ein Name-Konflikt droht (du willst etwas in einen
-        Namen umbenennen, der schon existiert), warnt Studio bevor
-        es ausführt.
+        Tippe den neuen Namen, <kbd>Enter</kbd> bestätigt,
+        <kbd>Esc</kbd> bricht ab. Wenn ein Name-Konflikt droht
+        (du willst etwas in einen Namen umbenennen, der schon
+        existiert), warnt Studio bevor es ausführt.
       </p>
 
       <div class="tutorial-video-placeholder">
-        <em>(Video folgt: F2-Rename mit Diff-Vorschau)</em>
+        <em>(Video folgt: F2-Rename cross-file)</em>
       </div>
     </section>
 
@@ -143,8 +141,7 @@
         <tr><td>Tippen <code>$</code></td><td>Token-Liste passend zur Property</td></tr>
         <tr><td>Komponente einrücken</td><td>Slot-Vorschläge in der nächsten Zeile</td></tr>
         <tr><td><kbd>Cmd</kbd>+<kbd>P</kbd></td><td>Fuzzy-Switch zwischen Files</td></tr>
-        <tr><td><kbd>Cmd</kbd>+<kbd>F</kbd></td><td>Find/Replace im aktuellen File</td></tr>
-        <tr><td><kbd>F2</kbd></td><td>Symbol cross-file umbenennen mit Diff-Vorschau</td></tr>
+        <tr><td><kbd>F2</kbd></td><td>Symbol cross-file umbenennen</td></tr>
         <tr><td><kbd>Cmd</kbd>+<kbd>Z</kbd> / <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></td><td>Undo / Redo (auch für visuelle Operationen)</td></tr>
       </table>
 

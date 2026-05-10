@@ -82,9 +82,9 @@
         speichern oder reloaden.
       </p>
       <p>
-        Bei zirkulären Referenzen (Token A nutzt Token B, der wieder
-        Token A nutzt) warnt Studio mit einem Lint-Marker und
-        verwendet den letzten gültigen Wert.
+        Bei zirkulärer Komponenten-Inheritance (<code>A as B</code>
+        und gleichzeitig <code>B as A</code>) erkennt der Validator
+        den Zyklus und zeigt einen Lint-Marker auf der Definition.
       </p>
 
       <div class="tutorial-video-placeholder">

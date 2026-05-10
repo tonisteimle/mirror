@@ -23,7 +23,7 @@
 
     <header>
       <h1>Run-Mode &amp; Validierung</h1>
-      <p class="subtitle">Interaktives Preview, Lint-Markers, Quick-Fix</p>
+      <p class="subtitle">Interaktives Preview, Lint-Markers im Editor</p>
     </header>
 
     <p class="intro">
@@ -33,7 +33,7 @@
       schaltet Studio das Preview in einen interaktiven Zustand:
       Buttons sind klickbar, States cyclen, Form-Inputs editierbar.
       Daneben hat der Editor Lint-Markers, die Fehler im Code
-      direkt anzeigen — mit Quick-Fix wo möglich.
+      direkt anzeigen.
     </p>
 
 
@@ -41,10 +41,10 @@
     <section>
       <h2>Run-Mode toggeln — interaktives Preview</h2>
       <p>
-        In der Toolbar oben (oder mit <kbd>Cmd</kbd>+<kbd>R</kbd>)
-        toggelst du zwischen Edit-Mode und Run-Mode. Im Run-Mode
-        wechselt der Cursor sich, Selektion-Indikatoren verschwinden,
-        und das Preview verhält sich wie eine echte Anwendung:
+        In der Toolbar oben gibt es einen Play-Knopf — Klick wechselt
+        zwischen Edit-Mode und Run-Mode. Im Run-Mode wechselt der
+        Cursor sich, Selektion-Indikatoren verschwinden, und das
+        Preview verhält sich wie eine echte Anwendung:
       </p>
       <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
         <li><strong>Buttons</strong> reagieren auf Klick — <code>toggle()</code> wechselt den State, <code>show(…)</code> blendet Elemente ein</li>
@@ -66,7 +66,7 @@
 
     <!-- ============================================================ -->
     <section>
-      <h2>Validierung im Editor — Lint-Markers und Quick-Fix</h2>
+      <h2>Validierung im Editor — Lint-Markers</h2>
       <p>
         Während du tippst, validiert Studio den Code gegen das
         DSL-Schema. Fehler erscheinen als rote Wellenlinien unter
@@ -74,12 +74,11 @@
         zeigt einen Tooltip mit der Erklärung.
       </p>
       <p>
-        Beispiele: <code>bg #2271</code> — ungültige Hex-Länge,
-        rot. <code>fs bold</code> — <code>bold</code> ist
-        <code>weight</code>, nicht <code>fs</code>; gelbe Warnung
-        mit Quick-Fix-Vorschlag „Property zu <code>weight</code>
-        ändern". <kbd>Cmd</kbd>+<kbd>.</kbd> öffnet das Quick-Fix-
-        Menu, akzeptiert mit <kbd>Enter</kbd>.
+        Beispiele: <code>bg #2271</code> — ungültige Hex-Länge, rot
+        markiert. <code>fs bold</code> — <code>bold</code> gehört zu
+        <code>weight</code>, nicht zu <code>fs</code>; gelbe Warnung
+        mit Hinweis. Validierung läuft live; du musst nichts manuell
+        triggern.
       </p>
       <p>
         Lint-Status der ganzen Datei steht oben rechts: <em>0
@@ -88,7 +87,7 @@
       </p>
 
       <div class="tutorial-video-placeholder">
-        <em>(Video folgt: Lint-Markers + Quick-Fix für Property-Verwechslung)</em>
+        <em>(Video folgt: Lint-Markers + Tooltips)</em>
       </div>
     </section>
 
@@ -97,11 +96,11 @@
       <h2>Das Wichtigste</h2>
       <table class="ref-table">
         <tr><th>Aktion</th><th>Wie</th></tr>
-        <tr><td>Run-Mode aktivieren</td><td>Toolbar-Toggle oder <kbd>Cmd</kbd>+<kbd>R</kbd></td></tr>
-        <tr><td>Run-Mode verlassen</td><td>Selber Toggle — State wird zurückgesetzt</td></tr>
+        <tr><td>Run-Mode aktivieren</td><td>Play-Knopf in der Toolbar</td></tr>
+        <tr><td>Run-Mode verlassen</td><td>Derselbe Knopf — State wird zurückgesetzt</td></tr>
         <tr><td>Lint-Marker erklären</td><td>Hover über die Wellenlinie</td></tr>
-        <tr><td>Quick-Fix anwenden</td><td><kbd>Cmd</kbd>+<kbd>.</kbd> auf der markierten Stelle</td></tr>
         <tr><td>Lint-Status der Datei</td><td>Indikator oben rechts, Klick öffnet Liste</td></tr>
+        <tr><td>Quick-Fix-Menu</td><td><em>Roadmap — heute siehst du den Hinweis im Tooltip</em></td></tr>
       </table>
 
       <p><strong>Das Prinzip:</strong> Edit-Mode für das Bauen, Run-Mode für das Testen — beide Modi nutzen denselben Code. Validierung läuft live mit, du musst nichts manuell triggern; was rot ist, baut nicht; was gelb ist, baut, ist aber suboptimal.</p>
