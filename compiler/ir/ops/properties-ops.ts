@@ -17,16 +17,10 @@ import {
   generateLayoutStyles,
 } from '../transformers/layout-transformer'
 import { formatCSSValue } from '../transformers/style-utils-transformer'
-import {
-  propertyToCSS as propertyToCSSExtracted,
-  type PropertyTransformContext,
-} from '../transformers/property-transformer'
-import { resolveValue as resolveValueExtracted } from '../transformers/value-resolver'
-import {
-  validateProperty as validatePropertyExtracted,
-  isKnownProperty as isKnownPropertyExtracted,
-} from '../transformers/validation'
-import { expandPropertySets as expandPropertySetsExtracted } from '../transformers/property-set-expander'
+import * as PropertyTransformer from '../transformers/property-transformer'
+import { resolveValue } from '../transformers/value-resolver'
+import * as Validation from '../transformers/validation'
+import * as PropertySetExpander from '../transformers/property-set-expander'
 import type { IRTransformer } from '../index'
 
 export function validateProperty(
@@ -34,14 +28,14 @@ export function validateProperty(
   propName: string,
   position?: SourcePosition
 ): boolean {
-  return validatePropertyExtracted(propName, { warnings: this.warnings }, position)
+  return Validation.validateProperty(propName, { warnings: this.warnings }, position)
 }
 
 /**
  * Check if a property is known (without emitting warnings)
  */
 export function isKnownProperty(this: IRTransformer, propName: string): boolean {
-  return isKnownPropertyExtracted(propName)
+  return Validation.isKnownProperty(propName)
 }
 
 /**
@@ -70,7 +64,12 @@ export function expandPropertySets(
   properties: Property[],
   primitive?: string
 ): Property[] {
-  return expandPropertySetsExtracted(properties, this.propertySetMap, this.componentMap, primitive)
+  return PropertySetExpander.expandPropertySets(
+    properties,
+    this.propertySetMap,
+    this.componentMap,
+    primitive
+  )
 }
 
 /**
@@ -196,10 +195,7 @@ export function transformProperties(
 
     // Gap
     if ((name === 'gap' || name === 'g') && !isBoolean) {
-      layoutContext.gap = formatCSSValue(
-        name,
-        resolveValueExtracted(prop.values, this.tokenSet, name)
-      )
+      layoutContext.gap = formatCSSValue(name, resolveValue(prop.values, this.tokenSet, name))
       continue
     }
 
@@ -230,29 +226,20 @@ export function transformProperties(
 
     // Gap-x (column-gap)
     if ((name === 'gap-x' || name === 'gx') && !isBoolean) {
-      layoutContext.columnGap = formatCSSValue(
-        name,
-        resolveValueExtracted(prop.values, this.tokenSet, name)
-      )
+      layoutContext.columnGap = formatCSSValue(name, resolveValue(prop.values, this.tokenSet, name))
       continue
     }
 
     // Gap-y (row-gap)
     if ((name === 'gap-y' || name === 'gy') && !isBoolean) {
-      layoutContext.rowGap = formatCSSValue(
-        name,
-        resolveValueExtracted(prop.values, this.tokenSet, name)
-      )
+      layoutContext.rowGap = formatCSSValue(name, resolveValue(prop.values, this.tokenSet, name))
       continue
     }
 
     // Row-height (grid-auto-rows) - only handle in grid context
     // Otherwise let it fall through to schema-based handling
     if ((name === 'row-height' || name === 'rh') && !isBoolean && layoutContext.isGrid) {
-      layoutContext.rowHeight = formatCSSValue(
-        name,
-        resolveValueExtracted(prop.values, this.tokenSet, name)
-      )
+      layoutContext.rowHeight = formatCSSValue(name, resolveValue(prop.values, this.tokenSet, name))
       continue
     }
 
@@ -365,10 +352,15 @@ export function propertyToCSS(
   parentLayoutContext?: ParentLayoutContext
 ): IRStyle[] {
   // Create context for the extracted function
-  const ctx: PropertyTransformContext = {
-    resolveValue: (values, propertyName) =>
-      resolveValueExtracted(values, this.tokenSet, propertyName),
+  const ctx: PropertyTransformer.PropertyTransformContext = {
+    resolveValue: (values, propertyName) => resolveValue(values, this.tokenSet, propertyName),
     validateProperty: (propName, position) => this.validateProperty(propName, position),
   }
-  return propertyToCSSExtracted(prop, ctx, primitive, transformContext, parentLayoutContext)
+  return PropertyTransformer.propertyToCSS(
+    prop,
+    ctx,
+    primitive,
+    transformContext,
+    parentLayoutContext
+  )
 }
