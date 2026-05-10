@@ -51,6 +51,7 @@ import {
 } from './init'
 import { debounce } from './core/debounce'
 import { renderEmptyPreview, resetSelectionForEmptyCode } from './compile/empty-state'
+import { wrapLayoutForCompile } from './compile/wrap-layout'
 
 // New architecture imports
 import {
@@ -1263,56 +1264,15 @@ function compile(code: string) {
       currentPreludeOffset = 0
       currentPreludeLineOffset = 0
     } else if (fileType === 'layout') {
-      currentPreludeOffset = 0 // Reset prelude offset only in normal mode
+      // Note: indentedCode does NOT contribute to currentPreludeOffset because
+      // CodeModifier returns line-start positions (including indent). The
+      // indent is stripped separately in handleStudioCodeChange when applying
+      // changes to the editor.
       const prelude = getPreludeCode(compileFile)
-
-      // Check if code already starts with "App" (legacy files)
-      const startsWithApp = compileCode.trimStart().startsWith('App')
-
-      // Check if code contains component definitions at root level (lines ending with ":" at indent 0)
-      // These should NOT be wrapped in App, as they would become slot definitions instead
-      const hasRootComponentDefs = compileCode.split('\n').some((line: string) => {
-        const trimmed = line.trim()
-        // Component definition: starts with capital letter, ends with ":"
-        // But not a state like "hover:" or "focus:" (lowercase)
-        return (
-          trimmed.match(/^[A-Z][a-zA-Z0-9]*:/) && !line.startsWith(' ') && !line.startsWith('\t')
-        )
-      })
-
-      if (startsWithApp || hasRootComponentDefs) {
-        // Don't wrap: code already has App wrapper OR contains component definitions
-        // Component definitions at root level would become slot definitions if wrapped
-        isWrappedWithApp = false
-        if (prelude) {
-          const separator = '\n\n// === ' + compileFile + ' ===\n'
-          resolvedCode = prelude + separator + compileCode
-          currentPreludeOffset = prelude.length + separator.length
-        }
-      } else {
-        // New mode: wrap user code in implicit App root
-        // App is defined in components.com and can be styled there (padding, bg, etc.)
-        isWrappedWithApp = true
-        const rootWrapper = 'App'
-
-        // Indent user code to be children of the implicit root
-        const indentedCode = compileCode
-          .split('\n')
-          .map((line: string) => (line ? '  ' + line : ''))
-          .join('\n')
-
-        // Note: We do NOT add indent to currentPreludeOffset because CodeModifier
-        // returns line-start positions (including indent). The indent is stripped
-        // separately in handleStudioCodeChange when applying changes to the editor.
-        if (prelude) {
-          const separator = '\n\n// === ' + compileFile + ' ===\n'
-          resolvedCode = prelude + separator + rootWrapper + '\n' + indentedCode
-          currentPreludeOffset = prelude.length + separator.length + rootWrapper.length + 1
-        } else {
-          resolvedCode = rootWrapper + '\n' + indentedCode
-          currentPreludeOffset = rootWrapper.length + 1
-        }
-      }
+      const wrap = wrapLayoutForCompile(compileCode, compileFile, prelude || null)
+      resolvedCode = wrap.resolvedCode
+      currentPreludeOffset = wrap.preludeOffset
+      isWrappedWithApp = wrap.isWrappedWithApp
     }
 
     // Update global variables for DropResultApplier
