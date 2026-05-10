@@ -178,12 +178,17 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   Browser-Tests gedeckt — Refactor braucht sorgfältige headed-
   Verification. Eigene Session, nicht inkrementell.
 
-- **Wo:** `studio/panels/property/view.ts` (1037 LOC)
+- **Wo:** `studio/panels/property/view.ts` (1037 LOC → 776 LOC)
   **Was:** PANEL_CONFIG mit 100+ Primitive-Typen + 12 Section-Creators in
   einer Datei — God-Objekt mit dichtem Repeat-Pattern.
-  **Status:** offen
-  **Notiz:** Pro Primitiv-Kategorie in `studio/panels/property/configs/`
-  splitten.
+  **Status:** teilweise erledigt — `PANEL_CONFIG`,
+  `DEFAULT_PANEL_CONFIG`, `PanelConfig`-Interface und `getPanelConfig()`
+  in eigenes Modul `studio/panels/property/panel-config.ts`
+  ausgelagert (261 LOC). View ist 25 % kleiner und Config testbar
+  ohne View-Instanz. 679/679 property-panel tests pass.
+  **Notiz:** Bleibt: 12 Section-Creator-Aufrufe + `renderSections`-Switch
+  in `view.ts` — könnte über Section-Registry weiter geschrumpft werden,
+  aber Code ist bereits lesbar.
 
 - **Wo:** `studio/app.ts` (2557 LOC)
   **Was:** Bootstrap-Sprawl: 30+ globale Konstanten, 5 Extensions, 8
