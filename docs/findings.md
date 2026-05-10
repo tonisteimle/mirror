@@ -902,6 +902,24 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — 29 orphan tests/fixtures/\*.html manual-test Pages gelöscht (8096 LOC)
+
+- **Wo:** `tests/fixtures/*.html` (root-level — 29 Files)
+  **Was:** Hand-geschriebene HTML-Test-Pages (accordion, avatar,
+  carousel, checkbox, … bis tooltip/treeview) plus `index.html`
+  (broken Übersicht), `compiler-test.html`, `default-styles.html`.
+  Letzte Aktivität 2026-03-28 (1.5 Monate). 0 Konsumenten in der
+  Test-Infrastruktur — die `runner.test.ts`-basierten Suiten sind
+  in den Subfoldern (actions/, bind/, components/, …, jeweils mit
+  eigenem `runner.test.ts`). Die Root-HTML-Pages waren ein paralleles
+  Manual-Test-System, dessen Index-Seite `tests/index.html` nie
+  existierte (Breadcrumb-Links toten); Komponenten-Subdir
+  `components/tabs.html` (verlinkt aus index.html) ebenfalls
+  nicht vorhanden. System war von Anfang an broken bzw. wurde
+  früh aufgegeben. Restoration via
+  `git show <pre-delete>:tests/fixtures/<name>.html`.
+  **Status:** erledigt
+
 ### 2026-05-10 — `studio/preview/constants.ts` 7 dead Re-Exports + Datei gelöscht
 
 - **Wo:** `studio/preview/constants.ts` (34 LOC) +

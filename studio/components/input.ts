@@ -74,7 +74,7 @@ export class Input implements ComponentInstance {
       }
 
       this.setupInputEvents()
-      this.element = this.input as unknown as HTMLElement
+      this.element = this.input
     }
 
     if (this.config.testId && this.element !== this.input) {
@@ -94,7 +94,7 @@ export class Input implements ComponentInstance {
     this.input.addEventListener('change', () => this.handleChange())
 
     // Keyboard
-    this.input.addEventListener('keydown', (e) => {
+    this.input.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
         e.preventDefault()
         this.handleChange()

@@ -176,9 +176,10 @@ async function runExport(overlay: HTMLElement): Promise<void> {
 
   // state.files is only populated by tests; in production the file map
   // lives at window.files (mirroring the in-module `files` constant in
-  // app.ts). Read state first, fall back to window.files.
+  // app.ts — declared on Window in app.ts:declare global). Read state
+  // first, fall back to window.files.
   const stateFiles = state.get().files as Record<string, string> | undefined
-  const winFiles = (window as unknown as { files?: Record<string, string> }).files
+  const winFiles = window.files
   const files: Record<string, string> =
     stateFiles && Object.keys(stateFiles).length > 0 ? stateFiles : (winFiles ?? {})
 
