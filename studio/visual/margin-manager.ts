@@ -18,6 +18,11 @@ import { getSpacingSnapService, shouldBypassSnapping, type SpacingSnapResult } f
 import { SnapIndicator, createSnapIndicator } from './snap-indicator'
 import { RafMouseThrottle } from './raf-mouse-throttle'
 import { ObserverPack } from './observer-pack'
+import {
+  calculateSpacingDelta,
+  spacingDragLabel,
+  spacingPropertiesForMode,
+} from './spacing-handle-math'
 
 // Visual constants
 const HANDLE_VISUAL_SIZE = 2 // Visible line: 2px (1px is too thin to see)
@@ -743,18 +748,8 @@ export class MarginManager {
 
     const { handle, mode, startX, startY, startMargin, element } = this.activeDrag
 
-    // For margin, dragging outward increases margin
-    let delta: number
-    if (handle === 'top') {
-      delta = startY - e.clientY // Dragging up increases top margin
-    } else if (handle === 'bottom') {
-      delta = e.clientY - startY // Dragging down increases bottom margin
-    } else if (handle === 'left') {
-      delta = startX - e.clientX // Dragging left increases left margin
-    } else {
-      delta = e.clientX - startX // Dragging right increases right margin
-    }
-
+    // For margin, dragging outward (away from element) increases margin.
+    const delta = calculateSpacingDelta(handle, 'outward', startX, startY, e.clientX, e.clientY)
     let newMargin = Math.max(0, startMargin + delta)
 
     // Token snapping (unless Cmd/Ctrl held to bypass)
@@ -783,28 +778,11 @@ export class MarginManager {
     this.activeDrag.currentMargin = newMargin
     this.activeDrag.lastSnapResult = snapResult
 
-    // Live visual feedback
-    if (mode === 'all') {
-      element.style.marginTop = `${newMargin}px`
-      element.style.marginRight = `${newMargin}px`
-      element.style.marginBottom = `${newMargin}px`
-      element.style.marginLeft = `${newMargin}px`
-    } else if (mode === 'axis') {
-      if (handle === 'top' || handle === 'bottom') {
-        element.style.marginTop = `${newMargin}px`
-        element.style.marginBottom = `${newMargin}px`
-      } else {
-        element.style.marginLeft = `${newMargin}px`
-        element.style.marginRight = `${newMargin}px`
-      }
-    } else {
-      // Map MarginHandle → CSSStyleDeclaration camelCase key.
-      const marginProp = `margin${handle.charAt(0).toUpperCase() + handle.slice(1)}` as
-        | 'marginTop'
-        | 'marginRight'
-        | 'marginBottom'
-        | 'marginLeft'
-      element.style[marginProp] = `${newMargin}px`
+    // Live visual feedback — apply margin based on mode (Shift=all,
+    // Alt=axis, plain=single). Property list comes from the shared
+    // spacing-handle math helper.
+    for (const cssProp of spacingPropertiesForMode('margin', mode, handle)) {
+      element.style.setProperty(cssProp, `${newMargin}px`)
     }
 
     // Update handle positions in-place (no remove/recreate to prevent flicker)
@@ -813,14 +791,7 @@ export class MarginManager {
     // Show size indicator
     const rect = element.getBoundingClientRect()
     const containerRect = this.container.getBoundingClientRect()
-    let label: string
-    if (mode === 'all') {
-      label = 'mar'
-    } else if (mode === 'axis') {
-      label = handle === 'top' || handle === 'bottom' ? 'mar-y' : 'mar-x'
-    } else {
-      label = `mar-${handle[0]}`
-    }
+    const label = spacingDragLabel('mar', mode, handle)
 
     // Show token name in indicator if snapped
     const valueDisplay = snapResult?.tokenName || `${newMargin}px`

@@ -18,6 +18,11 @@ import { getSpacingSnapService, shouldBypassSnapping, type SpacingSnapResult } f
 import { SnapIndicator, createSnapIndicator } from './snap-indicator'
 import { RafMouseThrottle } from './raf-mouse-throttle'
 import { ObserverPack } from './observer-pack'
+import {
+  calculateSpacingDelta,
+  spacingDragLabel,
+  spacingPropertiesForMode,
+} from './spacing-handle-math'
 
 // Visual constants
 const HANDLE_VISUAL_SIZE = 1 // Visible line: 1px
@@ -770,18 +775,10 @@ export class PaddingManager {
   private processMouseMove(e: MouseEvent): void {
     if (!this.activeDrag) return
 
-    const { handle, mode, startX, startY, startPadding, startPaddings, element } = this.activeDrag
+    const { handle, mode, startX, startY, startPadding, element } = this.activeDrag
 
-    let delta: number
-    if (handle === 'top') {
-      delta = e.clientY - startY
-    } else if (handle === 'bottom') {
-      delta = startY - e.clientY
-    } else if (handle === 'left') {
-      delta = e.clientX - startX
-    } else {
-      delta = startX - e.clientX
-    }
+    // Padding grows when dragged inward (toward the centre).
+    const delta = calculateSpacingDelta(handle, 'inward', startX, startY, e.clientX, e.clientY)
 
     // Calculate new padding (clamp to minimum of 0)
     let newPadding = Math.max(0, startPadding + delta)
@@ -812,33 +809,11 @@ export class PaddingManager {
     this.activeDrag.currentPadding = newPadding
     this.activeDrag.lastSnapResult = snapResult
 
-    // Live visual feedback - apply padding based on mode
-    if (mode === 'all') {
-      // Shift: Apply to all sides
-      element.style.paddingTop = `${newPadding}px`
-      element.style.paddingRight = `${newPadding}px`
-      element.style.paddingBottom = `${newPadding}px`
-      element.style.paddingLeft = `${newPadding}px`
-    } else if (mode === 'axis') {
-      // Alt/Option: Apply to axis (horizontal or vertical)
-      if (handle === 'top' || handle === 'bottom') {
-        // Vertical axis
-        element.style.paddingTop = `${newPadding}px`
-        element.style.paddingBottom = `${newPadding}px`
-      } else {
-        // Horizontal axis
-        element.style.paddingLeft = `${newPadding}px`
-        element.style.paddingRight = `${newPadding}px`
-      }
-    } else {
-      // Single: Apply only to the dragged side. Map PaddingHandle → the
-      // matching CSSStyleDeclaration camelCase key.
-      const paddingProp = `padding${handle.charAt(0).toUpperCase() + handle.slice(1)}` as
-        | 'paddingTop'
-        | 'paddingRight'
-        | 'paddingBottom'
-        | 'paddingLeft'
-      element.style[paddingProp] = `${newPadding}px`
+    // Live visual feedback — apply padding based on mode (Shift=all,
+    // Alt=axis, plain=single). Property list comes from the shared
+    // spacing-handle math helper.
+    for (const cssProp of spacingPropertiesForMode('padding', mode, handle)) {
+      element.style.setProperty(cssProp, `${newPadding}px`)
     }
 
     // Update handle positions in-place (no remove/recreate to prevent flicker)
@@ -847,14 +822,7 @@ export class PaddingManager {
     // Show size indicator with mode info
     const rect = element.getBoundingClientRect()
     const containerRect = this.container.getBoundingClientRect()
-    let label: string
-    if (mode === 'all') {
-      label = 'pad'
-    } else if (mode === 'axis') {
-      label = handle === 'top' || handle === 'bottom' ? 'pad-y' : 'pad-x'
-    } else {
-      label = `pad-${handle[0]}`
-    }
+    const label = spacingDragLabel('pad', mode, handle)
 
     // Show token name in indicator if snapped
     const valueDisplay = snapResult?.tokenName || `${newPadding}px`
