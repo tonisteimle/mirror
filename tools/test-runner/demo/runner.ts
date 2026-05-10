@@ -1137,14 +1137,45 @@ export class DemoRunner {
     // bootstrap (see studio/test-api/demo-fx). We pass timings explicitly
     // so the bundled API uses the demo-runner's CLI-derived values
     // (`--pacing × --typing-speed × …`).
-    const hasBundledDemoApi = await this.evaluate<boolean>(
+    let hasBundledDemoApi = await this.evaluate<boolean>(
       `typeof window.__mirrorDemo !== 'undefined' && typeof window.__mirrorDemo.init === 'function'`
     )
     if (!hasBundledDemoApi) {
-      throw new Error(
-        'window.__mirrorDemo missing — the studio bundle is older than the demo-runner. ' +
-          'Run `npm run build:studio` and retry.'
-      )
+      // Stale bundle → rebuild + reload once before giving up. Saves
+      // the script-author the round-trip of running `npm run build:studio`
+      // and re-launching after lint-staged reformat or iterative edits.
+      console.log('   ℹ️  Bundle stale — rebuilding studio…')
+      const { spawnSync } = await import('node:child_process')
+      const result = spawnSync('npm', ['run', 'build:studio'], {
+        stdio: ['ignore', 'pipe', 'pipe'],
+        encoding: 'utf8',
+      })
+      if (result.status !== 0) {
+        throw new Error(
+          '__mirrorDemo missing and `npm run build:studio` failed: ' +
+            (result.stderr || result.stdout || 'unknown error')
+        )
+      }
+      console.log('   ✓ Studio rebuilt — reloading page')
+      await this.evaluate('window.location.reload()')
+      // Wait for the bundle to re-bootstrap.
+      for (let i = 0; i < 100; i++) {
+        await new Promise(r => setTimeout(r, 100))
+        try {
+          hasBundledDemoApi = await this.evaluate<boolean>(
+            `typeof window.__mirrorDemo !== 'undefined' && typeof window.__mirrorDemo.init === 'function'`
+          )
+          if (hasBundledDemoApi) break
+        } catch {
+          // page still reloading
+        }
+      }
+      if (!hasBundledDemoApi) {
+        throw new Error(
+          '__mirrorDemo still missing after rebuild — studio server may not be running. ' +
+            'Run `npm run studio` in another terminal.'
+        )
+      }
     }
     const initConfig = { ...config, timings: effectiveTimings }
     await this.evaluate(`window.__mirrorDemo.init(${JSON.stringify(initConfig)})`)
