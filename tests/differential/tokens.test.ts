@@ -71,6 +71,21 @@ describe('Tokens — Token-Name appears in DOM output', () => {
     // But its constituent values do appear (rgb form for #1a1a1a)
     expect(dom).toMatch(/1a1a1a|26, 26, 26/)
   })
+
+  it('React skips property-set tokens from the `tokens` object', () => {
+    // Pre-2026-05-10 the React backend emitted `'cardstyle': undefined`
+    // (and same for every property-set) because it iterated over
+    // `program.tokens` without checking for the property-set shape. The
+    // set still expands inline at use sites — what we don't want is the
+    // bare `undefined` entry in the runtime tokens object.
+    const react = generateReact(
+      parse(`cardstyle: bg #1a1a1a, pad 16, rad 8\n\nFrame $cardstyle\n  Text "Hi"`)
+    )
+    expect(react).not.toContain("'cardstyle': undefined")
+    // Properties still expand inline at the use site.
+    expect(react).toContain('#1a1a1a')
+    expect(react).toContain("padding: '16px'")
+  })
 })
 
 // =============================================================================

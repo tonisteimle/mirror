@@ -52,11 +52,21 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
   lines.push(`import React from 'react'`)
   lines.push(``)
 
-  // Generate CSS variables from tokens
-  if (includeTokens && program.tokens && program.tokens.length > 0) {
+  // Generate CSS variables from tokens. Skip property-sets — they have
+  // `.properties` set instead of `.value`, get expanded inline at every
+  // use site, and don't need to live in the `tokens` object. Pre-fix
+  // they emitted as `'cardstyle': undefined`, which is noise.
+  const valueTokens = (program.tokens ?? []).filter(
+    t =>
+      // Keep value tokens (`name: "Max"`, `primary.bg: #2271C1`)
+      t.value !== undefined ||
+      // Keep data tokens (nested `attributes`)
+      (t.attributes && t.attributes.length > 0)
+  )
+  if (includeTokens && valueTokens.length > 0) {
     lines.push(`// Design Tokens`)
     lines.push(`const tokens = {`)
-    for (const token of program.tokens) {
+    for (const token of valueTokens) {
       // Data tokens (`tasks:` block with nested entries) carry `attributes`
       // instead of a flat `value` — emit as a JS object so `each task in
       // $tasks` can iterate `Object.values(tokens.tasks)` at render time.
