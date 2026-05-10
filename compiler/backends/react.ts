@@ -14,6 +14,9 @@ import type {
   ComponentDefinition,
   Property,
   TokenDefinition,
+  Each,
+  LoopVarReference,
+  DataAttribute,
 } from '../parser/ast'
 import { expandPropertySets } from '../ir/transformers/property-set-expander'
 import { isLayoutPrimitive } from '../schema/dsl'
@@ -49,6 +52,15 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
     lines.push(`// Design Tokens`)
     lines.push(`const tokens = {`)
     for (const token of program.tokens) {
+      // Data tokens (`tasks:` block with nested entries) carry `attributes`
+      // instead of a flat `value` — emit as a JS object so `each task in
+      // $tasks` can iterate `Object.values(tokens.tasks)` at render time.
+      if (token.attributes && token.attributes.length > 0) {
+        lines.push(
+          `  ${JSON.stringify(token.name)}: ${dataAttributesToJSObject(token.attributes)},`
+        )
+        continue
+      }
       const value = typeof token.value === 'string' ? `'${token.value}'` : token.value
       lines.push(`  '${token.name}': ${value},`)
     }
@@ -411,7 +423,7 @@ function generateJSX(
   const skipTextContent = isLayoutPrimitive(instance.component)
   const textContent = skipTextContent ? null : getTextContent(instance, allProps)
 
-  // Has children?
+  // Has children? Includes Each blocks — they render as `.map()` output.
   const hasChildren = instance.children.length > 0 || textContent
 
   if (!hasChildren) {
@@ -423,8 +435,7 @@ function generateJSX(
 
   // Add text content
   if (textContent) {
-    // Use curly braces for JSX text to avoid escaping issues
-    lines.push(`${indent}  {${JSON.stringify(textContent)}}`)
+    lines.push(renderTextSlot(textContent, indent + '  '))
   }
 
   // Add children. Slice 6 V-2: pass own layout-context so grid-children
@@ -436,11 +447,88 @@ function generateJSX(
       )
     } else if (child.type === 'Text') {
       lines.push(`${indent}  {${JSON.stringify(child.content)}}`)
+    } else if (child.type === 'Each') {
+      lines.push(
+        generateEachJSX(
+          child as Each,
+          components,
+          tokens,
+          propertySetMap,
+          indent + '  ',
+          ownLayoutContext
+        )
+      )
     }
   }
 
   lines.push(`${indent}</${tag}>`)
 
+  return lines.join('\n')
+}
+
+/**
+ * Render an `each task in $tasks` block as a JSX `.map()` expression.
+ *
+ * Coerces the collection the same way the DOM runtime does — accepts
+ * arrays directly, Object.values for object-keyed collections — so a
+ * data block like `tasks:\n  t1:\n    title: "A"` works without the
+ * caller having to flatten it first.
+ *
+ * Loop-variable resolution: child instances may reference `task.title`
+ * via LoopVarReference values. Those are emitted as JSX expressions
+ * (`{task.title}`) by `renderTextSlot`; nothing extra is needed here
+ * beyond rendering the children inside the map callback.
+ *
+ * Limitations (not yet wired):
+ *  - No filter / orderBy / index handling
+ *  - LoopVarReference in style/property values still drops to undefined
+ *
+ * Tests pin both the working and the unfinished surfaces.
+ */
+function generateEachJSX(
+  each: Each,
+  components: Map<string, ComponentDefinition>,
+  tokens: TokenDefinition[],
+  propertySetMap: Map<string, Property[]>,
+  indent: string,
+  parentContext: ParentLayoutContext = { type: null }
+): string {
+  // `each.collection` carries the leading `$` from the source (`$tasks`);
+  // tokens are keyed without it so strip before the lookup.
+  const collection = each.collection.startsWith('$') ? each.collection.slice(1) : each.collection
+  const item = each.item // 'task'
+
+  const childLines: string[] = []
+  for (const child of each.children) {
+    if (child.type === 'Instance') {
+      childLines.push(
+        generateJSX(child, components, tokens, propertySetMap, indent + '    ', parentContext)
+      )
+    } else if (child.type === 'Each') {
+      childLines.push(
+        generateEachJSX(
+          child as Each,
+          components,
+          tokens,
+          propertySetMap,
+          indent + '    ',
+          parentContext
+        )
+      )
+    }
+  }
+
+  // Coerce object-keyed collections to arrays so .map() works regardless
+  // of how the data was authored. Mirrors the DOM backend's runtime
+  // coercion (compiler/backends/dom/ops/emit-loops.ts).
+  const coerced = `Array.isArray(tokens[${JSON.stringify(collection)}]) ? tokens[${JSON.stringify(collection)}] : Object.values(tokens[${JSON.stringify(collection)}] || {})`
+
+  const lines: string[] = []
+  lines.push(`${indent}{(${coerced}).map((${item}, _idx) => (`)
+  lines.push(`${indent}  <React.Fragment key={_idx}>`)
+  for (const line of childLines) lines.push(line)
+  lines.push(`${indent}  </React.Fragment>`)
+  lines.push(`${indent}))}`)
   return lines.join('\n')
 }
 
@@ -674,17 +762,57 @@ function generateHtmlAttributes(properties: Property[]): string {
   return attrs.length > 0 ? ' ' + attrs.join(' ') : ''
 }
 
-function getTextContent(instance: Instance, properties: Property[]): string | null {
+function getTextContent(
+  instance: Instance,
+  properties: Property[]
+): string | LoopVarReference | null {
   // Check for content property
   for (const prop of properties) {
-    if (prop.name === 'content' && prop.values.length > 0 && typeof prop.values[0] === 'string')
-      return prop.values[0]
+    if (prop.name === 'content' && prop.values.length > 0) {
+      const v = prop.values[0]
+      if (typeof v === 'string') return v
+      // `each task in $tasks` puts `task.title` into a positional content
+      // value as a LoopVarReference. JSX needs `{task.title}`, not the
+      // literal string — return the ref so the caller emits the
+      // expression form.
+      if (typeof v === 'object' && v !== null && 'kind' in v && v.kind === 'loopVar') {
+        return v as LoopVarReference
+      }
+    }
   }
   // Check for text child
   for (const child of instance.children) {
     if (child.type === 'Text') return child.content
   }
   return null
+}
+
+/**
+ * Convert a parsed data block (`tasks:\n  t1:\n    title: "A"`) to a JS
+ * object literal string. Used by the React tokens emit so `each task in
+ * $tasks` can iterate `Object.values(tokens.tasks)` at render time.
+ */
+function dataAttributesToJSObject(attrs: DataAttribute[]): string {
+  if (attrs.length === 0) return '{}'
+  const entries = attrs.map(attr => {
+    const key = JSON.stringify(attr.key)
+    if (attr.children && attr.children.length > 0) {
+      return `${key}: ${dataAttributesToJSObject(attr.children)}`
+    }
+    return `${key}: ${JSON.stringify(attr.value ?? null)}`
+  })
+  return `{ ${entries.join(', ')} }`
+}
+
+/**
+ * Render the textContent slot, handling both literal strings and
+ * loop-variable references that surface inside `each` blocks.
+ */
+function renderTextSlot(content: string | LoopVarReference, indent: string): string {
+  if (typeof content === 'string') {
+    return `${indent}{${JSON.stringify(content)}}`
+  }
+  return `${indent}{${content.name}}`
 }
 
 function generateStyles(

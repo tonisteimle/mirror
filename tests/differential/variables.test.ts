@@ -69,20 +69,37 @@ describe('Variables — Variable values appear in all 3 backend outputs', () => 
   })
 })
 
-describe('Variables — Nested-object access: DOM-only', () => {
-  // Pin: only DOM backend inlines nested-object values like `user.name`.
-  // React + Framework currently emit only the structural shell without the data.
+describe('Variables — Nested-object access', () => {
+  // PIN: nested-object data is reachable in DOM + React (DOM via
+  // `__mirrorData`, React via the `tokens` object literal). Framework
+  // still emits `'user': undefined` — closing that needs data emission
+  // in the framework backend.
   it.each(NESTED_CORPUS)(
-    '$name: DOM includes the value; React + Framework drop it',
+    '$name: nested-object data lands in DOM + React; Framework drops it',
     ({ src, expectIn }) => {
       const dom = generateDOM(parse(src))
       const react = generateReact(parse(src))
       const fw = generateFramework(parse(src))
       for (const value of expectIn) {
         expect(dom).toContain(value)
-        expect(react).not.toContain(value)
+        expect(react).toContain(value)
         expect(fw).not.toContain(value)
       }
+    }
+  )
+
+  // PIN: `$user.name` interpolation INSIDE Text content is wired in DOM
+  // (`$get("user.name")` runtime call) but stays a literal string in
+  // React + Framework. Separate from data accessibility above.
+  it.each(NESTED_CORPUS)(
+    '$name: Text-content interpolation: DOM resolves; React + Framework keep literal',
+    ({ src }) => {
+      const dom = generateDOM(parse(src))
+      const react = generateReact(parse(src))
+      const fw = generateFramework(parse(src))
+      expect(dom).toMatch(/\$get\(['"]user\.name['"]\)/)
+      expect(react).toContain('"$user.name"')
+      expect(fw).toContain("'$user.name'")
     }
   )
 })

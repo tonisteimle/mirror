@@ -48,12 +48,12 @@ describe('Tables — Backend support', () => {
     expect(code).toMatch(/forEach|for\s*\(/)
   })
 
-  // PIN current behavior: each-driven rows render in DOM (forEach) and
-  // Framework (`M.each(...)` wrapper). React silently drops the `each`
-  // block entirely — the static TableHeader still appears, but the
-  // dynamic TableRow generation is gone. Flipping the React expectation
-  // means React gained each-loop support; the others are stable.
-  it('each-driven TableRow: rendered in DOM + Framework, dropped by React', () => {
+  // each-driven rows now render in all three backends:
+  //   - DOM: forEach loop in compiled JS
+  //   - Framework: `M.each(...)` wrapper
+  //   - React: `.map()` over tokens.<collection>, with object-keyed
+  //     collections coerced via Object.values
+  it('each-driven TableRow: rendered in DOM, Framework, and React', () => {
     const dom = generateDOM(parse(TABLE_EACH))
     const react = generateReact(parse(TABLE_EACH))
     const fw = generateFramework(parse(TABLE_EACH))
@@ -61,7 +61,10 @@ describe('Tables — Backend support', () => {
     expect(dom).toContain('TableRow')
     expect(fw).toContain('TableRow')
     expect(fw).toMatch(/M\.each\(/)
-    expect(react).not.toContain('TableRow')
+    expect(react).toContain('TableRow')
+    expect(react).toMatch(/\.map\(/)
+    // Loop-var reference in text content lands as JSX expression.
+    expect(react).toContain('{task.title}')
   })
 })
 
