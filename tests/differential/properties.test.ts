@@ -212,6 +212,26 @@ describe('Properties — DOM emits expected style values', () => {
     expect(fw).toContain("'bor-r': 2")
   })
 
+  it.each([
+    // [direction, value, expected style fragments]
+    ['hor', 'top', /alignItems:\s*'flex-start'/],
+    ['hor', 'bottom', /alignItems:\s*'flex-end'/],
+    ['hor', 'center', /alignItems:\s*'center'.*justifyContent:\s*'center'/s],
+    ['hor', 'left', /justifyContent:\s*'flex-start'/],
+    ['hor', 'right', /justifyContent:\s*'flex-end'/],
+    ['ver', 'top', /justifyContent:\s*'flex-start'/],
+    ['ver', 'bottom', /justifyContent:\s*'flex-end'/],
+    ['ver', 'right', /alignItems:\s*'flex-end'/],
+  ])('React: direction-aware `align <value>` (%s, %s)', (dir, val, expected) => {
+    // PIN: pre-2026-05-10 React dropped `align top|bottom|center|left|right`
+    // entirely — the cross-axis defaulted to `flex-start`. DOM mapped
+    // these correctly through its IR layout-transformer. React now
+    // re-derives the same flex semantics.
+    const src = `Frame ${dir}, align ${val}\n  Frame w 50, h 50\n  Frame w 50, h 100`
+    const react = generateReact(parse(src))
+    expect(react).toMatch(expected as RegExp)
+  })
+
   it('React: `ver-baseline` emits alignItems baseline', () => {
     // PIN: pre-2026-05-10 the keyword fell through and React's default
     // `align-items: flex-start` clobbered the cross-axis baseline.

@@ -2374,6 +2374,36 @@ function generateStyles(
       if (applyFlagProperty(prop.name, style)) continue
     }
 
+    // `align <value>` direction-aware alignment. The IR resolves these
+    // through the layout-transformer; the React backend bypasses IR so
+    // we re-derive the same flex mapping here. Pre-2026-05-10 React
+    // dropped every `align top|bottom|left|right|center` keyword
+    // silently — the rendered cross-axis defaulted to `flex-start`.
+    if (prop.name === 'align') {
+      style.display = 'flex'
+      for (const v of prop.values) {
+        const val = String(v).toLowerCase()
+        if (layoutDirection === 'row') {
+          if (val === 'top') style.alignItems = 'flex-start'
+          else if (val === 'bottom') style.alignItems = 'flex-end'
+          else if (val === 'center') {
+            style.alignItems = 'center'
+            style.justifyContent = 'center'
+          } else if (val === 'left') style.justifyContent = 'flex-start'
+          else if (val === 'right') style.justifyContent = 'flex-end'
+        } else {
+          if (val === 'top') style.justifyContent = 'flex-start'
+          else if (val === 'bottom') style.justifyContent = 'flex-end'
+          else if (val === 'center') {
+            style.alignItems = 'center'
+            style.justifyContent = 'center'
+          } else if (val === 'left') style.alignItems = 'flex-start'
+          else if (val === 'right') style.alignItems = 'flex-end'
+        }
+      }
+      continue
+    }
+
     switch (prop.name) {
       // Layout (with values - less common)
       case 'hor':
