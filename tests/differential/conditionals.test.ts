@@ -135,6 +135,18 @@ describe('Conditionals — Inline-ternary in style: literal hex resolves', () =>
     expect(react).not.toContain('[object Object]')
     expect(react).not.toContain('backgroundColor')
   })
+
+  it('React: icon-color ternary emits a JSX expression, not [object Object]', () => {
+    // PIN: pre-2026-05-10 `Icon "check", ic done ? green : gray` fell
+    // through `formatIconPropValue`'s `JSON.stringify(String(v))` path
+    // and produced `color="[object Object]"`. The MirrorIcon component
+    // then crashed at render time because it spreads `color` onto SVG
+    // attributes. The Conditional value now emits a real JSX expression
+    // with token names rewritten to `tokens["..."]`.
+    const react = generateReact(parse(`done: true\n\nIcon "check", ic done ? green : gray`))
+    expect(react).not.toContain('[object Object]')
+    expect(react).toMatch(/color=\{tokens\["done"\]\s*\?\s*"green"\s*:\s*"gray"\}/)
+  })
 })
 
 // =============================================================================

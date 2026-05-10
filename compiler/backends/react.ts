@@ -630,7 +630,7 @@ function generateJSX(
   // `<MirrorIcon name="..." size={...} color={...} strokeWidth={...} fill />`
   // — die MirrorIcon-Komponente (oben definiert) holt das SVG zur Runtime.
   if (instance.component === 'Icon') {
-    return generateIconJSX(instance, indent)
+    return generateIconJSX(instance, indent, tokens)
   }
 
   // Chart primitives (`Line`, `Bar`, `Pie`, `Donut`, `Area`, …) emit as
@@ -1101,7 +1101,11 @@ function generateConditionalJSX(
  * `var(--…)` strings the resolver emits, which JSX accepts as inline
  * style values.
  */
-function generateIconJSX(instance: Instance, indent: string): string {
+function generateIconJSX(
+  instance: Instance,
+  indent: string,
+  tokens: TokenDefinition[] = []
+): string {
   const iconName = getIconName(instance)
   const propAttrs: string[] = [`name=${JSON.stringify(iconName)}`]
   let animValue: string | null = null
@@ -1109,11 +1113,11 @@ function generateIconJSX(instance: Instance, indent: string): string {
   for (const p of instance.properties) {
     const v = p.values[0]
     if (p.name === 'icon-size' || p.name === 'is') {
-      propAttrs.push(`size=${formatIconPropValue(v, 'is')}`)
+      propAttrs.push(`size=${formatIconPropValue(v, 'is', tokens)}`)
     } else if (p.name === 'icon-color' || p.name === 'ic') {
-      propAttrs.push(`color=${formatIconPropValue(v, 'ic')}`)
+      propAttrs.push(`color=${formatIconPropValue(v, 'ic', tokens)}`)
     } else if (p.name === 'icon-weight' || p.name === 'iw') {
-      propAttrs.push(`strokeWidth=${formatIconPropValue(v, 'iw')}`)
+      propAttrs.push(`strokeWidth=${formatIconPropValue(v, 'iw', tokens)}`)
     } else if (p.name === 'fill') {
       propAttrs.push(`fill`)
     } else if (p.name === 'anim' || p.name === 'animation') {
@@ -1224,7 +1228,11 @@ function getIconName(instance: Instance): string {
  * `--iconSize-is` — cross-backend variable-name mismatch, MirrorIcon
  * would silently fall back to default size.
  */
-function formatIconPropValue(v: unknown, propAlias: 'is' | 'ic' | 'iw'): string {
+function formatIconPropValue(
+  v: unknown,
+  propAlias: 'is' | 'ic' | 'iw',
+  tokens: TokenDefinition[] = []
+): string {
   if (v == null) return '{undefined}'
   if (typeof v === 'number') return `{${v}}`
   if (typeof v === 'boolean') return `{${v}}`
@@ -1232,6 +1240,23 @@ function formatIconPropValue(v: unknown, propAlias: 'is' | 'ic' | 'iw'): string 
     // Bare numeric strings → number JSX expression.
     if (/^-?\d+(\.\d+)?$/.test(v)) return `{${v}}`
     return JSON.stringify(v)
+  }
+  if (typeof v === 'object' && v !== null && 'kind' in v) {
+    // Inline ternary on an icon prop: `Icon "check", ic done ? green : gray`.
+    // Pre-2026-05-10 this fell through to `JSON.stringify(String(v))` which
+    // produced `color="[object Object]"` — the React render then crashed
+    // when the MirrorIcon spread that string onto the SVG. Emit a JSX
+    // expression carrying the rewritten condition (token names → tokens["..."]).
+    const cond = v as Conditional
+    if (cond.kind === 'conditional') {
+      const c = rewriteIdentifiersToTokens(cond.condition, tokens)
+      const fmt = (branch: unknown) => {
+        if (typeof branch === 'string') return JSON.stringify(branch)
+        if (typeof branch === 'number') return String(branch)
+        return JSON.stringify(String(branch))
+      }
+      return `{${c} ? ${fmt(cond.then)} : ${fmt(cond.else)}}`
+    }
   }
   if (typeof v === 'object' && v !== null && 'name' in v) {
     // Token reference — emit as `var(--<name>-<suffix>)` string matching
