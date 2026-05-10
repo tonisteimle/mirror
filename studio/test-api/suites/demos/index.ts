@@ -42,6 +42,8 @@ import { pickToken } from './pick-token.demo'
 import { pickIcon } from './pick-icon.demo'
 import { pickAnim } from './pick-anim.demo'
 import { pickAction } from './pick-action.demo'
+import { mfExplorer } from './mf-explorer.demo'
+import { mfTokensUpdate } from './mf-tokens-update.demo'
 
 export const demoTests: TestCase[] = [
   ...demoTextIntoFrame,
@@ -77,4 +79,6 @@ export const demoTests: TestCase[] = [
   ...pickIcon,
   ...pickAnim,
   ...pickAction,
+  ...mfExplorer,
+  ...mfTokensUpdate,
 ]
