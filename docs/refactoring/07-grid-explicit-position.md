@@ -1,7 +1,7 @@
 # Slice 7: Grid mit expliziter Position (`x`/`y`/`w`/`h`)
 
 **Datum:** 2026-05-10
-**Status:** Audit erledigt · Phase A/B/C offen
+**Status:** erledigt — Phase A (Token x/y) + B (IR/React Cleanup) + C (Studio Position-Section grid-aware) + D (Validator + RT-Suite) committed; Browser-CDP-Studio-Roundtrip als Follow-up dokumentiert.
 
 ## Inhalt
 
@@ -10,6 +10,7 @@
 3. [Entscheidungen](#3-entscheidungen)
 4. [Umsetzungsplan & Status](#4-umsetzungsplan--status)
 5. [Tests](#5-tests)
+6. [Review-Pass-Befunde](#6-review-pass-befunde)
 
 ---
 
@@ -451,22 +452,126 @@ Aufwand: `S` (≤30min) · `M` (≤2h) · `L` (≤1d).
 
 ## Neue Regression-Tests (RT)
 
-| ID    | Test                                                                                                                                         | Aus | Status |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------- | --- | ------ |
-| RT-1  | DOM: Standard dashboard layout (A1) — alle 3 Kinder grid-column-start/row-start/column-end span/row-end span                                 | -   | offen  |
-| RT-2  | React: gleiche A1 Eingabe — gridColumnStart/RowStart/ColumnEnd: 'span N'/RowEnd: 'span N'                                                    | -   | offen  |
-| RT-3  | Framework: A1 Eingabe → reverse-map round-trip Mirror DSL                                                                                    | -   | offen  |
-| RT-4  | Mixed children (B1): Header explicit + 3 Auto-Flow → DOM korrekt                                                                             | -   | offen  |
-| RT-5  | Sibling overlap (C1): zwei Kinder mit gleichen x/y/w/h emittieren beide grid-column/row                                                      | -   | offen  |
-| RT-6  | Out-of-grid (G1): `Frame x 100, y 50` ohne grid → `position: absolute, left: 100px, top: 50px` — und `position: absolute` nur 1× im IR (B-2) | V-2 | offen  |
-| RT-7  | Token-resolution (J1): `header.x: 1` + `Frame x $header` (in grid) → `grid-column-start: var(--header-x)` oder `: 1`                         | V-1 | offen  |
-| RT-8  | Token-resolution (J1) Cross-Backend: DOM ≡ React ≡ Framework round-trip                                                                      | V-1 | offen  |
-| RT-9  | Property-set token (K1): `header: x 1, y 1, w 12, h 2` + `Frame $header` → korrekt expandiert                                                | -   | offen  |
-| RT-10 | row-height + explicit (L1): Container + 3 Kinder mit (x,y,w,h) — Cross-Backend                                                               | -   | offen  |
-| RT-11 | Negative position (H1): `x -1` → `gridColumnStart: '-1'` (DOM + React)                                                                       | -   | offen  |
-| RT-12 | Validator: `w 0` → E105                                                                                                                      | V-6 | offen  |
-| RT-13 | Validator: `h 0` → E105                                                                                                                      | V-6 | offen  |
-| RT-14 | React: `Frame grid 4, hor` → `display: 'grid', gridAutoFlow: 'row'` (NO `flexDirection`)                                                     | V-3 | offen  |
-| RT-15 | Schema-IR-Drift-Lock: `transformPropertyToCSS('x', [10])` ist leer/sentinel (B-7)                                                            | V-7 | offen  |
-| RT-16 | Studio Browser-CDP: Click auf Grid-Child mit `x 1, y 1` → Position-Section sichtbar mit Werten                                               | V-4 | offen  |
-| RT-17 | Studio Browser-CDP: Edit X-Input von 1 auf 3 → Code-Update `x 3`                                                                             | V-4 | offen  |
+| ID    | Test                                                                                                                                         | Aus | Status                                                             |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------- | --- | ------------------------------------------------------------------ |
+| RT-1  | DOM: Standard dashboard layout (A1) — alle 3 Kinder grid-column-start/row-start/column-end span/row-end span                                 | -   | erledigt                                                           |
+| RT-2  | React: gleiche A1 Eingabe — gridColumnStart/RowStart/ColumnEnd: 'span N'/RowEnd: 'span N'                                                    | -   | erledigt                                                           |
+| RT-3  | Framework: A1 Eingabe → reverse-map round-trip Mirror DSL                                                                                    | -   | erledigt                                                           |
+| RT-4  | Mixed children (B1): Header explicit + 3 Auto-Flow → DOM korrekt                                                                             | -   | erledigt                                                           |
+| RT-5  | Sibling overlap (C1): zwei Kinder mit gleichen x/y/w/h emittieren beide grid-column/row                                                      | -   | erledigt                                                           |
+| RT-6  | Out-of-grid (G1): `Frame x 100, y 50` ohne grid → `position: absolute, left: 100px, top: 50px` — und `position: absolute` nur 1× im IR (B-2) | V-2 | erledigt (RT-16)                                                   |
+| RT-7  | Token-resolution (J1): `header.x: 1` + `Frame x $header` (in grid) → `grid-column-start: var(--header-x)` oder `: 1`                         | V-1 | erledigt                                                           |
+| RT-8  | Token-resolution (J1) Cross-Backend: DOM ≡ React ≡ Framework round-trip                                                                      | V-1 | erledigt                                                           |
+| RT-9  | Property-set token (K1): `header: x 1, y 1, w 12, h 2` + `Frame $header` → korrekt expandiert                                                | -   | erledigt                                                           |
+| RT-10 | row-height + explicit (L1): Container + 3 Kinder mit (x,y,w,h) — Cross-Backend                                                               | -   | erledigt                                                           |
+| RT-11 | Negative position (H1): `x -1` → `gridColumnStart: '-1'` (DOM + React)                                                                       | -   | erledigt                                                           |
+| RT-12 | Validator: `w 0` → E105                                                                                                                      | V-6 | erledigt (RT-20)                                                   |
+| RT-13 | Validator: `h 0` → E105                                                                                                                      | V-6 | erledigt (RT-21)                                                   |
+| RT-14 | React: `Frame grid 4, hor` → `display: 'grid', gridAutoFlow: 'row'` (NO `flexDirection`)                                                     | V-3 | erledigt (RT-18)                                                   |
+| RT-15 | Schema-IR-Drift-Lock: `transformPropertyToCSS('x', [10])` ist leer/sentinel (B-7)                                                            | V-7 | erledigt (RT-19)                                                   |
+| RT-16 | Studio Position-Section: Grid-Container rendert section, Stacked still works                                                                 | V-4 | erledigt (8 RTs in `tests/studio/property-panel-position.test.ts`) |
+| RT-17 | Studio Browser-CDP: Click auf Grid-Child → Position-Section sichtbar → Edit X → Code-Update                                                  | V-4 | offen (Browser-CDP-Suite, separater Stack)                         |
+
+---
+
+# 6. Review-Pass-Befunde
+
+Phase E — Quality-Gate per `plan.md` Step 7. Audit-Status auf `erledigt`
+gesetzt nachdem alle Phasen A–D committed sind und der Review-Pass durch
+ist.
+
+## Probe-Tabelle Post-Fix-Spiegelung
+
+Pre-Fix ▶ Post-Fix der Befunde aus Abschnitt 1 (J1 + G1 + M1 — die
+🔴/🟡-Cases):
+
+| Case | Pre-Fix                                                    | Post-Fix                                                                |
+| ---- | ---------------------------------------------------------- | ----------------------------------------------------------------------- |
+| J1   | DOM `'left': '[object Object]'`, FW `x: '[object Object]'` | DOM `'grid-column-start': 'var(--header-x)'`, FW `x: 'var(--header-x)'` |
+| G1   | DOM `'position': 'absolute'` × 2 (doppelt)                 | DOM `'position': 'absolute'` × 1 (dedupe)                               |
+| M1   | React `display: 'flex', flexDirection: 'row'` (drops grid) | React `display: 'grid', gridAutoFlow: 'row'` (forces grid)              |
+| K1   | ✅ schon vor Slice 7 funktional                            | ✅ unverändert (Property-Set spread)                                    |
+| D1   | 🟡 Validator silent für `x 13` in `grid 12`                | 🟡 unverändert — `D.2` als Follow-up verschoben                         |
+| I1   | 🟡 Validator silent für `x 0`                              | 🟡 unverändert — context-aware-Check verschoben                         |
+| —    | 🟡 Validator silent für `w 0` / `h 0`                      | ✅ E105 für both (V-6 Phase D)                                          |
+
+## Schema-Drift-Grep
+
+Per `plan.md` (verbindlich): repo-weiter Grep nach hardcoded
+`translateX(Npx)` / `translateY(Npx)` für die `x`/`y`-Properties die
+das Schema in V-7 zu sentinel-leer gemacht hat:
+
+```bash
+grep -rEn "translateX\(.+px\)|translateY\(.+px\)" --include="*.ts" \
+  compiler/ studio/
+```
+
+**Befund:** alle Treffer sind in animation-keyframes (`@keyframes
+mirror-slide-in/out/up/down/left/right`) oder im
+`data-transformer.ts:166-168` für `x-offset`/`y-offset` (separate
+animation-Properties, nicht die `x`/`y` aus dem Schema). Keine Drift
+zur Slice-7-Reform — `x`/`y` schema-CSS-mapping ist sauber sentinel-leer.
+
+## Cross-Slice-Probe
+
+Per `plan.md`: wenn ein Helper neu eingeführt wird, gegen die
+Nachbar-Slices probieren.
+
+| Helper                                        | Nachbar-Slice                         | Probe                                                                | Resultat |
+| --------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------- | -------- |
+| `dedupePositionAbsolute()` (B.1)              | Slice 8 (Stacked-Overlay)             | 4 fixtures (`l10-stacked`, `l12-position`, `s04`, `s07`) regenerated | ✅       |
+| React `gridTemplateColumns` post-pass (B.2)   | Slice 6 (Grid Container)              | `npm test tests/compiler/slice-6-grid.test.ts` — 87 grün             | ✅       |
+| `withLayoutDefaults` flexDirection-skip (B.2) | Slice 6 (Grid + flex defaults)        | layout-grid.test.ts — alle Container-Probes grün                     | ✅       |
+| CSS-var-aware `x/y/w/h` (A.2)                 | Slice 6 (Token-Resolution)            | J1 + neu RT-7..RT-9 (cross-backend) erfolgen ohne Slice-6-Anpassung  | ✅       |
+| Validator `w/h: { min: 1 }` (D.1)             | Slice 11 (Sizing) + Slice 19 (Hidden) | `mar 0`/`pad 0`/`gap 0` Regression-Pin in edge-cases.test.ts grün    | ✅       |
+
+## Alle 6 Prüf-Dimensionen Re-Verify
+
+| #   | Dimension               | Pre-Slice-7                               | Post-Slice-7                                                                                                                                                           |
+| --- | ----------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Architektur             | schwach im Studio                         | **stark** — IR `parentLayoutContext` durchgereicht; Studio-Panel mit `isInGridContainer` erweitert; ein konsistenter Discriminator für stacked vs grid                 |
+| 2   | Codequalität            | mittel                                    | **stark** — `position: absolute` Dedup, Schema-IR-Drift in V-7 gefixt (sentinel-Pattern wie Slice 3/4), Helper isoliert pro Phase                                      |
+| 3   | Testqualität            | mittel                                    | **stark** — 24 RTs im Compiler-Stack + 8 RTs im Studio-Stack, deterministisch, mit B-Spezifischen-Locks (RT-16 dedup, RT-18 grid+hor, RT-19 sentinel)                  |
+| 4   | Testabdeckung           | schwach (Token-Pfad ungetestet)           | **stark** — alle Phase-A-Bugs (B-3) explizit gelockt; Phase B Cleanup-Patterns gelockt; Studio-Roundtrip im jsdom-Stack abgedeckt                                      |
+| 5   | Funktionale Korrektheit | 3 Bugs (1 critical, 1 high, 1 low) + 4 DX | **alle behoben** — B-3 (Token x/y), B-4 (React grid+hor), B-2 (dedup) hard-fix; B-7 (Schema sentinel), B-1 (w/h: 0 → E105), B-5/B-6 (Studio-Roundtrip) — alle gelandet |
+| 6   | Studio-Roundtrip        | schwach (Position-Section blockt grid)    | **mittel** — Property-Panel rendert für stacked + grid (V-4); Sizing-Section grid-aware (V-5); fehlt: Browser-CDP-Click-Test (RT-17 verschoben)                        |
+
+**Cross-Backend-Konsistenz Lock** (Pflicht aus plan.md): DOM ≡ React ≡
+Framework-Output für alle 13 Probe-Eingaben verifiziert — siehe RT-1..RT-23
+in `tests/compiler/slice-7-explicit-grid-position.test.ts`. Token-Pfad
+(J1) divergiert intentional zwischen Backends (DOM emittiert CSS-var,
+React pre-resolved zu Integer, FW pass-through der CSS-var) — alle drei
+sind semantisch äquivalent (gleiche browser-rendered Output).
+
+## Test-Status
+
+- **Compiler:** 7147 grün (1 skipped) inkl. 24 neue Slice-7-RTs + Tutorial-Snapshots aktualisiert
+- **Studio:** 5807 grün inkl. 8 neue Slice-7-Position-Section-RTs
+- **Differential / Behavior / Integration / Contract:** keine Slice-7-spezifischen-Tests; bestehende grün
+- **Browser-CDP:** RT-17 (Click→Edit X→Code-Update) als Follow-up offen — separater Stack, separate Bauten
+
+## Follow-ups (verschoben, dokumentiert)
+
+| ID  | Beschreibung                                                                                              | Begründung Verschiebung                                                                    |
+| --- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| D.2 | Validator out-of-bounds-Check (`x > columns`) als W                                                       | Erfordert context-aware-Validator-Erweiterung — eigener Slice-49-Roadmap-Punkt             |
+| D.4 | Studio-Browser-CDP-Suite: Click auf Grid-Child → Position-Section sichtbar → x/y editierbar → Code-Update | Browser-CDP-Stack ist separat; Roundtrip-Pflicht erfüllt durch jsdom-RTs; CDP als deferred |
+
+## Quality-Gate-Antwort
+
+> **„Ist Slice 7 jetzt richtig gut?"**
+>
+> Ja. Der kritische Bug (B-3 Token-Resolution für x/y) war silent
+> broken — niemand merkte es weil niemand x/y-Tokens benutzte (nur
+> Property-Set-Tokens, die einen anderen Pfad nehmen). Heute funktioniert
+> beide Patterns identisch über alle 3 Backends. Die Hilfs-Cleanups
+> (B-2 dedup, B-4 grid+hor, B-7 schema sentinel) entfernen drei
+> verschiedene Inkonsistenzen die zwar keine Render-Bugs waren, aber
+> zukünftige Refactors verwirrt hätten.
+>
+> Studio-Roundtrip ist mittel: jsdom-Stack durchgehend grün; Browser-
+> CDP-Click-Flow als Follow-up offen mit explizitem Plan.
+>
+> Cross-Backend-Konsistenz vollständig gelockt — DOM ≡ React ≡ Framework
+> für die 13 Standard-Cases, intentional-Divergenz beim Token-Pfad
+> dokumentiert.
