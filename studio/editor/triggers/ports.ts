@@ -27,7 +27,9 @@ import type {
 // Types
 // ============================================
 
-export type CleanupFn = () => void
+// Re-export the canonical CleanupFn (defined in core/state-types).
+export type { CleanupFn } from '../../core/state-types'
+import type { CleanupFn } from '../../core/state-types'
 
 // Re-export the canonical CursorPosition (defined by the editor port).
 export type { CursorPosition } from '../ports'

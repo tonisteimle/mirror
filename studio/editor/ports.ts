@@ -37,7 +37,9 @@ export interface LineInfo {
   text: string
 }
 
-export type CleanupFn = () => void
+// Re-export the canonical CleanupFn (defined in core/state-types).
+export type { CleanupFn } from '../core/state-types'
+import type { CleanupFn } from '../core/state-types'
 
 // ============================================
 // Editor Port
@@ -152,10 +154,9 @@ export interface StateCursor {
   column: number
 }
 
-/**
- * Valid origins for selection events.
- */
-export type SelectionOrigin = 'editor' | 'preview' | 'panel' | 'llm' | 'keyboard' | 'drag-drop'
+// Re-export the canonical SelectionOrigin (defined in core/state-types).
+export type { SelectionOrigin } from '../core/state-types'
+import type { SelectionOrigin } from '../core/state-types'
 
 /**
  * StatePort abstracts the global application state.

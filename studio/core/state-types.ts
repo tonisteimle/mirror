@@ -10,6 +10,15 @@ import type { SourceMap } from '../../compiler/ir/source-map'
 
 export type SelectionOrigin = 'editor' | 'preview' | 'panel' | 'llm' | 'keyboard' | 'drag-drop'
 
+/**
+ * Subscription cleanup callback. Returned by every Studio port that
+ * registers a listener — calling it tears down the subscription. Same
+ * shape as `() => void`, but the named alias makes the intent explicit
+ * at the API surface ("call this to unsubscribe", not "call this for
+ * any reason").
+ */
+export type CleanupFn = () => void
+
 export interface BreadcrumbItem {
   nodeId: string
   name: string

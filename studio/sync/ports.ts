@@ -224,4 +224,6 @@ export interface SyncPorts {
 // Cleanup Function Type
 // ============================================
 
-export type CleanupFn = () => void
+// Re-export the canonical CleanupFn (defined in core/state-types).
+export type { CleanupFn } from '../core/state-types'
+import type { CleanupFn } from '../core/state-types'

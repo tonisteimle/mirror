@@ -34,7 +34,9 @@ import type { CursorPosition } from '../editor/ports'
 export type { LineInfo } from '../editor/ports'
 import type { LineInfo } from '../editor/ports'
 
-export type CleanupFn = () => void
+// Re-export the canonical CleanupFn (defined in core/state-types).
+export type { CleanupFn } from '../core/state-types'
+import type { CleanupFn } from '../core/state-types'
 
 // ============================================
 // Editor Context Port

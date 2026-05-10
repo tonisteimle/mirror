@@ -22,7 +22,9 @@ import type {
 // Common Types
 // ============================================
 
-export type CleanupFn = () => void
+// Re-export the canonical CleanupFn (defined in core/state-types).
+export type { CleanupFn } from '../../core/state-types'
+import type { CleanupFn } from '../../core/state-types'
 
 // Re-export the canonical Rect so existing
 // `import { Rect } from '.../property/ports'` keeps working.
