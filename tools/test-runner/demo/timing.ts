@@ -166,11 +166,14 @@ export const VIDEO_TIMING: ActionTimings = {
     rippleDurationMs: 300,
   },
   type: {
-    charMs: 45,
-    variance: 0.25,
-    wordPauseMs: 60,
-    linePauseMs: 150,
-    thoughtPauseMs: 200,
+    // Natural-feel typing: ~28wpm, light variance, near-zero word/line pauses
+    // so consecutive `type()` steps flow as one continuous stream instead
+    // of stuttering at every space and idling between every paragraph.
+    charMs: 42,
+    variance: 0.2,
+    wordPauseMs: 10,
+    linePauseMs: 60,
+    thoughtPauseMs: 0,
   },
   pressKey: {
     keyMs: 100,
@@ -485,8 +488,12 @@ export class TimingCalculator {
   calculateMoveDuration(fromX: number, fromY: number, toX: number, toY: number): number {
     const distance = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2))
     const hundredPixels = distance / 100
-    const duration = this.timings.moveTo.baseMs + (hundredPixels * this.timings.moveTo.perHundredPixels)
-    return Math.max(this.timings.moveTo.minMs, Math.min(this.timings.moveTo.maxMs, Math.round(duration)))
+    const duration =
+      this.timings.moveTo.baseMs + hundredPixels * this.timings.moveTo.perHundredPixels
+    return Math.max(
+      this.timings.moveTo.minMs,
+      Math.min(this.timings.moveTo.maxMs, Math.round(duration))
+    )
   }
 
   /**
@@ -531,10 +538,7 @@ export class TimingCalculator {
    */
   calculateWaitDuration(requestedMs: number): number {
     const scaled = requestedMs * this.timings.wait.scale
-    return Math.max(
-      this.timings.wait.minMs,
-      Math.min(this.timings.wait.maxMs, Math.round(scaled))
-    )
+    return Math.max(this.timings.wait.minMs, Math.min(this.timings.wait.maxMs, Math.round(scaled)))
   }
 
   /**
@@ -635,13 +639,18 @@ export function estimateDemoDuration(
   total += stepCounts.highlight * t.highlight.durationMs
 
   // Comment actions
-  const avgWordsPerComment = stepCounts.comment > 0 ? stepCounts.commentWords / stepCounts.comment : 0
+  const avgWordsPerComment =
+    stepCounts.comment > 0 ? stepCounts.commentWords / stepCounts.comment : 0
   const commentReadTime = (avgWordsPerComment / t.comment.readingSpeedWPM) * 60 * 1000
   total += stepCounts.comment * (t.comment.baseMs + commentReadTime)
 
   // Transitions (rough estimate)
-  const totalSteps = stepCounts.moveTo + stepCounts.click + stepCounts.type +
-                     stepCounts.pressKey + stepCounts.highlight
+  const totalSteps =
+    stepCounts.moveTo +
+    stepCounts.click +
+    stepCounts.type +
+    stepCounts.pressKey +
+    stepCounts.highlight
   total += totalSteps * t.transitions.afterClick * 0.3 // Rough average
 
   return Math.round(total)
@@ -666,7 +675,9 @@ export function formatDuration(ms: number): string {
 /**
  * Compare all profiles for a demo
  */
-export function compareProfiles(stepCounts: Parameters<typeof estimateDemoDuration>[0]): TimingComparison[] {
+export function compareProfiles(
+  stepCounts: Parameters<typeof estimateDemoDuration>[0]
+): TimingComparison[] {
   const profiles: PacingProfile[] = ['video', 'presentation', 'tutorial', 'testing', 'instant']
 
   return profiles.map(profile => {
