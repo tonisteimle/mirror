@@ -30,7 +30,6 @@ import { EditorController, createEditorController } from './editor'
 import {
   PreviewController,
   createPreviewController,
-  setPreviewController,
   PreviewBreadcrumb,
   createPreviewBreadcrumb,
 } from './preview'
@@ -472,7 +471,6 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     getCommandContext: () => commandContext,
   })
   previewController.attach()
-  setPreviewController(previewController)
   studioContext.preview = previewController
   studio.preview = previewController
 

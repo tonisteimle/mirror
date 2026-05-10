@@ -1136,23 +1136,3 @@ export class PreviewController {
 export function createPreviewController(config: PreviewConfig): PreviewController {
   return new PreviewController(config)
 }
-
-let globalPreview: PreviewController | null = null
-
-/**
- * @deprecated Use getStudioContext().preview instead
- */
-export function getPreviewController(): PreviewController | null {
-  return globalPreview
-}
-
-/**
- * @deprecated Use setStudioContext() with context.preview instead
- */
-export function setPreviewController(controller: PreviewController | null): void {
-  // Dispose old controller to prevent memory leaks
-  if (globalPreview && globalPreview !== controller) {
-    globalPreview.dispose()
-  }
-  globalPreview = controller
-}
