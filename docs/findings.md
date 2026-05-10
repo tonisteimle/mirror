@@ -141,7 +141,16 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   Aliases). Folgen: kein Schema-Validator-Hint, kein Studio-Picker-
   Support, kein zentrales TypeScript-Type. Klärung: jeden Eintrag
   einzeln: ins Schema aufnehmen (mit Aliases) ODER aus IR entfernen.
-  **Status:** offen
+  **Status:** aktiv (Claude-Session, 2026-05-10 ~21:30)
+  **Plan:** Audit zeigt: alle Properties haben IR-Backends + Backend-
+  Emit + sind in CLAUDE.md DSL-Reference dokumentiert + werden in
+  examples/tests verwendet (anim heavy, scale + blur in fixtures).
+  Entscheidung: alle ins Schema aufnehmen statt löschen. Slice:
+  PropertyDefinition-Einträge in `properties.ts` für animation (alias
+  anim), blur, backdrop-blur (alias blur-bg), scale, aspect. Verifizieren
+  dass `getAllSchemaPropertyNames()` jetzt alle akzeptiert. Pre-Refactor-
+  Pin: vitest-Test der jeden IR-Acceptance-Pfad gegen Schema-
+  Membership cross-checkt.
 
 - **Wo:** `compiler/schema/dsl.ts:213` (`'route' // @deprecated`)
   **Was:** Schema-Annotation widerspricht der Realität. Das
