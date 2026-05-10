@@ -33475,10 +33475,15 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 7 1`] = `
           "properties": [
             {
               "name": "textContent",
-              "value": "Aktiv",
+              "value": "__conditional:user.active?"Aktiv":"Inaktiv"",
             },
           ],
-          "styles": [],
+          "styles": [
+            {
+              "property": "color",
+              "value": "#10b981",
+            },
+          ],
           "tag": "span",
         },
       ],
@@ -33520,10 +33525,6 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 7 1`] = `
         {
           "property": "border-radius",
           "value": "8px",
-        },
-        {
-          "property": "color",
-          "value": "#10b981",
         },
       ],
       "tag": "div",
@@ -36386,10 +36387,19 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 27 1`] = `
                   "properties": [
                     {
                       "name": "textContent",
-                      "value": "$user.avatar",
+                      "value": "__conditional:user.avatar?"__loopVar:user.avatar":"__loopVar:user.name[0]"",
                     },
                   ],
-                  "styles": [],
+                  "styles": [
+                    {
+                      "property": "color",
+                      "value": "white",
+                    },
+                    {
+                      "property": "font-size",
+                      "value": "14px",
+                    },
+                  ],
                   "tag": "span",
                 },
               ],
@@ -36439,14 +36449,6 @@ exports[`Tutorial IR Snapshots > 09 - daten > Example 27 1`] = `
                 {
                   "property": "background",
                   "value": "#2271C1",
-                },
-                {
-                  "property": "color",
-                  "value": "white",
-                },
-                {
-                  "property": "font-size",
-                  "value": "14px",
                 },
               ],
               "tag": "div",

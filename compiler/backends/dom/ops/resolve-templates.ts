@@ -14,6 +14,14 @@ export function resolveTemplateValue(
   indexVar: string = 'index'
 ): string {
   if (typeof value === 'string') {
+    // __conditional: markers must route to the conditional resolver before
+    // the __loopVar: branch — otherwise the leading `__conditional:` prefix
+    // survives stripping and lands as bare JS in the output (e.g.
+    // `textContent = __conditional:member.status == "online"?...` — a
+    // SyntaxError at module load).
+    if (value.includes('__conditional:')) {
+      return this.resolveConditionalExpression(value, itemVar)
+    }
     // Check for __loopVar: markers (set by IR for loop variable references)
     // Use regex replacement for ALL occurrences (handles multiple markers in expressions)
     if (value.includes('__loopVar:')) {

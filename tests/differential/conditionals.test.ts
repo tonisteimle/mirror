@@ -291,4 +291,64 @@ Article
     expect(dom).toContain('Items')
     expect(dom).toContain('Empty')
   })
+
+  it('parser: `$token`-led ternary (was eaten as propset)', () => {
+    // PIN: pre-2026-05-10 the parser treated `$token` at the start of a
+    // property value as a `propset` (property-set spread) and split the
+    // following `==`/`?`/branches across multiple Property entries — so
+    // `Text $status == "online" ? "On" : "Off"` produced
+    //   prop propset = $status
+    //   prop content = "online"   (the comparison RHS)
+    //   prop content = "On"       (the then-branch)
+    // The else-branch was dropped, the comparison and ternary lost, and
+    // any trailing `, col $muted` on the same line ended up applied to
+    // the *next* sibling element. Now `$token` followed by `?` or a
+    // comparison op routes through the ternary parser, the same path
+    // bare-identifier conditions take. Tutorial Example 7 regression.
+    const src = `status: "online"\n\nText $status == "online" ? "On" : "Off", col #10b981`
+    const ast = parse(src)
+    const inst = ast.instances[0]
+    const content = inst.properties.find(p => p.name === 'content')
+    expect(content?.values[0]).toMatchObject({
+      kind: 'conditional',
+      condition: 'status == "online"',
+    })
+    // `col` lands on the Text element, not on a sibling.
+    const col = inst.properties.find(p => p.name === 'col')
+    expect(col?.values[0]).toBe('#10b981')
+  })
+
+  it('React: `$token`-led ternary in Text resolves through tokens', () => {
+    // Same scenario, end-to-end: the parser-fix above plus the
+    // `rewriteIdentifiersToTokens` `$ident`-form path produce a JSX
+    // expression that React can actually render.
+    const react = generateReact(
+      parse(`status: "online"\n\nText $status == "online" ? "On" : "Off"`)
+    )
+    expect(react).toContain('tokens["status"] == "online"')
+    expect(react).toContain('"On"')
+    expect(react).toContain('"Off"')
+  })
+
+  it('DOM: `__conditional:` markers route through the conditional resolver in loop bodies', () => {
+    // PIN: pre-2026-05-10 the DOM template-emit (`resolveTemplateValue`,
+    // used inside `each` bodies) stripped `__loopVar:` markers but left
+    // the `__conditional:` prefix verbatim, producing
+    //   node_X_tpl.textContent = __conditional:member.status == "online"?...
+    // — a SyntaxError that crashed the whole bundle at script load. Now
+    // routes `__conditional:` through `resolveConditionalExpression`
+    // first, so loop-body conditionals compile to valid ternaries.
+    const src = `members:
+  alice:
+    status: "online"
+  bob:
+    status: "away"
+
+each member in $members
+  Text $member.status == "online" ? "Online" : $member.status == "away" ? "Away" : "Offline"`
+    const dom = generateDOM(parse(src))
+    // Bundle parses (no leaking `__conditional:` marker)
+    expect(dom).not.toContain('= __conditional:')
+    expect(() => new Function(dom.replace(/^export\s+/gm, ''))).not.toThrow()
+  })
 })

@@ -676,6 +676,27 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — Parser/React/DOM: `$token`-led ternary
+
+- **Wo:** `compiler/parser/inline-property-parser.ts:consumeTokenRef`,
+  `compiler/backends/react.ts:rewriteIdentifiersToTokens`,
+  `compiler/backends/dom/ops/resolve-templates.ts:resolveTemplateValue`
+  **Was:** `Text $status == "online" ? "On" : "Off"` wurde vom Parser
+  als `propset:$status` interpretiert; die Comparison-RHS, der ?-
+  Operator und die Branches landeten als drei separate Properties auf
+  dem Element. Trailing-Properties auf der gleichen Zeile (`, col $muted`)
+  endeten beim _nächsten_ Sibling. Fix: `consumeTokenRef` routet jetzt
+  ein folgendes `?`/`==`/`>`/etc. durch `parseTernaryExpression`. React's
+  Identifier-Rewriter handelt zusätzlich `$ident`-Form als Defensive.
+  Der DOM-Loop-Body-Resolver `resolveTemplateValue` strippt jetzt auch
+  `__conditional:`-Marker (vorher nur `__loopVar:`) — sonst landete
+  `__conditional:member.status == ...` bare als JS und crashte das
+  Bundle.
+  **Wirkung:** Tutorial-Beispiele 9-7 und 9-27 (IR-Snapshot-Drift),
+  task-app/app.mirror (`Text $member.status == "online"...`),
+  task-app/simple.mirror (`Text "$project.completedCount" + ...`).
+  Pin: `tests/differential/conditionals.test.ts`.
+
 ### 2026-05-10 — React + Framework + DOM Backend-Hunt (24-Slice-Run)
 
 Eine durchgehende Hunt-Session an allen drei Backends; alle Slices

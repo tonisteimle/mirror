@@ -41,6 +41,19 @@ import type { ParserContext } from './parser-context'
 import { ParserUtils } from './parser-context'
 import { ALL_BOOLEAN_PROPERTIES, EVENT_NAMES, KEYBOARD_KEYS } from '../schema/parser-helpers'
 import { parseProperty } from './property-parser'
+import { parseTernaryExpression, type CollectedToken } from './ternary-parser'
+
+/** Token types recognised as comparison operators (mirror ternary-parser). */
+const TERNARY_COMPARISON_OPS = new Set([
+  'STRICT_EQUAL',
+  'STRICT_NOT_EQUAL',
+  'NOT_EQUAL',
+  'EQUALS',
+  'GT',
+  'LT',
+  'GTE',
+  'LTE',
+])
 
 const U = ParserUtils
 
@@ -281,6 +294,41 @@ function consumeTokenRef(ctx: ParserContext, cb: InlinePropertiesCallbacks): Pro
   }
 
   const tokenRef: TokenReference = { kind: 'token', name: tokenName }
+
+  // `$token ? a : b` or `$token == "x" ? a : b` — without this branch the
+  // `$token` would short-circuit to `propset`, swallowing the ternary as
+  // unrelated property tokens. Mirrors property-parser.ts's ternary path
+  // for bare-identifier conditions.
+  if (U.check(ctx, 'QUESTION') || TERNARY_COMPARISON_OPS.has(U.current(ctx).type)) {
+    // Strip the leading `$` for the condition string so the IR/backend
+    // sees a bare-identifier path (matches the shape produced by
+    // property-parser.ts for `c == "a" ? ...`). The actual `$token`
+    // resolution is handled by the same rewriter the bare form uses.
+    const synthName: Token = {
+      type: 'IDENTIFIER',
+      value: tokenName,
+      line: startLine,
+      column: startColumn,
+    }
+    const collected: CollectedToken[] = []
+    while (!U.check(ctx, 'QUESTION') && !U.isAtEnd(ctx)) {
+      const t = U.current(ctx)
+      if (
+        t.type === 'COMMA' ||
+        t.type === 'SEMICOLON' ||
+        t.type === 'NEWLINE' ||
+        t.type === 'INDENT' ||
+        t.type === 'DEDENT'
+      )
+        break
+      collected.push({ type: t.type, value: U.advance(ctx).value })
+    }
+    if (U.check(ctx, 'QUESTION')) {
+      return parseTernaryExpression(ctx, synthName, collected)
+    }
+    // No `?` after all (shouldn't happen given the entry condition, but
+    // be defensive). Fall through to propset.
+  }
 
   if (!isArithmeticOp(ctx)) {
     return {

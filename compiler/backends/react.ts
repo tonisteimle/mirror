@@ -1906,9 +1906,20 @@ function expressionPartsToJS(
   const isCloseParen = (p: unknown): boolean => p === ')'
   const partToJS = (part: unknown): string => {
     if (typeof part === 'string') {
-      // Parens are structural — emit verbatim. Other strings are
-      // literals, JSON-stringified.
+      // Parens are structural — emit verbatim.
       if (part === '(' || part === ')') return part
+      // String part with a `$ref` inside: the parser keeps quoted
+      // strings whole, so `Text "$x.y" + " items"` arrives with parts
+      // `["$x.y", " items"]` — the leading `$` survives through to
+      // here. Run it through the same interpolator the standalone-
+      // string path uses, then strip the JSX `{}` wrapper.
+      if (part.includes('$')) {
+        const wrapped = interpolateStringForJSX(part, tokens, loopVars)
+        if (wrapped.startsWith('{') && wrapped.endsWith('}')) {
+          return wrapped.slice(1, -1)
+        }
+        return wrapped
+      }
       return JSON.stringify(part)
     }
     if (typeof part === 'number') return String(part)
@@ -2203,7 +2214,14 @@ function rewriteIdentifiersToTokens(expr: string, tokens: TokenDefinition[]): st
       const isMember = i > 0 && expr[i - 1] === '.'
       const isKeyword =
         ident === 'true' || ident === 'false' || ident === 'null' || ident === 'undefined'
-      if (!isMember && !isKeyword && tokenNames.has(ident)) {
+      // `$name`-form: parser-preserved when the conditional was led by a
+      // `$token`. Strip the `$` and resolve as a normal token reference
+      // so React emits `tokens["name"]` instead of leaking a literal
+      // `$name` JS reference (which would be a ReferenceError at render).
+      const stripped = ident.startsWith('$') ? ident.slice(1) : null
+      if (!isMember && !isKeyword && stripped && tokenNames.has(stripped)) {
+        out += `tokens[${JSON.stringify(stripped)}]`
+      } else if (!isMember && !isKeyword && tokenNames.has(ident)) {
         out += `tokens[${JSON.stringify(ident)}]`
       } else {
         out += ident
