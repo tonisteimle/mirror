@@ -39,6 +39,17 @@ import {
 } from '../schema/layout-defaults'
 import { getTokenSuffix } from '../schema/token-suffixes'
 import { matchesCanonical } from '../schema/parser-helpers'
+import {
+  type ParentLayoutContext,
+  CHART_PRIMITIVE_NAMES,
+  collectNamedInstances,
+  containsAnimUsage,
+  containsChartInstance,
+  containsIconInstance,
+  detectLayoutContext,
+  getHtmlTag,
+  withLayoutDefaults,
+} from './react/ops/layout'
 
 export interface ReactExportOptions {
   /** Include token values as CSS variables */
@@ -348,81 +359,11 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
   return lines.join('\n')
 }
 
-/**
- * Slice 50 V-2: Walk the instance tree to detect any `Icon` usage.
- * If none present we skip emitting the MirrorIcon component definition
- * (keeps simple Mirror programs lean).
- */
-function containsIconInstance(instances: ReadonlyArray<unknown>): boolean {
-  for (const inst of instances) {
-    const node = inst as { type?: string; component?: string; children?: unknown[] }
-    if (node.type === 'Instance' && node.component === 'Icon') return true
-    if (node.children && containsIconInstance(node.children)) return true
-  }
-  return false
-}
-
-const CHART_PRIMITIVE_NAMES: ReadonlySet<string> = new Set([
-  'Chart',
-  'Line',
-  'Bar',
-  'Pie',
-  'Donut',
-  'Doughnut',
-  'Area',
-  'Scatter',
-  'Radar',
-])
-
-/**
- * Walk for any Chart-primitive instance (`Line`, `Bar`, `Pie`, `Donut`,
- * `Area`, `Scatter`, `Radar`, or unified `Chart`). Used to gate emission
- * of the MirrorChart component definition + Chart.js CDN loader.
- */
-function containsChartInstance(nodes: ReadonlyArray<unknown>): boolean {
-  for (const n of nodes) {
-    const node = n as {
-      type?: string
-      component?: string
-      children?: unknown[]
-      then?: unknown[]
-      else?: unknown[]
-    }
-    if (node.type === 'Instance' && node.component && CHART_PRIMITIVE_NAMES.has(node.component)) {
-      return true
-    }
-    if (node.children && containsChartInstance(node.children)) return true
-    if (node.then && containsChartInstance(node.then)) return true
-    if (node.else && containsChartInstance(node.else)) return true
-  }
-  return false
-}
-
-/**
- * Walk the AST tree for any `anim X` / `animation: X` property. Includes
- * Conditional and Each branches so animations inside `if`/`each` blocks
- * still trigger the keyframes emit.
- */
-function containsAnimUsage(nodes: ReadonlyArray<unknown>): boolean {
-  for (const n of nodes) {
-    const node = n as {
-      type?: string
-      properties?: Array<{ name?: string }>
-      children?: unknown[]
-      then?: unknown[]
-      else?: unknown[]
-    }
-    if (node.properties) {
-      for (const p of node.properties) {
-        if (p.name && matchesCanonical(p.name, 'animation')) return true
-      }
-    }
-    if (node.children && containsAnimUsage(node.children)) return true
-    if (node.then && containsAnimUsage(node.then)) return true
-    if (node.else && containsAnimUsage(node.else)) return true
-  }
-  return false
-}
+// Layout & Component cluster moved to react/ops/layout.ts (Slice 1 of
+// docs/refactoring/react-backend-decomp.md): containsIconInstance,
+// containsChartInstance, containsAnimUsage, CHART_PRIMITIVE_NAMES,
+// detectLayoutContext, getHtmlTag, collectNamedInstances,
+// withLayoutDefaults, ParentLayoutContext.
 
 /**
  * Slice 50 V-2: MirrorIcon runtime component, embedded once per React
@@ -631,39 +572,7 @@ function MirrorChart({ chartType, data, fill, tension, title, xLabel, yLabel, mi
   )
 }`
 
-/**
- * Layout-context for grid-vs-flex parent discrimination.
- *
- * Slice 6 V-2: Mirror's `x`/`y`/`w`/`h` semantics depend on whether the
- * parent is a CSS-Grid or a flex container. The DOM backend gets this
- * via the IR's `parentLayoutContext` (see `property-transformer.ts:394`);
- * the React backend bypasses the IR, so we walk the JSX tree manually
- * and pass the parent's layout-type down to children.
- */
-type ParentLayoutContext = {
-  type: 'grid' | 'flex' | null
-  /**
-   * Loop-variable names in scope at this nesting level (the inner `t` of
-   * `each t in $tasks`). Children rendered under this context get to
-   * resolve `$t.title`-shaped interpolations against the loop variable
-   * instead of the (missing) `tokens.t` token.
-   */
-  loopVars?: ReadonlySet<string>
-}
-
-/**
- * Detect a Frame's own layout-type from its properties — used to inform
- * its CHILDREN about their parent's layout context. Same heuristic as
- * the IR layout-transformer: `grid` property = grid container; `hor`/
- * `ver`/`wrap`/`spread`/`center`/etc = flex container; otherwise the
- * default flex-column kicks in via `withLayoutDefaults`.
- */
-function detectLayoutContext(props: Property[]): ParentLayoutContext {
-  for (const p of props) {
-    if (p.name === 'grid') return { type: 'grid' }
-  }
-  return { type: 'flex' } // Frame default is flex; children inherit flex-context
-}
+// ParentLayoutContext + detectLayoutContext moved to react/ops/layout.ts.
 
 function generateJSX(
   instance: Instance,
@@ -1404,40 +1313,7 @@ function formatIconPropValue(
   return JSON.stringify(String(v))
 }
 
-function getHtmlTag(componentName: string, compDef?: ComponentDefinition): string {
-  // 1) `Btn as Button: ...` → compDef.primitive='button' → <button>. Components
-  // without `as`-clause carry an implicit `primitive='frame'`, which we ignore
-  // here (returns 'div' from the schema) so the name-heuristic in step 3 still
-  // runs. Only schema-resolutions to a non-div tag are authoritative.
-  if (compDef?.primitive && isKnownPrimitive(compDef.primitive)) {
-    const tag = schemaGetHtmlTag(compDef.primitive)
-    if (tag !== 'div') return tag
-  }
-
-  // 2) Direct primitive name (Frame, Icon, H1, …) via DSL schema.
-  if (isKnownPrimitive(componentName)) {
-    return schemaGetHtmlTag(componentName)
-  }
-
-  // 3) Semantic-name heuristic for user components without `as`-clause.
-  // `Sidebar` → <aside>, `MyHeader` → <header>, `Title` → <h2> for
-  // accessibility/SEO without forcing the user to write `as`. Tested in
-  // backend-react.test.ts § "Heuristic tag resolution".
-  const name = componentName.toLowerCase()
-  if (name.includes('button') || name === 'btn') return 'button'
-  if (name.includes('input') || name.includes('field')) return 'input'
-  if (name.includes('link')) return 'a'
-  if (name.includes('heading') || name.includes('title')) return 'h2'
-  if (name.includes('text') || name.includes('label') || name.includes('body')) return 'span'
-  if (name.includes('nav')) return 'nav'
-  if (name.includes('header')) return 'header'
-  if (name.includes('footer')) return 'footer'
-  if (name.includes('main')) return 'main'
-  if (name.includes('section')) return 'section'
-  if (name.includes('aside') || name.includes('sidebar')) return 'aside'
-
-  return 'div'
-}
+// getHtmlTag moved to react/ops/layout.ts.
 
 /**
  * Set of property names that map directly to HTML attributes in JSX
@@ -1468,72 +1344,7 @@ const HTML_ATTR_PROPS: Record<string, string> = {
   mask: 'data-mask',
 }
 
-/**
- * Walk the instance tree and collect every `Instance.name` (instance name
- * set via `Element name X` in the DSL). Used by `generateReact` to decide
- * whether to declare the `_elements` registry useRef at the top of the
- * generated App component. Slice 1 Phase B.4.
- */
-function collectNamedInstances(roots: ReadonlyArray<unknown>): string[] {
-  const names: string[] = []
-  const walk = (node: unknown): void => {
-    if (!node || typeof node !== 'object') return
-    const n = node as { type?: string; name?: string | null; children?: unknown[] }
-    if (n.type === 'Instance' && typeof n.name === 'string' && n.name.length > 0) {
-      names.push(n.name)
-    }
-    if (Array.isArray(n.children)) {
-      for (const child of n.children) walk(child)
-    }
-  }
-  for (const root of roots) walk(root)
-  return names
-}
-
-/**
- * Merge Frame-default flex styles into the style object for layout primitives
- * that don't already carry an explicit display rule. The DOM backend gets
- * these for free via the IR transformer (see compiler/ir/transformers/
- * property-transformer.ts) — the React backend bypasses the IR, so we have
- * to prepend the same defaults here. User-component instances that resolve
- * to a layout primitive (e.g. `Btn: pad 10`) keep the defaults too, so
- * `<button>`-based components still flex-column unless they say otherwise.
- *
- * Skipped if the user has already set `display` (`hor`, `ver`, `center`,
- * `grid`, etc. all set it) — those layouts are intentional choices.
- */
-function withLayoutDefaults(
-  style: Record<string, string | number>,
-  componentName: string
-): Record<string, string | number> {
-  // Same container-detection rule the DOM IR uses
-  // (`compiler/schema/layout-defaults.ts:isContainer`). Pre-2026-05-10 this
-  // gated on `isLayoutPrimitive` (content === false), which excluded the
-  // semantic tags `Header`/`Section`/`Article`/`Main`/`Aside`/`Nav`/`Footer`
-  // even though DOM treats them as flex containers — React rendered them
-  // as inline-block elements without flex defaults, drifting from DOM.
-  if (!isContainerPrimitive(componentName.toLowerCase())) return style
-  // Slice 3 V-1: merge defaults per-key instead of skip-if-display-set.
-  // The old skip-when-display-set behavior dropped `alignSelf: stretch` and
-  // `alignItems: flex-start` whenever `hor`/`ver`/`grid` set display first
-  // — `Frame hor` lost its container stretch/flex-start defaults that the
-  // DOM/IR pipeline always emits. Now each default key only fills in if
-  // the user-explicit style hasn't already chosen a value: `hor` keeps
-  // flexDirection: 'row', `center` keeps alignItems: 'center', and the
-  // container still gets alignSelf: 'stretch' for parent-flex-fill.
-  const merged: Record<string, string | number> = { ...style }
-  if (merged.display === undefined) merged.display = 'flex'
-  // Slice 7 V-3 (B-4): grid containers never need `flexDirection` — DOM-IR
-  // emits `grid-auto-flow` instead. Without this gate the default
-  // `flexDirection: 'column'` leaked into grid containers and confused
-  // computed-style assertions.
-  if (merged.display !== 'grid' && merged.flexDirection === undefined) {
-    merged.flexDirection = 'column'
-  }
-  if (merged.alignSelf === undefined) merged.alignSelf = 'stretch'
-  if (merged.alignItems === undefined) merged.alignItems = 'flex-start'
-  return merged
-}
+// collectNamedInstances + withLayoutDefaults moved to react/ops/layout.ts.
 
 /**
  * Emit the Mirror data-* attributes the DOM backend writes via `dataset.*`:
