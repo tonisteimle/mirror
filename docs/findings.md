@@ -169,27 +169,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   **Status:** erledigt — auf `calculateSourcePosition(instance.line,
 instance.column)` umgestellt. 7849/7849 vitest grün.
 
-- **Wo:** `compiler/runtime/scroll.ts:50-75`,
-  `compiler/backends/dom/event-emitter.ts:528-541`
-  **Was:** Runtime-Bug aus dem TODO-Bucket: `scrollToTop()` und
-  `scrollToBottom()` ohne Argument scrollen das `window` statt der
-  nächsten scrollbaren Vorfahren-Box. Bei einem Button innerhalb
-  eines `Frame h 150, scroll`-Containers funktioniert `scrollToTop()`
-  daher nicht wie erwartet (Tests in
-  `studio/test-api/suites/actions/scroll.test.ts:9,36` sind deshalb
-  `testWithSetupSkip`).
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~19:15)
-  **Plan:**
-  1. DOM-Emit erweitern: `scrollToTop()` ohne Arg übergibt den
-     Click-Source (`currentVar`) als Context-Hint an die Runtime.
-  2. Runtime: wenn nur Context-Element gegeben, walk parents bis
-     `scrollHeight > clientHeight + overflow: auto/scroll`. Fallback
-     auf `window` wenn keine scrollbare Box gefunden.
-  3. Selber Fix für `scrollToBottom()`.
-  4. `testWithSetupSkip` → `testWithSetup` in den zwei Tests, plus
-     unit-Test in `tests/runtime/scroll.test.ts` (neu, jsdom).
-  5. Compiler+behavior-Suite grün, commit.
-
 - **Wo:** `studio/test-api/suites/` — 10 `// TODO: Runtime bug …`-Marker
   in den Browser-Test-Suiten
   **Was:** Latente Production-Bugs, die als Test-Workaround dokumentiert
@@ -280,6 +259,23 @@ instance.column)` umgestellt. 7849/7849 vitest grün.
   **Notiz:** Mein erster Versuch (Hunt 2026-05-10 ~19:00) wollte das
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
+
+- **Wo:** `studio/core/events.ts:21` + `studio/compile/types.ts:48`
+  vs. kanonische `compiler/parser/ast.ts:ParseError`
+  **Was:** `ParseError` 3× definiert mit divergierenden Shapes:
+  - Canonical (`compiler/parser/ast.ts`, 5 Felder):
+    `{ message, line, column, hint?, code? }`
+  - Studio-Kopie 1 (`studio/core/events.ts`, 4 Felder, kein `code`)
+  - Studio-Kopie 2 (`studio/compile/types.ts`, 2 Felder — nur
+    `{ line, message }`)
+    Beide Studio-Versionen sind Subsets, divergiert von der echten
+    Quelle. Caller die das vollständige Shape erwarten bekommen je
+    nach Import-Pfad andere Felder. Klassische Drift-Falle wie schon
+    beim SpacingToken-Hunt.
+    **Status:** aktiv (Claude-Session, 2026-05-10 ~21:40)
+    **Plan:** Beide Studio-Kopien durch Re-Import aus
+    `compiler/parser/ast.ts` ersetzen, lokale Definitionen weg,
+    Tests grün.
 
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
@@ -906,6 +902,28 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — `scrollToTop()` / `scrollToBottom()` ohne Arg scrollen jetzt den Container
+
+- **Wo:** `compiler/runtime/scroll.ts`, `compiler/backends/dom/event-emitter.ts`,
+  `compiler/runtime/dom-runtime.ts`,
+  `compiler/backends/dom/runtime-template/index.ts`,
+  `tests/runtime/scroll.test.ts` (neu),
+  `tests/fixtures/actions/a06-scroll/expected.dom.js`,
+  `studio/test-api/suites/actions/scroll.test.ts`
+  **Was:** Erster Inkrement aus dem Runtime-Bug-TODO-Bucket.
+  Pre-Fix scrollten `scrollToTop()`/`scrollToBottom()` ohne Arg
+  immer das `window` — innerhalb eines `Frame h 150, scroll`-
+  Containers also nutzlos. Zwei neue Runtime-Funktionen
+  `scrollContainerToTop` / `scrollContainerToBottom` mit
+  `findScrollableAncestor`-Helper (walk parents bis overflow:
+  auto/scroll + scrollHeight > clientHeight, sonst window-Fallback).
+  DOM-Emit übergibt jetzt `currentVar` (den Click-Source) als
+  Context. 8 jsdom-Pins in `tests/runtime/scroll.test.ts`
+  (explicit-target: 3, context-aware: 5). Browser-Tests
+  `testWithSetupSkip` → `testWithSetup`. Golden-Fixture
+  `a06-scroll/expected.dom.js` aktualisiert. 15428/15428 vitest grün.
+  **Status:** erledigt
 
 ### 2026-05-10 — Dead-feature-Verdacht: alle 4 Slices entschieden
 

@@ -31,7 +31,7 @@
   })
   node_2.dataset.component = 'Button'
   node_2.addEventListener('click', (e) => {
-    _runtime.scrollToTop()
+    _runtime.scrollContainerToTop(node_2)
   })
   node_1.appendChild(node_2)
   
@@ -54,7 +54,7 @@
   })
   node_3.dataset.component = 'Button'
   node_3.addEventListener('click', (e) => {
-    _runtime.scrollToBottom()
+    _runtime.scrollContainerToBottom(node_3)
   })
   node_1.appendChild(node_3)
   
