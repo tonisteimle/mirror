@@ -23,6 +23,9 @@ import { appendAtEndVsIndexTests } from './01-palette-drop/append-at-end-vs-inde
 import { moveIntoDifferentContainerTests } from './02-move/move-into-different-container.test'
 import { reorderSiblingsTests } from './02-move/reorder-siblings.test'
 
+import { twoLevelsDeepTests } from './03-nesting/two-levels-deep.test'
+import { threeLevelsDeepTests } from './03-nesting/three-levels-deep.test'
+
 // Wave 1 — Smoke (verifies the helper layer is reachable).
 export const previewCdpSmokeTests: TestCase[] = [...smokeTests]
 
@@ -42,9 +45,13 @@ export const previewCdpMoveTests: TestCase[] = [
   ...reorderSiblingsTests,
 ]
 
+// Wave 5 — nesting (multi-level palette-drop sequences).
+export const previewCdpNestingTests: TestCase[] = [...twoLevelsDeepTests, ...threeLevelsDeepTests]
+
 // Aggregate — every wave above flows into this list.
 export const previewCdpAllTests: TestCase[] = [
   ...previewCdpSmokeTests,
   ...previewCdpPaletteDropTests,
   ...previewCdpMoveTests,
+  ...previewCdpNestingTests,
 ]

@@ -56,6 +56,15 @@ Frame w 200, h 200, bg #27272a, pad 16`,
   /** Frame with a Text child — for nested inline-edit and selection tests. */
   frameWithText: `Frame w 240, h 80, bg #1a1a1a, pad 16
   Text "Hello", col white`,
+
+  /** Roomy 2-level hierarchy for nested drop tests. */
+  twoLevelHierarchy: `Frame w 360, h 280, bg #1a1a1a, pad 24
+  Frame w 240, h 160, bg #27272a, pad 16`,
+
+  /** Roomy 3-level hierarchy. */
+  threeLevelHierarchy: `Frame w 400, h 320, bg #1a1a1a, pad 24
+  Frame w 320, h 240, bg #27272a, pad 16
+    Frame w 240, h 160, bg #3f3f46, pad 12`,
 } as const
 
 export type FixtureName = keyof typeof FIXTURES
