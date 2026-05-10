@@ -18,6 +18,7 @@ import type { DragSource } from '../../preview/drag'
 import { setCurrentDragData, clearCurrentDragData } from '../../preview/drag-preview'
 import { getFixture } from '../../preview/drag/test-api/fixtures'
 import { LAYOUT_SECTION, COMPONENTS_SECTION } from '../../panels/components/layout-presets'
+import { getComponentIcon } from '../../icons'
 
 /**
  * Selectorish — a structured Selector OR a string shorthand. The runner
@@ -394,6 +395,94 @@ export function installMirrorActions(): MirrorActionsAPI {
     const cursor = win.__mirrorDemo && win.__mirrorDemo.cursor
     if (cursor) await cursor.moveTo(point)
     return point
+  }
+
+  /**
+   * Render the same drag-preview chip Studio shows when a real user drags
+   * a palette item — icon + component name in a dark rounded chip with a
+   * shadow. Follows the demo cursor via rAF. Studio's own `setDragImage`
+   * is what produces this chip during a real drag (see component-panel.ts
+   * `setupVisibleDragImage`); we mirror it byte-for-byte so the demo
+   * matches reality instead of inventing a fake colored block.
+   */
+  const attachStudioDragPreview = (iconKey: string | undefined, name: string): (() => void) => {
+    const cursor = win.__mirrorDemo && win.__mirrorDemo.cursor
+    if (!cursor) return () => {}
+
+    const chip = document.createElement('div')
+    Object.assign(chip.style, {
+      position: 'fixed',
+      left: '0',
+      top: '0',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      padding: '8px 12px',
+      background: '#1a1a1a',
+      border: '1px solid #333',
+      borderRadius: '6px',
+      color: '#fff',
+      fontSize: '13px',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+      pointerEvents: 'none',
+      whiteSpace: 'nowrap',
+      zIndex: '999998',
+      opacity: '0',
+      transform: 'translate(0,0)',
+      transition: 'opacity 180ms ease-out',
+    })
+
+    if (iconKey) {
+      const iconSpan = document.createElement('span')
+      try {
+        iconSpan.innerHTML = getComponentIcon(iconKey)
+      } catch {
+        // ignore — chip without icon is still legible
+      }
+      Object.assign(iconSpan.style, {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '16px',
+        height: '16px',
+        color: '#888',
+      })
+      const svg = iconSpan.querySelector('svg')
+      if (svg) {
+        svg.style.width = '16px'
+        svg.style.height = '16px'
+      }
+      chip.appendChild(iconSpan)
+    }
+
+    const text = document.createElement('span')
+    text.textContent = name
+    chip.appendChild(text)
+    document.body.appendChild(chip)
+
+    let alive = true
+    let raf = 0
+    const tick = (): void => {
+      if (!alive) return
+      const p = cursor.getPosition()
+      // Offset down-right of the cursor tip — same anchor as setDragImage(20,20).
+      chip.style.left = p.x - 20 + 'px'
+      chip.style.top = p.y - 20 + 'px'
+      raf = requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(() => {
+      chip.style.opacity = '1'
+      tick()
+    })
+
+    return (): void => {
+      alive = false
+      if (raf) cancelAnimationFrame(raf)
+      chip.style.transition = 'opacity 220ms ease-in'
+      chip.style.opacity = '0'
+      setTimeout(() => chip.remove(), 240)
+    }
   }
 
   const attachDragGhost = (label: string): (() => void) => {
@@ -899,6 +988,10 @@ export function installMirrorActions(): MirrorActionsAPI {
     }
 
     const releasePalette = pressPaletteItem(paletteEl)
+    // Studio's real palette drag shows a dark icon+name chip following the
+    // OS-level drag cursor (via setDragImage). We mirror that exactly so
+    // the demo doesn't invent visuals that don't match what users see.
+    const releaseDragPreview = attachStudioDragPreview(preset?.icon, preset?.name ?? component)
     const cursor = win.__mirrorDemo && win.__mirrorDemo.cursor
     const controller = getDragController()
 
@@ -949,6 +1042,7 @@ export function installMirrorActions(): MirrorActionsAPI {
       await controller.drop()
     } finally {
       releasePalette()
+      releaseDragPreview()
       clearCurrentDragData()
     }
 
