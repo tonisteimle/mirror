@@ -184,22 +184,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   **Status:** erledigt — auf `calculateSourcePosition(instance.line,
 instance.column)` umgestellt. 7849/7849 vitest grün.
 
-- **Wo:** `studio/test-api/suites/actions/crud.test.ts:36-69`
-  **Was:** Dritter Inkrement aus dem Runtime-Bug-TODO-Bucket.
-  „Runtime bug — remove() doesn't update DOM" ist ein **Test-Bug**,
-  kein Runtime-Bug. jsdom-Probe (`tools/probes/remove-action.ts`)
-  zeigt: `remove(item)` mutiert `__mirrorData` korrekt, ruft
-  `_refreshEachLoops` auf, DOM ist nach Click 2 Texts statt 3, 2
-  Buttons statt 3, Data hat `a` entfernt. Test-Fail-Grund: Selector
-  `[data-mirror-id="node-1"] > [data-mirror-id]` matcht nichts, weil
-  `each`-Block einen `[data-each-container]`-Wrapper ohne mirror-id
-  einschiebt + nochmals einen unnamed-div pro Iteration.
-  **Status:** aktiv (Claude, 2026-05-10)
-  **Plan:** behavior-Pin in `tests/behavior/actions.test.ts` (A5
-  remove-Block) der die korrekte Semantik festhält. Browser-Test
-  selector auf `data-mirror-name="Text"` umstellen, `testWithSetupSkip`
-  → `testWithSetup`, TODO-Kommentar entfernen.
-
 - **Wo:** `studio/test-api/suites/` — 10 `// TODO: Runtime bug …`-Marker
   in den Browser-Test-Suiten
   **Was:** Latente Production-Bugs, die als Test-Workaround dokumentiert
@@ -916,6 +900,25 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — `remove(item)` „Runtime bug" entlarvt als Test-Selector-Bug
+
+- **Wo:** `tests/behavior/actions.test.ts` (A5 remove-Pin),
+  `studio/test-api/suites/actions/crud.test.ts`
+  **Was:** Dritter Inkrement aus dem Runtime-Bug-TODO-Bucket. Der
+  TODO-Marker behauptete „remove() doesn't correctly update the DOM";
+  jsdom-Probe (`tools/probes/remove-action.ts`) zeigte das Gegenteil:
+  Nach `remove(item)` Click sind Texts `[A,B,C] → [B,C]`, Buttons 3 → 2,
+  `__mirrorData.items.a` ist weg, `_refreshEachLoops` lief. Der Browser-
+  Test scheiterte schon an seiner ersten Assertion, weil `[data-mirror-
+id="node-1"] > [data-mirror-id]` nichts matchte: `each` schiebt einen
+  `[data-each-container]`-Wrapper ohne mirror-id + einen weiteren
+  unnamed Iteration-Wrapper dazwischen. Behavior-Pin in
+  `tests/behavior/actions.test.ts` (A5 remove-Block) dokumentiert die
+  reale DOM-Contract. Browser-Test-Selector auf
+  `[data-mirror-name="Text"]` umgestellt, `testWithSetupSkip` →
+  `testWithSetup`, TODO-Kommentar entfernt.
+  **Status:** erledigt
 
 ### 2026-05-10 — `toggle(ElementName)` toggled jetzt Element-Visibility statt State-Machine
 

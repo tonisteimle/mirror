@@ -2,7 +2,7 @@
  * CRUD Actions — add/remove for collections
  */
 
-import { testWithSetup, testWithSetupSkip, describe, type TestCase } from '../../test-runner'
+import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 
 export const crudActionTests: TestCase[] = describe('CRUD Actions', [
@@ -33,8 +33,7 @@ Frame gap 8, pad 16, bg #1a1a1a
     }
   ),
 
-  // TODO: Runtime bug - remove() doesn't correctly update the DOM after removing item
-  testWithSetupSkip(
+  testWithSetup(
     'remove() removes item from collection on click',
     `items:
   a: { name: "Item A" }
@@ -49,22 +48,22 @@ Frame gap 8, pad 16, bg #1a1a1a
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
 
-      const countItems = () =>
-        document.querySelectorAll('[data-mirror-id="node-1"] > [data-mirror-id]').length
+      // Iteration items wrap in a `[data-each-container]` div without
+      // mirror-id; counting Texts is the stable signal.
+      const countTexts = () => document.querySelectorAll('[data-mirror-name="Text"]').length
 
-      const initialCount = countItems()
+      const initialCount = countTexts()
       api.assert.ok(initialCount >= 3, 'Should have initial items')
 
       const removeButtons = document.querySelectorAll('button')
       const firstRemove = Array.from(removeButtons).find(b => b.textContent?.trim() === '×')
+      api.assert.ok(!!firstRemove, 'Should find at least one remove button')
 
-      if (firstRemove) {
-        firstRemove.click()
-        await api.utils.delay(150)
+      firstRemove!.click()
+      await api.utils.delay(150)
 
-        const newCount = countItems()
-        api.assert.ok(newCount < initialCount, 'Should have removed an item')
-      }
+      const newCount = countTexts()
+      api.assert.ok(newCount < initialCount, 'Should have removed an item')
     }
   ),
 ])

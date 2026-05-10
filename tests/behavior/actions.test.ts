@@ -152,6 +152,28 @@ describe('Actions — Behavior Spec', () => {
       const after = allByName(root, 'Text').length
       expect(after).toBeGreaterThan(before)
     })
+
+    // PIN: `remove(item)` mutates __mirrorData and triggers a refresh of
+    // each-loops. Once tracked as a "Runtime bug" via TODO-Marker; the
+    // actual runtime is fine — the previous test selector
+    // `[data-mirror-id=node-1] > [data-mirror-id]` only saw the
+    // each-container wrapper (no mirror-id) and missed the iterated
+    // children. This pin nails the real DOM contract.
+    it('remove(item) drops the corresponding iteration from the DOM', () => {
+      const root = render(
+        `items:\n  a:\n    name: "Item A"\n  b:\n    name: "Item B"\n  c:\n    name: "Item C"\n\nFrame\n  each item in $items\n    Frame hor\n      Text "$item.name"\n      Button "x", onclick remove(item)`,
+        container
+      )
+      const beforeNames = allByName(root, 'Text').map(t => t.textContent?.trim())
+      expect(beforeNames).toEqual(['Item A', 'Item B', 'Item C'])
+
+      const firstRemove = root.querySelectorAll('button')[0] as HTMLElement
+      firstRemove.click()
+
+      const afterNames = allByName(root, 'Text').map(t => t.textContent?.trim())
+      expect(afterNames).toEqual(['Item B', 'Item C'])
+      expect(root.querySelectorAll('button').length).toBe(2)
+    })
   })
 
   // ---------------------------------------------------------------------------
