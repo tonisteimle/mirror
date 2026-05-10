@@ -123,10 +123,10 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   Click Home: zurück. Test-Marker stale wie remove() — Test selbst nie
   gelaufen, vermutlich aus einer Zeit vor `navigate()`-Runtime
   (`compiler/runtime/component-navigation.ts`).
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~22:40)
-  **Plan:** Behavior-Pin in `tests/behavior/actions.test.ts` (A11
-  navigate+show/hide combined) für die drei Display-States. Dann
-  Browser-Test `testWithSetupSkip` → `testWithSetup`, TODO entfernen.
+  **Status:** erledigt — A11 Behavior-Pin in `tests/behavior/actions.test.ts`
+  (navigate+show/hide kombiniert) grün; Browser-Test
+  `testWithSetupSkip` → `testWithSetup`, TODO weg. 336/336 behavior
+  tests grün.
 
 - **Wo:** `studio/test-api/mirror-actions/index.ts:dropChildIndexPoint`
   - Studios Drop-Target-Detection (`studio/preview/drag/...`)
@@ -913,6 +913,26 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — `navigate() + show/hide` „Runtime bug" entlarvt als Skip-Marker
+
+- **Wo:** `tests/behavior/actions.test.ts` (A7-Pin),
+  `studio/test-api/suites/actions/navigation.test.ts`
+  **Was:** Sechster Inkrement aus dem Runtime-Bug-TODO-Bucket. Der
+  `testWithSetupSkip`-Marker mit Kommentar „Runtime bug — navigate() +
+  show/hide combinations don't work correctly" war nie ausgeführt
+  worden — die Behauptung also unverified. jsdom-Probe
+  `tools/probes/navigate-show-hide.ts` reproduziert die Sequenz
+  korrekt: initial Home visible / Settings hidden → click Settings:
+  Home hidden / Settings visible → click Home: Home visible / Settings
+  hidden. Behavior-Pin in `tests/behavior/actions.test.ts` (A7) hält
+  die observable Semantik fest. Browser-Test un-skipped, TODO entfernt.
+  **Notiz:** show()/hide() merkt sich keinen ursprünglichen `display`
+  Wert — nach `show()` ist `inline-style.display=""` und computed fällt
+  auf `block` (statt `flex` für Frame). Visibility-Tests passen
+  weiterhin (`!== 'none'`), aber Layout könnte verloren gehen.
+  Separater Befund, hier nicht angefasst.
+  **Status:** erledigt
 
 ### 2026-05-10 — Doppel-Click-Handler bei `toggle() + increment()` behoben
 

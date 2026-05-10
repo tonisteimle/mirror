@@ -2,12 +2,11 @@
  * Navigation Actions — navigate() between views
  */
 
-import { testWithSetupSkip, describe, type TestCase } from '../../test-runner'
+import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 
 export const navigationActionTests: TestCase[] = describe('Navigation Actions', [
-  // TODO: Runtime bug - navigate() + show/hide combinations don't work correctly
-  testWithSetupSkip(
+  testWithSetup(
     'navigate() switches between views',
     `Frame hor, w 400
   Frame gap 4, pad 8, bg #1a1a1a, w 100
