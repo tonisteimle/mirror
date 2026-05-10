@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <title>Mirror – Studio bedienen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>Studio bedienen</h1>
+      <p class="subtitle">Bidirektionales Editieren, Property-Panel, Komponenten, Multi-File</p>
+    </header>
+
+    <p class="intro">
+      Mirror Studio zeigt drei Sichten auf dieselbe Datei: <strong>Code</strong>,
+      <strong>Preview</strong> und <strong>Property-Panel</strong>. Jede
+      Geste in einer Sicht produziert sofort einen sichtbaren Diff in den
+      anderen — du kannst tippen, ziehen, klicken, doppelklicken: alles
+      landet im Code, und der Code rendert sofort. Dieses Kapitel zeigt
+      die wichtigsten Workflows als kurze Loop-Aufnahmen.
+    </p>
+
+
+    <!-- ============================================================ -->
+    <!-- BLOCK A — Bidirektionales Editieren                          -->
+    <!-- ============================================================ -->
+
+    <section>
+      <h2>Drop &amp; Sync — Element aus der Palette</h2>
+      <p>
+        Im Components-Panel links siehst du die Bausteine: Frame, Text,
+        Button, Icon und so weiter. Du ziehst sie direkt ins Preview oder
+        in einen anderen Container. Während des Drags zeigt ein
+        <em>Drop-Indikator</em>, wo das Element landet. Sobald du loslässt,
+        erscheint die passende Mirror-Zeile im Editor.
+      </p>
+
+      <div class="tutorial-video">
+        <video src="videos/tut-01-drop-sync.webm" autoplay loop muted playsinline disablepictureinpicture controlslist="nodownload"></video>
+        <div class="tutorial-video-caption">
+          Erst <code>Frame</code> aus der Palette in den leeren Canvas, dann
+          <code>Button</code> in den Frame. Jeder Drop schreibt eine
+          Mirror-Zeile mit den Default-Properties.
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Inline-Edit — Text direkt im Preview ändern</h2>
+      <p>
+        Doppelklick auf einen Text im Preview macht ihn editierbar. Tippst
+        du den neuen Text, wird er gespeichert sobald du Enter drückst
+        oder anderswo hinklickst — und der Code-String in der
+        entsprechenden Zeile updated sich gleich mit.
+      </p>
+
+      <!-- VIDEO PLACEHOLDER: tut-02-inline-edit.webm -->
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Inline-Edit)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Resize-Handles — Größe per Drag</h2>
+      <p>
+        Selektiere ein Element im Preview, dann erscheinen acht
+        Resize-Handles an Ecken und Kanten. Ziehst du an einem Handle,
+        ändert sich <code>w</code> oder <code>h</code> in der
+        entsprechenden Zeile — Pixel-genau, mit Snap an Vielfache von 4.
+      </p>
+
+      <!-- VIDEO PLACEHOLDER: tut-03-resize.webm -->
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Resize)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Padding &amp; Margin per Handle</h2>
+      <p>
+        Innerhalb eines selektierten Containers zeigen sich
+        Padding-Handles an allen vier Seiten. Ziehst du sie nach innen,
+        wird das Padding größer, nach außen kleiner. Margins gehen genauso
+        — ziehe am Außenrand des Elements. Das Hold-Verhalten ist
+        figma-ähnlich: Shift verändert nur eine Seite, sonst werden
+        gegenüberliegende Seiten gespiegelt.
+      </p>
+
+      <!-- VIDEO PLACEHOLDER: tut-04-padding-margin.webm -->
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Padding &amp; Margin)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <!-- BLOCK B — Property-Panel + Picker                            -->
+    <!-- ============================================================ -->
+
+    <section>
+      <h2>Property-Panel — Werte numerisch setzen</h2>
+      <p>
+        Rechts vom Preview ist das Property-Panel. Es zeigt für das
+        selektierte Element alle gesetzten Properties — und alle
+        ungesetzten, gruppiert nach Layout, Spacing, Typo, Color, Border,
+        Effects. Änderst du einen Wert per Slider, Input oder Picker,
+        wird die Zeile im Code an genau der richtigen Stelle ergänzt
+        oder ersetzt.
+      </p>
+
+      <!-- VIDEO PLACEHOLDER: tut-05-property-panel.webm -->
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Property-Panel)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Color- &amp; Token-Picker</h2>
+      <p>
+        Color-Properties (<code>bg</code>, <code>col</code>,
+        <code>boc</code>, <code>ic</code>) öffnen einen Picker mit zwei
+        Tabs: <em>Hex</em> für freie Farben und <em>Tokens</em> für die
+        im Projekt definierten Design-Tokens. Wählst du einen Token,
+        landet <code>$tokenname</code> im Code — wird der Token später
+        geändert, ändert sich überall die Farbe mit.
+      </p>
+
+      <!-- VIDEO PLACEHOLDER: tut-06-color-token-picker.webm -->
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Color- &amp; Token-Picker)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <!-- BLOCK C — Komponenten als Workflow                           -->
+    <!-- ============================================================ -->
+
+    <section>
+      <h2>Komponente extrahieren</h2>
+      <p>
+        Hast du dasselbe Element-Muster mehrfach verwendet, kannst du es
+        zu einer Komponente refactoren: Element selektieren, im Tree- oder
+        Property-Panel <em>„Komponente extrahieren"</em> wählen, Name
+        vergeben — Studio fügt die Komponenten-Definition oben ein und
+        ersetzt alle Instanzen durch den neuen Namen. Wiederholungen
+        werden zu einer Definition plus mehreren Verwendungen.
+      </p>
+
+      <!-- VIDEO PLACEHOLDER: tut-07-extract-component.webm -->
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Komponente extrahieren)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <!-- BLOCK D — Multi-File                                         -->
+    <!-- ============================================================ -->
+
+    <section>
+      <h2>Multi-File — Tokens, Komponenten, Layouts trennen</h2>
+      <p>
+        Größere Projekte teilst du auf mehrere Dateien auf:
+        <code>.tok</code> für Tokens, <code>.com</code> für Komponenten,
+        <code>.mir</code> für Layouts. Im File-Explorer links legst du
+        sie an, mit <kbd>Cmd</kbd>+<kbd>P</kbd> springst du schnell
+        zwischen ihnen. Tokens und Komponenten aus anderen Dateien sind
+        überall im Projekt verfügbar — keine Imports.
+      </p>
+
+      <!-- VIDEO PLACEHOLDER: tut-08-multi-file.webm -->
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Multi-File)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Und die AI-Sketches</h2>
+      <p>
+        Sketches mit <code>--</code> hat das vorherige Kapitel
+        ausführlich gezeigt — siehe
+        <a href="17-ai-bauen.html">AI-unterstütztes Bauen</a>. Der
+        AI-Flow ist der einzige Studio-Workflow, der über das reine
+        Bidirectional-Editing hinausgeht: hier schreibst du eine Skizze,
+        die AI übersetzt sie in Mirror-Code, du nimmst per Tab an oder
+        verwirfst per Esc.
+      </p>
+    </section>
+
+
+    <div class="summary">
+      <h2>Das Wichtigste</h2>
+      <table class="ref-table">
+        <tr><th>Geste im Preview</th><th>Effekt im Code</th></tr>
+        <tr><td>Element aus Palette ziehen</td><td>neue Mirror-Zeile am Drop-Punkt</td></tr>
+        <tr><td>Doppelklick auf Text</td><td>String in der Zeile ändern</td></tr>
+        <tr><td>Resize-Handle ziehen</td><td><code>w</code> / <code>h</code> updaten</td></tr>
+        <tr><td>Padding-Handle ziehen</td><td><code>pad</code> updaten</td></tr>
+        <tr><td>Margin-Handle ziehen</td><td><code>mar</code> updaten</td></tr>
+        <tr><td>Property im Panel ändern</td><td>Property-Wert in der Zeile</td></tr>
+        <tr><td>Color-Picker → Token wählen</td><td><code>$tokenname</code> statt Hex</td></tr>
+        <tr><td>„Extract Component"</td><td>Definition + Verwendungen</td></tr>
+      </table>
+
+      <p><strong>Das Prinzip:</strong> Studio ist kein eigenständiger Editor neben dem Code — es ist eine zweite Eingabe-Methode für genau dieselbe Datei. Was du im Preview tust, ist im Code lesbar; was du im Code änderst, ist im Preview sichtbar.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="17-ai-bauen.html">&larr; AI-unterstütztes Bauen</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <span class="next disabled">Ende</span>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

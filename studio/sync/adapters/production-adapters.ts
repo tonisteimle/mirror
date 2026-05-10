@@ -145,7 +145,7 @@ export function createDOMQueryPort(config: DOMQueryPortConfig = {}): DOMQueryPor
 export function createClockPort(): ClockPort {
   return {
     setTimeout(callback: () => void, delay: number): number {
-      return window.setTimeout(callback, delay) as unknown as number
+      return window.setTimeout(callback, delay)
     },
 
     clearTimeout(id: number): void {

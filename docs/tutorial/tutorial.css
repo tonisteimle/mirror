@@ -284,6 +284,16 @@ a:hover { text-decoration: underline; }
   line-height: 1.4;
   border-top: 1px solid var(--border);
 }
+.tutorial-video-placeholder {
+  margin: 24px 0;
+  padding: 48px 16px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-muted, #888);
+  font-size: 13px;
+  text-align: center;
+}
 
 /* Static Code Block (non-interactive, e.g. for JavaScript examples) */
 .code-block {

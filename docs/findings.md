@@ -24,14 +24,6 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
 
 ## Offen
 
-- **Wo:** ~32 verbleibende `import { X as XExtracted }` Aliase quer durch
-  `compiler/ir/` und `compiler/backends/dom/`
-  **Was:** Halbfertiger Refactor: extrahierte Pure-Funktionen werden via
-  Alias re-importiert, weil die Wrapper-Klassenmethoden die gleichen Namen
-  tragen. Ersetzbar durch Namespace-Imports (`import * as X from ...`) —
-  Pattern in `compiler/ir/ops/instance-ops.ts` etabliert.
-  **Status:** offen
-
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — eigene `componentMap`
@@ -98,13 +90,16 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Was:** Multi-Selection-Validierung filtert Knoten still ohne
   `multiselection:changed`-Emit — Listener sehen geänderte Auswahl erst beim
   nächsten expliziten Set.
-  **Status:** offen
+  **Status:** abgewiesen — Befund stale, Code hat den Emit bereits in
+  `state.ts:209`.
 
 - **Wo:** `studio/core/state.ts:736-750` (`findFallbackSelection`)
   **Was:** Simplistischer Fallback (`roots[0].nodeId`) ohne Sibling/Parent-
   Tracking. `findFallbackWithInfo()` direkt nebenan macht es richtig.
-  **Status:** offen
-  **Notiz:** Auf `findFallbackWithInfo` umstellen.
+  **Status:** erledigt (`f78e7f00`) — umbenannt zu `findFirstRootNode`,
+  unbenutzten Parameter entfernt, Doc-Comment auf `findFallbackWithInfo`
+  als Smart-Variante zeigt. Echtes Sibling-Aware-Fallback (Caller müssen
+  Info pre-computen) bleibt offen.
 
 - **Wo:** `studio/core/change-pipeline.ts:127`
   **Was:** `(ctx.intent as any).nodeId`-Cast umgeht Type-Check auf
@@ -122,7 +117,8 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Was:** `window.setTimeout(...) as unknown as number` — Double-Cast
   signalisiert kaputte Typdefinition upstream (native Return ist bereits
   `number`).
-  **Status:** offen
+  **Status:** erledigt (vor heutiger Session, Cast schon weg) —
+  bei Inspektion verifiziert, Code zeigt `return window.setTimeout(callback, delay)`.
 
 - **Wo:** `studio/core/command-executor.ts:54-56`
   **Was:** Re-Entrancy-Guard `if (this.executing) return { success: false }`
@@ -277,7 +273,22 @@ als`undefined`geloggt werden.
 
 Chronologisch absteigend (neueste zuerst).
 
-### 2026-05-10 — `*Extracted` Aliase (Phase 1)
+### 2026-05-10 — `*Extracted` Aliase (Kampagne abgeschlossen)
+
+- **Wo:** `compiler/parser/ops/parse-blocks.ts`,
+  `compiler/backends/dom/ops/emit-static.ts`, `compiler/backends/dom.ts`
+  **Was:** Letzte 8 Aliase entfernt. `0` `*Extracted`-Aliase verbleiben in
+  `compiler/` und `studio/` Production-Code (Start: ~38).
+  **Status:** erledigt (`9c3a2795`)
+
+- **Wo:** `compiler/parser/ops/parse-{control-flow,events,misc,expr,decls}.ts`
+  **Was:** ~25 Aliase via Namespace-Imports
+  (EachParser, StateChildParser, PropertyParser, EventParser, ZagParser,
+  AnimationParser, ExpressionParser, TokenParser, DataObjectParser,
+  DeclarationParser).
+  **Status:** erledigt (`44ae031a`)
+
+
 
 - **Wo:** `compiler/ir/index.ts`, `compiler/ir/transformers/validation.ts`
   **Was:** `addWarningExtracted` Alias war nur da wegen Namenskonflikt mit
