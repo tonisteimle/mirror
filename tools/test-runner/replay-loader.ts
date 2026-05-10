@@ -20,8 +20,6 @@
  * selector goes in verbatim.
  */
 
-import * as fs from 'fs'
-
 // Mirror of studio/test-api/replay-recorder.ts wire types. Kept inlined
 // rather than imported to keep the Node-side loader free of browser type
 // dependencies.
@@ -172,21 +170,4 @@ export function sessionToScenario(session: RecordedSession, name: string): Repla
   }
 
   return { name, setup: session.initialCode, steps }
-}
-
-/** Read a JSON session dump from disk and return the raw shape. */
-export function loadSession(path: string): RecordedSession {
-  const raw = fs.readFileSync(path, 'utf8')
-  const data = JSON.parse(raw) as Partial<RecordedSession>
-  if (typeof data.startedAt !== 'string' || !Array.isArray(data.events)) {
-    throw new Error(`Replay file at ${path} is not a valid RecordedSession`)
-  }
-  return data as RecordedSession
-}
-
-/** Read a session and translate to a Scenario in one go. */
-export function scenarioFromFile(path: string, name?: string): ReplayScenario {
-  const session = loadSession(path)
-  const scenarioName = name ?? `Replay: ${session.startedAt}`
-  return sessionToScenario(session, scenarioName)
 }
