@@ -91,12 +91,16 @@ function adjustCursor(oldVal: string, newVal: string, oldPos: number, pattern: s
   return Math.min(newPos, newVal.length)
 }
 
+// Per-input mask pattern, kept off the element so we don't bolt
+// untyped fields onto HTMLInputElement.
+const maskPatterns = new WeakMap<HTMLInputElement, string>()
+
 /**
  * Apply mask to an input element
  */
 export function applyMask(input: HTMLInputElement, pattern: string): void {
   // Store pattern for later retrieval
-  ;(input as any)._maskPattern = pattern
+  maskPatterns.set(input, pattern)
 
   // Format initial value if present
   if (input.value) {
@@ -148,6 +152,6 @@ export function applyMask(input: HTMLInputElement, pattern: string): void {
  * Get raw value from a masked input
  */
 export function getMaskRawValue(input: HTMLInputElement): string {
-  const pattern = (input as any)._maskPattern
+  const pattern = maskPatterns.get(input)
   return pattern ? getRawValue(input.value, pattern) : input.value
 }

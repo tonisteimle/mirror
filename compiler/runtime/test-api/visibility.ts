@@ -74,12 +74,10 @@ export function createVisibilityAPI(runtime: RuntimeFunctions): VisibilityTestAP
         el.style.display = ''
       }
 
-      // If element has a saved display value, restore it
-      // Using any cast to access custom _savedDisplay property on DOM element
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((el as any)._savedDisplay) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        el.style.display = (el as any)._savedDisplay
+      // If element has a saved display value, restore it.
+      // _savedDisplay is declared on MirrorElement.
+      if (el._savedDisplay) {
+        el.style.display = el._savedDisplay
       }
 
       // Update visibility if runtime supports it
@@ -100,8 +98,7 @@ export function createVisibilityAPI(runtime: RuntimeFunctions): VisibilityTestAP
       // Fallback: save display and hide
       const currentDisplay = window.getComputedStyle(el).display
       if (currentDisplay !== 'none') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (el as any)._savedDisplay = currentDisplay
+        el._savedDisplay = currentDisplay
       }
 
       el.style.display = 'none'
@@ -150,7 +147,7 @@ export function createVisibilityAPI(runtime: RuntimeFunctions): VisibilityTestAP
     // ----------------------------------------
 
     waitForVisible(el: MirrorElement, timeout: number = 1000): Promise<boolean> {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         if (!el) {
           resolve(false)
           return
@@ -177,7 +174,7 @@ export function createVisibilityAPI(runtime: RuntimeFunctions): VisibilityTestAP
     },
 
     waitForHidden(el: MirrorElement, timeout: number = 1000): Promise<boolean> {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         if (!el) {
           resolve(true) // null element is "hidden"
           return

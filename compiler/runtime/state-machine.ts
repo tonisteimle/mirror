@@ -237,10 +237,7 @@ function applyTransition(
   if (!anim) {
     Object.assign(el.style, newStyles as Partial<CSSStyleDeclaration>)
     if (isDebug()) {
-      console.log(
-        '[applyTransition] applied. el.style.background now:',
-        (el as any).style.background
-      )
+      console.log('[applyTransition] applied. el.style.background now:', el.style.background)
       console.log(
         '[applyTransition] computedStyle.backgroundColor:',
         getComputedStyle(el).backgroundColor
@@ -298,12 +295,7 @@ export function transitionTo(
   animation?: StateAnimation
 ): void {
   if (isDebug()) {
-    console.log(
-      '[transitionTo] called:',
-      stateName,
-      'on',
-      (el as any)?.dataset?.mirrorId || 'unknown'
-    )
+    console.log('[transitionTo] called:', stateName, 'on', el?.dataset?.mirrorId || 'unknown')
   }
 
   if (!el?._stateMachine) {

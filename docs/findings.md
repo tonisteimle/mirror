@@ -306,7 +306,11 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
   **Was:** Aggregat: 105× `as any` (53 in `studio/`, 44 in `tools/`, 8 in
   `compiler/`), 7× `@ts-expect-error` (5 davon in `tauri-bridge.ts`), 1×
   `any[]` Parameter in `compiler/ir/ops/` Layout.
-  **Status:** offen
+  **Status:** offen — 7 von 8 `compiler/` `as any` weg (state-machine
+  el-style/dataset, input-mask via WeakMap statt Element-Mutation,
+  visibility \_savedDisplay direkt via MirrorElement-Field). Verbleibt
+  1 in `animations.ts:262` (motion-Lib-API-Shape-Mismatch). Alle 5
+  `@ts-expect-error` in `tauri-bridge.ts` weg (siehe oben).
   **Notiz:** Numerische Baseline — bei jedem Refactor sollte die Zahl
   runter.
 
