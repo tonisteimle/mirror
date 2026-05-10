@@ -29,6 +29,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { parse } from '../../compiler/parser'
+import { validate } from '../../compiler/validator'
 import { generateDOM } from '../../compiler/backends/dom'
 import { generateReact } from '../../compiler/backends/react'
 import { generateFramework } from '../../compiler/backends/framework'
@@ -356,5 +357,27 @@ Frame grid 12
     const { SCHEMA } = await import('../../compiler/schema/property-schema')
     expect(SCHEMA.x.numeric?.css(10, [10])).toEqual([])
     expect(SCHEMA.y.numeric?.css(50, [50])).toEqual([])
+  })
+
+  // V-6 (B-1): Validator rejects w/h: 0 — both the degenerate width-0 and
+  // span-0 forms. `mar 0`/`pad 0`/`gap 0` (zero-spacing) remain valid.
+  it('RT-20 — `Frame w 0` is rejected (E105)', () => {
+    const r = validate('Frame w 0')
+    expect(r.valid).toBe(false)
+    expect(r.errors.some(e => e.code === 'E105')).toBe(true)
+  })
+
+  it('RT-21 — `Frame h 0` is rejected (E105)', () => {
+    const r = validate('Frame h 0')
+    expect(r.valid).toBe(false)
+    expect(r.errors.some(e => e.code === 'E105')).toBe(true)
+  })
+
+  it('RT-22 — `Frame w 1, h 1` is accepted (boundary)', () => {
+    expect(validate('Frame w 1, h 1').valid).toBe(true)
+  })
+
+  it('RT-23 — `Frame mar 0, pad 0, gap 0` stays valid (regression-pin)', () => {
+    expect(validate('Frame mar 0, pad 0, gap 0').valid).toBe(true)
   })
 })

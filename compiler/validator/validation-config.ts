@@ -130,10 +130,17 @@ export const PROPERTY_RANGES: Record<string, PropertyRange> = {
   // but `width: -10px` is just garbage.
   'font-size': { min: 0, description: 'greater than or equal to 0' },
   fs: { min: 0, description: 'greater than or equal to 0' },
-  width: { min: 0, description: 'greater than or equal to 0' },
-  w: { min: 0, description: 'greater than or equal to 0' },
-  height: { min: 0, description: 'greater than or equal to 0' },
-  h: { min: 0, description: 'greater than or equal to 0' },
+  // Slice 7 V-6: `w 0` / `h 0` are degenerate in both contexts:
+  // - outside grid: `width: 0` renders nothing (no legitimate use found in
+  //   examples/ or fixtures/) and is more clearly written `hidden`
+  // - in grid: `grid-column-end: span 0` is invalid CSS, browser treats as
+  //   auto, hides the element silently
+  // Forcing min: 1 closes both edge cases. `minw 0` / `minh 0` (separate
+  // properties) keep min: 0 to stay compatible with the `flex` reset pattern.
+  width: { min: 1, description: 'positive integer (1 or more)' },
+  w: { min: 1, description: 'positive integer (1 or more)' },
+  height: { min: 1, description: 'positive integer (1 or more)' },
+  h: { min: 1, description: 'positive integer (1 or more)' },
   radius: { min: 0, description: 'greater than or equal to 0' },
   rad: { min: 0, description: 'greater than or equal to 0' },
   gap: { min: 0, description: 'greater than or equal to 0' },

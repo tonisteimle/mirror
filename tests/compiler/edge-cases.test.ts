@@ -229,12 +229,12 @@ describe('Edge Cases: Unicode and Special Characters', () => {
   })
 
   it('handles RTL characters in strings', () => {
-    const result = validate('Text "مرحبا"')  // Arabic "hello"
+    const result = validate('Text "مرحبا"') // Arabic "hello"
     expect(result.valid).toBe(true)
   })
 
   it('handles combining characters', () => {
-    const result = validate('Text "café"')  // e with combining acute accent
+    const result = validate('Text "café"') // e with combining acute accent
     expect(result.valid).toBe(true)
   })
 })
@@ -300,8 +300,15 @@ Btn "Click"`)
 
 describe('Edge Cases: Number Boundaries', () => {
   it('handles zero', () => {
-    const result = validate('Frame w 0')
+    // Slice 7 V-6: `Frame w 0` now emits E105 — width must be ≥ 1.
+    // `mar 0` / `pad 0` / `gap 0` are still valid (zero-spacing is meaningful).
+    const result = validate('Frame mar 0, pad 0, gap 0')
     expect(result.valid).toBe(true)
+  })
+
+  it('rejects width 0 / height 0 (Slice 7 V-6)', () => {
+    expect(validate('Frame w 0').valid).toBe(false)
+    expect(validate('Frame h 0').valid).toBe(false)
   })
 
   it('handles negative numbers', () => {
