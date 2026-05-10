@@ -18,6 +18,9 @@ import { tutorial05 } from './tut-05-property-panel.demo'
 import { tutorial06 } from './tut-06-reorder.demo'
 import { tutorial07 } from './tut-07-code-edit.demo'
 import { tutorial08 } from './tut-08-multi-file.demo'
+import { stateHoverFocus } from './state-hover-focus.demo'
+import { stateToggle } from './state-toggle.demo'
+import { stateCrossElement } from './state-cross-element.demo'
 
 export const demoTests: TestCase[] = [
   ...demoTextIntoFrame,
@@ -29,4 +32,7 @@ export const demoTests: TestCase[] = [
   ...tutorial06,
   ...tutorial07,
   ...tutorial08,
+  ...stateHoverFocus,
+  ...stateToggle,
+  ...stateCrossElement,
 ]
