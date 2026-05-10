@@ -41,15 +41,26 @@ export function transformEvents(events: Event[]): IREvent[] {
 /**
  * Transform action to IR format.
  * Identifies built-in state functions (toggle, cycle, exclusive).
+ *
+ * Special case: `toggle(ElementName)` (PascalCase single argument) is
+ * *not* a state-machine action — it's a visibility toggle on the named
+ * element. Mark it as a regular runtime call so the DOM emitter routes
+ * it to `_runtime.toggle(_elements['…'])` instead of synthesizing a
+ * state-machine on the click source. See findings.md "toggle(ElementName)".
  */
 export function transformAction(action: Action): IRAction {
   const isBuiltin = BUILTIN_STATE_FUNCTIONS.has(action.name)
+  const isElementNameToggle =
+    (action.name === 'toggle' || action.name === 'cycle') &&
+    !!action.args &&
+    action.args.length === 1 &&
+    /^[A-Z]/.test(action.args[0])
 
   return {
     type: action.name,
     target: action.target,
     args: action.args,
     isFunctionCall: action.isFunctionCall,
-    isBuiltinStateFunction: action.isFunctionCall && isBuiltin,
+    isBuiltinStateFunction: action.isFunctionCall && isBuiltin && !isElementNameToggle,
   }
 }

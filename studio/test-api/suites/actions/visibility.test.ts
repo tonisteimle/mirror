@@ -2,7 +2,7 @@
  * Visibility Actions — show/hide/toggle for elements
  */
 
-import { testWithSetup, testWithSetupSkip, describe, type TestCase } from '../../test-runner'
+import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 
 export const visibilityActionTests: TestCase[] = describe('Visibility Actions', [
@@ -57,8 +57,7 @@ export const visibilityActionTests: TestCase[] = describe('Visibility Actions', 
     }
   ),
 
-  // TODO: Runtime bug - toggle(ElementName) doesn't work correctly
-  testWithSetupSkip(
+  testWithSetup(
     'toggle() switches visibility on each click',
     `Frame gap 12, pad 16, bg #1a1a1a
   Button "Toggle Menu", toggle(Menu)

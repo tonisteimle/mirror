@@ -187,8 +187,21 @@ export function emitAction(ctx: EventEmitterContext, action: IRAction, currentVa
         case 'toggle':
         case 'cycle': // cycle() is now an alias for toggle()
           if (action.args && action.args.length > 0) {
-            const states = action.args.map(s => `'${s}'`).join(', ')
-            ctx.emit(`_runtime.stateMachineToggle(${currentVar}, [${states}])`)
+            // PascalCase single arg = element name → visibility toggle.
+            // Lowercase args = state names → state-machine cycle.
+            // Mirror's broader DSL convention is PascalCase for
+            // components/elements; following the same rule here keeps
+            // `toggle(Menu)` (show/hide Menu element) and
+            // `toggle(on, off)` (cycle between two states) both working.
+            // See `studio/test-api/suites/actions/visibility.test.ts:60`
+            // and `tests/differential/actions.test.ts` pins.
+            const isElementName = action.args.length === 1 && /^[A-Z]/.test(action.args[0])
+            if (isElementName) {
+              ctx.emit(`_runtime.toggle(_elements['${action.args[0]}'])`)
+            } else {
+              const states = action.args.map(s => `'${s}'`).join(', ')
+              ctx.emit(`_runtime.stateMachineToggle(${currentVar}, [${states}])`)
+            }
           } else {
             ctx.emit(`_runtime.stateMachineToggle(${currentVar})`)
           }
@@ -228,6 +241,19 @@ function emitRuntimeAction(
         ctx.emit(`_runtime.show(_elements['${action.args[0]}'])`)
       } else {
         ctx.emit(`_runtime.show(${currentVar})`)
+      }
+      break
+    case 'toggle':
+    case 'cycle':
+      // Reachable when args[0] is PascalCase (element name) — the IR
+      // de-flagged it from `isBuiltinStateFunction` so it lands here.
+      // Lowercase or no-args toggle goes through the state-machine
+      // path (see top-level `case 'toggle'` in emitAction). See
+      // findings.md "toggle(ElementName)".
+      if (action.args && action.args.length > 0) {
+        ctx.emit(`_runtime.toggle(_elements['${action.args[0]}'])`)
+      } else {
+        ctx.emit(`_runtime.toggle(${currentVar})`)
       }
       break
     case 'hide':

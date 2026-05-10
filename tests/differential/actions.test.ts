@@ -46,4 +46,31 @@ describe('Actions — DOM emits action runtime calls', () => {
     )
     expect(dom).toMatch(/_state|setState/)
   })
+
+  it('toggle(ElementName) toggles the named element visibility, not own state-machine', () => {
+    // PIN: pre-2026-05-10 `toggle(Menu)` emitted
+    // `_runtime.stateMachineToggle(buttonNode, ['Menu'])` — i.e. toggled
+    // the *button's* state-machine between `default` and `'Menu'`. User
+    // intent is „show/hide the Menu element". PascalCase argument is
+    // the discriminator: PascalCase = element name → visibility-toggle,
+    // lowercase = state name → cycle-state.
+    const dom = generateDOM(
+      parse(`Button "Toggle", toggle(Menu)\nFrame name Menu, hidden\n  Text "Hi"`)
+    )
+    // The button click handler resolves the named element and calls
+    // `_runtime.toggle` (visibility helper, not stateMachineToggle).
+    expect(dom).toMatch(/_runtime\.toggle\(_elements\['Menu'\]\)/)
+    expect(dom).not.toMatch(/stateMachineToggle\([^,]+,\s*\['Menu'\]\)/)
+  })
+
+  it('toggle(stateName) keeps state-machine cycling for lowercase args', () => {
+    // PIN: lowercase args stay state names — preserves multi-state
+    // cycle semantics like `toggle(on, off)`.
+    const dom = generateDOM(
+      parse(
+        `Btn: bg #333, toggle(on, off)\n  on:\n    bg #2271C1\n  off:\n    bg #333\n\nBtn "Click"`
+      )
+    )
+    expect(dom).toMatch(/stateMachineToggle\([^,]+,\s*\['on', 'off'\]\)/)
+  })
 })

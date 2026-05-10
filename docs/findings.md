@@ -115,25 +115,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
-- **Wo:** `compiler/backends/dom/event-emitter.ts:187-195` (`toggle`/`cycle`)
-  **Was:** `toggle(Menu)` (mit Element-Name-Argument) wird falsch
-  emittiert: aktuell `_runtime.stateMachineToggle(currentVar, ['Menu'])`
-  — also wird die State-Machine des Click-Targets (Button) zwischen
-  `default` und `'Menu'` toggled. User-Intent ist aber: Visibility des
-  Menu-Frames togglen. Test
-  `studio/test-api/suites/actions/visibility.test.ts:60` ist deshalb
-  `testWithSetupSkip`.
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~19:25)
-  **Plan:**
-  1. Im `toggle`/`cycle`-Case: wenn `args.length === 1` und
-     `args[0]` PascalCase startet → emit
-     `_runtime.toggle(_elements['<Name>'])` (visibility-toggle).
-     Sonst alter Pfad (`stateMachineToggle(currentVar, [...])`).
-  2. Pre-Refactor-Pin: behavior-Test mit `toggle(Menu)` und expected
-     hidden→visible→hidden Verhalten.
-  3. `testWithSetupSkip` → `testWithSetup` in visibility.test.ts.
-  4. Compiler+behavior-Suite grün, commit.
-
 - **Wo:** `studio/test-api/mirror-actions/index.ts:dropChildIndexPoint`
   - Studios Drop-Target-Detection (`studio/preview/drag/...`)
     **Was:** Drop into a container tight-packed with children (3 children
@@ -919,6 +900,26 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — `toggle(ElementName)` toggled jetzt Element-Visibility statt State-Machine
+
+- **Wo:** `compiler/ir/transformers/event-transformer.ts:transformAction`,
+  `compiler/backends/dom/event-emitter.ts:emitRuntimeAction`,
+  `tests/differential/actions.test.ts` (2 Pins),
+  `studio/test-api/suites/actions/visibility.test.ts`
+  **Was:** Zweiter Inkrement aus dem Runtime-Bug-TODO-Bucket. Pre-Fix
+  emittierte `toggle(Menu)` als `_runtime.stateMachineToggle(buttonNode,
+['Menu'])` — d.h. die State-Machine des Buttons wurde zwischen
+  `default` und `'Menu'` getoggled. User-Intent: Visibility des Menu-
+  Frames togglen. Discriminator: PascalCase-Argument =
+  Element-Name → `_runtime.toggle(_elements[…])`. Lowercase oder
+  no-args = State-Cycling (alter Pfad). IR-Transformer markiert
+  PascalCase-toggle nicht mehr als `isBuiltinStateFunction`, der
+  DOM-Emitter route es durch `emitRuntimeAction`. Differential-Pin in
+  `tests/differential/actions.test.ts` (Element-Name vs. State-Name).
+  Browser-Test `testWithSetupSkip` → `testWithSetup`. 15430/15430
+  vitest grün.
+  **Status:** erledigt
 
 ### 2026-05-10 — `scrollToTop()` / `scrollToBottom()` ohne Arg scrollen jetzt den Container
 
