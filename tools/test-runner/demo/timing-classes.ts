@@ -34,23 +34,24 @@ export interface TimingClassValues {
 
 export const TIMING_CLASSES: Record<TimingClassName, TimingClassValues> = {
   // Palette → preview drops (and element-to-container moves).
-  // Long dwell so Mirror's drop indicator fully renders before release.
-  drop: { preHoldMs: 220, dwellMs: 800, settleMs: 360 },
+  // Dwell long enough for Mirror's drop indicator to render, but short
+  // enough to keep demo videos snappy.
+  drop: { preHoldMs: 120, dwellMs: 360, settleMs: 200 },
 
-  // Resize / padding / margin handle drags. Slightly faster than drops:
-  // the changing element itself is the indicator.
-  handle: { preHoldMs: 180, dwellMs: 600, settleMs: 260 },
+  // Resize / padding / margin handle drags. Faster than drops — the
+  // changing element itself is the indicator.
+  handle: { preHoldMs: 90, dwellMs: 240, settleMs: 140 },
 
   // Inline-edit / setProperty / pickColor — click into a field and
   // change it. No drag, no dwell at destination.
-  edit: { preHoldMs: 140, dwellMs: 0, settleMs: 200 },
+  edit: { preHoldMs: 70, dwellMs: 0, settleMs: 110 },
 
   // Plain selection click on a preview node or panel chrome.
-  click: { preHoldMs: 0, dwellMs: 0, settleMs: 180 },
+  click: { preHoldMs: 0, dwellMs: 0, settleMs: 90 },
 
-  // Typing into the editor (JS-dispatched, deterministic across keyboard
-  // layouts). settleMs gives Mirror's compile a beat before the next step.
-  typing: { preHoldMs: 0, dwellMs: 0, settleMs: 200 },
+  // Typing into the editor. settleMs gives Mirror's compile a beat
+  // before the next step.
+  typing: { preHoldMs: 0, dwellMs: 0, settleMs: 110 },
 }
 
 export function getTimingClass(name: TimingClassName): TimingClassValues {

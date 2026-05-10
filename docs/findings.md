@@ -129,27 +129,6 @@ Alias-Equivalenz`) deckt die Drei-Alias-Equivalenz schon ab.
   einzeln: ins Schema aufnehmen (mit Aliases) ODER aus IR entfernen.
   **Status:** offen
 
-- **Wo:** `tools/probes/probe-*.ts` (70 Files)
-  **Was:** Probe-Hygiene. Werkzeug-Konvention sagt „re-runnable
-  Schema-Drift- und Cross-Backend-Probes (committet, nicht in `/tmp`)
-  überleben Sessions". Audit nach dem Snapshot-Commit `23f2d985`:
-  alle 70 generic `probe-*.ts` (im Gegensatz zu den 25 `slice-NN-*.ts`)
-  haben **0 externe Referenzen** in TS/MD/JSON, und alle wurden im
-  selben Snapshot zum ersten Mal committet — also reine Throwaway-
-  Debug-Iteration aus älteren Sessions, die als untracked Files
-  herumlagen. Konkrete Cluster: `probe-react-edge.ts` … `probe-react-
-edge10.ts` (10 Files), `probe-fw-edge.ts` … `probe-fw-edge4.ts`
-  (4 Files), plus 56 weitere thematisch verstreut. Inhalte sind
-  durchweg `console.log`-Dumps von Compiler-Output für ad-hoc Cases,
-  die heute alle in `tests/differential/*.test.ts` gepinnt sind
-  (24-Slice-Hunt erledigt, siehe „Erledigt").
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~18:40)
-  **Plan:**
-  1. Alle 70 `tools/probes/probe-*.ts` löschen (Git-History bewahrt
-     sie für Notfall-Restoration via `git show 23f2d985:<pfad>`).
-  2. `slice-NN-*.ts` Probes bleiben unverändert (folgen Konvention).
-  3. Eintrag nach „Erledigt" mit neuem Commit-Hash.
-
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
@@ -801,6 +780,20 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — Probe-Hygiene: 70 throwaway `probe-*.ts` gelöscht
+
+- **Wo:** `tools/probes/probe-*.ts` (70 Files)
+  **Was:** Alle 70 generic `probe-*.ts` ohne externe Referenzen und
+  ohne Slice-NN-Konvention gelöscht — Throwaway-Debug-Iteration aus
+  älteren Sessions, deren Cases heute über `tests/differential/*.test.ts`
+  gepinnt sind. Cluster: `probe-react-edge.ts` … `probe-react-edge10.ts`,
+  `probe-fw-edge.ts` … `probe-fw-edge4.ts`, plus 56 verstreute
+  Einzel-Probes. Konvention bleibt: `slice-NN-*.ts` (25 Files) sind
+  kuratierte Re-Run-Werkzeuge, generic `probe-*.ts` waren es nie.
+  Git-History bewahrt die Files für Notfall-Restoration via
+  `git show 23f2d985:<pfad>`.
+  **Status:** erledigt (`<probe-rm-commit>`)
 
 ### 2026-05-10 — Lane 2, Inkrement 1: Schema-driven alias resolution in `property-transformer.ts`
 

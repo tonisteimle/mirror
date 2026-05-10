@@ -18,7 +18,6 @@ import type { DragSource } from '../../preview/drag'
 import { setCurrentDragData, clearCurrentDragData } from '../../preview/drag-preview'
 import { getFixture } from '../../preview/drag/test-api/fixtures'
 import { LAYOUT_SECTION, COMPONENTS_SECTION } from '../../panels/components/layout-presets'
-import { getComponentIcon } from '../../icons'
 
 /**
  * Selectorish — a structured Selector OR a string shorthand. The runner
@@ -276,7 +275,7 @@ export function installMirrorActions(): MirrorActionsAPI {
   ): Promise<T> => {
     const cursor = win.__mirrorDemo && win.__mirrorDemo.cursor
     if (cursor) cursor.showClickEffect()
-    await delay(opts.preHoldMs ?? 200)
+    await delay(opts.preHoldMs ?? 100)
     const moveDur =
       opts.moveMs ?? (cursor && targetPoint ? cursor.calculateDuration(targetPoint) : 0)
     const triggerAt = Math.max(0, Math.round(moveDur * (opts.triggerFrac ?? 0.7)))
@@ -289,7 +288,7 @@ export function installMirrorActions(): MirrorActionsAPI {
     await motionPromise
     const result = await opPromise
     if (cursor) cursor.showClickEffect()
-    await delay(opts.settleMs ?? 280)
+    await delay(opts.settleMs ?? 160)
     return result
   }
 
@@ -310,12 +309,12 @@ export function installMirrorActions(): MirrorActionsAPI {
     endPoint: Point | null,
     durationMs: number,
     realOpFn: () => Promise<T> | T,
-    settleMs = 180
+    settleMs = 90
   ): Promise<T> => {
     const cursor = win.__mirrorDemo && win.__mirrorDemo.cursor
     if (cursor && endPoint) await cursor.moveTo(endPoint, durationMs)
     if (cursor) cursor.showClickEffect()
-    await delay(60)
+    await delay(40)
     const result = await realOpFn()
     await delay(settleMs)
     return result
@@ -398,257 +397,6 @@ export function installMirrorActions(): MirrorActionsAPI {
   }
 
   /**
-   * Render the same drag-preview chip Studio shows when a real user drags
-   * a palette item — icon + component name in a dark rounded chip with a
-   * shadow. Follows the demo cursor via rAF. Studio's own `setDragImage`
-   * is what produces this chip during a real drag (see component-panel.ts
-   * `setupVisibleDragImage`); we mirror it byte-for-byte so the demo
-   * matches reality instead of inventing a fake colored block.
-   */
-  const attachStudioDragPreview = (iconKey: string | undefined, name: string): (() => void) => {
-    const cursor = win.__mirrorDemo && win.__mirrorDemo.cursor
-    if (!cursor) return () => {}
-
-    const chip = document.createElement('div')
-    Object.assign(chip.style, {
-      position: 'fixed',
-      left: '0',
-      top: '0',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      padding: '8px 12px',
-      background: '#1a1a1a',
-      border: '1px solid #333',
-      borderRadius: '6px',
-      color: '#fff',
-      fontSize: '13px',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-      boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-      pointerEvents: 'none',
-      whiteSpace: 'nowrap',
-      zIndex: '999998',
-      opacity: '0',
-      transform: 'translate(0,0)',
-      transition: 'opacity 180ms ease-out',
-    })
-
-    if (iconKey) {
-      const iconSpan = document.createElement('span')
-      try {
-        iconSpan.innerHTML = getComponentIcon(iconKey)
-      } catch {
-        // ignore — chip without icon is still legible
-      }
-      Object.assign(iconSpan.style, {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '16px',
-        height: '16px',
-        color: '#888',
-      })
-      const svg = iconSpan.querySelector('svg')
-      if (svg) {
-        svg.style.width = '16px'
-        svg.style.height = '16px'
-      }
-      chip.appendChild(iconSpan)
-    }
-
-    const text = document.createElement('span')
-    text.textContent = name
-    chip.appendChild(text)
-    document.body.appendChild(chip)
-
-    let alive = true
-    let raf = 0
-    const tick = (): void => {
-      if (!alive) return
-      const p = cursor.getPosition()
-      // Offset down-right of the cursor tip — same anchor as setDragImage(20,20).
-      chip.style.left = p.x - 20 + 'px'
-      chip.style.top = p.y - 20 + 'px'
-      raf = requestAnimationFrame(tick)
-    }
-    requestAnimationFrame(() => {
-      chip.style.opacity = '1'
-      tick()
-    })
-
-    return (): void => {
-      alive = false
-      if (raf) cancelAnimationFrame(raf)
-      chip.style.transition = 'opacity 220ms ease-in'
-      chip.style.opacity = '0'
-      setTimeout(() => chip.remove(), 240)
-    }
-  }
-
-  const attachDragGhost = (label: string): (() => void) => {
-    const cursor = win.__mirrorDemo && win.__mirrorDemo.cursor
-    if (!cursor) return () => {}
-    const ghost = document.createElement('div')
-    ghost.style.cssText =
-      'position:fixed;width:80px;height:60px;' +
-      'background:rgba(91,168,245,0.18);' +
-      'border:2px solid rgba(91,168,245,0.85);' +
-      'border-radius:6px;' +
-      'box-shadow:0 6px 20px rgba(0,0,0,0.35);' +
-      'pointer-events:none;z-index:999998;' +
-      'display:flex;align-items:center;justify-content:center;' +
-      'color:white;font-family:system-ui,-apple-system,sans-serif;' +
-      'font-size:11px;font-weight:600;' +
-      'text-shadow:0 1px 2px rgba(0,0,0,0.6);' +
-      'transform:translate(0,0);opacity:0;' +
-      'transition:opacity 180ms ease-out;'
-    ghost.textContent = label || ''
-    document.body.appendChild(ghost)
-
-    let rafHandle = 0
-    let alive = true
-    const tick = (): void => {
-      if (!alive) return
-      const p = cursor.getPosition()
-      ghost.style.left = p.x + 14 + 'px'
-      ghost.style.top = p.y + 14 + 'px'
-      rafHandle = requestAnimationFrame(tick)
-    }
-    requestAnimationFrame(() => {
-      ghost.style.opacity = '1'
-      tick()
-    })
-
-    return (): void => {
-      alive = false
-      if (rafHandle) cancelAnimationFrame(rafHandle)
-      ghost.style.transition = 'opacity 220ms ease-in'
-      ghost.style.opacity = '0'
-      setTimeout(() => {
-        ghost.remove()
-      }, 240)
-    }
-  }
-
-  /**
-   * Synthesize a drop-zone preview around `targetEl` plus an insertion line
-   * at `endPoint`. Used by `dropFromPalette` so the viewer sees *where* the
-   * dragged item will land before the cursor finishes moving — same colors
-   * and z-indices as the empty-canvas branch's indicators so both flows
-   * feel identical. Returns a `destroy()` that fades them out.
-   *
-   * Insertion-line orientation follows the target's flex-direction:
-   *   - horizontal layout → vertical line between siblings
-   *   - vertical layout (default) → horizontal line between siblings
-   */
-  const showDropIndicators = (targetEl: HTMLElement, endPoint: Point): (() => void) => {
-    const targetRect = targetEl.getBoundingClientRect()
-    const targetStyle = window.getComputedStyle(targetEl)
-    const isHor =
-      targetStyle.display.startsWith('flex') &&
-      (targetStyle.flexDirection || 'row').startsWith('row')
-
-    const containerRing = document.createElement('div')
-    containerRing.style.cssText =
-      'position:fixed;' +
-      'left:' +
-      targetRect.left +
-      'px;' +
-      'top:' +
-      targetRect.top +
-      'px;' +
-      'width:' +
-      targetRect.width +
-      'px;' +
-      'height:' +
-      targetRect.height +
-      'px;' +
-      'border:2px dashed #5BA8F5;' +
-      'border-radius:8px;' +
-      'background:rgba(91,168,245,0.05);' +
-      'box-sizing:border-box;' +
-      'pointer-events:none;z-index:999990;' +
-      'opacity:0;transition:opacity 240ms ease-out;'
-    document.body.appendChild(containerRing)
-
-    const insertionLine = document.createElement('div')
-    if (isHor) {
-      // Vertical line between two horizontal siblings.
-      insertionLine.style.cssText =
-        'position:fixed;' +
-        'left:' +
-        (endPoint.x - 1) +
-        'px;' +
-        'top:' +
-        (targetRect.top + 6) +
-        'px;' +
-        'width:3px;' +
-        'height:' +
-        Math.max(20, targetRect.height - 12) +
-        'px;' +
-        'background:#5BA8F5;' +
-        'box-shadow:0 0 8px rgba(91,168,245,0.6);' +
-        'border-radius:2px;' +
-        'pointer-events:none;z-index:999991;' +
-        'opacity:0;transition:opacity 200ms ease-out;'
-    } else {
-      // Horizontal line between two stacked siblings.
-      insertionLine.style.cssText =
-        'position:fixed;' +
-        'left:' +
-        (targetRect.left + 6) +
-        'px;' +
-        'top:' +
-        (endPoint.y - 1) +
-        'px;' +
-        'width:' +
-        Math.max(40, targetRect.width - 12) +
-        'px;' +
-        'height:3px;' +
-        'background:#5BA8F5;' +
-        'box-shadow:0 0 8px rgba(91,168,245,0.6);' +
-        'border-radius:2px;' +
-        'pointer-events:none;z-index:999991;' +
-        'opacity:0;transition:opacity 200ms ease-out;'
-    }
-    document.body.appendChild(insertionLine)
-
-    // Reveal just before the cursor arrives so the viewer's eye lands on
-    // them at the same beat as the drop, not while the cursor is still far.
-    const showAt = setTimeout(() => {
-      containerRing.style.opacity = '1'
-      insertionLine.style.opacity = '1'
-    }, 600)
-
-    return (): void => {
-      clearTimeout(showAt)
-      containerRing.style.transition = 'opacity 280ms ease-in'
-      insertionLine.style.transition = 'opacity 200ms ease-in'
-      containerRing.style.opacity = '0'
-      insertionLine.style.opacity = '0'
-      setTimeout(() => {
-        containerRing.remove()
-        insertionLine.remove()
-      }, 300)
-    }
-  }
-
-  /**
-   * Glow ring + value chip around a property-panel field, so viewers can
-   * track which field changed and what the new value is during
-   * setProperty / pickColor. Two layers:
-   *
-   *   - A ring positioned-fixed over the element's rect, color matching
-   *     Mirror's own focus-ring blue.
-   *   - A floating chip "→ value" anchored to the element's right edge,
-   *     truncated for long values. The chip is what makes the change
-   *     legible at a glance — the ring just says "look here".
-   *
-   * The caller controls when both fade out via the returned destroy().
-   * Callers should keep the ring visible for ≥600ms so the eye has time
-   * to read the chip and match it to the preview update.
-   */
-  /**
    * Type `value` into a focused input character-by-character so viewers see
    * real character entry instead of an instant whole-string replacement.
    * Existing content is cleared first; each char fires an `input` event so
@@ -669,107 +417,6 @@ export function installMirrorActions(): MirrorActionsAPI {
       input.dispatchEvent(new Event('input', { bubbles: true }))
       // Light variance (±25%) so the typing feels natural rather than mechanical.
       await delay(charDelayMs * (0.75 + Math.random() * 0.5))
-    }
-  }
-
-  const highlightField = (el: HTMLElement, valueLabel: string, showChip = true): (() => void) => {
-    const rect = el.getBoundingClientRect()
-
-    const ring = document.createElement('div')
-    ring.style.cssText =
-      'position:fixed;' +
-      'left:' +
-      (rect.left - 4) +
-      'px;' +
-      'top:' +
-      (rect.top - 4) +
-      'px;' +
-      'width:' +
-      (rect.width + 8) +
-      'px;' +
-      'height:' +
-      (rect.height + 8) +
-      'px;' +
-      'border:2px solid #5BA8F5;' +
-      'border-radius:6px;' +
-      'box-shadow:0 0 0 4px rgba(91,168,245,0.18), 0 0 12px rgba(91,168,245,0.5);' +
-      'background:rgba(91,168,245,0.06);' +
-      'box-sizing:border-box;' +
-      'pointer-events:none;z-index:999992;' +
-      'opacity:0;transition:opacity 220ms ease-out;'
-    document.body.appendChild(ring)
-
-    const chip = showChip ? document.createElement('div') : null
-    if (chip) {
-      const trimmed = valueLabel.length > 28 ? valueLabel.slice(0, 28) + '…' : valueLabel
-      chip.textContent = '→ ' + trimmed
-      chip.style.cssText =
-        'position:fixed;' +
-        'left:' +
-        (rect.right + 12) +
-        'px;' +
-        'top:' +
-        (rect.top + rect.height / 2 - 14) +
-        'px;' +
-        'background:rgba(91,168,245,0.95);' +
-        'color:white;' +
-        'padding:6px 12px;' +
-        'border-radius:6px;' +
-        'font-family:ui-monospace,SFMono-Regular,Menlo,monospace;' +
-        'font-size:13px;font-weight:600;' +
-        'white-space:nowrap;' +
-        'box-shadow:0 4px 12px rgba(0,0,0,0.3);' +
-        'pointer-events:none;z-index:999993;' +
-        'opacity:0;transform:translateX(-6px);' +
-        'transition:opacity 220ms ease-out,transform 220ms ease-out;'
-      document.body.appendChild(chip)
-    }
-
-    requestAnimationFrame(() => {
-      ring.style.opacity = '1'
-      if (chip) {
-        chip.style.opacity = '1'
-        chip.style.transform = 'translateX(0)'
-      }
-    })
-
-    return (): void => {
-      ring.style.transition = 'opacity 260ms ease-in'
-      ring.style.opacity = '0'
-      if (chip) {
-        chip.style.transition = 'opacity 220ms ease-in,transform 220ms ease-in'
-        chip.style.opacity = '0'
-        chip.style.transform = 'translateX(-6px)'
-      }
-      setTimeout(() => {
-        ring.remove()
-        if (chip) chip.remove()
-      }, 280)
-    }
-  }
-
-  const pressPaletteItem = (el: HTMLElement | null): (() => void) => {
-    if (!el) return () => {}
-    const prev = {
-      transform: el.style.transform,
-      boxShadow: el.style.boxShadow,
-      transition: el.style.transition,
-      filter: el.style.filter,
-    }
-    el.style.transition =
-      'transform 140ms ease-out, box-shadow 140ms ease-out, filter 140ms ease-out'
-    el.style.transform = (prev.transform || '') + ' scale(1.06)'
-    el.style.boxShadow = '0 8px 24px rgba(91,168,245,0.55), 0 0 0 2px rgba(91,168,245,0.85) inset'
-    el.style.filter = 'brightness(1.15)'
-    return (): void => {
-      el.style.transition =
-        'transform 200ms ease-in, box-shadow 200ms ease-in, filter 200ms ease-in'
-      el.style.transform = prev.transform
-      el.style.boxShadow = prev.boxShadow
-      el.style.filter = prev.filter
-      setTimeout(() => {
-        el.style.transition = prev.transition
-      }, 220)
     }
   }
 
@@ -803,6 +450,11 @@ export function installMirrorActions(): MirrorActionsAPI {
     if (paletteEl) await visitElement(paletteEl)
 
     // Special case: empty / canvas-only editor (no node tree yet).
+    // Studio's real DragController has no target container to highlight
+    // when the preview tree is empty, so we write the new node directly
+    // into the editor source and let the normal compile cycle render it.
+    // No synthetic ring / insertion line / ghost — those were fake app
+    // visuals that didn't match anything Studio actually shows.
     {
       const editor = win.editor
       const codeBefore = editor && editor.state ? editor.state.doc.toString() : ''
@@ -820,86 +472,21 @@ export function installMirrorActions(): MirrorActionsAPI {
           y: previewRect.top + 24 + NEW_W / 2,
         }
 
-        const containerRing = document.createElement('div')
-        containerRing.style.cssText =
-          'position:fixed;' +
-          'left:' +
-          (previewRect.left + 8) +
-          'px;' +
-          'top:' +
-          (previewRect.top + 8) +
-          'px;' +
-          'width:' +
-          (previewRect.width - 16) +
-          'px;' +
-          'height:' +
-          (previewRect.height - 16) +
-          'px;' +
-          'border:2px dashed #5BA8F5;' +
-          'border-radius:8px;' +
-          'background:rgba(91,168,245,0.05);' +
-          'pointer-events:none;z-index:999990;' +
-          'opacity:0;transition:opacity 240ms ease-out;'
-        document.body.appendChild(containerRing)
+        const newLine = component + ' w 100, h 100, bg #27272a, rad 8'
+        const newCode = isEmpty ? newLine : trimmed + '\n\n' + newLine
 
-        const insertionLine = document.createElement('div')
-        insertionLine.style.cssText =
-          'position:fixed;' +
-          'left:' +
-          (previewRect.left + 24) +
-          'px;' +
-          'top:' +
-          (previewRect.top + 22) +
-          'px;' +
-          'width:' +
-          Math.min(NEW_W * 1.5, previewRect.width - 48) +
-          'px;' +
-          'height:3px;' +
-          'background:#5BA8F5;' +
-          'box-shadow:0 0 8px rgba(91,168,245,0.6);' +
-          'border-radius:2px;' +
-          'pointer-events:none;z-index:999991;' +
-          'opacity:0;transition:opacity 200ms ease-out;'
-        document.body.appendChild(insertionLine)
-
-        const releasePalette = pressPaletteItem(paletteEl)
-        const destroyGhost = attachDragGhost(component)
-
-        try {
-          const showAt = setTimeout(() => {
-            containerRing.style.opacity = '1'
-            insertionLine.style.opacity = '1'
-          }, 800)
-
-          const newLine = component + ' w 100, h 100, bg #27272a, rad 8'
-          const newCode = isEmpty ? newLine : trimmed + '\n\n' + newLine
-
-          await withVisibleDrag(
-            dropPoint,
-            async () => {
-              await win.__dragTest.setTestCode(newCode)
-            },
-            {
-              moveMs: 2500,
-              triggerFrac: 0.85,
-              preHoldMs: 300,
-              settleMs: 420,
-            }
-          )
-
-          clearTimeout(showAt)
-        } finally {
-          releasePalette()
-          destroyGhost()
-          containerRing.style.transition = 'opacity 280ms ease-in'
-          insertionLine.style.transition = 'opacity 200ms ease-in'
-          containerRing.style.opacity = '0'
-          insertionLine.style.opacity = '0'
-          setTimeout(() => {
-            containerRing.remove()
-            insertionLine.remove()
-          }, 300)
-        }
+        await withVisibleDrag(
+          dropPoint,
+          async () => {
+            await win.__dragTest.setTestCode(newCode)
+          },
+          {
+            moveMs: 700,
+            triggerFrac: 0.85,
+            preHoldMs: 100,
+            settleMs: 140,
+          }
+        )
 
         await win.__dragTest.waitForCompile()
         // Auto-select the dropped element so follow-up styling steps land
@@ -909,9 +496,6 @@ export function installMirrorActions(): MirrorActionsAPI {
           el => el.getAttribute('data-mirror-id') as string
         )
         if (droppedIds.length > 0 && win.__dragTest && win.__dragTest.selectNode) {
-          // The empty-canvas case creates a single new node (the canvas-only
-          // case appends one). Pick the last one — most recently added —
-          // since data-mirror-id is assigned in document order.
           win.__dragTest.selectNode(droppedIds[droppedIds.length - 1])
           await delay(120)
         }
@@ -944,13 +528,10 @@ export function installMirrorActions(): MirrorActionsAPI {
       )
     )
 
-    // Drive Studio's REAL drag pipeline (DragController + Indicator) instead
-    // of synthesizing a fake ghost / ring / insertion line that doesn't match
-    // what a human user actually sees. Studio shows the genuine container
-    // highlight, alignment zones for empty containers, insertion line for
-    // flex layouts, and the proper ghost rectangle — all driven by
-    // controller.startDrag + updatePosition + drop. The synthetic visuals
-    // (attachDragGhost / showDropIndicators) are gone.
+    // Drive Studio's REAL drag pipeline (DragController + Indicator). The
+    // controller renders the genuine container highlight, alignment zones,
+    // insertion line, and ghost rectangle — exactly what a real user sees.
+    // No synthetic overlays.
     // Resolve the dragged component to a Studio source. We prefer the live
     // layout-preset registry (the same one the Component Panel renders
     // from — has the correct textContent / properties / mirTemplate for
@@ -987,11 +568,6 @@ export function installMirrorActions(): MirrorActionsAPI {
       template: fixture.template,
     }
 
-    const releasePalette = pressPaletteItem(paletteEl)
-    // Studio's real palette drag shows a dark icon+name chip following the
-    // OS-level drag cursor (via setDragImage). We mirror that exactly so
-    // the demo doesn't invent visuals that don't match what users see.
-    const releaseDragPreview = attachStudioDragPreview(preset?.icon, preset?.name ?? component)
     const cursor = win.__mirrorDemo && win.__mirrorDemo.cursor
     const controller = getDragController()
 
@@ -1013,8 +589,8 @@ export function installMirrorActions(): MirrorActionsAPI {
       //    real ghost / container highlight / insertion line / alignment
       //    zones render naturally. We poll cursor position via rAF.
       const cursorStart = cursor ? cursor.getPosition() : { x: 0, y: 0 }
-      const moveDur = cursor && cursor.calculateDuration ? cursor.calculateDuration(endPoint) : 1200
-      const moveMs = Math.max(800, moveDur)
+      const moveDur = cursor && cursor.calculateDuration ? cursor.calculateDuration(endPoint) : 700
+      const moveMs = Math.max(450, moveDur)
 
       let alive = true
       let raf = 0
@@ -1032,7 +608,7 @@ export function installMirrorActions(): MirrorActionsAPI {
       // Final tick at the exact drop point so the indicator settles.
       controller.updatePosition({ x: endPoint.x, y: endPoint.y })
       // Hold a beat so the viewer registers the indicator + ghost at rest.
-      await delay(280)
+      await delay(160)
 
       // 3. Apply the drop — DragController routes to studio's onDrop
       //    callback, which writes the new component into the editor.
@@ -1041,8 +617,6 @@ export function installMirrorActions(): MirrorActionsAPI {
       cancelAnimationFrame(raf)
       await controller.drop()
     } finally {
-      releasePalette()
-      releaseDragPreview()
       clearCurrentDragData()
     }
 
@@ -1391,9 +965,6 @@ export function installMirrorActions(): MirrorActionsAPI {
       const r = input.getBoundingClientRect()
       const endPoint: Point = { x: r.left + r.width / 2, y: r.top + r.height / 2 }
       if (input.tagName.toLowerCase() === 'select') {
-        // Selects can't be typed into — keep the ring + chip so the viewer
-        // sees what value the dropdown was set to.
-        const releaseHighlight = highlightField(input, propName + ' ' + value, true)
         await withSingleClick(endPoint, 250, async () => {
           input!.focus()
           ;(input as HTMLSelectElement).value = value
@@ -1401,21 +972,14 @@ export function installMirrorActions(): MirrorActionsAPI {
           await delay(100)
           input!.blur()
         })
-        await delay(600)
-        releaseHighlight()
+        await delay(200)
       } else {
-        // Text input: ring only, no chip — the chip would spoil the value
-        // before the typing reveals it. The actual character-by-character
-        // typing is the visible signal.
-        const releaseHighlight = highlightField(input, '', false)
         await withSingleClick(endPoint, 250, async () => {
           input!.focus()
           ;(input as HTMLInputElement).select()
-          // Brief dwell so the viewer sees the focus + selection state
-          // before content is replaced.
-          await delay(220)
+          await delay(120)
           await typeIntoInput(input as HTMLInputElement, value)
-          await delay(140)
+          await delay(80)
           input!.dispatchEvent(new Event('change', { bubbles: true }))
           input!.dispatchEvent(
             new KeyboardEvent('keydown', {
@@ -1425,13 +989,10 @@ export function installMirrorActions(): MirrorActionsAPI {
               cancelable: true,
             })
           )
-          await delay(120)
+          await delay(80)
           input!.blur()
         })
-        // Hold the ring after blur so the eye can lock on the new value
-        // long enough to compare with the preview update.
-        await delay(500)
-        releaseHighlight()
+        await delay(150)
       }
     } else {
       const panelEl = document.querySelector('#property-panel') as HTMLElement | null
@@ -1471,11 +1032,6 @@ export function installMirrorActions(): MirrorActionsAPI {
       )
     }
     const triggerRect = trigger.getBoundingClientRect()
-    // Glow ring around the color swatch trigger so viewers see which
-    // property is being edited. No chip — the typing into the hex input
-    // (and the trigger swatch updating to the new color) is the visible
-    // signal.
-    const releaseHighlight = highlightField(trigger, propName + ' ' + color, false)
     await withSingleClick(
       {
         x: triggerRect.left + triggerRect.width / 2,
@@ -1551,10 +1107,7 @@ export function installMirrorActions(): MirrorActionsAPI {
       }
       panel.changeProperty(propName, color)
     }
-    // Hold the highlight ring after the picker closes so the eye locks
-    // on the swatch trigger and registers the new color.
-    await delay(500)
-    releaseHighlight()
+    await delay(200)
   }
 
   // === DOM snapshot (E2) ===
