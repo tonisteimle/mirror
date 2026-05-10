@@ -250,6 +250,49 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
       // would try to read `.properties` on a node that doesn't have it and
       // throw TypeError.
       if ((instance as { type: string }).type !== 'Instance') {
+        // DatePicker is the only Zag component left in Mirror (every
+        // other former Zag component is now a Pure-Mirror template).
+        // Pre-2026-05-10 React simply emitted a `not supported` comment,
+        // making DatePicker invisible in any React export. Surface it as
+        // a native `<input type="date">` with the documented attributes
+        // mapped — placeholder, defaultValue, min/max, readOnly, disabled.
+        // Range mode falls through to the comment placeholder for now.
+        // Range mode (`DatePicker selectionMode range`) parses as
+        // `initialState: "range"` due to a parser quirk — fall through
+        // to the placeholder for now since range needs two inputs.
+        const isRangeMode =
+          (instance as { initialState?: string }).initialState === 'range' ||
+          ((instance as { properties?: Property[] }).properties ?? []).some(
+            p => p.name === 'selectionMode' && p.values[0] === 'range'
+          )
+        if (
+          (instance as { type?: string }).type === 'ZagComponent' &&
+          (instance as { machine?: string }).machine === 'date-picker' &&
+          !isRangeMode
+        ) {
+          const props = (instance as { properties?: Property[] }).properties ?? []
+          const attrs: string[] = ['type="date"']
+          for (const p of props) {
+            const v = typeof p.values[0] === 'string' ? p.values[0] : null
+            if (v == null) {
+              if (p.name === 'disabled') attrs.push('disabled')
+              else if (p.name === 'readOnly' || p.name === 'readonly') attrs.push('readOnly')
+              continue
+            }
+            if (p.name === 'placeholder') attrs.push(`placeholder=${JSON.stringify(v)}`)
+            else if (p.name === 'min') attrs.push(`min=${JSON.stringify(v)}`)
+            else if (p.name === 'max') attrs.push(`max=${JSON.stringify(v)}`)
+            else if (p.name === 'value' || p.name === 'defaultValue')
+              attrs.push(`defaultValue=${JSON.stringify(v)}`)
+          }
+          attrs.push('data-component="DatePicker"')
+          attrs.push('data-mirror-name="DatePicker"')
+          rootItems.push({
+            kind: 'jsx',
+            code: `      <input ${attrs.join(' ')} />`,
+          })
+          continue
+        }
         const skipped = (instance as { type?: string }).type ?? 'Unknown'
         rootItems.push({
           kind: 'comment',

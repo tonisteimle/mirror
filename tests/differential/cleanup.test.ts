@@ -175,4 +175,28 @@ describe('Cleanup — DatePicker across backends', () => {
     const out = generateDOM(parse(`DatePicker placeholder "X"`))
     expect(out).toContain('initDatePickerComponent')
   })
+
+  it('React: single-mode DatePicker renders as <input type="date">', () => {
+    // PIN: pre-2026-05-10 the React backend skipped every Zag component
+    // entirely — DatePicker (the only Zag component in modern Mirror)
+    // emitted just a `not supported` comment, so the React export had
+    // no date input at all. Now surfaced as a native HTML date input
+    // with placeholder/min/max/value/disabled/readOnly mapped through.
+    const r1 = generateReact(parse(`DatePicker placeholder "Pick"`))
+    expect(r1).toContain('type="date"')
+    expect(r1).toContain('placeholder="Pick"')
+    expect(r1).toContain('data-component="DatePicker"')
+
+    const r2 = generateReact(parse(`DatePicker min "2024-01-01", max "2024-12-31"`))
+    expect(r2).toContain('min="2024-01-01"')
+    expect(r2).toContain('max="2024-12-31"')
+  })
+
+  it('React: range-mode DatePicker stays as a comment (needs two inputs)', () => {
+    // Range mode requires two date inputs + state tracking; defer until
+    // the React state runtime ships.
+    const react = generateReact(parse(`DatePicker selectionMode "range"`))
+    expect(react).not.toContain('type="date"')
+    expect(react).toContain('not supported')
+  })
 })
