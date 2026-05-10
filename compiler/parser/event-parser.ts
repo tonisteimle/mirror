@@ -19,7 +19,6 @@
  * Extracted from parser.ts.
  */
 
-import type { Token } from './lexer'
 import type { Event, Action } from './ast'
 import type { ParserContext } from './parser-context'
 import { ParserUtils } from './parser-context'

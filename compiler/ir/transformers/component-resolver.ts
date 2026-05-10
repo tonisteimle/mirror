@@ -5,13 +5,7 @@
  * Extracted from IRTransformer for modularity.
  */
 
-import type {
-  State,
-  Property,
-  ComponentDefinition,
-  SourcePosition,
-  ZagSlotDef,
-} from '../../parser/ast'
+import type { State, ComponentDefinition, SourcePosition, ZagSlotDef } from '../../parser/ast'
 import { mergeProperties } from './property-utils-transformer'
 
 type SlotMap = Record<string, ZagSlotDef>

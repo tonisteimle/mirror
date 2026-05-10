@@ -10,7 +10,6 @@ import { ANIMATION_KEYFRAMES_CSS } from '../animations'
 import { generateTheme, isThemeToken } from '../../schema/theme-generator'
 import {
   getSizeStateThresholds,
-  SIZE_STATES,
   SYSTEM_STATES as SCHEMA_SYSTEM_STATES,
 } from '../../schema/parser-helpers'
 import {

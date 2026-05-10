@@ -7,11 +7,6 @@
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'silent'
 
-interface LoggerConfig {
-  level: LogLevel
-  prefix?: string
-}
-
 const LOG_LEVELS: Record<LogLevel, number> = {
   debug: 0,
   info: 1,

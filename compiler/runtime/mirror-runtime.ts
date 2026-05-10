@@ -44,15 +44,6 @@ interface WindowWithMirrorFunctions extends Window {
   [key: string]: unknown
 }
 
-/**
- * Internal type for CSS to Mirror conversion with temporary properties
- */
-interface CSSConversionProps extends Partial<MirrorProps> {
-  _justifyCenter?: boolean
-  _alignCenter?: boolean
-  [key: `_${string}`]: string | number | boolean | undefined
-}
-
 /** Mirror property names - exactly as in Mirror DSL */
 export interface MirrorProps {
   // Layout

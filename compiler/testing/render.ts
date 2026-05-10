@@ -5,7 +5,7 @@
  */
 
 import { parse } from '../parser/parser'
-import { toIR, SourceMap } from '../ir'
+import { toIR } from '../ir'
 import { generateDOM } from '../backends/dom'
 import type { RenderContext } from './types'
 import type { IR } from '../ir/types'
@@ -105,7 +105,10 @@ export function getElementByName(ctx: RenderContext, name: string): HTMLElement 
 /**
  * Find element by component name
  */
-export function getElementByComponent(ctx: RenderContext, componentName: string): HTMLElement | null {
+export function getElementByComponent(
+  ctx: RenderContext,
+  componentName: string
+): HTMLElement | null {
   return ctx.root.querySelector(`[data-component-name="${componentName}"]`) as HTMLElement | null
 }
 
@@ -113,7 +116,9 @@ export function getElementByComponent(ctx: RenderContext, componentName: string)
  * Find all elements of a component type
  */
 export function getElementsByComponent(ctx: RenderContext, componentName: string): HTMLElement[] {
-  return Array.from(ctx.root.querySelectorAll(`[data-component-name="${componentName}"]`)) as HTMLElement[]
+  return Array.from(
+    ctx.root.querySelectorAll(`[data-component-name="${componentName}"]`)
+  ) as HTMLElement[]
 }
 
 // =============================================================================
@@ -207,7 +212,10 @@ export function getElementStateStyles(el: HTMLElement, state: string): Record<st
 /**
  * Get computed styles for specific properties
  */
-export function getComputedStylesFor(el: HTMLElement, properties: string[]): Record<string, string> {
+export function getComputedStylesFor(
+  el: HTMLElement,
+  properties: string[]
+): Record<string, string> {
   const computed = window.getComputedStyle(el)
   const styles: Record<string, string> = {}
   for (const prop of properties) {

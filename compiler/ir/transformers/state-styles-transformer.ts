@@ -7,7 +7,7 @@
 
 import type { State, Property } from '../../parser/ast'
 import type { IRStyle, IRNode } from '../types'
-import { SIZE_STATES, isSizeState } from '../../schema/parser-helpers'
+import { isSizeState } from '../../schema/parser-helpers'
 
 // System states that get a CSS `transition: ...` injected on the BASE element
 // when the author writes `<state> 0.15s:` (Slice 32 — State-Transitions).

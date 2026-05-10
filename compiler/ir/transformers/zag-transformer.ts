@@ -9,7 +9,7 @@
  */
 
 import type { Property, ZagNode, ZagSlotDef, Instance, Text, Slot } from '../../parser/ast'
-import type { IRNode, IRZagNode, IRSlot, SourcePosition } from '../types'
+import type { IRNode, IRZagNode, IRSlot } from '../types'
 import type { TransformerContext, ParentLayoutContext } from './transformer-context'
 import { ZAG_PRIMITIVES } from '../../schema/dsl'
 

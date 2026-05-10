@@ -16,12 +16,10 @@
 import {
   DataFile,
   DataEntry,
-  DataAttribute,
   DataMarkdownBlock,
   DataParseError,
   DataValue,
   DataReference,
-  DataReferenceArray,
   MethodDefinition,
   isDataReference,
   isDataReferenceArray,

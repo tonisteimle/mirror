@@ -5,7 +5,7 @@
  * Used by the IR transformer for property-to-CSS conversion.
  */
 
-import { SCHEMA, findProperty, CSSOutput, DSL } from './dsl'
+import { findProperty, DSL } from './dsl'
 
 /**
  * Result of converting a property to CSS

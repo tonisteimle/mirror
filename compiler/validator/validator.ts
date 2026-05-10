@@ -15,17 +15,10 @@ import {
   ComponentDefinition,
   TokenDefinition,
   Each,
-  Slot,
   isTokenReference,
 } from '../parser/ast'
 import { generateValidationRules, HEX_COLOR_REGEX } from './generator'
-import {
-  ValidationResult,
-  ValidationError,
-  ValidationRules,
-  ERROR_CODES,
-  ErrorSeverity,
-} from './types'
+import { ValidationResult, ValidationError, ValidationRules, ERROR_CODES } from './types'
 import { suggestSimilar } from './string-utils'
 import {
   KNOWN_STATE_STYLE_EXTRAS,

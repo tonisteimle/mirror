@@ -6,7 +6,7 @@
  * - Property change → update exact source location
  */
 
-import type { SourcePosition, PropertySourceMap } from './types'
+import type { SourcePosition } from './types'
 
 /**
  * Complete mapping for a single node

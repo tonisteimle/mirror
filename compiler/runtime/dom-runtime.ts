@@ -11,18 +11,12 @@
  * 3. Tree-shakeable for production builds
  */
 
-// Frame batching — single source of truth in batching.ts
-import { batchInFrame } from './batching'
 // Visibility primitives — single source of truth in visibility.ts
 import { show, hide } from './visibility'
 // Cleanup primitives — single source of truth in cleanup.ts
 import { registerForCleanup, cleanupElement, initCleanupObserver } from './cleanup'
 // Data binding — single source of truth in data-binding.ts
 import { bindValue, bindText, bindVisibility, unbindValue, notifyDataChange } from './data-binding'
-// Alignment helpers — single source of truth in alignment.ts
-import { alignToCSS, getAlign } from './alignment'
-// Element wrapper — single source of truth in element-wrapper.ts
-import { wrap, type ElementWrapper } from './element-wrapper'
 // Animations — single source of truth in animations.ts
 import type { StateAnimation } from './types'
 import { playStateAnimation, setupEnterExitObserver } from './animations'

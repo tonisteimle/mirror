@@ -8,7 +8,7 @@
  * - emitConditional: Generates code for `if/else` conditionals
  */
 
-import type { IRNode, IREach, IRConditional } from '../../ir/types'
+import type { IREach, IRConditional } from '../../ir/types'
 import type { LoopEmitterContext } from './base-emitter-context'
 
 // Re-export for backwards compatibility

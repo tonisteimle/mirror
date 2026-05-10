@@ -13,7 +13,7 @@
  * - Collection methods from .data files
  */
 
-import type { IR, IRToken } from '../../ir/types'
+import type { IRToken } from '../../ir/types'
 import { isIRDataReference, isIRDataReferenceArray } from '../../ir/types'
 import type { DataFile } from '../../parser/data-types'
 import { mergeDataFiles, serializeDataForJS } from '../../parser/data-parser'
