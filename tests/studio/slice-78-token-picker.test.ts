@@ -21,11 +21,14 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import {
-  parseTokens,
   TokenPicker,
   type TokenDefinition,
   type TokenContext,
 } from '../../studio/pickers/token/index'
+// Slice 4 of the parseTokens migration: characterization tests now run
+// against the AST-based parser. The regex parseTokens is on the way
+// out — equivalence is locked in `parse-tokens-via-ast.test.ts`.
+import { parseTokensViaAST as parseTokens } from '../../studio/pickers/token/parse-via-ast'
 
 // jsdom doesn't implement scrollIntoView; the picker's keyboard-nav calls
 // it on initial focus. Mock it once for all tests in this file.

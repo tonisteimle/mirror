@@ -122,9 +122,16 @@ function mapOne(t: ASTTokenDefinition): TokenDefinition | null {
   // matches the regex parser which has no concept of them.
   if (t.attributes !== undefined || t.blocks !== undefined) return null
 
-  const name = '$' + t.name
-  const dot = t.name.lastIndexOf('.')
-  const category = dot > 0 ? t.name.slice(0, dot) : undefined
+  // Compiler's TokenDefinition.name is inconsistent across the four
+  // parser-paths: `parseTokenWithSuffix*` and `parseTokenReference`
+  // strip a leading `$`, but `parseTokenDefinition` (simple form) does
+  // not — so `$primary: #fff` arrives here with name `'$primary'`,
+  // while `$primary.bg: #fff` arrives as `'primary.bg'`. Normalise
+  // both to bare-no-`$` form before prepending the picker's `$`.
+  const bareName = t.name.startsWith('$') ? t.name.slice(1) : t.name
+  const name = '$' + bareName
+  const dot = bareName.lastIndexOf('.')
+  const category = dot > 0 ? bareName.slice(0, dot) : undefined
 
   // Compiler parses `b: $a` as a property-set with a single synthetic
   // `propset` property pointing at `$a`. The regex parser treats this
@@ -142,7 +149,7 @@ function mapOne(t: ASTTokenDefinition): TokenDefinition | null {
       return {
         name,
         value: refName,
-        type: inferType(t.name, refName),
+        type: inferType(bareName, refName),
         kind: 'single',
         ...(category ? { category } : {}),
       }
@@ -168,7 +175,7 @@ function mapOne(t: ASTTokenDefinition): TokenDefinition | null {
   return {
     name,
     value,
-    type: inferType(t.name, value),
+    type: inferType(bareName, value),
     kind: 'single',
     ...(category ? { category } : {}),
   }

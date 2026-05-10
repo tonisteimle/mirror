@@ -8,8 +8,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import {
   TokenPicker,
   createTokenPicker,
-  parseTokens,
-  parseTokensFromFiles,
   getTokenTypesForProperty,
   filterTokensBySuffix,
   filterTokensByType,
@@ -17,6 +15,12 @@ import {
   type TokenDefinition,
   type TokenContext,
 } from '../../studio/pickers/token/index'
+// Slice 4 of the parseTokens migration — see comment in
+// slice-78-token-picker.test.ts.
+import {
+  parseTokensViaAST as parseTokens,
+  parseTokensFromFilesViaAST as parseTokensFromFiles,
+} from '../../studio/pickers/token/parse-via-ast'
 
 // Mock scrollIntoView
 Element.prototype.scrollIntoView = vi.fn()
@@ -83,10 +87,7 @@ describe('TokenPicker', () => {
 
   describe('render()', () => {
     beforeEach(() => {
-      picker = new TokenPicker(
-        { tokens: sampleTokens, animate: false },
-        { onSelect }
-      )
+      picker = new TokenPicker({ tokens: sampleTokens, animate: false }, { onSelect })
     })
 
     it('should render picker container', () => {
@@ -142,10 +143,7 @@ describe('TokenPicker', () => {
 
   describe('Token items', () => {
     beforeEach(() => {
-      picker = new TokenPicker(
-        { tokens: sampleTokens, animate: false },
-        { onSelect }
-      )
+      picker = new TokenPicker({ tokens: sampleTokens, animate: false }, { onSelect })
     })
 
     it('should show token name', () => {
@@ -181,10 +179,7 @@ describe('TokenPicker', () => {
 
   describe('Token selection', () => {
     beforeEach(() => {
-      picker = new TokenPicker(
-        { tokens: sampleTokens, animate: false },
-        { onSelect }
-      )
+      picker = new TokenPicker({ tokens: sampleTokens, animate: false }, { onSelect })
     })
 
     it('should call onSelect on item click', () => {
@@ -206,10 +201,7 @@ describe('TokenPicker', () => {
 
   describe('Search', () => {
     beforeEach(() => {
-      picker = new TokenPicker(
-        { tokens: sampleTokens, animate: false },
-        { onSelect }
-      )
+      picker = new TokenPicker({ tokens: sampleTokens, animate: false }, { onSelect })
     })
 
     it('should filter tokens by name', () => {
@@ -275,21 +267,15 @@ describe('TokenPicker', () => {
 
   describe('Context filtering', () => {
     beforeEach(() => {
-      picker = new TokenPicker(
-        { tokens: sampleTokens, animate: false },
-        { onSelect }
-      )
+      picker = new TokenPicker({ tokens: sampleTokens, animate: false }, { onSelect })
     })
 
     it('should filter by context allowed types', () => {
       const context: TokenContext = {
         property: 'bg',
-        allowedTypes: ['color']
+        allowedTypes: ['color'],
       }
-      picker = new TokenPicker(
-        { tokens: sampleTokens, context, animate: false },
-        { onSelect }
-      )
+      picker = new TokenPicker({ tokens: sampleTokens, context, animate: false }, { onSelect })
       picker.show(anchor)
 
       const items = document.querySelectorAll('.token-picker-item')
@@ -306,7 +292,11 @@ describe('TokenPicker', () => {
 
     it('should clear context', () => {
       picker = new TokenPicker(
-        { tokens: sampleTokens, context: { property: 'bg', allowedTypes: ['color'] }, animate: false },
+        {
+          tokens: sampleTokens,
+          context: { property: 'bg', allowedTypes: ['color'] },
+          animate: false,
+        },
         { onSelect }
       )
       picker.show(anchor)
@@ -332,15 +322,10 @@ describe('TokenPicker', () => {
 
   describe('setTokens', () => {
     it('should update tokens list', () => {
-      picker = new TokenPicker(
-        { tokens: sampleTokens, animate: false },
-        { onSelect }
-      )
+      picker = new TokenPicker({ tokens: sampleTokens, animate: false }, { onSelect })
       picker.show(anchor)
 
-      const newTokens: TokenDefinition[] = [
-        { name: '$new.token', value: '#123456', type: 'color' }
-      ]
+      const newTokens: TokenDefinition[] = [{ name: '$new.token', value: '#123456', type: 'color' }]
       picker.setTokens(newTokens)
 
       const items = document.querySelectorAll('.token-picker-item')
@@ -350,10 +335,7 @@ describe('TokenPicker', () => {
 
   describe('Empty state', () => {
     it('should show empty list with no tokens', () => {
-      picker = new TokenPicker(
-        { tokens: [], animate: false },
-        { onSelect }
-      )
+      picker = new TokenPicker({ tokens: [], animate: false }, { onSelect })
       picker.show(anchor)
 
       // Implementation returns empty container without message
@@ -364,10 +346,7 @@ describe('TokenPicker', () => {
 
   describe('Keyboard navigation', () => {
     beforeEach(() => {
-      picker = new TokenPicker(
-        { tokens: sampleTokens, animate: false },
-        { onSelect }
-      )
+      picker = new TokenPicker({ tokens: sampleTokens, animate: false }, { onSelect })
     })
 
     it('should navigate with ArrowDown from search', () => {

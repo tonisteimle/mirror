@@ -10,8 +10,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { TokenPicker, createTokenPicker } from '../../studio/pickers/token/picker'
 import {
-  parseTokens,
-  parseTokensFromFiles,
   filterTokensBySuffix,
   filterTokensByType,
   filterTokensBySearch,
@@ -19,6 +17,11 @@ import {
   PROPERTY_TOKEN_TYPES,
   type TokenDefinition,
 } from '../../studio/pickers/token/types'
+// Slice 4 of the parseTokens migration — see slice-78-token-picker.test.ts.
+import {
+  parseTokensViaAST as parseTokens,
+  parseTokensFromFilesViaAST as parseTokensFromFiles,
+} from '../../studio/pickers/token/parse-via-ast'
 
 // =============================================================================
 // types.ts — pure helpers
