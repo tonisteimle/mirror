@@ -793,7 +793,7 @@ Chronologisch absteigend (neueste zuerst).
   kuratierte Re-Run-Werkzeuge, generic `probe-*.ts` waren es nie.
   Git-History bewahrt die Files für Notfall-Restoration via
   `git show 23f2d985:<pfad>`.
-  **Status:** erledigt (`<probe-rm-commit>`)
+  **Status:** erledigt (`3c5b2b98`)
 
 ### 2026-05-10 — Lane 2, Inkrement 1: Schema-driven alias resolution in `property-transformer.ts`
 
