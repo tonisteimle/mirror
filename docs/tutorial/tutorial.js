@@ -158,12 +158,20 @@ function initializePlaygrounds() {
  * The navigation structure is defined here and injected into the DOM.
  */
 
-// Tutorial Navigation Structure
-// Sprache (00-10, 16) + Komponenten-Bibliothek (11-15) + Studio (17-28)
+// Tutorial Navigation Structure (pädagogische Reihenfolge):
+//   1. Intro (00)
+//   2. Studio kennenlernen (17, 18) — Werkzeug zuerst, motivierend
+//   3. Die Sprache (01-10, 16) — Syntax mit Tool-Kontext im Kopf
+//   4. Komponenten-Bibliothek (11-15) — was vorgebaut ist
+//   5. Studio vertieft (19-28) — Pickers, Refactoring, Multi-File, Export
 const tutorialNavigation = [
+  // Intro
+  { num: '00', file: 'index.html', title: 'Intro', section: 'Start' },
+  // Studio kennenlernen
+  { num: '17', file: '17-ai-bauen.html', title: 'AI-Bauen', section: 'Studio kennenlernen' },
+  { num: '18', file: '18-studio.html', title: 'Bedienung Basis' },
   // Die Sprache
-  { num: '00', file: 'index.html', title: 'Intro', section: 'Sprache' },
-  { num: '01', file: '01-elemente.html', title: 'Elemente' },
+  { num: '01', file: '01-elemente.html', title: 'Elemente', section: 'Die Sprache' },
   { num: '02', file: '02-komponenten.html', title: 'Komponenten' },
   { num: '03', file: '03-tokens.html', title: 'Tokens' },
   { num: '04', file: '04-layout.html', title: 'Layout' },
@@ -175,15 +183,13 @@ const tutorialNavigation = [
   { num: '10', file: '10-seiten.html', title: 'Seiten' },
   { num: '16', file: '16-prosa.html', title: 'Prosa-Mode' },
   // Komponenten-Bibliothek
-  { num: '11', file: '11-eingabe.html', title: 'Eingabe', section: 'Komponenten' },
+  { num: '11', file: '11-eingabe.html', title: 'Eingabe', section: 'Komponenten-Bibliothek' },
   { num: '12', file: '12-navigation.html', title: 'Navigation' },
   { num: '13', file: '13-overlays.html', title: 'Overlays' },
   { num: '14', file: '14-tabellen.html', title: 'Tabellen' },
   { num: '15', file: '15-charts.html', title: 'Charts' },
-  // Mirror Studio
-  { num: '17', file: '17-ai-bauen.html', title: 'AI-Bauen', section: 'Studio' },
-  { num: '18', file: '18-studio.html', title: 'Bedienung Basis' },
-  { num: '19', file: '19-pickers.html', title: 'Pickers' },
+  // Studio vertieft
+  { num: '19', file: '19-pickers.html', title: 'Pickers', section: 'Studio vertieft' },
   { num: '20', file: '20-komponenten-workflow.html', title: 'Komponenten-Workflow' },
   { num: '21', file: '21-tokens-workflow.html', title: 'Tokens-Workflow' },
   { num: '22', file: '22-visuelles-editieren.html', title: 'Visuelles Editieren' },
