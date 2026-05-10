@@ -42,13 +42,6 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Status:** offen
   **Notiz:** Audit in `docs/refactoring/21-komponenten.md` Section 3 (V-1, V-4).
 
-- **Wo:** `tests/fixtures/states/s08-state-children/expected.dom.js`
-  **Was:** Stale golden-fixture nach Slice-50 V-1 (Icon-Defaults `16 → 24`).
-  Fixture erwartet noch alte Defaults plus `data-icon-fill` Type-Drift
-  (boolean vs `"true"`-String). Regenerieren oder Slice-50-Owner bitten.
-  **Status:** offen
-  **Notiz:** Bricht keine Funktionalität — nur Snapshot ist veraltet.
-
 - **Wo:** Dead-feature-Verdacht (zu prüfen vom Owner)
   **Was:** Slices wie Stacked-Overlay (8), Custom-Icons-Registry (51),
   Prose-Mode (66), Section-Header-Parsing (Slice 25 E002 Probe 22) — werden
@@ -279,6 +272,15 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — Stale s08 Golden-Fixture regeneriert
+
+- **Wo:** `tests/fixtures/states/s08-state-children/expected.dom.js`
+  **Was:** Fixture via `UPDATE_GOLDEN=1` aktualisiert. Diff bestätigt drei
+  intentionale Änderungen seit letztem Snapshot: Icon-Default 16→24
+  (Slice 50), Default-Width 20→24, `data-icon-fill` boolean→`"true"`-
+  String. Keine Code-Änderung nötig — nur Snapshot war veraltet.
+  **Status:** erledigt (`69953ed7`)
 
 ### 2026-05-10 — `getHtmlTag`-Duplikation in React-Backend
 
