@@ -7,6 +7,9 @@
 
 import { getDropService, DropResultApplier } from './index'
 import type { DropResult, DropContext, ApplierDependencies } from './index'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('DropAdapter')
 
 /**
  * Create a drop context from app.js globals
@@ -64,7 +67,7 @@ export async function handleStudioDropNew(result: DropResult, globals: AppGlobal
   hideDropVisuals(globals)
 
   if (!globals.studioCodeModifier) {
-    console.warn('[DropAdapter] CodeModifier not available')
+    log.warn('CodeModifier not available')
     return
   }
 
@@ -73,7 +76,7 @@ export async function handleStudioDropNew(result: DropResult, globals: AppGlobal
   const modResult = await dropService.handleDrop(result, context)
 
   if (!modResult?.success) {
-    console.warn('[DropAdapter] Drop failed:', modResult?.error)
+    log.warn('Drop failed:', modResult?.error)
     return
   }
 

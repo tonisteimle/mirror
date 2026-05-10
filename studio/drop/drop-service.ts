@@ -6,7 +6,10 @@
  */
 
 import type { DropResult, DropContext, DropHandler, ModificationResult } from './types'
+import { createLogger } from '../../compiler/utils/logger'
 import { ElementDuplicateHandler } from './handlers/element-duplicate'
+
+const log = createLogger('DropService')
 import { ElementMoveHandler } from './handlers/element-move'
 import { AbsolutePositionHandler } from './handlers/absolute-position'
 import { PaletteDropHandler } from './handlers/palette-drop'
@@ -61,7 +64,7 @@ export class DropService {
       if (modResult !== null) return modResult
     }
 
-    console.warn('[DropService] No handler succeeded for drop:', result.source.type)
+    log.warn('No handler succeeded for drop:', result.source.type)
     return null
   }
 

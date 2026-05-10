@@ -8,6 +8,9 @@
 import type { ModificationResult } from './types'
 import type { Command, CommandContext, CommandResult } from '../core/commands'
 import { adjustChangeForEditor } from './change-offset'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('DropResultApplier')
 
 export interface ApplierDependencies {
   editor: CodeMirrorEditor
@@ -141,8 +144,8 @@ export class DropResultApplier {
   }
 
   private logInvalidChange(change: Change, docLength: number): void {
-    console.warn(
-      '[DropResultApplier] Invalid change range:',
+    log.warn(
+      'Invalid change range:',
       'from=' + change.from,
       'to=' + change.to,
       'insertLen=' + change.insert.length,
