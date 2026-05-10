@@ -559,6 +559,25 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — System-State-Pseudoklassen (`hover`/`focus`/`active`/`disabled`) in React
+
+- **Wo:** `compiler/backends/react.ts`,
+  `tests/differential/states.test.ts`
+  **Was:** React droppte sowohl State-Blocks
+  (`Btn:\n  hover:\n    bg #555`) als auch Shorthand-Props
+  (`Button hover-bg #555`) komplett. JSX-Inline-`style={{ }}` kann
+  keine Pseudoklassen tragen. Fix: `ReactStateContext`-Akkumulator wird
+  durch generateJSX/Each/Conditional gethreaded, sammelt CSS-Regeln
+  (`[data-h="N"]:hover { background-color: #555 }`); `<style>`-Block
+  als erstes Root-Item emittiert; betroffene Elemente bekommen
+  `data-h="N"`. `collectStateGroups()` kombiniert beide Eingangsformen
+  (State-Blocks + Shorthand-Props) zu einer einheitlichen Liste.
+  `formatStyleAsCSS` macht camelCase → kebab-case (mit korrekter
+  Webkit/Moz/Ms-Vendor-Prefix-Behandlung).
+  **Status:** erledigt
+  **Notiz:** 4 neue Pins: hover-block, hover-shorthand, focus/active/
+  disabled, no-state-no-attr (Bundle-Size-Guard).
+
 ### 2026-05-10 — Gradient-Shorthand `bg grad …` im React-Backend
 
 - **Wo:** `compiler/backends/react.ts` (`generateStyles`),

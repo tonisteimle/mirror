@@ -156,6 +156,11 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
   type RootItem = { kind: 'jsx' | 'expr' | 'comment'; code: string }
   const rootItems: RootItem[] = []
 
+  // Pseudo-class state-rule accumulator. Populated as `generateJSX` walks
+  // each instance with hover/focus/active/disabled state-blocks or shorthand
+  // props; emitted as a `<style>` block at the top of `App()`.
+  const stateContext: ReactStateContext = { rules: [], counter: { value: 0 } }
+
   // Animations: emit a single `<style>` block carrying every Mirror
   // keyframe rule when at least one descendant uses `anim`. The shared
   // CSS (`compiler/backends/animations.ts`) is the single source of truth
@@ -183,7 +188,9 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
             componentMap,
             program.tokens || [],
             propertySetMap,
-            '      '
+            '      ',
+            { type: null },
+            stateContext
           ),
         })
         continue
@@ -198,7 +205,9 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
             componentMap,
             program.tokens || [],
             propertySetMap,
-            '      '
+            '      ',
+            { type: null },
+            stateContext
           ),
         })
         continue
@@ -222,10 +231,24 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
           componentMap,
           program.tokens || [],
           propertySetMap,
-          rootItems.length === 0 && program.instances.length === 1 ? '    ' : '      '
+          rootItems.length === 0 && program.instances.length === 1 ? '    ' : '      ',
+          { type: null },
+          stateContext
         ),
       })
     }
+  }
+
+  // Prepend the state-rule `<style>` block as the first root item if any
+  // pseudo-class rules were collected during the walk. We unshift here
+  // (not when `stateContext` was created) because we need to know the
+  // accumulated rules first; this also forces a Fragment wrap, which the
+  // existing `needsFragment` path handles transparently.
+  if (stateContext.rules.length > 0) {
+    rootItems.unshift({
+      kind: 'jsx',
+      code: `      <style>{${JSON.stringify(stateContext.rules.join('\n'))}}</style>`,
+    })
   }
 
   // Wrap in `<>...</>` when:
@@ -447,7 +470,8 @@ function generateJSX(
   tokens: TokenDefinition[],
   propertySetMap: Map<string, Property[]>,
   indent: string,
-  parentContext: ParentLayoutContext = { type: null }
+  parentContext: ParentLayoutContext = { type: null },
+  stateContext: ReactStateContext | null = null
 ): string {
   // Slice 50 V-2: Icon-Sonderpfad. Statt `<span>{"check"}</span>` (das
   // kein Icon rendert, nur den literal Text-Namen anzeigt), emittiere
@@ -515,6 +539,34 @@ function generateJSX(
   // tooling can resolve elements identically across both targets.
   const mirrorAttrStr = generateMirrorAttributes(instance)
 
+  // Hover/focus/active/disabled state rules. JSX `style={{ }}` can't carry
+  // pseudo-selectors, so we collect rules into a `<style>` block emitted
+  // at the top of `App()`. Each instance with state-bearing props gets a
+  // unique `data-h="N"` selector. The DOM backend uses the same shape via
+  // `[data-mirror-id="node-N"]:hover { … }` so cross-backend behavior
+  // matches by construction.
+  let stateAttr = ''
+  if (stateContext) {
+    const stateGroups = collectStateGroups(compDef, allProps)
+    if (stateGroups.length > 0) {
+      stateContext.counter.value += 1
+      const id = String(stateContext.counter.value)
+      stateAttr = ` data-h=${JSON.stringify(id)}`
+      for (const group of stateGroups) {
+        const stateStyle = withLayoutDefaults(
+          generateStyles(group.properties, tokens, parentContext),
+          ''
+        )
+        // `withLayoutDefaults('')` adds nothing — we only want the state
+        // properties' direct CSS, not Frame-flex defaults.
+        const css = formatStyleAsCSS(stateStyle)
+        if (css.length > 0) {
+          stateContext.rules.push(`[data-h="${id}"]:${group.state} { ${css} }`)
+        }
+      }
+    }
+  }
+
   // Element-Registry callback ref. Only attached when the instance has
   // an explicit `name X` — that's the only DSL form that can be the
   // target of a cross-element state reference. Plain `<div />` doesn't
@@ -541,12 +593,12 @@ function generateJSX(
   const visibleWhen = (instance as Instance & { visibleWhen?: string }).visibleWhen
 
   if (!hasChildren) {
-    const selfClosing = `${indent}<${tag}${attrStr}${mirrorAttrStr}${refStr}${styleStr} />`
+    const selfClosing = `${indent}<${tag}${attrStr}${mirrorAttrStr}${stateAttr}${refStr}${styleStr} />`
     return wrapWithVisibility(selfClosing, visibleWhen, tokens, indent)
   }
 
   const lines: string[] = []
-  lines.push(`${indent}<${tag}${attrStr}${mirrorAttrStr}${refStr}${styleStr}>`)
+  lines.push(`${indent}<${tag}${attrStr}${mirrorAttrStr}${stateAttr}${refStr}${styleStr}>`)
 
   // Add text content
   if (textContent) {
@@ -558,7 +610,15 @@ function generateJSX(
   for (const child of instance.children) {
     if (child.type === 'Instance') {
       lines.push(
-        generateJSX(child, components, tokens, propertySetMap, indent + '  ', ownLayoutContext)
+        generateJSX(
+          child,
+          components,
+          tokens,
+          propertySetMap,
+          indent + '  ',
+          ownLayoutContext,
+          stateContext
+        )
       )
     } else if (child.type === 'Text') {
       lines.push(`${indent}  {${JSON.stringify(child.content)}}`)
@@ -570,7 +630,8 @@ function generateJSX(
           tokens,
           propertySetMap,
           indent + '  ',
-          ownLayoutContext
+          ownLayoutContext,
+          stateContext
         )
       )
     } else if (child.type === 'Conditional') {
@@ -581,7 +642,8 @@ function generateJSX(
           tokens,
           propertySetMap,
           indent + '  ',
-          ownLayoutContext
+          ownLayoutContext,
+          stateContext
         )
       )
     }
@@ -633,7 +695,8 @@ function generateEachJSX(
   tokens: TokenDefinition[],
   propertySetMap: Map<string, Property[]>,
   indent: string,
-  parentContext: ParentLayoutContext = { type: null }
+  parentContext: ParentLayoutContext = { type: null },
+  stateContext: ReactStateContext | null = null
 ): string {
   // `each.collection` carries the leading `$` from the source (`$tasks`);
   // tokens are keyed without it so strip before the lookup.
@@ -644,7 +707,15 @@ function generateEachJSX(
   for (const child of each.children) {
     if (child.type === 'Instance') {
       childLines.push(
-        generateJSX(child, components, tokens, propertySetMap, indent + '    ', parentContext)
+        generateJSX(
+          child,
+          components,
+          tokens,
+          propertySetMap,
+          indent + '    ',
+          parentContext,
+          stateContext
+        )
       )
     } else if (child.type === 'Each') {
       childLines.push(
@@ -654,7 +725,8 @@ function generateEachJSX(
           tokens,
           propertySetMap,
           indent + '    ',
-          parentContext
+          parentContext,
+          stateContext
         )
       )
     }
@@ -693,7 +765,8 @@ function generateConditionalJSX(
   tokens: TokenDefinition[],
   propertySetMap: Map<string, Property[]>,
   indent: string,
-  parentContext: ParentLayoutContext = { type: null }
+  parentContext: ParentLayoutContext = { type: null },
+  stateContext: ReactStateContext | null = null
 ): string {
   const condExpr = rewriteIdentifiersToTokens(cond.condition, tokens)
 
@@ -708,7 +781,8 @@ function generateConditionalJSX(
             tokens,
             propertySetMap,
             branchIndent,
-            parentContext
+            parentContext,
+            stateContext
           )
         )
       } else if ((node as { type: string }).type === 'Each') {
@@ -719,7 +793,8 @@ function generateConditionalJSX(
             tokens,
             propertySetMap,
             branchIndent,
-            parentContext
+            parentContext,
+            stateContext
           )
         )
       } else if ((node as { type: string }).type === 'Conditional') {
@@ -730,7 +805,8 @@ function generateConditionalJSX(
             tokens,
             propertySetMap,
             branchIndent,
-            parentContext
+            parentContext,
+            stateContext
           )
         )
       }
@@ -1826,4 +1902,84 @@ function formatStyleObject(style: Record<string, string | number>): string {
   })
 
   return `{ ${parts.join(', ')} }`
+}
+
+/**
+ * Convert a JS-style record (`{ backgroundColor: '#555', fontSize: 18 }`) to
+ * a CSS declaration string (`background-color: #555; font-size: 18;`).
+ * Used to emit pseudo-class state rules (`:hover`, `:focus`, …) in a real
+ * stylesheet — JSX `style={{ }}` doesn't support pseudo-selectors. Numeric
+ * values flow through unchanged; React's px-conversion already happened
+ * upstream in `generateStyles`.
+ */
+function formatStyleAsCSS(style: Record<string, string | number>): string {
+  const parts: string[] = []
+  for (const [key, value] of Object.entries(style)) {
+    // camelCase → kebab-case, but keep `--custom-prop` intact.
+    let cssKey: string
+    if (key.startsWith('--')) {
+      cssKey = key
+    } else if (key.startsWith('Webkit') || key.startsWith('Moz') || key.startsWith('Ms')) {
+      // Vendor prefixes: Webkit → -webkit-
+      cssKey =
+        '-' + key[0].toLowerCase() + key.slice(1).replace(/[A-Z]/g, m => '-' + m.toLowerCase())
+    } else {
+      cssKey = key.replace(/[A-Z]/g, m => '-' + m.toLowerCase())
+    }
+    parts.push(`${cssKey}: ${value}`)
+  }
+  return parts.join('; ')
+}
+
+/**
+ * Accumulator for pseudo-class CSS rules emitted during the React tree
+ * walk. `[data-h="N"]:hover { … }` rules need to live in a stylesheet
+ * (JSX inline `style` can't carry pseudo-selectors), so we collect them
+ * as we walk and emit a single `<style>` block at the top of `App()`.
+ */
+interface ReactStateContext {
+  rules: string[]
+  counter: { value: number }
+}
+
+/**
+ * Detect system-state blocks (`hover:`, `focus:`, `active:`, `disabled:`)
+ * on a resolved component, plus shorthand `hover-X` / `focus-X` /
+ * `active-X` / `disabled-X` properties on the instance/component. Returns
+ * a per-state property list; empty if there's nothing to emit.
+ */
+function collectStateGroups(
+  compDef: ComponentDefinition | undefined,
+  allProps: Property[]
+): Array<{ state: string; properties: Property[] }> {
+  const SYSTEM_STATES = ['hover', 'focus', 'active', 'disabled'] as const
+  const groups: Record<string, Property[]> = {}
+
+  // 1) State blocks from the component definition (`hover: bg #555`).
+  for (const s of compDef?.states ?? []) {
+    if (!SYSTEM_STATES.includes(s.name as (typeof SYSTEM_STATES)[number])) continue
+    if (s.properties && s.properties.length > 0) {
+      ;(groups[s.name] ??= []).push(...s.properties)
+    }
+  }
+
+  // 2) Shorthand props on the instance/component (`hover-bg #555`,
+  //    `focus-boc #2271C1`, `active-opacity 0.8`, `disabled-opa 0.5`).
+  for (const p of allProps) {
+    for (const state of SYSTEM_STATES) {
+      const prefix = `${state}-`
+      if (p.name.startsWith(prefix)) {
+        const stripped = p.name.slice(prefix.length)
+        ;(groups[state] ??= []).push({
+          ...p,
+          name: stripped,
+        } as Property)
+        break
+      }
+    }
+  }
+
+  return Object.entries(groups)
+    .filter(([, props]) => props.length > 0)
+    .map(([state, properties]) => ({ state, properties }))
 }

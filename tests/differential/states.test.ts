@@ -58,3 +58,37 @@ describe('States — Backend support limits', () => {
     expect(fw).not.toContain('cycleState')
   })
 })
+
+describe('States — System-state CSS rules in React', () => {
+  // System states (hover/focus/active/disabled) emit `:hover` etc. as
+  // real CSS rules in a `<style>` block, with `data-h="N"` selectors.
+  // No runtime needed — pure CSS pseudo-classes.
+  it('hover state-block emits a `[data-h]:hover` rule', () => {
+    const react = generateReact(parse(`Btn: pad 10, bg #333\n  hover:\n    bg #555\n\nBtn "Click"`))
+    expect(react).toMatch(/<style>/)
+    expect(react).toMatch(/data-h=\\?"1\\?"\]:hover/)
+    expect(react).toContain('background-color: #555')
+    expect(react).toContain('data-h="1"')
+  })
+
+  it('hover-bg shorthand also lands as a CSS pseudo-rule', () => {
+    const react = generateReact(parse(`Button "X", bg #333, hover-bg #555`))
+    expect(react).toMatch(/data-h=\\?"1\\?"\]:hover/)
+    expect(react).toContain('background-color: #555')
+  })
+
+  it('focus, active, disabled all reach the stylesheet', () => {
+    const src = `Btn: bg #333\n  focus:\n    bg #2271C1\n  active:\n    bg #ef4444\n  disabled:\n    opacity 0.5\n\nBtn "X"`
+    const react = generateReact(parse(src))
+    expect(react).toContain(':focus')
+    expect(react).toContain(':active')
+    expect(react).toContain(':disabled')
+  })
+
+  it('elements without state-bearing props get no `data-h` attribute', () => {
+    // Bundle-size guard: idle Frames must not carry `data-h` selectors.
+    const react = generateReact(parse(`Frame bg #333`))
+    expect(react).not.toContain('data-h=')
+    expect(react).not.toMatch(/<style>/)
+  })
+})
