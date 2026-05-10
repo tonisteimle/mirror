@@ -29,16 +29,39 @@ describe('Tables — Backend support', () => {
     expect(() => generateFramework(parse(src))).not.toThrow()
   })
 
-  it('DOM emits TableHeader + TableRow elements', () => {
-    const code = generateDOM(parse(TABLE_STATIC))
-    expect(code).toContain('TableHeader')
-    expect(code).toContain('TableRow')
+  it('static Table renders TableHeader + TableRow + cell text in all 3 backends', () => {
+    const dom = generateDOM(parse(TABLE_STATIC))
+    const react = generateReact(parse(TABLE_STATIC))
+    const fw = generateFramework(parse(TABLE_STATIC))
+
+    for (const out of [dom, react, fw]) {
+      expect(out).toContain('TableHeader')
+      expect(out).toContain('TableRow')
+      expect(out).toContain('Name')
+      expect(out).toContain('Max')
+    }
   })
 
   it('DOM emits each-loop for $tasks-driven Table', () => {
     const code = generateDOM(parse(TABLE_EACH))
     // each-loop emits a forEach over the data
     expect(code).toMatch(/forEach|for\s*\(/)
+  })
+
+  // PIN current behavior: each-driven rows render in DOM (forEach) and
+  // Framework (`M.each(...)` wrapper). React silently drops the `each`
+  // block entirely — the static TableHeader still appears, but the
+  // dynamic TableRow generation is gone. Flipping the React expectation
+  // means React gained each-loop support; the others are stable.
+  it('each-driven TableRow: rendered in DOM + Framework, dropped by React', () => {
+    const dom = generateDOM(parse(TABLE_EACH))
+    const react = generateReact(parse(TABLE_EACH))
+    const fw = generateFramework(parse(TABLE_EACH))
+
+    expect(dom).toContain('TableRow')
+    expect(fw).toContain('TableRow')
+    expect(fw).toMatch(/M\.each\(/)
+    expect(react).not.toContain('TableRow')
   })
 })
 
@@ -69,5 +92,20 @@ describe('Charts — Backend support', () => {
   it('DOM chart emits createChart runtime call', () => {
     const code = generateDOM(parse(CHART_LINE))
     expect(code).toContain('_runtime.createChart')
+  })
+
+  // PIN current behavior: only DOM wires up Chart.js. React + Framework
+  // emit a placeholder element with the chart name as `data-component` /
+  // `M('Line', …)` but no rendering setup, no data binding, no canvas.
+  // Flipping this means the backend gained Chart support.
+  it('React/Framework chart output lacks chart-rendering wiring', () => {
+    const react = generateReact(parse(CHART_LINE))
+    const fw = generateFramework(parse(CHART_LINE))
+
+    expect(react).not.toContain('createChart')
+    expect(react).not.toMatch(/Chart\.js|chart\.js/)
+    expect(fw).not.toContain('createChart')
+    // FW emits only the M('Line', …) placeholder with sizing
+    expect(fw).toMatch(/M\(\s*['"]Line['"]/)
   })
 })
