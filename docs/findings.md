@@ -11,6 +11,13 @@ Ziel ist **rigorose Qualität**, nicht Tempo.
 
 - **Klein inkrementieren.** Ein Befund → eine Probe → ein Fix → ein
   Commit. Keine Multi-Befund-Bündel. Jeder Schritt isoliert.
+- **Findings direkt beheben, nicht deferren.** Wenn ein Befund
+  beim Hunt aufgemacht wird, gehört zur Bearbeitung der reale Fix
+  (Code löschen, refactoren, Bug schließen) — nicht das Verschieben
+  in eine Policy-Watchlist oder das Aufschieben auf später. Tracker-
+  Mechanismen (z. B. WATCHLIST in der Dead-Feature-Policy) sind nur
+  legitim, wenn der Owner noch entscheiden muss; Code-Findings mit
+  klarer Lösung werden im selben Inkrement gelöst.
 - **Regelmäßig committen.** Jeder grüne Inkrement-Schritt geht sofort
   ins Git, nicht batchen. Parallele Sessions und externe Reverts haben
   in der Vergangenheit uncommitteten Stand vernichtet — Disk ist kein
@@ -129,26 +136,24 @@ Alias-Equivalenz`) deckt die Drei-Alias-Equivalenz schon ab.
   einzeln: ins Schema aufnehmen (mit Aliases) ODER aus IR entfernen.
   **Status:** offen
 
-- **Wo:** `compiler/schema/dsl.ts:213` (`'route'` keyword), Parser-Plumbing
-  in `compiler/parser/{lexer,parser-context,inline-property-parser,
-body-parser,parser,ops/parse-misc,ops/parse-blocks}.ts` +
-  `compiler/runtime/mirror-runtime.ts:366`
-  **Was:** Lane 1 (Dead-Feature-Watchlist) — `route`-Keyword ist im
-  Schema bereits `@deprecated - use navigate() or Tab/NavItem without
-  children instead`, aber: 0 Verwendung in `examples/`, 0 in DSL-Files
-  repo-weit, NICHT in `tests/policy/dsl-features-have-examples.test.ts`
-  WATCHLIST oder KEEP gelistet — also zwischen den Rosten. Komplette
-  Parser-Plumbing existiert (8 Files): Lexer-Token `ROUTE`, Parse-
-  Funktion `parseRouteClause`, 5 Aufrufer in `body-parser.ts`/
-  `parse-blocks.ts`/`inline-property-parser.ts`. Der `@deprecated`-
-  Hinweis suggeriert Owner-Entscheidung schon einmal getroffen, aber
-  Code nie entfernt.
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~19:00)
-  **Plan:** Minimal-invasiv: WATCHLIST-Eintrag in der Policy mit
-  Deadline 2026-08-10 (gleich wie ursprüngliche Batch). Forciert
-  Owner-Entscheidung nach Frist (delete-vs-promote). Deletion wäre
-  Multi-File-Refactor (8+ Files) und braucht Owner-Sign-off — Policy-
-  Mechanismus liefert genau das.
+- **Wo:** `compiler/schema/dsl.ts:213` (`'route' // @deprecated`)
+  **Was:** Schema-Annotation widerspricht der Realität. Das
+  `@deprecated`-Comment sagt „use navigate() or Tab/NavItem without
+  children instead", aber `route` ist aktiv genutzt — nicht in
+  `examples/` direkt, sondern in der Studio-Multi-Page-App-
+  Infrastruktur: `autoCreateReferencedFiles` scannt Source nach
+  `route <name>` und erzeugt Page-Files (4 Tests pinnen das in
+  `tests/studio/compile-orchestrators.test.ts:226-249, 746-754`).
+  Volle Parser-Plumbing (Lexer-Token `ROUTE`, `parseRouteClause`,
+  IR-Field `Instance.route`, DOM-Backend `data-route`-Emit, Runtime-
+  Navigation in `compiler/runtime/component-navigation.ts`) ist
+  legitimes Production-Feature. Owner-Entscheidung nötig: entweder
+  `@deprecated` entfernen (Feature ist nicht deprecated) oder Wording
+  refinen (z. B. „nur für top-level page declarations, nicht inline").
+  **Status:** offen — Owner-Entscheidung
+  **Notiz:** Mein erster Versuch (Hunt 2026-05-10 ~19:00) wollte das
+  als pure-dead löschen — falsche Prämisse, vom User korrigiert.
+  Hier dokumentiert als Owner-Item.
 
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
