@@ -1344,11 +1344,15 @@ export class FullColorPicker {
   }
 
   private async openEyeDropper(): Promise<void> {
-    if (!('EyeDropper' in window)) return
+    // EyeDropper API is browser-only and not yet in lib.dom. Cast through
+    // a minimal shape rather than a wholesale `as any`.
+    const w = window as unknown as {
+      EyeDropper?: new () => { open: () => Promise<{ sRGBHex: string }> }
+    }
+    if (!w.EyeDropper) return
 
     try {
-      // @ts-ignore - EyeDropper API
-      const dropper = new window.EyeDropper()
+      const dropper = new w.EyeDropper()
       const result = await dropper.open()
       const hex = result.sRGBHex.toUpperCase()
       this.setColor(hex)

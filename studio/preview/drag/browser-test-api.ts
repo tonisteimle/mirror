@@ -47,10 +47,19 @@ export type {
 // Global Setup
 // =============================================================================
 
+// Test-only window global. The shape is dictated by the `api` object built
+// below; declaring it as Record<string, unknown> here keeps the existence
+// check + assignment typed without forcing every property to be enumerated.
+declare global {
+  interface Window {
+    __dragTest?: Record<string, unknown>
+  }
+}
+
 let globalRunner: BrowserTestRunner | null = null
 
 export function setupBrowserDragTestAPI(): void {
-  if ((window as any).__dragTest) return
+  if (window.__dragTest) return
 
   globalRunner = new BrowserTestRunner()
   const studioControl = new MirrorStudioControl()
@@ -181,7 +190,7 @@ export function setupBrowserDragTestAPI(): void {
     studio: studioControl,
   }
 
-  ;(window as any).__dragTest = api
+  window.__dragTest = api
 
   console.log('🪞 Mirror Studio Test API ready. Usage:')
   console.log('')
