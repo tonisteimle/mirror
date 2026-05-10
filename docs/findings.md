@@ -297,6 +297,23 @@ instance.column)` umgestellt. 7849/7849 vitest grün.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
+- **Wo:** Tutorial-Demos (neue Initiative, kein Befund-Code)
+  **Was:** Tutorial-Videos werden über den neuen CDP-Runner gedreht:
+  `--headed --os-mouse --record=*.webm`. nut-js bewegt den realen
+  macOS-Cursor (`mouseSpeed = 1500`, „deliberate but watchable" laut
+  Code-Comment), CDP fired Trusted-Events, CDP-Screencast →
+  ffmpeg-VP9-WebM. Erstes Allerkleinstes-Beispiel: `Text` aus Palette
+  in existierenden `Frame` droppen (Test
+  `Drag Text from palette into existing Frame appends a Text child`).
+  **Status:** aktiv (Claude-Session, 2026-05-10 ~23:00)
+  **Plan:**
+  1. `demos/`-Verzeichnis anlegen + `.gitignore`-Eintrag für `*.webm`.
+  2. Bestehenden Test mit `--headed --os-mouse --record=demos/01-text-into-frame.webm --record-fps=30` laufen lassen.
+  3. Video inspizieren — ist die Cursor-Bewegung smooth, ist der
+     Drop sichtbar, ist die Dauer angenehm?
+  4. Wenn das erste Video sauber rauskommt: Pattern für weitere
+     Demos festhalten.
+
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
