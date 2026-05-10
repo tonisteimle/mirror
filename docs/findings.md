@@ -174,6 +174,17 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
+- **Wo:** `studio/core/prelude-service.ts` (139 LOC)
+  **Was:** Zweites Orphan-Modul nach `usage-tracker.ts`. `PreludeService`-
+  Klasse + `PreludeInfo`-Interface + Singleton-Helpers
+  (`getPreludeService`/`createPreludeService`) ohne einen Consumer im
+  Repo. Heutige Prelude-Resolution läuft via `studio/compile/
+prelude-builder.ts` (echter Consumer-Pfad). Diese Service-Variante
+  wurde entweder nie integriert oder durch den Compile-Service-
+  Mechanismus überholt und nie aufgeräumt.
+  **Status:** aktiv (Claude-Session, 2026-05-10 ~21:00)
+  **Plan:** Datei löschen, Tests grün halten.
+
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
