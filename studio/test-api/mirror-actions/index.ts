@@ -13,6 +13,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type { Selector } from '../../../tools/test-runner/demo/types'
+import { getDragController } from '../../preview/drag'
+import type { DragSource } from '../../preview/drag'
+import { setCurrentDragData, clearCurrentDragData } from '../../preview/drag-preview'
+import { getFixture } from '../../preview/drag/test-api/fixtures'
+import { LAYOUT_SECTION, COMPONENTS_SECTION } from '../../panels/components/layout-presets'
 
 type Point = { x: number; y: number }
 
@@ -784,14 +789,11 @@ export function installMirrorActions(): MirrorActionsAPI {
     if (!targetEl) throw new Error('Target ' + targetId + ' not found')
 
     let endPoint: Point
-    let chain = win.__dragTest.fromPalette(component).toContainer(targetId)
     if (at.kind === 'index') {
       endPoint = dropChildIndexPoint(targetEl, at.index)
-      chain = chain.atIndex(at.index)
     } else {
       const r = targetEl.getBoundingClientRect()
       endPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 }
-      chain = chain.atAlignmentZone(at.zone)
     }
 
     // Snapshot the preview's data-mirror-id set before the drop so we can
@@ -805,43 +807,113 @@ export function installMirrorActions(): MirrorActionsAPI {
       )
     )
 
-    const releasePalette = pressPaletteItem(paletteEl)
-    const destroyGhost = attachDragGhost(component)
-    // Drop-zone preview: dashed ring around the target container plus an
-    // insertion line at the predicted landing point, so the viewer sees
-    // where the new node will land before the cursor finishes its glide.
-    const destroyDropIndicators = showDropIndicators(targetEl, endPoint)
+    // Drive Studio's REAL drag pipeline (DragController + Indicator) instead
+    // of synthesizing a fake ghost / ring / insertion line that doesn't match
+    // what a human user actually sees. Studio shows the genuine container
+    // highlight, alignment zones for empty containers, insertion line for
+    // flex layouts, and the proper ghost rectangle — all driven by
+    // controller.startDrag + updatePosition + drop. The synthetic visuals
+    // (attachDragGhost / showDropIndicators) are gone.
+    // Resolve the dragged component to a Studio source. We prefer the live
+    // layout-preset registry (the same one the Component Panel renders
+    // from — has the correct textContent / properties / mirTemplate for
+    // primitives like H1-H6, Image, RadioGroup, …) over the test
+    // fixtures, and fall back to a minimal synth for unknown names so
+    // the drag pipeline never crashes on basic primitives.
+    const presets = [...LAYOUT_SECTION, ...COMPONENTS_SECTION]
+    const preset = presets.find(p => p.name.toLowerCase() === lower)
+    const fallbackFixture = getFixture(component)
+    const fixture = preset
+      ? {
+          componentName: preset.template ?? preset.name,
+          textContent: preset.textContent,
+          properties: preset.properties,
+          mirTemplate: preset.mirTemplate,
+          template: preset.template ?? preset.name,
+          expectedLines: [],
+          category: 'simple' as const,
+        }
+      : (fallbackFixture ?? {
+          componentName: component,
+          textContent: component,
+          template: component,
+          expectedLines: [`${component} "${component}"`],
+          category: 'simple' as const,
+        })
 
-    let result: any
+    const previewContainer = document.getElementById('preview') as HTMLElement | null
+    if (!previewContainer) throw new Error('dropFromPalette: #preview not found')
+
+    const dragSource: DragSource = {
+      type: 'palette',
+      componentName: fixture.componentName,
+      template: fixture.template,
+    }
+
+    const releasePalette = pressPaletteItem(paletteEl)
+    const cursor = win.__mirrorDemo && win.__mirrorDemo.cursor
+    const controller = getDragController()
+
+    // Set the global drag data so Studio's drop callback can read it.
+    setCurrentDragData({
+      componentName: fixture.componentName,
+      properties: fixture.properties,
+      textContent: fixture.textContent,
+      mirTemplate: fixture.mirTemplate,
+      fromComponentPanel: true,
+    })
+
     try {
-      result = await withVisibleDrag(endPoint, () => chain.execute(), {
-        moveMs: 1500,
-        triggerFrac: 0.05,
-        preHoldMs: 240,
-        settleMs: 320,
-      })
+      // 1. Enter drag state — caches the layout, primes the indicator.
+      controller.startDrag(dragSource, previewContainer)
+
+      // 2. Move the demo cursor towards the drop point AND tick the
+      //    DragController's updatePosition along the way so Studio's
+      //    real ghost / container highlight / insertion line / alignment
+      //    zones render naturally. We poll cursor position via rAF.
+      const cursorStart = cursor ? cursor.getPosition() : { x: 0, y: 0 }
+      const moveDur = cursor && cursor.calculateDuration ? cursor.calculateDuration(endPoint) : 1200
+      const moveMs = Math.max(800, moveDur)
+
+      let alive = true
+      let raf = 0
+      const tick = (): void => {
+        if (!alive) return
+        const p = cursor ? cursor.getPosition() : endPoint
+        controller.updatePosition({ x: p.x, y: p.y })
+        raf = requestAnimationFrame(tick)
+      }
+      raf = requestAnimationFrame(tick)
+
+      const motionPromise = cursor ? cursor.moveTo(endPoint, moveMs) : Promise.resolve()
+      await motionPromise
+
+      // Final tick at the exact drop point so the indicator settles.
+      controller.updatePosition({ x: endPoint.x, y: endPoint.y })
+      // Hold a beat so the viewer registers the indicator + ghost at rest.
+      await delay(280)
+
+      // 3. Apply the drop — DragController routes to studio's onDrop
+      //    callback, which writes the new component into the editor.
+      if (cursor) cursor.showClickEffect()
+      alive = false
+      cancelAnimationFrame(raf)
+      await controller.drop()
     } finally {
       releasePalette()
-      destroyGhost()
-      destroyDropIndicators()
+      clearCurrentDragData()
     }
-    if (!result || !result.success) {
-      throw new Error('Drop failed: ' + ((result && result.error) || 'unknown'))
-    }
+
     await win.__dragTest.waitForCompile()
 
     // Auto-select the freshly-dropped element. Diff the post-drop
     // data-mirror-id set against the snapshot taken before the drop;
-    // the new node(s) are the difference. If multiple were added (rare
-    // — a component with default children counts as one drop but
-    // multiple IDs), select the first one, which is the dropped root.
+    // the new node(s) are the difference.
     const newIds = Array.from(document.querySelectorAll('#preview [data-mirror-id]'))
       .map(el => el.getAttribute('data-mirror-id') as string)
       .filter(id => !idsBefore.has(id))
     if (newIds.length > 0 && win.__dragTest && win.__dragTest.selectNode) {
       win.__dragTest.selectNode(newIds[0])
-      // Brief settle so the property panel has time to populate before
-      // the next demo step assumes the selection is live.
       await delay(120)
     }
   }
