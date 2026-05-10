@@ -32,8 +32,25 @@ function getComputedStyleValue(nodeId: string, cssProperty: string): string {
 // Primitive Lists
 // ============================================================================
 
-// All basic primitives (excluding Zag components)
-const ALL_PRIMITIVES = [
+// "Basic" primitives — leaf/atom primitives that aren't part of the
+// semantic/heading/table sub-families (those have their own lists below).
+//
+// Slice 50 V-8 deferred from Slice 1 Iter-2: this list was previously
+// named `ALL_PRIMITIVES`, which lied — it's 11 of the 26 schema-defined
+// primitives. The naming/scope was misleading. Renaming to BASIC_PRIMITIVES
+// makes the intent explicit. Full schema-derivation (e.g. `category` field
+// on PrimitiveDef, drop the magic names below) is a Schema-Category-Reform
+// out of Slice-50 scope. Re-Open-Trigger: dedicated Schema-Categories-Slice
+// (no number assigned yet — flag in plan.md Re-Open table). Until then, the
+// implicit contract is:
+//
+//   BASIC_PRIMITIVES + CONTAINER_PRIMITIVES + HEADING_PRIMITIVES
+//   + ['Slot'] + Table-Family (6)
+//   ≡ Object.keys(compiler/schema/dsl.ts:DSL.primitives) (31)
+//
+// If a new primitive lands in `dsl.ts` without being added to one of the
+// lists below, the schema-drift-grep in the next slice audit catches it.
+const BASIC_PRIMITIVES = [
   'Frame',
   'Text',
   'Button',
@@ -46,6 +63,9 @@ const ALL_PRIMITIVES = [
   'Divider',
   'Spacer',
 ] as const
+
+// Backwards-compat alias for any external readers; new code uses BASIC_PRIMITIVES.
+const ALL_PRIMITIVES = BASIC_PRIMITIVES
 
 // Container primitives that support layout properties
 const CONTAINER_PRIMITIVES = [
