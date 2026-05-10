@@ -676,7 +676,7 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
-### 2026-05-10 — React + Framework Backend-Hunt (16-Slice-Run)
+### 2026-05-10 — React + Framework Backend-Hunt (19-Slice-Run)
 
 Eine durchgehende Hunt-Session am React- und Framework-Backend; alle
 Slices mit Differential-Test-Pin. Real-Example-Probes zeigen jetzt 0
@@ -800,10 +800,33 @@ Object]"` weil Conditional via `JSON.stringify(String(v))` lief.
      nicht.
   2. Explicit `visible-when X`: parser-desugared `visibleWhen` aus
      `if/else`-blocks im Parent wurde gehandhabt, aber `Frame
-   visible-when X` als reguläre Property nicht. Auch: top-level Fragment
+visible-when X` als reguläre Property nicht. Auch: top-level Fragment
      wrap wenn visible-when-expression-only-root-item — `return
-   ({cond ? ... : null})` ist invalid JSX.
+({cond ? ... : null})` ist invalid JSX.
      **Status:** erledigt (`da17ef6c`)
+
+- **Wo:** `compiler/backends/react.ts` (`generateStyles` switch)
+  **Was:** `tracking N` / `ls N` / `letter-spacing` dropped silently —
+  React-switch hatte keinen Case. IR emittiert `letter-spacing: Nem`
+  korrekt. Jetzt mit em-suffix in React reproduziert.
+  **Status:** erledigt (`61ea5a62`)
+
+- **Wo:** `compiler/backends/react.ts` (`HTML_ATTR_PROPS`,
+  `applyFlagProperty`)
+  **Was:** Drei dokumentierte Schema-Props ohne React-Branch:
+  `ver-baseline` (cross-axis baseline alignment, fiel auf flex-start
+  zurück), `min`/`max`/`step` (numeric input attrs, nicht in
+  HTML_ATTR_PROPS), `mask "###..."` (DOM nutzt Runtime-Handler;
+  React surface jetzt als `data-mask` für künftigen Runtime-Layer).
+  **Status:** erledigt (`376d317d`)
+
+- **Wo:** `compiler/backends/react.ts` (`generateStyles` align-handler)
+  **Was:** `align top|bottom|center|left|right` keyword-with-value
+  fiel komplett durch — Cross-axis defaultete auf flex-start
+  unabhängig von Direction. DOM mappte korrekt via IR
+  layout-transformer. Jetzt direction-aware Mapping in React
+  reproduziert (`hor` vs `column` mirroren Achsen).
+  **Status:** erledigt (`76e08045`)
 
 ### 2026-05-10 — Directional Padding/Margin/Border-Shortcuts in React
 
