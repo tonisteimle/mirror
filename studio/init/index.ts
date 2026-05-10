@@ -23,3 +23,4 @@ export {
   type GridOverlayInitResult,
 } from './init-grid-overlay'
 export { tabLabel, renderEditorFileTabs, syncEditorFileTabs, type FileTabsDeps } from './file-tabs'
+export { installEditorDispatchWrapper } from './init-editor-dispatch'
