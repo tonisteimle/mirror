@@ -624,48 +624,38 @@ async function browserExportProject(): Promise<void> {
 }
 
 // =============================================================================
-// Tauri Implementation (Stubs - werden von tauri-bridge.js überschrieben)
+// Tauri Implementation
 // =============================================================================
+//
+// In Tauri desktop these four entry points are partly stubbed:
+// `tauriLoadDemo` writes the default-project to the on-disk storage and
+// works end-to-end, but `tauriNewProject` / `tauriImportProject` /
+// `tauriExportProject` log a warning and no-op. The real Tauri command
+// surface (`TauriBridge.project.{open,create}Project`) exists in
+// `studio/tauri-bridge.ts` but is not wired into these UI entry points
+// yet — see docs/findings.md ("`studio/storage/project-actions.ts`
+// (`tauriNewProject` &c)").
 
-async function tauriNewProject(type: ProjectType): Promise<void> {
-  // Wird von Tauri überschrieben
-  const tauriBridge = window.__TAURI_BRIDGE__
-  if (tauriBridge?.newProject) {
-    await tauriBridge.newProject(type)
-  } else {
-    log.warn('Tauri bridge not available')
-  }
+async function tauriNewProject(_type: ProjectType): Promise<void> {
+  log.warn('newProject is not implemented for Tauri desktop yet')
 }
 
 async function tauriLoadDemo(): Promise<void> {
-  const tauriBridge = window.__TAURI_BRIDGE__
-  if (tauriBridge?.loadDemo) {
-    await tauriBridge.loadDemo()
-  } else {
-    // Fallback: Default-Project direkt schreiben
-    const storage = getStorage()
-    for (const [path, content] of Object.entries(DEFAULT_PROJECT)) {
-      await storage.writeFile(path, content)
-    }
-    await storage.refreshTree()
+  // Default-Project direkt in den Tauri-Storage schreiben.
+  const storage = getStorage()
+  for (const [path, content] of Object.entries(DEFAULT_PROJECT)) {
+    await storage.writeFile(path, content)
   }
+  await storage.refreshTree()
 }
 
 async function tauriImportProject(): Promise<boolean> {
-  const tauriBridge = window.__TAURI_BRIDGE__
-  if (tauriBridge?.importProject) {
-    return await tauriBridge.importProject()
-  }
+  log.warn('importProject is not implemented for Tauri desktop yet')
   return false
 }
 
 async function tauriExportProject(): Promise<void> {
-  // Tauri speichert automatisch - nichts zu tun
-  // Oder: "Speichern unter" Dialog
-  const tauriBridge = window.__TAURI_BRIDGE__
-  if (tauriBridge?.exportProject) {
-    await tauriBridge.exportProject()
-  }
+  log.warn('exportProject is not implemented for Tauri desktop yet')
 }
 
 // =============================================================================

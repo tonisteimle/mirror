@@ -497,8 +497,16 @@ describe('exportProject', () => {
 })
 
 // =============================================================================
-// TAURI BRANCHES (P2 coverage)
+// TAURI BRANCHES — pinning the not-yet-implemented stubs
 // =============================================================================
+//
+// Production Tauri behaviour today: newProject / importProject /
+// exportProject silently no-op (warning in the log); loadDemo writes
+// the default project to the on-disk storage. The earlier tests that
+// stubbed `window.__TAURI_BRIDGE__` were exercising a global the
+// runtime never set — now removed. Real wiring to
+// `TauriBridge.project.{open,create}Project` is tracked in
+// docs/findings.md.
 
 describe('Tauri branches — newProject / loadDemo / importProject / exportProject', () => {
   beforeEach(() => {
@@ -508,65 +516,26 @@ describe('Tauri branches — newProject / loadDemo / importProject / exportProje
 
   afterEach(() => {
     delete (global.window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__
-    delete (global.window as unknown as { __TAURI_BRIDGE__?: unknown }).__TAURI_BRIDGE__
   })
 
-  it('newProject delegates to TauriBridge.newProject when Tauri is detected', async () => {
-    const newProjectMock = vi.fn().mockResolvedValue(undefined)
-    ;(global.window as unknown as { __TAURI_BRIDGE__: unknown }).__TAURI_BRIDGE__ = {
-      newProject: newProjectMock,
-    }
-    const { newProject } = await getProjectActions()
-    await newProject('demo')
-    expect(newProjectMock).toHaveBeenCalledWith('demo')
-    // No localStorage write happened — Tauri branch took over.
-    expect(mockStorage.getItem('mirror-files')).toBeNull()
-  })
-
-  it('newProject silently no-ops when Tauri bridge is missing', async () => {
-    // No __TAURI_BRIDGE__ set, but isTauri()=true.
+  it('newProject silently no-ops in Tauri (not implemented yet)', async () => {
     const { newProject } = await getProjectActions()
     await expect(newProject()).resolves.toBeUndefined()
     expect(mockStorage.getItem('mirror-files')).toBeNull()
   })
 
-  it('loadDemoProject delegates to TauriBridge.loadDemo when present', async () => {
-    const loadDemoMock = vi.fn().mockResolvedValue(undefined)
-    ;(global.window as unknown as { __TAURI_BRIDGE__: unknown }).__TAURI_BRIDGE__ = {
-      loadDemo: loadDemoMock,
-    }
-    const { loadDemoProject } = await getProjectActions()
-    await loadDemoProject()
-    expect(loadDemoMock).toHaveBeenCalled()
-  })
+  // loadDemoProject's Tauri branch writes DEFAULT_PROJECT files via the
+  // lazy-required storage singleton (require('./index').storage) — that
+  // pattern works in browser/Tauri but vitest's ESM context can't resolve
+  // the relative require() at runtime. Real coverage of the write side-
+  // effects lives in the desktop-files integration suite, not here.
 
-  it('importProject returns false when Tauri bridge is missing the method', async () => {
-    ;(global.window as unknown as { __TAURI_BRIDGE__: unknown }).__TAURI_BRIDGE__ = {}
+  it('importProject returns false in Tauri (not implemented yet)', async () => {
     const { importProject } = await getProjectActions()
-    const result = await importProject()
-    expect(result).toBe(false)
+    expect(await importProject()).toBe(false)
   })
 
-  it('importProject returns whatever TauriBridge.importProject returns', async () => {
-    ;(global.window as unknown as { __TAURI_BRIDGE__: unknown }).__TAURI_BRIDGE__ = {
-      importProject: vi.fn().mockResolvedValue(true),
-    }
-    const { importProject } = await getProjectActions()
-    expect(await importProject()).toBe(true)
-  })
-
-  it('exportProject delegates to TauriBridge.exportProject when present', async () => {
-    const exportMock = vi.fn().mockResolvedValue(undefined)
-    ;(global.window as unknown as { __TAURI_BRIDGE__: unknown }).__TAURI_BRIDGE__ = {
-      exportProject: exportMock,
-    }
-    const { exportProject } = await getProjectActions()
-    await exportProject()
-    expect(exportMock).toHaveBeenCalled()
-  })
-
-  it('exportProject is a no-op when Tauri bridge has no exportProject', async () => {
-    ;(global.window as unknown as { __TAURI_BRIDGE__: unknown }).__TAURI_BRIDGE__ = {}
+  it('exportProject silently no-ops in Tauri (not implemented yet)', async () => {
     const { exportProject } = await getProjectActions()
     await expect(exportProject()).resolves.toBeUndefined()
   })

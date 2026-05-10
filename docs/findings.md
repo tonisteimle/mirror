@@ -472,16 +472,28 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
   durch Existenz-Check vor `resolve()` geschlossen.
 
 - **Wo:** `studio/storage/project-actions.ts` (`tauriNewProject` &c)
-  **Was:** Die vier Tauri-Helfer lesen `window.__TAURI_BRIDGE__`, das
-  produktiv **nirgends gesetzt** wird — nur Tests injizieren. Runtime hat
+  **Was:** Die vier Tauri-Helfer lasen `window.__TAURI_BRIDGE__`, das
+  produktiv nirgends gesetzt wurde — nur Tests injizierten. Runtime hat
   `window.TauriBridge` (anderer Name, andere Form, siehe
   `studio/tauri-bridge.ts:412`). API-Shapes passen auch nicht zusammen
   (`newProject(type)` vs. `TauriProject.createProject(name, path)`).
-  Heißt: in der Desktop-App fallen alle vier Stubs durch zum Else-Pfad.
-  **Status:** offen
-  **Notiz:** Entweder Stubs an `window.TauriBridge.project` verdrahten
-  und die API-Shape angleichen, oder die Stubs streichen, falls die
-  Browser-Pfade die einzigen genutzten sind. Owner-Entscheidung.
+  **Status:** teilweise erledigt — `__TAURI_BRIDGE__`-Indirektion komplett
+  raus: vier Stubs sind jetzt explizit als „not implemented for Tauri
+  desktop yet" markiert (loggen `log.warn`, no-op). `loadDemo` nutzt den
+  bisher schon vorhandenen `getStorage().writeFile`-Pfad als Default.
+  `TauriBridgeShim` aus `window-globals.d.ts` raus, sechs Tests, die
+  den toten Bridge-Path stubsten, durch vier Tests ersetzt, die das
+  echte Stub-Verhalten pinnen. Echte Wiring an
+  `TauriBridge.project.{open,create}Project` bleibt offen — braucht
+  Native-Dialog-Plumbing für Path-Auswahl.
+  **Notiz:** Tracker für die Wiring-Arbeit:
+  - `tauriNewProject` → `TauriDialog.open(directory: true)` +
+    `TauriProject.createProject(name, path)` + `loadProject(path)`.
+  - `tauriImportProject` → analog `TauriDialog.open` +
+    `TauriProject.openProject`.
+  - `tauriExportProject` → no-op (Tauri auto-saves) oder `TauriDialog.save`.
+    Schätzung ~150 LOC + Dialog-UX. Wird vor dem ersten Tauri-Release
+    gebraucht.
 
 - **Wo:** `studio/core/events.ts:493-494`
   **Was:** `(middleware as any).getStats = …` — Instrumentation an
