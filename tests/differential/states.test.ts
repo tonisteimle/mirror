@@ -92,3 +92,40 @@ describe('States — System-state CSS rules in React', () => {
     expect(react).not.toMatch(/<style>/)
   })
 })
+
+// =============================================================================
+// Initial-state merge — instances starting in a custom state
+// =============================================================================
+
+describe('States — React folds initial-state props into inline style', () => {
+  // PIN: `Btn "Active", on` carries `instance.initialState = "on"`. The
+  // React backend merges the matching state block's properties into
+  // `allProps` so the rendered `style={{...}}` already reflects the
+  // active state at first render — no click required, no runtime
+  // needed. Pre-2026-05-10 this case rendered with the base props only,
+  // making `Btn "Active", on` and `Btn "Off"` look identical.
+  it('Btn "Active", on → inline style picks up `on:` block props', () => {
+    const src = `Btn: pad 10, bg #333, toggle()\n  on:\n    bg #2271C1\n\nBtn "Active", on\nBtn "Off"`
+    const react = generateReact(parse(src))
+    // Both buttons present.
+    const buttonLines = react.split('\n').filter(l => l.includes('data-component="Btn"'))
+    expect(buttonLines.length).toBe(2)
+    // Active one carries the `on` data-state and the on-state's bg.
+    const active = buttonLines.find(l => l.includes('data-state="on"'))!
+    expect(active).toContain('#2271C1')
+    // Inactive one keeps the base bg.
+    const inactive = buttonLines.find(l => !l.includes('data-state="on"'))!
+    expect(inactive).toContain('#333')
+    expect(inactive).not.toContain('#2271C1')
+  })
+
+  it('exclusive() with `selected` initial state lands as inline override', () => {
+    const src = `Tab: pad 12 20, col #888, exclusive()\n  selected:\n    col white\n\nFrame hor\n  Tab "A", selected\n  Tab "B"`
+    const react = generateReact(parse(src))
+    const tabLines = react.split('\n').filter(l => l.includes('data-component="Tab"'))
+    const sel = tabLines.find(l => l.includes('data-state="selected"'))!
+    const idle = tabLines.find(l => !l.includes('data-state="selected"'))!
+    expect(sel).toContain("color: 'white'")
+    expect(idle).toContain("color: '#888'")
+  })
+})

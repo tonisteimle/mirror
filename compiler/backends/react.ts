@@ -672,7 +672,22 @@ function generateJSX(
   )
 
   // Merge properties: component defaults + instance overrides
-  const allProps = [...expandedComp, ...expandedInst]
+  let allProps = [...expandedComp, ...expandedInst]
+
+  // Initial-state merge. `Btn "Active", on` carries `instance.initialState
+  // = "on"` and the component definition holds an `on:` block with the
+  // properties that should be active. Without this merge the inline
+  // `style={...}` reflects only the base props, so `Btn "Active", on`
+  // looks identical to `Btn "Off"` until the user clicks. The DOM
+  // backend handles this through its initial-state runtime hook; in
+  // React we fold the state's properties into `allProps` so the inline
+  // style already reflects the active state at first render.
+  if (instance.initialState && compDef?.states) {
+    const stateBlock = compDef.states.find(s => s.name === instance.initialState)
+    if (stateBlock?.properties && stateBlock.properties.length > 0) {
+      allProps = [...allProps, ...stateBlock.properties]
+    }
+  }
 
   // Slice 6 V-2: detect THIS instance's layout-context to inform its
   // children. Children of a `grid N` parent get `parentContext.type='grid'`,
