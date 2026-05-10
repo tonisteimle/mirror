@@ -71,6 +71,25 @@ describe('States — System-state CSS rules in React', () => {
     expect(react).toContain('data-h="1"')
   })
 
+  it('React: state-block animation timing lands on base style as `transition`', () => {
+    // PIN: pre-2026-05-10 `hover 0.2s ease-out: bg #555` only emitted
+    // the hover-state CSS rule; the timing was dropped. Hover then
+    // popped instantly in React (DOM gets a smooth transition via the
+    // IR `transition: ...` emit). Now the React backend reads
+    // `state.animation` and folds a `transition: 'all <dur>s <easing>'`
+    // into the base inline style.
+    const r1 = generateReact(parse(`Btn: bg #333\n  hover 0.2s ease-out:\n    bg #555\n\nBtn "X"`))
+    expect(r1).toContain("transition: 'all 0.2s ease-out'")
+
+    // Default easing falls back to `ease`.
+    const r2 = generateReact(parse(`Btn: bg #333\n  hover 0.15s:\n    bg #555\n\nBtn "X"`))
+    expect(r2).toContain("transition: 'all 0.15s ease'")
+
+    // No timing → no transition prop on the base style.
+    const r3 = generateReact(parse(`Btn: bg #333\n  hover:\n    bg #555\n\nBtn "X"`))
+    expect(r3).not.toContain('transition:')
+  })
+
   it('hover-bg shorthand also lands as a CSS pseudo-rule', () => {
     const react = generateReact(parse(`Button "X", bg #333, hover-bg #555`))
     expect(react).toMatch(/data-h=\\?"1\\?"\]:hover/)

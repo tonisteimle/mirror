@@ -768,7 +768,6 @@ function generateJSX(
   // heuristic resolves to `<button>` doesn't accidentally pick up Frame
   // flex defaults — `button` is in `NON_CONTAINER_PRIMITIVES`.
   const style = withLayoutDefaults(generateStyles(allProps, tokens, parentContext), tag)
-  const styleStr = Object.keys(style).length > 0 ? ` style={${formatStyleObject(style)}}` : ''
 
   // HTML attributes from properties (placeholder, type, href, src, etc.)
   const attrStr =
@@ -788,6 +787,11 @@ function generateJSX(
   // `[data-mirror-id="node-N"]:hover { … }` so cross-backend behavior
   // matches by construction.
   let stateAttr = ''
+  // Transition-spec collected from any state with timing — emitted on
+  // the BASE element style so the hover/focus/active/disabled
+  // transitions are smooth. Mirror's `hover 0.2s ease-out:` shape sits
+  // on `state.animation` in the AST.
+  let transitionSpec: string | null = null
   if (stateContext) {
     const stateGroups = collectStateGroups(compDef, allProps)
     if (stateGroups.length > 0) {
@@ -805,9 +809,29 @@ function generateJSX(
         if (css.length > 0) {
           stateContext.rules.push(`[data-h="${id}"]:${group.state} { ${css} }`)
         }
+        // First state with timing wins for the base-element transition.
+        // DOM does the same thing via the IR transition emit.
+        if (!transitionSpec && group.animation && (group.animation.duration ?? 0) > 0) {
+          const duration = group.animation.duration!
+          const easing = group.animation.easing ?? 'ease'
+          // Pick the property name(s) to transition. Use 'all' as a safe
+          // default — Mirror's hover blocks usually animate one or two
+          // props and `all` covers them without needing a per-prop list.
+          // (DOM emits `transition: background 200ms ease-out` for a
+          // single-prop case; we use `all` because deriving the prop
+          // name list from `group.properties` requires re-doing the
+          // CSS-key mapping.)
+          transitionSpec = `all ${duration}s ${easing}`
+        }
       }
     }
   }
+
+  // Apply state-driven transition to the base element's style. Without
+  // this the React render shows an instant pop on hover (no smoothing)
+  // even when the user wrote `hover 0.2s:`.
+  if (transitionSpec) style.transition = transitionSpec
+  const styleStr = Object.keys(style).length > 0 ? ` style={${formatStyleObject(style)}}` : ''
 
   // Element-Registry callback ref. Only attached when the instance has
   // an explicit `name X` — that's the only DSL form that can be the
@@ -3207,9 +3231,14 @@ interface ReactStateContext {
 function collectStateGroups(
   compDef: ComponentDefinition | undefined,
   allProps: Property[]
-): Array<{ state: string; properties: Property[] }> {
+): Array<{
+  state: string
+  properties: Property[]
+  animation?: { duration?: number; easing?: string }
+}> {
   const SYSTEM_STATES = ['hover', 'focus', 'active', 'disabled'] as const
   const groups: Record<string, Property[]> = {}
+  const animations: Record<string, { duration?: number; easing?: string } | undefined> = {}
 
   // 1) State blocks from the component definition (`hover: bg #555`).
   for (const s of compDef?.states ?? []) {
@@ -3217,6 +3246,7 @@ function collectStateGroups(
     if (s.properties && s.properties.length > 0) {
       ;(groups[s.name] ??= []).push(...s.properties)
     }
+    if (s.animation) animations[s.name] = s.animation
   }
 
   // 2) Shorthand props on the instance/component (`hover-bg #555`,
@@ -3237,5 +3267,5 @@ function collectStateGroups(
 
   return Object.entries(groups)
     .filter(([, props]) => props.length > 0)
-    .map(([state, properties]) => ({ state, properties }))
+    .map(([state, properties]) => ({ state, properties, animation: animations[state] }))
 }
