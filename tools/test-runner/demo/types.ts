@@ -38,8 +38,21 @@ export const DEFAULT_CONFIG: DemoConfig = {
 }
 
 // =============================================================================
-// Speed Presets (Legacy - kept for backwards compatibility)
+// Speed Presets — LEGACY shim for `config.speed`
 // =============================================================================
+//
+// Demo scripts can opt into the modern timing model via `config.pacing` plus
+// the comprehensive `ActionTimings` profiles in `./timing.ts`. The
+// `config.speed` field below predates pacing — most older scripts still
+// declare `speed: 'normal'` etc. We keep these constants only so old scripts
+// keep working: `getSpeedPreset()` in the bundled DemoAPI reads them, and
+// `PACING_TO_SPEED` lets the runner project a pacing profile back onto the
+// legacy speed dimension when a script mixes both.
+//
+// New scripts: prefer `config.pacing` ('video' | 'tutorial' | …) over
+// `config.speed`. New action timings: edit `./timing.ts`. New
+// drag-class timings (preHold / dwell / settle for OS-mouse drags):
+// edit `./timing-classes.ts`.
 
 export interface SpeedPreset {
   /** Mouse movement duration in ms */
@@ -55,10 +68,6 @@ export const SPEED_PRESETS: Record<DemoConfig['speed'], SpeedPreset> = {
   normal: { mouseMs: 600, charMs: 100, pauseMultiplier: 1.0 },
   fast: { mouseMs: 300, charMs: 50, pauseMultiplier: 0.5 },
 }
-
-// =============================================================================
-// Pacing Profile to Speed Preset mapping (for legacy compatibility)
-// =============================================================================
 
 export const PACING_TO_SPEED: Record<PacingProfile, DemoConfig['speed']> = {
   video: 'normal',

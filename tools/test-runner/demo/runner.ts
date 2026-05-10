@@ -24,7 +24,7 @@ import type {
   StateSnapshot,
   DemoValidationReport,
 } from './validation'
-import { DEFAULT_CONFIG, SPEED_PRESETS, PACING_TO_SPEED } from './types'
+import { DEFAULT_CONFIG } from './types'
 import { getTimingProfile, TimingCalculator, formatDuration, compareProfiles } from './timing'
 import { getTimingClass, setSpeedMultipliers } from './timing-classes'
 import {

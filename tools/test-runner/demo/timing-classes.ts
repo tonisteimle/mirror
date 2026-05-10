@@ -1,6 +1,16 @@
 /**
- * Timing classes — single source of truth for OS-mouse + OS-keyboard
- * timings inside Mirror demo actions.
+ * Timing classes — drag-class timings for OS-mouse + JS-mouse drags.
+ *
+ * NOT to be confused with the action-level timings in `./timing.ts`.
+ *
+ *  - `./timing.ts` ActionTimings: per-action high-level pacing
+ *    (typing speed, click pre/post delay, comment reading time, …).
+ *    Selected via `config.pacing: 'video' | 'tutorial' | ...`.
+ *  - `./types.ts` SPEED_PRESETS: legacy shim for `config.speed`.
+ *  - this file TIMING_CLASSES: drag-flow micro-timings (preHold / dwell /
+ *    settle) for the few actions that physically drag the mouse — drop,
+ *    handle, edit, click, typing. Picked via `getTimingClass(name)` from
+ *    inside action implementations only.
  *
  * Each action primitive belongs to exactly one class. The class governs:
  *  - preHoldMs:  pause between mouse-down and the start of motion
@@ -9,7 +19,7 @@
  *                and the viewer time to read what's about to happen
  *  - settleMs:   pause after mouse-up before the next demo step
  *
- * Every action implementation reads its values from here. Magic numbers
+ * Every drag implementation reads its values from here. Magic numbers
  * inline in action code are forbidden — they are a bug of inconsistency
  * waiting to happen.
  */
