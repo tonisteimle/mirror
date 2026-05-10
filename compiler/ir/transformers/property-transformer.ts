@@ -20,6 +20,14 @@ import {
   BORDER_DIRECTION_MAP,
   hoverPropertyToCSS,
 } from '../../schema/ir-helpers'
+import { SYSTEM_STATES } from '../../schema/parser-helpers'
+
+// Schema-derived state-prefix list for inline shorthand
+// (`hover-bg`, `focus-bor`, `focus-visible-bg`, …). Sorted longest-first
+// so `focus-visible-` matches before `focus-`. Slice 26 Iter-2.
+const STATE_PREFIXES = Array.from(SYSTEM_STATES)
+  .sort((a, b) => b.length - a.length)
+  .map(s => `${s}-`)
 import {
   formatCSSValue,
   parseDirectionalSpacing,
@@ -545,9 +553,16 @@ export function propertyToCSS(
     return [{ property: 'animation', value: animValue }]
   }
 
-  // Handle inline state-prefixed properties: hover-bg, focus-bor, active-col, disabled-opa, etc.
-  // Uses hoverPropertyToCSS from schema/ir-helpers.ts (now generalized for all system states).
-  const STATE_PREFIXES = ['hover-', 'focus-', 'active-', 'disabled-']
+  // Handle inline state-prefixed properties: hover-bg, focus-bor, active-col,
+  // disabled-opa, and the advanced states from Slice 26 Iter-1
+  // (focus-visible-bg, focus-within-bor, visited-col, checked-bg, …).
+  //
+  // Slice 26 Iter-2: this gate was hardcoded as ['hover-','focus-','active-',
+  // 'disabled-'] — the same 4-state drift Slice 26 Iter-1 fixed in the DOM
+  // emitter. Now schema-derived from SYSTEM_STATES (sorted longest-first so
+  // `focus-visible` matches before `focus`, `placeholder-shown` before
+  // `placeholder`, etc.). The helper itself uses the same source of truth
+  // (compiler/schema/ir-helpers.ts:STATE_PROPERTY_PREFIXES).
   const matchedPrefix = STATE_PREFIXES.find(p => name.startsWith(p))
   if (matchedPrefix) {
     const hoverResult = hoverPropertyToCSS(name, value)

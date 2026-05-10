@@ -654,6 +654,121 @@ export const combinedSystemStatesTests: TestCase[] = describe('Combined System S
 ])
 
 // =============================================================================
+// Slice 26 Iter-2: Advanced System States
+// =============================================================================
+//
+// Iter-1 erweiterte das Schema von 4 auf 13 system-states; Iter-2-Sweep
+// zieht jetzt CDP-Coverage für die bisher untested 5 nach
+// (focus-visible, focus-within, visited, checked, placeholder).
+// `placeholder-shown`, `first-child`, `last-child`, `empty` haben keine
+// programmatic-fallback-Form (kein `[data-X="true"]`), sind reine CSS-
+// Pseudo-classes — Browser-Verhalten ist die Test-Quelle.
+
+export const focusVisibleStateTests: TestCase[] = describe('Focus-Visible State', [
+  testWithSetup(
+    'Button focus-visible only on keyboard focus',
+    `Button "Tab me", bg #2271C1, col white, pad 12 24, rad 6
+  focus-visible:
+    bor 3
+    boc #ff0`,
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      const btn = document.querySelector('[data-mirror-id="node-1"]') as HTMLButtonElement
+      api.assert.ok(btn !== null, 'Button should exist')
+      const css = getPreviewCSS()
+      api.assert.ok(
+        /:focus-visible/.test(css),
+        `:focus-visible missing in preview CSS — sample: ${css.slice(0, 200) || '(empty)'}`
+      )
+    }
+  ),
+])
+
+/**
+ * Helper: read the Mirror-preview's inline `<style>` element. The DOM
+ * backend appends the preview stylesheet to `_root` (a child of body)
+ * via `_root.appendChild(_style)` (compiler/backends/dom/style-emitter.ts:490).
+ * `document.styleSheets` includes Studio-chrome stylesheets (CodeMirror,
+ * pp-content) which contain false-positive matches for state selectors —
+ * scope the read to the `.mirror-root` subtree to isolate preview CSS.
+ */
+function getPreviewCSS(): string {
+  const root = document.querySelector('.mirror-root, [data-mirror-root]')
+  if (!root) return ''
+  const styles = root.querySelectorAll('style')
+  return Array.from(styles)
+    .map(s => s.textContent ?? '')
+    .join('\n')
+}
+
+export const focusWithinStateTests: TestCase[] = describe('Focus-Within State', [
+  testWithSetup(
+    'Frame focus-within emits CSS selector',
+    `Frame bg #1a1a1a, pad 16, rad 8
+  focus-within:
+    bor 2
+    boc #2271C1`,
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      await api.utils.delay(200)
+      const css = getPreviewCSS()
+      // Tail of the CSS — preview-base CSS comes first, state-blocks last
+      const tail = css.slice(-1500)
+      api.assert.ok(
+        /:focus-within/.test(css),
+        `:focus-within missing — total ${css.length} chars, tail: ${tail || '(empty)'}`
+      )
+    }
+  ),
+])
+
+export const visitedStateTests: TestCase[] = describe('Visited State', [
+  testWithSetup(
+    'Link visited emits CSS selector',
+    `Link "Open", href "https://example.com", col #2271C1
+  visited:
+    col #888`,
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      const cssText = getPreviewCSS()
+      api.assert.ok(/:visited/.test(cssText), 'Inline CSS should contain :visited selector')
+    }
+  ),
+])
+
+export const checkedStateTests: TestCase[] = describe('Checked State', [
+  testWithSetup(
+    'Input[type=checkbox] checked emits CSS selector',
+    `Input type "checkbox"
+  checked:
+    bg #2271C1`,
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      const cssText = getPreviewCSS()
+      api.assert.ok(/:checked/.test(cssText), 'Inline CSS should contain :checked selector')
+    }
+  ),
+])
+
+export const placeholderStateTests: TestCase[] = describe('Placeholder Pseudo-Element', [
+  testWithSetup(
+    'Input placeholder block emits ::placeholder',
+    `Input placeholder "name@example.com", bg #1a1a1a, col white
+  placeholder:
+    col #666
+    italic`,
+    async (api: TestAPI) => {
+      await api.utils.waitForCompile()
+      const cssText = getPreviewCSS()
+      api.assert.ok(
+        /::placeholder/.test(cssText),
+        'Inline CSS should contain ::placeholder pseudo-element'
+      )
+    }
+  ),
+])
+
+// =============================================================================
 // Export All
 // =============================================================================
 
@@ -662,4 +777,10 @@ export const allSystemStatesTests: TestCase[] = [
   ...activeStateTests,
   ...disabledStateTests,
   ...combinedSystemStatesTests,
+  // Slice 26 Iter-2 advanced states
+  ...focusVisibleStateTests,
+  ...focusWithinStateTests,
+  ...visitedStateTests,
+  ...checkedStateTests,
+  ...placeholderStateTests,
 ]

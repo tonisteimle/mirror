@@ -484,10 +484,34 @@ export const HOVER_PROPERTIES: Record<string, string> = {
 }
 
 /**
- * System states that support a `<state>-<prop>` shorthand syntax.
- * E.g. hover-bg, focus-bor, active-col, disabled-opa.
+ * System states that support the `<state>-<prop>` shorthand syntax
+ * (e.g. `Frame hover-bg #fff`, `Frame focus-bor 2`, `Frame disabled-opa 0.5`).
+ *
+ * Slice 26 Iter-2 (Dev 3): the prior 4-state hardcoded list had a
+ * **longest-match bug**: `Frame focus-visible-bg #fff` matched the
+ * `focus` prefix (first hit in the for-loop), sliced off `focus-` and
+ * used `visible-bg` as the base property — emitting
+ * `:focus { visible-bg: #fff !important }`. The advanced states from
+ * Slice 26 Iter-1 (`focus-visible`, `focus-within`, `placeholder-shown`,
+ * `first-child`, `last-child`) were silently broken because the longer
+ * names never matched the prefix-loop.
+ *
+ * Fix: sort by length descending so `focus-visible` matches before
+ * `focus`, `placeholder-shown` before `placeholder`, etc. — the same
+ * longest-first ordering that `studio/sync/component-line-parser.ts`
+ * already uses (Slice 26 Iter-1 fix). Schema-derived from
+ * `SYSTEM_STATES` so future schema growth doesn't drift here.
+ *
+ * Open: schema only defines `hover-*` as known properties (Iter-2
+ * finding); `focus-bg`/`active-bg`/etc. raise validator E100 but still
+ * emit CSS. That validator-compiler disagreement is documented as
+ * deferred — Ziel: Slice 31 (Initialer State) where state-shorthand
+ * coverage gets a real schema audit.
  */
-const STATE_PROPERTY_PREFIXES = ['hover', 'focus', 'active', 'disabled'] as const
+import { SYSTEM_STATES } from './parser-helpers'
+const STATE_PROPERTY_PREFIXES: readonly string[] = Array.from(SYSTEM_STATES).sort(
+  (a, b) => b.length - a.length
+)
 
 /**
  * Convert a state-prefixed property (hover-bg, focus-bor, …) to CSS.

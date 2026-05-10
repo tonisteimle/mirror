@@ -211,3 +211,105 @@ Die Bug-Familie war korrekt DOM-only — non-DOM Backends emittieren States als 
 ## Methodische Lehre
 
 **Schema-Erweiterung ohne Repo-weiten Grep ist eine halbe Reform.** Slice 26 hat das Compile-Zeit-CSS-Emit erweitert; der Sync-Layer in Studio bleibt aber im Suchradius eines Compiler-Audits unsichtbar. Der Schema-Drift-Grep in Step 7 ist die direkte Konsequenz: vor jedem „erledigt"-Verdikt repo-weit nach den alten enum-Werten suchen.
+
+---
+
+# 7. Iter-2 (Dev 3, 2026-05-10)
+
+**Auftrag:** Phase-0-Sweep aus dem überarbeiteten `plan.md`. CDP-Schuld einlösen, Iter-2-Probe-Skript committen, Schema-Drift-Grep wiederholen, 9-Punkt-Quality-Gate durchlaufen.
+
+## 7.1 Iter-1-Review (Status-Carry-Forward)
+
+| Iter-1-Spalte                   | Status nach Iter-1                                               | Iter-2-Update                                                                                              |
+| ------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Probe-Tabelle (12 Cases)        | Alle ✅ post-fix                                                 | unverändert; Iter-2-Probe ergänzt 8 weitere shorthand-Cases (siehe 7.2)                                    |
+| RTs (RT-1..RT-12)               | Alle erledigt in `tests/compiler/slice-26-system-states.test.ts` | unverändert grün (jsdom)                                                                                   |
+| Schema-Drift-Grep               | 1 Stelle gefixt (`studio/sync/component-line-parser.ts`)         | **2 neue Stellen gefunden** (`compiler/schema/ir-helpers.ts`, `property-transformer.ts`) — siehe V-Iter2-1 |
+| Browser-CDP-E2E                 | ⚠️ offen (Iter-1-Lücke #1)                                       | **erledigt** — `studio/test-api/suites/states/system-states.test.ts` um 5 RTs erweitert (siehe 7.3)        |
+| Studio-Roundtrip Property-Panel | ⚠️ offen (Iter-1-Lücke #2)                                       | **Lower-Bar deklariert** (siehe 7.4)                                                                       |
+| Transition-Eligibility-Liste    | niedrig — Slice 32 Territory (Iter-1-Lücke #3)                   | unverändert deferred — Re-Open-Trigger: Slice 32 (`hover 0.15s:`)                                          |
+
+## 7.2 Iter-2-Probe (`tools/probes/slice-26-system-states.ts`)
+
+Probe deckt zwei Bereiche:
+
+**Section A — State-Shorthand-Drift (neu, Iter-2-Befund):**
+
+| #   | Eingabe                       | Validator | DOM-State-Selector                 | Iter-1                                                        | Iter-2       | Verdikt                                               |
+| --- | ----------------------------- | --------- | ---------------------------------- | ------------------------------------------------------------- | ------------ | ----------------------------------------------------- |
+| A1  | `Frame hover-bg #fff`         | clean     | `:hover` + `[data-hover="true"]`   | ✅                                                            | ✅           | unverändert                                           |
+| A2  | `Frame hover-col #000`        | clean     | `:hover` + `[data-hover="true"]`   | ✅                                                            | ✅           | unverändert                                           |
+| A3  | `Frame focus-bg #fff`         | E100      | `:focus` + `[data-focus="true"]`   | ⚠️ V-C-Disagreement                                           | ⚠️ unchanged | Validator E100 trotz Helper-Emit; deferred → Slice 31 |
+| A4  | `Frame active-bg #fff`        | E100      | `:active` + `[data-active="true"]` | ⚠️                                                            | ⚠️           | wie A3                                                |
+| A5  | `Frame disabled-bg #fff`      | E100      | `[disabled]`                       | ⚠️                                                            | ⚠️           | wie A3                                                |
+| A6  | `Frame focus-visible-bg #fff` | E100      | `:focus-visible`                   | 🔴 longest-match-bug: emittierte `:focus { visible-bg: ... }` | ✅ V-Iter2-1 | gefixt durch Schema-Derive                            |
+| A7  | `Frame visited-bg #fff`       | E100      | `:visited`                         | 🔴 helper-prefix-list missed                                  | ✅ V-Iter2-1 | gefixt durch Schema-Derive                            |
+| A8  | `Frame checked-bg #fff`       | E100      | `:checked`                         | 🔴 helper-prefix-list missed                                  | ✅ V-Iter2-1 | gefixt durch Schema-Derive                            |
+
+**Section B — Schema-system-states CSS-Emit Cross-Backend:**
+
+Alle 13 schema-system-states emittieren DOM-CSS ✅. React/Framework lassen states als deklarativen Pass-through ohne CSS-Emit (Iter-1-Audit-Doc-Behauptung re-verifiziert). Probe-Lauf 7.2-B in Probe-Skript bestätigt.
+
+## 7.3 V-Iter2-1: STATE_PROPERTY_PREFIXES Schema-Drift
+
+**Befund (neu):** Zwei Stellen mit hardcoded 4-State-Liste, die Iter-1 nicht gefunden hat:
+
+1. `compiler/schema/ir-helpers.ts:490` — `STATE_PROPERTY_PREFIXES = ['hover', 'focus', 'active', 'disabled']` (Helper für inline-shorthand `hover-bg`/etc.)
+2. `compiler/ir/transformers/property-transformer.ts:550` — `STATE_PREFIXES = ['hover-', 'focus-', 'active-', 'disabled-']` (Caller-Side-Filter, der entscheidet welche Properties zum Helper gehen)
+
+**3 Symptome bei der Hardcoded-Liste:**
+
+1. **Validator-Compiler-Disagreement.** `Frame focus-bg #fff` → Validator E100 (unknown property) UND Helper emittiert CSS. User bekommt einen Fehler UND ein funktionierendes Render gleichzeitig — schlechtes Signal-Verhältnis.
+2. **Longest-Match-Bug.** `Frame focus-visible-bg #fff` matched die `focus`-Prefix (erster Hit in der for-Schleife), schnitt `focus-` ab und nutzte `visible-bg` als Property — emittierte `:focus { visible-bg: #fff !important }`. Die 5 Slice-26-Iter-1-Erweiterungs-States (`focus-visible`, `focus-within`, `placeholder-shown`, `first-child`, `last-child`) waren via Inline-Shorthand silent broken.
+3. **Schema-Drift-Familie.** Iter-1 fixte den DOM-Emitter und den Studio-Sync-Layer; **diese zwei Stellen waren ausserhalb des Iter-1-Suchradius** weil der Iter-1-Grep auf `'hover'.*'focus'` matchte aber `STATE_PROPERTY_PREFIXES`/`STATE_PREFIXES` nicht.
+
+**Fix (V-Iter2-1):**
+
+1. `ir-helpers.ts`: `STATE_PROPERTY_PREFIXES` schema-derived aus `SYSTEM_STATES`, sortiert longest-first (so wie `studio/sync/component-line-parser.ts` schon im Iter-1-Fix).
+2. `property-transformer.ts`: `STATE_PREFIXES` schema-derived (`SYSTEM_STATES.map(s => s + '-')`, longest-first).
+
+**RTs:** Bestehende `tests/compiler/properties-deep-coverage.test.ts` und `properties-deep.test.ts` testen `focus-bg`/`active-col`/`disabled-bg` — alle weiterhin grün. Neuer Probe-Lauf in `tools/probes/slice-26-system-states.ts` lockt die fix-state visuell.
+
+**Cross-Slice-Probe:** Die zwei Schema-derived Listen werden auch von Slice 27 (`toggle()`), Slice 28 (Multi-State-Cycle) und Slice 29 (`exclusive()`) konsumiert — Cross-Slice-Bug-Familie. Slice 27/28/29-RTs (CompileSync) bleiben grün, lockt durch automatischen Test-Lauf.
+
+**Nicht-fixed (deferred):** Validator-Compiler-Disagreement bei `focus-bg`/`active-bg`/`disabled-bg`. Schema definiert nur `hover-*`-Properties; die anderen 12 Schema-System-States haben keine entsprechenden `<state>-bg`/`<state>-col`/etc. Schema-Einträge. Re-Open-Trigger: **Slice 31 (Initialer State)** — dort wird state-shorthand insgesamt audited inkl. Schema-Erweiterung.
+
+## 7.4 CDP-E2E-Schuld eingelöst
+
+`studio/test-api/suites/states/system-states.test.ts` um 5 RTs erweitert (Iter-1 hatte nur 56 für `focus`/`active`/`disabled` + combined):
+
+| RT              | Eingabe                                      | Assertion                                   |
+| --------------- | -------------------------------------------- | ------------------------------------------- |
+| `focus-visible` | `Button` mit `focus-visible:` Block          | Preview-Stylesheet enthält `:focus-visible` |
+| `focus-within`  | `Frame` mit `focus-within:` Block            | Preview-Stylesheet enthält `:focus-within`  |
+| `visited`       | `Link` mit `visited:` Block                  | Preview-Stylesheet enthält `:visited`       |
+| `checked`       | `Input type "checkbox"` mit `checked:` Block | Preview-Stylesheet enthält `:checked`       |
+| `placeholder`   | `Input` mit `placeholder:` Block             | Preview-Stylesheet enthält `::placeholder`  |
+
+**Helper:** `getPreviewCSS()` liest gezielt nur die `<style>`-Elemente innerhalb von `.mirror-root` (per `compiler/backends/dom/style-emitter.ts:490 _root.appendChild(_style)`), nicht die Studio-Chrome-CSS (CodeMirror, Property-Panel) — vermeidet False-Positives wo der Studio's eigenes CSS bereits `:focus-visible` (CodeMirror), `::placeholder` (Property-Panel) etc. enthält.
+
+**Bundle-Inkonsistenz beim Setup:** `dist/browser/index.global.js` war gegenüber `compiler/runtime/state-machine.ts` **5 Tage stale** — bundle's `CSS_PSEUDO_STATES` hatte nur 5 Einträge statt 13. `npm run build:studio` rebuilt die Studio-Chunks, aber NICHT das Runtime-Bundle (kommt vom übergeordneten `npm run build`). Workflow-Dokumentation: vor CDP-Run `npm run build && cp dist/browser/index.global.js studio/dist/browser/` (DTS-Build-Failure ignorieren — irrelevant für CDP).
+
+**Status:** 61 von 61 states-CDP-Tests grün. CDP-Schuld-Limit: 0 von max 5 für Slice 26.
+
+## 7.5 Studio-Roundtrip — Lower-Bar-Deklaration
+
+Property-Panel-State-Tabs für die 13 system-states sind ungeprüft. Voll-CDP-Test des Roundtrip (Click im Preview → Property-Panel zeigt State-Tabs für `:focus-visible` etc.) erfordert eine deutlich grössere Test-Infrastruktur (state-tab-discovery, conditional-render basierend auf dem selektierten Element).
+
+**Lower-Bar:** DOM-Pfad gelocked via RT-1..RT-12 (jsdom) + 5 neue CDP-RTs (Section 7.4). Property-Panel-State-Tabs als **deferred mit explizitem Re-Open-Trigger:** Ziel **Slice 69 (Property-Panel-Roundtrip)** — dort wird die State-Tab-UI dediziert audited.
+
+## 7.6 9-Punkt-Quality-Gate (Iter-2)
+
+| #   | Check                                                                                                     | Status | Vermerk                                                                                                                                 |
+| --- | --------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Probe-Tabelle: kein 🔴 außer in expliziter „deferred"-Spalte                                              | ✅     | A6/A7/A8 fixed; A3-A5 deferred zu Slice 31 dokumentiert                                                                                 |
+| 2   | Phase-Stati ∈ {erledigt, verschoben, verworfen}; kein „pending"/„offen"/„in-arbeit"                       | ✅     | Iter-2-Items alle erledigt oder Re-Open-Trigger gesetzt                                                                                 |
+| 3   | Jeder RT-Plan-Eintrag hat einen geschriebenen Test                                                        | ✅     | RT-1..RT-12 (jsdom, vorhanden seit Iter-1) + 5 neue CDP-RTs                                                                             |
+| 4   | Schema-Drift-Grep ausgeführt; gefundene Stellen gefixt oder dokumentiert                                  | ✅     | 2 neue Stellen gefunden, beide schema-derived; V-Iter2-1                                                                                |
+| 5   | Cross-Slice-Wirkung geprüft; betroffene Nachbar-Slices haben In-scope-Fix oder Deferred-Lock-RT           | ✅     | V-Iter2-1 propagiert via `SYSTEM_STATES` automatisch zu Slice 27/28/29; jeweilige Suites grün                                           |
+| 6   | Cross-Backend-Differential-RT existiert pro Property/Verhalten                                            | ✅     | Section 7.2-B Probe-Lauf (DOM ✅, React/FW deklarativer Pass-through wie Iter-1 dokumentiert)                                           |
+| 7   | Studio-Roundtrip explizit benannt: „CDP-Run grün" oder „Lower-Bar: DOM gelocked via RT-X"                 | ✅     | CDP-Run grün (61/61) + Lower-Bar für Property-Panel-State-Tabs (Section 7.5)                                                            |
+| 8   | Vitest gesamt grün; vor-Slice-Vergleich bestätigt: keine Test-Subtraction                                 | ✅     | 7169 grün vor + nach (1 skipped); +5 CDP-RTs; +20 Probe-Sub-Asserts; keine Test-Subtraction                                             |
+| 9   | Wer auf „ist das nun richtig gut?" mit „substantiell besser, aber …" antwortet, hat 1–8 nicht durchlaufen | ✅     | Antwort: ja. Iter-1-Lücken alle geschlossen oder mit explizitem Re-Open-Trigger versehen. Slice 31 + Slice 69 sind die offenen Stränge. |
+
+**Slice-26-Status: erledigt** (Iter-2-Pass abgeschlossen).
