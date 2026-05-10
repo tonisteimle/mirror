@@ -55,7 +55,7 @@ export function mergeSlotPropertiesIntoFiller(
   if (isText(filler) || hasContent(filler)) {
     const text = filler as Text
     // Create an Instance that acts as a styled text container
-    return {
+    const wrapped: Instance = {
       type: 'Instance',
       component: 'Text',
       name: null,
@@ -72,7 +72,8 @@ export function mergeSlotPropertiesIntoFiller(
       children: [],
       line: text.line,
       column: text.column,
-    } as Instance
+    }
+    return wrapped
   }
 
   // For Instance fillers, merge properties (filler wins on conflict)
@@ -194,10 +195,9 @@ function substituteNode(
     // v1 fan-out picks the first filler — multi-filler at the same deep
     // position is intentionally not supported (see docs/concepts/...).
     const filler = substitutions.get(nodeName)![0]
-    const slotProps =
-      (isSlot(node)
-        ? (node as Slot).properties
-        : (node as Instance | ComponentDefinition).properties) || []
+    // All three NamedNode shapes (Instance / ComponentDefinition / Slot)
+    // expose `.properties`; only Slot's is optional. Coalesce to [].
+    const slotProps = node.properties ?? []
     const merged = mergeSlotPropertiesIntoFiller(filler, slotProps) as Instance
     // Mark for the IR transformer; matches the marker that Pass 1 sets on
     // top-level slot fillers.
