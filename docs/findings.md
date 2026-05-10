@@ -281,6 +281,22 @@ instance.column)` umgestellt. 7849/7849 vitest grün.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
+- **Wo:** `studio/icons/index.ts` (UI_ICONS-Chain + getPropertyIcon)
+  - `studio/test-api.ts:226` (cleanupStudioTestAPI)
+    **Was:** Dead-Export-Cluster nach den Orphan-Modul-Deletions:
+    (1) `studio/icons/index.ts` exportiert `UI_ICONS` (~22 LOC SVG-
+    Pfade), `UIIconName`-Typ und `getUIIcon()`-Helper — komplette
+    Kette mit 0 Konsumenten. (2) `getPropertyIcon()` und
+    `PropertyIconName`-Typ ebenfalls 0 Konsumenten — visual-section.ts
+    liest `PROPERTY_ICONS` direkt und baut SVG inline statt den
+    Helper zu nutzen. (3) `cleanupStudioTestAPI` in `studio/test-api.ts`
+    hat 0 Caller — Test-Cleanup das nie gerufen wird. ~40 LOC pure
+    dead exports.
+    **Status:** aktiv (Claude-Session, 2026-05-10 ~21:25)
+    **Plan:** UI_ICONS+UIIconName+getUIIcon-Chain löschen,
+    getPropertyIcon+PropertyIconName löschen, cleanupStudioTestAPI
+    löschen, Tests grün halten.
+
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
