@@ -191,24 +191,24 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Was:** 3931 LOC über vier nahezu identische Manager-Klassen (Handles,
   Drag-State, Observer, RAF-Throttling, Snap-Logik) — massive Duplikation
   im größten Subsystem.
-  **Status:** offen — Strukturanalyse 2026-05-10 (per Explore-Agent):
-  Public API identisch (`showHandles`/`hideHandles`/`refresh`/`dispose`).
-  RAF-Mouse-Loop (`onMouseDown`/`onMouseMove`/`processMouseMove`/`onMouseUp`
-  mit `pendingMouseEvent`+`rafId`) verbatim in allen 4. Padding/Margin/Gap
-  teilen zusätzlich Observer-Setup (Resize+MutationObserver+scroll+window-
-  resize, `debouncedRefresh`) und Snap-Logik via
-  `getSpacingSnapService`. ResizeManager ist Outlier (8 Handles, Multi-
+  **Status:** Step 1 erledigt — RAF-Mouse-Throttle (verbatim in allen 4)
+  in `studio/visual/raf-mouse-throttle.ts` als `RafMouseThrottle`-Klasse
+  extrahiert. Alle 4 Manager rufen jetzt
+  `new RafMouseThrottle(e => this.processMouseMove(e))` im Constructor,
+  `throttle.schedule(e)` in `onMouseMove`, `throttle.cancel()` in
+  `dispose`/`onMouseUp`. 3931 → 3886 LOC (–45 LOC). 565/565 visual
+  tests pass.
+  **Notiz:** Verbleibende inkrementelle Schritte: (2) `observer-pack.ts`
+  für Resize+MutationObserver+scroll+window-resize (in
+  Padding/Margin/Gap verbatim), (3) `SpacingHandleManagerBase` für
+  Padding/Margin/Gap mit gleicher Modifier-Logik / Snap / Overlay-
+  Pattern. ResizeManager bleibt eigenständig (8 Handles, Multi-
   Selection, Grid, Sizing-Mode, double-click).
-  **Notiz:** Inkrementeller Pfad: (1) `studio/visual/raf-mouse.ts` Helper
-  für RAF-Mouse-Throttle, (2) `studio/visual/observer-pack.ts` für die
-  Observer-Tripletts der Spacing-Manager, (3) `SpacingHandleManagerBase`
-  für Padding/Margin/Gap (gleiche Modifier-Logik, gleicher Snap, gleiches
-  Overlay-Pattern), (4) ResizeManager bleibt eigenständig.
   Tests: nur ResizeManager hat Unit-Tests
   (`tests/studio/visual-resize-manager.test.ts`,
   `visual/resize-manager-multi.test.ts`); Padding/Margin/Gap nur durch
-  Browser-Tests gedeckt — Refactor braucht sorgfältige headed-
-  Verification. Eigene Session, nicht inkrementell.
+  Browser-Tests gedeckt — Steps 2+3 brauchen sorgfältige headed-
+  Verification.
 
 - **Wo:** `studio/panels/property/view.ts` (1037 LOC → 776 LOC)
   **Was:** PANEL_CONFIG mit 100+ Primitive-Typen + 12 Section-Creators in

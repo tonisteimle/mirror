@@ -22,6 +22,7 @@ import {
   type GridGeometry,
 } from './grid-overlay/grid-detector'
 import { readGridPlacement, resizeToCells, type GridPlacement } from './grid-overlay/grid-resize'
+import { RafMouseThrottle } from './raf-mouse-throttle'
 
 export type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
 
@@ -108,8 +109,7 @@ export class ResizeManager {
   private handlesContainerRef: HTMLElement | null = null
 
   // RAF throttling for smooth 60fps resize
-  private rafId: number | null = null
-  private pendingMouseEvent: MouseEvent | null = null
+  private mouseThrottle: RafMouseThrottle
 
   // Bound handlers
   private boundMouseDown: (e: MouseEvent) => void
@@ -121,6 +121,8 @@ export class ResizeManager {
     this.container = config.container
     this.overlayManager = config.overlayManager
     this.getSourceMap = config.getSourceMap
+
+    this.mouseThrottle = new RafMouseThrottle(e => this.processMouseMove(e))
 
     this.boundMouseDown = this.onMouseDown.bind(this)
     this.boundMouseMove = this.onMouseMove.bind(this)
@@ -315,13 +317,7 @@ export class ResizeManager {
   }
 
   dispose(): void {
-    // Cancel any pending RAF
-    if (this.rafId !== null) {
-      cancelAnimationFrame(this.rafId)
-      this.rafId = null
-    }
-    this.pendingMouseEvent = null
-
+    this.mouseThrottle.cancel()
     this.hideHandles()
     this.removeEventListeners()
   }
@@ -489,16 +485,7 @@ export class ResizeManager {
 
   private onMouseMove(e: MouseEvent): void {
     if (!this.activeResize && !this.activeMultiResize && !this.activeGridResize) return
-    this.pendingMouseEvent = e // RAF throttling: batch mouse events to animation frames for smooth 60fps
-    if (this.rafId === null) {
-      this.rafId = requestAnimationFrame(() => {
-        this.rafId = null
-        if (this.pendingMouseEvent) {
-          this.processMouseMove(this.pendingMouseEvent)
-          this.pendingMouseEvent = null
-        }
-      })
-    }
+    this.mouseThrottle.schedule(e)
   }
 
   /**
@@ -675,12 +662,7 @@ export class ResizeManager {
   }
 
   private onMouseUp(): void {
-    // Cancel any pending RAF
-    if (this.rafId !== null) {
-      cancelAnimationFrame(this.rafId)
-      this.rafId = null
-    }
-    this.pendingMouseEvent = null
+    this.mouseThrottle.cancel()
 
     if (this.activeGridResize) {
       this.handleGridResizeEnd()

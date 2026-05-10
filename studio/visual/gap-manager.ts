@@ -17,6 +17,7 @@ import { events, getLayoutService } from '../core'
 import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
 import { getSpacingSnapService, shouldBypassSnapping, type SpacingSnapResult } from './snap'
 import { SnapIndicator, createSnapIndicator } from './snap-indicator'
+import { RafMouseThrottle } from './raf-mouse-throttle'
 
 // Visual constants
 const HANDLE_VISUAL_SIZE = 2 // Visible line: 2px
@@ -64,8 +65,7 @@ export class GapManager {
   private handlesContainerRef: HTMLElement | null = null
 
   // RAF throttling for smooth 60fps drag
-  private rafId: number | null = null
-  private pendingMouseEvent: MouseEvent | null = null
+  private mouseThrottle: RafMouseThrottle
 
   // Bound handlers
   private boundMouseDown: (e: MouseEvent) => void
@@ -92,6 +92,8 @@ export class GapManager {
     this.container = config.container
     this.overlayManager = config.overlayManager
     this.getSourceMap = config.getSourceMap
+
+    this.mouseThrottle = new RafMouseThrottle(e => this.processMouseMove(e))
 
     this.boundMouseDown = this.onMouseDown.bind(this)
     this.boundMouseMove = this.onMouseMove.bind(this)
@@ -583,15 +585,11 @@ export class GapManager {
   }
 
   dispose(): void {
-    if (this.rafId !== null) {
-      cancelAnimationFrame(this.rafId)
-      this.rafId = null
-    }
+    this.mouseThrottle.cancel()
     if (this.refreshDebounceId !== null) {
       cancelAnimationFrame(this.refreshDebounceId)
       this.refreshDebounceId = null
     }
-    this.pendingMouseEvent = null
     this.hideHandles()
     this.removeEventListeners()
     this.removeObservers()
@@ -732,16 +730,7 @@ export class GapManager {
 
   private onMouseMove(e: MouseEvent): void {
     if (!this.activeDrag) return
-    this.pendingMouseEvent = e
-    if (this.rafId === null) {
-      this.rafId = requestAnimationFrame(() => {
-        this.rafId = null
-        if (this.pendingMouseEvent) {
-          this.processMouseMove(this.pendingMouseEvent)
-          this.pendingMouseEvent = null
-        }
-      })
-    }
+    this.mouseThrottle.schedule(e)
   }
 
   private processMouseMove(e: MouseEvent): void {
@@ -815,11 +804,7 @@ export class GapManager {
   }
 
   private onMouseUp(): void {
-    if (this.rafId !== null) {
-      cancelAnimationFrame(this.rafId)
-      this.rafId = null
-    }
-    this.pendingMouseEvent = null
+    this.mouseThrottle.cancel()
 
     if (!this.activeDrag) return
 
