@@ -6,6 +6,7 @@
  */
 
 import type { IRNode, IRStyle, IRToken } from '../../ir/types'
+import { ANIMATION_KEYFRAMES_CSS } from '../animations'
 import { generateTheme, isThemeToken } from '../../schema/theme-generator'
 import {
   getSizeStateThresholds,
@@ -45,52 +46,14 @@ export interface StyleEmitterContext {
 // ANIMATION KEYFRAMES
 // ============================================
 
-const ANIMATION_KEYFRAMES = [
-  // fade-in / fade-out
-  '@keyframes mirror-fade-in { from { opacity: 0; } to { opacity: 1; } }',
-  '@keyframes mirror-fade-out { from { opacity: 1; } to { opacity: 0; } }',
-
-  // slide-in / slide-out (horizontal default)
-  '@keyframes mirror-slide-in { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }',
-  '@keyframes mirror-slide-out { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-20px); opacity: 0; } }',
-
-  // slide-up / slide-down (vertical)
-  '@keyframes mirror-slide-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }',
-  '@keyframes mirror-slide-down { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }',
-
-  // slide-left / slide-right (horizontal explicit)
-  '@keyframes mirror-slide-left { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }',
-  '@keyframes mirror-slide-right { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }',
-
-  // scale-in / scale-out
-  '@keyframes mirror-scale-in { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }',
-  '@keyframes mirror-scale-out { from { transform: scale(1); opacity: 1; } to { transform: scale(0.9); opacity: 0; } }',
-
-  // bounce
-  '@keyframes mirror-bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }',
-
-  // pulse
-  '@keyframes mirror-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }',
-
-  // shake
-  '@keyframes mirror-shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }',
-
-  // spin
-  '@keyframes mirror-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }',
-
-  // reveal animations (for scroll-triggered or entry)
-  '@keyframes mirror-reveal-up { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }',
-  '@keyframes mirror-reveal-scale { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }',
-  '@keyframes mirror-reveal-fade { from { opacity: 0; } to { opacity: 1; } }',
-]
-
 /**
- * Emit animation keyframes
+ * Emit animation keyframes. The keyframe set is shared across backends —
+ * see `compiler/backends/animations.ts`.
  */
 function emitAnimationKeyframes(ctx: StyleEmitterContext): void {
   ctx.emit('')
   ctx.emit('/* Animation Keyframes */')
-  for (const keyframe of ANIMATION_KEYFRAMES) {
+  for (const keyframe of ANIMATION_KEYFRAMES_CSS) {
     ctx.emit(keyframe)
   }
 }

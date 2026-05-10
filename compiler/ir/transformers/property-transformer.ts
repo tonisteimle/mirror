@@ -34,6 +34,7 @@ import {
   formatBorderValue,
   booleanPropertyToCSS,
 } from './style-utils-transformer'
+import { animationShorthand } from '../../backends/animations'
 
 /** Property value type from AST - matches Property.values element type */
 type PropertyValue =
@@ -528,29 +529,7 @@ export function propertyToCSS(
 
   // Handle animation property: animation fade-in, anim bounce
   if (name === 'animation' || name === 'anim') {
-    const animName = String(values[0])
-    // Map animation keywords to CSS animation values
-    const animationMap: Record<string, string> = {
-      'fade-in': 'mirror-fade-in 0.3s ease forwards',
-      'fade-out': 'mirror-fade-out 0.3s ease forwards',
-      'slide-in': 'mirror-slide-in 0.3s ease forwards',
-      'slide-out': 'mirror-slide-out 0.3s ease forwards',
-      'slide-up': 'mirror-slide-up 0.4s ease forwards',
-      'slide-down': 'mirror-slide-down 0.4s ease forwards',
-      'slide-left': 'mirror-slide-left 0.3s ease forwards',
-      'slide-right': 'mirror-slide-right 0.3s ease forwards',
-      'scale-in': 'mirror-scale-in 0.3s ease forwards',
-      'scale-out': 'mirror-scale-out 0.3s ease forwards',
-      bounce: 'mirror-bounce 0.5s ease infinite',
-      pulse: 'mirror-pulse 1s ease infinite',
-      shake: 'mirror-shake 0.5s ease',
-      spin: 'mirror-spin 1s linear infinite',
-      'reveal-up': 'mirror-reveal-up 0.5s ease forwards',
-      'reveal-scale': 'mirror-reveal-scale 0.5s ease forwards',
-      'reveal-fade': 'mirror-reveal-fade 0.5s ease forwards',
-    }
-    const animValue = animationMap[animName] || animName
-    return [{ property: 'animation', value: animValue }]
+    return [{ property: 'animation', value: animationShorthand(String(values[0])) }]
   }
 
   // Handle inline state-prefixed properties: hover-bg, focus-bor, active-col,

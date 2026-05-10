@@ -22,6 +22,7 @@ import type {
 } from '../parser/ast'
 import { expandPropertySets } from '../ir/transformers/property-set-expander'
 import { resolveComponent } from '../ir/transformers/component-resolver'
+import { ANIMATION_KEYFRAMES_CSS, animationShorthand } from './animations'
 import { isLayoutPrimitive } from '../schema/dsl'
 import { getHtmlTag as schemaGetHtmlTag, isKnownPrimitive } from '../schema/ir-helpers'
 import {
@@ -105,6 +106,13 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
   // emitted once at the top of the file (only when needed).
   const hasIcon = containsIconInstance(program.instances ?? [])
 
+  // Detect any `anim X` / `animation: X` usage so we know whether to emit
+  // the shared keyframes block. Mirrors the DOM backend's behavior — it
+  // unconditionally emits all keyframes once per stylesheet — but for
+  // React we conditionally emit only when needed to keep simple programs
+  // lean.
+  const hasAnimation = containsAnimUsage(program.instances ?? [])
+
   // Slice 50 V-2: emit MirrorIcon helper component only when used.
   // Strategy: runtime-fetch from Lucide CDN (mirrors DOM backend's
   // `_runtime.loadIcon`). useEffect + fetch + sanitize. Same fallback
@@ -147,6 +155,18 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
   // multiple roots also need a wrapper.
   type RootItem = { kind: 'jsx' | 'expr' | 'comment'; code: string }
   const rootItems: RootItem[] = []
+
+  // Animations: emit a single `<style>` block carrying every Mirror
+  // keyframe rule when at least one descendant uses `anim`. The shared
+  // CSS (`compiler/backends/animations.ts`) is the single source of truth
+  // — DOM emits the same set into its stylesheet, so cross-backend
+  // animation timing matches by construction.
+  if (hasAnimation) {
+    rootItems.push({
+      kind: 'jsx',
+      code: `      <style>{${JSON.stringify(ANIMATION_KEYFRAMES_CSS.join('\n'))}}</style>`,
+    })
+  }
   if (program.instances && program.instances.length > 0) {
     for (const instance of program.instances) {
       // Skip Slot primitives in React output (they're only for visual editor)
@@ -247,6 +267,32 @@ function containsIconInstance(instances: ReadonlyArray<unknown>): boolean {
 }
 
 /**
+ * Walk the AST tree for any `anim X` / `animation: X` property. Includes
+ * Conditional and Each branches so animations inside `if`/`each` blocks
+ * still trigger the keyframes emit.
+ */
+function containsAnimUsage(nodes: ReadonlyArray<unknown>): boolean {
+  for (const n of nodes) {
+    const node = n as {
+      type?: string
+      properties?: Array<{ name?: string }>
+      children?: unknown[]
+      then?: unknown[]
+      else?: unknown[]
+    }
+    if (node.properties) {
+      for (const p of node.properties) {
+        if (p.name === 'anim' || p.name === 'animation') return true
+      }
+    }
+    if (node.children && containsAnimUsage(node.children)) return true
+    if (node.then && containsAnimUsage(node.then)) return true
+    if (node.else && containsAnimUsage(node.else)) return true
+  }
+  return false
+}
+
+/**
  * Slice 50 V-2: MirrorIcon runtime component, embedded once per React
  * file when any `Icon` instance is used. Mirrors `compiler/runtime/icons.ts`
  * — same Lucide CDN, same SVG sanitization (DOMParser, strip script tags
@@ -309,7 +355,7 @@ function _mirrorBuildCustomSvg(pathData, viewBox) {
     '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + '</svg>'
 }
 
-function MirrorIcon({ name, size, color, strokeWidth, fill }) {
+function MirrorIcon({ name, size, color, strokeWidth, fill, style: extraStyle }) {
   const [svg, setSvg] = React.useState(_mirrorIconCache.get(name) ?? '')
   React.useEffect(() => {
     // Slice 51 V-1: Custom-Icon-Registry takes precedence over Lucide-CDN.
@@ -365,7 +411,7 @@ function MirrorIcon({ name, size, color, strokeWidth, fill }) {
   return React.createElement('span', {
     'data-component': 'Icon',
     'data-mirror-name': 'Icon',
-    style: wrapStyle,
+    style: extraStyle ? Object.assign({}, wrapStyle, extraStyle) : wrapStyle,
     dangerouslySetInnerHTML: { __html: dressed },
   })
 }`
@@ -724,6 +770,7 @@ function generateConditionalJSX(
 function generateIconJSX(instance: Instance, indent: string): string {
   const iconName = getIconName(instance)
   const propAttrs: string[] = [`name=${JSON.stringify(iconName)}`]
+  let animValue: string | null = null
 
   for (const p of instance.properties) {
     const v = p.values[0]
@@ -735,7 +782,16 @@ function generateIconJSX(instance: Instance, indent: string): string {
       propAttrs.push(`strokeWidth=${formatIconPropValue(v, 'iw')}`)
     } else if (p.name === 'fill') {
       propAttrs.push(`fill`)
+    } else if (p.name === 'anim' || p.name === 'animation') {
+      animValue = animationShorthand(String(v))
     }
+  }
+
+  // Pass animations through as an inline style — MirrorIcon spreads
+  // unknown props onto the rendered SVG. `Icon "loader", anim spin` is
+  // the canonical usage (loading spinner) so this is the most-used path.
+  if (animValue) {
+    propAttrs.push(`style={{ animation: ${JSON.stringify(animValue)} }}`)
   }
 
   return `${indent}<MirrorIcon ${propAttrs.join(' ')} />`
@@ -1545,6 +1601,15 @@ function generateStyles(
         break
       case 'hidden':
         style.display = 'none'
+        break
+
+      // Animations: `Frame anim spin` → `animation: 'mirror-spin …'`.
+      // The corresponding `@keyframes mirror-spin` rules are emitted as
+      // a single `<style>` block at the top of App() — see
+      // `containsAnimUsage` + `MIRROR_ANIMATION_STYLE_BLOCK`.
+      case 'anim':
+      case 'animation':
+        style.animation = animationShorthand(String(value))
         break
     }
   }

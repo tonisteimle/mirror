@@ -44,12 +44,14 @@ describe('Cleanup — Animations across backends', () => {
     expect(out).toMatch(new RegExp(name.replace('-', '[-_]?'), 'i'))
   })
 
-  // PIN current behavior: only DOM emits keyframes + animation property.
-  // React and Framework backends silently drop `anim` triggers entirely
-  // — same drift class as Charts. Flipping any of these means a backend
-  // gained animation support.
+  // PIN: DOM and React both wire animations through the shared
+  // `compiler/backends/animations.ts` constants — DOM emits the keyframes
+  // into its stylesheet plus an `animation:` rule on the matching element;
+  // React emits a `<style>` block carrying the same keyframes plus
+  // `style={{ animation: 'mirror-…' }}` inline. Framework still drops
+  // the trigger silently (M(...) descriptor has no animation hook yet).
   it.each(ANIMATIONS)(
-    'anim %s: DOM wires keyframes; React + Framework drop the trigger',
+    'anim %s: DOM and React wire keyframes; Framework drops the trigger',
     (_name, src) => {
       const dom = generateDOM(parse(src))
       const react = generateReact(parse(src))
@@ -58,12 +60,24 @@ describe('Cleanup — Animations across backends', () => {
       expect(dom).toMatch(/@keyframes mirror-/)
       expect(dom).toMatch(/animation['":\s]+['"]mirror-/)
 
-      expect(react).not.toMatch(/@keyframes/)
-      expect(react).not.toMatch(/animation:/)
+      expect(react).toMatch(/@keyframes mirror-/)
+      // Quote style depends on emit path: inline style uses single
+      // quotes (`style={{ animation: 'mirror-…' }}`), Icon path uses
+      // JSON.stringify-derived double quotes. Match either.
+      expect(react).toMatch(/animation:\s*['"]mirror-/)
+
       expect(fw).not.toMatch(/@keyframes/)
       expect(fw).not.toMatch(/animation:/)
     }
   )
+
+  it('React skips the keyframes `<style>` block when no anim is used', () => {
+    // Bunde-size guard: simple programs without `anim` must NOT carry
+    // 17 keyframes worth of CSS.
+    const react = generateReact(parse(`Frame w 50, h 50`))
+    expect(react).not.toMatch(/@keyframes/)
+    expect(react).not.toMatch(/<style>/)
+  })
 })
 
 describe('Cleanup — Canvas presets across backends', () => {

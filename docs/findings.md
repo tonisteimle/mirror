@@ -529,6 +529,29 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — Animations in React-Backend + Shared Animation-Modul
+
+- **Wo:** `compiler/backends/animations.ts` (neu),
+  `compiler/backends/dom/style-emitter.ts`,
+  `compiler/ir/transformers/property-transformer.ts`,
+  `compiler/backends/react.ts`,
+  `tests/differential/cleanup.test.ts`
+  **Was:** Animation-Keyframes (`@keyframes mirror-spin` …) lebten in
+  `dom/style-emitter.ts`, der Anim-Shorthand-Map in
+  `property-transformer.ts` — beide DOM-only. React droppte `anim`
+  silent. Fix: gemeinsames Modul `compiler/backends/animations.ts` mit
+  `ANIMATION_KEYFRAMES_CSS` + `ANIMATION_SHORTHAND` + `animationShorthand()`.
+  DOM und IR-Transformer importieren daraus, React: `containsAnimUsage`
+  pre-scant den Tree, bei Treffer wird ein `<style>`-Block (alle
+  Keyframes als ein einzelner String) als erstes Root-Item gepusht;
+  `generateStyles` mappt `anim` auf `style.animation`. Icon-Pfad
+  (MirrorIcon) bekam `style`-Prop, das mit `wrapStyle` gemerged wird
+  → `Icon "loader", anim spin` rendert tatsächlich.
+  **Status:** erledigt
+  **Notiz:** Pin von "React + Framework drop" auf "DOM und React wire,
+  Framework dropt" umgestellt. Bundle-Size-Guard: `<style>`-Block wird
+  nur emittiert wenn `anim` benutzt wird.
+
 ### 2026-05-10 — Multi-Level `as`-Inheritance in React-Backend
 
 - **Wo:** `compiler/backends/react.ts`,
