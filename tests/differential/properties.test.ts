@@ -212,6 +212,30 @@ describe('Properties — DOM emits expected style values', () => {
     expect(fw).toContain("'bor-r': 2")
   })
 
+  it('React: `ver-baseline` emits alignItems baseline', () => {
+    // PIN: pre-2026-05-10 the keyword fell through and React's default
+    // `align-items: flex-start` clobbered the cross-axis baseline.
+    const react = generateReact(parse(`Frame hor, ver-baseline\n  Text "A"\n  Text "B"`))
+    expect(react).toContain("alignItems: 'baseline'")
+  })
+
+  it('React: numeric input min/max/step land as HTML attrs', () => {
+    // PIN: pre-2026-05-10 these were silently dropped — the React
+    // HTML_ATTR_PROPS map didn't list them. DOM emits them via setAttribute.
+    const react = generateReact(parse(`Input type number, min 0, max 100, step 5`))
+    expect(react).toContain('min="0"')
+    expect(react).toContain('max="100"')
+    expect(react).toContain('step="5"')
+  })
+
+  it('React: input mask surfaces as data-mask attribute', () => {
+    // DOM applies a runtime mask handler; React has no runtime, so we
+    // surface the pattern as `data-mask` for any future runtime layer.
+    // Pre-fix the entire `mask "..."` value dropped silently.
+    const react = generateReact(parse(`Input mask "###-###-####", w 200`))
+    expect(react).toContain('data-mask="###-###-####"')
+  })
+
   it('React: `tracking N` / `ls N` emits letterSpacing in em', () => {
     // PIN: pre-2026-05-10 `Text "X", tracking 0.05` dropped the
     // property entirely from React (no `letterSpacing` in style). DOM

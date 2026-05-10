@@ -1390,6 +1390,17 @@ const HTML_ATTR_PROPS: Record<string, string> = {
   disabled: 'disabled',
   checked: 'defaultChecked',
   readonly: 'readOnly',
+  // Numeric input attributes — `Input type number, min 0, max 100, step 5`
+  // dropped these silently from React output before. DOM emits them as
+  // setAttribute calls; React just needs them in HTML_ATTR_PROPS so
+  // generateHtmlAttributes picks them up.
+  min: 'min',
+  max: 'max',
+  step: 'step',
+  // Input mask — DOM applies a runtime mask handler; React has no
+  // runtime so we surface as `data-mask` so a future runtime layer
+  // can read it without re-parsing. Same shape as `data-bind`.
+  mask: 'data-mask',
 }
 
 /**
@@ -2865,6 +2876,13 @@ function applyFlagProperty(name: string, style: Record<string, string | number>)
       return true
     case 'wrap':
       style.flexWrap = 'wrap'
+      return true
+
+    // Cross-axis baseline alignment for mixed-size text rows. The DOM
+    // IR emits `align-items: baseline`; React used to fall through to
+    // the default `flex-start` and silently flatten the alignment.
+    case 'ver-baseline':
+      style.alignItems = 'baseline'
       return true
 
     // Overflow.
