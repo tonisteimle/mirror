@@ -115,6 +115,27 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
+- **Wo:** `compiler/runtime/scroll.ts:50-75`,
+  `compiler/backends/dom/event-emitter.ts:528-541`
+  **Was:** Runtime-Bug aus dem TODO-Bucket: `scrollToTop()` und
+  `scrollToBottom()` ohne Argument scrollen das `window` statt der
+  nächsten scrollbaren Vorfahren-Box. Bei einem Button innerhalb
+  eines `Frame h 150, scroll`-Containers funktioniert `scrollToTop()`
+  daher nicht wie erwartet (Tests in
+  `studio/test-api/suites/actions/scroll.test.ts:9,36` sind deshalb
+  `testWithSetupSkip`).
+  **Status:** aktiv (Claude-Session, 2026-05-10 ~19:15)
+  **Plan:**
+  1. DOM-Emit erweitern: `scrollToTop()` ohne Arg übergibt den
+     Click-Source (`currentVar`) als Context-Hint an die Runtime.
+  2. Runtime: wenn nur Context-Element gegeben, walk parents bis
+     `scrollHeight > clientHeight + overflow: auto/scroll`. Fallback
+     auf `window` wenn keine scrollbare Box gefunden.
+  3. Selber Fix für `scrollToBottom()`.
+  4. `testWithSetupSkip` → `testWithSetup` in den zwei Tests, plus
+     unit-Test in `tests/runtime/scroll.test.ts` (neu, jsdom).
+  5. Compiler+behavior-Suite grün, commit.
+
 - **Wo:** `studio/test-api/suites/` — 10 `// TODO: Runtime bug …`-Marker
   in den Browser-Test-Suiten
   **Was:** Latente Production-Bugs, die als Test-Workaround dokumentiert
