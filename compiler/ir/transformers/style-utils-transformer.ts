@@ -141,6 +141,18 @@ export function formatBorderValue(values: PropertyValue[]): string {
   let hasStyle = false
 
   for (const v of values) {
+    // TokenReference (e.g. `bor b 1 $border`): resolve through the
+    // CSS-var registry. Without this branch the value rendered as
+    // `String({kind,name})` → `[object Object]` and the resulting
+    // `border-bottom: 1px solid [object Object]` was a silent invalid
+    // CSS rule. Border colors prefer the `-boc` suffix; padding/margin
+    // already uses `-pad`. Match the same naming scheme as the schema-
+    // driven `border-*` paths.
+    if (v && typeof v === 'object' && 'kind' in v && (v as { kind: string }).kind === 'token') {
+      const tokenName = (v as { kind: string; name: string }).name
+      parts.push(`var(--${tokenName}-boc)`)
+      continue
+    }
     const str = String(v)
     if (/^\d+$/.test(str)) {
       parts.push(`${str}px`)

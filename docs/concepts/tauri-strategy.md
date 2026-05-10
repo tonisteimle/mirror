@@ -22,24 +22,121 @@
 
 ## Implementation-Plan (5 unabhängig shippable Slices)
 
-| #   | Slice                                                                                                                                  | Geschätzt | Status |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------- | --------- | ------ |
-| 1   | `tauriNewProject` → `TauriDialog.open(directory: true)` + `TauriProject.createProject(name, path)` + `loadProject(path)`               | ~50 LOC   | offen  |
-| 2   | `tauriImportProject` → `TauriDialog.open(directory: true)` + `TauriProject.openProject(path)` + Files laden                            | ~40 LOC   | offen  |
-| 3   | `tauriExportProject` → Studio-Toolbar-Integration für Spec-Bundle-Export via `TauriAgent.runAgent`. „Als React/Vue/Svelte exportieren" | ~80 LOC   | offen  |
-| 4   | Recent-Projects-Menü im File-Tree (UI für `TauriProject.getRecentProjects()`, Code schon da)                                           | ~80 LOC   | offen  |
-| 5   | Code-Signing + Auto-Update-Pipeline (Tauri-Updater-Setup + CI macOS/Windows-Runner + Cert-Setup)                                       | ~1 Woche  | Owner  |
+| #   | Slice                                                                                                     | Geschätzt | Status                    |
+| --- | --------------------------------------------------------------------------------------------------------- | --------- | ------------------------- |
+| 1   | `tauriNewProject` → Native-Folder-Picker + `createProject` + `loadProject`                                | ~50 LOC   | **erledigt** (`7bbbb00d`) |
+| 2   | `tauriImportProject` → Native-Folder-Picker + `openProject`                                               | ~40 LOC   | **erledigt** (`8f5f64ce`) |
+| 3   | `tauriExportProject` → "Auto-saved"-Info-Alert (Files leben in git, Spec-Bundle-Export ist Toolbar-Knopf) | ~20 LOC   | **erledigt** (`f6333df4`) |
+| 3b  | Export-Button "Run Claude" → TauriAgent.runAgent (skipt HTTP /agent/run wenn Tauri verfügbar)             | ~60 LOC   | **erledigt** (`16d8b9e2`) |
+| 4   | Recent-Projects-Picker (Cmd+Shift+O Floating-UI)                                                          | ~210 LOC  | **erledigt** (`7bdcc643`) |
+| 5   | Code-Signing + Auto-Update-Pipeline (Tauri-Updater + CI macOS/Windows-Runner + Cert-Setup)                | ~1 Woche  | Owner                     |
+| 6   | **Bundle-Build Migration** — Spec-Bundle ohne AI-Bridge-Server bauen (siehe Decision unten)               | siehe ↓   | offen — Decision-Vorlage  |
 
-Slices 1–4 sind reine Engineering-Arbeit, ich schiebe sie über die
-nächsten Sessions. Slice 5 braucht externe Infrastruktur und ist
-Owner-Workstream.
+Slices 1–4 + 3b sind alle erledigt — die vier Stub-Functions haben
+echte UX, der „Run Claude"-Knopf shellt direkt zu lokalem `claude`,
+Recent-Projects ist über Cmd+Shift+O erreichbar.
 
-**Wichtig:** Slice 3 (Spec-Bundle via TauriAgent) ist nicht nur das
-„Export-Project"-Menü, sondern macht das ganze AI-Code-Generation-
-Produkt-Versprechen aus `positioning.md` (Hypothese A) im Studio
-sichtbar. Designer klickt einen Knopf, Mirror packt Spec-Bundle, ruft
-lokales `claude` auf, Output landet in `./generated/`. Kein Terminal
-nötig, keine Cloud-Auth.
+Slice 5 braucht externe Infrastruktur (Cert-Käufe, Update-Server) und
+bleibt Owner-Workstream.
+
+**Slice 6 ist der einzige verbleibende Engineering-Block** für das
+„kein lokaler Server nötig"-Versprechen — Details in der
+Decision-Vorlage unten.
+
+---
+
+## Slice 6: Bundle-Build Migration — Decision-Vorlage
+
+**Aktueller Zustand:** Der Spec-Bundle-Bau (`tools/export.ts buildBundle`)
+läuft heute Node-only und wird vom AI-Bridge-Server (`scripts/ai-bridge-
+server.ts:180`) als HTTP-Endpoint `/export` exposed. Studio-Toolbar-
+Export-Button posted die Files dorthin als NDJSON-Stream.
+
+Im Tauri-Local-Tool-Modell ist das die letzte verbleibende HTTP-
+Server-Abhängigkeit. Der Designer-User soll Mirror downloaden und
+direkt benutzen — heute braucht er einen mit-laufenden Node-Server,
+was contradicts `positioning.md`.
+
+`buildBundle` benutzt:
+
+- `node:fs` (mkdtemp, writeFile, mkdir, rmSync)
+- `node:path`, `node:os`
+- `node:child_process` (spawn `npx tsx tools/snapshot.ts` für
+  Render-Snapshots, Headless-Chrome-basiert)
+- Template-Loading (read `tools/export/templates/*.md` from disk)
+
+**Drei Migrations-Pfade, mit konkreten Trade-offs:**
+
+### Pfad A — JS-Port + Static-Asset-Templates
+
+`buildBundle` wird auf eine `WriteFile`-Schnittstelle abstrahiert (statt
+`node:fs` direkt). Studio injiziert eine Tauri-Implementierung via
+`TauriFS`. Templates werden mit dem Studio-Bundle als Assets geshipped
+(via `import.meta.glob` oder als JSON-encoded constants).
+
+- **Aufwand:** ~500 LOC Port + Template-Asset-Pipeline + Tests.
+- **Snapshot:** muss separat gelöst werden (Headless-Chrome läuft nicht
+  im Tauri-Webview; wäre eigener Tauri-Command der Headless-Chrome
+  spawned, oder Snapshot wird Optional).
+- **Bundle-Größe:** marginal (Templates sind ~50KB).
+- **Pro:** Zero-Setup für User, keine Server-Abhängigkeit.
+- **Con:** Snapshot-Path getrennt, ~500 LOC duplizierte Logik (Node-CLI
+  - Browser-Port), Maintenance-Last.
+
+### Pfad B — Node-Binary mit Tauri bundlen
+
+Tauri-Build packt eine Node-Binary + `tools/export.ts` + node_modules
+als Sidecar-Resource. Tauri-Rust-Command `run_export` spawned das
+gebundelte Node mit Args. Streaming via Tauri-Events.
+
+- **Aufwand:** ~150 LOC Rust-Command + Tauri-Side-Loading-Setup +
+  Bundle-Pipeline-Update + Tests.
+- **Snapshot:** funktioniert direkt (gebundelt-Node hat alle deps).
+- **Bundle-Größe:** **+50-80MB** für Node-Binary + minimal node_modules.
+  macOS App-Größe steigt von ~15MB auf ~80MB.
+- **Pro:** Zero-Setup für User, original Code-Pfad bleibt.
+- **Con:** Erhebliche Bundle-Größe, Node-Version-Drift beim Update.
+
+### Pfad C — Tauri verlässt sich auf user-installiertes Node
+
+Tauri-Rust-Command `run_export` spawned `npx tsx <Mirror-Source-Path>/
+tools/export.ts`. Setzt voraus dass User Mirror-Repo geklont hat.
+
+- **Aufwand:** ~80 LOC Rust + 30 LOC TS.
+- **Pro:** Kein Bundle-Größe-Hit.
+- **Con:** **Bricht das Designer-First-Modell** — Designer muss git
+  clone + npm install bevor er Mirror nutzen kann. Inkompatibel mit
+  „eigene lokale Anwendung downloaden".
+
+### Empfehlung des Engineers
+
+**Pfad A ist die richtige Lösung** für das Designer-First-Modell —
+Bundle-Größe matters für Download-Friction, und der ~500 LOC Port ist
+einmalige Investition. Snapshot wird auf Pfad-B-style umgestellt
+(Tauri-spezifisch: bundled Headless-Chrome via Tauri-Plugin), oder
+Snapshot wird Opt-in „advanced" Feature.
+
+**Aber:** Pfad A ist 3-4 Tage Engineering-Arbeit. Wenn Tauri-Release
+für Q3 geplant ist, muss diese Decision **bis 2026-06-15 fallen**
+(zeitgleich mit Slice 5 Code-Signing). Sonst default zu **Pfad B mit
++80MB-Bundle** als pragmatische Lösung — User bekommt funktionierende
+App, Bundle-Slimming kommt in v1.1.
+
+### Owner-Decision-Trigger
+
+Drei konkrete Fragen die du beantworten musst:
+
+1. **Snapshot-Feature im v1?** Wenn ja, Pfad B oder Pfad A mit
+   separater Snapshot-Lösung. Wenn opt-in/optional, Pfad A wird
+   einfacher.
+2. **Bundle-Größe-Toleranz?** ~80MB Mac-App ist akzeptabel für ein
+   „Designer-Tool" (Figma-Desktop ist ~250MB). Wenn ja → Pfad B
+   ist OK.
+3. **Q3-Release-Druck?** Wenn Time-to-Market wichtig → Pfad B
+   pragmatisch. Wenn Polish-First → Pfad A langfristig richtig.
+
+Default-bei-Nicht-Decision: **Pfad B** mit dokumentiertem
+„Bundle-Slimming v1.1"-Roadmap-Item.
 
 ---
 

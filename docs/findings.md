@@ -676,6 +676,24 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — IR: TokenReference in border + chart-slot values
+
+- **Wo:** `compiler/ir/transformers/style-utils-transformer.ts:formatBorderValue`,
+  `compiler/ir/transformers/chart-transformer.ts` (chart-slot config build),
+  `compiler/runtime/charts.ts:applySlotConfigs` (CSS-var resolver)
+  **Was:** Zwei IR-Pfade riefen `String(value)` auf TokenReference-
+  Objekten und produzierten den literalen String `"[object Object]"`:
+  (1) Border-Direction-Path (`bor b 1 $border` → `'border-bottom':
+'1px solid [object Object]'`) — CSS-Regel still ungültig, Divider
+  unsichtbar; (2) Chart-Slot-Config (`Point: bg $accent.blue` auf
+  Line-Chart) — Chart.js fiel auf Default-Farbe zurück, Müll in
+  emittierter JSON. Fix: TokenReference in formatBorderValue →
+  `var(--<name>-boc)`. Chart-Slot → `$name`-Marker, Runtime-Resolver
+  via `getComputedStyle(...)` gegen CSS-Var-Registry.
+  **Wirkung:** portfolio-dashboard-optimized (19× border-Object),
+  hospital-dashboard (2× chart-slot-Object). Pin:
+  `tests/differential/properties.test.ts`.
+
 ### 2026-05-10 — Parser/React/DOM: `$token`-led ternary
 
 - **Wo:** `compiler/parser/inline-property-parser.ts:consumeTokenRef`,

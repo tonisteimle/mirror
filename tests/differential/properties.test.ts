@@ -351,4 +351,37 @@ describe('Properties — DOM emits expected style values', () => {
     const v = generateFramework(parse(`Frame ver, align right\n  Frame w 50`))
     expect(v).toContain("align: 'right'")
   })
+
+  it('DOM: `bor b 1 $border` resolves the color token to a CSS variable', () => {
+    // PIN: pre-2026-05-10 `formatBorderValue` called `String(v)` on each
+    // value. When a value was a TokenReference (`{kind:"token",name:"border"}`)
+    // — which happens with `bor b 1 $border` — `String()` returned the
+    // literal `"[object Object]"` and the emit produced
+    //   'border-bottom': '1px solid [object Object]'
+    // The CSS rule was silently ignored, the divider invisible, and the
+    // string polluted the bundle. Now the directional border path
+    // resolves the TokenReference to `var(--<name>-boc)` (matches the
+    // suffix scheme padding/margin already use).
+    const dom = generateDOM(parse(`border.boc: #1e1e28\n\nFrame bor b 1 $border`))
+    expect(dom).not.toContain('[object Object]')
+    expect(dom).toContain('1px solid var(--border-boc)')
+  })
+
+  it('IR/runtime: chart-slot color tokens survive instead of stringifying as `[object Object]`', () => {
+    // PIN: pre-2026-05-10 `Point: bg $accent.blue` on a chart slot
+    // (e.g. `Line $sales\n  Point: bg $accent.blue`) was `String(value)`'d
+    // when building the chart-slot config. The TokenReference object
+    // stringified to `"[object Object]"` and chart.js silently fell
+    // back to defaults while the literal text landed in the emitted
+    // JSON config. Now the IR keeps tokens as `$name` markers and the
+    // chart runtime resolves them through `getComputedStyle(...)`
+    // against the CSS-var registry.
+    const dom = generateDOM(
+      parse(
+        `accent.blue: #3b82f6\nsales:\n  Jan: 1\n  Feb: 2\n\nLine $sales\n  Point: size 4, bg $accent.blue`
+      )
+    )
+    expect(dom).not.toContain('[object Object]')
+    expect(dom).toContain('"$accent.blue"')
+  })
 })

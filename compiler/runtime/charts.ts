@@ -337,9 +337,30 @@ function applySlotConfigs(chartConfig: Record<string, any>, slots?: ChartSlotCon
     Object.entries(slot.config).forEach(([path, value]) => {
       if (path.includes('.title.text'))
         setNestedValue(chartConfig, path.replace('.title.text', '.title.display'), true)
-      setNestedValue(chartConfig, path, value)
+      // `$token` markers (set by the IR transformer for TokenReference
+      // values like `Point: bg $accent.blue`) get resolved against the
+      // CSS-var registry so chart.js gets a real color/size string.
+      // Without this they'd land in the chart config as literal `$name`
+      // and chart.js would silently fall back to defaults.
+      const resolved = typeof value === 'string' ? resolveTokenMarker(value) : value
+      setNestedValue(chartConfig, path, resolved)
     })
   )
+}
+
+function resolveTokenMarker(value: string): string {
+  if (!value.startsWith('$')) return value
+  const name = value.slice(1)
+  // Try multiple flat-name shapes (`accent.blue` → `--accent-blue` and
+  // `--accent.blue`). The CSS-var registry uses dash-separated names.
+  const candidates = [name.replace(/\./g, '-'), name]
+  for (const c of candidates) {
+    const v = getComputedStyle(document.documentElement)
+      .getPropertyValue('--' + c)
+      .trim()
+    if (v) return v
+  }
+  return value
 }
 
 // ============================================
