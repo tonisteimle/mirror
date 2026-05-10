@@ -43,8 +43,8 @@ body {
   padding: 80px 32px 100px;
 }
 
-/* Page Logo (in-page hero — only shown when sidebar is NOT mounted, e.g.
-   playground page or narrow viewports). The sidebar carries its own logo. */
+/* Page Logo (in-page hero — only shown on pages without the topbar,
+   e.g. playground). The topbar carries its own brand mark. */
 .page-logo {
   display: flex;
   align-items: center;
@@ -62,10 +62,8 @@ body {
   width: auto;
 }
 
-@media (min-width: 1100px) {
-  body.has-sidebar .page-logo {
-    display: none;
-  }
+body.has-topbar .page-logo {
+  display: none;
 }
 
 /* Typography (Plex Sans Strict) */
@@ -141,21 +139,12 @@ code {
   text-align: center;
 }
 
-/* Hero shot / tutorial-video: break out of the 840px text column on wider viewports. */
+/* Hero shot / tutorial-video: break out of the 720px text column on wider viewports. */
 @media (min-width: 1024px) {
   .studio-shot,
   .tutorial-video {
     margin-left: -100px;
     margin-right: -100px;
-  }
-}
-
-/* Sidebar mode (≥1100px): only break out to the right; sidebar pins the left. */
-@media (min-width: 1100px) {
-  body.has-sidebar .studio-shot,
-  body.has-sidebar .tutorial-video {
-    margin-left: 0;
-    margin-right: -200px;
   }
 }
 
@@ -308,7 +297,7 @@ a:hover { text-decoration: underline; }
   border: 1px dashed var(--border);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.02);
-  color: var(--text-muted, #888);
+  color: var(--text-dim);
   font-size: 13px;
   text-align: center;
 }
@@ -540,103 +529,232 @@ details pre {
 }
 
 /* ============================================
-   Sidebar Navigation (appears on wide screens)
+   Top-Bar + Mega-Menu Navigation
    ============================================ */
 
-.tutorial-sidebar {
-  display: none;
+.tutorial-topbar {
   position: fixed;
   top: 0;
   left: 0;
-  width: 240px;
-  height: 100vh;
-  background: var(--bg);
-  padding: 24px 0;
-  overflow-y: auto;
-  z-index: 100;
-  /* Hide scrollbar while keeping scrollability — the gutter would otherwise
-     show as a darker strip between sidebar and content. */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.tutorial-sidebar::-webkit-scrollbar {
-  display: none;
-}
-
-.tutorial-sidebar-header {
-  padding: 0 20px 28px;
-  margin-bottom: 16px;
-}
-
-.tutorial-sidebar-header a {
+  right: 0;
+  height: 56px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  padding: 0 20px;
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  z-index: 90;
+}
+
+.tutorial-topbar-hamburger {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.tutorial-topbar-hamburger:hover {
+  color: var(--text-bright);
+  background: #1f1f1f;
+  border-color: var(--border);
+}
+
+.tutorial-topbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   text-decoration: none;
   color: var(--text-bright);
 }
-
-.tutorial-sidebar-header img {
-  height: 32px;
+.tutorial-topbar-brand:hover {
+  text-decoration: none;
+}
+.tutorial-topbar-brand img {
+  height: 20px;
   width: auto;
 }
-
-.tutorial-sidebar-header span {
-  font-size: 20px;
+.tutorial-topbar-brand span {
+  font-size: 15px;
   font-weight: 600;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
 }
 
-/* Sections are unlabeled — first link of each group gets `.group-start`
- * which adds top-margin + a thin border-top as visual separator. */
-.tutorial-sidebar-link.group-start {
-  margin-top: 14px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-}
-
-.tutorial-sidebar-link {
-  display: flex;
-  align-items: center;
+.tutorial-topbar-chapter {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: baseline;
   gap: 10px;
-  padding: 2px 20px;
   color: var(--text-dim);
-  text-decoration: none;
   font-size: 13px;
-  transition: color 0.15s, background 0.15s;
+  min-width: 0;
 }
-
-.tutorial-sidebar-link:hover {
-  color: var(--text);
-  background: #151515;
-  text-decoration: none;
-}
-
-.tutorial-sidebar-link.active {
-  color: var(--accent);
-}
-
-.tutorial-sidebar-link-num {
+.tutorial-topbar-chapter-num {
   font-family: var(--mono);
   font-size: 11px;
-  color: #444;
+  color: var(--text-dim);
+}
+.tutorial-topbar-chapter-title {
+  color: var(--text);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 540px) {
+  .tutorial-topbar-chapter-title {
+    display: none;
+  }
+}
+
+/* Push page content below the fixed top bar. */
+body.has-topbar .page {
+  padding-top: 120px;
+}
+
+/* Mega-menu overlay */
+.tutorial-megamenu {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  overflow-y: auto;
+}
+.tutorial-megamenu.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body.megamenu-open {
+  overflow: hidden;
+}
+
+.tutorial-megamenu-inner {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 80px 48px 80px;
+  min-height: 100%;
+}
+
+.tutorial-megamenu-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.tutorial-megamenu-close:hover {
+  color: var(--text-bright);
+  background: #1f1f1f;
+  border-color: var(--border);
+}
+
+.tutorial-megamenu-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 48px;
+}
+
+.tutorial-megamenu-heading {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-bright);
+  margin-top: 0;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tutorial-megamenu-subhead {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: 18px;
+  margin-bottom: 6px;
+}
+.tutorial-megamenu-col > .tutorial-megamenu-subhead:first-of-type {
+  margin-top: 0;
+}
+
+.tutorial-megamenu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 6px;
+}
+.tutorial-megamenu-list li {
+  margin: 0;
+}
+
+.tutorial-megamenu-link {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 0;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 15px;
+  transition: color 0.12s;
+}
+.tutorial-megamenu-link:hover {
+  color: var(--text-bright);
+  text-decoration: none;
+}
+.tutorial-megamenu-link.active {
+  color: var(--accent);
+}
+.tutorial-megamenu-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
   width: 22px;
   flex-shrink: 0;
 }
-
-.tutorial-sidebar-link.active .tutorial-sidebar-link-num {
+.tutorial-megamenu-link.active .tutorial-megamenu-num {
   color: var(--accent);
 }
 
-/* Show sidebar on wide screens */
-@media (min-width: 1100px) {
-  .tutorial-sidebar {
-    display: block;
+/* Narrow viewports: collapse mega-menu to 2 columns, then 1. */
+@media (max-width: 900px) {
+  .tutorial-megamenu-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 36px;
   }
-
-  /* Shift main content to the right */
-  body.has-sidebar .page {
-    margin-left: 240px;
-    max-width: calc(840px + 60px);
+  .tutorial-megamenu-inner {
+    padding: 72px 24px 60px;
+  }
+}
+@media (max-width: 540px) {
+  .tutorial-megamenu-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
   }
 }

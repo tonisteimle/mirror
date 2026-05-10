@@ -5,23 +5,98 @@
  * for all tutorial playground elements.
  */
 
-// Syntax highlighting patterns
+// Vocabulary (kept in sync with compiler/schema/dsl.ts and CLAUDE.md DSL
+// reference). Properties first, then keywords/states/events/actions.
+// `buildAltRegex` sorts longest-first so multi-token entries like `pad-x`
+// match before their prefix `pad`.
+const PROPERTIES = [
+  // Sizing
+  'w', 'h', 'size', 'minw', 'min-width', 'maxw', 'max-width',
+  'minh', 'min-height', 'maxh', 'max-height', 'aspect', 'full', 'hug',
+  // Layout direction & flow
+  'hor', 'horizontal', 'ver', 'vertical', 'gap', 'gx', 'gap-x', 'gy', 'gap-y',
+  'row-height', 'rh', 'center', 'cen', 'spread', 'wrap', 'stacked',
+  'grid', 'dense', 'grow', 'shrink', 'align',
+  // 9-position keywords
+  'tl', 'tc', 'tr', 'cl', 'cr', 'bl', 'bc', 'br',
+  'hor-center', 'ver-center', 'left', 'right', 'top', 'bottom',
+  // Spacing
+  'pad', 'padding', 'p', 'pad-x', 'px', 'pad-y', 'py',
+  'pad-t', 'pt', 'pad-r', 'pr', 'pad-b', 'pb', 'pad-l', 'pl',
+  'mar', 'margin', 'm', 'mar-x', 'mx', 'mar-y', 'my',
+  'mar-t', 'mt', 'mar-r', 'mr', 'mar-b', 'mb', 'mar-l', 'ml',
+  // Color
+  'bg', 'background', 'col', 'color', 'c', 'boc', 'ic',
+  // Border & radius
+  'bor', 'border', 'bor-t', 'bort', 'bor-b', 'borb',
+  'bor-l', 'borl', 'bor-r', 'borr', 'rad', 'radius',
+  // Typography
+  'fs', 'font-size', 'weight', 'line', 'font', 'text-align',
+  'italic', 'underline', 'uppercase', 'lowercase', 'truncate',
+  // Position & transform
+  'x', 'y', 'z', 'abs', 'absolute', 'fixed', 'relative',
+  'rotate', 'rot', 'scale',
+  // Effects
+  'opacity', 'opa', 'o', 'shadow', 'cursor', 'blur', 'backdrop-blur', 'blur-bg',
+  // Visibility
+  'hidden', 'visible', 'disabled', 'scroll', 'scroll-ver',
+  'scroll-hor', 'scroll-both', 'clip',
+  // Content & input
+  'content', 'href', 'src', 'placeholder', 'mask', 'focusable',
+  'editable', 'keyboard-nav', 'keynav', 'loop-focus', 'loopfocus',
+  'typeahead', 'trigger-text', 'triggertext', 'readonly',
+  'type', 'name', 'value', 'checked', 'text',
+  // Icon
+  'is', 'icon-size', 'ic', 'icon-color', 'iw', 'icon-weight', 'fill',
+  // Animation
+  'anim', 'animation', 'x-offset', 'y-offset',
+  // Hover-prefixed shorthand
+  'hover-bg', 'hover-background', 'hover-col', 'hover-color', 'hover-c',
+  'hover-opacity', 'hover-opa', 'hover-o', 'hover-scale',
+  'hover-border', 'hover-bor', 'hover-border-color', 'hover-boc',
+  'hover-radius', 'hover-rad',
+]
+
+const KEYWORDS = [
+  // System + custom states (and size-states)
+  'hover', 'focus', 'active', 'disabled',
+  'on', 'off', 'open', 'closed', 'selected', 'highlighted',
+  'expanded', 'collapsed', 'filled', 'valid', 'invalid', 'loading', 'error',
+  'compact', 'regular', 'wide',
+  // Reserved keywords
+  'canvas', 'as', 'extends', 'named', 'each', 'in', 'if', 'else', 'then',
+  'where', 'and', 'or', 'not', 'data', 'keys', 'selection', 'bind',
+  'from', 'with', 'by', 'asc', 'desc', 'grouped', 'use',
+  // Events
+  'onclick', 'onhover', 'onfocus', 'onblur', 'oninput', 'onchange',
+  'onkeydown', 'onkeyup', 'onclick-outside', 'onload',
+  'onviewenter', 'onviewexit', 'onenter', 'onescape', 'onspace',
+  'onkeyenter', 'onkeyescape', 'onkeyspace',
+  // Actions
+  'toggle', 'exclusive', 'show', 'hide', 'navigate', 'back', 'forward',
+  'set', 'reset', 'increment', 'decrement', 'copy', 'add', 'remove',
+  'create', 'save', 'delete', 'toast',
+  'highlightNext', 'highlightPrev', 'selectHighlighted',
+  'scrollTo', 'scrollToTop', 'scrollToBottom', 'scrollBy',
+  'clear', 'setError', 'clearError', 'openUrl', 'focus', 'blur',
+  // Common custom state names used in tutorials
+  'todo', 'doing', 'done',
+]
+
+function buildAltRegex(words) {
+  const sorted = Array.from(new Set(words)).sort((a, b) => b.length - a.length)
+  const escaped = sorted.map(w => w.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'))
+  return new RegExp(`\\b(${escaped.join('|')})\\b`, 'g')
+}
+
 const patterns = [
   { regex: /\/\/.*$/gm, cls: 'syn-comment' },
   { regex: /"[^"]*"/g, cls: 'syn-string' },
   { regex: /\$[a-zA-Z][a-zA-Z0-9.]*/g, cls: 'syn-token' },
   { regex: /#[0-9A-Fa-f]{3,8}\b/g, cls: 'syn-hex' },
   { regex: /\b\d+(\.\d+)?(%|px|rem|em)?\b/g, cls: 'syn-number' },
-  {
-    regex:
-      /\b(pad|padding|bg|background|col|color|gap|rad|radius|bor|border|boc|width|height|size|font|weight|center|hor|ver|spread|wrap|hidden|visible|opacity|shadow|cursor|grid|scroll|clip|truncate|italic|underline|uppercase|lowercase|left|right|top|bottom|margin|w|h|fs|is|ic|scale|name|full|shrink|placeholder|row-height)\b/g,
-    cls: 'syn-property',
-  },
-  {
-    regex:
-      /\b(hover|focus|active|disabled|onclick|onhover|onfocus|onblur|oninput|onchange|onkeydown|onclick-outside|selected|state|show|hide|toggle|cycle|exclusive|open|close|as|on|todo|doing|done|loading|valid|invalid|error|loaded|default)\b/g,
-    cls: 'syn-keyword',
-  },
+  { regex: buildAltRegex(PROPERTIES), cls: 'syn-property' },
+  { regex: buildAltRegex(KEYWORDS), cls: 'syn-keyword' },
   { regex: /\b[A-Z][a-zA-Z0-9]*\b/g, cls: 'syn-component' },
 ]
 
@@ -152,112 +227,235 @@ function initializePlaygrounds() {
 }
 
 /**
- * Tutorial Sidebar Navigation
+ * Tutorial Top-Bar + Mega-Menu Navigation
  *
- * Creates a responsive sidebar that appears on wide screens.
- * The navigation structure is defined here and injected into the DOM.
+ * Top-bar (always visible): hamburger button + Mirror logo.
+ * Hamburger opens a full-screen overlay with all chapters arranged
+ * in 4 labeled columns.
  */
 
-// Tutorial Navigation Structure (pädagogische Reihenfolge):
-//   Studio Basis (17, 18) — Werkzeug zuerst, motivierend
-//   Sprache (01-10, 16) — Syntax mit Tool-Kontext im Kopf
-//   Bibliothek (11-15) — was vorgebaut ist
-//   Studio Tiefe (19-28) — Pickers, Refactoring, Multi-File, Export
-//
-// Intro (index.html) ist nicht aufgelistet — das Mirror-Logo oben in
-// der Sidebar verlinkt dorthin.
-const tutorialNavigation = [
-  // Studio Basis
-  { num: '17', file: '17-ai-bauen.html', title: 'AI-Bauen', section: 'Studio Basis' },
-  { num: '18', file: '18-studio.html', title: 'Bedienung' },
-  // Sprache
-  { num: '01', file: '01-elemente.html', title: 'Elemente', section: 'Sprache' },
-  { num: '02', file: '02-komponenten.html', title: 'Komponenten' },
-  { num: '03', file: '03-tokens.html', title: 'Tokens' },
-  { num: '04', file: '04-layout.html', title: 'Layout' },
-  { num: '05', file: '05-styling.html', title: 'Styling' },
-  { num: '06', file: '06-states.html', title: 'States' },
-  { num: '07', file: '07-animationen.html', title: 'Animationen' },
-  { num: '08', file: '08-functions.html', title: 'Functions' },
-  { num: '09', file: '09-daten.html', title: 'Daten' },
-  { num: '10', file: '10-seiten.html', title: 'Seiten' },
-  { num: '16', file: '16-prosa.html', title: 'Prosa-Mode' },
-  // Bibliothek
-  { num: '11', file: '11-eingabe.html', title: 'Eingabe', section: 'Bibliothek' },
-  { num: '12', file: '12-navigation.html', title: 'Navigation' },
-  { num: '13', file: '13-overlays.html', title: 'Overlays' },
-  { num: '14', file: '14-tabellen.html', title: 'Tabellen' },
-  { num: '15', file: '15-charts.html', title: 'Charts' },
-  // Studio Tiefe
-  { num: '19', file: '19-pickers.html', title: 'Pickers', section: 'Studio Tiefe' },
-  { num: '20', file: '20-komponenten-workflow.html', title: 'Komponenten' },
-  { num: '21', file: '21-tokens-workflow.html', title: 'Tokens' },
-  { num: '22', file: '22-visuelles-editieren.html', title: 'Visuelles Editieren' },
-  { num: '23', file: '23-states.html', title: 'States' },
-  { num: '24', file: '24-code-editor.html', title: 'Code-Editor' },
-  { num: '25', file: '25-multi-file.html', title: 'Multi-File' },
-  { num: '26', file: '26-run-mode.html', title: 'Run-Mode' },
-  { num: '27', file: '27-export.html', title: 'Export' },
-  { num: '28', file: '28-reference.html', title: 'Reference' },
+// 4 columns, visually balanced (6/8/8/6). Studio is split into
+// Bedienen (entry + editing tools) and Vertiefen (IDE/States + Output).
+// Order matches the index: Studio first, Sprache in the middle,
+// then deeper Studio.
+const tutorialSections = [
+  {
+    title: 'Studio — Bedienen',
+    groups: [
+      {
+        title: 'Einstieg',
+        items: [
+          { num: '17', file: '17-ai-bauen.html', title: 'AI-Bauen' },
+          { num: '18', file: '18-studio.html', title: 'Bedienung' },
+        ],
+      },
+      {
+        title: 'Editing-Werkzeuge',
+        items: [
+          { num: '19', file: '19-pickers.html', title: 'Pickers' },
+          { num: '20', file: '20-komponenten-workflow.html', title: 'Komponenten-Workflow' },
+          { num: '21', file: '21-tokens-workflow.html', title: 'Tokens-Workflow' },
+          { num: '22', file: '22-visuelles-editieren.html', title: 'Visuelles Editieren' },
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Sprache — Aufbau',
+    groups: [
+      {
+        title: 'Grundlagen',
+        items: [
+          { num: '01', file: '01-elemente.html', title: 'Elemente' },
+          { num: '02', file: '02-komponenten.html', title: 'Komponenten' },
+          { num: '03', file: '03-tokens.html', title: 'Tokens' },
+          { num: '04', file: '04-layout.html', title: 'Layout' },
+          { num: '05', file: '05-styling.html', title: 'Styling' },
+        ],
+      },
+      {
+        title: 'Wirkung',
+        items: [
+          { num: '06', file: '06-states.html', title: 'States' },
+          { num: '07', file: '07-animationen.html', title: 'Animationen' },
+          { num: '08', file: '08-functions.html', title: 'Functions' },
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Sprache — Bausteine',
+    groups: [
+      {
+        title: 'Daten & Seiten',
+        items: [
+          { num: '09', file: '09-daten.html', title: 'Daten' },
+          { num: '10', file: '10-seiten.html', title: 'Seiten' },
+          { num: '16', file: '16-prosa.html', title: 'Prosa-Mode' },
+        ],
+      },
+      {
+        title: 'Bibliothek',
+        items: [
+          { num: '11', file: '11-eingabe.html', title: 'Eingabe' },
+          { num: '12', file: '12-navigation.html', title: 'Navigation' },
+          { num: '13', file: '13-overlays.html', title: 'Overlays' },
+          { num: '14', file: '14-tabellen.html', title: 'Tabellen' },
+          { num: '15', file: '15-charts.html', title: 'Charts' },
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Studio — Vertiefen',
+    groups: [
+      {
+        title: 'Code & States',
+        items: [
+          { num: '23', file: '23-states.html', title: 'States im Studio' },
+          { num: '24', file: '24-code-editor.html', title: 'Code-Editor' },
+        ],
+      },
+      {
+        title: 'Files & Output',
+        items: [
+          { num: '25', file: '25-multi-file.html', title: 'Multi-File' },
+          { num: '26', file: '26-run-mode.html', title: 'Run-Mode' },
+          { num: '27', file: '27-export.html', title: 'Export' },
+          { num: '28', file: '28-reference.html', title: 'Reference' },
+        ],
+      },
+    ],
+  },
 ]
 
-function createTutorialSidebar() {
-  // Don't create sidebar on playground page. Dev-server may strip .html from
-  // the URL — normalise so the active-link check below matches item.file.
+// Build a flat lookup so the topbar can show the current chapter title.
+function findChapter(file) {
+  for (const section of tutorialSections) {
+    for (const group of section.groups) {
+      for (const item of group.items) {
+        if (item.file === file) return item
+      }
+    }
+  }
+  return null
+}
+
+function createTutorialNav() {
+  // Skip on playground (no chapter context).
   let currentFile = window.location.pathname.split('/').pop() || 'index.html'
   if (currentFile === '' || currentFile === 'tutorial') currentFile = 'index.html'
   if (!currentFile.includes('.')) currentFile = currentFile + '.html'
   if (currentFile === 'playground.html') return
 
-  // Create sidebar element
-  const sidebar = document.createElement('aside')
-  sidebar.className = 'tutorial-sidebar'
-
-  // Header with logo
-  const header = document.createElement('div')
-  header.className = 'tutorial-sidebar-header'
-  header.innerHTML = `
-    <a href="index.html">
+  // Top bar (always visible): hamburger left, logo center-left next to it.
+  // If we're inside a chapter, show its number + title on the right.
+  const chapter = findChapter(currentFile)
+  const topbar = document.createElement('header')
+  topbar.className = 'tutorial-topbar'
+  topbar.innerHTML = `
+    <button type="button" class="tutorial-topbar-hamburger" aria-label="Menü öffnen" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a class="tutorial-topbar-brand" href="index.html">
       <img src="logo-mirror.png" alt="Mirror">
       <span>Mirror</span>
     </a>
+    ${chapter ? `<div class="tutorial-topbar-chapter"><span class="tutorial-topbar-chapter-num">${chapter.num}</span><span class="tutorial-topbar-chapter-title">${chapter.title}</span></div>` : ''}
   `
-  sidebar.appendChild(header)
 
-  // Flat list of links. Items that carry `section` mark a group boundary —
-  // we don't render the section name (the size disparity between groups
-  // makes labeled headers look uneven). Instead the first link of each
-  // group gets a `group-start` class for spacing/separator.
-  let isFirstItem = true
-  for (const item of tutorialNavigation) {
-    const link = document.createElement('a')
-    link.className = 'tutorial-sidebar-link'
-    if (item.section && !isFirstItem) {
-      link.classList.add('group-start')
+  // Mega-menu overlay
+  const overlay = document.createElement('div')
+  overlay.className = 'tutorial-megamenu'
+  overlay.setAttribute('aria-hidden', 'true')
+
+  const inner = document.createElement('div')
+  inner.className = 'tutorial-megamenu-inner'
+
+  const closeBtn = document.createElement('button')
+  closeBtn.type = 'button'
+  closeBtn.className = 'tutorial-megamenu-close'
+  closeBtn.setAttribute('aria-label', 'Menü schließen')
+  closeBtn.innerHTML = `
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  `
+  inner.appendChild(closeBtn)
+
+  const grid = document.createElement('div')
+  grid.className = 'tutorial-megamenu-grid'
+
+  for (const section of tutorialSections) {
+    const col = document.createElement('div')
+    col.className = 'tutorial-megamenu-col'
+
+    const heading = document.createElement('h3')
+    heading.className = 'tutorial-megamenu-heading'
+    heading.textContent = section.title
+    col.appendChild(heading)
+
+    for (const group of section.groups) {
+      const subhead = document.createElement('div')
+      subhead.className = 'tutorial-megamenu-subhead'
+      subhead.textContent = group.title
+      col.appendChild(subhead)
+
+      const list = document.createElement('ul')
+      list.className = 'tutorial-megamenu-list'
+      for (const item of group.items) {
+        const li = document.createElement('li')
+        const a = document.createElement('a')
+        a.className = 'tutorial-megamenu-link'
+        a.href = item.file
+        if (currentFile === item.file) a.classList.add('active')
+        a.innerHTML = `<span class="tutorial-megamenu-num">${item.num}</span><span>${item.title}</span>`
+        li.appendChild(a)
+        list.appendChild(li)
+      }
+      col.appendChild(list)
     }
-    link.href = item.file
-    if (currentFile === item.file) {
-      link.classList.add('active')
-    }
-    link.innerHTML = `
-      <span class="tutorial-sidebar-link-num">${item.num}</span>
-      <span>${item.title}</span>
-    `
-    sidebar.appendChild(link)
-    isFirstItem = false
+    grid.appendChild(col)
   }
+  inner.appendChild(grid)
+  overlay.appendChild(inner)
 
-  document.body.insertBefore(sidebar, document.body.firstChild)
-  document.body.classList.add('has-sidebar')
+  // Wire open/close
+  const hamburger = topbar.querySelector('.tutorial-topbar-hamburger')
+  function open() {
+    overlay.classList.add('is-open')
+    overlay.setAttribute('aria-hidden', 'false')
+    hamburger.setAttribute('aria-expanded', 'true')
+    document.body.classList.add('megamenu-open')
+  }
+  function close() {
+    overlay.classList.remove('is-open')
+    overlay.setAttribute('aria-hidden', 'true')
+    hamburger.setAttribute('aria-expanded', 'false')
+    document.body.classList.remove('megamenu-open')
+  }
+  hamburger.addEventListener('click', () => {
+    if (overlay.classList.contains('is-open')) close(); else open()
+  })
+  closeBtn.addEventListener('click', close)
+  overlay.addEventListener('click', e => {
+    // Click on backdrop (outside .tutorial-megamenu-inner content) closes.
+    if (e.target === overlay) close()
+  })
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && overlay.classList.contains('is-open')) close()
+  })
+
+  document.body.insertBefore(overlay, document.body.firstChild)
+  document.body.insertBefore(topbar, document.body.firstChild)
+  document.body.classList.add('has-topbar')
 }
 
 // Auto-initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     initializePlaygrounds()
-    createTutorialSidebar()
+    createTutorialNav()
   })
 } else {
   initializePlaygrounds()
-  createTutorialSidebar()
+  createTutorialNav()
 }
