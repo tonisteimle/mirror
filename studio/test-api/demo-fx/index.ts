@@ -243,15 +243,22 @@ export class MirrorDemoAPI {
     const t = this.timings.type
     if (t.thoughtPauseMs > 0) await this.delay(t.thoughtPauseMs)
 
+    // ONE overlay chip with the typed snippet (truncated), not one chip
+    // per character — viewers already see the chars appear in the
+    // editor; per-char chips just produce visual noise. Skip ws-only
+    // strings (e.g. an indent paste).
+    if (this.config.showKeystrokeOverlay && text.trim().length > 0) {
+      const preview = text.length > 24 ? text.slice(0, 24) + '…' : text
+      // Single-line preview — replace internal whitespace with a space
+      // so multiline pastes don't blow the chip up.
+      this.overlay.showText('"' + preview.replace(/\s+/g, ' ') + '"')
+    }
+
     const w = window as unknown as BrowserGlobals
     const cm = w.editor
     if (cm && cm.state && cm.dispatch) {
       let isFirstChar = true
       for (const char of text) {
-        if (this.config.showKeystrokeOverlay && char !== ' ' && char !== '\n') {
-          this.overlay.show(char === '\n' ? 'Enter' : char)
-        }
-
         const sel = cm.state.selection.main
         if (isFirstChar && !sel.empty) {
           cm.dispatch({
@@ -280,7 +287,6 @@ export class MirrorDemoAPI {
 
     // Fallback: regular input/textarea elements.
     for (const char of text) {
-      if (this.config.showKeystrokeOverlay && char !== ' ') this.overlay.show(char)
       const activeEl = document.activeElement as HTMLElement | null
       if (activeEl) {
         activeEl.dispatchEvent(

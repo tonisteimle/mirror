@@ -57,6 +57,36 @@ export class KeystrokeOverlay {
   }
 
   /**
+   * Show a transient text chip — used for `type()` aggregation. The chip
+   * lifts opacity/transform on append, sits while the rest of the text
+   * arrives, and fades. Idempotent on repeated calls with the same
+   * label — only one in-flight chip per text run.
+   *
+   * Public so the DemoAPI can call it once at the start of `type()`
+   * instead of one chip per character.
+   */
+  showText(label: string): void {
+    if (!this.enabled || !this.container) return
+    const overlayMs = this.timing.overlayMs
+    if (overlayMs === 0) return
+
+    const chip = document.createElement('div')
+    chip.textContent = label
+    chip.style.cssText =
+      'background:rgba(91,168,245,0.95);color:white;padding:8px 16px;border-radius:8px;' +
+      'font-family:system-ui,-apple-system,sans-serif;font-size:16px;font-weight:500;' +
+      'white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.3);opacity:1;' +
+      'transform:translateY(0);transition:opacity 0.3s ease-out,transform 0.3s ease-out;'
+    this.container.appendChild(chip)
+    const fadeStart = overlayMs * 0.8
+    setTimeout(() => {
+      chip.style.opacity = '0'
+      chip.style.transform = 'translateY(10px)'
+    }, fadeStart)
+    setTimeout(() => chip.remove(), overlayMs)
+  }
+
+  /**
    * Render a key chip. `modifiers` is the subset that was held when the
    * key fired — modifier glyphs appear in the canonical macOS order
    * (⌘ ⌥ ⇧) plus Ctrl on non-Mac.
