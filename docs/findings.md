@@ -284,29 +284,23 @@ instance.column)` umgestellt. 7849/7849 vitest grün.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
-- **Wo:** Tutorial-Demos für `docs/tutorial/18-studio.html`
-  **Was:** Acht Tutorial-Videos für Studio-Kapitel 18. Pipeline
-  etabliert in `c58773c8` (`tools/test-runner/recording.ts` +
-  `--os-mouse`-Bridge): nut-js bewegt den realen macOS-Cursor mit
-  `mouseSpeed = 1500`, CDP fired Trusted-Events parallel, CDP-
-  Screencast → ffmpeg-VP9-WebM in `docs/tutorial/videos/`. Pattern
-  pro Demo: ein File `studio/test-api/suites/demos/tut-NN-*.demo.ts`,
-  Cursor-Beats vor State-Changes (`osMouse.moveTo` + `sleep`),
-  deterministische Mutation via `api.editor.setCode` oder
-  `__mirrorActions`, Asserts am Ende, `osMouse.park()` als Closer.
-  **Status:** aktiv (Claude-Session, 2026-05-10) — 5 von 8 Videos
-  committed (`d3115504` tut-01 drop-sync, `7790b2b8` tut-02 inline-
-  edit, `99f47eec` tut-03 resize, `a29aaa00` tut-04 padding-margin,
-  `554b51c8` tut-05 property-panel).
-  **Plan:**
-  1. tut-06 reorder — Drei Frames `hor`, gelb nach vorne, rot ans
-     Ende per `__mirrorActions.reorderChild` (oder `editor.setCode`
-     wenn Reorder-Action nicht im API-Set ist).
-  2. tut-07 code-edit — Vom leeren Canvas vier Zeilen tippen (Frame
-     - 2× Text + Button). `cdpInput.keyType` mit pacing.
-  3. tut-08 multi-file — `tokens.tok` anlegen via File-Tree-Action,
-     drei Tokens reinschreiben, zurück nach `index.mir` via Cmd+P,
-     Frame-Zeile auf `bg $primary, rad $card` umstellen.
+- **Wo:** Tutorial-Demos + Test-Runner — **OWNER-EXKLUSIV (toni)**
+  **Was:** Bereiche `studio/test-api/suites/demos/`,
+  `docs/tutorial/videos/*.webm`, `tools/test-runner/recording.ts`,
+  `tools/test-runner/os-mouse*.ts` und alles rundherum (Demo-
+  Pipeline, --os-mouse-Bridge, Tutorial-Recording-Workflow) werden
+  vom Owner direkt gepflegt — **keine Claude-Sessions hier
+  auseinandersetzen, keine Findings aufmachen, keine PRs vorbereiten,
+  keine Recordings anstoßen.** Stand 2026-05-10: 6 von 8 Videos
+  committed (`d3115504` tut-01, `7790b2b8` tut-02, `99f47eec` tut-03,
+  `a29aaa00` tut-04, `554b51c8` tut-05, `1b416c30` tut-06). tut-07
+  - tut-08 macht der Owner.
+    **Status:** offen — Owner-Lane, nicht Claude-Lane
+    **Notiz:** Wenn ein Bug in `studio/test-api/` (Test-Framework
+    selbst, nicht `suites/demos/`) durch andere Hunt-Arbeit auffällt,
+    Befund hier eintragen UND warten — nicht selbst fixen, weil der
+    Owner gerade aktiv am Recording-Workflow ist und parallele Edits
+    am Test-API-Stack die Demo-Aufnahmen brechen können.
 
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
