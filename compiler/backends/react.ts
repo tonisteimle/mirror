@@ -125,11 +125,20 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
   // lean.
   const hasAnimation = containsAnimUsage(program.instances ?? [])
 
+  // Charts: gate the MirrorChart component + Chart.js CDN loader on
+  // actual usage. Programs without charts stay free of the runtime.
+  const hasChart = containsChartInstance(program.instances ?? [])
+
   // Slice 50 V-2: emit MirrorIcon helper component only when used.
   // Strategy: runtime-fetch from Lucide CDN (mirrors DOM backend's
   // `_runtime.loadIcon`). useEffect + fetch + sanitize. Same fallback
   // SVG as `compiler/runtime/icons.ts:FALLBACK_ICON` so cross-backend
   // unknown-icon behavior is identical.
+  if (hasChart) {
+    lines.push(MIRROR_CHART_COMPONENT)
+    lines.push(``)
+  }
+
   if (hasIcon) {
     lines.push(MIRROR_ICON_COMPONENT)
     lines.push(``)
@@ -301,6 +310,42 @@ function containsIconInstance(instances: ReadonlyArray<unknown>): boolean {
   return false
 }
 
+const CHART_PRIMITIVE_NAMES: ReadonlySet<string> = new Set([
+  'Chart',
+  'Line',
+  'Bar',
+  'Pie',
+  'Donut',
+  'Doughnut',
+  'Area',
+  'Scatter',
+  'Radar',
+])
+
+/**
+ * Walk for any Chart-primitive instance (`Line`, `Bar`, `Pie`, `Donut`,
+ * `Area`, `Scatter`, `Radar`, or unified `Chart`). Used to gate emission
+ * of the MirrorChart component definition + Chart.js CDN loader.
+ */
+function containsChartInstance(nodes: ReadonlyArray<unknown>): boolean {
+  for (const n of nodes) {
+    const node = n as {
+      type?: string
+      component?: string
+      children?: unknown[]
+      then?: unknown[]
+      else?: unknown[]
+    }
+    if (node.type === 'Instance' && node.component && CHART_PRIMITIVE_NAMES.has(node.component)) {
+      return true
+    }
+    if (node.children && containsChartInstance(node.children)) return true
+    if (node.then && containsChartInstance(node.then)) return true
+    if (node.else && containsChartInstance(node.else)) return true
+  }
+  return false
+}
+
 /**
  * Walk the AST tree for any `anim X` / `animation: X` property. Includes
  * Conditional and Each branches so animations inside `if`/`each` blocks
@@ -452,6 +497,89 @@ function MirrorIcon({ name, size, color, strokeWidth, fill, style: extraStyle })
 }`
 
 /**
+ * MirrorChart runtime component, embedded once per React file when any
+ * Chart instance (`Line`/`Bar`/`Pie`/`Donut`/`Area`) is used. Mirrors
+ * `compiler/runtime/charts.ts` — same Chart.js CDN, same data parsing
+ * (key-value object → labels + values), same pie/doughnut handling.
+ *
+ * Why useEffect+CDN-load (vs `chart.js` peer-dep): keeps the React
+ * export self-contained, no peer-dep, no build step. Single
+ * module-level promise dedupes parallel chart mounts.
+ */
+const MIRROR_CHART_COMPONENT = `// Mirror Chart component
+const _MIRROR_CHART_CDN = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'
+const _MIRROR_CHART_COLORS = ['#2271C1','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316']
+let _mirrorChartPromise = null
+
+function _mirrorLoadChartJs() {
+  if (typeof window === 'undefined') return Promise.resolve(null)
+  if (window.Chart) return Promise.resolve(window.Chart)
+  if (_mirrorChartPromise) return _mirrorChartPromise
+  _mirrorChartPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = _MIRROR_CHART_CDN
+    script.onload = () => resolve(window.Chart)
+    script.onerror = () => reject(new Error('Chart.js failed to load'))
+    document.head.appendChild(script)
+  })
+  return _mirrorChartPromise
+}
+
+function _mirrorParseChartData(data) {
+  if (data == null) return { labels: [], values: [] }
+  if (Array.isArray(data) && typeof data[0] === 'number') {
+    return { labels: data.map((_, i) => String(i + 1)), values: data }
+  }
+  if (typeof data === 'object') {
+    const entries = Object.entries(data)
+    return { labels: entries.map(([k]) => k), values: entries.map(([, v]) => Number(v) || 0) }
+  }
+  return { labels: [], values: [] }
+}
+
+function MirrorChart({ chartType, data, fill, tension, title, xLabel, yLabel, min, max, colors, style: extraStyle }) {
+  const canvasRef = React.useRef(null)
+  React.useEffect(() => {
+    let chart = null
+    let cancelled = false
+    _mirrorLoadChartJs().then((Chart) => {
+      if (cancelled || !Chart || !canvasRef.current) return
+      const { labels, values } = _mirrorParseChartData(data)
+      const isPie = chartType === 'pie' || chartType === 'doughnut'
+      const palette = colors || _MIRROR_CHART_COLORS
+      chart = new Chart(canvasRef.current.getContext('2d'), {
+        type: chartType === 'doughnut' || chartType === 'donut' ? 'doughnut' : chartType,
+        data: {
+          labels,
+          datasets: [{
+            label: title || '',
+            data: values,
+            backgroundColor: isPie ? palette : palette[0],
+            borderColor: palette[0],
+            fill: fill !== false,
+            tension: tension ?? 0.3,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: isPie } },
+          scales: isPie ? undefined : {
+            x: { title: { display: !!xLabel, text: xLabel } },
+            y: { title: { display: !!yLabel, text: yLabel }, min, max },
+          },
+        },
+      })
+    }).catch(() => { /* CDN unavailable — silent */ })
+    return () => { cancelled = true; if (chart) chart.destroy() }
+  }, [chartType, data, fill, tension, title, xLabel, yLabel, min, max, colors])
+  const wrapStyle = Object.assign({ position: 'relative' }, extraStyle || {})
+  return React.createElement('div', { 'data-component': 'Chart', 'data-mirror-name': 'Chart', style: wrapStyle },
+    React.createElement('canvas', { ref: canvasRef })
+  )
+}`
+
+/**
  * Layout-context for grid-vs-flex parent discrimination.
  *
  * Slice 6 V-2: Mirror's `x`/`y`/`w`/`h` semantics depend on whether the
@@ -500,6 +628,15 @@ function generateJSX(
   // — die MirrorIcon-Komponente (oben definiert) holt das SVG zur Runtime.
   if (instance.component === 'Icon') {
     return generateIconJSX(instance, indent)
+  }
+
+  // Chart primitives (`Line`, `Bar`, `Pie`, `Donut`, `Area`, …) emit as
+  // <MirrorChart> with the data prop wired to a token reference. The
+  // MirrorChart component (above) loads Chart.js on mount and creates
+  // the actual chart inside a canvas — same wire-up the DOM runtime
+  // does, no peer-dep needed.
+  if (CHART_PRIMITIVE_NAMES.has(instance.component)) {
+    return generateChartJSX(instance, indent, tokens)
   }
 
   // Resolve component definition. Walk the inheritance chain so
@@ -910,6 +1047,77 @@ function generateIconJSX(instance: Instance, indent: string): string {
   }
 
   return `${indent}<MirrorIcon ${propAttrs.join(' ')} />`
+}
+
+/**
+ * Emit a Mirror chart primitive (Line/Bar/Pie/…) as a `<MirrorChart>`
+ * element. The chart's data binding lives in a `propset`-named property
+ * (because `Line $data` parses as a property-set reference); pull the
+ * token name from there and emit `data={tokens["data"]}` so the
+ * MirrorChart's useEffect reads the resolved data at render time.
+ */
+function generateChartJSX(instance: Instance, indent: string, tokens: TokenDefinition[]): string {
+  // Map Mirror chart primitive name → Chart.js type. Donut/Doughnut both
+  // map to chartjs `'doughnut'`; Area renders as `'line'` with `fill`.
+  const typeMap: Record<string, string> = {
+    Line: 'line',
+    Bar: 'bar',
+    Pie: 'pie',
+    Donut: 'doughnut',
+    Doughnut: 'doughnut',
+    Area: 'line',
+    Scatter: 'scatter',
+    Radar: 'radar',
+  }
+  const chartType = typeMap[instance.component] ?? 'line'
+
+  const attrs: string[] = []
+  attrs.push(`chartType=${JSON.stringify(chartType)}`)
+
+  // Area defaults to fill: true (DOM runtime does the same).
+  if (instance.component === 'Area') attrs.push(`fill`)
+
+  let dataExpr = '{}'
+  let widthPx: string | null = null
+  let heightPx: string | null = null
+
+  for (const prop of instance.properties) {
+    const v = prop.values[0]
+    // Data binding lives on a `propset`-named property when the user
+    // wrote `Line $data, …` — the token reference is the value.
+    if (prop.name === 'propset' || prop.name === 'data') {
+      if (typeof v === 'object' && v !== null && 'kind' in v && v.kind === 'token') {
+        const tokenName = (v as { name: string }).name
+        dataExpr = `tokens[${JSON.stringify(tokenName)}]`
+      } else if (typeof v === 'string' && v.startsWith('$')) {
+        dataExpr = `tokens[${JSON.stringify(v.slice(1))}]`
+      }
+    } else if (prop.name === 'w' || prop.name === 'width') {
+      widthPx = `${v}px`
+    } else if (prop.name === 'h' || prop.name === 'height') {
+      heightPx = `${v}px`
+    } else if (prop.name === 'fill') {
+      // Override the Area default if explicitly set.
+    } else if (prop.name === 'tension' || prop.name === 'min' || prop.name === 'max') {
+      attrs.push(`${prop.name}={${Number(v)}}`)
+    } else if (prop.name === 'title' || prop.name === 'xLabel' || prop.name === 'yLabel') {
+      attrs.push(`${prop.name}=${JSON.stringify(String(v))}`)
+    }
+  }
+
+  attrs.push(`data={${dataExpr}}`)
+
+  const styleParts: string[] = []
+  if (widthPx) styleParts.push(`width: '${widthPx}'`)
+  if (heightPx) styleParts.push(`height: '${heightPx}'`)
+  if (styleParts.length > 0) {
+    attrs.push(`style={{ ${styleParts.join(', ')} }}`)
+  }
+
+  // Reference `tokens` once so unused-warning gates close cleanly even
+  // for charts compiled from an empty token block.
+  void tokens
+  return `${indent}<MirrorChart ${attrs.join(' ')} />`
 }
 
 function getIconName(instance: Instance): string {

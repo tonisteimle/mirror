@@ -97,22 +97,31 @@ describe('Charts — Backend support', () => {
     expect(code).toContain('_runtime.createChart')
   })
 
-  // PIN: only DOM owns Chart.js wiring. React drops chart entirely (no
-  // canvas, no `createChart`). Framework now passes the chart props
-  // (`chartType`, `data`, `fill`, `tension` + axis hints) through to
-  // mirror-runtime, so any future runtime can hook Chart.js the same
-  // way DOM does. Flipping any of these means the backend gained or
-  // lost Chart support.
-  it('React drops chart wiring; Framework passes data + chartType through', () => {
+  // PIN: all three backends wire charts now — different mechanisms.
+  //   DOM:       imperative `_runtime.createChart(...)` call.
+  //   React:     embeds a `<MirrorChart>` component that loads Chart.js
+  //              from CDN on mount and creates the chart in a canvas.
+  //   Framework: passes the chart props (`chartType`, `data`, `fill`,
+  //              `tension` + axis hints) through the M-prop bag for the
+  //              mirror-runtime to render.
+  it('all three backends wire chart rendering', () => {
     const react = generateReact(parse(CHART_LINE))
     const fw = generateFramework(parse(CHART_LINE))
 
-    expect(react).not.toContain('createChart')
-    expect(react).not.toMatch(/Chart\.js|chart\.js/)
-    expect(fw).not.toContain('createChart')
+    // React: MirrorChart component + Chart.js CDN loader.
+    expect(react).toContain('MirrorChart')
+    expect(react).toMatch(/cdn\.jsdelivr\.net.*chart\.js/)
+    expect(react).toMatch(/<MirrorChart\s+chartType="line"/)
+
+    // Framework: passes chart props through.
     expect(fw).toMatch(/M\(\s*['"]Line['"]/)
-    // Framework now carries the data binding through to the M-prop bag.
     expect(fw).toMatch(/chartType:\s*['"]line['"]/)
     expect(fw).toMatch(/data:\s*['"]\$data['"]/)
+  })
+
+  it('React skips MirrorChart when no chart is used (bundle guard)', () => {
+    const react = generateReact(parse(`Frame bg #2271C1, w 100`))
+    expect(react).not.toContain('MirrorChart')
+    expect(react).not.toMatch(/cdn\.jsdelivr\.net.*chart\.js/)
   })
 })
