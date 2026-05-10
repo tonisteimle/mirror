@@ -41,19 +41,4 @@ export const allFlexReorderTests: TestCase[] = [
   ...sequentialMixedTests,
 ]
 
-// Backwards-compatibility aliases (used by drag/index.ts re-exports)
-export const buttonReorderVerticalTests = buttonTextIconTests
-export const buttonReorderHorizontalTests = inputButtonTextTests
-export const textReorderTests = imageTextButtonTests
-export const iconReorderTests = linkIconTextTests
-export const inputReorderTests = textareaInputButtonTests
-export const imageReorderTests = imageTextButtonTests
-export const dividerSpacerReorderTests = dividerSpacerMixedTests
-export const linkTextareaReorderTests = linkIconTextTests
-export const mixedComponentReorderTests = complexMixedTests
-export const zagComponentReorderTests = zagMixedTests
-export const nestedContainerReorderTests = edgeCaseMixedTests
-export const reorderEdgeCaseTests = edgeCaseMixedTests
-export const sequentialReorderTests = sequentialMixedTests
-
 export default allFlexReorderTests

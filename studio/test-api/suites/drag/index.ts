@@ -30,22 +30,7 @@ export {
   layoutDetectionTests,
 } from '../stacked-drag'
 
-export {
-  allFlexReorderTests,
-  buttonReorderVerticalTests,
-  buttonReorderHorizontalTests,
-  textReorderTests,
-  iconReorderTests,
-  inputReorderTests,
-  imageReorderTests,
-  dividerSpacerReorderTests,
-  linkTextareaReorderTests,
-  mixedComponentReorderTests,
-  zagComponentReorderTests,
-  nestedContainerReorderTests,
-  reorderEdgeCaseTests,
-  sequentialReorderTests,
-} from '../flex-reorder'
+export { allFlexReorderTests } from '../flex-reorder'
 
 export {
   allAlignmentZoneTests,
