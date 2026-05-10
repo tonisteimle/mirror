@@ -44,6 +44,10 @@ import { pickAnim } from './pick-anim.demo'
 import { pickAction } from './pick-action.demo'
 import { mfExplorer } from './mf-explorer.demo'
 import { mfTokensUpdate } from './mf-tokens-update.demo'
+import { runMode } from './run-mode.demo'
+import { runLint } from './run-lint.demo'
+import { exportBundle } from './export-bundle.demo'
+import { exportCli } from './export-cli.demo'
 
 export const demoTests: TestCase[] = [
   ...demoTextIntoFrame,
@@ -81,4 +85,8 @@ export const demoTests: TestCase[] = [
   ...pickAction,
   ...mfExplorer,
   ...mfTokensUpdate,
+  ...runMode,
+  ...runLint,
+  ...exportBundle,
+  ...exportCli,
 ]
