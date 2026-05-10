@@ -6,12 +6,10 @@
  */
 
 import type { IRNode, IRStyle } from '../../../ir/types'
-import {
-  emitStateMachine as emitStateMachineExtracted,
-  emitDeferredWhenWatchers,
-} from '../../dom/state-machine-emitter'
+import * as StateMachineEmitter from '../../dom/state-machine-emitter'
+import { emitDeferredWhenWatchers } from '../../dom/state-machine-emitter'
 import { mapKeyName } from '../../dom/event-emitter'
-import { collectNamedNodes as collectNamedNodesExtracted } from '../../dom/api-emitter'
+import * as ApiEmitter from '../../dom/api-emitter'
 import type { DOMGenerator } from '../../dom'
 
 export function mapKeyNameMethod(this: DOMGenerator, key: string): string {
@@ -19,7 +17,7 @@ export function mapKeyNameMethod(this: DOMGenerator, key: string): string {
 }
 
 export function emitStateMachine(this: DOMGenerator, varName: string, node: IRNode): void {
-  emitStateMachineExtracted(this.createStateMachineContext(), varName, node)
+  StateMachineEmitter.emitStateMachine(this.createStateMachineContext(), varName, node)
 }
 
 export function emitDeferredWhenWatchersMethod(this: DOMGenerator): void {
@@ -37,5 +35,5 @@ export function groupByState(this: DOMGenerator, styles: IRStyle[]): Record<stri
 }
 
 export function collectNamedNodes(this: DOMGenerator, nodes: IRNode[]): IRNode[] {
-  return collectNamedNodesExtracted(nodes)
+  return ApiEmitter.collectNamedNodes(nodes)
 }

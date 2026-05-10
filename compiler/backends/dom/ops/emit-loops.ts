@@ -6,21 +6,18 @@
  */
 
 import type { IRNode, IREach, IRConditional } from '../../../ir/types'
-import {
-  emitEachLoop as emitEachLoopExtracted,
-  emitConditional as emitConditionalExtracted,
-} from '../../dom/loop-emitter'
+import * as LoopEmitter from '../../dom/loop-emitter'
 import { ICON_DEFAULTS } from '../../../schema/primitives'
 import type { DOMGenerator } from '../../dom'
 
 export function emitEachLoop(this: DOMGenerator, each: IREach, parentVar: string): void {
   const ctx = this.createLoopEmitterContext()
-  emitEachLoopExtracted(ctx, each, parentVar)
+  LoopEmitter.emitEachLoop(ctx, each, parentVar)
 }
 
 export function emitConditional(this: DOMGenerator, cond: IRConditional, parentVar: string): void {
   const ctx = this.createLoopEmitterContext()
-  emitConditionalExtracted(ctx, cond, parentVar)
+  LoopEmitter.emitConditional(ctx, cond, parentVar)
 }
 
 export function emitConditionalTemplateNode(

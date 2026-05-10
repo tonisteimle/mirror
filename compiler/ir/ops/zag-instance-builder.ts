@@ -16,7 +16,7 @@ import type {
 } from '../../parser/ast'
 import type { IRNode } from '../types'
 import { ZAG_PRIMITIVES } from '../../schema/zag-primitives'
-import { transformZagComponent as transformZagComponentExtracted } from '../transformers/zag-transformer'
+import * as ZagTransformer from '../transformers/zag-transformer'
 import type { ParentLayoutContext } from '../transformers/transformer-context'
 import { mergeProperties } from '../transformers/property-utils-transformer'
 import type { IRTransformer } from '../index'
@@ -28,7 +28,7 @@ export function transformZagComponent(
   parentId?: string
 ): IRNode {
   const ctx = this.createTransformerContext()
-  return transformZagComponentExtracted(ctx, zagNode, parentLayoutContext, parentId)
+  return ZagTransformer.transformZagComponent(ctx, zagNode, parentLayoutContext, parentId)
 }
 
 /**

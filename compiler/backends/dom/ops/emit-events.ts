@@ -6,11 +6,7 @@
  */
 
 import type { IREvent, IRAction } from '../../../ir/types'
-import {
-  emitEventListener as emitEventListenerExtracted,
-  emitTemplateEventListener as emitTemplateEventListenerExtracted,
-  emitAction as emitActionExtracted,
-} from '../../dom/event-emitter'
+import * as EventEmitter from '../../dom/event-emitter'
 import type { DOMGenerator } from '../../dom'
 
 export function emitTemplateEventListener(
@@ -20,7 +16,7 @@ export function emitTemplateEventListener(
   itemVar: string
 ): void {
   const ctx = this.createEventEmitterContext()
-  emitTemplateEventListenerExtracted(ctx, varName, event, itemVar, (action, currentVar, item) =>
+  EventEmitter.emitTemplateEventListener(ctx, varName, event, itemVar, (action, currentVar, item) =>
     this.emitTemplateAction(action, currentVar, item)
   )
 }
@@ -65,7 +61,7 @@ export function emitTemplateAction(
  */
 export function emitEventListener(this: DOMGenerator, varName: string, event: IREvent): void {
   const ctx = this.createEventEmitterContext()
-  emitEventListenerExtracted(ctx, varName, event, (action, currentVar) =>
+  EventEmitter.emitEventListener(ctx, varName, event, (action, currentVar) =>
     this.emitAction(action, currentVar)
   )
 }
@@ -76,5 +72,5 @@ export function emitEventListener(this: DOMGenerator, varName: string, event: IR
  */
 export function emitAction(this: DOMGenerator, action: IRAction, currentVar: string): void {
   const ctx = this.createEventEmitterContext()
-  emitActionExtracted(ctx, action, currentVar)
+  EventEmitter.emitAction(ctx, action, currentVar)
 }
