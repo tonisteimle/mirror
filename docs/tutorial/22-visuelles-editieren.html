@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <title>Mirror – Visuelles Editieren</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>Visuelles Editieren</h1>
+      <p class="subtitle">Smart-Guides, Snap, Grid-Mode, Auto-Layout-Inferenz</p>
+    </header>
+
+    <p class="intro">
+      Über die Basis-Operationen aus Kapitel 18 hinaus hat Studio
+      visuelle Hilfen, die das Bauen schneller machen — Smart-Guides
+      richten Elemente an Nachbarn aus, Snap rastet auf Vielfache
+      von 4, der Grid-Mode lässt dich Rechtecke direkt in Zellen
+      zeichnen, und Layout-Inferenz erkennt wenn du mehrere Elemente
+      in einen Container droppst und schlägt <code>hor</code> oder
+      <code>grid</code> vor.
+    </p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Smart-Guides &amp; Snap</h2>
+      <p>
+        Während du ein Element draggst oder resizt, zeigen sich blaue
+        Linien sobald die Position einer Kante eines Nachbar-Elements
+        oder des Containers entspricht. Loslassen rastet ein. Damit
+        bauen Frames ohne pixel-friemeln aufeinander aus.
+      </p>
+      <p>
+        Zusätzlich gibt es ein <em>Snap-Grid</em> auf Vielfachen von
+        4: ein Frame mit Width 167 wird beim Drag zu 168. Wer das
+        umgehen will, hält beim Drag <kbd>Cmd</kbd> — dann
+        deaktivieren sich Snap und Smart-Guides für die Dauer der
+        Geste.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Smart-Guides + Snap beim Drag)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Layout-Inferenz — automatisches <code>hor</code> bei Multi-Drop</h2>
+      <p>
+        Droppst du nacheinander mehrere Elemente in einen vertikal
+        ausgerichteten Container (Default), erkennt Studio nach dem
+        zweiten oder dritten Drop, dass die Children nebeneinander
+        stehen sollten, und schlägt vor: <em>„Container auf
+        horizontal umstellen?"</em> Mit <kbd>Y</kbd> bestätigst du,
+        Studio fügt <code>hor, gap 8</code> in die Container-Zeile.
+      </p>
+      <p>
+        Die Inferenz arbeitet auch andersrum: bei vielen Drops in
+        einen <code>hor</code>-Container schlägt sie <code>wrap</code>
+        vor, damit die Elemente bei Container-Verkleinerung umbrechen.
+        Ähnlich für <code>grid 12</code> bei strukturierten
+        Mehrfachdrops.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Drei Drops → Inference-Dialog → hor)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Grid-Mode + Draw-Tool</h2>
+      <p>
+        Container mit <code>grid 12</code> bekommen ein
+        <em>Grid-Overlay</em>: ein 12-spaltiges Raster wird im
+        Preview eingeblendet sobald der Container selektiert ist.
+        Klick auf eine Komponente in der Palette, dann ziehst du
+        ein Rechteck im Container von Zelle <em>A</em> nach Zelle
+        <em>B</em>. Studio schreibt <code>x A, y 1, w (B-A+1), h 1</code>
+        in die neue Zeile.
+      </p>
+      <p>
+        Damit baust du Dashboards, Forms oder strukturierte Layouts
+        in der Hälfte der Zeit — du denkst in Zellen und Spannen
+        statt in Pixeln.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Grid-Mode mit Draw-Tool, 3 Frames in Cells)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Position-Controls — absolute Positionierung</h2>
+      <p>
+        Standard-Frames sind im Flex-Flow. Für Overlays, Badges oder
+        Decals willst du absolute Positionierung — Studio toggelt
+        das im Property-Panel mit einem Knopf <em>„Frei
+        positionieren"</em>. Damit erscheint <code>x</code>/<code>y</code>
+        in der Properties-Liste; du kannst per Drag im Preview den
+        Frame frei verschieben, oder direkt Werte eingeben.
+      </p>
+      <p>
+        Für Overlays über Bilder oder Hero-Sektionen ist der
+        <code>stacked</code>-Container die bessere Wahl — Children
+        ohne <code>x</code>/<code>y</code> stapeln sich in der Mitte,
+        mit <code>x</code>/<code>y</code> kannst du sie relativ
+        positionieren. Studio bietet das im Layout-Mode-Toggle als
+        dritte Option neben Vertical und Horizontal.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Position-Controls + stacked-Layout)</em>
+      </div>
+    </section>
+
+
+    <div class="summary">
+      <h2>Das Wichtigste</h2>
+      <table class="ref-table">
+        <tr><th>Hilfe</th><th>Was sie tut</th></tr>
+        <tr><td>Smart-Guides</td><td>Blaue Linien beim Ausrichten an Nachbar-Kanten</td></tr>
+        <tr><td>Snap</td><td>Rastet auf Vielfache von 4 — <kbd>Cmd</kbd>-Hold deaktiviert</td></tr>
+        <tr><td>Layout-Inferenz</td><td>Schlägt <code>hor</code>/<code>wrap</code>/<code>grid</code> vor wenn das Drop-Muster es nahelegt</td></tr>
+        <tr><td>Grid-Mode</td><td><code>grid 12</code> aktiviert Overlay; Draw-Tool zieht Rect in Zellen</td></tr>
+        <tr><td>Position-Controls</td><td>Absolute Positionierung per Toggle, Drag-im-Preview</td></tr>
+        <tr><td>Stacked-Layout</td><td>Dritte Option neben Vertical/Horizontal — Overlays, Badges</td></tr>
+      </table>
+
+      <p><strong>Das Prinzip:</strong> Studio versucht zu erraten was du baust und gibt dir die passende Hilfe. Wenn du sie nicht willst — <kbd>Cmd</kbd>-Hold während Drag, <kbd>Esc</kbd> um Inference-Dialoge wegzuklicken. Default ist hilfreich, nicht im Weg.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="21-tokens-workflow.html">&larr; Tokens-Workflow</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="23-states.html">States im Studio &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

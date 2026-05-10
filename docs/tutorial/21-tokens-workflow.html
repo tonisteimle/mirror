@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <title>Mirror – Tokens-Workflow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>Tokens-Workflow</h1>
+      <p class="subtitle">Definieren, im Code referenzieren, später als Token extrahieren oder umbenennen</p>
+    </header>
+
+    <p class="intro">
+      Tokens sind benannte Werte — Farben, Abstände, Radien — die du
+      einmal definierst und überall referenzierst. Studio gibt dir
+      drei Werkzeuge: das einfache <em>Definieren</em> in einem
+      <code>.tok</code>-File, das nachträgliche <em>Extrahieren</em>
+      eines Hex-Werts in einen Token (samt automatischem Ersetzen
+      aller Vorkommen), und das <em>Umbenennen</em> eines Tokens mit
+      cross-file Refactor.
+    </p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Token definieren</h2>
+      <p>
+        Lege im Projekt ein <code>tokens.tok</code>-File an oder
+        schreibe Tokens direkt am Anfang deines Layouts. Die Syntax
+        ist immer dieselbe:
+      </p>
+      <div class="code-block">
+        <pre>primary.bg: #2271C1
+muted.col: #888888
+card.pad: 16
+card.rad: 8
+md.fs: 14</pre>
+      </div>
+      <p>
+        Der Suffix nach dem Punkt (<code>bg</code>, <code>col</code>,
+        <code>pad</code>, …) sagt Studio, zu welchem Property-Typ
+        dieser Token passt — der Token-Picker filtert später danach,
+        und Validierung warnt wenn du <code>$primary</code> für ein
+        Padding einsetzt.
+      </p>
+      <p>
+        In Komponenten und Layouts referenzierst du den Token ohne
+        Suffix — Studio mappt automatisch zur passenden Property:
+        <code>bg $primary</code>, <code>pad $card</code>, …
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: tokens.tok anlegen, Suffix-Mapping zeigen)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Token-Extract — Hex-Wert nachträglich zu Token machen</h2>
+      <p>
+        Im Eifer des Gefechts hast du <code>#2271C1</code> in fünf
+        verschiedene Komponenten direkt eingetragen. Jetzt willst du
+        diese Farbe in einen Token packen, damit du sie zentral
+        steuern kannst.
+      </p>
+      <p>
+        Selektiere die Property mit dem Hex-Wert im Property-Panel,
+        klicke auf <em>„Als Token speichern"</em>. Studio fragt nach
+        einem Token-Namen (Vorschlag: aus Property-Suffix +
+        Farbton-Heuristik, z. B. <code>brand.bg</code>). Bestätigst
+        du mit <kbd>Enter</kbd>, geschieht zweierlei: der Token wird
+        in <code>tokens.tok</code> angelegt, und alle Vorkommen von
+        <code>#2271C1</code> im Projekt werden zu
+        <code>$brand</code> ersetzt — mit Diff-Vorschau, die du
+        annehmen oder ablehnen kannst.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Token-Extract mit Auto-Replace + Diff-Vorschau)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Token umbenennen — cross-file Refactor</h2>
+      <p>
+        Du hast einen Token <code>blue</code> definiert und willst
+        ihn präziser <code>primary</code> nennen. Klick im Token-Panel
+        auf den Namen, drücke <kbd>F2</kbd>, tippe den neuen Namen.
+        Studio aktualisiert die Definition in <code>tokens.tok</code>
+        und alle <code>$blue</code>-Referenzen in allen Layouts und
+        Komponenten zu <code>$primary</code>.
+      </p>
+      <p>
+        Bei Mehrdeutigkeit (es gibt schon einen Token namens
+        <code>primary.col</code>) warnt Studio und schlägt einen
+        anderen Namen vor.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: F2-Rename eines Tokens, alle Layouts updaten)</em>
+      </div>
+    </section>
+
+
+    <div class="summary">
+      <h2>Das Wichtigste</h2>
+      <table class="ref-table">
+        <tr><th>Aktion</th><th>Geste</th></tr>
+        <tr><td>Token definieren</td><td><code>name.suffix: wert</code> in <code>tokens.tok</code></td></tr>
+        <tr><td>Token verwenden</td><td><code>bg $name</code> ohne Suffix</td></tr>
+        <tr><td>Hex zu Token machen</td><td>Property selektieren → Color-Picker → „Als Token speichern"</td></tr>
+        <tr><td>Token umbenennen</td><td>Token-Panel → <kbd>F2</kbd> → neuer Name</td></tr>
+        <tr><td>Token-Wert ändern</td><td>Inline im <code>.tok</code>-File — alle Verwendungen updaten</td></tr>
+      </table>
+
+      <p><strong>Das Prinzip:</strong> Tokens sind kein extra Layer den du pflegen musst — sie entstehen aus dem Workflow heraus. Du tippst Hex-Werte solange das schneller ist; sobald sich Wiederholung zeigt, extrahierst du in einem Schritt.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="20-komponenten-workflow.html">&larr; Komponenten-Workflow</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="22-visuelles-editieren.html">Visuelles Editieren &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

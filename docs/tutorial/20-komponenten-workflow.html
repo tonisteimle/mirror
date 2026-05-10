@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <title>Mirror – Komponenten-Workflow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>Komponenten-Workflow</h1>
+      <p class="subtitle">Extrahieren, Slots editieren, in eigene Files auslagern</p>
+    </header>
+
+    <p class="intro">
+      Wenn du dasselbe Element-Muster mehrfach im Code wiederholst,
+      wird es Zeit für eine Komponente. Studio macht das in einem
+      Schritt: du tippst <code>Name::</code> vor die Eigenschaften,
+      und Studio extrahiert die Definition, ersetzt alle Vorkommen
+      durch Instanzen. Im Property-Panel und in der Components-Bibliothek
+      arbeitest du danach mit der Komponente, nicht mit ihren
+      Einzelteilen.
+    </p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Komponente extrahieren mit dem <code>::</code>-Trigger</h2>
+      <p>
+        Du hast eine Frame-Zeile mit Properties die du wiederverwenden
+        willst. Setze den Cursor auf den Component-Namen und tippe
+        <code>::</code> direkt danach. Studio öffnet ein Popup: <em>Als
+        Komponente extrahieren?</em> mit Eingabefeld für den Namen.
+      </p>
+      <p>
+        Bestätigst du mit <kbd>Enter</kbd>, geschieht zweierlei
+        gleichzeitig: oben in der Datei (oder in <code>components.com</code>,
+        wenn das File existiert) wird die Komponenten-Definition
+        eingefügt mit allen Properties. Die ursprüngliche Zeile wird
+        zur Instanz reduziert — nur Name plus eventueller Text-Inhalt.
+      </p>
+      <p>
+        Wenn das Projekt mehrere identische Frames hat (gleiche
+        Properties, gleiche Children), zeigt Studio die Treffer und
+        fragt: <em>Auch diese ersetzen?</em> Mit Häkchen pro Treffer
+        kannst du selektiv refactoren.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Geführtes Video folgt: <code>::</code>-Extract mit Auto-Replace, ~2 min)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Slots — Default-Properties an Kind-Elementen</h2>
+      <p>
+        Eine Komponente kann benannte Slots für ihre Children haben.
+        In der Definition gibt jeder Slot seine Default-Properties
+        vor:
+      </p>
+      <div class="code-block">
+        <pre>Card: bg #1a1a1a, pad 16, rad 8, gap 8
+  Title: col white, fs 16, weight 500
+  Desc: col #888, fs 14
+  Footer: hor, gap 8, mar-t 8</pre>
+      </div>
+      <p>
+        Im Property-Panel auf der Definition siehst du die Slots als
+        nested Liste — klickst du <em>Title</em> an, ändert das
+        Property-Panel die Properties dieses Slots. Was du hier
+        änderst, wirkt auf alle Title-Slots aller Card-Instanzen.
+      </p>
+      <p>
+        An einer Instanz selbst kannst du Slot-Properties überschreiben
+        (Instanz-Override) — Studio markiert die überschriebene
+        Property mit einem Punkt im Panel, damit du den Override
+        wiedererkennst.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Slot-Properties editieren)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Components-Bibliothek — Palette + eigene Komponenten</h2>
+      <p>
+        Das Components-Panel links zeigt zwei Bereiche: oben die
+        Mirror-Primitives (<code>Frame</code>, <code>Text</code>,
+        <code>Button</code>, <code>Input</code>, …), darunter alle
+        Komponenten, die im aktuellen Projekt definiert sind. Beide
+        kannst du per Drag &amp; Drop in das Preview ziehen.
+      </p>
+      <p>
+        Der Unterschied: Primitives droppen die Default-Form (z. B.
+        <code>Frame w 100, h 100, bg #27272a</code>); Komponenten
+        droppen ihre Instanz mit Standard-Inhalt für die Slots
+        („Title", „Desc", …). Damit experimentierst du sofort mit
+        deinem eigenen Design-System.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Komponente aus Bibliothek droppen)</em>
+      </div>
+    </section>
+
+
+    <div class="summary">
+      <h2>Das Wichtigste</h2>
+      <table class="ref-table">
+        <tr><th>Workflow</th><th>So geht es</th></tr>
+        <tr><td>Komponente extrahieren</td><td><code>Card::</code> tippen, Name vergeben, <kbd>Enter</kbd></td></tr>
+        <tr><td>Auch andere Vorkommen ersetzen</td><td>Im Popup Treffer ankreuzen</td></tr>
+        <tr><td>Slot-Defaults ändern</td><td>Definition selektieren, Slot im Panel anklicken</td></tr>
+        <tr><td>Instanz-Override</td><td>Instanz selektieren, Property im Panel ändern (Punkt-Marker)</td></tr>
+        <tr><td>Komponente droppen</td><td>Aus Components-Panel ins Preview ziehen</td></tr>
+        <tr><td>In eigenes File auslagern</td><td>Definition cut, in <code>components.com</code> paste — Studio findet sie weiter</td></tr>
+      </table>
+
+      <p><strong>Das Prinzip:</strong> Komponenten sind keine Code-Konstrukte mit Boilerplate, sondern eine Schreibkonvention. <code>::</code> ist die Geste „mache aus diesem Element eine Komponente"; alles andere folgt.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="19-pickers.html">&larr; Pickers</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="21-tokens-workflow.html">Tokens-Workflow &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

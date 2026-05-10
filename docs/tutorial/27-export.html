@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <title>Mirror – Export &amp; Deploy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>Export &amp; Deploy</h1>
+      <p class="subtitle">Spec-Bundle für AI-Pipeline, mirror-build für direktes HTML</p>
+    </header>
+
+    <p class="intro">
+      Wenn du fertig bist, willst du das Resultat irgendwo
+      hinbringen. Mirror bietet zwei Wege: das <em>Spec-Bundle</em>
+      übergibt dein Projekt einer AI-Pipeline, die produktionsreifen
+      Framework-Code (React, Vue, Svelte oder Vanilla) erzeugt; das
+      <em>mirror-build</em>-CLI baut direkt eine self-contained
+      HTML-Datei, die du hochladen kannst — ohne weitere Build-
+      Tools.
+    </p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Spec-Bundle erzeugen — Mirror zu React/Vue/Svelte</h2>
+      <p>
+        In der Studio-Toolbar oben gibt es einen Export-Knopf
+        (Pfeil-Down-Icon). Klick öffnet einen Dialog: <em>Target</em>
+        wählen (React, Vue, Svelte, Vanilla), <em>Snapshot</em> ja/
+        nein (Render-Snapshot mit Computed-Styles für die AI),
+        <em>Output</em> als Pfad.
+      </p>
+      <p>
+        Bestätigen erzeugt einen Ordner mit deinem Mirror-Source +
+        DSL-Brief + Pipeline-Instructions + Target-Settings. Das
+        Bundle ist self-contained — alles, was die AI braucht, um
+        produktionsreifen Code zu generieren.
+      </p>
+      <p>
+        Mit <em>Run Claude</em> startest du die AI-Pipeline direkt
+        aus Studio (AI-Bridge-Server muss laufen — siehe
+        <code>npm run ai-bridge</code> in der README). Studio
+        streamt die Pipeline-Phasen live und zeigt am Ende den
+        generierten Code-Output.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Geführtes Video folgt: Spec-Bundle erzeugen + Run Claude, ~2 min)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>mirror-build — eine HTML-Datei zum Hochladen</h2>
+      <p>
+        Wer keine Framework-Konvertierung braucht, sondern nur
+        statisches HTML zum Deployen, nutzt das <code>mirror-build</code>-
+        CLI:
+      </p>
+      <div class="code-block">
+        <pre>mirror-build app.mir
+# → dist/app.html (self-contained, ~230 KB)
+
+mirror-build my-project/ --minify
+# → dist/index.html (minified, ~100 KB)
+
+mirror-build app.mir --watch
+# → rebuilds bei jeder Änderung</pre>
+      </div>
+      <p>
+        Das Output-HTML enthält allen JS und CSS inline — du
+        brauchst keinen Build-Server, keine npm-Dependencies, kein
+        Hosting-Setup. Hochladen und es läuft. Mit
+        <code>--external-css --external-js</code> trennst du die
+        Dateien wenn dein Hoster Cache-Strategien erlaubt.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: mirror-build CLI im Terminal + resultierende HTML)</em>
+      </div>
+    </section>
+
+
+    <div class="summary">
+      <h2>Das Wichtigste</h2>
+      <table class="ref-table">
+        <tr><th>Ziel</th><th>Werkzeug</th></tr>
+        <tr><td>React/Vue/Svelte/Vanilla-Code</td><td>Studio-Toolbar → Export → Target wählen</td></tr>
+        <tr><td>AI-Pipeline aus Studio starten</td><td>Export-Dialog → <em>Run Claude</em> (AI-Bridge nötig)</td></tr>
+        <tr><td>Self-contained HTML</td><td><code>mirror-build app.mir</code></td></tr>
+        <tr><td>Watch-Mode</td><td><code>mirror-build app.mir --watch</code></td></tr>
+        <tr><td>Externe CSS/JS</td><td><code>--external-css --external-js</code></td></tr>
+        <tr><td>Minified</td><td><code>--minify</code></td></tr>
+      </table>
+
+      <p><strong>Das Prinzip:</strong> Mirror ist nicht nur Designwerkzeug, sondern Produktionsformat. Vom ersten Sketch bis zum hochgeladenen HTML kein Tool-Wechsel; oder eben mit AI-Pipeline weiter zu Framework-Code, je nach was du brauchst.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="26-run-mode.html">&larr; Run-Mode &amp; Validierung</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="28-reference.html">Reference &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <title>Mirror – Multi-File-Projekt</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>Multi-File-Projekt</h1>
+      <p class="subtitle">File-Operations im Explorer und Cross-File-Effekte</p>
+    </header>
+
+    <p class="intro">
+      Kapitel 18 hat die Multi-File-Basis gezeigt — <code>.tok</code>
+      anlegen, zwischen Files wechseln, Tokens projekt-weit nutzen.
+      Hier geht es um die Operationen am File-Explorer (anlegen,
+      umbenennen, löschen, duplizieren) und darum, wie sich
+      Änderungen in einem File live auf alle anderen auswirken.
+    </p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>File-Operations im Explorer</h2>
+      <p>
+        Im File-Explorer-Panel links siehst du den Projekt-Tree:
+        Ordner für <code>data/</code>, <code>tokens/</code>,
+        <code>components/</code>, <code>layouts/</code>,
+        <code>screens/</code>, plus Root-Files. Mit Rechtsklick auf
+        einen Ordner: <em>Neue Datei</em>, <em>Neuer Ordner</em>.
+        Auf einem File: <em>Umbenennen</em> (oder <kbd>F2</kbd>),
+        <em>Duplizieren</em>, <em>Löschen</em> (Bestätigung
+        nötig).
+      </p>
+      <p>
+        Datei-Endung bestimmt die Datei-Art: <code>.tok</code> /
+        <code>.tokens</code> für Tokens, <code>.com</code> /
+        <code>.components</code> für Komponenten, <code>.mir</code>
+        / <code>.mirror</code> für Layouts und Screens. Studio
+        validiert beim Anlegen — falscher Inhaltstyp im falschen
+        File-Typ produziert Lint-Warnungen.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: File-Operations im Explorer)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Cross-File-Effekte — wenn Token oder Komponente sich ändert</h2>
+      <p>
+        Änderst du in <code>tokens.tok</code> einen Wert
+        (<code>primary.bg: #2271C1</code> → <code>#10b981</code>),
+        rendern alle Layouts und Komponenten, die <code>$primary</code>
+        referenzieren, im Preview sofort mit der neuen Farbe — auch
+        wenn du gerade nicht in dem Layout-File bist.
+      </p>
+      <p>
+        Dasselbe gilt für Komponenten in <code>.com</code>-Files:
+        änderst du das Padding einer Card, sehen alle Card-Instanzen
+        in allen Layouts den neuen Wert. Studio führt einen
+        <em>SyncCoordinator</em>, der sich um die Re-Compile- und
+        Re-Render-Reihenfolge kümmert; du musst nicht aktiv
+        speichern oder reloaden.
+      </p>
+      <p>
+        Bei zirkulären Referenzen (Token A nutzt Token B, der wieder
+        Token A nutzt) warnt Studio mit einem Lint-Marker und
+        verwendet den letzten gültigen Wert.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Token in tokens.tok ändern → alle Layouts updaten live)</em>
+      </div>
+    </section>
+
+
+    <div class="summary">
+      <h2>Das Wichtigste</h2>
+      <table class="ref-table">
+        <tr><th>Aktion</th><th>So</th></tr>
+        <tr><td>Datei anlegen</td><td>Rechtsklick auf Ordner → <em>Neue Datei</em></td></tr>
+        <tr><td>Datei umbenennen</td><td>Datei selektieren, <kbd>F2</kbd></td></tr>
+        <tr><td>Datei duplizieren</td><td>Rechtsklick → <em>Duplizieren</em></td></tr>
+        <tr><td>Datei löschen</td><td>Rechtsklick → <em>Löschen</em> (Bestätigung)</td></tr>
+        <tr><td>Cross-File-Effekt</td><td>Token/Komponente ändern → alle Verwendungen updaten live</td></tr>
+        <tr><td>Schneller File-Wechsel</td><td><kbd>Cmd</kbd>+<kbd>P</kbd> → Fuzzy-Pfad</td></tr>
+      </table>
+
+      <p><strong>Das Prinzip:</strong> Multi-File ist nicht „mehrere Codestellen synchron halten" — sondern eine Datei pro Verantwortung. Tokens hier, Komponenten dort, Layouts wo sie hingehören. Studio kümmert sich darum, dass Änderungen in einer Verantwortung bei den anderen ankommen.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="24-code-editor.html">&larr; Code-Editor</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="26-run-mode.html">Run-Mode &amp; Validierung &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

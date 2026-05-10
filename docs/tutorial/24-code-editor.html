@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <title>Mirror – Code-Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>Code-Editor</h1>
+      <p class="subtitle">Autocomplete, Cmd+P, Cmd+F, F2-Rename</p>
+    </header>
+
+    <p class="intro">
+      Studio nutzt CodeMirror 6 als Editor — schnell, mit Mirror-
+      Syntax-Highlighting und context-aware Autocomplete. Dazu kommt
+      die übliche IDE-Tastatur: <kbd>Cmd</kbd>+<kbd>P</kbd> für
+      Datei-Switch, <kbd>Cmd</kbd>+<kbd>F</kbd> für Find/Replace,
+      <kbd>F2</kbd> für Rename. Wer aus VS Code kommt, fühlt sich
+      sofort zu Hause.
+    </p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Autocomplete für Property-Namen</h2>
+      <p>
+        Tippst du in einer Element-Zeile etwas Buchstaben, öffnet
+        Studio nach kurzer Pause eine Liste von Vorschlägen — alle
+        Properties, die mit dem getippten Prefix beginnen. <kbd>Tab</kbd>
+        oder <kbd>Enter</kbd> akzeptiert; <kbd>Esc</kbd> verwirft.
+      </p>
+      <p>
+        Die Liste ist context-aware: bei <code>Frame</code> siehst du
+        Layout-Properties prominent (<code>hor</code>, <code>gap</code>,
+        <code>center</code>); bei <code>Text</code> dominieren die
+        Typo-Properties (<code>fs</code>, <code>weight</code>,
+        <code>col</code>). Snippets wie <code>pad ${1:16}</code>
+        rasten an Tab-Stopps ein, damit du den Wert direkt nachtippen
+        kannst.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Autocomplete für Properties)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Autocomplete für Tokens und Component-Slots</h2>
+      <p>
+        Tippst du <code>$</code>, kennt Studio den Property-Kontext
+        und schlägt nur die zur Property passenden Tokens vor —
+        <code>bg $</code> öffnet eine Liste aller
+        <code>*.bg</code>-Tokens, <code>pad $</code> öffnet die
+        <code>*.pad</code>-Tokens. Property-Sets ohne Suffix
+        erscheinen überall.
+      </p>
+      <p>
+        Bei Komponenten-Verwendungen kennt das Autocomplete die
+        Slots der jeweiligen Komponente. Wenn du
+        <code>Card</code> mit Enter abschließt und einrückst, sind
+        in der nächsten Zeile <em>Title</em>, <em>Desc</em>,
+        <em>Footer</em> als Vorschläge da — exakt die Slots, die
+        die Card-Definition bietet.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Token- und Slot-Autocomplete)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Cmd+P — Quick-Switch zwischen Files</h2>
+      <p>
+        In Multi-File-Projekten öffnet <kbd>Cmd</kbd>+<kbd>P</kbd>
+        ein Fuzzy-Search-Popup über alle Files: <code>tokens.tok</code>,
+        <code>components.com</code>, <code>screens/login.mir</code>,
+        … Tippe Buchstaben, die im Pfad vorkommen, dann <kbd>Enter</kbd>
+        — Studio öffnet das File und springt an die letzte
+        Cursor-Position.
+      </p>
+      <p>
+        Das Fuzzy-Matching ist sub-string + initialen — <code>tk</code>
+        findet <code>tokens.tok</code>, <code>scrl</code> findet
+        <code>screens/login.mir</code>. <kbd>↑</kbd>/<kbd>↓</kbd>
+        navigiert die Treffer, <kbd>Esc</kbd> schließt ohne Wechsel.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Cmd+P Quick-Switch in Multi-File-Projekt)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>F2-Rename — Symbol cross-file umbenennen</h2>
+      <p>
+        Cursor auf einen Komponenten-Namen, einen Token-Namen oder
+        einen Element-Namen (<code>name</code>-Property), dann
+        <kbd>F2</kbd>. Studio öffnet eine Inline-Rename-Surface und
+        zeigt rechts in einem Diff-Panel alle Stellen, die geändert
+        würden — über alle Projekt-Files hinweg.
+      </p>
+      <p>
+        Tippe den neuen Namen, <kbd>Enter</kbd> bestätigt — alle
+        Vorkommen in einem Schritt umbenannt. <kbd>Esc</kbd> bricht
+        ab. Wenn ein Name-Konflikt droht (du willst etwas in einen
+        Namen umbenennen, der schon existiert), warnt Studio bevor
+        es ausführt.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: F2-Rename mit Diff-Vorschau)</em>
+      </div>
+    </section>
+
+
+    <div class="summary">
+      <h2>Das Wichtigste</h2>
+      <table class="ref-table">
+        <tr><th>Geste</th><th>Was passiert</th></tr>
+        <tr><td>Tippen einer Property</td><td>Autocomplete-Liste, <kbd>Tab</kbd> akzeptiert</td></tr>
+        <tr><td>Tippen <code>$</code></td><td>Token-Liste passend zur Property</td></tr>
+        <tr><td>Komponente einrücken</td><td>Slot-Vorschläge in der nächsten Zeile</td></tr>
+        <tr><td><kbd>Cmd</kbd>+<kbd>P</kbd></td><td>Fuzzy-Switch zwischen Files</td></tr>
+        <tr><td><kbd>Cmd</kbd>+<kbd>F</kbd></td><td>Find/Replace im aktuellen File</td></tr>
+        <tr><td><kbd>F2</kbd></td><td>Symbol cross-file umbenennen mit Diff-Vorschau</td></tr>
+        <tr><td><kbd>Cmd</kbd>+<kbd>Z</kbd> / <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></td><td>Undo / Redo (auch für visuelle Operationen)</td></tr>
+      </table>
+
+      <p><strong>Das Prinzip:</strong> Die Editor-Tastatur ist VS-Code-kompatibel. Was du in anderen IDEs gewohnt bist, geht hier auch — der Editor ist nicht auf Visual-Editing reduziert.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="23-states.html">&larr; States im Studio</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="25-multi-file.html">Multi-File-Projekt &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

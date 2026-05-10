@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <title>Mirror – States im Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>States im Studio</h1>
+      <p class="subtitle">Hover, Focus, Custom-State und Multi-State im Property-Panel</p>
+    </header>
+
+    <p class="intro">
+      Kapitel 6 zeigt die States-Syntax in der DSL — <code>hover:</code>,
+      <code>on:</code>, <code>toggle()</code>. Hier geht es um die
+      Studio-Bedienung dazu: das Property-Panel hat einen <em>State-
+      Reiter</em>, in dem du den aktiven State zum Editieren wählst,
+      und ein Preview-Toggle, mit dem du die States-Wirkung im
+      Preview siehst ohne in den Run-Mode zu wechseln.
+    </p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Hover- und Focus-States editieren</h2>
+      <p>
+        Selektiere ein Element im Preview. Im Property-Panel oben
+        siehst du Tabs: <em>Default</em>, <em>Hover</em>, <em>Focus</em>,
+        <em>Active</em>, <em>Disabled</em>. Klick auf <em>Hover</em>
+        und das Panel zeigt nur die hover-spezifischen Properties.
+        Was du hier änderst, landet im <code>hover:</code>-Block der
+        Code-Zeile.
+      </p>
+      <p>
+        Damit du sofort siehst was passiert, hat das Preview einen
+        <em>State-Trigger</em>: bewegst du den Maus-Cursor über das
+        selektierte Element, wechselt das Preview in den Hover-Zustand,
+        auch wenn die Maus eigentlich über dem Property-Panel ist.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Geführtes Video folgt: Hover-State editieren mit Preview-Sync, ~90s)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Custom-States — eigene Zustände definieren</h2>
+      <p>
+        Neben den System-States kannst du eigene definieren. Im
+        State-Tab des Property-Panels klickst du <em>+ State</em>,
+        gibst einen Namen (z. B. <code>active</code>,
+        <code>highlighted</code>, <code>error</code>). Studio fügt
+        einen leeren State-Block in die Definition.
+      </p>
+      <p>
+        Damit der State auch ausgelöst wird, setzt du
+        <code>toggle()</code> oder <code>exclusive()</code> als
+        Property auf das Element — das Action-Picker-Menü hat diese
+        beiden in der Kategorie <em>State</em>. <code>toggle()</code>
+        wechselt bei Klick zwischen Default und State; bei mehreren
+        Custom-States cyclet er reihum.
+      </p>
+      <p>
+        Cross-Element-State funktioniert mit dem
+        <em>name</em>-Property: gibst du einem Button den Namen
+        <code>MenuBtn</code> und einem anderen Element ein
+        <code>MenuBtn.open: visible</code>, reagiert dieses andere
+        Element auf den State des Buttons.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Custom-State definieren + toggle())</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Multi-State — Cycle durch mehrere Zustände</h2>
+      <p>
+        Manche UI-Elemente haben drei oder mehr Zustände — eine
+        Task-Liste mit <em>Todo</em>, <em>Doing</em>, <em>Done</em>;
+        ein Audio-Player mit <em>Play</em>, <em>Pause</em>,
+        <em>Loading</em>. Definiere die States nacheinander im
+        State-Tab; <code>toggle()</code> cyclet bei Klick durch die
+        Reihe.
+      </p>
+      <p>
+        Im State-Tab siehst du alle States als Reiter. Reihenfolge
+        per Drag ändern — das ändert die Cycle-Reihenfolge. Mit
+        <em>exclusive()</em> statt <em>toggle()</em> bekommst du
+        Tab-/Radio-Verhalten: nur einer in der Gruppe ist aktiv, alle
+        anderen springen automatisch in Default zurück.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Multi-State Cycle mit todo/doing/done)</em>
+      </div>
+    </section>
+
+
+    <div class="summary">
+      <h2>Das Wichtigste</h2>
+      <table class="ref-table">
+        <tr><th>Aktion</th><th>Wo</th></tr>
+        <tr><td>Hover/Focus/Active editieren</td><td>State-Tabs im Property-Panel</td></tr>
+        <tr><td>Custom-State definieren</td><td>State-Tab → <em>+ State</em> → Name</td></tr>
+        <tr><td>State triggern</td><td><code>toggle()</code> oder <code>exclusive()</code> als Property</td></tr>
+        <tr><td>Multi-State-Cycle</td><td>Mehrere States definieren, <code>toggle()</code> cyclet reihum</td></tr>
+        <tr><td>Cross-Element-State</td><td><code>name SomeId</code> + <code>SomeId.state:</code> auf anderem Element</td></tr>
+        <tr><td>State-Preview ohne Klick</td><td>Hover über selektiertes Element triggert Hover-Preview</td></tr>
+      </table>
+
+      <p><strong>Das Prinzip:</strong> States sind keine Ausnahmen vom Default — sie sind weitere Schichten Property-Values. Der State-Tab im Property-Panel ist die Eingabe; <code>toggle()</code> oder <code>exclusive()</code> ist der Trigger.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="22-visuelles-editieren.html">&larr; Visuelles Editieren</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="24-code-editor.html">Code-Editor &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

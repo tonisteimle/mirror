@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <title>Mirror – Pickers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>Pickers</h1>
+      <p class="subtitle">Floating-UI für Farbe, Token, Icon, Animation, Action</p>
+    </header>
+
+    <p class="intro">
+      Property-Panel-Felder, deren Wert nicht einfach eine Zahl ist,
+      öffnen einen <em>Picker</em> als kleines Floating-Fenster. Studio
+      hat fünf davon — jeder ist auf seinen Werte-Typ optimiert: der
+      Color-Picker zeigt Schwatch-Grids und Hex-Eingabe, der
+      Token-Picker filtert nach Property-Kontext, der Icon-Picker hat
+      eine Suche durch 1000+ Lucide-Icons und so weiter. Alle Pickers
+      sind erreichbar über das Property-Panel oder über
+      <kbd>Ctrl</kbd>+<kbd>Space</kbd> im Editor.
+    </p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Color-Picker — Hex-Tab</h2>
+      <p>
+        Klick auf ein Color-Trigger im Property-Panel
+        (<code>bg</code>, <code>col</code>, <code>boc</code>,
+        <code>ic</code>) öffnet den Color-Picker. Der <em>Hex</em>-Tab
+        ist der Default: ein Schwatch-Grid mit kuratierten Standard-
+        Farben, ein freies Hex-Input und ein Eyedropper für
+        Bildschirm-Pick.
+      </p>
+      <p>
+        Das Schwatch-Grid ist nicht beliebig — die Farben sind die
+        Tailwind-Skala (50/100/200…/900) für 22 Farbtöne. Damit landest
+        du immer auf etablierten Werten und Mirror-Code wird visuell
+        konsistent. Recent-Colors am unteren Rand merken sich die
+        zuletzt im Projekt benutzten Farben.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Color-Picker Hex-Tab)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Color-Picker — Token-Tab</h2>
+      <p>
+        Im selben Picker steht oben ein zweiter Tab: <em>Tokens</em>.
+        Hier werden die im Projekt definierten Color-Tokens (aus
+        <code>.tok</code>-Files oder oben im aktuellen File) gelistet,
+        jeweils mit ihrem Visual-Schwatch. Klickst du einen Token an,
+        landet <code>$tokenname</code> im Code statt der Hex-Wert.
+      </p>
+      <p>
+        Der Vorteil ist nicht die Bequemlichkeit beim Auswählen —
+        sondern dass spätere Token-Änderungen alle Verwendungen
+        gleichzeitig anpassen. Ein neues Brand-Blau in einer Zeile
+        umsetzen statt in 47.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Color-Picker Token-Tab)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Token-Picker</h2>
+      <p>
+        Bei Properties die nicht-Color sind (<code>pad</code>,
+        <code>rad</code>, <code>fs</code>, <code>gap</code>, …) hat das
+        Property-Panel-Feld einen kleinen Token-Trigger neben dem Input.
+        Klick öffnet den Token-Picker — eine gefilterte Liste der
+        Tokens, die zur jeweiligen Property passen.
+      </p>
+      <p>
+        Das Filtern arbeitet über das <em>Suffix-Matching</em>: ein
+        Token <code>card.rad: 8</code> matcht jedes Radius-Feld;
+        <code>md.pad: 16</code> matcht jedes Padding. Tokens ohne
+        Suffix (Property-Sets wie <code>cardstyle:</code>) erscheinen
+        überall, weil sie als Set mehrere Properties auf einmal setzen.
+      </p>
+      <p>
+        Empty-State: hat das Projekt noch keine Tokens, zeigt der
+        Picker einen Hinweis mit Quick-Action „Token hier definieren"
+        — der Cursor springt in die nächste Definition-Position.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Token-Picker)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Icon-Picker</h2>
+      <p>
+        <code>Icon "name"</code>-Elemente öffnen über das
+        Content-Property den Icon-Picker. Oben ist eine Suche, darunter
+        ein Visual-Grid: alle 1000+ Lucide-Icons gerendert mit ihrem
+        Namen. Tippst du <em>arrow</em>, filtert der Picker auf alle
+        Icons, deren Namen oder Tags „arrow" enthalten.
+      </p>
+      <p>
+        Hat das Projekt eine <code>$icons:</code>-Section mit eigenen
+        SVG-Pfaden definiert, hat der Picker einen zweiten Tab
+        <em>Custom</em>. Dort tauchen die projekt-eigenen Icons in
+        derselben Visual-Grid-Form auf — Mischung von Lucide und Custom
+        ist nahtlos.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Icon-Picker mit Suche)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Animation-Picker</h2>
+      <p>
+        <code>anim</code>-Properties (Animations-Presets) öffnen einen
+        Picker mit allen verfügbaren Presets — <em>fade-in</em>,
+        <em>slide-up</em>, <em>bounce</em>, <em>pulse</em>,
+        <em>shake</em>, <em>spin</em> und etwa 14 weitere. Hover über
+        einen Eintrag triggert das Preset live im Preview-Panel als
+        Vorschau, ohne dass du auswählen musst.
+      </p>
+      <p>
+        Optional kannst du in einem zweiten Eingabefeld eine Dauer
+        setzen (z. B. <code>0.3s</code>). Studio schreibt das dann als
+        <code>anim slide-up 0.3s</code> in den Code.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Animation-Picker mit Live-Preview)</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Action-Picker</h2>
+      <p>
+        Action-Properties wie <code>onclick</code>,
+        <code>onkeydown</code> oder die direkten Aktionen
+        (<code>toggle()</code>, <code>show(…)</code>, <code>set(…)</code>)
+        öffnen den Action-Picker — eine Liste aller eingebauten Mirror-
+        Actions, gegliedert nach Kategorie (State, Sichtbarkeit,
+        Counter, Toast, Navigation, Clipboard, CRUD).
+      </p>
+      <p>
+        Wählst du eine Action aus, fragt der Picker nach den nötigen
+        Parametern (Target-Element, Wert, Toast-Text usw.) und
+        schreibt den vollständigen Aufruf in den Code. Damit musst du
+        die Action-Syntax nicht auswendig wissen.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>(Video folgt: Action-Picker mit Parameter-Eingabe)</em>
+      </div>
+    </section>
+
+
+    <div class="summary">
+      <h2>Das Wichtigste</h2>
+      <table class="ref-table">
+        <tr><th>Picker</th><th>Geöffnet durch</th><th>Schreibt</th></tr>
+        <tr><td>Color-Picker</td><td><code>bg</code> / <code>col</code> / <code>boc</code> / <code>ic</code> Trigger</td><td><code>#hex</code> oder <code>$token</code></td></tr>
+        <tr><td>Token-Picker</td><td>Token-Trigger neben numerischen Feldern</td><td><code>$tokenname</code></td></tr>
+        <tr><td>Icon-Picker</td><td>Content-Feld auf <code>Icon</code></td><td><code>"icon-name"</code></td></tr>
+        <tr><td>Animation-Picker</td><td><code>anim</code>-Property</td><td><code>preset</code> oder <code>preset 0.3s</code></td></tr>
+        <tr><td>Action-Picker</td><td>Event-Properties (<code>onclick</code> usw.)</td><td><code>action(args)</code></td></tr>
+      </table>
+
+      <p><strong>Das Prinzip:</strong> Pickers nehmen dir die Syntax-Last ab. Du wählst aus dem Verfügbaren statt es auswendig zu tippen. Was im Code landet, ist immer gültiger Mirror-Code.</p>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="18-studio.html">&larr; Studio bedienen</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <a class="next" href="20-komponenten-workflow.html">Komponenten-Workflow &rarr;</a>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>

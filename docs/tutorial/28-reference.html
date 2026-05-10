@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="../../assets/favicon.svg">
+  <title>Mirror – Reference</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/mirror-defaults.css">
+  <link rel="stylesheet" href="tutorial.css">
+</head>
+<body>
+
+  <main class="page">
+
+    <div class="page-logo">
+      <a href="index.html">
+        <img src="logo-mirror-tutorial.png" alt="Mirror Tutorial">
+      </a>
+    </div>
+
+    <header>
+      <h1>Reference</h1>
+      <p class="subtitle">Tastatur-Shortcuts und Property-Panel-Cheatsheet</p>
+    </header>
+
+    <p class="intro">
+      Zwei Nachschlage-Tabellen. Die erste listet alle globalen
+      Tastatur-Shortcuts in Studio. Die zweite zeigt, welche
+      Property in welcher Section des Property-Panels lebt — wenn
+      du eine Property suchst und nicht weißt wo sie ist.
+    </p>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Tastatur-Shortcuts</h2>
+
+      <h3>AI-Workflows</h3>
+      <table class="ref-table">
+        <tr><th>Shortcut</th><th>Aktion</th></tr>
+        <tr><td><kbd>Cmd</kbd>+<kbd>Enter</kbd></td><td>AI-Sketch ausführen (Block oder Trailing)</td></tr>
+        <tr><td><kbd>Tab</kbd></td><td>AI-Diff annehmen</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td>AI-Diff verwerfen</td></tr>
+      </table>
+
+      <h3>Editor</h3>
+      <table class="ref-table">
+        <tr><th>Shortcut</th><th>Aktion</th></tr>
+        <tr><td><kbd>Cmd</kbd>+<kbd>P</kbd></td><td>File-Quick-Switch (Fuzzy-Search)</td></tr>
+        <tr><td><kbd>Cmd</kbd>+<kbd>F</kbd></td><td>Find/Replace im aktuellen File</td></tr>
+        <tr><td><kbd>F2</kbd></td><td>Symbol cross-file umbenennen</td></tr>
+        <tr><td><kbd>Cmd</kbd>+<kbd>Z</kbd></td><td>Undo (auch für visuelle Operationen)</td></tr>
+        <tr><td><kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></td><td>Redo</td></tr>
+        <tr><td><kbd>Cmd</kbd>+<kbd>S</kbd></td><td>Manuelles Speichern (Autosave aktiv)</td></tr>
+        <tr><td><kbd>Tab</kbd></td><td>Autocomplete-Vorschlag akzeptieren</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td>Autocomplete schließen</td></tr>
+        <tr><td><kbd>Cmd</kbd>+<kbd>.</kbd></td><td>Quick-Fix für Lint-Marker</td></tr>
+      </table>
+
+      <h3>Visuelles Editieren</h3>
+      <table class="ref-table">
+        <tr><th>Shortcut</th><th>Aktion</th></tr>
+        <tr><td>Drag mit <kbd>Cmd</kbd>-Hold</td><td>Snap und Smart-Guides für die Geste deaktivieren</td></tr>
+        <tr><td>Drag mit <kbd>Shift</kbd>-Hold</td><td>Bei Padding/Margin nur eine Seite ändern</td></tr>
+        <tr><td><kbd>Cmd</kbd>+<kbd>D</kbd></td><td>Selektiertes Element duplizieren</td></tr>
+        <tr><td><kbd>Backspace</kbd> / <kbd>Delete</kbd></td><td>Selektiertes Element löschen</td></tr>
+        <tr><td><kbd>↑</kbd>/<kbd>↓</kbd>/<kbd>←</kbd>/<kbd>→</kbd></td><td>Selektiertes Element 1px verschieben (Shift = 8px)</td></tr>
+      </table>
+
+      <h3>Modi</h3>
+      <table class="ref-table">
+        <tr><th>Shortcut</th><th>Aktion</th></tr>
+        <tr><td><kbd>Cmd</kbd>+<kbd>R</kbd></td><td>Run-Mode toggeln</td></tr>
+        <tr><td><kbd>Cmd</kbd>+<kbd>B</kbd></td><td>Side-Panels ein-/ausblenden</td></tr>
+        <tr><td><kbd>F11</kbd></td><td>Fullscreen-Preview</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Property-Panel-Cheatsheet</h2>
+      <p>Welche Property findest du in welcher Section des Property-Panels?</p>
+
+      <table class="ref-table">
+        <tr><th>Section</th><th>Properties</th></tr>
+        <tr><td>Layout</td><td><code>hor</code> / <code>ver</code> / <code>grid</code> / <code>stacked</code>, <code>gap</code>, Alignment (<code>center</code>, <code>spread</code>, …), <code>wrap</code></td></tr>
+        <tr><td>Sizing</td><td><code>w</code> / <code>h</code> / <code>full</code> / <code>hug</code>, <code>minw</code> / <code>maxw</code> / <code>minh</code> / <code>maxh</code>, Device-Presets</td></tr>
+        <tr><td>Position</td><td><code>x</code> / <code>y</code> / <code>z</code>, <code>absolute</code> / <code>fixed</code> / <code>relative</code>, Constraint-Tabs</td></tr>
+        <tr><td>Spacing</td><td><code>pad</code> + <code>pad-x/y/t/r/b/l</code>, <code>mar</code> + <code>mar-x/y/t/r/b/l</code> (mit Padding/Margin-Handles)</td></tr>
+        <tr><td>Border</td><td><code>bor</code>, <code>boc</code>, <code>rad</code> + Per-Corner-Radius im Expand-Mode</td></tr>
+        <tr><td>Color</td><td><code>bg</code>, <code>col</code> (mit Color-Picker)</td></tr>
+        <tr><td>Typo</td><td><code>fs</code>, <code>weight</code>, <code>font</code>, <code>line</code>, Alignment, Decoration (<code>italic</code>, <code>underline</code>, <code>uppercase</code>, <code>truncate</code>)</td></tr>
+        <tr><td>Visual</td><td><code>opacity</code>, <code>shadow</code>, <code>blur</code>, <code>cursor</code>, <code>scale</code>, <code>rotate</code></td></tr>
+        <tr><td>Animation</td><td><code>anim</code> (mit Animation-Picker), Duration, Easing</td></tr>
+        <tr><td>Sichtbarkeit</td><td><code>hidden</code> / <code>visible</code>, <code>scroll</code>, <code>clip</code></td></tr>
+        <tr><td>Icon (nur bei <code>Icon</code>-Element)</td><td><code>is</code> (size), <code>ic</code> (color), <code>iw</code> (weight), <code>fill</code></td></tr>
+        <tr><td>Form (nur bei <code>Input</code>/<code>Button</code>)</td><td><code>placeholder</code>, <code>type</code>, <code>name</code>, <code>value</code>, <code>checked</code>, <code>disabled</code>, <code>mask</code>, <code>bind</code></td></tr>
+        <tr><td>Events</td><td><code>onclick</code>, <code>onhover</code>, <code>onfocus</code>, <code>onblur</code>, <code>onchange</code>, <code>oninput</code>, Keyboard-Events (mit Action-Picker)</td></tr>
+        <tr><td>States</td><td>State-Tabs <em>Default / Hover / Focus / Active / Disabled</em> + Custom-State-Definition</td></tr>
+      </table>
+    </section>
+
+
+    <div class="summary">
+      <h2>Wo geht's weiter?</h2>
+      <ul style="margin: 12px 0; padding-left: 24px; color: var(--text);">
+        <li><strong>Sprache vertiefen:</strong> Kapitel <a href="01-elemente.html">01-16</a> für die volle DSL.</li>
+        <li><strong>Volle DSL-Referenz:</strong> <code>docs/MIRROR-TUTORIAL-FULL.md</code> mit allen Properties, Edge-Cases, Beispielen.</li>
+        <li><strong>Studio-Internals:</strong> <code>studio/bootstrap.ts</code> als Architektur-Entry, <code>CLAUDE.md</code> für die Modul-Übersicht.</li>
+        <li><strong>Test-Framework für eigene Demos:</strong> <code>docs/TEST-FRAMEWORK.md</code> erklärt wie du Studio-Workflows als reproduzierbare Tests aufnimmst — die Tutorial-Videos in diesem Kapitel sind selbst so gemacht.</li>
+      </ul>
+    </div>
+
+
+    <nav>
+      <a class="prev" href="27-export.html">&larr; Export &amp; Deploy</a>
+      <a class="index" href="index.html">Übersicht</a>
+      <span class="next disabled">Ende</span>
+    </nav>
+
+  </main>
+
+  <script src="../../dist/browser/index.global.js"></script>
+  <script src="tutorial.js"></script>
+</body>
+</html>
