@@ -894,6 +894,19 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — 6 orphan tools/ Throwaway-Scripts gelöscht (1019 LOC)
+
+- **Wo:** `tools/{debug-tauri-mode,diagnose-colors,probe-personas-live,
+screenshot-file-panel,verify-tauri-file-panel,smoke-test-pipeline}.ts`
+  **Was:** Sechs single-File Debug-/Diagnose-/Probe-Scripts auf
+  `tools/`-Root-Level (nicht in `tools/probes/` Slice-NN-Konvention).
+  Jeder mit 0 Konsumenten in `package.json`/Doku/`.ts`-Source. Letzte
+  Aktivität 2026-05-08 (2 Tage). Pendant zur „Probe-Hygiene"-Aktion
+  (`3c5b2b98`), die 70 generic `probe-*.ts` aus `tools/probes/`
+  gelöscht hat — gleiche Logik, andere Lokation. Restoration via
+  `git show <pre-delete>:tools/<name>.ts`.
+  **Status:** erledigt
+
 ### 2026-05-10 — transformInstance child-pipeline Type-Cleanup (3 Slices)
 
 - **Wo:** `compiler/ir/transformers/{control-flow-transformer,inline-extraction}.ts`,
@@ -919,7 +932,7 @@ Chronologisch absteigend (neueste zuerst).
     (waren immer schon strukturell-typed durch). Cleanup ist Type-
     Cleanup, kein observable Behavior-Change.
     Verbleibend: `transformInstance` selbst hat noch `Instance | Each
-  | any` mit eslint-disable. Das tightening-Cascade ist mit Slice
+| any` mit eslint-disable. Das tightening-Cascade ist mit Slice
     1-3 zwar gelöst, aber konkrete Tightening braucht zusätzliche
     Cycle-Detection-Type-Anpassungen — aufgeschoben.
     **Status:** erledigt
