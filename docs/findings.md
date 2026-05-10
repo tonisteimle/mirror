@@ -222,12 +222,18 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   in `view.ts` — könnte über Section-Registry weiter geschrumpft werden,
   aber Code ist bereits lesbar.
 
-- **Wo:** `studio/app.ts` (2557 LOC)
+- **Wo:** `studio/app.ts` (heute 2532 LOC, vor Refactor 2557)
   **Was:** Bootstrap-Sprawl: 30+ globale Konstanten, 5 Extensions, 8
-  Manager-Inits inline. Phase A–D verstreut, Lesbarkeit leidet.
-  **Status:** offen
-  **Notiz:** Phase-Funktionen nach `studio/init/phase-*.ts` extrahieren,
-  app.ts als reiner Orchestrator.
+  Manager-Inits inline. Sieben Phasen nach `studio/init/` extrahiert:
+  `init-notifications`, `init-sync`, `init-grid-overlay`,
+  `init-draw-manager`, `init-inline-edit`, `file-tabs`,
+  `init-editor-dispatch` (`8b92ae7a`). Verbleibend: `compile()` (~406
+  LOC), `updateStudio()`, `handleStudioCodeChange()`, plus File-IO und
+  Ext-Wiring.
+  **Status:** offen — ongoing decomposition.
+  **Notiz:** `compile()` ist das nächste grosse Stück, aber risk-heavy
+  — zentrale Funktion mit vielen Closures auf top-level Variablen.
+  Vor Extraktion müsste der Closure-Graph entwirrt werden.
 
 - **Wo:** Fünf `mock-adapters.ts` (`studio/editor/triggers/adapters/`,
   `studio/editor/adapters/`, `studio/panels/property/adapters/`,
