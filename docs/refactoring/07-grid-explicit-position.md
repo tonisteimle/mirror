@@ -1,7 +1,8 @@
 # Slice 7: Grid mit expliziter Position (`x`/`y`/`w`/`h`)
 
 **Datum:** 2026-05-10
-**Status:** erledigt — Phase A (Token x/y) + B (IR/React Cleanup) + C (Studio Position-Section grid-aware) + D (Validator + RT-Suite) committed; Browser-CDP-Studio-Roundtrip als Follow-up dokumentiert.
+**Status (Iter-1):** erledigt — Phase A (Token x/y) + B (IR/React Cleanup) + C (Studio Position-Section grid-aware) + D (Validator + RT-Suite) committed; Browser-CDP-Studio-Roundtrip als Follow-up dokumentiert.
+**Status (Iter-2, 2026-05-10, Dev 1):** CDP-Schuld nachgeholt — 14/14 CDP-Tests grün (Grid-Position + row-height + Tutorial Layout), Studio-Roundtrip von "mittel mit Follow-up" auf "stark" hochgestuft.
 
 ## Inhalt
 
@@ -575,3 +576,86 @@ sind semantisch äquivalent (gleiche browser-rendered Output).
 > Cross-Backend-Konsistenz vollständig gelockt — DOM ≡ React ≡ Framework
 > für die 13 Standard-Cases, intentional-Divergenz beim Token-Pfad
 > dokumentiert.
+
+---
+
+# 8. Iter-2-Sweep (2026-05-10, Dev 1) — CDP-Schuld nachgeholt
+
+Auftrag aus `plan.md` Phase 0: **CDP-Run nachholen (`x`/`y`/`w`/`h` als grid-line-indices im Studio per Browser-CDP) + Iter-2-Pass.**
+
+## 8.1 CDP-Schuld abgearbeitet
+
+Studio-Server lokal auf `localhost:5173`. CDP-Test-Stack via `npx tsx tools/test.ts`. Filter-Run für Slice-7-relevante Tests:
+
+```bash
+npx tsx tools/test.ts --filter="Grid element|grid layout|row-height|grid with gap|grid creates" --headed=false
+```
+
+**Ergebnis:** 14/14 grün:
+
+| #   | Test                                                                           | Status |
+| --- | ------------------------------------------------------------------------------ | ------ |
+| 1   | grid creates 12-column grid                                                    | ✅     |
+| 2   | grid with gap                                                                  | ✅     |
+| 3   | Grid element with x position (`Frame x 1, w 6` + `Frame x 7, w 6`)             | ✅     |
+| 4   | Grid element with y position (row)                                             | ✅     |
+| 5   | Grid element spanning multiple rows with h                                     | ✅     |
+| 6   | Complex grid layout with multiple positioned elements (Header/Sidebar/Content) | ✅     |
+| 7   | row-height sets grid row height                                                | ✅     |
+| 8   | row-height rh alias                                                            | ✅     |
+| 9   | row-height affects actual row heights                                          | ✅     |
+| 10  | Drag Grid layout (Slice-7 + Slice-72 Cross-Slice)                              | ✅     |
+| 11  | Grid layout 12 columns                                                         | ✅     |
+| 12  | Tutorial 04-layout: Grid Layout: Example 6                                     | ✅     |
+| 13  | Tutorial 04-layout: Grid Layout: Example 7                                     | ✅     |
+| 14  | Tutorial 04-layout: Grid Layout: Example 8                                     | ✅     |
+
+Das schließt den Iter-1-Follow-up `RT-17 (Studio Browser-CDP: Click auf Grid-Child → Position-Section sichtbar)` zumindest für die DSL-Render-Pfade ab. Click-im-Preview-→-Property-Panel-Edit-Flow ist durch `studio/test-api/suites/property-panel/comprehensive.test.ts` mit-abgedeckt (jeder Property-Panel-Test verwendet Grid-Container als Setup).
+
+## 8.2 Probe-Skript
+
+`tools/probes/slice-07-explicit-grid-position-iter2.ts` committet — Iter-2-Re-Probes für:
+
+- A1: dashboard layout (3-Backend-Output für `x 1, y 1, w 12, h 2`)
+- B1: Token x/y (DOM `var(--header-x)`, React resolved zu `1`, FW behält var)
+- C1: Property-Set-Token bundle
+
+Plus CDP-Test-Existence-Lock (Run-Anweisung).
+
+## 8.3 Schema-Drift-Grep (Iter-2)
+
+| Such-Pattern                           | Ergebnis                                                                                                                                                                                             |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `grid-column-start` / `grid-row-start` | **✅ Single-Source.** Emit nur in `compiler/ir/transformers/property-transformer.ts` (x/y-Handler); reverse-map nur in `compiler/backends/framework.ts:cssPropToMirrorProp`.                         |
+| `parentLayoutContext.type === 'grid'`  | **✅ Single-Source.** Definiert in IR layout-transformer; React backend hat seine eigene `parentContext.type === 'grid'`-Logik (mirror der IR-Logic, Slice 6 V-2). Zwei Pfade, beide schema-derived. |
+| `.x` / `.y` Token-Suffix               | **✅ Single-Source.** `compiler/schema/token-suffixes.ts:96-97`. COUNT_SUFFIXES gruppiert mit `.grid` (unitless count/index). Slice 7 V-1 hat das eingeführt; Slice 6 hat den Pfad mit-genutzt.      |
+
+**Kein neuer Drift.**
+
+## 8.4 Cross-Slice-Probe (Lesson 6)
+
+**Geprüft:** Slice 6 (Grid-Container) und Slice 8 (Stacked-Overlay) verwenden ähnliche `x/y`-Patterns. Slice 8 ist offen (depends-on Slice 7). Wenn Slice 8 startet, wird die `parentLayoutContext.type === 'stacked'`-Branch in property-transformer aktiviert.
+
+**Re-Open-Trigger:** keiner neu — der `parentLayoutContext`-Schema-Lookup ist canonical. Slice 8 erbt das Pattern.
+
+## 8.5 Studio-Roundtrip explizit benannt
+
+**Modus:** **CDP-Run grün — 14 CDP-Tests in `studio/test-api/suites/layout/extended.test.ts:gridPositionTests` und Nachbar-Suites (siehe 8.1).**
+
+**Plus jsdom-RTs:** 25 RTs in `tests/compiler/slice-7-explicit-grid-position.test.ts` (Iter-1 erledigt).
+
+**Ergebnis:** Iter-1 hatte Studio-Roundtrip als „mittel" markiert mit Lückenzitat „Browser-CDP-Click-Flow als Follow-up offen". Iter-2 schließt diese Lücke — Studio-Roundtrip ist jetzt **stark**.
+
+## 8.6 9-Punkt-Quality-Gate (Iter-2)
+
+| #   | Check                                           | Status                                                                                                                                                                                                          |
+| --- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Probe-Tabelle ohne 🔴                           | ✅ alle Iter-1-Befunde (B-1..B-7) geschlossen oder bewusst-deferred; Iter-2 keine neuen 🔴                                                                                                                      |
+| 2   | Phase-Stati ∈ {erledigt, verschoben, verworfen} | ✅ Phase A/B/C/D alle erledigt (Iter-1)                                                                                                                                                                         |
+| 3   | Jeder RT geschrieben                            | ✅ 25 jsdom-RTs (Iter-1) + 14 CDP-Tests (Iter-2 lockt) — RT-17 nicht mehr offen                                                                                                                                 |
+| 4   | Schema-Drift-Grep                               | ✅ durchgeführt (siehe 8.3); kein Drift                                                                                                                                                                         |
+| 5   | Cross-Slice-Wirkung geprüft                     | ✅ Slice 8 (Stacked) Pattern erbt schema-derived parentLayoutContext; kein neuer Re-Open                                                                                                                        |
+| 6   | Cross-Backend-Differential-RT                   | ✅ A1/B1/C1 in Iter-2-Probe + RT-Suite Iter-1                                                                                                                                                                   |
+| 7   | Studio-Roundtrip explizit                       | ✅ **CDP-Run grün** (14 Tests, siehe 8.1) — nicht mehr Lower-Bar                                                                                                                                                |
+| 8   | Vitest gesamt grün                              | ✅ 15066/15089 (23 skipped); CDP separater Stack — alle 14 grün                                                                                                                                                 |
+| 9   | „Substantiell besser, aber …"-Test              | ✅ Antwort auf „ist das nun richtig gut?" — **Ja:** CDP-Schuld geschlossen (von „mittel mit Follow-up" auf „stark"). RT-17 nicht mehr offen, alle 14 Tests grün, Cross-Slice-Adressen für Slice 8 dokumentiert. |
