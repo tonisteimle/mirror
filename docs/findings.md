@@ -115,6 +115,25 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
+- **Wo:** `compiler/backends/framework.ts` (Stand: 1057 LOC)
+  — Decomposition in `compiler/backends/framework/ops/*.ts`
+  **Was:** Lane-Doc in `docs/refactoring/framework-backend-decomp.md`
+  mit 5-Slice-Plan (Helpers/CSS→Mirror/Style+Event/Props+States/
+  Node-emit). DOM-Backend ist Vorbild mit 767 LOC + `dom/ops/`-
+  Subdir. React-Lane (3273 → 343 LOC, 8 Slices) ist abgeschlossen,
+  Pattern erprobt.
+  - ⏳ Slice 1 — Pure helpers (~150 LOC)
+  - ⏳ Slice 2 — CSS→Mirror reverse-mapper (~257 LOC)
+  - ⏳ Slice 3 — Style/Event/Action emit (~280 LOC)
+  - ⏳ Slice 4 — Props/States serialization (~110 LOC)
+  - ⏳ Slice 5 — Node-to-M emit (~190 LOC)
+    **Status:** aktiv (Claude). Differential-Tests + Round-Trip-Pins
+    fangen Drift; jeder Slice ein Commit, byte-identische M(...)-
+    Output-Garantie.
+    **Notiz:** Anders als React: Class-basierte Struktur. Methoden
+    werden zu freien Funktionen extrahiert; Class bleibt als
+    Orchestrator für den Side-Effect-Pfad (`emit`/`emitHeader`/…).
+
 - **Wo:** `studio/demo/` (735 LOC) — DOM-Overlay-Demo-API (DemoCursor +
   KeystrokeOverlay)
   **Was:** Browser-Side-Implementation für Demo-Modus mit visuellem
