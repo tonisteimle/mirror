@@ -238,11 +238,13 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
 ### Bug-Patterns & Type-Escapes (Hunt 2026-05-10)
 
 - **Wo:** `studio/agent/generation-pipeline.ts:335`
-  **Was:** Workaround filtert phantom Token-Refs aus String-Literalen —
-  TODO verweist auf Parser-Root-Cause: Parser/Lexer emittiert Token-Refs
-  innerhalb von Strings.
-  **Status:** offen
-  **Notiz:** Fix gehört in `compiler/parser/`.
+  **Was:** Workaround filtert phantom Token-Refs aus String-Literalen.
+  Root-Cause war im **Validator** (nicht Parser/Lexer): `validateProperty`
+  normalisierte `TokenReference` zu `'$' + name` und re-iterierte den
+  String-Array — Quoted-String-Content wie `Text "$48,217"` wurde zu
+  `W500 Token "$48,217" is not defined`. Validator liest Token-Refs jetzt
+  direkt aus dem AST, Workaround entfernt.
+  **Status:** erledigt (`74e0b2d3`)
 
 - **Wo:** `studio/agent/generation-pipeline.ts:378`
   **Was:** Pre-Flight-Check fängt Parser-Hang bei nested-state-Blöcken ab
@@ -319,6 +321,16 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — Phantom W500 für `$N` in Quoted-Strings
+
+- **Wo:** `compiler/validator/validator.ts:760-764` (`validateProperty`)
+  **Was:** Validator hat TokenReference-Objekte zu `'$' + name`-Strings
+  normalisiert und dann wieder als Token-Refs interpretiert — Quoted-
+  String-Werte wie `Text "$48,217"` triggerten W500. Fix liest Refs
+  direkt aus dem AST, der Workaround in `generation-pipeline.ts:339-345`
+  konnte ersatzlos weg. Regression-Tests in `validator-error-codes.test.ts`.
+  **Status:** erledigt (`74e0b2d3`)
 
 ### 2026-05-10 — Custom-Icons Differential gehärtet
 
