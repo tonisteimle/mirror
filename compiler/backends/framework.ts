@@ -1021,6 +1021,13 @@ class FrameworkGenerator {
       const num = parseFloat(value)
       if (!isNaN(num)) return num
     }
+    // Bare numeric strings (e.g. `'0'` from `left: 0` in stacked-overlay
+    // children) — round-trip back to a number so the M(...) bag stays
+    // numeric-typed and re-compile produces the same IR. Pre-2026-05-10
+    // these emitted as quoted strings (`x: '0'` in M-prop bag).
+    if (/^-?\d+(\.\d+)?$/.test(value.trim())) {
+      return parseFloat(value)
+    }
     return value
   }
 

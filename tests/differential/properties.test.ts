@@ -316,6 +316,17 @@ describe('Properties — DOM emits expected style values', () => {
     expect(r).not.toContain('<em>')
   })
 
+  it('Framework: bare-numeric values round-trip as numbers, not strings', () => {
+    // PIN: pre-2026-05-10 the IR's stacked-overlay children carry
+    // `left: 0`/`top: 0` (without `px`). \`parsePxValue\` only stripped
+    // values ending in `px`, so the bare-numeric `'0'` fell through and
+    // emitted as `x: '0'` (string). Re-compile then read it as a string,
+    // round-trip-lossy.
+    const fw = generateFramework(parse(`Frame stacked, w 200\n  Frame bg red`))
+    expect(fw).toContain('x: 0')
+    expect(fw).not.toContain("x: '0'")
+  })
+
   it("Framework prefers Mirror's short alias `fs:` over CSS-form `'font-size':`", () => {
     // PIN: pre-2026-05-10 the Framework reverse-mapper emitted
     // `'font-size': N` (quoted key, hyphenated). Mirror DSL accepts
