@@ -57,6 +57,8 @@ function describeDropTarget(target: DropTarget | null): string {
       return `aligned:${target.alignmentProperty}`
     case 'flex':
       return `at index ${target.insertionIndex}`
+    case 'grid':
+      return `grid cell (${target.gridX},${target.gridY}) span ${target.gridW}×${target.gridH}`
   }
 }
 

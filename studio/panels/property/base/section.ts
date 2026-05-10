@@ -36,6 +36,8 @@ export interface SectionData {
   colorProps?: string[]
   /** Whether the element sits inside a positioned (stacked/absolute) container */
   isInPositionedContainer?: boolean
+  /** Whether the element sits inside a grid container (drives grid X/Y/W/H controls) */
+  isInGridContainer?: boolean
   /** Events of the current element (passed to the events section) */
   events?: unknown[]
   /**
