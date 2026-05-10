@@ -228,3 +228,23 @@ export function parseTokensViaAST(source: string): TokenDefinition[] {
   resolveChains(tokens)
   return tokens
 }
+
+/**
+ * Multi-file companion for parseTokensFromFiles. Same dedup-by-name
+ * semantics — first file wins on collision, matching the regex
+ * parser's order-of-iteration behaviour.
+ */
+export function parseTokensFromFilesViaAST(files: Record<string, string>): TokenDefinition[] {
+  const all: TokenDefinition[] = []
+  const seen = new Set<string>()
+  for (const content of Object.values(files)) {
+    if (!content) continue
+    for (const token of parseTokensViaAST(content)) {
+      if (!seen.has(token.name)) {
+        seen.add(token.name)
+        all.push(token)
+      }
+    }
+  }
+  return all
+}

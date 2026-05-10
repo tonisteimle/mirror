@@ -117,6 +117,35 @@ describe('parseTokensViaAST equivalence with parseTokens', () => {
   }
 })
 
+describe('parseTokensFromFilesViaAST: multi-file dedup', () => {
+  it('dedups by name across files; first occurrence wins', async () => {
+    const { parseTokensFromFiles } = await import('../../studio/pickers/token/types')
+    const { parseTokensFromFilesViaAST } = await import('../../studio/pickers/token/parse-via-ast')
+    const files = {
+      'tokens-a.tok': 'primary.bg: #2271C1\naccent.bg: #ff0000',
+      'tokens-b.tok': 'primary.bg: #000000\nbutton.rad: 6',
+    }
+    const regex = parseTokensFromFiles(files)
+    const ast = parseTokensFromFilesViaAST(files)
+
+    expect(ast.map(t => t.name).sort()).toEqual(regex.map(t => t.name).sort())
+    // primary.bg keeps the first file's value in both implementations.
+    const primary = ast.find(t => t.name === '$primary.bg')
+    expect(primary?.value).toBe('#2271C1')
+  })
+
+  it('skips empty files in both implementations', async () => {
+    const { parseTokensFromFiles } = await import('../../studio/pickers/token/types')
+    const { parseTokensFromFilesViaAST } = await import('../../studio/pickers/token/parse-via-ast')
+    const files = {
+      'empty.tok': '',
+      'real.tok': 'foo.bg: #fff',
+    }
+    expect(parseTokensFromFiles(files).length).toBe(1)
+    expect(parseTokensFromFilesViaAST(files).length).toBe(1)
+  })
+})
+
 describe('parseTokensViaAST: known divergences from parseTokens', () => {
   // The regex parser silently skips `name: hello world` (single-segment
   // non-numeric body). The compiler parses it as a property-set with
