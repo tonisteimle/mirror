@@ -57,7 +57,7 @@ export class LocalStorageProvider implements StorageProvider {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {
-        this.files = JSON.parse(stored)
+        this.files = JSON.parse(stored) as Record<string, string>
       }
 
       // Wenn komplett leer, Demo-Projekt laden

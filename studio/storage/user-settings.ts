@@ -41,7 +41,7 @@ class UserSettingsService {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {
-        const data = JSON.parse(stored)
+        const data = JSON.parse(stored) as Partial<UserSettings>
         this.settings = { ...DEFAULT_SETTINGS, ...data }
         log.info('Loaded from localStorage')
       } else {

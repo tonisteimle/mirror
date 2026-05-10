@@ -736,7 +736,7 @@ registerAllTriggers({
     try {
       const stored = localStorage.getItem('mirror-files')
       if (stored) {
-        return JSON.parse(stored)
+        return JSON.parse(stored) as Record<string, string>
       }
     } catch (e) {
       log.warn('Failed to read files from localStorage:', e)
