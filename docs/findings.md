@@ -26,13 +26,31 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
 
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
-  - `studio/code-modifier/property-extractor.ts:302` — eigene `componentMap`
+  - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
   - `studio/sync/component-line-parser.ts` — eigener Component-Parser
-    **Was:** Drei Studio-Module re-implementieren Logik, die der Compiler
-    bereits hat. Frage: warum kann Studio nicht den Compiler-Parser direkt
-    benutzen? Vermutlich historisch (Studio war vor dem aktuellen Schema da).
-    **Status:** offen
-    **Notiz:** Architektur-Entscheidung nötig, kein einzelner Refactor.
+
+  **Was:** Audit der drei Verdachts-Stellen:
+  - `parseTokens` (175 LOC): echte Duplikation — Regex-basierter Parser
+    produziert UI-spezifisches `TokenDefinition`-Shape mit Type-
+    Klassifikation (color/spacing/size/font), Property-Set-Detection,
+    Chain-Resolution (8 hops). Compiler-Token-Parser produziert AST-
+    Knoten — andere Output-Shape. Migration = AST + Mapping-Layer in
+    Studio. Multi-Day-Refactor.
+  - `property-extractor.ts:302 componentMap`: **keine Duplikation** —
+    `Map<string, ComponentDefinition>` ist nur Perf-Index aus
+    `ast.components`. Standard-Pattern.
+  - `component-line-parser.ts` (344 LOC): **keine Duplikation** —
+    parses single lines for cursor-to-element sync DURING typing
+    (vor Compile). Compiler-Parser braucht ganze Datei + AST-Bau,
+    funktioniert nicht für diesen Use-Case.
+
+  **Status:** teilweise abgewiesen — 2 von 3 sind keine Duplikation.
+  `parseTokens`-Migration bleibt offen als Multi-Day-Slice.
+  **Notiz:** Echter Refactor wäre: Compiler exposed `parseTokensToAST`,
+  Studio mappt AST→`TokenDefinition` mit Type-Inference + Chain-
+  Resolution als post-pass. Risiko: Regex-Parser hat Subtleties (z.B.
+  Inline-Comments, Single-Property-Set-Reject) die der AST nicht 1:1
+  reproduziert. Test-First nötig.
 
 - **Wo:** `compiler/parser/ops/parse-blocks.ts` (Slice 21 V-1)
   **Was:** Verbleibender silent-failure-Pfad: undefined component →
