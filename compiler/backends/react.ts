@@ -24,6 +24,7 @@ import type {
 } from '../parser/ast'
 import { expandPropertySets } from '../ir/transformers/property-set-expander'
 import { resolveComponent } from '../ir/transformers/component-resolver'
+import { mergeSlotPropertiesIntoFiller } from '../ir/transformers/slot-utils'
 import { ANIMATION_KEYFRAMES_CSS, animationShorthand } from './animations'
 import { getDevicePreset } from '../schema/dsl'
 import { isContainer as isContainerPrimitive } from '../schema/layout-defaults'
@@ -822,13 +823,37 @@ function generateJSX(
     lines.push(renderTextSlot(textContent, indent + '  ', tokens, parentContext.loopVars))
   }
 
+  // Slot-fill merge. A component definition's `children` carry slot
+  // definitions like `Title: col white, fs 18`; when the instance fills
+  // those slots (`Card\n  Title "Hello"`), the slot-def's properties
+  // should flow into the filler. Pre-2026-05-10 the React backend
+  // skipped this and emitted bare `<h2>Hello</h2>` with none of the
+  // slot's typography. The DOM/IR backend uses the same
+  // `mergeSlotPropertiesIntoFiller` helper.
+  //
+  // Skip when we're rendering the comp-def's default children (the
+  // fallback path) — those ARE the slot defs already, no merge needed.
+  const slotDefs: Map<string, Property[]> | null =
+    !useDefaultChildren && compDef?.children
+      ? new Map(
+          compDef.children
+            .filter((c): c is Instance => c.type === 'Instance')
+            .map(slot => [slot.component, slot.properties])
+        )
+      : null
+
   // Add children. Slice 6 V-2: pass own layout-context so grid-children
   // resolve `x`/`y`/`w`/`h` to grid-positioning instead of absolute/numeric.
   for (const child of effectiveChildren) {
     if (child.type === 'Instance') {
+      const slotProps = slotDefs?.get(child.component)
+      const merged =
+        slotProps && slotProps.length > 0
+          ? (mergeSlotPropertiesIntoFiller(child, slotProps) as Instance)
+          : child
       lines.push(
         generateJSX(
-          child,
+          merged,
           components,
           tokens,
           propertySetMap,

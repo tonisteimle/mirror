@@ -194,6 +194,46 @@ describe('Components — React backend documented limits', () => {
     expect(react).toMatch(/<span[^>]*data-component="Text"/)
   })
 
+  it('slot-fill merge: parent component defines Title slot, instance fills it', () => {
+    // PIN: `Card: bg #1a1a1a\n  Title: col white, fs 18\n\nCard\n  Title "Hi"`
+    // — the slot-def's properties (`col white, fs 18`) must flow into
+    // the filler at compile time. Pre-2026-05-10 the React emit was a
+    // bare `<h2>Hi</h2>` with none of the slot's typography. DOM does
+    // this via the IR's `mergeSlotPropertiesIntoFiller`; React now uses
+    // the same helper directly.
+    const src = `Card: bg #1a1a1a
+  Title: col white, fs 18, weight bold
+  Body: col #888, fs 14
+
+Card
+  Title "Hello"
+  Body "World"`
+    const react = generateReact(parse(src))
+    // Title has slot-def styles applied.
+    expect(react).toContain("color: 'white'")
+    expect(react).toContain("fontSize: '18px'")
+    expect(react).toContain("fontWeight: 'bold'")
+    // Body too.
+    expect(react).toContain("color: '#888'")
+    expect(react).toContain("fontSize: '14px'")
+  })
+
+  it('slot-fill: filler property overrides slot-def property', () => {
+    // PIN: filler wins on conflict — same shape `mergeSlotPropertiesIntoFiller`
+    // implements for the IR/DOM path.
+    const src = `Card: bg #000
+  Title: col white, fs 18
+
+Card
+  Title "Hi", col red`
+    const react = generateReact(parse(src))
+    expect(react).toContain("color: 'red'")
+    // The slot-def `col white` shouldn't appear inside the Title's style
+    // (Card's bg #000 is unrelated and doesn't carry color either).
+    const titleLine = react.split('\n').find(l => l.includes('data-component="Title"'))!
+    expect(titleLine).not.toContain("color: 'white'")
+  })
+
   it('default children skipped when instance carries its own positional content', () => {
     // PIN: `Btn "Custom"` overrides the default — only the positional
     // string lands in the JSX, not both.
