@@ -254,6 +254,81 @@ overlay.ts`, 134 LOC, ersetzt vor langem durch
   (beide `@deprecated`), `resolveGridColumns`.
   **Status:** erledigt (`4fa88b11`) — −265 LOC.
 
+### Naming-Collision-Smells (2026-05-10 Iter-N+2)
+
+Drei Stellen, wo derselbe Symbolname unterschiedliche Semantik hat —
+echte Drift-Fallen, aber Behebung braucht Owner-Entscheidung.
+
+- **Wo:** `studio/visual/{models/coordinate.ts, models/coordinate-
+calculator.ts, snap/alignment-snap.ts}` — drei `snapPointToGrid`-
+  Funktionen
+  **Was:** Alle drei nehmen `(point: Point, gridSize: number): Point`,
+  haben aber unterschiedliche Edge-Case-Semantik:
+  - `coordinate.ts`: simple snap, kein Clamping.
+  - `coordinate-calculator.ts`: clampt zu `>= 0`, snapt zu integer wenn
+    `gridSize <= 0`.
+  - `snap/alignment-snap.ts`: gibt input unverändert zurück wenn
+    `gridSize <= 0`.
+
+  Drei Caller könnten die "falsche" Variante importiert haben.
+  **Status:** offen
+  **Notiz:** Owner-Entscheidung: ist das Clamping-Verhalten gewollt?
+  Wenn ja, Funktionen umbenennen (`snapPointToGridClamped`,
+  `snapPointToGridStrict`). Wenn nein, alle drei auf eine
+  Implementation konsolidieren — mit Browser-Test-Probe, da
+  Spacing-Snap visuell ist.
+
+- **Wo:** `studio/panels/property/{types,ports}.ts` +
+  `studio/visual/snap/spacing-snap.ts` — drei `SpacingToken`-Interfaces
+  **Was:** Panels-Version hat `{ name, fullName, value: string }`
+  (3 Felder). Snap-Version hat
+  `{ name, fullName, value: number, suffix }` (4 Felder). Gleicher
+  Name, unterschiedliche Konzepte: UI-Anzeige vs. Snap-Engine-Input.
+  **Status:** offen
+  **Notiz:** `PanelSpacingToken` vs. `SnapSpacingToken` umbenennen,
+  damit der Unterschied am Import-Pfad sichtbar ist.
+
+- **Wo:** `studio/desktop-files-utils.ts`, `studio/storage/types.ts`,
+  `studio/panels/components/component-templates.ts` — drei
+  `getFileType`-Funktionen mit drei verschiedenen Return-Types
+  (`FileTypeInfo`, `MirrorFileType`, `'mir' | 'com'`).
+  **Status:** offen
+  **Notiz:** `getFileTypeInfo` / `getFileTypeKey` / `getMirOrCom`
+  o.ä. — disambiguierende Namen. Code-Logic ist je korrekt für seinen
+  Use-Case; nur die Namen lügen.
+
+### Type-Dedupe Round 2 (2026-05-10 Iter-N+2)
+
+- **Wo:** `studio/{autocomplete,sync,editor,editor/triggers,panels/property}/ports.ts`
+  **Was:** `CleanupFn = () => void` 5× identisch, `SelectionOrigin`-
+  Union 1× redundant in `editor/ports.ts` (sync hatte schon Re-Export).
+  **Status:** erledigt (`2e6b0a4a`) — beide auf
+  `studio/core/state-types.ts` als kanonische Quelle, Re-Exports.
+  5913/5913 studio tests pass.
+
+### Schema-Direction-Sharing (2026-05-10 Iter-N+2)
+
+- **Wo:** `compiler/ir/transformers/property-{transformer,utils-transformer}.ts`
+  **Was:** 15-Entry direction-Liste 2× inline in `property-transformer.ts`
+  (für `pad`/`margin`), parallel zur 19-Entry `DIRECTIONS`-Set in
+  `property-utils-transformer.ts` (für `border`/`radius` mit Corners).
+  Differenz war intentional — Padding/Margin haben kein CSS-
+  `padding-top-left` — aber als Magic-Literals an drei Stellen.
+  **Status:** erledigt (`15a6280b`) — `EDGE_DIRECTIONS` (15) +
+  `CORNER_DIRECTIONS` (4) + `DIRECTIONS = union` als komponierte
+  Konstanten in `property-utils-transformer.ts`. Padding/Margin nutzen
+  jetzt explizit `EDGE_DIRECTIONS`.
+
+### Property-Section-Registry (2026-05-10 Iter-N+2)
+
+- **Wo:** `studio/panels/property/view.ts` → `sections/index.ts`
+  **Was:** Section-Hinzufügen erforderte Edits in 2 Dateien (Import
+  - `this.sections.set(...)`-Zeile). Beide jetzt durch eine Zeile
+    in `sections/index.ts:SECTION_FACTORIES` ersetzt; View iteriert
+    `Object.entries()`.
+    **Status:** erledigt (`ba615bad`) — view.ts –16 LOC, 868/868
+    panel tests pass.
+
 ### Tutorial-Blocking Gaps (2026-05-10, per `docs/concepts/studio-tutorial.md`)
 
 Hunting durch das Tutorial-Konzept `docs/concepts/studio-tutorial.md`
