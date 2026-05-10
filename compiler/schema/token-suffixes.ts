@@ -81,6 +81,20 @@ export const PROPERTY_TO_TOKEN_SUFFIX: Record<string, string> = {
   'icon-color': '.ic',
   is: '.is',
   'icon-size': '.is',
+  // Grid (Slice 6 V-4): column count for `Frame grid $cols` with `cols.grid: 12`.
+  // Numeric size-token (column count, not a px-length, but the suffix unifies
+  // suffix-aware lookup across all backends so React resolves `grid $cols` to
+  // the actual count instead of falling through unresolved.
+  grid: '.grid',
+  'row-height': '.rh',
+  rh: '.rh',
+  // Slice 7 V-1: explicit grid position. `header.x: 1` + `Frame x $header`
+  // resolves via `.x` suffix. Like `.grid`, these are unitless (grid-line
+  // numbers); intentionally NOT in SIZE_SUFFIXES so no `px` is appended.
+  // Outside-of-grid use (absolute positioning) with token values is not
+  // a supported pattern — use literal numbers there.
+  x: '.x',
+  y: '.y',
 }
 
 /** Suffixes that carry size semantics (numeric values get a `px` unit). */
@@ -99,7 +113,19 @@ const SIZE_SUFFIXES = new Set([
   '.line',
   '.ls',
   '.is',
+  // Slice 6 V-4: `row-height` carries px semantics (grid-auto-rows). `.grid`,
+  // `.x`, `.y` are unitless counts (column count, grid-line indices) and
+  // intentionally NOT in this set — they're classified numeric below.
+  '.rh',
 ])
+
+/**
+ * Suffixes that are numeric counts/indices (no `px` suffix), but still
+ * classified as 'size' for token-picker/validator purposes (Slice 6 V-4 +
+ * Slice 7 V-1). Separate from SIZE_SUFFIXES because `needsPxUnit` must NOT
+ * append `px` to grid column counts or grid-line indices.
+ */
+const COUNT_SUFFIXES = new Set(['.grid', '.x', '.y'])
 
 /** Suffixes that carry font semantics (typeface tokens). */
 const FONT_SUFFIXES = new Set(['.font'])
@@ -145,6 +171,7 @@ export function getCompatibleProperties(suffix: string): string[] {
  */
 export function inferTokenTypeFromSuffix(suffix: string): TokenType | undefined {
   if (SIZE_SUFFIXES.has(suffix)) return 'size'
+  if (COUNT_SUFFIXES.has(suffix)) return 'size'
   if (FONT_SUFFIXES.has(suffix)) return 'font'
   if (COLOR_SUFFIXES.has(suffix)) return 'color'
   return undefined

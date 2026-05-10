@@ -33,6 +33,7 @@ import {
   resolveNineZoneAlias,
   NINE_ZONE,
 } from '../../compiler/schema/layout-defaults'
+import { ZONE_ALIGNMENT_PROPS } from '../../compiler/validator/validation-config'
 
 function dom(src: string): string {
   return generateDOM(parse(src))
@@ -295,6 +296,131 @@ describe('Slice 4 — 9-Positions', () => {
       const out = react('Btn: hor, cr\nBtn "X"')
       expect(out).toContain("justifyContent: 'flex-end'")
       expect(out).toContain("alignItems: 'center'")
+    })
+  })
+
+  // ===========================================================================
+  // RT-14 — Schema-Drift-Lock: validation-config zone list agrees with NINE_ZONE
+  // ===========================================================================
+  describe('RT-14 — Schema-Drift-Lock: ZONE_ALIGNMENT_PROPS is consistent with NINE_ZONE', () => {
+    // Plan-Step 7 Schema-Drift-Grep findings:
+    //
+    //   * `ZONE_ALIGNMENT_PROPS` (validation-config.ts) — live, used by
+    //     validator.ts:1220 for the multi-zone E110 detection. Holds 9
+    //     short + 8 long forms + the `cen` alias = 18 entries.
+    //
+    //   * `LAYOUT_CONFLICTS` (validation-config.ts) — was a dead-code copy
+    //     of the same data plus other conflict tables, never imported.
+    //     Deleted in this Slice's review-pass (commit history). RT-14
+    //     locks the surviving canonical list against NINE_ZONE drift.
+    //
+    //   * `layout-transformer.ts:213-260` — 18 hardcoded `case` statements
+    //     for the same zones. Pre-existing, mirrors `nineZoneToSemantic`
+    //     (the schema-side helper Slice 4 introduced). Real schema-drift
+    //     surface but invasive to refactor now; left as accepted residual
+    //     drift, locked behaviorally via RT-6 cross-backend equivalence.
+    const expectedZoneNames = [
+      ...Object.keys(NINE_ZONE),
+      'top-left',
+      'top-center',
+      'top-right',
+      'center-left',
+      'center-right',
+      'bottom-left',
+      'bottom-center',
+      'bottom-right',
+      'cen', // alias for `center`
+    ].sort()
+
+    it('ZONE_ALIGNMENT_PROPS contains exactly the 9 short + 8 long forms + `cen` alias', () => {
+      expect([...ZONE_ALIGNMENT_PROPS].sort()).toEqual(expectedZoneNames)
+    })
+  })
+
+  // ===========================================================================
+  // RT-15 — Cross-Slice deferred-state lock for ver-center / hor-center
+  // ===========================================================================
+  describe('RT-15 — Cross-Slice deferred lock: `ver-center` / `hor-center` (Slice 5 territory)', () => {
+    // Plan-Step 7 Cross-Slice-Probe: V-2's flexToNineZone reverse-mapper
+    // does NOT distinguish single-axis center keywords (`ver-center` /
+    // `hor-center`) from two-axis 9-zone aliases. Examples surfaced by
+    // /tmp/slice4-cross-slice-probe.ts:
+    //
+    //   `Frame ver-center` (column) → DOM justify:center, items:flex-start
+    //     → Framework reverse-map sees (center, flex-start, column)
+    //     → matches `cl` (center-left) per ZONE_TO_SEMANTIC, NOT `ver-center`
+    //
+    //   `Frame hor, hor-center` (row) → DOM justify:center, items:flex-start
+    //     → Framework reverse-map sees (center, flex-start, row)
+    //     → matches `tc` per row-axis-flip, NOT `hor-center`
+    //
+    // Both produce CSS-equivalent output to their zone counterparts but
+    // lose the original Mirror-DSL keyword. Out of Slice 4 scope —
+    // Slice 5 (`center / spread / ver-center / hor-center`) owns the
+    // single-axis-center semantics. RT-15 locks the current behavior so
+    // Slice 5 can detect the regression when it inverts these expectations.
+
+    it('Frame ver-center → Framework re-emits cl (CSS-equivalent collapse — Slice 5 will fix)', () => {
+      const out = fw('Frame ver-center\n  Text "x"')
+      expect(out).toMatch(/cl:\s*true/)
+      expect(out).not.toMatch(/ver-center:\s*true/) // Mirror keyword lost — known
+    })
+
+    it('Frame hor, hor-center → Framework re-emits hor + tc (CSS-equivalent collapse)', () => {
+      const out = fw('Frame hor, hor-center\n  Text "x"')
+      expect(out).toMatch(/hor:\s*true/)
+      expect(out).toMatch(/tc:\s*true/)
+      expect(out).not.toMatch(/hor-center:\s*true/) // Mirror keyword lost — known
+    })
+
+    it('Frame hor-center → Framework preserves the original keyword (passes through unchanged)', () => {
+      // Single-axis center keywords pass through the framework backend
+      // verbatim because the IR stores them as raw boolean properties
+      // and the per-style mapper only consumes css-shape entries it
+      // recognises. So `hor-center` survives — unlike `ver-center` which
+      // gets reverse-mapped via flexToNineZone (justify:center +
+      // align:flex-start matches `cl` in the column ZONE_TO_SEMANTIC
+      // table).
+      const out = fw('Frame hor-center\n  Text "x"')
+      expect(out).toMatch(/['"]hor-center['"]:\s*true/)
+    })
+
+    it('React emits the single-axis CSS without zone-collapse (no inverse needed)', () => {
+      // React backend doesn't reverse-map; ver-center stays single-axis CSS.
+      // This is the side that's actually correct semantically — locks the
+      // distinction that Slice 5 will eventually unify.
+      const out = react('Frame ver-center\n  Text "x"')
+      expect(out).toContain("justifyContent: 'center'")
+      // alignItems comes from FLEX_DEFAULTS, not from a 2-axis spec
+      expect(out).toContain("alignItems: 'flex-start'")
+    })
+  })
+
+  // ===========================================================================
+  // RT-16 — Studio-Roundtrip honest disclosure
+  // ===========================================================================
+  describe('RT-16 — Studio-Roundtrip status (honest disclosure)', () => {
+    // Plan-Step 7 verlangt Studio-Roundtrip-Verifikation. Slice 4 ändert
+    // nur React + Framework + Validator. Studio nutzt das DOM-Backend (das
+    // 9-zone-Verhalten unverändert lässt — siehe RT-6). Daraus folgt:
+    //
+    // ✅ DOM-Pfad: durch RT-6 cross-backend-Lock validiert; Studio-Preview
+    //    rendert 9-zone identisch zu vor Slice 4.
+    // ❌ Echte Click→Property-Panel→Code-Edit Verifikation per Browser-CDP-
+    //    Run wurde NICHT gemacht (Studio-Test-Stack braucht Server-Boot).
+    //
+    // RT-16 lockt den Status: jede Änderung am DOM-Backend für 9-zone
+    // bricht RT-6, wodurch der Roundtrip implizit prüfbar bleibt. Wer
+    // Studio explicit click-flow verifizieren will, muss `npm run studio`
+    // + property-panel-tests/9-zone fahren (kein vitest, separater Stack).
+
+    it('DOM 9-zone behavior unchanged by Slice 4 (Studio uses DOM backend)', () => {
+      // Pre-Slice-4 DOM output for Frame center: justify:center + items:center.
+      // RT-6 already locks this for all 9 zones. RT-16 is the explicit
+      // statement: Studio-Preview parity = RT-6 parity.
+      const out = dom('Frame center\n  Text "x"')
+      expect(out).toMatch(/'justify-content':\s*'center'/)
+      expect(out).toMatch(/'align-items':\s*'center'/)
     })
   })
 })

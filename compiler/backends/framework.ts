@@ -13,7 +13,7 @@
 import type { AST } from '../parser/ast'
 import { toIR } from '../ir'
 import { isLayoutPrimitive } from '../schema/dsl'
-import { flexToNineZone } from '../schema/layout-defaults'
+import { flexToNineZone, flexToSingleAxisCenter } from '../schema/layout-defaults'
 import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional } from '../ir/types'
 
 const TAG_TO_TYPE: Record<string, string> = {
@@ -338,10 +338,10 @@ class FrameworkGenerator {
     // span-count gets clobbered. Mark companions for skip in the loop
     // below.
     const hasGridColSpan = baseStyles.some(
-      s => s.property === 'grid-column-end' && /^span\s+\d+$/.test(s.value)
+      s => s.property === 'grid-column-end' && /^span\s+(\d+|var\(--[^)]+\))$/.test(s.value)
     )
     const hasGridRowSpan = baseStyles.some(
-      s => s.property === 'grid-row-end' && /^span\s+\d+$/.test(s.value)
+      s => s.property === 'grid-row-end' && /^span\s+(\d+|var\(--[^)]+\))$/.test(s.value)
     )
 
     // Slice 4 V-2: detect 9-zone combination BEFORE the per-style loop
@@ -360,6 +360,27 @@ class FrameworkGenerator {
       if (zone) {
         props[zone] = true
         consumedAlignmentStyles.add('justify-content')
+        consumedAlignmentStyles.add('align-items')
+      }
+    }
+    // Slice 5 V-2: single-axis center detection. Fires when EXACTLY ONE
+    // axis is `center` AND the other is unset — that's the unique IR
+    // signature of `hor-center` / `ver-center` (the orthogonal axis is
+    // omitted entirely, vs. `tc`/`cl`/etc. which set both). Without this
+    // the per-style fallback collapses single `justify:center` /
+    // `align:center` to a bare `center: true`, which compiles to BOTH
+    // axes — round-trip-lossy.
+    if (!consumedAlignmentStyles.has('justify-content') && justify === 'center' && !align) {
+      const keyword = flexToSingleAxisCenter('justify-content', direction)
+      if (keyword) {
+        props[keyword] = true
+        consumedAlignmentStyles.add('justify-content')
+      }
+    }
+    if (!consumedAlignmentStyles.has('align-items') && align === 'center' && !justify) {
+      const keyword = flexToSingleAxisCenter('align-items', direction)
+      if (keyword) {
+        props[keyword] = true
         consumedAlignmentStyles.add('align-items')
       }
     }
@@ -523,16 +544,28 @@ class FrameworkGenerator {
     // `w N`/`h N` in grid-parent context. The `width: 100%` / `height: 100%`
     // companions emitted alongside `grid-column-end: span N` are dropped
     // (they're a DOM-only artefact — Mirror DSL has just `w N`).
-    if (prop === 'grid-column-start') return { name: 'x', value: parseInt(value) }
-    if (prop === 'grid-row-start') return { name: 'y', value: parseInt(value) }
+    // Slice 7 V-1: token-resolved values arrive as `var(--name-x)` strings.
+    // Pass them through verbatim — the M-runtime resolves CSS-vars at render
+    // time. Without this branch `parseInt('var(...)') = NaN` clobbered the
+    // round-trip.
+    if (prop === 'grid-column-start') {
+      return { name: 'x', value: value.startsWith('var(') ? value : parseInt(value) }
+    }
+    if (prop === 'grid-row-start') {
+      return { name: 'y', value: value.startsWith('var(') ? value : parseInt(value) }
+    }
     if (prop === 'grid-column-end') {
       const m = value.match(/^span\s+(\d+)$/)
       if (m) return { name: 'w', value: parseInt(m[1]) }
+      const v = value.match(/^span\s+(var\(--[^)]+\))$/)
+      if (v) return { name: 'w', value: v[1] }
       return null
     }
     if (prop === 'grid-row-end') {
       const m = value.match(/^span\s+(\d+)$/)
       if (m) return { name: 'h', value: parseInt(m[1]) }
+      const v = value.match(/^span\s+(var\(--[^)]+\))$/)
+      if (v) return { name: 'h', value: v[1] }
       return null
     }
 

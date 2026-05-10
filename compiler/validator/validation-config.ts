@@ -96,41 +96,6 @@ export const KNOWN_NON_SCHEMA_PROPERTIES = new Set<string>([
 ])
 
 /**
- * Layout conflict pairs - these should not be used together
- */
-export const LAYOUT_CONFLICTS: [string[], string][] = [
-  // Direction conflicts
-  [['hor', 'horizontal', 'ver', 'vertical'], 'Cannot use both horizontal and vertical layout'],
-  // Alignment conflicts
-  [['center', 'cen', 'spread'], 'Cannot use both center and spread'],
-  // Grid vs Flex conflicts
-  [['grid', 'hor', 'horizontal'], 'Cannot combine grid with horizontal flex'],
-  [['grid', 'ver', 'vertical'], 'Cannot combine grid with vertical flex'],
-  // 9-zone alignment conflicts (only one can be active)
-  [
-    [
-      'tl',
-      'top-left',
-      'tc',
-      'top-center',
-      'tr',
-      'top-right',
-      'cl',
-      'center-left',
-      'cr',
-      'center-right',
-      'bl',
-      'bottom-left',
-      'bc',
-      'bottom-center',
-      'br',
-      'bottom-right',
-    ],
-    'Cannot use multiple position alignments',
-  ],
-]
-
-/**
  * Required properties per component type
  */
 export const REQUIRED_PROPERTIES: Record<string, string[]> = {

@@ -393,12 +393,21 @@ export function propertyToCSS(
 
   // Grid positioning: x → grid-column-start (when parent is grid)
   // Absolute positioning: x → left + position: absolute (default)
+  //
+  // Slice 7 V-1: token-resolved values arrive here as `var(--name-x)` strings
+  // (the resolveValue call above already applied the `.x` suffix mapping). In
+  // grid context CSS-vars are valid for grid-line numbers; in absolute context
+  // they'd resolve to unitless values that don't satisfy `left`'s length type,
+  // so we restrict token-x/y to grid context.
   if (name === 'x') {
     const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
-    if (parentLayoutContext?.type === 'grid' && !isNaN(numVal)) {
-      return [{ property: 'grid-column-start', value: String(numVal) }]
+    const isVar = typeof value === 'string' && value.startsWith('var(')
+    if (parentLayoutContext?.type === 'grid') {
+      if (!isNaN(numVal)) return [{ property: 'grid-column-start', value: String(numVal) }]
+      if (isVar) return [{ property: 'grid-column-start', value }]
     }
-    // Default: position absolute + left
+    // Default: position absolute + left (numeric only — tokenized x outside
+    // grid is undefined behavior; the `var()` would emit a unitless value).
     const val = typeof values[0] === 'number' ? `${values[0]}px` : String(values[0])
     const px = /^-?\d+$/.test(val) ? `${val}px` : val
     return [
@@ -411,10 +420,12 @@ export function propertyToCSS(
   // Absolute positioning: y → top + position: absolute (default)
   if (name === 'y') {
     const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
-    if (parentLayoutContext?.type === 'grid' && !isNaN(numVal)) {
-      return [{ property: 'grid-row-start', value: String(numVal) }]
+    const isVar = typeof value === 'string' && value.startsWith('var(')
+    if (parentLayoutContext?.type === 'grid') {
+      if (!isNaN(numVal)) return [{ property: 'grid-row-start', value: String(numVal) }]
+      if (isVar) return [{ property: 'grid-row-start', value }]
     }
-    // Default: position absolute + top
+    // Default: position absolute + top (see x-handler note about tokens).
     const val = typeof values[0] === 'number' ? `${values[0]}px` : String(values[0])
     const px = /^-?\d+$/.test(val) ? `${val}px` : val
     return [
@@ -430,9 +441,18 @@ export function propertyToCSS(
   // would clobber the start emitted from `x N`. Same goes for `h` ↔ `y`.
   if ((name === 'w' || name === 'width') && parentLayoutContext?.type === 'grid') {
     const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
+    const isVar = typeof value === 'string' && value.startsWith('var(')
     if (!isNaN(numVal) && numVal > 0) {
       return [
         { property: 'grid-column-end', value: `span ${numVal}` },
+        { property: 'width', value: '100%' },
+      ]
+    }
+    // Slice 7 V-1: tokenized `w $header` (resolves to `var(--header-w)`)
+    // emits `span var(...)` so the browser uses the runtime token value.
+    if (isVar) {
+      return [
+        { property: 'grid-column-end', value: `span ${value}` },
         { property: 'width', value: '100%' },
       ]
     }
@@ -442,11 +462,18 @@ export function propertyToCSS(
   // Grid span: h (numeric) → grid-row-end: span N (when parent is grid)
   if ((name === 'h' || name === 'height') && parentLayoutContext?.type === 'grid') {
     const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
+    const isVar = typeof value === 'string' && value.startsWith('var(')
     if (!isNaN(numVal) && numVal > 0) {
       // In grid context, numeric h means row span. Use the longhand so the
       // start emitted from `y N` survives.
       return [
         { property: 'grid-row-end', value: `span ${numVal}` },
+        { property: 'height', value: '100%' },
+      ]
+    }
+    if (isVar) {
+      return [
+        { property: 'grid-row-end', value: `span ${value}` },
         { property: 'height', value: '100%' },
       ]
     }
@@ -668,6 +695,26 @@ export function propertyToCSS(
       return [
         { property: 'display', value: 'grid' },
         { property: 'grid-template-columns', value: `repeat(${gridValues[0]}, 1fr)` },
+      ]
+    }
+
+    // Slice 6 V-4: token reference (`Frame grid $cols` with `cols.grid: 12`).
+    // The value-resolver has already turned the TokenReference into a
+    // CSS-var string like `var(--cols-grid)`. Without this branch the
+    // token form silently fell through to the bare `display: grid`-only
+    // emit, losing the column count.
+    if (
+      gridValues.length === 1 &&
+      typeof gridValues[0] === 'object' &&
+      gridValues[0] !== null &&
+      'kind' in gridValues[0] &&
+      (gridValues[0] as { kind: string }).kind === 'token'
+    ) {
+      // Use the resolver-produced var(--…) value verbatim; CSS `repeat()`
+      // accepts CSS-var as the count argument (modern browsers).
+      return [
+        { property: 'display', value: 'grid' },
+        { property: 'grid-template-columns', value: `repeat(${value}, 1fr)` },
       ]
     }
 
