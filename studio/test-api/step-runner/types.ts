@@ -401,6 +401,23 @@ export interface Scenario {
    */
   compileMode?: 'test' | 'real'
   /**
+   * Per-step viewport snapshot capture. When set, the runner takes a
+   * PNG of the page after every step's expectations validate, writes
+   * it to `dir/<seq>-<step-name>.png`, and (if `baselineDir` is set)
+   * pixel-diffs against `baselineDir/<seq>-<step-name>.png`. Mismatches
+   * are reported as step failures so cursor smoothness, drop indicators,
+   * focus rings, and animation frames gate CI without manual review.
+   *
+   * `threshold` is the per-pixel pixelmatch tolerance (0..1). 0.1 is
+   * a safe default for anti-aliased text; lower for stricter pinning.
+   *
+   * Requires the runner to have been started with --snapshot-dir; the
+   * scenario's `dir` and `baselineDir` are merged with the runner's
+   * snapshot bridge config when set, otherwise the scenario's values
+   * are used directly.
+   */
+  snapshots?: { dir: string; baselineDir?: string; threshold?: number }
+  /**
    * Which input pipeline drives mouse-style actions.
    *
    *   - `'synthetic'` (default) — `dispatchEvent` MouseEvents via the

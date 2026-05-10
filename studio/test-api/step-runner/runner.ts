@@ -20,6 +20,7 @@ import type { Scenario, SetupProject, Step, Expectations, Selector } from './typ
 import { installConsoleCollector, type ConsoleCollector } from './console-collector'
 import { codeDiff, canonicalizeCode } from './diff'
 import { osMouse, isOsMouseAvailable } from '../os-mouse-client'
+import { snapshotClient, isSnapshotAvailable } from '../snapshot-client'
 import { getReader, PROPERTY_READERS, type SourceMapLike } from './properties'
 import { getWriter } from './writers'
 
@@ -81,8 +82,32 @@ export function scenarioToTestCase(scenario: Scenario): TestCase {
         triggerCompile(api.editor.getCode(), compileMode)
         await api.utils.delay(50)
       }
+      // Pre-configure the snapshot bridge once when the scenario opts in.
+      // If the bridge isn't installed (--snapshot-dir not passed), we keep
+      // snapshots off and the per-step capture call short-circuits.
+      let snapshotsState: 'off' | 'on' = 'off'
+      if (scenario.snapshots && isSnapshotAvailable()) {
+        await snapshotClient.setConfig({
+          dir: scenario.snapshots.dir,
+          ...(scenario.snapshots.baselineDir
+            ? { baselineDir: scenario.snapshots.baselineDir }
+            : {}),
+          ...(typeof scenario.snapshots.threshold === 'number'
+            ? { threshold: scenario.snapshots.threshold }
+            : {}),
+        })
+        snapshotsState = 'on'
+      } else if (scenario.snapshots) {
+        // Loud warning: scenario asked for snapshots but the bridge wasn't
+        // installed. Don't fail the run — most CI invocations skip snapshots.
+        console.warn(
+          `[step-runner] scenario "${scenario.name}" requested snapshots but ` +
+            'the snapshot bridge is not installed (run with --snapshot-dir to enable)'
+        )
+      }
       await runScenario(scenario, api, collector, {
         inputMode: scenario.inputMode ?? 'synthetic',
+        snapshots: snapshotsState,
       })
     } finally {
       collector.dispose()
@@ -415,6 +440,27 @@ async function runScenario(
         throw new Error(`${label}\n${issues.map(line => '  • ' + line).join('\n')}`)
       }
 
+      // Snapshot AFTER expectations validate — capturing a passing state
+      // is the contract. Failures earlier in the loop never produce a PNG.
+      if (ctx.snapshots === 'on') {
+        const result = await snapshotClient.capture(`step-${i + 1}-${describeStep(step)}`)
+        if (result.mismatch) {
+          const sizeNote = result.mismatch.sizeMismatch ? ' (size mismatch)' : ''
+          throw new Error(
+            `${label}\n  • snapshot diff${sizeNote}: ` +
+              `${result.mismatch.diffPixels}/${result.mismatch.totalPixels} px ` +
+              `(${result.mismatch.ratio.toFixed(2)}%) — see ${result.mismatch.diffPath}`
+          )
+        }
+        if (result.noBaseline) {
+          // First-run hint: don't fail the step, but tell the user once
+          // per scenario that they need to seed the baseline.
+          console.warn(
+            `[step-runner] no baseline for ${result.path} — copy to baseline dir to seed`
+          )
+        }
+      }
+
       prevUndoStackSize = api.studio.history.getUndoStackSize()
       prevErrorCount = collector.errorCount()
       prevWarnCount = collector.warnCount()
@@ -448,6 +494,7 @@ function isOnNonLayoutFile(step: Step, api: TestAPI): boolean {
 
 interface ExecutionContext {
   inputMode: 'synthetic' | 'os'
+  snapshots: 'off' | 'on'
 }
 
 async function executeAction(step: Step, api: TestAPI, ctx: ExecutionContext): Promise<void> {

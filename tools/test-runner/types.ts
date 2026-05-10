@@ -83,6 +83,16 @@ export interface TestConfig {
    * cursor. Off by default — opt in with --os-mouse on the CLI.
    */
   osMouse?: boolean
+
+  /**
+   * When set, install the snapshot bridge so step-runner scenarios can
+   * capture viewport screenshots and pixel-diff against a baseline.
+   * Provide `dir` (where this run's PNGs land) and optionally
+   * `baselineDir` (golden snapshots to compare against) and `threshold`
+   * (pixelmatch 0..1, default 0.1). Off by default — opt in with
+   * --snapshots=DIR [--baseline=DIR] [--snapshot-threshold=N] on the CLI.
+   */
+  snapshots?: { dir: string; baselineDir?: string; threshold?: number }
 }
 
 export const defaultConfig: TestConfig = {

@@ -474,6 +474,19 @@ async function runDemoSuiteMode(args: CLIArgs): Promise<number> {
     silent: args.silent,
     osMouse: args.osMouse,
   }
+  // Reuse the existing --snapshot-dir / --snapshot-baseline / --snapshot-threshold
+  // flags to also drive the Phase-7 Step-Runner snapshot bridge. The demo
+  // runner has its own consumer (demoSnapshots*); we mirror them into the
+  // bridge config so a single flag covers both.
+  if (args.demoSnapshots) {
+    config.snapshots = {
+      dir: args.demoSnapshots,
+      ...(args.demoSnapshotBaseline ? { baselineDir: args.demoSnapshotBaseline } : {}),
+      ...(typeof args.demoSnapshotThreshold === 'number'
+        ? { threshold: args.demoSnapshotThreshold }
+        : {}),
+    }
+  }
   const runner = new TestRunner(config)
 
   const results: SuiteResult[] = []

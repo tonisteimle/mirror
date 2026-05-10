@@ -59,6 +59,7 @@ import {
 import { createFixturesAPI, type Fixture, type FixturesAPI } from './fixtures'
 import { installCdpInputClient, isCdpInputAvailable, cdpInput } from './cdp-input-client'
 import { installOsMouseClient, isOsMouseAvailable, osMouse } from './os-mouse-client'
+import { installSnapshotClient, isSnapshotAvailable, snapshotClient } from './snapshot-client'
 import { installReplayRecorder, replayRecorder } from './replay-recorder'
 import { trustedInteractions, type TrustedInteractionAPI } from './trusted-interactions'
 import { createStudioAPI } from './studio-api'
@@ -324,6 +325,17 @@ export function initStudioTestAPI(_studio?: unknown, _editor?: unknown): void {
     log.warn('Failed to install replay recorder:', e)
   }
 
+  // Snapshot client — pixel-diff via the Node bridge. Off unless the
+  // runner was started with --snapshot-dir.
+  try {
+    installSnapshotClient()
+    log.info(
+      `Snapshot client installed (bridge ${isSnapshotAvailable() ? 'available' : 'not available'})`
+    )
+  } catch (e) {
+    log.warn('Failed to install snapshot client:', e)
+  }
+
   // Register on window for Playwright access
   if (typeof window !== 'undefined') {
     ;(window as Window & { __STUDIO_TEST__?: StudioTestAPI }).__STUDIO_TEST__ = api
@@ -331,6 +343,7 @@ export function initStudioTestAPI(_studio?: unknown, _editor?: unknown): void {
     ;(window as unknown as { __osMouse?: typeof osMouse }).__osMouse = osMouse
     ;(window as unknown as { __replayRecorder?: typeof replayRecorder }).__replayRecorder =
       replayRecorder
+    ;(window as unknown as { __snapshot?: typeof snapshotClient }).__snapshot = snapshotClient
   }
 
   // Initialize drag test API (available at window.__testDragDrop)

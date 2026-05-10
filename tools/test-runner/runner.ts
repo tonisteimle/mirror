@@ -20,6 +20,7 @@ import { ScreenshotCapture } from './screenshot'
 import { FileExplorer } from './file-explorer'
 import { installCdpInputBridge } from './cdp-input-bridge'
 import { installOsMouseBridge } from './os-mouse-bridge'
+import { installSnapshotBridge } from './snapshot-bridge'
 import { parseProgressMessage, type ProgressUpdate } from './reporters/progress'
 
 // =============================================================================
@@ -444,6 +445,18 @@ export class TestRunner {
     if (this.config.osMouse) {
       await installOsMouseBridge(this.cdp)
       this.log('OS-mouse bridge installed (real macOS cursor active)')
+    }
+    // Snapshot bridge — capture-and-compare viewport PNGs from in-browser
+    // Step-Runner scenarios. Off unless --snapshots=DIR was passed.
+    if (this.config.snapshots) {
+      await installSnapshotBridge(this.cdp)
+      this.log(
+        `Snapshot bridge installed (dir=${this.config.snapshots.dir}` +
+          (this.config.snapshots.baselineDir
+            ? `, baseline=${this.config.snapshots.baselineDir}`
+            : '') +
+          ')'
+      )
     }
   }
 
