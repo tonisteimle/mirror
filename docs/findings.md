@@ -222,7 +222,8 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
   **Was:** Zwei `} catch { return false }` / `catch { document.title = ... }`
   schlucken Tauri-Fehler stumm — Permission/Plattform-Fehler werden
   unsichtbar.
-  **Status:** offen
+  **Status:** erledigt — beide catch-Blöcke loggen jetzt via `log.warn`
+  bevor Fallback (`return false` bzw. `document.title = title`) greift.
 
 - **Wo:** `studio/tauri-bridge.ts:54, 63, 273, 281, 289` (5×)
   **Was:** `@ts-expect-error` für ESM-URL-Imports von CDN

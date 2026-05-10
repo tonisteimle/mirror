@@ -169,7 +169,8 @@ export const TauriAgent = {
     if (!core) return false
     try {
       return await core.invoke<boolean>('check_claude_cli')
-    } catch {
+    } catch (err) {
+      log.warn('checkClaudeCli failed:', err)
       return false
     }
   },
@@ -262,7 +263,8 @@ export const TauriWindow = {
     if (!core) return
     try {
       await core.invoke('set_window_title', { title })
-    } catch {
+    } catch (err) {
+      log.warn('setTitle invoke failed, falling back to document.title:', err)
       document.title = title
     }
   },
