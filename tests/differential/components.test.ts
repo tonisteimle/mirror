@@ -181,6 +181,28 @@ describe('Components — React backend documented limits', () => {
     expect(react).toMatch(/<div[\s>/]/)
   })
 
+  it('default children: component definition children render when instance is bare', () => {
+    // PIN: `Card: pad 16\n  Text "Default"\n\nCard` — the instance has no
+    // children, so the React backend now falls through to the component
+    // definition's children as default content. Pre-2026-05-10 the React
+    // emit was an empty `<div />` for this case.
+    const src = `LikeBtn: bg #333, pad 12 20\n  Text "Like"\n\nLikeBtn`
+    const react = generateReact(parse(src))
+    // Default text shows up.
+    expect(react).toContain('Like')
+    // Concretely as a Text-tagged span child.
+    expect(react).toMatch(/<span[^>]*data-component="Text"/)
+  })
+
+  it('default children skipped when instance carries its own positional content', () => {
+    // PIN: `Btn "Custom"` overrides the default — only the positional
+    // string lands in the JSX, not both.
+    const src = `Btn: pad 10\n  Text "Default"\n\nBtn "Custom"`
+    const react = generateReact(parse(src))
+    expect(react).toContain('Custom')
+    expect(react).not.toContain('Default')
+  })
+
   it('multi-level `as Component` inheritance: chain merges across DOM and React', () => {
     // Both backends now walk the `as`-chain via ComponentResolver and merge
     // properties from every level. DOM has done this all along; the React

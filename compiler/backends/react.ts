@@ -744,8 +744,19 @@ function generateJSX(
   const skipTextContent = isLayoutPrimitive(instance.component)
   const textContent = skipTextContent ? null : getTextContent(instance, allProps)
 
+  // Default-children fall-through. A component definition's children
+  // (`Btn: pad 10\n  Text "Save"`) act as default content when the
+  // instance is used without its own children (`Btn` alone). The DOM
+  // backend gets this via the IR transform; React has to read straight
+  // from `compDef.children`. Skip the fallback when the instance carries
+  // its own text content (covers `Btn "Custom"` overriding the default
+  // text via positional content).
+  const useDefaultChildren =
+    instance.children.length === 0 && !textContent && (compDef?.children?.length ?? 0) > 0
+  const effectiveChildren = useDefaultChildren ? compDef!.children : instance.children
+
   // Has children? Includes Each blocks — they render as `.map()` output.
-  const hasChildren = instance.children.length > 0 || textContent
+  const hasChildren = effectiveChildren.length > 0 || textContent
 
   // Parser desugars `if cond / else` blocks **inside a parent** into per-
   // instance `visibleWhen` strings (the explicit `Conditional` AST node only
@@ -772,7 +783,7 @@ function generateJSX(
 
   // Add children. Slice 6 V-2: pass own layout-context so grid-children
   // resolve `x`/`y`/`w`/`h` to grid-positioning instead of absolute/numeric.
-  for (const child of instance.children) {
+  for (const child of effectiveChildren) {
     if (child.type === 'Instance') {
       lines.push(
         generateJSX(
