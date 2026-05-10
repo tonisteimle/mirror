@@ -38,7 +38,7 @@ import {
   currentCompletions,
 } from '@codemirror/autocomplete'
 import { indentUnit } from '@codemirror/language'
-import { linter, lintGutter, forceLinting } from '@codemirror/lint'
+import { linter, forceLinting } from '@codemirror/lint'
 import type { Diagnostic } from '@codemirror/lint'
 
 // Custom dialogs
