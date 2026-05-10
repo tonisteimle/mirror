@@ -2471,9 +2471,23 @@ export class DemoRunner {
       }
     }
 
-    const apiCode = getDemoAPISource(effectiveTimings)
-    await this.evaluate(apiCode)
-    await this.evaluate(`window.__mirrorDemo.init(${JSON.stringify(config)})`)
+    // Prefer the bundled `window.__mirrorDemo` (studio/test-api/demo-fx)
+    // over the legacy ~300 LOC inline-eval'd string. The bundled
+    // version is typed, testable, and shared with the Step-Runner.
+    // We pass timings explicitly so the bundled API uses the same
+    // CLI-derived (`--pacing × --typing-speed × …`) values.
+    //
+    // Fallback to the inline injection if the bundled API isn't
+    // present — preserves backwards compat with older studio bundles.
+    const hasBundledDemoApi = await this.evaluate<boolean>(
+      `typeof window.__mirrorDemo !== 'undefined' && typeof window.__mirrorDemo.init === 'function'`
+    )
+    if (!hasBundledDemoApi) {
+      const apiCode = getDemoAPISource(effectiveTimings)
+      await this.evaluate(apiCode)
+    }
+    const initConfig = { ...config, timings: effectiveTimings }
+    await this.evaluate(`window.__mirrorDemo.init(${JSON.stringify(initConfig)})`)
 
     // Single-cursor mode: hide __dragTest's own cursor while demo runs.
     // Also slow the underlying palette/move drag animation: default is 15

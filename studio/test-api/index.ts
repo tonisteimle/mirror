@@ -60,6 +60,7 @@ import { createFixturesAPI, type Fixture, type FixturesAPI } from './fixtures'
 import { installCdpInputClient, isCdpInputAvailable, cdpInput } from './cdp-input-client'
 import { installOsMouseClient, isOsMouseAvailable, osMouse } from './os-mouse-client'
 import { installSnapshotClient, isSnapshotAvailable, snapshotClient } from './snapshot-client'
+import { installMirrorDemo, isMirrorDemoInstalled } from './demo-fx'
 import { installReplayRecorder, replayRecorder } from './replay-recorder'
 import { trustedInteractions, type TrustedInteractionAPI } from './trusted-interactions'
 import { createStudioAPI } from './studio-api'
@@ -323,6 +324,22 @@ export function initStudioTestAPI(_studio?: unknown, _editor?: unknown): void {
     log.info('Replay recorder installed at window.__replayRecorder')
   } catch (e) {
     log.warn('Failed to install replay recorder:', e)
+  }
+
+  // Mirror Demo API — bundled animated cursor + keystroke overlay.
+  // Replaces the ~300 LOC inline-eval'd string the demo-runner used to
+  // inject. Demo runner detects this via `typeof window.__mirrorDemo`
+  // and skips its own inline injection. Step-Runner headed runs can
+  // also call __mirrorDemo.click(...) for visual feedback.
+  try {
+    installMirrorDemo()
+    log.info(
+      `Mirror Demo API installed at window.__mirrorDemo (${
+        isMirrorDemoInstalled() ? 'ready' : 'install-failed'
+      })`
+    )
+  } catch (e) {
+    log.warn('Failed to install Mirror Demo API:', e)
   }
 
   // Snapshot client — pixel-diff via the Node bridge. Off unless the
