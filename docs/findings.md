@@ -826,7 +826,7 @@ Chronologisch absteigend (neueste zuerst).
   nie gelöscht. Die anderen 4 Geschwister-Exports (`LAYOUT_COMPONENTS`,
   `BASIC_PRIMITIVES`, `CHART_COMPONENTS`, `BASIC_COMPONENTS`) haben
   Consumer und bleiben unverändert. 6002/6002 studio tests pass.
-  **Status:** erledigt (`<layout-presets-commit>`)
+  **Status:** erledigt (`47e30682`)
 
 ### 2026-05-10 — `SpacingToken`-Deprecation-Aliase aus Panel + Snap entfernt
 
