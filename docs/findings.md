@@ -184,21 +184,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
-- **Wo:** `studio/test-api/suites/flex-reorder/index.ts:44-57` +
-  `studio/test-api/suites/drag/index.ts:35-47`
-  **Was:** 13 „Backwards-compatibility aliases" (`buttonReorderVerticalTests`,
-  `buttonReorderHorizontalTests`, `textReorderTests`, `iconReorderTests`,
-  `inputReorderTests`, `imageReorderTests`, `dividerSpacerReorderTests`,
-  `linkTextareaReorderTests`, `mixedComponentReorderTests`,
-  `zagComponentReorderTests`, `nestedContainerReorderTests`,
-  `reorderEdgeCaseTests`, `sequentialReorderTests`) sind reine
-  Pass-Through-Re-Exports: Definition in `flex-reorder/index.ts`,
-  Re-Export im `drag/index.ts`-Barrel — niemand konsumiert sie
-  hinter den beiden Files. Klassische tote Migrations-Krücke.
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~19:50)
-  **Plan:** Aliase in `flex-reorder/index.ts` entfernen, Re-Exports
-  in `drag/index.ts` entfernen, Tests grün.
-
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
@@ -850,6 +835,28 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — 13 unused flex-reorder backwards-compat-Aliase gelöscht
+
+- **Wo:** `studio/test-api/suites/flex-reorder/index.ts` +
+  `studio/test-api/suites/drag/index.ts`
+  **Was:** Migrations-Krücken aus einer früheren Reorganisation der
+  Drag-Test-Suite: 13 Konstanten (`buttonReorderVerticalTests`,
+  `buttonReorderHorizontalTests`, `textReorderTests`, `iconReorderTests`,
+  `inputReorderTests`, `imageReorderTests`, `dividerSpacerReorderTests`,
+  `linkTextareaReorderTests`, `mixedComponentReorderTests`,
+  `zagComponentReorderTests`, `nestedContainerReorderTests`,
+  `reorderEdgeCaseTests`, `sequentialReorderTests`) waren Aliase auf
+  bestehende Test-Arrays, in `drag/index.ts`-Barrel re-exported, aber
+  ohne End-Consumer. Beide Stellen aufgeräumt: `allFlexReorderTests`
+  bleibt als einziger sinnvoller Re-Export. **Status:** erledigt
+  (`6cb8bd12`).
+  **Notiz:** Test-Suite-Validation: 4 unrelated Failures in
+  `demo-fx`/`headed-realism`/`step-runner-*` waren bereits vor meiner
+  Änderung im Working-Tree (parallele Refactor-Session löscht
+  `studio/test-api/{demo-fx,step-runner}` und
+  `tools/test-runner/demo/`); ohne meine Änderungen 4 fail / 5963 pass,
+  mit meinen Änderungen identisch — Befund ist clean.
 
 ### 2026-05-10 — 6 leere Legacy-Exports aus `layout-presets.ts` gelöscht
 
