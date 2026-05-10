@@ -90,7 +90,7 @@ class GlobalColorPickerWrapper {
 
     // Call the global showColorPicker from app.js
     // Pass null for callback so the Editor-mode logic in selectColor() handles insertion
-    const showColorPicker = (window as any).showColorPicker
+    const showColorPicker = window.showColorPicker
     if (typeof showColorPicker === 'function') {
       showColorPicker(
         x,
@@ -113,7 +113,7 @@ class GlobalColorPickerWrapper {
    * Hide the picker - calls the global hideColorPicker from app.js
    */
   hide(): void {
-    const hideColorPicker = (window as any).hideColorPicker
+    const hideColorPicker = window.hideColorPicker
     if (typeof hideColorPicker === 'function') {
       hideColorPicker()
     }

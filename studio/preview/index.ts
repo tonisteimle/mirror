@@ -358,23 +358,23 @@ export class PreviewController {
     this.resizeManager = createResizeManager({
       container: this.container,
       overlayManager: this.overlayManager,
-      getSourceMap: () => this.sourceMap as any,
+      getSourceMap: () => this.sourceMap,
       // LayoutService is now used via global singleton (getLayoutService())
     })
     this.paddingManager = createPaddingManager({
       container: this.container,
       overlayManager: this.overlayManager,
-      getSourceMap: () => this.sourceMap as any,
+      getSourceMap: () => this.sourceMap,
     })
     this.marginManager = createMarginManager({
       container: this.container,
       overlayManager: this.overlayManager,
-      getSourceMap: () => this.sourceMap as any,
+      getSourceMap: () => this.sourceMap,
     })
     this.gapManager = createGapManager({
       container: this.container,
       overlayManager: this.overlayManager,
-      getSourceMap: () => this.sourceMap as any,
+      getSourceMap: () => this.sourceMap,
     })
 
     // Listen for resize:end events to execute commands

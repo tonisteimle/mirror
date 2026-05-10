@@ -61,26 +61,31 @@ export interface ShowColorPickerOptions {
   callback?: ColorPickerCallback | null
 }
 
-interface MirrorWindow {
-  showColorPicker?: (
-    x: number,
-    y: number,
-    insertPos: number | null,
-    replaceRange?: ReplaceRange | null,
-    initialColor?: string | null,
-    isHashTrigger?: boolean,
-    hashStartPos?: number | null,
-    property?: string | null,
-    callback?: ColorPickerCallback | null
-  ) => void
-  showColorPickerForProperty?: (
-    x: number,
-    y: number,
-    property: string,
-    currentValue: string | null,
-    callback: ColorPickerCallback
-  ) => void
-  hideColorPicker?: () => void
+// Global window declaration for the color-picker handles. Editor
+// triggers and the property panel call these without importing setup.ts,
+// so they need to live on the global Window interface to stay typed.
+declare global {
+  interface Window {
+    showColorPicker?: (
+      x: number,
+      y: number,
+      insertPos: number | null,
+      replaceRange?: ReplaceRange | null,
+      initialColor?: string | null,
+      isHashTrigger?: boolean,
+      hashStartPos?: number | null,
+      property?: string | null,
+      callback?: ColorPickerCallback | null
+    ) => void
+    showColorPickerForProperty?: (
+      x: number,
+      y: number,
+      property: string,
+      currentValue: string | null,
+      callback: ColorPickerCallback
+    ) => void
+    hideColorPicker?: () => void
+  }
 }
 
 export interface ColorPickerHandle {
@@ -432,10 +437,9 @@ export function initColorPicker(deps: ColorPickerSetupDeps): ColorPickerHandle {
   // ===========================================================================
   // Public window globals (consumed by editor triggers + property panel)
   // ===========================================================================
-  const w = window as MirrorWindow
-  w.showColorPicker = showColorPicker
-  w.hideColorPicker = hideColorPicker
-  w.showColorPickerForProperty = (x, y, prop, currentValue, cb) => {
+  window.showColorPicker = showColorPicker
+  window.hideColorPicker = hideColorPicker
+  window.showColorPickerForProperty = (x, y, prop, currentValue, cb) => {
     showColorPicker(x, y, null, null, currentValue, false, null, prop, cb)
   }
 

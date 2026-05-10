@@ -581,7 +581,7 @@ export class PropertyPanelView {
       const y = rect.bottom + 8
 
       // Use the global color picker API
-      const showColorPicker = (window as any).showColorPickerForProperty
+      const showColorPicker = window.showColorPickerForProperty
       if (showColorPicker) {
         showColorPicker(x, y, property, currentValue, (color: string) => {
           // When a color is selected, update the property
