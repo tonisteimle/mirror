@@ -91,26 +91,6 @@ export function scenarioToTestCase(scenario: Scenario): TestCase {
   return tc
 }
 
-/**
- * Create non-entry project files via the panel.files API, then re-open
- * the entry file so the editor focus matches the scenario's intent.
- * Tokens defined in `tokens.tok`/`*.tok` and components in `*.com`
- * become available across the whole project after this step.
- *
- * Test isolation note: pre-existing files NOT listed in setup.files
- * are wiped to empty content (but not deleted — deleting the file the
- * editor is currently on or the scenario's entry breaks Studio's file
- * cache). Empty content keeps cross-file scans (`findSegmentMatches`,
- * `findProjectMatches`) from picking up stale lines an earlier test
- * left behind. Files explicitly in setup.files are recreated normally.
- */
-/**
- * Drive a recompile via either the synchronous test-mode shortcut
- * (`__compileTestCode`) or the production compile path
- * (`__compileRealNow`). Returns true if a compile hook was found
- * and invoked, false otherwise — caller decides whether absence is
- * fatal (in practice the shortcut is always present in studio bundles).
- */
 // =============================================================================
 // Structural selector resolution
 //
@@ -219,6 +199,13 @@ export function resolveSelector(sel: Selector): string {
   return id
 }
 
+/**
+ * Drive a recompile via either the synchronous test-mode shortcut
+ * (`__compileTestCode`) or the production compile path
+ * (`__compileRealNow`). Returns true if a compile hook was found
+ * and invoked, false otherwise — caller decides whether absence is
+ * fatal (in practice the shortcut is always present in studio bundles).
+ */
 export function triggerCompile(code: string, mode: 'test' | 'real'): boolean {
   const w = window as {
     __compileTestCode?: (code: string) => unknown
@@ -235,6 +222,19 @@ export function triggerCompile(code: string, mode: 'test' | 'real'): boolean {
   return false
 }
 
+/**
+ * Create non-entry project files via the panel.files API, then re-open
+ * the entry file so the editor focus matches the scenario's intent.
+ * Tokens defined in `tokens.tok`/`*.tok` and components in `*.com`
+ * become available across the whole project after this step.
+ *
+ * Test isolation note: pre-existing files NOT listed in setup.files
+ * are wiped to empty content (but not deleted — deleting the file the
+ * editor is currently on or the scenario's entry breaks Studio's file
+ * cache). Empty content keeps cross-file scans (`findSegmentMatches`,
+ * `findProjectMatches`) from picking up stale lines an earlier test
+ * left behind. Files explicitly in setup.files are recreated normally.
+ */
 async function setupProjectFiles(setup: SetupProject, api: TestAPI): Promise<void> {
   // Close any leftover Studio dialogs from a prior scenario. A
   // batch-replace dialog left open because the previous test didn't
