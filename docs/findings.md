@@ -559,6 +559,22 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — Gradient-Shorthand `bg grad …` im React-Backend
+
+- **Wo:** `compiler/backends/react.ts` (`generateStyles`),
+  `tests/differential/properties.test.ts`
+  **Was:** `Frame bg grad #2271C1 #7c3aed` produzierte
+  `backgroundColor: 'grad #2271C1 #7c3aed'` — kein gültiges CSS,
+  einfacher String-Join. DOM resolved über IR-Property-Transformer zu
+  `linear-gradient(...)`. Fix: Pre-Switch-Pass detektiert
+  `bg`/`col`/`c` mit `grad`/`grad-N`/`grad-ver` als erstem Wert,
+  baut den `linear-gradient(<angle>, <colors>)` String. Default 90deg,
+  `grad-ver` → 180deg, `grad N` → `Ndeg`. Text-Gradient-Pattern (col)
+  kommt mit background-clip-Workaround durch.
+  **Status:** erledigt
+  **Notiz:** 2 neue Pins: bg-Gradient (3 Varianten) und col-Gradient
+  (text-clip).
+
 ### 2026-05-10 — `[object Object]` bei Style-Property-Ternary in React
 
 - **Wo:** `compiler/backends/react.ts` (`generateStyles`),

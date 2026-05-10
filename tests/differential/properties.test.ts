@@ -43,6 +43,28 @@ describe('Properties — DOM emits expected style values', () => {
     expect(dom).toContain('linear-gradient')
   })
 
+  it('React emits linear-gradient for bg/col gradients (DOM-equivalent)', () => {
+    // Pinned gap: pre-2026-05-10 the React backend just `String()`-joined
+    // the gradient values into `backgroundColor: 'grad #… #…'` (invalid
+    // CSS). Must produce a real `linear-gradient(...)`.
+    const reactBg = generateReact(parse(`Frame bg grad #2271C1 #7c3aed, w 200, h 100`))
+    expect(reactBg).toContain('linear-gradient(90deg, #2271C1, #7c3aed)')
+
+    const reactVer = generateReact(parse(`Frame bg grad-ver #f59e0b #ef4444, w 200, h 100`))
+    expect(reactVer).toContain('linear-gradient(180deg, #f59e0b, #ef4444)')
+
+    const reactAngle = generateReact(parse(`Frame bg grad 45 #10b981 #2271C1, w 200, h 100`))
+    expect(reactAngle).toContain('linear-gradient(45deg, #10b981, #2271C1)')
+  })
+
+  it('React emits text-gradient pattern for col grad', () => {
+    // Text gradient = background + clip-to-text + transparent color.
+    const react = generateReact(parse(`Text "Hi", col grad #2271C1 #7c3aed`))
+    expect(react).toContain('linear-gradient(90deg, #2271C1, #7c3aed)')
+    expect(react).toContain('WebkitBackgroundClip')
+    expect(react).toMatch(/color:\s*['"]transparent['"]/)
+  })
+
   it('truncate emits text-overflow + overflow + white-space', () => {
     const dom = generateDOM(parse(`Text "X", truncate, w 100`))
     expect(dom).toContain('text-overflow')

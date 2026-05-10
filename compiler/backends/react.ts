@@ -1466,6 +1466,51 @@ function generateStyles(
       }
     }
 
+    // Gradient shorthand on bg / col: `bg grad #2271C1 #7c3aed`,
+    // `bg grad-ver #f59e0b #ef4444`, `bg grad 45 #10b981 #2271C1`.
+    // The IR's property-transformer handles this for the DOM backend;
+    // React bypasses IR so we re-derive the same `linear-gradient(...)`
+    // CSS here. Mirrors `compiler/ir/transformers/property-transformer.ts:118`.
+    if (
+      (prop.name === 'bg' ||
+        prop.name === 'background' ||
+        prop.name === 'col' ||
+        prop.name === 'color' ||
+        prop.name === 'c') &&
+      effectiveValues.length >= 2 &&
+      typeof effectiveValues[0] === 'string' &&
+      (effectiveValues[0] === 'grad' || (effectiveValues[0] as string).startsWith('grad-'))
+    ) {
+      const gradType = effectiveValues[0] as string
+      let angle = '90deg'
+      let colorStart = 1
+      if (gradType === 'grad-ver') {
+        angle = '180deg'
+      } else if (gradType === 'grad') {
+        const maybeAngle = String(effectiveValues[1])
+        if (/^\d+$/.test(maybeAngle)) {
+          angle = `${maybeAngle}deg`
+          colorStart = 2
+        }
+      }
+      const colors = effectiveValues.slice(colorStart).map(v => String(v))
+      if (colors.length >= 2) {
+        const gradientValue = `linear-gradient(${angle}, ${colors.join(', ')})`
+        const isTextGradient = prop.name === 'col' || prop.name === 'color' || prop.name === 'c'
+        if (isTextGradient) {
+          // Text-gradient pattern: paint via background, clip-to-text,
+          // hide foreground color. Same fallback the DOM IR uses.
+          style.background = gradientValue
+          ;(style as Record<string, string | number>)['WebkitBackgroundClip'] = 'text'
+          ;(style as Record<string, string | number>)['backgroundClip'] = 'text'
+          style.color = 'transparent'
+        } else {
+          style.background = gradientValue
+        }
+        continue
+      }
+    }
+
     // Slice 2 V-7: multi-value-shorthand support — `pad 8 16` / `gap 12 8`
     // arrive as `values: ["8", "16"]` / `["12", "8"]`; join them as a single
     // space-separated string so `pxify` can multi-px-ify. Single values pass
