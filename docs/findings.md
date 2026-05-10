@@ -247,31 +247,6 @@ token-trigger.ts:85` zur AST-Variante. Einziger direkter
   **Notiz:** Audit in
   `docs/refactoring/21-komponenten.md` Section 3 (V-1).
 
-- **Wo:** Dead-feature-Verdacht (zu prüfen vom Owner)
-  **Was:** Slices wie Stacked-Overlay (8), Custom-Icons-Registry (51),
-  Prose-Mode (66), Section-Header-Parsing (Slice 25 E002 Probe 22) — werden
-  diese in echten Mirror-Projekten benutzt? Wenn nein, ersatzlos streichen
-  spart Wartungsaufwand.
-  **Status:** offen — Audit 2026-05-10:
-  - **Stacked-Overlay**: USED — `examples/hospital-dashboard/dashboard.mirror:218`.
-    Behalten.
-  - **Prose-Mode**: USED — 4× in
-    `examples/personas-informatik/components.com` (`prose` als
-    Frame-Property). Behalten.
-  - **Custom-Icons-Registry (`$icons:`)**: keine Verwendung in
-    `examples/`. Test-Coverage in 4 Test-Files (slice-50, slice-51,
-    behavior/cleanup, differential/cleanup) + Probe
-    `tools/probes/slice-51-custom-icons.ts`. **Owner-Entscheidung
-    nötig**: Feature dokumentiert in CLAUDE.md, kein Realnutzer.
-  - **Section-Header-Parsing (`--- Title ---`)**: keine Verwendung in
-    `examples/` _oder_ irgendwelchen DSL-Files (`*.mir`/`.com`/`.tok`)
-    repo-weit. Test-Coverage in 5 Test-Files (lexer-sections,
-    tokens-coverage, lexer-bugs, parser-components, lexer-additional).
-    **Owner-Entscheidung nötig**: Feature parst, aber niemand nutzt.
-    **Notiz:** Braucht Owner-Entscheidung für die zwei verbleibenden
-    Kandidaten (`$icons:` + section-header). Audit-Daten oben sollten
-    reichen.
-
 ### Studio Sync/State (Hunt 2026-05-10)
 
 - **Wo:** `studio/core/state.ts:328-331`
@@ -824,6 +799,26 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — Dead-feature-Verdacht: alle 4 Slices entschieden
+
+- **Wo:** Slices Stacked-Overlay (8), Custom-Icons-Registry (51),
+  Prose-Mode (66), Section-Header-Parsing (Slice 25 E002 Probe 22)
+  **Was:** Audit per `tests/policy/dsl-features-have-examples.test.ts`
+  KEEP/WATCHLIST. Resultat:
+  - **Stacked-Overlay** — KEEP (USED in
+    `examples/hospital-dashboard/dashboard.mirror`).
+  - **Prose-Mode** — KEEP (USED 4× in
+    `examples/personas-informatik/components.com`).
+  - **Custom-Icons-Registry (`$icons:`)** — KEEP (Lane 1 Inkrement 1,
+    `8b31a4fe`: `examples/custom-icons.mirror` als Demo-Beispiel
+    addiert, Eintrag von WATCHLIST nach KEEP promoted).
+  - **Section-Header-Parsing (`--- Title ---`)** — KEEP (Lane 1
+    Inkrement 2, `74cf45f5`: `examples/tokens-with-sections.tok`
+    mit 7 Sections, Eintrag promoted).
+    Watchlist ist jetzt leer; Policy-Test grün, alle vier Slices
+    haben mindestens ein Beispiel und sind explizit KEEP.
+    **Status:** erledigt
 
 ### 2026-05-10 — 6 stale Test-Files für gelöschte demo-fx/step-runner-Module entfernt
 
