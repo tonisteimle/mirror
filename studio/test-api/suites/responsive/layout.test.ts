@@ -85,7 +85,10 @@ export const responsiveLayoutTests: TestCase[] = describe('Responsive Layout', [
     }
   ),
 
-  // TODO: Runtime bug - responsive width changes don't apply in headless tests
+  // SKIP: Container-Query-Architektur (siehe basic.test.ts). Children
+  // mit `compact:`/`regular:`/`wide:` reagieren erst dann, wenn sie in
+  // einem Outer-Container mit `container-type` stehen — nicht der
+  // gleiche Container, der die States deklariert. Lane-Doc nötig.
   testWithSetupSkip(
     'Grid columns adapt to container size',
     `Frame w 800, h 300, wrap, gap 8, pad 16, bg #1a1a1a

@@ -184,11 +184,42 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   **Status:** erledigt — auf `calculateSourcePosition(instance.line,
 instance.column)` umgestellt. 7849/7849 vitest grün.
 
+- **Wo:** `compiler/backends/dom/style-emitter.ts:emitNodeSizeStateCSS`,
+  `compiler/backends/dom/node-emitter.ts:emitContainerType`,
+  `studio/test-api/suites/responsive/{basic,layout}.test.ts`
+  **Was:** Architektur-Befund aus dem Runtime-Bug-Bucket. Mirror lässt
+  Designer schreiben:
+
+  ```mirror
+  Frame w full
+    compact: bg #ef4444
+    wide:    bg #10b981
+  ```
+
+  und compiled das zu (a) `container-type: inline-size` AUF dem Frame
+  selbst plus (b) `@container (max-width: 400px) { [data-mirror-id^=
+"node-1"] { background: #ef4444 !important } }` — wo das
+  Selector-Target _derselbe_ Frame ist. Per CSS-Spec matcht
+  `@container` aber gegen die _Container-Ancestor_-Größe, nicht gegen
+  die eigene des deklarierenden Elements. Folge: Frame reagiert nicht
+  auf seine eigene Breite. Probe `tools/probes/container-queries.ts`
+  zeigt das Emit-Pattern; CDP-Tests bleiben skipped.
+  Zwei Fix-Pfade: (A) synthetischen Outer-Wrapper als Container
+  emittieren, Size-States aufs Frame anwenden; (B) Size-States auf
+  einen synthetischen Inner-Wrapper-Child emittieren. Beides ist
+  DOM-strukturell invasiv (Frame-Identität ändert sich, andere CSS
+  inkl. flex/grid-Layout muss sich nicht miterklären).
+  **Status:** offen — Architektur-Entscheid + Lane-Doc nötig
+  **Notiz:** Browser-Tests in `responsive/{basic,layout}.test.ts:73,88`
+  bleiben `testWithSetupSkip` mit aktualisierten Kommentaren bis Fix
+  da ist. `Frame > Inner` mit Size-States auf `Inner` funktioniert
+  _heute_ schon (Inner reagiert auf Frame-Container) — Workaround.
+
 - **Wo:** `studio/test-api/suites/` — Runtime-Bug-TODO-Bucket
   **Was:** Latente Production-Bugs, die als Test-Workaround dokumentiert
-  waren. Stand 2026-05-10: 7 von 10 Original-Markern abgearbeitet.
+  waren. Stand 2026-05-10: alle 10 Original-Markern abgearbeitet:
   - ✅ `actions/scroll.test.ts:9,36` — Container-Scroll in
-    `scrollContainerToTop/Bottom` (siehe Erledigt 2026-05-10).
+    `scrollContainerToTop/Bottom` (Erledigt).
   - ✅ `actions/visibility.test.ts:60` — `toggle(ElementName)` (Erledigt).
   - ✅ `actions/crud.test.ts:36` — Test-Selector-Bug, nicht Runtime
     (Erledigt).
@@ -198,15 +229,11 @@ instance.column)` umgestellt. 7849/7849 vitest grün.
     - increment()` (Erledigt).
   - ✅ `actions/navigation.test.ts:9` — Skip-Marker ohne realen Bug
     (Erledigt).
-  - 🔄 `transforms/translate.test.ts:323` — Multi-Transform-Composition,
-    parallel-Session-aktiv (Eintrag oben).
-  - ⏳ `responsive/basic.test.ts:73` + `responsive/layout.test.ts:88` —
-    Container-Queries auf eigenem Element. Architektur-Befund:
-    `@container` queries inspizieren das _Parent_-Element, nicht das
-    deklarierende. Frame mit `container-type: inline-size` und
-    eigenen `compact:`/`regular:`-States kann nicht auf seine eigene
-    Breite reagieren — braucht Wrapper-Container. Kein einfacher
-    Runtime-Fix, eigener Architektur-Befund.
+  - ✅ `transforms/translate.test.ts:323` — Multi-Transform-Composition
+    (Erledigt `6c3ab636`).
+  - 🚫 `responsive/basic.test.ts:73` + `responsive/layout.test.ts:88` —
+    Container-Queries-Architektur, separater Befund oben (kein
+    einfacher Runtime-Fix).
     Plus 6 weitere TODOs in `autocomplete/` und `responsive/` ohne
     „Runtime bug"-Wording (Context-aware Completions / State Completions
     / Stress-Tests-Hang) — separate Buckets, nicht Teil dieses Eintrags.
