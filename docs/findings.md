@@ -517,6 +517,24 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — Block-If/Else in React-Backend
+
+- **Wo:** `compiler/backends/react.ts`,
+  `tests/differential/conditionals.test.ts`
+  **Was:** Block-Conditionals waren React-only-Skip
+  (`{/* Conditional not supported */}`). Jetzt: Top-Level
+  `Conditional`-Knoten werden zu `{cond ? (<>then</>) : (<>else</>)}`
+  bzw. `: null` ohne Else. **Nested if/else** desugart der Parser in
+  per-Instanz-`visibleWhen`-Strings (Else-Branch = `!(cond)`); diese
+  werden in `generateJSX` über `wrapWithVisibility` zu
+  `{cond ? jsx : null}`. `rewriteIdentifiersToTokens` greift in beiden
+  Pfaden, damit `done` → `tokens["done"]` und `!(done)` →
+  `!(tokens["done"])` wird.
+  **Status:** erledigt
+  **Notiz:** DOM hat eigenen Runtime-Pfad (`_conditionalConfig`),
+  Framework verwendet `visible-when`-Props — alle drei Backends jetzt
+  per-Pin abgedeckt.
+
 ### 2026-05-10 — Inline-Ternary in React-Text-Content
 
 - **Wo:** `compiler/backends/react.ts`, `tests/differential/conditionals.test.ts`

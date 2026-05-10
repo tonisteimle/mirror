@@ -66,14 +66,43 @@ describe('Conditionals — Inline ternary: per-backend behavior', () => {
   })
 })
 
-describe('Conditionals — Block if/else: DOM-only runtime', () => {
-  // Block-if uses runtime conditional rendering (data-conditional-id +
-  // _conditionalConfig). React/Framework backends emit the structure
-  // but lack the runtime, so the dynamic switching doesn't work the
-  // same way. Pin: DOM has the runtime config, others don't.
+describe('Conditionals — Block if/else: per-backend wiring', () => {
+  // Block-if has different runtime shapes per backend. DOM uses the
+  // runtime conditional config (data-conditional-id + _conditionalConfig);
+  // React emits a JSX `{cond ? (<>…</>) : null}` (or `: (<>else</>)`)
+  // expression; Framework attaches `visible-when` props the runtime evaluates.
+  // CI fails if any of these regress.
   it('DOM emits _conditionalConfig runtime hook', () => {
     const dom = generateDOM(parse(`active: true\n\nif active\n  Text "Yes"`))
     expect(dom).toContain('_conditionalConfig')
+  })
+
+  it('React emits JSX `{cond ? (...) : null}` for top-level if', () => {
+    const react = generateReact(parse(`active: true\n\nif active\n  Text "Yes"`))
+    expect(react).toMatch(/tokens\[['"]active['"]\]\s*\?\s*\(/)
+    expect(react).toContain(') : null}')
+    expect(react).toContain('Yes')
+  })
+
+  it('React emits both branches for top-level if/else', () => {
+    const react = generateReact(
+      parse(`loggedIn: false\n\nif loggedIn\n  Text "Welcome"\nelse\n  Text "Login"`)
+    )
+    expect(react).toMatch(/tokens\[['"]loggedIn['"]\]\s*\?\s*\(/)
+    expect(react).toContain('Welcome')
+    expect(react).toContain('Login')
+  })
+
+  it('React wraps nested if/else children via `visibleWhen` per-instance', () => {
+    // Parser desugars `if cond / else` *inside a parent* into per-instance
+    // `visibleWhen` strings. React mirrors that as a per-child
+    // `{cond ? jsx : null}` wrap. The else-sibling carries `!(cond)` →
+    // emits `!(tokens["cond"])`.
+    const react = generateReact(
+      parse(`done: true\n\nFrame\n  if done\n    Text "OK"\n  else\n    Text "Pending"`)
+    )
+    expect(react).toMatch(/tokens\[['"]done['"]\]\s*\?\s*\(/)
+    expect(react).toMatch(/!\(tokens\[['"]done['"]\]\)\s*\?\s*\(/)
   })
 })
 

@@ -18,6 +18,7 @@ import type {
   LoopVarReference,
   DataAttribute,
   Conditional,
+  ConditionalNode,
 } from '../parser/ast'
 import { expandPropertySets } from '../ir/transformers/property-set-expander'
 import { isLayoutPrimitive } from '../schema/dsl'
@@ -166,10 +167,25 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
         })
         continue
       }
-      // Skip Conditional / ZagComponent / etc. — the static React backend
-      // supports plain Instance + Each trees. Without this guard,
-      // generateJSX would try to read `.properties` on a node that doesn't
-      // have it and throw TypeError.
+      // Top-level `if cond / else` → render as JSX expression. Same
+      // shape used inside Instance.children.
+      if ((instance as { type: string }).type === 'Conditional') {
+        rootItems.push({
+          kind: 'expr',
+          code: generateConditionalJSX(
+            instance as unknown as ConditionalNode,
+            componentMap,
+            program.tokens || [],
+            propertySetMap,
+            '      '
+          ),
+        })
+        continue
+      }
+      // Skip ZagComponent / etc. — the static React backend supports plain
+      // Instance + Each + Conditional trees. Without this guard, generateJSX
+      // would try to read `.properties` on a node that doesn't have it and
+      // throw TypeError.
       if ((instance as { type: string }).type !== 'Instance') {
         const skipped = (instance as { type?: string }).type ?? 'Unknown'
         rootItems.push({
@@ -464,8 +480,17 @@ function generateJSX(
   // Has children? Includes Each blocks — they render as `.map()` output.
   const hasChildren = instance.children.length > 0 || textContent
 
+  // Parser desugars `if cond / else` blocks **inside a parent** into per-
+  // instance `visibleWhen` strings (the explicit `Conditional` AST node only
+  // appears at the top level). Mirror those here as a JSX `{cond ? jsx : null}`
+  // wrap. Same identifier-rewrite as inline ternaries: bare names become
+  // `tokens["…"]`. The else-branch sibling carries `!(cond)`, which the
+  // rewriter steps through unchanged.
+  const visibleWhen = (instance as Instance & { visibleWhen?: string }).visibleWhen
+
   if (!hasChildren) {
-    return `${indent}<${tag}${attrStr}${mirrorAttrStr}${refStr}${styleStr} />`
+    const selfClosing = `${indent}<${tag}${attrStr}${mirrorAttrStr}${refStr}${styleStr} />`
+    return wrapWithVisibility(selfClosing, visibleWhen, tokens, indent)
   }
 
   const lines: string[] = []
@@ -496,12 +521,39 @@ function generateJSX(
           ownLayoutContext
         )
       )
+    } else if (child.type === 'Conditional') {
+      lines.push(
+        generateConditionalJSX(
+          child as ConditionalNode,
+          components,
+          tokens,
+          propertySetMap,
+          indent + '  ',
+          ownLayoutContext
+        )
+      )
     }
   }
 
   lines.push(`${indent}</${tag}>`)
 
-  return lines.join('\n')
+  return wrapWithVisibility(lines.join('\n'), visibleWhen, tokens, indent)
+}
+
+/**
+ * Wrap a JSX block with `{cond ? (jsx) : null}` if the source instance
+ * carries a `visibleWhen` (parser-desugared `if/else` inside a parent).
+ * Returns the JSX unchanged when there's nothing to wrap.
+ */
+function wrapWithVisibility(
+  jsx: string,
+  visibleWhen: string | undefined,
+  tokens: TokenDefinition[],
+  indent: string
+): string {
+  if (!visibleWhen) return jsx
+  const cond = rewriteIdentifiersToTokens(visibleWhen, tokens)
+  return [`${indent}{${cond} ? (`, jsx, `${indent}) : null}`].join('\n')
 }
 
 /**
@@ -567,6 +619,91 @@ function generateEachJSX(
   for (const line of childLines) lines.push(line)
   lines.push(`${indent}  </React.Fragment>`)
   lines.push(`${indent}))}`)
+  return lines.join('\n')
+}
+
+/**
+ * Render an `if cond` (with optional `else`) block as a JSX expression.
+ *
+ * Output shapes:
+ *   then-only          → `{cond ? (<>…</>) : null}`
+ *   if/else            → `{cond ? (<>…then…</>) : (<>…else…</>)}`
+ *
+ * The condition is rewritten the same way as inline ternaries — bare
+ * identifiers that match top-level data become `tokens["…"]` lookups so
+ * the React emit can evaluate them at render time without any Mirror
+ * runtime. Mirror condition syntax is JS-compatible (operators,
+ * comparisons), so the rest of the expression flows through verbatim.
+ */
+function generateConditionalJSX(
+  cond: ConditionalNode,
+  components: Map<string, ComponentDefinition>,
+  tokens: TokenDefinition[],
+  propertySetMap: Map<string, Property[]>,
+  indent: string,
+  parentContext: ParentLayoutContext = { type: null }
+): string {
+  const condExpr = rewriteIdentifiersToTokens(cond.condition, tokens)
+
+  const renderBranch = (nodes: (Instance | { type: string })[], branchIndent: string): string[] => {
+    const out: string[] = []
+    for (const node of nodes) {
+      if ((node as { type: string }).type === 'Instance') {
+        out.push(
+          generateJSX(
+            node as Instance,
+            components,
+            tokens,
+            propertySetMap,
+            branchIndent,
+            parentContext
+          )
+        )
+      } else if ((node as { type: string }).type === 'Each') {
+        out.push(
+          generateEachJSX(
+            node as unknown as Each,
+            components,
+            tokens,
+            propertySetMap,
+            branchIndent,
+            parentContext
+          )
+        )
+      } else if ((node as { type: string }).type === 'Conditional') {
+        out.push(
+          generateConditionalJSX(
+            node as unknown as ConditionalNode,
+            components,
+            tokens,
+            propertySetMap,
+            branchIndent,
+            parentContext
+          )
+        )
+      }
+    }
+    return out
+  }
+
+  const thenLines = renderBranch(cond.then, indent + '    ')
+  const elseLines =
+    cond.else && cond.else.length > 0 ? renderBranch(cond.else, indent + '    ') : []
+
+  const lines: string[] = []
+  lines.push(`${indent}{${condExpr} ? (`)
+  lines.push(`${indent}  <>`)
+  for (const line of thenLines) lines.push(line)
+  lines.push(`${indent}  </>`)
+  if (elseLines.length > 0) {
+    lines.push(`${indent}) : (`)
+    lines.push(`${indent}  <>`)
+    for (const line of elseLines) lines.push(line)
+    lines.push(`${indent}  </>`)
+    lines.push(`${indent})}`)
+  } else {
+    lines.push(`${indent}) : null}`)
+  }
   return lines.join('\n')
 }
 
