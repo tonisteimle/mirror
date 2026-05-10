@@ -28,6 +28,7 @@ import {
 } from './autocomplete'
 import { EditorController, createEditorController } from './editor'
 import { createFilePalette } from './file-palette'
+import { createRecentProjectsPicker } from './recent-projects'
 import {
   PreviewController,
   createPreviewController,
@@ -652,6 +653,67 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     })
 
     logBootstrap.info(' Cmd+P file palette initialized')
+  }
+
+  // ============================================
+  // Cmd/Ctrl+Shift+O Recent Projects Picker (Tauri only)
+  // ============================================
+  // Slice 4 of the Tauri-Commit-Plan (`docs/concepts/tauri-strategy.md`).
+  // Floating overlay listing TauriProject.getRecentProjects() — opens
+  // the picked project + reload. Wired in browser too (via a wrapper
+  // that always returns []) so the keyboard shortcut never silently
+  // does nothing; the picker just shows the empty-state.
+  {
+    const recentPicker = createRecentProjectsPicker({
+      getRecentProjects: async () => {
+        const tb = (
+          window as unknown as {
+            TauriBridge?: {
+              project?: { getRecentProjects?: () => Promise<unknown> }
+              isTauri?: () => boolean
+            }
+          }
+        ).TauriBridge
+        if (!tb?.isTauri?.() || !tb.project?.getRecentProjects) return []
+        const result = await tb.project.getRecentProjects()
+        return Array.isArray(result) ? (result as string[]) : []
+      },
+      openProject: async path => {
+        const tb = (
+          window as unknown as {
+            TauriBridge?: {
+              project?: { openProject?: (path: string) => Promise<unknown> }
+            }
+          }
+        ).TauriBridge
+        if (!tb?.project?.openProject) return
+        await tb.project.openProject(path)
+        // Force a reload so the file-tree + storage adapter pick up
+        // the new base path.
+        const u = new URL(window.location.href)
+        u.searchParams.set('_r', String(Date.now()))
+        window.location.replace(u.toString())
+      },
+    })
+
+    const handleCmdShiftO = (e: KeyboardEvent) => {
+      // Native browser default for Cmd+O is "Open File"; with Shift,
+      // browsers don't bind anything but we preventDefault anyway.
+      if (e.key !== 'O' && e.key !== 'o') return
+      if (!e.metaKey && !e.ctrlKey) return
+      if (!e.shiftKey || e.altKey) return
+      e.preventDefault()
+      e.stopPropagation()
+      if (recentPicker.isOpen()) recentPicker.close()
+      else recentPicker.open()
+    }
+    document.addEventListener('keydown', handleCmdShiftO, true)
+    eventUnsubscribes.push(() => {
+      document.removeEventListener('keydown', handleCmdShiftO, true)
+      recentPicker.dispose()
+    })
+
+    logBootstrap.info(' Cmd+Shift+O recent-projects picker initialized')
   }
 
   // Initialize DrawManager for component drawing

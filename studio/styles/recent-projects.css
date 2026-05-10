@@ -1,0 +1,87 @@
+/* Recent Projects — Cmd+Shift+O quick-switch overlay (Tauri only). */
+
+.recent-projects-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 18vh;
+}
+
+.recent-projects-panel {
+  width: 520px;
+  max-width: 92vw;
+  max-height: 60vh;
+  background: var(--bg-elevated, #1f1f24);
+  color: var(--text-primary, #e6e6e9);
+  border: 1px solid var(--border-default, #2f2f36);
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.recent-projects-header {
+  padding: 10px 14px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #8b8b94);
+  border-bottom: 1px solid var(--border-subtle, #2a2a30);
+}
+
+.recent-projects-list {
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  outline: none;
+}
+
+.recent-projects-item {
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  color: inherit;
+}
+
+.recent-projects-name {
+  font-weight: 500;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.recent-projects-parent {
+  font-size: 11px;
+  color: var(--text-muted, #8b8b94);
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.recent-projects-item.is-highlighted {
+  background: var(--accent-bg, #2563eb);
+  color: var(--accent-fg, #ffffff);
+}
+
+.recent-projects-item.is-highlighted .recent-projects-parent {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.recent-projects-empty {
+  padding: 14px;
+  font-size: 13px;
+  color: var(--text-muted, #8b8b94);
+  font-style: italic;
+  text-align: center;
+}
