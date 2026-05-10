@@ -271,12 +271,18 @@ calculator.ts, snap/alignment-snap.ts}` — drei `snapPointToGrid`-
     `gridSize <= 0`.
 
   Drei Caller könnten die "falsche" Variante importiert haben.
-  **Status:** offen
-  **Notiz:** Owner-Entscheidung: ist das Clamping-Verhalten gewollt?
-  Wenn ja, Funktionen umbenennen (`snapPointToGridClamped`,
-  `snapPointToGridStrict`). Wenn nein, alle drei auf eine
-  Implementation konsolidieren — mit Browser-Test-Probe, da
-  Spacing-Snap visuell ist.
+  **Status:** erledigt (`9fa8bb80`) — Audit zeigt: nur **eine** Variante
+  ist genuinely different — `coordinate-calculator.ts` mit Clamp-zu-≥0
+  - Round-zu-integer auch wenn gridSize=0. Die anderen beiden sind
+    funktional äquivalent (gleicher Output für jeden Input; nur Snap
+    preserviert Reference-Identity die kein Test pinnt). Der eine echt-
+    divergente wurde umbenannt zu `snapPointToGridClamped` mit JSDoc
+    cross-reference auf die zwei simple-Variante-Geschwister. Dabei
+    zwei dead aliases in `models/index.ts` weg
+    (`snapPointToGridWithResult`, `snapRectToGridWithResult` — nie
+    importiert). Die zwei simple-Varianten bleiben getrennt, sind aber
+    über ihre Barrels (`visual/models` vs `visual/snap`) am Import-Pfad
+    disambiguiert.
 
 - **Wo:** `studio/panels/property/{types,ports}.ts` +
   `studio/visual/snap/spacing-snap.ts` — drei `SpacingToken`-Interfaces
