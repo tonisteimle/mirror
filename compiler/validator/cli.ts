@@ -29,6 +29,7 @@ import {
 } from './cli-runner'
 import type { ValidationError } from './types'
 import { watchFiles } from '../cli/watch'
+import { readVersion } from '../cli/output'
 
 // ============================================================================
 // Color helpers
@@ -200,19 +201,6 @@ Examples:
   mirror-validate examples/foo --json --max-warnings=0
   mirror-validate examples/foo --unused
 `)
-}
-
-function readVersion(): string {
-  try {
-    const pkgPath = path.resolve(__dirname, '../../package.json')
-    if (fs.existsSync(pkgPath)) {
-      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
-      return pkg.version || 'unknown'
-    }
-  } catch {
-    // Ignore — fall through to 'unknown'.
-  }
-  return 'unknown'
 }
 
 // ============================================================================

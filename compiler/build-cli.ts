@@ -14,7 +14,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { build, type BuildOptions } from './cli/build'
-import { c } from './cli/output'
+import { c, readVersion } from './cli/output'
 import { getAllMirrorExtensions } from './cli/types'
 
 interface CliArgs extends BuildOptions {
@@ -126,22 +126,6 @@ function parseArgs(argv: string[]): CliArgs {
   }
 
   return out
-}
-
-function readVersion(): string {
-  try {
-    const pkgPath = path.resolve(
-      path.dirname(new URL(import.meta.url).pathname),
-      '..',
-      'package.json'
-    )
-    if (fs.existsSync(pkgPath)) {
-      return JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).version ?? 'unknown'
-    }
-  } catch {
-    // ignore
-  }
-  return 'unknown'
 }
 
 function watchAndRebuild(args: CliArgs, runBuild: () => void): void {

@@ -2,6 +2,10 @@
  * CLI Output — ANSI colors, help, version.
  */
 
+import * as fs from 'fs'
+import * as path from 'path'
+import { fileURLToPath } from 'url'
+
 const colors = {
   red: '\x1b[31m',
   green: '\x1b[32m',
@@ -19,8 +23,30 @@ export function c(text: string, color: keyof typeof colors): string {
   return `${colors[color]}${text}${colors.reset}`
 }
 
+/**
+ * Read the version string from the project's package.json.
+ *
+ * Used by every CLI entry (mirror-compile, mirror-build, mirror-validate)
+ * so the brand-specific `--version` output stays in lock-step with the
+ * actual published package — without each CLI re-implementing the
+ * package.json lookup.
+ */
+export function readVersion(): string {
+  try {
+    const here = path.dirname(fileURLToPath(import.meta.url))
+    // From compiler/cli/output.ts: ../../package.json
+    const pkgPath = path.resolve(here, '..', '..', 'package.json')
+    if (fs.existsSync(pkgPath)) {
+      return JSON.parse(fs.readFileSync(pkgPath, 'utf-8')).version ?? 'unknown'
+    }
+  } catch {
+    // ignore — fall through to 'unknown'
+  }
+  return 'unknown'
+}
+
 export function printVersion(): void {
-  console.log('mirror-compile v2.0.0')
+  console.log(`mirror-compile v${readVersion()}`)
 }
 
 export function printHelp(): void {
