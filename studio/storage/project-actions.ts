@@ -730,8 +730,33 @@ async function tauriLoadDemo(): Promise<void> {
 }
 
 async function tauriImportProject(): Promise<boolean> {
-  log.warn('importProject is not implemented for Tauri desktop yet')
-  return false
+  // Tauri-only path; lazy-load (see loadTauriBridge comment).
+  const { TauriDialog, TauriProject } = await loadTauriBridge()
+
+  // 1. Folder picker — let the user pick the project root on disk.
+  let projectPath: string | null
+  try {
+    projectPath = await TauriDialog.openFolder()
+  } catch (err) {
+    log.error('TauriDialog.openFolder failed:', err)
+    await MirrorDialog.alert(`Ordner-Dialog fehlgeschlagen: ${err}`, { title: 'Fehler' })
+    return false
+  }
+  if (!projectPath) return false // user cancelled
+
+  // 2. Open the project (sets base path + adds to recents). The Rust
+  //    side canonicalises + verifies it's a directory.
+  try {
+    await TauriProject.openProject(projectPath)
+  } catch (err) {
+    log.error('TauriProject.openProject failed:', err)
+    await MirrorDialog.alert(`Projekt konnte nicht geöffnet werden: ${err}`, { title: 'Fehler' })
+    return false
+  }
+
+  // 3. Reload so file-tree + storage adapter see the new base path.
+  reloadFresh()
+  return true
 }
 
 async function tauriExportProject(): Promise<void> {
