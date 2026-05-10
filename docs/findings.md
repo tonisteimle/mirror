@@ -115,6 +115,19 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
+- **Wo:** `compiler/backends/react.ts` (3273 LOC) — Decomposition
+  in `compiler/backends/react/ops/*.ts`
+  **Was:** Größte Datei in `compiler/`, 62 Commits seit April,
+  monolithischer Aufbau (49 Top-Level-Decls). DOM-Backend ist mit
+  767 LOC + `dom/ops/`-Subdir bereits modularisiert; React-Backend
+  hat dieselbe Surface aber 4× das Volumen. Lane-Doc geschrieben
+  in `docs/refactoring/react-backend-decomp.md` mit konkretem
+  8-Slice-Plan (Layout/Events/Attributes/Icon/Chart/Text/JSX/Style)
+  inkl. Pre-Refactor-Pins.
+  **Status:** offen — bereit für Slice 1 (Layout & Component, ~150 LOC).
+  **Notiz:** Framework-Backend-Decomp (1057 LOC, gleiche Klasse von
+  Monolithik) ist deferred bis nach React-Validierung.
+
 - **Wo:** `studio/demo/` (735 LOC) — DOM-Overlay-Demo-API (DemoCursor +
   KeystrokeOverlay)
   **Was:** Browser-Side-Implementation für Demo-Modus mit visuellem
