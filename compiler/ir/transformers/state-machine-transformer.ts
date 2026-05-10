@@ -46,14 +46,6 @@ export function buildStateMachine(
   // Filter states that have triggers or when dependencies (these form the state machine)
   const interactiveStates = states.filter(s => s.trigger || s.when)
 
-  // Filter custom states for state machine:
-  // 1. States NOT in SYSTEM_STATES (like "on", "open", "loading"), OR
-  // 2. States in SYSTEM_STATES but used as custom states (have properties defined)
-  //    e.g., "active: bg #2271C1" is a custom state, not CSS :active pseudo-class
-  const customStates = states.filter(
-    s => !SYSTEM_STATES.has(s.name) || (s.properties && s.properties.length > 0)
-  )
-
   // Check if any event has a state machine function (toggle, exclusive)
   const hasStateMachineEvents =
     events?.some(e => e.actions?.some(a => a.isBuiltinStateFunction)) ?? false

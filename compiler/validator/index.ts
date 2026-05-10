@@ -206,7 +206,6 @@ export function formatErrors(result: ValidationResult, source?: string): string 
 
   const formatError = (err: ValidationError): string => {
     const prefix = err.severity === 'error' ? '✗' : '⚠'
-    const color = err.severity === 'error' ? 'error' : 'warning'
 
     let msg = `${prefix} [${err.code}] ${err.message} (line ${err.line}, col ${err.column})`
 
