@@ -52,14 +52,18 @@ describe('Each-Loop — DOM-only runtime semantics', () => {
     expect(dom).toContain('eachContainer')
   })
 
-  it('React backend: each-loop is documented limitation', () => {
-    // React backend: each does not produce a runtime loop. Pin this
-    // documented limit (was found in Tier 9 + smoke tests).
+  it('React backend: top-level each renders as `.map()` over the collection', () => {
+    // React backend now emits a real `.map()` over the collection (was
+    // a documented limitation pre-Tier-9 follow-up). Object-keyed
+    // collections coerced via Object.values; output wrapped in `<>...</>`
+    // because the `.map()` expression is naked JSX.
     const react = generateReact(
       parse(`tasks:\n  t1:\n    title: "A"\n\neach task in $tasks\n  Text "$task.title"`)
     )
-    // React doesn't crash, but doesn't loop either.
-    expect(react).toContain('react')
+    expect(react).toMatch(/\.map\(\(task,/)
+    expect(react).toContain('Object.values')
+    // Top-level Each → Fragment wrapper (return value isn't a single element).
+    expect(react).toMatch(/return\s*\(\s*<>/)
   })
 })
 

@@ -424,6 +424,19 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — Top-Level `each` in React-Backend
+
+- **Wo:** `compiler/backends/react.ts`, `tests/differential/each.test.ts`
+  **Was:** Top-Level `each task in $tasks` produzierte naked
+  `{...}.map()`-Expression im `return (…)` — ungültiges JSX. Fix:
+  Root-Items werden klassifiziert (`jsx` / `expr` / `comment`) und bei
+  Bedarf in `<>...</>` gewickelt (Fragment). Single-Element-Root bleibt
+  unverpackt. Pin im each-Differential von "documented limitation" auf
+  konkrete `.map()`+`Object.values`+Fragment-Assertion umgestellt.
+  **Status:** erledigt
+  **Notiz:** Fragment-Wrap deckt auch Multi-Root-Programme ab, die
+  vorher implizit auf einen Root angewiesen waren.
+
 ### 2026-05-10 — Differential Coverage Gap geschlossen
 
 - **Wo:** `tests/differential/` (16 Files)

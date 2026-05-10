@@ -138,38 +138,75 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
     lines.push(`  const _elements = React.useRef<Record<string, HTMLElement | null>>({})`)
     lines.push(``)
   }
-  lines.push(`  return (`)
-
-  // Generate JSX for each root instance
+  // Collect renderable root items first so we can decide on a Fragment
+  // wrapper. A top-level `each` block expands to `{tokens.map(...)}` (a
+  // naked JSX expression) — illegal as a sole `return (...)` body, and
+  // multiple roots also need a wrapper.
+  type RootItem = { kind: 'jsx' | 'expr' | 'comment'; code: string }
+  const rootItems: RootItem[] = []
   if (program.instances && program.instances.length > 0) {
     for (const instance of program.instances) {
       // Skip Slot primitives in React output (they're only for visual editor)
       if (instance.type === 'Slot') continue
       // Skip Table for now - not yet supported in React backend
       if (instance.type === 'Table') continue
-      // Skip Each / Conditional / ZagComponent / etc. — the static React
-      // backend supports only plain Instance trees. Without this guard,
+      // Top-level `each task in $tasks` → emits a naked `{...}.map(...)`
+      // expression; same renderer used inside Instance.children.
+      if ((instance as { type: string }).type === 'Each') {
+        rootItems.push({
+          kind: 'expr',
+          code: generateEachJSX(
+            instance as unknown as Each,
+            componentMap,
+            program.tokens || [],
+            propertySetMap,
+            '      '
+          ),
+        })
+        continue
+      }
+      // Skip Conditional / ZagComponent / etc. — the static React backend
+      // supports plain Instance + Each trees. Without this guard,
       // generateJSX would try to read `.properties` on a node that doesn't
       // have it and throw TypeError.
       if ((instance as { type: string }).type !== 'Instance') {
-        // Emit a comment so the user sees what was skipped.
         const skipped = (instance as { type?: string }).type ?? 'Unknown'
-        lines.push(`    {/* ${skipped} not supported in React backend */}`)
+        rootItems.push({
+          kind: 'comment',
+          code: `      {/* ${skipped} not supported in React backend */}`,
+        })
         continue
       }
-      const jsx = generateJSX(
-        instance as Instance,
-        componentMap,
-        program.tokens || [],
-        propertySetMap,
-        '    '
-      )
-      lines.push(jsx)
+      rootItems.push({
+        kind: 'jsx',
+        code: generateJSX(
+          instance as Instance,
+          componentMap,
+          program.tokens || [],
+          propertySetMap,
+          rootItems.length === 0 && program.instances.length === 1 ? '    ' : '      '
+        ),
+      })
     }
-  } else {
-    lines.push(`    <div />`)
   }
 
+  // Wrap in `<>...</>` when:
+  //   - 0 items (nothing to render — emit `<div />` placeholder, no wrap)
+  //   - 1 plain JSX element → no wrap (the Instance is its own root)
+  //   - anything else (multi-root, top-level Each, comments) → Fragment
+  const needsFragment =
+    rootItems.length > 1 || (rootItems.length === 1 && rootItems[0].kind !== 'jsx')
+
+  lines.push(`  return (`)
+  if (rootItems.length === 0) {
+    lines.push(`    <div />`)
+  } else if (needsFragment) {
+    lines.push(`    <>`)
+    for (const item of rootItems) lines.push(item.code)
+    lines.push(`    </>`)
+  } else {
+    lines.push(rootItems[0].code)
+  }
   lines.push(`  )`)
   lines.push(`}`)
   lines.push(``)
