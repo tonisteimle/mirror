@@ -288,29 +288,6 @@ instance.column)` umgestellt. 7849/7849 vitest grün.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
-- **Wo:** `docs/TEST-FRAMEWORK.md` (1429 LOC)
-  **Was:** Dokument substanziell veraltet seit dem CDP-Test-Runner-
-  Refactor (Commit `8e81387f`). 7 konkrete Drift-Punkte:
-  (1) Architektur-Diagramm referenziert nicht-existierendes
-  `tools/drag-test-runner.ts` und alte verbotene InteractionAPI.
-  (2) „Kern-Dateien"-Liste fehlt 10 neue Files (cdp-input-client,
-  mirror-actions, helpers, os-mouse-client, snapshot-client,
-  trusted-interactions, layout-assertions, cli-bridge-shim,
-  codemirror-api, snapping-api). (3) „Test-Suites"-Tabelle listet
-  3 Subdirs als Files + ~25 fehlende Subdirs. (4) „CLI Test-Runner"
-  falscher Entry-Name + 7 fehlende Files. (5) Komplette „InteractionAPI"-
-  Section dokumentiert die HEUTE VERBOTENE synthetische API
-  (`click()`, `dragFromPalette(component, target, index)`, `pressKey()`).
-  (6) Neue kanonische `__mirrorActions`-API (Schicht 3) nirgends
-  dokumentiert. (7) `cdpInput`-API (Schicht 1) nur als Schlagwort
-  im Grundprinzip erwähnt, keine Referenz.
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~22:00)
-  **Plan:** Full rewrite: altes Dokument nach `docs/archive/`,
-  neues Dokument schreibt das 3-Schichten-Modell (cdpInput →
-  trusted-interactions → mirror-actions) auf, gibt API-Referenz
-  pro Schicht, Test-Template, CLI-Aufrufe. Grundprinzip bleibt.
-  Verlinkungen aus CLAUDE.md prüfen.
-
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
@@ -1081,6 +1058,31 @@ step-runner-selectors}.test.ts`
   (15420/15420 Tests, 585/585 Files).
   **Status:** erledigt (5 in `05cce232` parallel-bundle, 1 in `e4f378ad`
   parallel-bundle; Bookkeeping in `b099a445`)
+
+### 2026-05-10 — `docs/TEST-FRAMEWORK.md` Full Rewrite (3-Schichten-CDP-Modell)
+
+- **Wo:** `docs/TEST-FRAMEWORK.md` + `docs/archive/TEST-FRAMEWORK-pre-cdp-rewrite.md` + `package.json`
+  **Was:** Altes Dokument (1429 LOC) war komplett veraltet seit dem
+  CDP-Test-Runner-Refactor (`8e81387f`): 7 dokumentierte Drift-Punkte
+  (Architektur-Diagramm verwies auf nicht-existierende Files,
+  „InteractionAPI"-Section dokumentierte die heute verbotene synthetische
+  API, neue `__mirrorActions`/`cdpInput`-Schichten nirgends dokumentiert,
+  fehlende Files in jeder Liste). Komplett neu geschrieben (~520 LOC)
+  mit 3-Schichten-Modell (cdpInput → trustedInteractions →
+  \_\_mirrorActions), API-Referenz pro Schicht, Test-Template,
+  Verzeichnis-Struktur (21 registrierte Kategorien gelistet),
+  vollständige CLI-Flag-Tabelle, Browser-Konsolen-API. Vorgängerdoc als
+  `docs/archive/TEST-FRAMEWORK-pre-cdp-rewrite.md` aufbewahrt
+  (force-add, da `docs/archive/` gitignored aber konventionell tracked).
+  Bonus: 2 stale `npm run`-Scripts (`test:demos`/`test:demos:headed`)
+  aus `package.json` entfernt — referenzierten gelöschten
+  `tools/test-runner/demo/scripts/` und CLI-Flags
+  `--demo-suite`/`--pacing`. Verlinkungen aus CLAUDE.md, README.md,
+  CONTRIBUTING.md, studio/test-api/README.md, suites/categories.ts,
+  suites/preview-cdp/\_shared/actions.ts geprüft — alle stabil
+  (zeigen weiter auf TEST-FRAMEWORK.md, das den „Grundprinzip"-
+  Abschnitt mit gleichem Anker behält).
+  **Status:** erledigt (`c0f550f2`)
 
 ### 2026-05-10 — `ParseError`-3×-Drift auf canonical compiler-Type konvergiert
 
