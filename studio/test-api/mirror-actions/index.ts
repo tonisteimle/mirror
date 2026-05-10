@@ -485,6 +485,91 @@ export function installMirrorActions(): MirrorActionsAPI {
     }
   }
 
+  /**
+   * Glow ring + value chip around a property-panel field, so viewers can
+   * track which field changed and what the new value is during
+   * setProperty / pickColor. Two layers:
+   *
+   *   - A ring positioned-fixed over the element's rect, color matching
+   *     Mirror's own focus-ring blue.
+   *   - A floating chip "→ value" anchored to the element's right edge,
+   *     truncated for long values. The chip is what makes the change
+   *     legible at a glance — the ring just says "look here".
+   *
+   * The caller controls when both fade out via the returned destroy().
+   * Callers should keep the ring visible for ≥600ms so the eye has time
+   * to read the chip and match it to the preview update.
+   */
+  const highlightField = (el: HTMLElement, valueLabel: string): (() => void) => {
+    const rect = el.getBoundingClientRect()
+
+    const ring = document.createElement('div')
+    ring.style.cssText =
+      'position:fixed;' +
+      'left:' +
+      (rect.left - 4) +
+      'px;' +
+      'top:' +
+      (rect.top - 4) +
+      'px;' +
+      'width:' +
+      (rect.width + 8) +
+      'px;' +
+      'height:' +
+      (rect.height + 8) +
+      'px;' +
+      'border:2px solid #5BA8F5;' +
+      'border-radius:6px;' +
+      'box-shadow:0 0 0 4px rgba(91,168,245,0.18), 0 0 12px rgba(91,168,245,0.5);' +
+      'background:rgba(91,168,245,0.06);' +
+      'box-sizing:border-box;' +
+      'pointer-events:none;z-index:999992;' +
+      'opacity:0;transition:opacity 220ms ease-out;'
+    document.body.appendChild(ring)
+
+    const chip = document.createElement('div')
+    const trimmed = valueLabel.length > 28 ? valueLabel.slice(0, 28) + '…' : valueLabel
+    chip.textContent = '→ ' + trimmed
+    chip.style.cssText =
+      'position:fixed;' +
+      'left:' +
+      (rect.right + 12) +
+      'px;' +
+      'top:' +
+      (rect.top + rect.height / 2 - 14) +
+      'px;' +
+      'background:rgba(91,168,245,0.95);' +
+      'color:white;' +
+      'padding:6px 12px;' +
+      'border-radius:6px;' +
+      'font-family:ui-monospace,SFMono-Regular,Menlo,monospace;' +
+      'font-size:13px;font-weight:600;' +
+      'white-space:nowrap;' +
+      'box-shadow:0 4px 12px rgba(0,0,0,0.3);' +
+      'pointer-events:none;z-index:999993;' +
+      'opacity:0;transform:translateX(-6px);' +
+      'transition:opacity 220ms ease-out,transform 220ms ease-out;'
+    document.body.appendChild(chip)
+
+    requestAnimationFrame(() => {
+      ring.style.opacity = '1'
+      chip.style.opacity = '1'
+      chip.style.transform = 'translateX(0)'
+    })
+
+    return (): void => {
+      ring.style.transition = 'opacity 260ms ease-in'
+      chip.style.transition = 'opacity 220ms ease-in,transform 220ms ease-in'
+      ring.style.opacity = '0'
+      chip.style.opacity = '0'
+      chip.style.transform = 'translateX(-6px)'
+      setTimeout(() => {
+        ring.remove()
+        chip.remove()
+      }, 280)
+    }
+  }
+
   const pressPaletteItem = (el: HTMLElement | null): (() => void) => {
     if (!el) return () => {}
     const prev = {
@@ -968,6 +1053,12 @@ export function installMirrorActions(): MirrorActionsAPI {
     if (input) {
       const r = input.getBoundingClientRect()
       const endPoint: Point = { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+      // Highlight the field with a chip showing the new value, so viewers
+      // can connect cursor → field → preview update. The ring stays up
+      // through the focus/set/blur dance and a 600ms dwell after, then
+      // fades — long enough for the eye to read the chip and match it
+      // against the preview change that just rendered.
+      const releaseHighlight = highlightField(input, propName + ' ' + value)
       if (input.tagName.toLowerCase() === 'select') {
         await withCursorSync(endPoint, 250, async () => {
           input!.focus()
@@ -997,6 +1088,8 @@ export function installMirrorActions(): MirrorActionsAPI {
           input!.blur()
         })
       }
+      await delay(600)
+      releaseHighlight()
     } else {
       const panelEl = document.querySelector('#property-panel') as HTMLElement | null
       if (panelEl) {
@@ -1035,6 +1128,10 @@ export function installMirrorActions(): MirrorActionsAPI {
       )
     }
     const triggerRect = trigger.getBoundingClientRect()
+    // Glow ring around the color swatch trigger plus a chip with the
+    // new color literal — viewers see "this swatch → #2196F3" before
+    // the picker pops, then the preview updates with the same color.
+    const releaseHighlight = highlightField(trigger, propName + ' ' + color)
     await withCursorSync(
       {
         x: triggerRect.left + triggerRect.width / 2,
@@ -1043,7 +1140,9 @@ export function installMirrorActions(): MirrorActionsAPI {
       250,
       async () => {
         trigger.click()
-        await delay(220)
+        // Hold the picker open longer than before so the viewer registers
+        // that a color picker actually appeared.
+        await delay(550)
       }
     )
     document.body.click()
@@ -1054,7 +1153,10 @@ export function installMirrorActions(): MirrorActionsAPI {
       throw new Error('pickColor: studio.propertyPanel.changeProperty not available')
     }
     panel.changeProperty(propName, color)
-    await delay(450)
+    // Hold the highlight a beat after the color applies so the eye can
+    // link the chip ("→ #2196F3") to the preview's new background.
+    await delay(700)
+    releaseHighlight()
   }
 
   // === DOM snapshot (E2) ===
