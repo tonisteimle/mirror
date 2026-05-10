@@ -826,7 +826,7 @@ Chronologisch absteigend (neueste zuerst).
   Re-Export, `test-api/snapping-api.ts`) auf `SnapSpacingToken`.
   Beide `@deprecated SpacingToken`-Aliase + zugehörige Re-Exports
   in 4 Files entfernt. 6002/6002 studio tests pass.
-  **Status:** erledigt (`<spacingtoken-commit>`)
+  **Status:** erledigt (`2a3dd1b6`)
 
 ### 2026-05-10 — Probe-Hygiene: 70 throwaway `probe-*.ts` gelöscht
 
