@@ -344,20 +344,19 @@ function selectBlockingIssues(result: ValidationResult): ValidationError[] {
 
 /**
  * Pre-flight check for parser-pathological patterns. Runs BEFORE the
- * validator on Mirror that the LLM produced — because some inputs hang
- * the parser in an infinite loop, and the validator can't be aborted
- * once running (synchronous code, no worker isolation today).
+ * validator on Mirror that the LLM produced — kept as a cheap regex
+ * pre-check so the LLM gets a clean error in one shape (no special-
+ * casing for parser-error vs. validator-error).
  *
  * Currently detected:
- *  - Nested state blocks (`hover:` inside `on:` etc.) — trigger an
- *    infinite loop in the current parser. Discovered in the
- *    profile-card-toggle smoke test (2026-05-05).
+ *  - Nested state blocks (`hover:` inside `on:` etc.) — used to hang
+ *    the parser in an infinite loop (discovered in the profile-card-
+ *    toggle smoke test 2026-05-05). Parser now reports a proper error
+ *    (commit `4ff7cade`); this pre-flight stays as a fast-path that
+ *    surfaces the same diagnosis without invoking the parser.
  *
  * Returns errors in the same shape as the validator, so they thread
  * through the existing retry-loop without special-casing.
- *
- * TODO: remove the pre-flight once the parser bug is fixed in
- * `compiler/parser/`. Tracked alongside the canvas-position bug.
  */
 // Schema-derived: every name that can legally start a state block (`name:`)
 // must be detected here, otherwise the LLM-pipeline's nested-state-block
