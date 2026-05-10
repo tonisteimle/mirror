@@ -44,6 +44,13 @@ export const tutorial06: TestCase[] = describe('demos.tutorial', [
       // Settle so layout has measured before we read centers.
       await sleep(400)
 
+      // Initial order assertion: red, yellow, blue (in DOM order).
+      const initial = api.editor.getCode()
+      const iRed0 = initial.indexOf('#ef4444')
+      const iYellow0 = initial.indexOf('#f59e0b')
+      const iBlue0 = initial.indexOf('#2271C1')
+      api.assert.ok(iRed0 < iYellow0 && iYellow0 < iBlue0, 'initial order: red, yellow, blue')
+
       // Beat 1 — Yellow → front.
       // ef4444 = rgb(239, 68, 68) red, f59e0b = rgb(245, 158, 11) yellow.
       const yellow = findByBg('rgb(245, 158, 11)')
@@ -54,6 +61,12 @@ export const tutorial06: TestCase[] = describe('demos.tutorial', [
 
       await osMouse.moveTo(yellowStart)
       await sleep(500)
+      // Assert cursor is over the yellow frame before the drag.
+      const hitYellow = document.elementFromPoint(yellowStart.x, yellowStart.y)
+      api.assert.ok(
+        hitYellow && (yellow.contains(hitYellow) || hitYellow === yellow),
+        'cursor parked on yellow before drag'
+      )
       await osMouse.drag(yellowStart, dropBeforeRed, {
         preHoldMs: 300,
         dwellMs: 350,
@@ -61,6 +74,13 @@ export const tutorial06: TestCase[] = describe('demos.tutorial', [
       })
       await api.editor.setCode(AFTER_BEAT_1)
       await sleep(900)
+
+      // Beat 1 assertion: yellow now first, red second, blue third.
+      const afterB1 = api.editor.getCode()
+      const iYellow1 = afterB1.indexOf('#f59e0b')
+      const iRed1 = afterB1.indexOf('#ef4444')
+      const iBlue1 = afterB1.indexOf('#2271C1')
+      api.assert.ok(iYellow1 < iRed1 && iRed1 < iBlue1, 'after Beat 1: yellow, red, blue')
 
       // Beat 2 — Red → end.
       const redAfter = findByBg('rgb(239, 68, 68)')
@@ -71,6 +91,11 @@ export const tutorial06: TestCase[] = describe('demos.tutorial', [
 
       await osMouse.moveTo(redStart)
       await sleep(500)
+      const hitRed = document.elementFromPoint(redStart.x, redStart.y)
+      api.assert.ok(
+        hitRed && (redAfter.contains(hitRed) || hitRed === redAfter),
+        'cursor parked on red before drag'
+      )
       await osMouse.drag(redStart, dropAfterBlue, {
         preHoldMs: 300,
         dwellMs: 350,
@@ -79,6 +104,7 @@ export const tutorial06: TestCase[] = describe('demos.tutorial', [
       await api.editor.setCode(AFTER_BEAT_2)
       await sleep(900)
 
+      // Final order assertion: yellow, blue, red.
       const code = api.editor.getCode()
       const yellowIdx = code.indexOf('#f59e0b')
       const blueIdx = code.indexOf('#2271C1')
