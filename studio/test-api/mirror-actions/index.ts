@@ -1103,6 +1103,25 @@ export function installMirrorActions(): MirrorActionsAPI {
 
   // === Property-Panel actions (B1) ===
 
+  /**
+   * Read the currently-selected node id from Studio's runtime, falling
+   * back to the DOM marker. Returns null if nothing's selected.
+   * Used to skip redundant selectInPreview when chained setProperty /
+   * pickColor calls target a node that's already selected — otherwise
+   * each call would re-click the preview element and the viewer reads
+   * a string of click ripples as "tapping the same thing over and over".
+   */
+  const getCurrentSelectionId = (): string | null => {
+    try {
+      const fromApi = win.__dragTest && win.__dragTest.getSelection && win.__dragTest.getSelection()
+      if (typeof fromApi === 'string' && fromApi.length > 0) return fromApi
+    } catch {
+      // fall through to DOM fallback
+    }
+    const sel = document.querySelector('#preview [data-mirror-id].selected')
+    return sel ? sel.getAttribute('data-mirror-id') : null
+  }
+
   const selectInPreview = async (sel: Selector): Promise<void> => {
     const nodeId = resolveSelector(sel)
     const el = document.querySelector('[data-mirror-id="' + nodeId + '"]') as HTMLElement | null
@@ -1113,6 +1132,19 @@ export function installMirrorActions(): MirrorActionsAPI {
       win.__dragTest.selectNode(nodeId)
       await delay(150)
     })
+  }
+
+  /**
+   * Used internally by setProperty / pickColor. Skips the click + select
+   * if the node is already selected — avoids the rapid repeat clicks
+   * the user reported when chaining several setProperty calls on the
+   * same target.
+   */
+  const ensureSelected = async (sel: Selector): Promise<string> => {
+    const nodeId = resolveSelector(sel)
+    if (getCurrentSelectionId() === nodeId) return nodeId
+    await selectInPreview(sel)
+    return nodeId
   }
 
   const findPropertyInput = (propName: string): HTMLInputElement | HTMLSelectElement => {
@@ -1134,7 +1166,7 @@ export function installMirrorActions(): MirrorActionsAPI {
   }
 
   const setProperty = async (sel: Selector, propName: string, value: string): Promise<void> => {
-    await selectInPreview(sel)
+    await ensureSelected(sel)
     let input: HTMLInputElement | HTMLSelectElement | null = null
     try {
       input = findPropertyInput(propName)
@@ -1213,7 +1245,7 @@ export function installMirrorActions(): MirrorActionsAPI {
   }
 
   const pickColor = async (sel: Selector, propName: string, color: string): Promise<void> => {
-    await selectInPreview(sel)
+    await ensureSelected(sel)
     const trigger = document.querySelector(
       '#property-panel [data-color-prop="' + propName + '"]'
     ) as HTMLElement | null
