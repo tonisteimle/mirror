@@ -736,3 +736,14 @@ export function getHtmlTag(primitiveName: string): string {
   if (!_htmlTagByName) _htmlTagByName = buildHtmlTagIndex()
   return _htmlTagByName.get(primitiveName.toLowerCase()) ?? 'div'
 }
+
+/**
+ * Whether `name` resolves to a primitive in the DSL schema (case-insensitive,
+ * including aliases). Distinguishes "Frame → div by design" from "Unknown → div
+ * fallback" — call sites that need that distinction (e.g., heuristic name-tag
+ * resolution) gate on this.
+ */
+export function isKnownPrimitive(name: string): boolean {
+  if (!_htmlTagByName) _htmlTagByName = buildHtmlTagIndex()
+  return _htmlTagByName.has(name.toLowerCase())
+}

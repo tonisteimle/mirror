@@ -17,6 +17,7 @@ import type {
 } from '../parser/ast'
 import { expandPropertySets } from '../ir/transformers/property-set-expander'
 import { isLayoutPrimitive } from '../schema/dsl'
+import { getHtmlTag as schemaGetHtmlTag, isKnownPrimitive } from '../schema/ir-helpers'
 import {
   nineZoneToFlex,
   resolveNineZoneAlias,
@@ -97,6 +98,23 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
   if (hasIcon) {
     lines.push(MIRROR_ICON_COMPONENT)
     lines.push(``)
+    // Slice 51 V-1: populate the Custom-Icon-Registry baked into the
+    // MirrorIcon component template. Mirrors DOM backend's
+    // `_runtime.registerIcon` calls (see compiler/backends/dom/ops/emit-static.ts).
+    const customIcons =
+      (program as Program & { icons?: Array<{ name: string; path: string; viewBox?: string }> })
+        .icons ?? []
+    if (customIcons.length > 0) {
+      lines.push(`// Slice 51 V-1: Custom-Icon-Registry (from $icons:)`)
+      for (const icon of customIcons) {
+        const escapedPath = icon.path.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+        const viewBox = icon.viewBox || '0 0 24 24'
+        lines.push(
+          `_MIRROR_CUSTOM_ICONS[${JSON.stringify(icon.name)}] = { path: "${escapedPath}", viewBox: ${JSON.stringify(viewBox)} }`
+        )
+      }
+      lines.push(``)
+    }
   }
 
   // Generate main App component
@@ -212,9 +230,28 @@ function _mirrorSanitizeSVG(svgText) {
 
 const _mirrorIconCache = new Map()
 
+// Slice 51 V-1: Custom-Icon-Registry. Populated at compile-time from
+// dollar-icons declarations (see compiler/backends/react.ts).
+// MirrorIcon checks here first before falling through to Lucide-CDN.
+const _MIRROR_CUSTOM_ICONS = {}
+
+function _mirrorBuildCustomSvg(pathData, viewBox) {
+  const paths = String(pathData).split(/[\\n|]/).map(p => p.trim()).filter(p => p.length > 0)
+    .map(p => '<path d="' + p + '"/>').join('')
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + (viewBox || '0 0 24 24') +
+    '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + paths + '</svg>'
+}
+
 function MirrorIcon({ name, size, color, strokeWidth, fill }) {
   const [svg, setSvg] = React.useState(_mirrorIconCache.get(name) ?? '')
   React.useEffect(() => {
+    // Slice 51 V-1: Custom-Icon-Registry takes precedence over Lucide-CDN.
+    // Mirrors compiler/runtime/icons.ts:getIconSvg semantics.
+    const custom = _MIRROR_CUSTOM_ICONS[name]
+    if (custom) {
+      setSvg(_mirrorBuildCustomSvg(custom.path, custom.viewBox))
+      return
+    }
     const safe = _mirrorSanitizeIconName(name)
     if (!safe) { setSvg(_MIRROR_FALLBACK_ICON); return }
     if (_mirrorIconCache.has(safe)) { setSvg(_mirrorIconCache.get(safe)); return }
@@ -479,47 +516,24 @@ function formatIconPropValue(v: unknown, propAlias: 'is' | 'ic' | 'iw'): string 
 }
 
 function getHtmlTag(componentName: string, compDef?: ComponentDefinition): string {
-  // Direct primitive name lookup (when used as instance without component def)
-  const primitiveTagMap: Record<string, string> = {
-    Frame: 'div',
-    Box: 'div',
-    Text: 'span',
-    Button: 'button',
-    Input: 'input',
-    Textarea: 'textarea',
-    Image: 'img',
-    Img: 'img',
-    Icon: 'span',
-    Link: 'a',
-    Divider: 'hr',
-    Spacer: 'div',
-    Header: 'header',
-    Nav: 'nav',
-    Main: 'main',
-    Section: 'section',
-    Article: 'article',
-    Aside: 'aside',
-    Footer: 'footer',
-    H1: 'h1',
-    H2: 'h2',
-    H3: 'h3',
-    H4: 'h4',
-    H5: 'h5',
-    H6: 'h6',
+  // 1) `Btn as Button: ...` → compDef.primitive='button' → <button>. Components
+  // without `as`-clause carry an implicit `primitive='frame'`, which we ignore
+  // here (returns 'div' from the schema) so the name-heuristic in step 3 still
+  // runs. Only schema-resolutions to a non-div tag are authoritative.
+  if (compDef?.primitive && isKnownPrimitive(compDef.primitive)) {
+    const tag = schemaGetHtmlTag(compDef.primitive)
+    if (tag !== 'div') return tag
   }
-  if (primitiveTagMap[componentName]) return primitiveTagMap[componentName]
 
-  // Check primitive type from component definition
-  const primitive = compDef?.primitive?.toLowerCase()
+  // 2) Direct primitive name (Frame, Icon, H1, …) via DSL schema.
+  if (isKnownPrimitive(componentName)) {
+    return schemaGetHtmlTag(componentName)
+  }
 
-  if (primitive === 'button') return 'button'
-  if (primitive === 'input') return 'input'
-  if (primitive === 'textarea') return 'textarea'
-  if (primitive === 'image') return 'img'
-  if (primitive === 'link') return 'a'
-  if (primitive === 'text') return 'span'
-
-  // Default based on common names
+  // 3) Semantic-name heuristic for user components without `as`-clause.
+  // `Sidebar` → <aside>, `MyHeader` → <header>, `Title` → <h2> for
+  // accessibility/SEO without forcing the user to write `as`. Tested in
+  // backend-react.test.ts § "Heuristic tag resolution".
   const name = componentName.toLowerCase()
   if (name.includes('button') || name === 'btn') return 'button'
   if (name.includes('input') || name.includes('field')) return 'input'

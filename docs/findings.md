@@ -181,17 +181,6 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
 
 ### Compiler Backends (Hunt 2026-05-10)
 
-- **Wo:** `compiler/backends/react.ts:517` und `compiler/schema/ir-helpers.ts:735`
-  **Was:** Zwei parallele `getHtmlTag`-Funktionen mit unterschiedlichen
-  Signaturen — React-lokal `(componentName, compDef)` mit eigener
-  Primitive-Map plus Heuristik (`name.includes('button')` etc.),
-  Schema-Helper `(primitiveName)` ohne Heuristik. Neue Primitives müssen
-  heute an beiden Stellen ergänzt werden, sonst React-Drift.
-  **Status:** offen
-  **Notiz:** DOM-Backend nutzt den Schema-Helper, React nicht. React auf
-  Schema-Helper umstellen, Heuristik separat (oder löschen, wenn nicht
-  durch Tests gedeckt).
-
 - **Wo:** `compiler/backends/dom/ops/resolve-templates.ts:132-220`
   `resolveConditionalExpression`
   **Was:** Hand-rolled String-Position-Parser mit `inConditional`-Flag,
@@ -285,6 +274,14 @@ als`undefined`geloggt werden.
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — `getHtmlTag`-Duplikation in React-Backend
+
+- **Wo:** `compiler/backends/react.ts`, `compiler/schema/ir-helpers.ts`
+  **Was:** Lokale Primitive-Map im React-Backend durch Schema-Helper
+  ersetzt (`schemaGetHtmlTag` + neuer `isKnownPrimitive`). `compDef.primitive`-
+  und Heuristik-Pfade behalten, Drift-Quelle für neue Primitives weg.
+  **Status:** erledigt (`PENDING`)
 
 ### 2026-05-10 — `*Extracted` Aliase (Kampagne abgeschlossen)
 
