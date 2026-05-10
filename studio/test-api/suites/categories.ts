@@ -158,6 +158,7 @@ import { allTestSystemTests } from './test-system'
 // inline-edit, property panel) via the CDP-only helper layer. Plan:
 // docs/test-plan-preview-cdp.md.
 import { previewCdpAllTests } from './preview-cdp'
+import { demoTests } from './demos'
 
 // =============================================================================
 // Consolidated Categories
@@ -406,6 +407,7 @@ export type CategoryName =
   | 'headed'
   | 'stepRunner'
   | 'previewCdp'
+  | 'demos'
 
 export interface CategoryInfo {
   name: CategoryName
@@ -518,6 +520,11 @@ export const categories: Record<CategoryName, CategoryInfo> = {
     name: 'previewCdp',
     description: 'Preview interactions via CDP Trusted Mouse + Keyboard (no synthetic events)',
     tests: previewCdpTests,
+  },
+  demos: {
+    name: 'demos',
+    description: 'Tutorial demos — real OS cursor via nut-js (--os-mouse required)',
+    tests: demoTests,
   },
 }
 

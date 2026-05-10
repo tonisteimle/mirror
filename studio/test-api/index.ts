@@ -971,16 +971,19 @@ export function setupMirrorTestAPI(): void {
   // client just sits dormant.
   try {
     installCdpInputClient()
+    ;(window as unknown as { __cdpInput?: typeof cdpInput }).__cdpInput = cdpInput
   } catch (e) {
     console.warn('[test-api] CDP input client install failed:', e)
   }
   try {
     installOsMouseClient()
+    ;(window as unknown as { __osMouse?: typeof osMouse }).__osMouse = osMouse
   } catch (e) {
     console.warn('[test-api] OS-mouse client install failed:', e)
   }
   try {
     installSnapshotClient()
+    ;(window as unknown as { __snapshot?: typeof snapshotClient }).__snapshot = snapshotClient
   } catch (e) {
     console.warn('[test-api] snapshot client install failed:', e)
   }
