@@ -760,7 +760,21 @@ async function tauriImportProject(): Promise<boolean> {
 }
 
 async function tauriExportProject(): Promise<void> {
-  log.warn('exportProject is not implemented for Tauri desktop yet')
+  // In Tauri, files live on disk in the user's git repo — there's
+  // nothing to "export" the way the browser path zips up localStorage.
+  // The Spec-Bundle-via-Claude flow (Mirror → React/Vue/Svelte/Vanilla)
+  // is wired separately on the toolbar via `initExportButton` →
+  // TauriAgent.runAgent, not on the menu Export Project entry.
+  //
+  // Show a toast so the user gets clear feedback that the action
+  // completed (their files are already on disk + git-tracked); add a
+  // pointer to the Spec-Bundle export they probably want.
+  await MirrorDialog.alert(
+    'Dein Projekt ist bereits auf der Disk gespeichert (Git-Repo). ' +
+      'Für den Export zu React / Vue / Svelte / Vanilla nutze den ' +
+      '"Export"-Knopf in der Toolbar.',
+    { title: 'Auto-saved' }
+  )
 }
 
 // =============================================================================

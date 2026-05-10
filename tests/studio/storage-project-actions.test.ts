@@ -580,9 +580,25 @@ describe('Tauri branches — newProject / loadDemo / importProject / exportProje
     expect(importProject.length).toBe(0)
   })
 
-  it('exportProject silently no-ops in Tauri (Slice 3 — not implemented yet)', async () => {
-    const { exportProject } = await getProjectActions()
-    await expect(exportProject()).resolves.toBeUndefined()
+  it('exportProject in Tauri shows the auto-saved info-alert', async () => {
+    // Slice 3 — Tauri files live on disk in git, so the menu Export
+    // entry is just an informational alert pointing at the toolbar
+    // Spec-Bundle export. The toolbar export-button (initExportButton)
+    // is the real React/Vue/Svelte conversion path; this menu entry
+    // exists only because the browser path uses it for ZIP download.
+    const alertMock = vi.fn().mockResolvedValue(undefined)
+    ;(global as unknown as { MirrorDialog: unknown }).MirrorDialog = {
+      alert: alertMock,
+      prompt: vi.fn(),
+    }
+    try {
+      const { exportProject } = await getProjectActions()
+      await exportProject()
+      expect(alertMock).toHaveBeenCalledTimes(1)
+      expect(alertMock.mock.calls[0][0]).toMatch(/Disk|Git|Toolbar/)
+    } finally {
+      delete (global as unknown as { MirrorDialog?: unknown }).MirrorDialog
+    }
   })
 })
 
