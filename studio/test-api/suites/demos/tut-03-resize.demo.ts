@@ -34,6 +34,11 @@ export const tutorial03: TestCase[] = describe('demos.tutorial', [
       const frameEl = querySafe('#preview [data-mirror-id]')
       const frameId = frameEl.getAttribute('data-mirror-id') as string
 
+      // Initial state assertion.
+      const startCode = api.editor.getCode()
+      api.assert.matches(startCode, /w\s+240/, 'starts with w 240')
+      api.assert.matches(startCode, /h\s+160/, 'starts with h 160')
+
       // Visual: cursor approaches the Frame, then click to select.
       // dragResize internally calls ensureSelected, so the click is
       // optional state-wise but valuable for the recording's narrative.
@@ -41,6 +46,11 @@ export const tutorial03: TestCase[] = describe('demos.tutorial', [
       await sleep(400)
       await osMouse.click(centerOf(frameEl))
       await sleep(700)
+
+      // Assert resize handles are now in the DOM (proves selection
+      // engaged and the handles will be there for the OS drag).
+      const handlesRoot = document.querySelector('.visual-overlay .resize-handles')
+      api.assert.ok(handlesRoot, 'resize handles rendered after selection')
 
       // SE handle: drag diagonal +80 +60 (wider AND taller).
       // Trigger state-correct resize first (handles need to be in DOM
@@ -57,6 +67,13 @@ export const tutorial03: TestCase[] = describe('demos.tutorial', [
       await actions.dragResize({ byId: frameId }, 'se', 80, 60)
       await sleep(500)
 
+      // Assert width AND height grew after SE drag.
+      const afterSE = api.editor.getCode()
+      const wMatch = afterSE.match(/w\s+(\d+)/)
+      const hMatchSE = afterSE.match(/h\s+(\d+)/)
+      api.assert.ok(wMatch && parseInt(wMatch[1]) > 240, 'width grew after SE drag')
+      api.assert.ok(hMatchSE && parseInt(hMatchSE[1]) > 160, 'height grew after SE drag')
+
       // S handle: drag down by 40 (taller only).
       const sHandle = querySafe('.visual-overlay .resize-handles .resize-handle[data-position="s"]')
       const sStart = centerOf(sHandle)
@@ -67,9 +84,15 @@ export const tutorial03: TestCase[] = describe('demos.tutorial', [
       await actions.dragResize({ byId: frameId }, 's', 0, 40)
       await sleep(700)
 
-      const code = api.editor.getCode()
-      api.assert.matches(code, /w\s+\d+/, 'editor has updated w')
-      api.assert.matches(code, /h\s+\d+/, 'editor has updated h')
+      // Assert height grew further but width is unchanged after S drag.
+      const finalCode = api.editor.getCode()
+      const wFinal = finalCode.match(/w\s+(\d+)/)
+      const hFinal = finalCode.match(/h\s+(\d+)/)
+      api.assert.ok(wFinal && wMatch && wFinal[1] === wMatch[1], 'width unchanged after S drag')
+      api.assert.ok(
+        hFinal && hMatchSE && parseInt(hFinal[1]) > parseInt(hMatchSE[1]),
+        'height grew further after S drag'
+      )
 
       await osMouse.park()
     }

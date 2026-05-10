@@ -29,11 +29,21 @@ export const tutorial04: TestCase[] = describe('demos.tutorial', [
       await osMouse.click(centerOf(frameEl))
       await sleep(600)
 
+      // Assert resize handles are visible (proves the Frame is selected).
+      api.assert.ok(
+        document.querySelector('.visual-overlay .resize-handles'),
+        'resize handles rendered after selection'
+      )
+
       // Press P to reveal padding handles. Studio's PaddingManager
       // listens for window `keydown`.
       await cdpInput.keyDown({ key: 'p' })
       await cdpInput.keyUp({ key: 'p' })
       await sleep(900)
+
+      // Assert padding handles are now in the DOM (top/right/bottom/left).
+      const padTop = document.querySelector('.padding-handle-top')
+      api.assert.ok(padTop, 'padding handles visible after P-key')
 
       // Beat 1 — Move cursor to the inner top of the Frame to suggest the
       // grab. We then mutate the editor directly (the handle-drag pipeline
@@ -51,6 +61,8 @@ export const tutorial04: TestCase[] = describe('demos.tutorial', [
       )
       await api.editor.setCode('Frame w 240, h 160, bg #2271C1, pad 40')
       await sleep(700)
+      // Assert padding updated.
+      api.assert.matches(api.editor.getCode(), /pad\s+40/, 'editor reflects pad 40')
 
       // Exit padding mode.
       await cdpInput.keyDown({ key: 'p' })

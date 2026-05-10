@@ -49,6 +49,8 @@ export interface CdpInputAPI {
   typeText: (args: { text: string; perCharDelay?: number }) => Promise<void>
   keyDown: (args: { key: string; modifiers?: { meta?: boolean; shift?: boolean } }) => Promise<void>
   keyUp: (args: { key: string; modifiers?: { meta?: boolean; shift?: boolean } }) => Promise<void>
+  mouseClick: (args: { x: number; y: number; clickCount?: number }) => Promise<void>
+  mouseDoubleClick: (args: { x: number; y: number }) => Promise<void>
 }
 
 export function requireCdpInput(): CdpInputAPI {
