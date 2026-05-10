@@ -80,6 +80,9 @@ export class PaddingManager {
   // Debounce timer for refresh
   private refreshDebounceId: number | null = null
 
+  // Document listeners are global and must only be wired once per instance.
+  private documentListenersAdded = false
+
   // Snap indicator for visual feedback
   private snapIndicator: SnapIndicator | null = null
 
@@ -656,12 +659,11 @@ export class PaddingManager {
       this.handlesContainerRef.addEventListener('mousedown', this.boundMouseDown)
     }
 
-    // Document listeners only need to be set once (they're on document, which is stable)
-    // Check if we've already added them by using a marker
-    if (!(this as any)._documentListenersAdded) {
+    // Document listeners only need to be set once (they're on document, which is stable).
+    if (!this.documentListenersAdded) {
       document.addEventListener('mousemove', this.boundMouseMove)
       document.addEventListener('mouseup', this.boundMouseUp)
-      ;(this as any)._documentListenersAdded = true
+      this.documentListenersAdded = true
     }
   }
 
@@ -886,9 +888,14 @@ export class PaddingManager {
         element.style.paddingRight = `${newPadding}px`
       }
     } else {
-      // Single: Apply only to the dragged side
-      const paddingProp = `padding${handle.charAt(0).toUpperCase() + handle.slice(1)}`
-      ;(element.style as any)[paddingProp] = `${newPadding}px`
+      // Single: Apply only to the dragged side. Map PaddingHandle → the
+      // matching CSSStyleDeclaration camelCase key.
+      const paddingProp = `padding${handle.charAt(0).toUpperCase() + handle.slice(1)}` as
+        | 'paddingTop'
+        | 'paddingRight'
+        | 'paddingBottom'
+        | 'paddingLeft'
+      element.style[paddingProp] = `${newPadding}px`
     }
 
     // Update handle positions in-place (no remove/recreate to prevent flicker)

@@ -83,6 +83,9 @@ export class MarginManager {
   // Snap indicator for visual feedback
   private snapIndicator: SnapIndicator | null = null
 
+  // Document listeners are global and must only be wired once per instance.
+  private documentListenersAdded = false
+
   constructor(config: MarginManagerConfig) {
     this.container = config.container
     this.overlayManager = config.overlayManager
@@ -632,11 +635,11 @@ export class MarginManager {
       this.handlesContainerRef.addEventListener('mousedown', this.boundMouseDown)
     }
 
-    // Document listeners only need to be set once (they're on document, which is stable)
-    if (!(this as any)._documentListenersAdded) {
+    // Document listeners only need to be set once (they're on document, which is stable).
+    if (!this.documentListenersAdded) {
       document.addEventListener('mousemove', this.boundMouseMove)
       document.addEventListener('mouseup', this.boundMouseUp)
-      ;(this as any)._documentListenersAdded = true
+      this.documentListenersAdded = true
     }
   }
 
@@ -844,8 +847,13 @@ export class MarginManager {
         element.style.marginRight = `${newMargin}px`
       }
     } else {
-      const marginProp = `margin${handle.charAt(0).toUpperCase() + handle.slice(1)}`
-      ;(element.style as any)[marginProp] = `${newMargin}px`
+      // Map MarginHandle → CSSStyleDeclaration camelCase key.
+      const marginProp = `margin${handle.charAt(0).toUpperCase() + handle.slice(1)}` as
+        | 'marginTop'
+        | 'marginRight'
+        | 'marginBottom'
+        | 'marginLeft'
+      element.style[marginProp] = `${newMargin}px`
     }
 
     // Update handle positions in-place (no remove/recreate to prevent flicker)
