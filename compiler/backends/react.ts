@@ -2575,6 +2575,20 @@ function generateStyles(
     delete style.flexDirection
   }
 
+  // Token-leak guard. If a style value is still a literal `$token` string,
+  // that means the suffix-aware lookup couldn't resolve it (e.g.
+  // `boc $accent` when only `accent.bg` and `accent.col` are defined —
+  // `accent.boc` doesn't exist, and there's no plain `accent` value
+  // either). The DOM backend silently drops such props because there's
+  // no `var(--accent-boc)` either. Mirror that here instead of leaking
+  // the literal `'$accent'` into the inline style — that string would
+  // render as an invalid CSS value the browser ignores anyway, and it
+  // confuses anyone reading the generated React.
+  for (const k of Object.keys(style)) {
+    const v = style[k]
+    if (typeof v === 'string' && v.startsWith('$')) delete style[k]
+  }
+
   return style
 }
 

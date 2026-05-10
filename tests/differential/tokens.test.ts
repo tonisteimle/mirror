@@ -105,6 +105,38 @@ describe('Tokens — Token-Name appears in DOM output', () => {
 })
 
 // =============================================================================
+// Token-leak guard — unresolved $tokens drop instead of leaking literal
+// =============================================================================
+
+describe('Tokens — Unresolved $tokens drop in React style props', () => {
+  // PIN: when a token reference can't resolve under the suffix-aware
+  // lookup (e.g. `boc $accent` when only `accent.bg`/`accent.col` exist —
+  // there's no `accent.boc` and no plain `accent`), the DOM backend
+  // silently emits no `border-color:` rule. Pre-2026-05-10 the React
+  // backend leaked `borderColor: '$accent'` into the inline style — an
+  // invalid CSS value the browser dropped anyway, but it confused anyone
+  // reading the generated JSX. The leak guard now drops these silently
+  // so React matches DOM.
+  it('boc $accent with no accent.boc/accent token: drops in React, drops in DOM', () => {
+    const src = `accent.bg: #c9a961\naccent.col: #c9a961\n\nFrame boc $accent, bor 1, w 100, h 50`
+    const react = generateReact(parse(src))
+    const dom = generateDOM(parse(src))
+    expect(react).not.toContain("'$accent'")
+    expect(react).not.toContain('borderColor:')
+    // DOM has the same drop semantics: no var(--accent-boc) reference,
+    // no border-color either.
+    expect(dom).not.toContain('var(--accent-boc)')
+  })
+
+  it('col $primary with no primary.col/primary token: drops in React', () => {
+    const src = `primary.bg: #1a1a1a\n\nFrame col $primary, w 100`
+    const react = generateReact(parse(src))
+    expect(react).not.toContain("'$primary'")
+    expect(react).not.toContain('color:')
+  })
+})
+
+// =============================================================================
 // Bug #29 PIN — `bor` shorthand overrides `boc` token
 // =============================================================================
 
