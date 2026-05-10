@@ -1,0 +1,143 @@
+/**
+ * Equivalence tests: parseTokensViaAST vs the regex-based parseTokens.
+ *
+ * Slice 1 of the parseTokens migration tracked in docs/findings.md
+ * ("Studio dupliziert Compiler-Pfade"). The new AST-based parser must
+ * produce the same TokenDefinition[] as the regex parser for every
+ * input the characterization suite (slice-78-token-picker.test.ts) and
+ * existing studio code exercise. Once these pass on a known set of
+ * fixtures, the cut-over slice swaps the picker's call-site.
+ */
+
+import { describe, it, expect } from 'vitest'
+import { parseTokens } from '../../studio/pickers/token/types'
+import { parseTokensViaAST } from '../../studio/pickers/token/parse-via-ast'
+import type { TokenDefinition } from '../../studio/pickers/token/types'
+
+/**
+ * Compare two token arrays as sets keyed by name. Order can differ
+ * between the regex and AST paths; what matters is that every
+ * regex-parsed token shows up in the AST output with the same
+ * value/type/kind/properties.
+ */
+function tokensEqualByName(
+  actual: TokenDefinition[],
+  expected: TokenDefinition[],
+  fixture: string
+): void {
+  const actualMap = new Map(actual.map(t => [t.name, t]))
+  const expectedMap = new Map(expected.map(t => [t.name, t]))
+
+  for (const [name, exp] of expectedMap) {
+    const got = actualMap.get(name)
+    expect(got, `[${fixture}] missing token ${name} in AST output`).toBeDefined()
+    if (!got) continue
+    expect(got.value, `[${fixture}] ${name}.value`).toBe(exp.value)
+    expect(got.type, `[${fixture}] ${name}.type`).toBe(exp.type)
+    expect(got.kind, `[${fixture}] ${name}.kind`).toBe(exp.kind)
+    if (exp.kind === 'set') {
+      expect(got.properties, `[${fixture}] ${name}.properties`).toEqual(exp.properties)
+    }
+  }
+
+  for (const [name] of actualMap) {
+    expect(expectedMap.has(name), `[${fixture}] AST emitted unexpected token ${name}`).toBe(true)
+  }
+}
+
+const FIXTURES: Array<{ label: string; source: string }> = [
+  // --- Single-value tokens with suffix ---------------------------------
+  {
+    label: 'simple suffix tokens',
+    source: ['primary.bg: #2271C1', 'primary.col: #ffffff', 'danger.bg: #ef4444'].join('\n'),
+  },
+  {
+    label: 'numeric size tokens',
+    source: ['sm.pad: 8', 'md.pad: 16', 'lg.pad: 24'].join('\n'),
+  },
+  {
+    label: 'mixed colors and sizes',
+    source: ['accent.bg: #2271C1', 'card.rad: 8', 'card.pad: 16'].join('\n'),
+  },
+
+  // --- Property-set tokens (Slice 78) ----------------------------------
+  {
+    label: 'cardstyle as a property set',
+    source: 'cardstyle: bg #1a1a1a, pad 16, rad 8',
+  },
+  {
+    label: 'typography set',
+    source: 'heading: fs 24, weight bold, col white',
+  },
+  {
+    label: 'multi-token values inside a set',
+    source: 'btn: pad 10 20, rad 6',
+  },
+  {
+    label: 'set with > 3 properties triggers + N more',
+    source: 'cardstyle: bg #1a1a1a, pad 16, rad 8, gap 8',
+  },
+  {
+    label: 'mixed singles and sets in one source',
+    source: ['primary.bg: #2271C1', 'cardstyle: bg #1a1a1a, pad 16, rad 8', 'btn.pad: 10 20'].join(
+      '\n'
+    ),
+  },
+
+  // --- Single-segment body must NOT be classified as a set -------------
+  // RT-1 from slice-78-token-picker.test.ts: `text: hello world` is not
+  // a token at all in Mirror; both parsers should emit zero tokens.
+  // The regex parser explicitly skips it. Compiler may emit it as a
+  // single-value token, in which case the AST mapper would diverge.
+  // This fixture is intentionally listed but treated as "expected to
+  // diverge" — tracked separately so we don't over-pin.
+
+  // --- Chain-token resolution ------------------------------------------
+  {
+    label: 'one-hop chain to terminal hex',
+    source: ['primary: #2271C1', 'accent.bg: $primary'].join('\n'),
+  },
+  {
+    label: 'three-hop chain',
+    source: ['a: #ff0000', 'b: $a', 'c: $b', 'd.bg: $c'].join('\n'),
+  },
+  {
+    label: 'chain cycle terminates without crash',
+    source: ['a: $b', 'b: $c', 'c: $a'].join('\n'),
+  },
+]
+
+describe('parseTokensViaAST equivalence with parseTokens', () => {
+  for (const fx of FIXTURES) {
+    it(fx.label, () => {
+      const expected = parseTokens(fx.source)
+      const actual = parseTokensViaAST(fx.source)
+      tokensEqualByName(actual, expected, fx.label)
+    })
+  }
+})
+
+describe('parseTokensViaAST: known divergences from parseTokens', () => {
+  // The regex parser silently skips `name: hello world` (single-segment
+  // non-numeric body). The compiler parses it as a property-set with
+  // one property (depending on parser-context). This is a known regex-
+  // parser quirk; document it explicitly so the cut-over slice can
+  // decide whether to preserve the divergence in a post-pass.
+  it('single-segment non-numeric body — regex skips, AST may emit', () => {
+    const regex = parseTokens('text: hello world')
+    const ast = parseTokensViaAST('text: hello world')
+    expect(regex).toEqual([])
+    // No assertion on `ast` — pinned for awareness only. If a future
+    // change to the AST mapper aligns the two, tighten this then.
+    expect(Array.isArray(ast)).toBe(true)
+  })
+
+  it('comments and empty lines — both ignore', () => {
+    const source = ['// comment', '', '  ', '# also a comment', 'primary.bg: #fff'].join('\n')
+    const regex = parseTokens(source)
+    const ast = parseTokensViaAST(source)
+    expect(regex.length).toBe(1)
+    expect(ast.length).toBe(1)
+    expect(ast[0].name).toBe('$primary.bg')
+  })
+})
