@@ -756,10 +756,15 @@ export class Validator {
       }
     }
 
-    // Check token references
-    for (const val of values) {
-      if (typeof val === 'string' && val.startsWith('$')) {
-        this.validateTokenReference(val, prop.line, prop.column)
+    // Check token references — read from the raw AST, not the normalized
+    // `values` array. The normalization above turned each TokenReference
+    // into a `'$' + name` string for the propertyValueValidator, but a
+    // string-typed property value can also originate from a quoted string
+    // literal (e.g. `Text "$48,217"`); only the AST-level TokenReference
+    // signals an actual token-ref, so we validate from there.
+    for (const v of prop.values) {
+      if (typeof v === 'object' && v !== null && 'kind' in v && v.kind === 'token') {
+        this.validateTokenReference('$' + (v as TokenReference).name, prop.line, prop.column)
       }
     }
   }

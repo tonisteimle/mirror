@@ -327,25 +327,6 @@ export async function runGenerationPipeline(
 // ============================================================================
 
 /**
- * Real Mirror tokens follow identifier syntax: a letter start, optional
- * dot-suffix. The lexer occasionally surfaces `$N`-shaped substrings from
- * inside string literals (e.g. `"$48,217"`) as token references — those
- * fail this pattern and get filtered out below.
- *
- * TODO: Fix at the source by making the parser/lexer not emit token-refs
- * from inside string literals. Until then, this filter prevents the
- * pipeline from chasing phantom undefined-token errors.
- */
-const VALID_TOKEN_REF_RE = /^\$[a-zA-Z_][a-zA-Z0-9_-]*(?:\.[a-zA-Z_][a-zA-Z0-9_-]*)?$/
-
-function looksLikeRealTokenRef(message: string): boolean {
-  // Validator emits `Token "${tokenRef}" is not defined`.
-  const match = message.match(/^Token "([^"]+)" is not defined$/)
-  if (!match) return true // unknown message shape — be safe, keep as blocking
-  return VALID_TOKEN_REF_RE.test(match[1])
-}
-
-/**
  * Combine validator errors with the warning subset we treat as blocking
  * for the AI-pipeline use case. Today: only W500 (undefined token) gets
  * elevated. W501 (unused token) and W503 (unused component) stay
@@ -354,7 +335,7 @@ function looksLikeRealTokenRef(message: string): boolean {
 function selectBlockingIssues(result: ValidationResult): ValidationError[] {
   const blocking: ValidationError[] = [...result.errors]
   for (const w of result.warnings) {
-    if (w.code === 'W500' && looksLikeRealTokenRef(w.message)) {
+    if (w.code === 'W500') {
       blocking.push({ ...w, severity: 'error' })
     }
   }

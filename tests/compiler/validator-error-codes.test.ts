@@ -241,6 +241,24 @@ describe('W500 UNDEFINED_TOKEN', () => {
     const result = validate('Frame bg $primary.bg')
     expect(result.warnings.some(e => e.code === ERROR_CODES.UNDEFINED_TOKEN)).toBe(true)
   })
+
+  // Regression: quoted-string content is not a token-ref, even when it
+  // happens to contain `$`. Previously the validator normalized
+  // TokenReference objects to `'$' + name` strings before scanning for
+  // token-refs, so any literal string starting with `$` (e.g. price
+  // formatting like "$48,217") was misread as an undefined token. The
+  // studio AI-pipeline carried a `looksLikeRealTokenRef` regex workaround
+  // for exactly this surface — fixed at the source by reading TokenRefs
+  // from the AST instead of the normalized value array.
+  it('does not warn for `$N` substrings inside quoted strings', () => {
+    const result = validate('Text "$48,217"')
+    expect(result.warnings.filter(w => w.code === ERROR_CODES.UNDEFINED_TOKEN)).toEqual([])
+  })
+
+  it('does not warn for `$identifier` inside quoted strings', () => {
+    const result = validate('Text "Cost is $primary today"')
+    expect(result.warnings.filter(w => w.code === ERROR_CODES.UNDEFINED_TOKEN)).toEqual([])
+  })
 })
 
 // W501 / W503 are intentionally NOT emitted — see compiler/validator/validator.ts
