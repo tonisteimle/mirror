@@ -126,14 +126,17 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 rotate 45` droppt translateX komplett (combined transform überschreibt
   die Schema-Emit-Variante). Probe `tools/probes/transform-combine.ts`
   reproduziert deterministisch.
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~23:00)
-  **Plan:** x-offset/y-offset in beide Passes der properties-ops
-  einbauen (analog zu rotate/scale): Pass 1 sammeln in
-  transformContext.transforms[], Pass 2 skippen damit Schema-Emit nicht
-  feuert. Dann combined-Transform am Ende. Pre-Refactor-Pin in
-  `tests/differential/properties.test.ts` (combined-transforms-Block)
-  - Browser-Test `transforms/translate.test.ts:323` Body auf echtes
-    combined Source umschreiben + TODO entfernen.
+  **Status:** erledigt (`6c3ab636`) — x-offset/y-offset gehen jetzt
+  durch denselben transformContext wie rotate/scale: Pass 1 sammelt
+  translateX/Y-Strings, Pass 2 skippt damit der Schema-Numeric-Handler
+  nicht doppelt feuert. Combined transform am Ende joint alle vier zu
+  einem `transform: translateX(20px) translateY(15px) scale(1.2)
+  rotate(45deg)`. Pre-Refactor-Pin in
+  `tests/differential/properties.test.ts` (5 Tests „Properties —
+  Combined Transforms") parsed das DOM-Output und checkt dass nur EINE
+  `transform:`-Assignment per Element entsteht. Browser-Test mit
+  echtem combined Source + assert-x-and-y, TODO weg. 8191/8197
+  vitest grün.
 
 - **Wo:** `studio/test-api/mirror-actions/index.ts:dropChildIndexPoint`
   - Studios Drop-Target-Detection (`studio/preview/drag/...`)
