@@ -497,16 +497,13 @@ describe('exportProject', () => {
 })
 
 // =============================================================================
-// TAURI BRANCHES — pinning the not-yet-implemented stubs
+// TAURI BRANCHES — wired actions + remaining stubs
 // =============================================================================
 //
-// Production Tauri behaviour today: newProject / importProject /
-// exportProject silently no-op (warning in the log); loadDemo writes
-// the default project to the on-disk storage. The earlier tests that
-// stubbed `window.__TAURI_BRIDGE__` were exercising a global the
-// runtime never set — now removed. Real wiring to
-// `TauriBridge.project.{open,create}Project` is tracked in
-// docs/findings.md.
+// As of 2026-05-10, Tauri commit-decision per docs/concepts/
+// tauri-strategy.md. newProject (Slice 1) is wired through TauriDialog
+// + TauriProject. importProject (Slice 2) and exportProject (Slice 3)
+// are still stubs. loadDemo writes via the on-disk storage adapter.
 
 describe('Tauri branches — newProject / loadDemo / importProject / exportProject', () => {
   beforeEach(() => {
@@ -518,11 +515,49 @@ describe('Tauri branches — newProject / loadDemo / importProject / exportProje
     delete (global.window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__
   })
 
-  it('newProject silently no-ops in Tauri (not implemented yet)', async () => {
-    const { newProject } = await getProjectActions()
-    await expect(newProject()).resolves.toBeUndefined()
-    expect(mockStorage.getItem('mirror-files')).toBeNull()
+  it('newProject early-returns when user cancels the name prompt', async () => {
+    // Stub the MirrorDialog the wiring resolves at runtime. Returning
+    // null from prompt() means the user pressed cancel — the function
+    // must early-return without touching storage.
+    const promptMock = vi.fn().mockResolvedValue(null)
+    ;(global as unknown as { MirrorDialog: unknown }).MirrorDialog = {
+      alert: vi.fn(),
+      prompt: promptMock,
+    }
+    try {
+      const { newProject } = await getProjectActions()
+      await expect(newProject()).resolves.toBeUndefined()
+      expect(promptMock).toHaveBeenCalledTimes(1)
+      expect(mockStorage.getItem('mirror-files')).toBeNull()
+    } finally {
+      delete (global as unknown as { MirrorDialog?: unknown }).MirrorDialog
+    }
   })
+
+  it('newProject rejects names with invalid characters', async () => {
+    const promptMock = vi.fn().mockResolvedValue('a b c') // space invalid
+    const alertMock = vi.fn().mockResolvedValue(undefined)
+    ;(global as unknown as { MirrorDialog: unknown }).MirrorDialog = {
+      alert: alertMock,
+      prompt: promptMock,
+    }
+    try {
+      const { newProject } = await getProjectActions()
+      await newProject()
+      expect(alertMock).toHaveBeenCalled()
+      expect(alertMock.mock.calls[0][0]).toMatch(/Ungültiger Name|Buchstaben/i)
+      expect(mockStorage.getItem('mirror-files')).toBeNull()
+    } finally {
+      delete (global as unknown as { MirrorDialog?: unknown }).MirrorDialog
+    }
+  })
+
+  // Full happy-path tests for the new tauriNewProject flow (prompt →
+  // openFolder → createProject → openProject → reload) require
+  // mocking TauriDialog/TauriProject/TauriFS plus reloadFresh, plus
+  // the lazy-required storage singleton. That coverage lives in the
+  // Tauri integration suite (browser tests) which can spin up the
+  // real bridge — vitest's ESM-context limits don't carry it.
 
   // loadDemoProject's Tauri branch writes DEFAULT_PROJECT files via the
   // lazy-required storage singleton (require('./index').storage) — that
@@ -530,12 +565,12 @@ describe('Tauri branches — newProject / loadDemo / importProject / exportProje
   // the relative require() at runtime. Real coverage of the write side-
   // effects lives in the desktop-files integration suite, not here.
 
-  it('importProject returns false in Tauri (not implemented yet)', async () => {
+  it('importProject returns false in Tauri (Slice 2 — not implemented yet)', async () => {
     const { importProject } = await getProjectActions()
     expect(await importProject()).toBe(false)
   })
 
-  it('exportProject silently no-ops in Tauri (not implemented yet)', async () => {
+  it('exportProject silently no-ops in Tauri (Slice 3 — not implemented yet)', async () => {
     const { exportProject } = await getProjectActions()
     await expect(exportProject()).resolves.toBeUndefined()
   })

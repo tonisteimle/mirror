@@ -18,11 +18,25 @@ function getStorage(): typeof import('./index').storage {
 import { isTauri } from './providers'
 import { createLogger } from '../../compiler/utils/logger'
 
+// Lazy-load tauri-bridge inside the tauriXProject branches. The bridge
+// module has top-level side effects (assigns window.TauriBridge) that
+// pollute the vitest+jsdom test environment when spies on document.*
+// are active in unrelated tests — pulling it in only when the Tauri
+// branch is actually taken keeps the browser-path tests isolated.
+type TauriBridgeModule = typeof import('../tauri-bridge')
+async function loadTauriBridge(): Promise<TauriBridgeModule> {
+  return import('../tauri-bridge')
+}
+
 const log = createLogger('ProjectActions')
 
 // Custom dialog module (loaded globally)
 declare const MirrorDialog: {
   alert: (message: string, options?: { title?: string }) => Promise<void>
+  prompt: (
+    message: string,
+    options?: { title?: string; defaultValue?: string; placeholder?: string; confirmLabel?: string }
+  ) => Promise<string | null>
 }
 
 // =============================================================================
@@ -627,17 +641,83 @@ async function browserExportProject(): Promise<void> {
 // Tauri Implementation
 // =============================================================================
 //
-// In Tauri desktop these four entry points are partly stubbed:
-// `tauriLoadDemo` writes the default-project to the on-disk storage and
-// works end-to-end, but `tauriNewProject` / `tauriImportProject` /
-// `tauriExportProject` log a warning and no-op. The real Tauri command
-// surface (`TauriBridge.project.{open,create}Project`) exists in
-// `studio/tauri-bridge.ts` but is not wired into these UI entry points
-// yet — see docs/findings.md ("`studio/storage/project-actions.ts`
-// (`tauriNewProject` &c)").
+// `tauriLoadDemo` writes the default-project to the on-disk storage.
+// `tauriNewProject` is wired through TauriDialog + TauriProject (see
+// docs/concepts/tauri-strategy.md Slice 1, decided 2026-05-10).
+// `tauriImportProject` and `tauriExportProject` are still stubs —
+// queued as Slices 2 + 3 of the Tauri-commit-plan.
 
-async function tauriNewProject(_type: ProjectType): Promise<void> {
-  log.warn('newProject is not implemented for Tauri desktop yet')
+async function tauriNewProject(type: ProjectType): Promise<void> {
+  // 1. Project name (text input)
+  const name = await MirrorDialog.prompt('Projektname:', {
+    title: 'Neues Mirror-Projekt',
+    placeholder: 'mein-projekt',
+    confirmLabel: 'Weiter',
+  })
+  if (!name) return // user cancelled
+  if (!/^[a-zA-Z0-9_-][a-zA-Z0-9_.-]*$/.test(name)) {
+    await MirrorDialog.alert(
+      'Projektname darf nur Buchstaben, Zahlen, Punkt, Bindestrich und Unterstrich enthalten.',
+      { title: 'Ungültiger Name' }
+    )
+    return
+  }
+
+  // Tauri-only path; lazy-load to keep the bridge module out of the
+  // browser-path test environment (see loadTauriBridge comment).
+  const { TauriDialog, TauriProject, TauriFS } = await loadTauriBridge()
+
+  // 2. Parent directory (native folder picker)
+  let parentDir: string | null
+  try {
+    parentDir = await TauriDialog.openFolder()
+  } catch (err) {
+    log.error('TauriDialog.openFolder failed:', err)
+    await MirrorDialog.alert(`Ordner-Dialog fehlgeschlagen: ${err}`, { title: 'Fehler' })
+    return
+  }
+  if (!parentDir) return // user cancelled
+
+  // 3. Create the project directory + seed file (Rust-side)
+  let projectPath: string
+  try {
+    projectPath = (await TauriProject.createProject(name, parentDir)) as string
+  } catch (err) {
+    log.error('TauriProject.createProject failed:', err)
+    await MirrorDialog.alert(`Projekt konnte nicht erstellt werden: ${err}`, { title: 'Fehler' })
+    return
+  }
+
+  // 4. For 'demo' type, drop in the DEFAULT_PROJECT files. For 'empty'
+  //    type, drop in EMPTY_PROJECT (four canonical empty files). Both
+  //    sit alongside the Rust-seeded `index.mir`.
+  const filesToWrite: Record<string, string> = type === 'demo' ? DEFAULT_PROJECT : EMPTY_PROJECT
+  for (const [relPath, content] of Object.entries(filesToWrite)) {
+    const absPath = `${projectPath}/${relPath}`
+    try {
+      await TauriFS.writeFile(absPath, content)
+    } catch (err) {
+      // Non-fatal: the project directory exists, this just means one
+      // seed file failed. Log + keep going so the user still gets the
+      // project they asked for.
+      log.warn(`Could not write seed file ${relPath}:`, err)
+    }
+  }
+
+  // 5. Open the new project as the active one (sets base path + recents)
+  try {
+    await TauriProject.openProject(projectPath)
+  } catch (err) {
+    log.error('TauriProject.openProject failed:', err)
+    await MirrorDialog.alert(
+      `Projekt erstellt unter ${projectPath}, aber konnte nicht geöffnet werden: ${err}`,
+      { title: 'Warnung' }
+    )
+    return
+  }
+
+  // 6. Reload the app so the file-tree picks up the new project
+  reloadFresh()
 }
 
 async function tauriLoadDemo(): Promise<void> {
