@@ -24,6 +24,7 @@ import { validateProject, type CrossFileError } from '../loader/cross-file-valid
 import type { ProjectFile } from '../loader/project-loader'
 import { parse, parseWithDiagnostics } from '../parser'
 import type { AST, Instance, Property } from '../parser/ast'
+import { isTokenReference } from '../parser/ast'
 import { classify, isPlainToken, isPropertySet } from '../loader/classify'
 import { FILE_EXTENSIONS, isMirrorCodeFile, isDataFile, getAllMirrorExtensions } from '../cli/types'
 import { listMirrorCodeFiles, listDataFiles } from '../cli/files'
@@ -598,16 +599,12 @@ function walkInstanceForUsage(
 function tokenRefsInProperty(prop: Property): string[] {
   const refs: string[] = []
   for (const v of prop.values) {
-    if (typeof v === 'object' && v !== null && 'kind' in v) {
-      if (v.kind === 'token') refs.push(v.name)
-      else if (v.kind === 'expression') {
+    if (isTokenReference(v)) {
+      refs.push(v.name)
+    } else if (typeof v === 'object' && v !== null && 'kind' in v) {
+      if (v.kind === 'expression') {
         for (const part of v.parts) {
-          if (
-            typeof part === 'object' &&
-            part !== null &&
-            'kind' in part &&
-            part.kind === 'token'
-          ) {
+          if (isTokenReference(part)) {
             refs.push(part.name)
           }
         }

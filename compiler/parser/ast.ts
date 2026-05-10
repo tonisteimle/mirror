@@ -789,6 +789,16 @@ export function isTokenReference(value: unknown): value is TokenReference {
   )
 }
 
+/** Check if value is a LoopVarReference (kind: 'loopVar', name: string) */
+export function isLoopVarReference(value: unknown): value is LoopVarReference {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value as { kind?: string }).kind === 'loopVar' &&
+    typeof (value as { name?: unknown }).name === 'string'
+  )
+}
+
 /** Check if value is a ComputedExpression (kind: 'expression') */
 export function isComputedExpression(value: unknown): value is ComputedExpression {
   return (

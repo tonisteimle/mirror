@@ -14,7 +14,7 @@ import type {
   IconDefinition,
 } from '../parser/ast'
 
-import { isComponent, isZagComponent, isSlot } from '../parser/ast'
+import { isComponent, isZagComponent, isSlot, isTokenReference } from '../parser/ast'
 import type { IR, IRCanvas, IRStyle, IRWarning, IRToken } from './types'
 import { SourceMap, SourceMapBuilder, calculateSourcePosition } from './source-map'
 import { simplePropertyToCSS } from '../schema/ir-helpers'
@@ -348,13 +348,8 @@ export class IRTransformer {
       // Token reference: `bg $paper` → `var(--paper-bg)` (matches the
       // `<token>.<suffix>` convention emitted by the regular property
       // transformer).
-      if (
-        value &&
-        typeof value === 'object' &&
-        'kind' in value &&
-        (value as { kind: string }).kind === 'token'
-      ) {
-        const tokenName = (value as { kind: 'token'; name: string }).name
+      if (isTokenReference(value)) {
+        const tokenName = value.name
         const cssVar = `var(--${tokenName}-${propName})`
         const result = simplePropertyToCSS(propName, cssVar)
         if (result.handled) {

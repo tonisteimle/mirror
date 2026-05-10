@@ -8,6 +8,7 @@
  */
 
 import type { TokenReference, LoopVarReference } from '../../parser/ast'
+import { isTokenReference, isLoopVarReference } from '../../parser/ast'
 
 // =============================================================================
 // Types
@@ -58,9 +59,9 @@ export function buildExpressionString(parts: ExpressionPart[], operators: string
     }
 
     // Add the part
-    if (typeof part === 'object' && part.kind === 'token') {
+    if (isTokenReference(part)) {
       result.push(`$${part.name}`)
-    } else if (typeof part === 'object' && part.kind === 'loopVar') {
+    } else if (isLoopVarReference(part)) {
       // Loop variable reference - use special marker for backend
       result.push(`__loopVar:${part.name}`)
     } else if (typeof part === 'string') {

@@ -16,7 +16,7 @@ import {
   TokenDefinition,
   Each,
   Slot,
-  TokenReference,
+  isTokenReference,
 } from '../parser/ast'
 import { generateValidationRules, HEX_COLOR_REGEX } from './generator'
 import {
@@ -690,8 +690,8 @@ export class Validator {
     // user-facing concept is "Token", not "property-set token".
     if (prop.name === 'propset' && prop.values.length === 1) {
       const val = prop.values[0]
-      if (typeof val === 'object' && val !== null && 'kind' in val && val.kind === 'token') {
-        this.validateTokenReference('$' + (val as TokenReference).name, prop.line, prop.column)
+      if (isTokenReference(val)) {
+        this.validateTokenReference('$' + val.name, prop.line, prop.column)
       }
       return
     }
@@ -735,8 +735,8 @@ export class Validator {
     let hasOpaqueExpression = false
     const values = prop.values
       .map(v => {
+        if (isTokenReference(v)) return '$' + v.name
         if (typeof v === 'object' && v !== null && 'kind' in v) {
-          if (v.kind === 'token') return '$' + (v as TokenReference).name
           if (v.kind === 'conditional' || v.kind === 'expression' || v.kind === 'loopVar') {
             hasOpaqueExpression = true
             return null
@@ -762,8 +762,8 @@ export class Validator {
     // literal (e.g. `Text "$48,217"`); only the AST-level TokenReference
     // signals an actual token-ref, so we validate from there.
     for (const v of prop.values) {
-      if (typeof v === 'object' && v !== null && 'kind' in v && v.kind === 'token') {
-        this.validateTokenReference('$' + (v as TokenReference).name, prop.line, prop.column)
+      if (isTokenReference(v)) {
+        this.validateTokenReference('$' + v.name, prop.line, prop.column)
       }
     }
   }
