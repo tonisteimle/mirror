@@ -124,7 +124,9 @@ export const validateNodeStep: PipelineStep = {
       return ctx
     }
 
-    const nodeId = (ctx.intent as any).nodeId
+    // After the discriminator skip above, ctx.intent is narrowed to intents
+    // that extend BaseIntent — TypeScript can read `nodeId` directly.
+    const nodeId = ctx.intent.nodeId
     if (!nodeId) {
       ctx.error = 'No nodeId in intent'
       ctx.failedStep = 'validateNode'
