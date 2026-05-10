@@ -210,6 +210,99 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   zur Bootzeit normalerweise keine Events feuern, kann der Handler
   jetzt unmöglich vor dem Context aufgerufen werden.
 
+### Studio Hunt — Type-Duplikate (2026-05-10 Iter-N)
+
+- **Wo:** Studio, fünf duplizierte Value-Types
+  **Was:** `Rect` (6×), `Point` (3× exportiert), `LineInfo` (3×),
+  `CursorPosition` (4×), `CodeChange` (2×) — überall identische Shapes.
+  TS-Strukturtypen machten sie austauschbar (kein Bug), aber jede
+  Definition war eine Drift-Falle.
+  **Status:** erledigt (`190381d9`) — kanonische Homes:
+  Geometrie → `studio/visual/models/coordinate.ts`, Editor-Primitives
+  → `studio/editor/ports.ts`, `CodeChange` → `code-modifier.ts`
+  (mit re-export aus `core/events.ts` für die `source:changed`-Payload).
+  Andere Files haben nur `export type { ... } from '<canonical>'` —
+  alle Import-Pfade bleiben gültig. 5856/5856 studio tests pass.
+
+### Tutorial-Blocking Gaps (2026-05-10, per `docs/concepts/studio-tutorial.md`)
+
+Hunting durch das Tutorial-Konzept `docs/concepts/studio-tutorial.md`
+ergibt eine kleine Anzahl konkreter Lücken, die produktion-blocking sind
+für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
+
+- **Wo:** `tools/test-runner/demo/types.ts` (DemoAction-Union)
+  **Was:** Vier in `studio/test-api/step-runner/types.ts` existierende
+  Test-Actions sind im Demo-Runner nicht verfügbar:
+  `extractComponent`, `extractToken`, `batchReplace`, sowie die
+  `switchFile`-Variante mit Cmd+P-Quick-Switch-Animation. Tutorial
+  Kapitel 20 (Komponenten-Workflow geführt) und 21 (Token-Extract)
+  brauchen sie als Demo-Actions, sonst lässt sich der Workflow nicht
+  als Loop-Video aufnehmen.
+  **Status:** offen
+  **Notiz:** Lösung: dünner Demo-Runner-Wrapper, der die existierenden
+  step-runner-Actions als DemoAction-Variante exposed (Wiederverwendung
+  der step-runner-Logik, nur eigenes Pacing/Cursor-Animation).
+  ~50–100 LOC pro Action.
+
+- **Wo:** Studio-Keyboard
+  **Was:** Cmd+P-Quick-Switch (Fuzzy-Search-File-Palette) ist im
+  Tutorial Kapitel 24 als Loop geplant, **existiert aber nicht im
+  Code**. `switchFile()` als Funktion ja, kein Cmd+P-UI. Suche nach
+  `metaKey && key === 'p'` in `studio/` außer Preview-Play-Mode-
+  Toggle ergibt nichts.
+  **Status:** offen
+  **Notiz:** Vor Tutorial-Kapitel 24 muss entweder das Feature gebaut
+  werden (~150–250 LOC: Floating-Input + Fuzzy-Match + Keyboard-Nav)
+  oder das Tutorial-Skript reduziert auf File-Tree-Click-Switch.
+
+- **Wo:** `tools/test-runner/demo/types.ts` (PickColorAction)
+  **Was:** `pickColor` ist die einzige Picker-Action im Demo-Runner.
+  Tutorial Kapitel 19 plant Loops für 5 Pickers: Color (Hex+Token-
+  Tab), Token, Icon, Animation, Action. Kein generischer
+  `openPicker`/`selectPickerOption`/`pickerTabSwitch` heute.
+  **Status:** offen
+  **Notiz:** Drei Wege:
+  1. `pickColor` → `pickValue` mit `pickerType`-Diskriminator.
+  2. Eigene Actions pro Picker (`pickToken`, `pickIcon`,
+     `pickAnimation`, `pickAction`).
+  3. Generisch: `openPicker` + `pickerSelect` + `pickerTabSwitch`.
+     Variante 3 ist am kleinsten — nutzt die schon existierenden
+     Picker-DOM-Patterns (`base/picker.ts`).
+
+- **Wo:** Tutorial-Mode-Setup, Selektoren
+  **Was:** Tutorial-Mode (`tools/test-runner/demo/fragments/tutorial-mode.ts`)
+  versteckt Panels per Class-Toggle. Bei Studio-UI-Änderungen
+  (Panel-Layout-Refactor, neue Selektoren) brechen alle Tutorials
+  gleichzeitig — keine Versionierung der Selektor-Verträge.
+  **Status:** offen
+  **Notiz:** Niedrige Priorität, aber: ein `data-testid`-basierter
+  Selector-Vertrag in `tools/test-runner/demo/selectors.ts` würde
+  Tutorial-Resilience erhöhen. Keine produktion-blocking Lücke,
+  eher Wartungs-Hygiene wenn der Vollausbau läuft.
+
+### Compiler/CLI Hunt (2026-05-10 Iter-N)
+
+- **Wo:** `compiler/build-cli.ts`, `compiler/validator/cli.ts`,
+  `compiler/cli/output.ts`
+  **Was:** Drei CLI-Entries hatten je eigene Version-Reading-Logik.
+  `mirror-compile` printVersion war hardcoded `'mirror-compile v2.0.0'`
+  (ohne package.json-Read), die anderen zwei lasen package.json mit
+  unterschiedlichen Module-Resolution-Pfaden (`__dirname`-via-tsx-shim
+  vs. `import.meta.url`).
+  **Status:** erledigt (`f19402b2`) — `readVersion()` in
+  `cli/output.ts` (ESM-correct via `import.meta.url`), beide Wrapper-
+  CLIs importieren. mirror-compile zeigt jetzt die echte Version.
+  Drift-Falle für package.json-Bumps geschlossen.
+
+- **Wo:** `compiler/runtime/mirror-runtime.ts:252` (vor Fix)
+  **Was:** `const isContentPrimitive = ['Text', 'Icon', 'Button', 'Link']
+.includes(type)` — Variable seit Erst-Commit (2026-03-08) zugewiesen
+  aber nirgends gelesen. Argument-Parsing in `M()` dispatcht über
+  `typeof arg1 === 'string'`, nicht über die Liste.
+  **Status:** erledigt (`72b34aab`) — Variable gelöscht. Damit existiert
+  keine hardcoded Primitive-Liste mehr im Runtime; Schema (`dsl.ts`) ist
+  Single Source of Truth.
+
 ### Studio Struktur — God-Objects & Duplikation (Hunt 2026-05-10)
 
 - **Wo:** `studio/visual/{resize,padding,margin,gap}-manager.ts`
