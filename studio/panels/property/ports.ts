@@ -36,11 +36,11 @@ import type { Rect } from '../../visual/models/coordinate'
 export type { PanelSpacingToken, SpacingToken } from './types'
 import type { PanelSpacingToken } from './types'
 
-export interface ColorToken {
-  name: string // e.g., "primary", "danger"
-  fullName?: string // e.g., "primary.bg", "danger.col" (optional for simple tokens)
-  value: string // e.g., "#2271C1", "#ef4444"
-}
+// Re-export from types.ts (single source of truth). The earlier inline
+// version here advertised an optional `fullName` field that no
+// implementation produced and no consumer read — drift trap.
+export type { ColorToken } from './types'
+import type { ColorToken } from './types'
 
 export interface PropertyChange {
   name: string
