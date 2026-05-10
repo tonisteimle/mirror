@@ -32,6 +32,9 @@ import { codeRename } from './code-rename.demo'
 import { tokCreate } from './tok-create.demo'
 import { tokExtract } from './tok-extract.demo'
 import { tokRename } from './tok-rename.demo'
+import { compExtract } from './comp-extract.demo'
+import { compSlots } from './comp-slots.demo'
+import { compLibrary } from './comp-library.demo'
 
 export const demoTests: TestCase[] = [
   ...demoTextIntoFrame,
@@ -57,4 +60,7 @@ export const demoTests: TestCase[] = [
   ...tokCreate,
   ...tokExtract,
   ...tokRename,
+  ...compExtract,
+  ...compSlots,
+  ...compLibrary,
 ]
