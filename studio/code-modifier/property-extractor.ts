@@ -13,10 +13,24 @@ import type {
   ComponentDefinition,
   Instance,
   Property,
+  Slot,
   ZagNode,
+  Each,
+  ConditionalNode,
+  TableNode,
+  Text,
   Event,
   Action,
 } from '../../compiler/parser/ast'
+
+/**
+ * Subtypes of Program.instances + Instance.children that findInInstance
+ * walks. The runtime check (`inst.type === 'Instance' | 'ZagComponent'`)
+ * narrows from the union to the actionable nodes; other types fall
+ * through unchanged. Listed here so the parameter typing tells the
+ * truth instead of `| any`.
+ */
+type ProgramOrChildNode = Instance | Slot | TableNode | Each | ConditionalNode | ZagNode | Text
 import type { SourceMap, NodeMapping } from '../../compiler/ir/source-map'
 import {
   properties as allPropertyDefinitions,
@@ -606,24 +620,34 @@ export class PropertyExtractor {
   }
 
   /**
-   * Recursively find an instance or ZagNode matching the mapping
+   * Recursively find an instance or ZagNode matching the mapping.
+   * Other top-level / child node types (Slot/Each/Conditional/Table/Text)
+   * are walked-past without matching — they don't carry the
+   * Property[] surface this extractor cares about.
    */
   private findInInstance(
-    inst: Instance | ZagNode | any,
+    inst: ProgramOrChildNode,
     mapping: NodeMapping
   ): Instance | ZagNode | null {
     // Check if this is a ZagComponent at top level
     if (inst.type === 'ZagComponent') {
       if (inst.line === mapping.position.line && inst.column === mapping.position.column) {
-        return inst as ZagNode
+        return inst
       }
       // ZagComponents don't have nested children to search
       return null
     }
 
+    if (inst.type !== 'Instance') {
+      // Slot / Each / Conditional / Table / Text don't expose properties
+      // to the extractor and don't have an instance-children sub-tree
+      // shape we care about. Skip without recursing.
+      return null
+    }
+
     // Check if this instance matches
     if (inst.line === mapping.position.line && inst.column === mapping.position.column) {
-      return inst as Instance
+      return inst
     }
 
     // Search children
@@ -635,7 +659,7 @@ export class PropertyExtractor {
         } else if (child.type === 'ZagComponent') {
           // Check if this ZagNode matches
           if (child.line === mapping.position.line && child.column === mapping.position.column) {
-            return child as ZagNode
+            return child
           }
         }
       }
