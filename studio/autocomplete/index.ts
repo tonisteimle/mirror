@@ -4,11 +4,9 @@
  * Uses schema-completions.ts as Single Source of Truth for all completions.
  */
 
-import { state } from '../core'
 import {
   SCHEMA_COMPLETIONS,
   generatePropertyValueCompletions,
-  getAllComponentCompletions,
   getAllCompletions,
   isZagComponent,
   getZagSlotsForComponent,

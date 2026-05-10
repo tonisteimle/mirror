@@ -25,6 +25,10 @@ import { visualSnap } from './visual-snap.demo'
 import { visualInference } from './visual-inference.demo'
 import { visualGrid } from './visual-grid.demo'
 import { visualPosition } from './visual-position.demo'
+import { codeAutocompleteProps } from './code-autocomplete-props.demo'
+import { codeAutocompleteTokens } from './code-autocomplete-tokens.demo'
+import { codeCmdP } from './code-cmd-p.demo'
+import { codeRename } from './code-rename.demo'
 
 export const demoTests: TestCase[] = [
   ...demoTextIntoFrame,
@@ -43,4 +47,8 @@ export const demoTests: TestCase[] = [
   ...visualInference,
   ...visualGrid,
   ...visualPosition,
+  ...codeAutocompleteProps,
+  ...codeAutocompleteTokens,
+  ...codeCmdP,
+  ...codeRename,
 ]

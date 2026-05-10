@@ -192,12 +192,10 @@ export function createSourceMapContextPort(
 
 export function createCompletionUIPort(config: CreateCompletionUIPortConfig): CompletionUIPort {
   const { view, onShow, onHide } = config
-  let currentResult: AutocompleteResult | null = null
   let isVisible = false
   const selectionHandlers: Array<(completion: Completion) => void> = []
 
   function showCompletions(result: AutocompleteResult): void {
-    currentResult = result
     isVisible = result.completions.length > 0
 
     if (isVisible && onShow) {
@@ -212,7 +210,6 @@ export function createCompletionUIPort(config: CreateCompletionUIPortConfig): Co
     if (isVisible && onHide) {
       onHide()
     }
-    currentResult = null
     isVisible = false
   }
 
