@@ -150,40 +150,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   \_\_mirrorActions.dropFromPalette AND bare cdpInput.\* — the bug is
   specific to `editor source = ''` + testMode.
 
-- **Wo:** `compiler/ir/ops/instance-ops.ts:transformInstance` (signature)
-  **Was:** Signature ist `instance: Instance | Each | any`. Versuch der
-  Tightening (2026-05-10 Claude-Session) deckte cascading mismatches
-  auf: (1) `transformConditional` erwartet `ConditionalBlock`
-  (control-flow-transformer-lokaler Type), aber AST liefert
-  `ConditionalNode`. Beide haben `type: 'Conditional'` aber
-  unterschiedliche `then`/`else`-Element-Unions. Runtime-equivalent für
-  `condition` (Expression = string-Alias), divergent für nested
-  Each/Conditional in then-Branch. (2) Slot wird via EachChild-Pfad
-  durchgereicht aber nie als `instance.type === 'Slot'` erkannt —
-  fällt in `if (!instance.component)` und produziert
-  „Instance missing component name"-Warnung statt durch
-  `transformSlotPrimitive` zu gehen. (3) `extractInlineStatesAndEvents`
-  Signatur ist `(Instance | Text)[]`, bekommt aber
-  `(Instance | Slot | ZagNode | Each | ConditionalNode | Text)[]`
-  durchgereicht (Instance.children-Type). Filtert defensiv via
-  `isInstance`, aber Type-System-Lüge.
-  **Status:** aktiv (Claude, 2026-05-10) — Slice 1 von 3:
-  ConditionalBlock-vs-ConditionalNode konvergieren.
-  **Plan:** Probe `tools/probes/slot-in-each.ts` zeigt: nested-if
-  - each-in-if funktionieren runtime-korrekt — der Typ ist nur eine
-    Lüge, kein observable bug. Slice 1: `ConditionalBlock` aus
-    control-flow-transformer.ts droppen, `ConditionalNode` aus ast.ts
-    importieren (Single Source of Truth). Mapper-Callback-Typen
-    widen von `(Instance | Slot)` auf `(Instance | Slot | ConditionalNode
-| Each)`. Slice 2/3 (Slot-EachChild + extractInlineStates) bleiben
-    offen — Probe zeigt dass Slot in Each-Children parser-seitig nie
-    produziert wird, also möglicherweise dead code. Erst Slice 1
-    liefern.
-    **Notiz:** Kollateral-Fund: `instance.position` wurde dreimal
-    gelesen, existiert nicht (BaseNode hat line/column, kein
-    position-Objekt) — silent-undefined an `addWarning`. Fixed in
-    Bystander-Slice unten.
-
 - **Wo:** `compiler/ir/ops/instance-ops.ts:transformInstance`
   (3 `addWarning`-Aufrufe)
   **Was:** Bystander-Bug: Drei Warnungen (`invalid-instance`,
@@ -927,6 +893,36 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — transformInstance child-pipeline Type-Cleanup (3 Slices)
+
+- **Wo:** `compiler/ir/transformers/{control-flow-transformer,inline-extraction}.ts`,
+  `compiler/ir/ops/{instance-ops,children-resolver}.ts`,
+  `tools/probes/slot-in-each.ts`
+  **Was:** Drei Type-System-Lügen im IR-Child-Pipeline aufgeräumt:
+  - **Slice 1** (`6fd20b87`): `ConditionalBlock` aus
+    control-flow-transformer.ts gedroppt; transformConditional nimmt
+    jetzt `ConditionalNode` aus ast.ts (Single Source of Truth).
+    Mapper-Callbacks ohne explizite Element-Type-Annotation
+    konvergieren auf die wider AST-Union.
+  - **Slice 2** (`943f990a`): Slot-Dispatch in transformInstance
+    hinzugefügt — Each.children/Conditional.then|else dürfen per
+    ast.ts Slot enthalten, der Parser produziert das heute zwar
+    nicht (Probe `tools/probes/slot-in-each.ts`), aber wenn doch
+    routed der Code nicht mehr in den misleading-Warning-Path.
+  - **Slice 3** (`54f4d910`): Drei Child-Pipeline-Signaturen
+    (extractInlineStatesAndEvents, resolveChildren, transformChild)
+    auf den neuen Type-Alias `InstanceChild` konvergiert. Damit
+    matchen sie die AST-Quelle exakt — keine strukturelle
+    Pass-Through-Lüge mehr.
+    Probe zeigt: nested-if + each-in-if funktionieren runtime-korrekt
+    (waren immer schon strukturell-typed durch). Cleanup ist Type-
+    Cleanup, kein observable Behavior-Change.
+    Verbleibend: `transformInstance` selbst hat noch `Instance | Each
+  | any` mit eslint-disable. Das tightening-Cascade ist mit Slice
+    1-3 zwar gelöst, aber konkrete Tightening braucht zusätzliche
+    Cycle-Detection-Type-Anpassungen — aufgeschoben.
+    **Status:** erledigt
 
 ### 2026-05-10 — `tools/image-to-mirror-test/` deletion (~19'000 LOC weg)
 
