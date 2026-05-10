@@ -281,7 +281,7 @@ Chronologisch absteigend (neueste zuerst).
   **Was:** Lokale Primitive-Map im React-Backend durch Schema-Helper
   ersetzt (`schemaGetHtmlTag` + neuer `isKnownPrimitive`). `compDef.primitive`-
   und Heuristik-Pfade behalten, Drift-Quelle für neue Primitives weg.
-  **Status:** erledigt (`PENDING`)
+  **Status:** erledigt (`5fabe6e2`)
 
 ### 2026-05-10 — `*Extracted` Aliase (Kampagne abgeschlossen)
 
