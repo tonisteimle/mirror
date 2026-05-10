@@ -50,14 +50,14 @@
       <table class="ref-table">
         <tr><th>Shortcut</th><th>Aktion</th></tr>
         <tr><td><kbd>Cmd</kbd>+<kbd>P</kbd></td><td>File-Quick-Switch (Fuzzy-Search)</td></tr>
-        <tr><td><kbd>Cmd</kbd>+<kbd>F</kbd></td><td>Find/Replace im aktuellen File</td></tr>
         <tr><td><kbd>F2</kbd></td><td>Symbol cross-file umbenennen</td></tr>
         <tr><td><kbd>Cmd</kbd>+<kbd>Z</kbd></td><td>Undo (auch für visuelle Operationen)</td></tr>
         <tr><td><kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></td><td>Redo</td></tr>
         <tr><td><kbd>Cmd</kbd>+<kbd>S</kbd></td><td>Manuelles Speichern (Autosave aktiv)</td></tr>
         <tr><td><kbd>Tab</kbd></td><td>Autocomplete-Vorschlag akzeptieren</td></tr>
         <tr><td><kbd>Esc</kbd></td><td>Autocomplete schließen</td></tr>
-        <tr><td><kbd>Cmd</kbd>+<kbd>.</kbd></td><td>Quick-Fix für Lint-Marker</td></tr>
+        <tr><td><code>::</code> nach Komp.-Name</td><td>Komponente extrahieren</td></tr>
+        <tr><td><code>::</code> nach Wert</td><td>Wert zu Token extrahieren</td></tr>
       </table>
 
       <h3>Visuelles Editieren</h3>
@@ -73,10 +73,56 @@
       <h3>Modi</h3>
       <table class="ref-table">
         <tr><th>Shortcut</th><th>Aktion</th></tr>
-        <tr><td><kbd>Cmd</kbd>+<kbd>R</kbd></td><td>Run-Mode toggeln</td></tr>
+        <tr><td>Play-Knopf in Toolbar</td><td>Run-Mode toggeln</td></tr>
         <tr><td><kbd>Cmd</kbd>+<kbd>B</kbd></td><td>Side-Panels ein-/ausblenden</td></tr>
         <tr><td><kbd>F11</kbd></td><td>Fullscreen-Preview</td></tr>
       </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Canvas — App-Basis</h2>
+      <p>
+        <code>canvas</code> als erste Zeile setzt Basis-Styling für die
+        gesamte Anwendung (vererbbar: <code>col</code>,
+        <code>font</code>, <code>fs</code>):
+      </p>
+      <table class="ref-table">
+        <tr><th>Form</th><th>Effekt</th></tr>
+        <tr><td><code>canvas mobile</code></td><td>375 × 812 (Device-Preset)</td></tr>
+        <tr><td><code>canvas tablet</code></td><td>768 × 1024</td></tr>
+        <tr><td><code>canvas desktop</code></td><td>1440 × 900</td></tr>
+        <tr><td><code>canvas bg #1a1a1a, w 375, h 812</code></td><td>frei konfiguriert</td></tr>
+        <tr><td><code>canvas mobile, bg #1a1a1a, col white</code></td><td>Preset + Overrides</td></tr>
+      </table>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Size-States — Container-Queries</h2>
+      <p>
+        Komponenten reagieren via Size-States auf ihre eigene Breite.
+        Defaults aus dem Schema (überschreibbar via Token):
+      </p>
+      <table class="ref-table">
+        <tr><th>State</th><th>Default-Breite</th><th>Token-Override</th></tr>
+        <tr><td><code>compact:</code></td><td>&lt; 400px</td><td><code>compact.max: N</code></td></tr>
+        <tr><td><code>regular:</code></td><td>400-800px</td><td><code>regular.min: N</code>, <code>regular.max: N</code></td></tr>
+        <tr><td><code>wide:</code></td><td>&gt; 800px</td><td><code>wide.min: N</code></td></tr>
+        <tr><td>eigene</td><td>per Token definiert</td><td><code>statename.min: N</code> / <code>.max: N</code></td></tr>
+      </table>
+      <p>
+        Beispiel:
+      </p>
+      <div class="code-block">
+        <pre>Card: pad 16, gap 12
+  compact:
+    pad 8, gap 6, fs 13
+  wide:
+    pad 24, gap 16, fs 16</pre>
+      </div>
     </section>
 
 
@@ -100,7 +146,7 @@
         <tr><td>Icon (nur bei <code>Icon</code>-Element)</td><td><code>is</code> (size), <code>ic</code> (color), <code>iw</code> (weight), <code>fill</code></td></tr>
         <tr><td>Form (nur bei <code>Input</code>/<code>Button</code>)</td><td><code>placeholder</code>, <code>type</code>, <code>name</code>, <code>value</code>, <code>checked</code>, <code>disabled</code>, <code>mask</code>, <code>bind</code></td></tr>
         <tr><td>Events</td><td><code>onclick</code>, <code>onhover</code>, <code>onfocus</code>, <code>onblur</code>, <code>onchange</code>, <code>oninput</code>, Keyboard-Events (mit Action-Picker)</td></tr>
-        <tr><td>States</td><td>State-Tabs <em>Default / Hover / Focus / Active / Disabled</em> + Custom-State-Definition</td></tr>
+        <tr><td>States</td><td>im Code: <code>hover:</code>, <code>focus:</code>, <code>active:</code>, <code>disabled:</code>, eigene Namen (<code>on:</code>, <code>highlighted:</code>, …) — Property-Panel-Tabs sind Roadmap</td></tr>
       </table>
     </section>
 
