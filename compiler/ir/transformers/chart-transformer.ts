@@ -11,6 +11,25 @@ import type { TransformerContext, ParentLayoutContext } from './transformer-cont
 import { getChartPrimitive, getChartSlotProperty } from '../../schema/chart-primitives'
 
 /**
+ * Stringify a chart-slot value, preserving Mirror token references as
+ * `$name` markers. The chart runtime (`applySlotConfigs` in
+ * `compiler/runtime/charts.ts`) resolves these via the CSS-var registry.
+ * Without this, `bg $accent.blue` on a Point slot was `String(...)`'d
+ * to the literal `"[object Object]"` (parser-level TokenReference is an
+ * object, not a string), and chart.js silently rendered the default
+ * color while polluting the emitted JSON.
+ */
+function stringifyChartSlotValue(value: unknown): string {
+  if (value && typeof value === 'object' && 'kind' in value) {
+    const kind = (value as { kind: string }).kind
+    if (kind === 'token') {
+      return '$' + (value as unknown as { name: string }).name
+    }
+  }
+  return String(value)
+}
+
+/**
  * Helper to convert string booleans ("true"/"false") to actual booleans
  */
 function toBool(v: unknown): boolean {
@@ -177,7 +196,7 @@ export function transformChart(
           } else if (slotPropDef.type === 'boolean') {
             slotConfig[slotPropDef.chartJsPath] = toBool(value)
           } else {
-            slotConfig[slotPropDef.chartJsPath] = String(value)
+            slotConfig[slotPropDef.chartJsPath] = stringifyChartSlotValue(value)
           }
         }
       }

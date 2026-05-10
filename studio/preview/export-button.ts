@@ -5,14 +5,46 @@
  * current Studio file-set to the AI-bridge `/export` endpoint (NDJSON
  * streaming), and shows phase-by-phase progress live. After successful
  * export, the user can either copy the claude command or click "Run
- * Claude" to invoke it directly via the bridge's `/agent/run` endpoint.
+ * Claude" to invoke it directly.
  *
- * Requires the AI bridge server (`npm run ai-bridge`).
+ * Two execution paths for the "Run Claude" step:
+ *
+ *   Browser   → /agent/run via the AI-Bridge HTTP server
+ *               (`npm run ai-bridge`). Requires the bridge running.
+ *   Tauri app → TauriAgent.runAgent — invokes the user's local
+ *               `claude` CLI directly. No HTTP server needed.
+ *
+ * Tracked in docs/concepts/tauri-strategy.md ("Export-Button →
+ * TauriAgent migration"). Bundle-build migration (the /export
+ * endpoint) is Node-only and stays HTTP today; its browser/Tauri
+ * port is the queued follow-up slice.
  */
 
 import { state } from '../core'
 
 const BRIDGE_URL = 'http://localhost:3456'
+
+interface TauriAgentBridge {
+  checkClaudeCli(): Promise<boolean>
+  runAgent(
+    prompt: string,
+    agentType: string,
+    projectPath?: string,
+    sessionId?: string | null
+  ): Promise<{ session_id: string; success: boolean; output: string; error: string | null }>
+}
+
+/** Resolve TauriBridge.agent if running inside the Tauri shell. Returns
+ *  null in the browser so callers fall back to the HTTP path. */
+function getTauriAgent(): TauriAgentBridge | null {
+  const tb = (
+    window as unknown as {
+      TauriBridge?: { isTauri?: () => boolean; agent?: TauriAgentBridge }
+    }
+  ).TauriBridge
+  if (!tb?.isTauri?.() || !tb.agent) return null
+  return tb.agent
+}
 
 type Target = 'react' | 'vue' | 'svelte' | 'vanilla'
 
@@ -312,7 +344,6 @@ async function runClaudeOnBundle(bundlePath: string, resultEl: HTMLElement): Pro
   const runBtn = resultEl.querySelector<HTMLButtonElement>('.export-dialog-run-claude')
   if (!outEl || !runBtn) return
   outEl.hidden = false
-  outEl.textContent = 'Claude läuft… (kein Live-Stream — Output erscheint am Ende)'
   runBtn.disabled = true
   runBtn.textContent = 'Läuft…'
 
@@ -321,13 +352,45 @@ async function runClaudeOnBundle(bundlePath: string, resultEl: HTMLElement): Pro
     runBtn.textContent = `Läuft… (${((performance.now() - start) / 1000).toFixed(0)} s)`
   }, 1000)
 
+  const prompt = [
+    `cd ${bundlePath}`,
+    'Read INSTRUCTIONS.md, MIRROR-BRIEF.md, target.json, source/*.',
+    'Execute the pipeline in INSTRUCTIONS.md, gating on each step.',
+    'Use Write/Edit/Bash to create files in ./generated/.',
+  ].join('\n')
+
+  // Tauri path — call the user's local claude CLI directly. No HTTP
+  // server required. The Tauri runAgent doesn't stream by design (the
+  // Rust command captures the full output before resolving), so the
+  // user-visible behaviour matches the HTTP path: no live stream,
+  // output arrives at the end. The migration to per-line streaming
+  // would use TauriAgent.onAgentOutput + an event-driven append.
+  const tauriAgent = getTauriAgent()
+  if (tauriAgent) {
+    outEl.textContent = 'Claude läuft… (Tauri direct-spawn, Output am Ende)'
+    try {
+      const data = await tauriAgent.runAgent(prompt, 'export', bundlePath, null)
+      clearInterval(tick)
+      if (data.success) {
+        outEl.textContent = `✓ Fertig (${((performance.now() - start) / 1000).toFixed(1)} s)\n\n${data.output || ''}`
+        runBtn.textContent = 'Fertig'
+      } else {
+        outEl.textContent = `✗ Fehler: ${data.error || 'unbekannt'}\n\n${data.output || ''}`
+        runBtn.disabled = false
+        runBtn.textContent = 'Erneut'
+      }
+    } catch (err) {
+      clearInterval(tick)
+      outEl.textContent = `TauriAgent-Fehler: ${err instanceof Error ? err.message : String(err)}`
+      runBtn.disabled = false
+      runBtn.textContent = 'Erneut'
+    }
+    return
+  }
+
+  // Browser path — go through the AI-Bridge HTTP server.
+  outEl.textContent = 'Claude läuft… (kein Live-Stream — Output erscheint am Ende)'
   try {
-    const prompt = [
-      `cd ${bundlePath}`,
-      'Read INSTRUCTIONS.md, MIRROR-BRIEF.md, target.json, source/*.',
-      'Execute the pipeline in INSTRUCTIONS.md, gating on each step.',
-      'Use Write/Edit/Bash to create files in ./generated/.',
-    ].join('\n')
     const res = await fetch(`${BRIDGE_URL}/agent/run`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
