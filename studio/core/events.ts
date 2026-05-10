@@ -45,8 +45,6 @@ export interface StudioEvents {
   }
   /** Emitted when selection becomes invalid (e.g., selected node removed) */
   'selection:invalidated': { nodeId: string }
-  /** Emitted when selection falls back to a different node (e.g., after queued selection fails) */
-  'selection:fallback': { requestedId: string; resolvedId: string; reason: string }
   /** Emitted when selection needs to be refreshed (e.g., after padding change) */
   'selection:refresh': { nodeId: string }
   /** Emitted when a change is applied via ChangeService */
