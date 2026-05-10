@@ -72,6 +72,22 @@ describe('Tokens — Token-Name appears in DOM output', () => {
     expect(dom).toMatch(/1a1a1a|26, 26, 26/)
   })
 
+  it('IR resolves token-typed gradient stops to CSS variables (DOM + Framework)', () => {
+    // Pre-2026-05-10 the IR's gradient logic stringified TokenReference
+    // objects directly, leaking `linear-gradient(135deg, [object Object], …)`
+    // into both DOM and Framework outputs. Now resolves through the
+    // standard `resolveValue` path → `var(--primary-bg)`.
+    const src = `primary.bg: #2271C1\nsecondary.bg: #ec4899\n\nFrame bg grad 135 $primary $secondary, w 100, h 100`
+    const dom = generateDOM(parse(src))
+    const fw = generateFramework(parse(src))
+    for (const out of [dom, fw]) {
+      expect(out).not.toContain('[object Object]')
+      expect(out).toMatch(
+        /linear-gradient\(135deg,\s*var\(--primary-bg\),\s*var\(--secondary-bg\)\)/
+      )
+    }
+  })
+
   it('React skips property-set tokens from the `tokens` object', () => {
     // Pre-2026-05-10 the React backend emitted `'cardstyle': undefined`
     // (and same for every property-set) because it iterated over

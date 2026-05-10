@@ -145,8 +145,13 @@ export function propertyToCSS(
       }
     }
 
-    // Collect colors (remaining values)
-    const colors = values.slice(colorStartIndex).map(v => String(v))
+    // Collect colors (remaining values). Resolve TokenReference objects
+    // through the same `resolveValue` path the rest of the transformer
+    // uses — without it, `String({kind: 'token', name: 'primary'})`
+    // produced `[object Object]` in the gradient string. Mirror's tokens
+    // are CSS variables (`var(--primary-bg)`), which work as color stops
+    // identically to literal hex values.
+    const colors = values.slice(colorStartIndex).map(v => ctx.resolveValue([v], name))
 
     if (colors.length < 2) {
       // Not enough colors, skip gradient processing
