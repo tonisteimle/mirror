@@ -58,6 +58,7 @@ import {
 } from './dom-bridge'
 import { createFixturesAPI, type Fixture, type FixturesAPI } from './fixtures'
 import { installCdpInputClient, isCdpInputAvailable, cdpInput } from './cdp-input-client'
+import { installOsMouseClient, isOsMouseAvailable, osMouse } from './os-mouse-client'
 import { trustedInteractions, type TrustedInteractionAPI } from './trusted-interactions'
 import { createStudioAPI } from './studio-api'
 import { createSnappingAPI, setupSnappingAPI, type SnappingAPI } from './snapping-api'
@@ -299,10 +300,24 @@ export function initStudioTestAPI(_studio?: unknown, _editor?: unknown): void {
     log.warn('Failed to install CDP input client:', e)
   }
 
+  // OS-mouse client: same response-handler pattern. Bridge is only
+  // present when the test runner was started with --os-mouse, otherwise
+  // isOsMouseAvailable() stays false and step-runner scenarios refusing
+  // to use synthetic fall-back will surface that loudly.
+  try {
+    installOsMouseClient()
+    log.info(
+      `OS-mouse client installed (bridge ${isOsMouseAvailable() ? 'available' : 'not available'})`
+    )
+  } catch (e) {
+    log.warn('Failed to install OS-mouse client:', e)
+  }
+
   // Register on window for Playwright access
   if (typeof window !== 'undefined') {
     ;(window as Window & { __STUDIO_TEST__?: StudioTestAPI }).__STUDIO_TEST__ = api
     ;(window as unknown as { __cdpInput?: typeof cdpInput }).__cdpInput = cdpInput
+    ;(window as unknown as { __osMouse?: typeof osMouse }).__osMouse = osMouse
   }
 
   // Initialize drag test API (available at window.__testDragDrop)

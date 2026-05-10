@@ -105,6 +105,25 @@ export type StepAction =
   | { do: 'multiSelect'; nodeIds: readonly Selector[] }
 
   // ---------------------------------------------------------------------------
+  // OS-driven drag — real macOS cursor moves from `from` to `to`. The
+  // browser sees a native mousedown / mousemove* / mouseup sequence so
+  // HTML5 dragstart fires with proper `dataTransfer`. Only available
+  // when the runner was started with `--os-mouse`; without it the
+  // step throws so failures are loud, not silent.
+  //
+  // `from` / `to` accept either a Selector (resolved to the element's
+  // viewport-center page coordinate) or an explicit `{x, y}` page point.
+  // ---------------------------------------------------------------------------
+  | {
+      do: 'osDrag'
+      from: Selector | { x: number; y: number }
+      to: Selector | { x: number; y: number }
+      preHoldMs?: number
+      dwellMs?: number
+      modifier?: 'shift' | 'alt' | 'cmd' | 'ctrl'
+    }
+
+  // ---------------------------------------------------------------------------
   // Project files — switch the editor's active file. The compile target
   // changes accordingly; readers thereafter resolve against the new file.
   // ---------------------------------------------------------------------------
@@ -381,6 +400,22 @@ export interface Scenario {
    * the same way for either mode.
    */
   compileMode?: 'test' | 'real'
+  /**
+   * Which input pipeline drives mouse-style actions.
+   *
+   *   - `'synthetic'` (default) — `dispatchEvent` MouseEvents via the
+   *     existing `Interactions` class. Runs in jsdom and headless
+   *     Chrome unchanged.
+   *   - `'os'` — real macOS cursor via the OS-mouse bridge. The browser
+   *     receives native input; HTML5 `dragstart` fires with proper
+   *     `dataTransfer`. Requires the runner to be started with
+   *     `--os-mouse` (`isOsMouseAvailable() === true`). Throws otherwise.
+   *
+   * Today only `click` and the explicit `osDrag` action route through
+   * this pipeline; other actions stay on the synthetic path until
+   * scenarios start asking for real input on them.
+   */
+  inputMode?: 'synthetic' | 'os'
   /**
    * Skip this scenario (don't run any steps). The reason is reported
    * back as a passing-but-skipped result so the test never silently

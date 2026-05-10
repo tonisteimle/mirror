@@ -181,10 +181,12 @@ describe('Components — React backend documented limits', () => {
     expect(react).toMatch(/<div[\s>/]/)
   })
 
-  it('multi-level `as Component` inheritance: only innermost props applied', () => {
-    // Current React behavior: `LoudBtn as PrimaryBtn` only emits LoudBtn's
-    // own properties (fs 18), NOT the merged chain.
-    // DOM correctly merges all 3 levels.
+  it('multi-level `as Component` inheritance: chain merges across DOM and React', () => {
+    // Both backends now walk the `as`-chain via ComponentResolver and merge
+    // properties from every level. DOM has done this all along; the React
+    // backend used to drop parent props (only innermost LoudBtn's `fs 18`
+    // landed) until it picked up the same resolver. CI fails if either
+    // backend regresses.
     const src = `Btn: Button pad 10
 PrimaryBtn as Btn: bg #2271C1
 LoudBtn as PrimaryBtn: fs 18
@@ -193,15 +195,12 @@ LoudBtn "X"`
     const dom = generateDOM(parse(src))
     const react = generateReact(parse(src))
 
-    // DOM has all 3 levels merged
-    expect(dom).toContain('10px')
-    expect(dom).toContain('#2271C1')
-    expect(dom).toContain('18px')
-
-    // React has only the innermost (LoudBtn) properties
-    expect(react).toContain('18')
-    // Currently the parent properties are dropped — pin that
-    // (if this fails because they ARE included, that's a fix worth celebrating)
-    expect(react).not.toContain('#2271C1')
+    for (const out of [dom, react]) {
+      expect(out).toContain('10px')
+      expect(out).toContain('#2271C1')
+      expect(out).toContain('18')
+    }
+    // React resolves to the underlying primitive too — `LoudBtn` → ... → `Button`.
+    expect(react).toMatch(/<button[\s>]/)
   })
 })

@@ -246,6 +246,9 @@ ${bold('Diagnostics:')}
 ${bold('Browser Options:')}
   --headed            Run with visible browser window
   --url=URL           Custom Studio URL (default: localhost:5173/studio/)
+  --os-mouse          Install the OS-mouse bridge (real macOS cursor via
+                      nut-js). Used by step-runner scenarios that opt into
+                      'inputMode: os'. Requires Accessibility permission.
 
 ${bold('Execution Options:')}
   --bail              Stop on first failure
@@ -469,6 +472,7 @@ async function runDemoSuiteMode(args: CLIArgs): Promise<number> {
     url: args.url,
     verbose: args.verbose,
     silent: args.silent,
+    osMouse: args.osMouse,
   }
   const runner = new TestRunner(config)
 

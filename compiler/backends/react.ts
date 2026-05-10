@@ -21,6 +21,7 @@ import type {
   ConditionalNode,
 } from '../parser/ast'
 import { expandPropertySets } from '../ir/transformers/property-set-expander'
+import { resolveComponent } from '../ir/transformers/component-resolver'
 import { isLayoutPrimitive } from '../schema/dsl'
 import { getHtmlTag as schemaGetHtmlTag, isKnownPrimitive } from '../schema/ir-helpers'
 import {
@@ -410,8 +411,13 @@ function generateJSX(
     return generateIconJSX(instance, indent)
   }
 
-  // Resolve component definition
-  const compDef = components.get(instance.component)
+  // Resolve component definition. Walk the inheritance chain so
+  // multi-level `as` chains (`Btn: Button pad 10` → `PrimaryBtn as Btn:
+  // bg #2271C1` → `LoudBtn as PrimaryBtn: fs 18`) merge their properties
+  // and resolve to the underlying primitive — same path the DOM/IR uses
+  // via ComponentResolver.resolveComponent.
+  const rawDef = components.get(instance.component)
+  const compDef = rawDef ? resolveComponent(rawDef, { componentMap: components }) : undefined
 
   // Determine HTML tag based on component type
   const tag = getHtmlTag(instance.component, compDef)

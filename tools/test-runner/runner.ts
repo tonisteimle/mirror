@@ -19,6 +19,7 @@ import { ConsoleCollector } from './console-collector'
 import { ScreenshotCapture } from './screenshot'
 import { FileExplorer } from './file-explorer'
 import { installCdpInputBridge } from './cdp-input-bridge'
+import { installOsMouseBridge } from './os-mouse-bridge'
 import { parseProgressMessage, type ProgressUpdate } from './reporters/progress'
 
 // =============================================================================
@@ -437,6 +438,13 @@ export class TestRunner {
     // window.__cdpInputCall(...) once the page loads. Must run after
     // Runtime.enable (binding events flow through the Runtime domain).
     await installCdpInputBridge(this.cdp)
+    // OS-mouse bridge is opt-in (requires Accessibility permission and
+    // visibly moves the cursor). Step-runner scenarios with
+    // `inputMode: 'os'` use this; without it they refuse and fail loud.
+    if (this.config.osMouse) {
+      await installOsMouseBridge(this.cdp)
+      this.log('OS-mouse bridge installed (real macOS cursor active)')
+    }
   }
 
   private async waitForPageLoad(): Promise<void> {

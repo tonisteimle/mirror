@@ -75,6 +75,14 @@ export interface TestConfig {
   // Verbosity
   verbose: boolean
   silent: boolean
+
+  /**
+   * When true, install the OS-mouse bridge so step-runner scenarios with
+   * `inputMode: 'os'` drive the real macOS cursor via nut-js. Requires
+   * Accessibility permission for the node process; visibly moves the
+   * cursor. Off by default — opt in with --os-mouse on the CLI.
+   */
+  osMouse?: boolean
 }
 
 export const defaultConfig: TestConfig = {

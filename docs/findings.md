@@ -529,6 +529,20 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — Multi-Level `as`-Inheritance in React-Backend
+
+- **Wo:** `compiler/backends/react.ts`,
+  `tests/differential/components.test.ts`
+  **Was:** `LoudBtn as PrimaryBtn as Btn as Button` droppte alle
+  Properties oberhalb der innersten Definition. DOM walkt die Kette
+  schon lange via `ComponentResolver.resolveComponent`. React rief nur
+  `componentMap.get(...)` direkt auf. Fix: gleicher Resolver-Aufruf, der
+  auch das `primitive`-Feld auf den HTML-Tag der Wurzel resolved
+  (`button` statt `div`).
+  **Status:** erledigt
+  **Notiz:** Pin von "React drops parent props" auf "alle 3 Backends
+  mergen die Kette + resolven zum primitiven Tag" umgestellt.
+
 ### 2026-05-10 — Block-If/Else in React-Backend
 
 - **Wo:** `compiler/backends/react.ts`,

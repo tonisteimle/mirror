@@ -19,6 +19,7 @@ import { testWithSetup } from '../test-runner'
 import type { Scenario, SetupProject, Step, Expectations, Selector } from './types'
 import { installConsoleCollector, type ConsoleCollector } from './console-collector'
 import { codeDiff, canonicalizeCode } from './diff'
+import { osMouse, isOsMouseAvailable } from '../os-mouse-client'
 import { getReader, PROPERTY_READERS, type SourceMapLike } from './properties'
 import { getWriter } from './writers'
 
@@ -80,7 +81,9 @@ export function scenarioToTestCase(scenario: Scenario): TestCase {
         triggerCompile(api.editor.getCode(), compileMode)
         await api.utils.delay(50)
       }
-      await runScenario(scenario, api, collector)
+      await runScenario(scenario, api, collector, {
+        inputMode: scenario.inputMode ?? 'synthetic',
+      })
     } finally {
       collector.dispose()
     }
@@ -197,6 +200,43 @@ export function resolveSelector(sel: Selector): string {
   if (!id)
     throw new Error(`Selector ${describeSelector(sel)} resolved element has no data-mirror-id`)
   return id
+}
+
+// =============================================================================
+// OS-mouse helpers — used by `osDrag` action and `inputMode: 'os'` scenarios
+// =============================================================================
+
+function ensureOsMouse(): void {
+  if (!isOsMouseAvailable()) {
+    throw new Error(
+      'OS-mouse bridge not available. Start the runner with --os-mouse, ' +
+        'or remove `inputMode: "os"` from the scenario.'
+    )
+  }
+}
+
+/**
+ * Page-space center of the element identified by node-id. Throws if the
+ * element is missing — callers have already resolved through resolveSelector,
+ * so this is the cheap read step.
+ */
+function pageCenterOf(nodeId: string): { x: number; y: number } {
+  const el = document.querySelector(`[data-mirror-id="${nodeId}"]`) as HTMLElement | null
+  if (!el) throw new Error(`OS-mouse: node ${nodeId} not in preview DOM`)
+  const r = el.getBoundingClientRect()
+  return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+}
+
+/**
+ * Resolve a Selector or explicit page point to page coordinates. Used by
+ * `osDrag` so scenarios can pin a drop target on a specific pixel even
+ * when no DOM element lives there yet (e.g. an empty alignment zone).
+ */
+function resolveDragPoint(target: Selector | { x: number; y: number }): { x: number; y: number } {
+  if (typeof target === 'object' && target !== null && 'x' in target && 'y' in target) {
+    return { x: target.x, y: target.y }
+  }
+  return pageCenterOf(resolveSelector(target as Selector))
 }
 
 /**
@@ -333,7 +373,8 @@ export function scenariosToTestCases(scenarios: Scenario[]): TestCase[] {
 async function runScenario(
   scenario: Scenario,
   api: TestAPI,
-  collector: ConsoleCollector
+  collector: ConsoleCollector,
+  ctx: ExecutionContext
 ): Promise<void> {
   // Wait for initial setup compile + give the studio a moment to settle.
   await api.utils.waitForCompile()
@@ -348,7 +389,7 @@ async function runScenario(
     const label = `Step ${i + 1}/${scenario.steps.length}: ${describeStep(step)}`
 
     try {
-      await executeAction(step, api)
+      await executeAction(step, api, ctx)
 
       // Most actions trigger a recompile; waitForCompile is a no-op if
       // nothing is pending. While the active file is non-layout (tokens
@@ -405,7 +446,11 @@ function isOnNonLayoutFile(step: Step, api: TestAPI): boolean {
 // Action execution
 // =============================================================================
 
-async function executeAction(step: Step, api: TestAPI): Promise<void> {
+interface ExecutionContext {
+  inputMode: 'synthetic' | 'os'
+}
+
+async function executeAction(step: Step, api: TestAPI, ctx: ExecutionContext): Promise<void> {
   switch (step.do) {
     case 'select':
       if (step.nodeId === null) {
@@ -415,7 +460,14 @@ async function executeAction(step: Step, api: TestAPI): Promise<void> {
       }
       return
     case 'click':
-      await api.interact.click(resolveSelector(step.nodeId))
+      if (ctx.inputMode === 'os') {
+        ensureOsMouse()
+        const id = resolveSelector(step.nodeId)
+        const pt = pageCenterOf(id)
+        await osMouse.click(pt)
+      } else {
+        await api.interact.click(resolveSelector(step.nodeId))
+      }
       return
     case 'pressKey':
       await api.interact.pressKey(step.key, {
@@ -510,6 +562,21 @@ async function executeAction(step: Step, api: TestAPI): Promise<void> {
         await api.interact.shiftClick(ids[i])
         await api.utils.delay(50)
       }
+      return
+    }
+    case 'osDrag': {
+      ensureOsMouse()
+      const from = resolveDragPoint(step.from)
+      const to = resolveDragPoint(step.to)
+      const opts: {
+        preHoldMs?: number
+        dwellMs?: number
+        modifier?: 'shift' | 'alt' | 'cmd' | 'ctrl'
+      } = {}
+      if (step.preHoldMs !== undefined) opts.preHoldMs = step.preHoldMs
+      if (step.dwellMs !== undefined) opts.dwellMs = step.dwellMs
+      if (step.modifier !== undefined) opts.modifier = step.modifier
+      await osMouse.drag(from, to, opts)
       return
     }
     case 'switchFile': {
@@ -1144,6 +1211,8 @@ function describeStep(step: Step): string {
       return `${prefix}unhover ${formatSelector(step.target)}${suffix}`
     case 'multiSelect':
       return `${prefix}multiSelect [${step.nodeIds.map(formatSelector).join(', ')}]${suffix}`
+    case 'osDrag':
+      return `${prefix}osDrag ${formatDragPoint(step.from)} → ${formatDragPoint(step.to)}${step.modifier ? ' [+' + step.modifier + ']' : ''}${suffix}`
     case 'switchFile':
       return `${prefix}switchFile ${step.filename}${suffix}`
     case 'replaceFile':
@@ -1170,6 +1239,13 @@ function formatId(id: string | null): string {
 function formatSelector(sel: Selector | null): string {
   if (sel === null) return '<none>'
   return typeof sel === 'string' ? sel : describeSelector(sel)
+}
+
+function formatDragPoint(p: Selector | { x: number; y: number }): string {
+  if (typeof p === 'object' && p !== null && 'x' in p && 'y' in p) {
+    return `(${p.x},${p.y})`
+  }
+  return formatSelector(p as Selector)
 }
 
 function formatPanelValue(v: string | null): string {
