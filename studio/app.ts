@@ -51,7 +51,7 @@ import {
 } from './init'
 import { debounce } from './core/debounce'
 import { renderEmptyPreview, resetSelectionForEmptyCode } from './compile/empty-state'
-import { wrapLayoutForCompile } from './compile/wrap-layout'
+import { wrapLayoutForCompile, prependPrelude, preludeLineOffset } from './compile/wrap-layout'
 import {
   findUninstancedComponents,
   appendImplicitInstances,
@@ -1244,37 +1244,33 @@ function compile(code: string) {
     // Auto-create any missing referenced files
     autoCreateReferencedFiles(compileCode)
 
-    // For layout files, prepend all tokens and components
-    // and wrap user code in an implicit full-screen root container
+    // Build the resolved source: prepend tokens/components prelude,
+    // optionally wrap in an implicit App root. Test mode skips the
+    // App-wrap unconditionally so the user's first element is node-1
+    // (tests expect deterministic IDs from the source they wrote, not
+    // from a synthetic root). Note: App's indent does NOT contribute to
+    // preludeOffset because CodeModifier returns line-start positions.
     let resolvedCode = compileCode
-    // In test mode, build the same tokens/components prelude as
-    // production so cross-file token + component resolution is
-    // available. The App-wrapping is intentionally skipped (tests want
-    // node-1 to be the user's first element, not the synthetic App).
     if (testModeActive && fileType === 'layout') {
-      const prelude = getPreludeCode(compileFile)
-      if (prelude) {
-        const separator = '\n\n// === ' + compileFile + ' ===\n'
-        resolvedCode = prelude + separator + compileCode
-        currentPreludeOffset = prelude.length + separator.length
-        currentPreludeLineOffset =
-          resolvedCode.substring(0, currentPreludeOffset).split('\n').length - 1
-      } else {
-        currentPreludeOffset = 0
-        currentPreludeLineOffset = 0
-      }
+      const prepended = prependPrelude(
+        compileCode,
+        compileFile,
+        getPreludeCode(compileFile) || null
+      )
+      resolvedCode = prepended.resolvedCode
+      currentPreludeOffset = prepended.preludeOffset
+      currentPreludeLineOffset = preludeLineOffset(resolvedCode, currentPreludeOffset)
     } else if (testModeActive) {
       // Non-layout in test mode (tokens.tok, components.com): compile alone.
       resolvedCode = compileCode
       currentPreludeOffset = 0
       currentPreludeLineOffset = 0
     } else if (fileType === 'layout') {
-      // Note: indentedCode does NOT contribute to currentPreludeOffset because
-      // CodeModifier returns line-start positions (including indent). The
-      // indent is stripped separately in handleStudioCodeChange when applying
-      // changes to the editor.
-      const prelude = getPreludeCode(compileFile)
-      const wrap = wrapLayoutForCompile(compileCode, compileFile, prelude || null)
+      const wrap = wrapLayoutForCompile(
+        compileCode,
+        compileFile,
+        getPreludeCode(compileFile) || null
+      )
       resolvedCode = wrap.resolvedCode
       currentPreludeOffset = wrap.preludeOffset
       isWrappedWithApp = wrap.isWrappedWithApp
@@ -1289,16 +1285,11 @@ function compile(code: string) {
     // In test mode the offsets were computed in the test-aware branch
     // above, so a unified update applies here too.
     if (studio?.state && !testModeActive) {
-      const preludeLineCount =
-        currentPreludeOffset > 0
-          ? resolvedCode.substring(0, currentPreludeOffset).split('\n').length - 1
-          : 0
-      // Update global for DropResultApplier
-      currentPreludeLineOffset = preludeLineCount
+      currentPreludeLineOffset = preludeLineOffset(resolvedCode, currentPreludeOffset)
       studio.state.set({
         resolvedSource: resolvedCode,
         preludeOffset: currentPreludeOffset,
-        preludeLineOffset: preludeLineCount,
+        preludeLineOffset: currentPreludeLineOffset,
         isWrappedWithApp: isWrappedWithApp,
       })
     } else if (studio?.state) {

@@ -33,6 +33,36 @@ export interface WrapLayoutResult {
 const APP_ROOT = 'App'
 
 /**
+ * Prepend `prelude` to `compileCode` with a `// === filename ===` separator.
+ * No App-wrap. Used directly by test mode (which wants the user's first
+ * element to be node-1, not the synthetic App) and indirectly by
+ * `wrapLayoutForCompile` for the explicit-App / root-defs branches.
+ */
+export function prependPrelude(
+  compileCode: string,
+  compileFile: string,
+  prelude: string | null
+): { resolvedCode: string; preludeOffset: number } {
+  if (!prelude) {
+    return { resolvedCode: compileCode, preludeOffset: 0 }
+  }
+  const separator = `\n\n// === ${compileFile} ===\n`
+  return {
+    resolvedCode: prelude + separator + compileCode,
+    preludeOffset: prelude.length + separator.length,
+  }
+}
+
+/**
+ * Convert a character-based prelude offset to a line-based offset.
+ * Used by the line-offset tracker for editor → sourceMap line resolution.
+ */
+export function preludeLineOffset(resolvedCode: string, preludeOffset: number): number {
+  if (preludeOffset === 0) return 0
+  return resolvedCode.substring(0, preludeOffset).split('\n').length - 1
+}
+
+/**
  * True when `code` declares at least one root-level component definition
  * (capital-letter name + `:` at column 0). Wrapping such files in an
  * implicit `App` would re-interpret the definition as a slot filler.
@@ -57,37 +87,18 @@ export function wrapLayoutForCompile(
   const skipWrap = startsWithApp || hasRootComponentDefs(compileCode)
 
   if (skipWrap) {
-    if (prelude) {
-      const separator = `\n\n// === ${compileFile} ===\n`
-      return {
-        resolvedCode: prelude + separator + compileCode,
-        preludeOffset: prelude.length + separator.length,
-        isWrappedWithApp: false,
-      }
-    }
-    return {
-      resolvedCode: compileCode,
-      preludeOffset: 0,
-      isWrappedWithApp: false,
-    }
+    return { ...prependPrelude(compileCode, compileFile, prelude), isWrappedWithApp: false }
   }
 
   const indentedCode = compileCode
     .split('\n')
     .map(line => (line ? '  ' + line : ''))
     .join('\n')
-
-  if (prelude) {
-    const separator = `\n\n// === ${compileFile} ===\n`
-    return {
-      resolvedCode: prelude + separator + APP_ROOT + '\n' + indentedCode,
-      preludeOffset: prelude.length + separator.length + APP_ROOT.length + 1,
-      isWrappedWithApp: true,
-    }
-  }
+  const wrappedBody = APP_ROOT + '\n' + indentedCode
+  const wrapped = prependPrelude(wrappedBody, compileFile, prelude)
   return {
-    resolvedCode: APP_ROOT + '\n' + indentedCode,
-    preludeOffset: APP_ROOT.length + 1,
+    resolvedCode: wrapped.resolvedCode,
+    preludeOffset: wrapped.preludeOffset + APP_ROOT.length + 1,
     isWrappedWithApp: true,
   }
 }

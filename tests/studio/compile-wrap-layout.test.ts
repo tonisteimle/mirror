@@ -6,7 +6,11 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { wrapLayoutForCompile } from '../../studio/compile/wrap-layout'
+import {
+  wrapLayoutForCompile,
+  prependPrelude,
+  preludeLineOffset,
+} from '../../studio/compile/wrap-layout'
 
 describe('wrapLayoutForCompile — implicit App-wrap', () => {
   it('wraps bare user code in App and indents children', () => {
@@ -73,5 +77,37 @@ describe('wrapLayoutForCompile — explicit (no wrap)', () => {
     const prelude = 'primary.bg: #fff'
     const sep = '\n\n// === app.mir ===\n'
     expect(r.preludeOffset).toBe(prelude.length + sep.length)
+  })
+})
+
+describe('prependPrelude — used by test mode + skip-wrap branch', () => {
+  it('returns code unchanged with offset 0 when prelude is null', () => {
+    const r = prependPrelude('Frame', 'app.mir', null)
+    expect(r.resolvedCode).toBe('Frame')
+    expect(r.preludeOffset).toBe(0)
+  })
+
+  it('joins prelude + separator + code', () => {
+    const r = prependPrelude('Frame', 'app.mir', 'primary.bg: #fff')
+    const expected = 'primary.bg: #fff\n\n// === app.mir ===\nFrame'
+    expect(r.resolvedCode).toBe(expected)
+    expect(r.preludeOffset).toBe('primary.bg: #fff'.length + '\n\n// === app.mir ===\n'.length)
+  })
+})
+
+describe('preludeLineOffset', () => {
+  it('returns 0 when offset is 0', () => {
+    expect(preludeLineOffset('App\n  Frame', 0)).toBe(0)
+  })
+
+  it('counts newlines up to the offset', () => {
+    const code = 'a\nb\nc\nFrame'
+    // Offset just before "Frame": 3 newlines consumed.
+    const offset = code.indexOf('Frame')
+    expect(preludeLineOffset(code, offset)).toBe(3)
+  })
+
+  it('treats a trailing newline at the offset as one line', () => {
+    expect(preludeLineOffset('a\n', 2)).toBe(1)
   })
 })
