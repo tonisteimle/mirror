@@ -1436,14 +1436,45 @@ function generateStyles(
       continue
     }
 
+    // Inline ternaries on style props (`Frame bg active ? #2271C1 : #333`)
+    // arrive as Conditional objects in `values[0]`. React has no Mirror
+    // runtime, so we statically resolve the branch using the
+    // compile-time `tokens` map. Bare-identifier conditions look up the
+    // token's truthiness; unresolvable conditions drop the property
+    // (better than emitting `[object Object]` into the style sheet).
+    // Skip `content` — text-content ternaries are rendered as JSX
+    // expressions by `renderTextSlot` and read directly from `getTextContent`.
+    const firstVal = prop.values[0] as unknown
+    let effectiveValues = prop.values as unknown[]
+    if (
+      prop.name !== 'content' &&
+      typeof firstVal === 'object' &&
+      firstVal !== null &&
+      'kind' in firstVal &&
+      (firstVal as { kind?: string }).kind === 'conditional'
+    ) {
+      const cond = firstVal as { condition: string; then: string | number; else: string | number }
+      const condId = cond.condition.trim()
+      // Only static-resolve when the condition is a single bare identifier
+      // pointing at a known data token (`active: true`).
+      if (/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(condId) && tokenMap.has(condId)) {
+        effectiveValues = [tokenMap.get(condId) ? cond.then : cond.else]
+      } else {
+        // Complex condition — drop the property silently. DOM resolves it
+        // through its runtime; React would need eval to do the same.
+        continue
+      }
+    }
+
     // Slice 2 V-7: multi-value-shorthand support — `pad 8 16` / `gap 12 8`
     // arrive as `values: ["8", "16"]` / `["12", "8"]`; join them as a single
     // space-separated string so `pxify` can multi-px-ify. Single values pass
     // through unchanged (no array wrapping). Token references and the like
     // are non-string objects — those bypass the join (only one value).
-    const allBareStrings = prop.values.length > 1 && prop.values.every(v => typeof v === 'string')
-    const rawValue = allBareStrings ? prop.values.join(' ') : prop.values[0]
-    const value = resolve(rawValue, prop.name)
+    const allBareStrings =
+      effectiveValues.length > 1 && effectiveValues.every(v => typeof v === 'string')
+    const rawValue = allBareStrings ? effectiveValues.join(' ') : effectiveValues[0]
+    const value = resolve(rawValue as string | number | boolean | object, prop.name)
 
     // Slice 4 V-1: 9-zone aliases reach here as `values: [true]` (the parser
     // packs boolean flags this way). Same schema-side lookup as the

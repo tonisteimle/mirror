@@ -529,6 +529,22 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — `[object Object]` bei Style-Property-Ternary in React
+
+- **Wo:** `compiler/backends/react.ts` (`generateStyles`),
+  `tests/differential/conditionals.test.ts`
+  **Was:** `Frame bg active ? #2271C1 : #333` produzierte
+  `backgroundColor: '[object Object]'` weil der Conditional-Wert nie
+  vom resolve-Pfad abgefangen wurde — `String({…})` lieferte den
+  defaulten Object-toString. Fix: Pre-Switch-Pass detektiert Conditional
+  in `prop.values[0]` (außer für `content`, das `renderTextSlot`
+  überlässt), resolved bare-identifier-Conditions statisch über die
+  tokenMap, dropt komplexere Conditions still (statt Garbage zu
+  emittieren). Effective-Values lokal statt In-Place-Mutation, damit
+  Text-Content-Pfad nicht kollateral betroffen ist.
+  **Status:** erledigt
+  **Notiz:** 3 neue Pins: truthy-branch, falsy-branch, complex-condition-drop.
+
 ### 2026-05-10 — Text-Content-Interpolation in React-Backend
 
 - **Wo:** `compiler/backends/react.ts`,

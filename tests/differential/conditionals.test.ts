@@ -113,6 +113,28 @@ describe('Conditionals — Inline-ternary in style: literal hex resolves', () =>
     // runtime ternary. Both are acceptable.
     expect(dom).toMatch(/2271C1|2271c1/)
   })
+
+  // PIN: React lacks a Mirror runtime, so style-property ternaries are
+  // statically resolved via the `tokens` map at compile time.
+  it('React static-resolves bare-identifier conditions (truthy branch wins)', () => {
+    const react = generateReact(parse(`active: true\n\nFrame bg active ? #2271C1 : #333`))
+    expect(react).toContain('#2271C1')
+    expect(react).not.toContain('#333')
+  })
+
+  it('React static-resolves the else branch when condition is falsy', () => {
+    const react = generateReact(parse(`active: false\n\nFrame bg active ? #2271C1 : #333`))
+    expect(react).toContain('#333')
+    expect(react).not.toContain('#2271C1')
+  })
+
+  it('React drops style-property ternary (no `[object Object]`) when condition is complex', () => {
+    // `count > 0` isn't a bare-identifier lookup — React drops the
+    // property rather than guessing. DOM resolves it through its runtime.
+    const react = generateReact(parse(`count: 5\n\nFrame bg count > 0 ? #2271C1 : #333`))
+    expect(react).not.toContain('[object Object]')
+    expect(react).not.toContain('backgroundColor')
+  })
 })
 
 // =============================================================================
