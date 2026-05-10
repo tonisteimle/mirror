@@ -261,6 +261,28 @@ export function installMirrorActions(): MirrorActionsAPI {
     realOpFn: () => Promise<T> | T
   ): Promise<T> => withVisibleDrag(endPoint, realOpFn, { moveMs: durationMs })
 
+  /**
+   * Single-click flow for selectInPreview / setProperty / pickColor — moves
+   * the cursor to `endPoint`, fires ONE click ripple at the destination,
+   * runs `realOpFn`, then settles. `withVisibleDrag` would fire a click
+   * ripple at the source AND the destination (press + release semantics
+   * for drag flows), which makes a plain click look like a double-click.
+   */
+  const withSingleClick = async <T>(
+    endPoint: Point | null,
+    durationMs: number,
+    realOpFn: () => Promise<T> | T,
+    settleMs = 180
+  ): Promise<T> => {
+    const cursor = win.__mirrorDemo && win.__mirrorDemo.cursor
+    if (cursor && endPoint) await cursor.moveTo(endPoint, durationMs)
+    if (cursor) cursor.showClickEffect()
+    await delay(60)
+    const result = await realOpFn()
+    await delay(settleMs)
+    return result
+  }
+
   // Mirrors studio/test-api/interactions.ts dispatchMouseEvent — no button/
   // buttons fields, so we match the existing tests' working contract exactly.
   const dispatchMouse = (
@@ -738,6 +760,19 @@ export function installMirrorActions(): MirrorActionsAPI {
         }
 
         await win.__dragTest.waitForCompile()
+        // Auto-select the dropped element so follow-up styling steps land
+        // on it without an explicit selectInPreview. (Studio doesn't do
+        // this on its own today.)
+        const droppedIds = Array.from(document.querySelectorAll('#preview [data-mirror-id]')).map(
+          el => el.getAttribute('data-mirror-id') as string
+        )
+        if (droppedIds.length > 0 && win.__dragTest && win.__dragTest.selectNode) {
+          // The empty-canvas case creates a single new node (the canvas-only
+          // case appends one). Pick the last one — most recently added —
+          // since data-mirror-id is assigned in document order.
+          win.__dragTest.selectNode(droppedIds[droppedIds.length - 1])
+          await delay(120)
+        }
         return
       }
     }
@@ -758,6 +793,17 @@ export function installMirrorActions(): MirrorActionsAPI {
       endPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 }
       chain = chain.atAlignmentZone(at.zone)
     }
+
+    // Snapshot the preview's data-mirror-id set before the drop so we can
+    // identify the new node afterwards. Studio doesn't auto-select the
+    // dropped element today, which makes follow-up steps that style "the
+    // thing we just dropped" fragile and feels like a UX bug. We bridge
+    // it here by selecting the diff after the drop completes.
+    const idsBefore = new Set(
+      Array.from(document.querySelectorAll('#preview [data-mirror-id]')).map(
+        el => el.getAttribute('data-mirror-id') as string
+      )
+    )
 
     const releasePalette = pressPaletteItem(paletteEl)
     const destroyGhost = attachDragGhost(component)
@@ -783,6 +829,21 @@ export function installMirrorActions(): MirrorActionsAPI {
       throw new Error('Drop failed: ' + ((result && result.error) || 'unknown'))
     }
     await win.__dragTest.waitForCompile()
+
+    // Auto-select the freshly-dropped element. Diff the post-drop
+    // data-mirror-id set against the snapshot taken before the drop;
+    // the new node(s) are the difference. If multiple were added (rare
+    // — a component with default children counts as one drop but
+    // multiple IDs), select the first one, which is the dropped root.
+    const newIds = Array.from(document.querySelectorAll('#preview [data-mirror-id]'))
+      .map(el => el.getAttribute('data-mirror-id') as string)
+      .filter(id => !idsBefore.has(id))
+    if (newIds.length > 0 && win.__dragTest && win.__dragTest.selectNode) {
+      win.__dragTest.selectNode(newIds[0])
+      // Brief settle so the property panel has time to populate before
+      // the next demo step assumes the selection is live.
+      await delay(120)
+    }
   }
 
   const drawInGrid = async (
@@ -1048,7 +1109,7 @@ export function installMirrorActions(): MirrorActionsAPI {
     if (!el) throw new Error('selectInPreview: element ' + nodeId + ' not in DOM')
     const r = el.getBoundingClientRect()
     const endPoint: Point = { x: r.left + r.width / 2, y: r.top + r.height / 2 }
-    await withCursorSync(endPoint, 350, async () => {
+    await withSingleClick(endPoint, 350, async () => {
       win.__dragTest.selectNode(nodeId)
       await delay(150)
     })
@@ -1087,7 +1148,7 @@ export function installMirrorActions(): MirrorActionsAPI {
         // Selects can't be typed into — keep the ring + chip so the viewer
         // sees what value the dropdown was set to.
         const releaseHighlight = highlightField(input, propName + ' ' + value, true)
-        await withCursorSync(endPoint, 250, async () => {
+        await withSingleClick(endPoint, 250, async () => {
           input!.focus()
           ;(input as HTMLSelectElement).value = value
           input!.dispatchEvent(new Event('change', { bubbles: true }))
@@ -1101,7 +1162,7 @@ export function installMirrorActions(): MirrorActionsAPI {
         // before the typing reveals it. The actual character-by-character
         // typing is the visible signal.
         const releaseHighlight = highlightField(input, '', false)
-        await withCursorSync(endPoint, 250, async () => {
+        await withSingleClick(endPoint, 250, async () => {
           input!.focus()
           ;(input as HTMLInputElement).select()
           // Brief dwell so the viewer sees the focus + selection state
@@ -1130,7 +1191,7 @@ export function installMirrorActions(): MirrorActionsAPI {
       const panelEl = document.querySelector('#property-panel') as HTMLElement | null
       if (panelEl) {
         const r = panelEl.getBoundingClientRect()
-        await withCursorSync({ x: r.left + r.width / 2, y: r.top + 60 }, 400, async () => {
+        await withSingleClick({ x: r.left + r.width / 2, y: r.top + 60 }, 400, async () => {
           const studio = win.__mirrorStudio__
           const panel = studio && studio.propertyPanel
           if (!panel || typeof panel.changeProperty !== 'function') {
@@ -1169,7 +1230,7 @@ export function installMirrorActions(): MirrorActionsAPI {
     // (and the trigger swatch updating to the new color) is the visible
     // signal.
     const releaseHighlight = highlightField(trigger, propName + ' ' + color, false)
-    await withCursorSync(
+    await withSingleClick(
       {
         x: triggerRect.left + triggerRect.width / 2,
         y: triggerRect.top + triggerRect.height / 2,
