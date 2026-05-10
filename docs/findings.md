@@ -224,6 +224,36 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   Andere Files haben nur `export type { ... } from '<canonical>'` —
   alle Import-Pfade bleiben gültig. 5856/5856 studio tests pass.
 
+### Dead-Export-Sweep (2026-05-10 Iter-N+1)
+
+Repo-weiter Audit auf Top-Level-Exports mit **0 Konsumenten** (geprüft
+über `*.ts`, `*.tsx`, `*.js`, `*.json`, `*.md` — also incl. Tests, Docs,
+Packages, NPM bin entries, beide compiler/index.ts und der Studio-Build):
+
+- **Wo:** `compiler/schema/{dsl,ir-helpers,layout-defaults}.ts`
+  **Was:** 18 dead exports (`isReservedKeyword`, `getReservedKeywords`,
+  `getKeywordsForProperty`, `isValidKey`, `getAllStates`,
+  `getSystemStates`, `getCSSPropertyName`, `hasKeywordValue`,
+  `getKeywordCSS`, `getNumericCSS`, `getColorCSS`, `getStandaloneCSS`,
+  `isStandaloneProperty`, `getTokenAcceptingProperties`,
+  `getColorAcceptingProperties`, `isCorner`, `getDirections`,
+  `getCorners`) + 1 (`nineZoneToSemantic` — internal use, `export`
+  abgelöst). 7 davon waren der **unfertige Zerlegungsversuch** von
+  `schemaPropertyToCSS` in Atom-Helper, die niemals integriert wurden.
+  **Status:** erledigt (`d60c8432`) — −206 LOC, 7349/7349 compiler +
+  5898/5898 studio tests pass.
+
+- **Wo:** `studio/{autocomplete,editor,preview}` + `compiler/ir/transformers/`
+  **Was:** 10 dead exports + 1 orphaned File (`studio/preview/grid-
+overlay.ts`, 134 LOC, ersetzt vor langem durch
+  `studio/visual/grid-overlay/grid-overlay.ts`). Konkret:
+  `generateAllZagSlotCompletions`, `getAllActionTargets`,
+  `getStandaloneProperties`, `getColorProperties`,
+  `getNumericProperties`, `getTokenProperties`,
+  `getCurrentDragData`, `getEditorController`, `setEditorController`
+  (beide `@deprecated`), `resolveGridColumns`.
+  **Status:** erledigt (`4fa88b11`) — −265 LOC.
+
 ### Tutorial-Blocking Gaps (2026-05-10, per `docs/concepts/studio-tutorial.md`)
 
 Hunting durch das Tutorial-Konzept `docs/concepts/studio-tutorial.md`
