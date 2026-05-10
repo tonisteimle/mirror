@@ -15,6 +15,7 @@ import { tutorial02 } from './tut-02-inline-edit.demo'
 import { tutorial03 } from './tut-03-resize.demo'
 import { tutorial04 } from './tut-04-padding-margin.demo'
 import { tutorial05 } from './tut-05-property-panel.demo'
+import { tutorial06 } from './tut-06-reorder.demo'
 
 export const demoTests: TestCase[] = [
   ...demoTextIntoFrame,
@@ -23,4 +24,5 @@ export const demoTests: TestCase[] = [
   ...tutorial03,
   ...tutorial04,
   ...tutorial05,
+  ...tutorial06,
 ]
