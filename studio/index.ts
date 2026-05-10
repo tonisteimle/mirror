@@ -117,10 +117,10 @@ export * from './compile/yaml-parser'
 // (collectPrelude is the load-bearing one — without it app.js fails to
 // boot with "does not provide an export named 'collectPrelude'"). We
 // enumerate explicitly to avoid `export *` collisions: `./compile`
-// duplicates names that other barrels (`./agent` FileType,
-// `./code-modifier` SourceMap, `./core` ParseError/StudioState,
-// `./modules` PreludeResult, `./preview` PreviewRenderer) already
-// surface. Re-exporting only compile-unique members keeps both sides.
+// duplicates names that other barrels (`./code-modifier` SourceMap,
+// `./core` ParseError/StudioState, `./modules` PreludeResult,
+// `./preview` PreviewRenderer) already surface. Re-exporting only
+// compile-unique members keeps both sides.
 export {
   CompileService,
   PreludeBuilder,

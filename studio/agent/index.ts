@@ -62,5 +62,3 @@ export { createChangeTracker, MAX_DIFF_LINES, type ChangeTracker } from './chang
 export { computeLineDiff, formatUnifiedDiff, type DiffHunk } from './source-diff'
 
 export { formatProjectFileSection } from './prompt-utils'
-
-export type { FileType, FileInfo } from './types'
