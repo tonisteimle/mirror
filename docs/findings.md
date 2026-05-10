@@ -795,7 +795,7 @@ Chronologisch absteigend (neueste zuerst).
   `tests/differential/properties.test.ts`) deckt Drei-Alias-Output-
   Equivalenz für padding/margin/width/height ab. 15481/15481 Tests
   grün.
-  **Status:** erledigt
+  **Status:** erledigt (`351a1333`)
 
 ### 2026-05-10 — Lane 1, Inkrement 2: Section-Header von WATCHLIST nach KEEP
 
@@ -810,7 +810,7 @@ Chronologisch absteigend (neueste zuerst).
   Eintrag von WATCHLIST nach KEEP promoted. WATCHLIST jetzt leer
   → Placeholder-Test damit Vitest die `describe` nicht als „No
   test found" failed.
-  **Status:** erledigt
+  **Status:** erledigt (`74cf45f5`)
 
 ### 2026-05-10 — Lane 1, Inkrement 1: `$icons:` von WATCHLIST nach KEEP
 
