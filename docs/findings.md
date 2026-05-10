@@ -162,6 +162,21 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
+- **Wo:** `studio/test-api/suites/flex-reorder/index.ts:44-57` +
+  `studio/test-api/suites/drag/index.ts:35-47`
+  **Was:** 13 „Backwards-compatibility aliases" (`buttonReorderVerticalTests`,
+  `buttonReorderHorizontalTests`, `textReorderTests`, `iconReorderTests`,
+  `inputReorderTests`, `imageReorderTests`, `dividerSpacerReorderTests`,
+  `linkTextareaReorderTests`, `mixedComponentReorderTests`,
+  `zagComponentReorderTests`, `nestedContainerReorderTests`,
+  `reorderEdgeCaseTests`, `sequentialReorderTests`) sind reine
+  Pass-Through-Re-Exports: Definition in `flex-reorder/index.ts`,
+  Re-Export im `drag/index.ts`-Barrel — niemand konsumiert sie
+  hinter den beiden Files. Klassische tote Migrations-Krücke.
+  **Status:** aktiv (Claude-Session, 2026-05-10 ~19:50)
+  **Plan:** Aliase in `flex-reorder/index.ts` entfernen, Re-Exports
+  in `drag/index.ts` entfernen, Tests grün.
+
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
