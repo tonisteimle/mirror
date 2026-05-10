@@ -115,7 +115,7 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
-- **Wo:** `compiler/backends/react.ts` (Stand: 2106 LOC, ↓ von 3273)
+- **Wo:** `compiler/backends/react.ts` (Stand: 1960 LOC, ↓ von 3273 = 40%)
   — Decomposition in `compiler/backends/react/ops/*.ts`
   **Was:** Lane-Doc in `docs/refactoring/react-backend-decomp.md`
   mit 8-Slice-Plan (Layout/Events/Attributes/Icon/Chart/Text/JSX/
@@ -124,13 +124,13 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   - ✅ Slice 2 — Events (`fe11e256`, –137 LOC)
   - ✅ Slice 5 — Chart (`eb046dfa`, –155 LOC)
   - ✅ Slice 6 — Text (`8dd62a42`, –449 LOC)
-  - ✅ Slice 4 — Icon (–237 LOC)
-  - ⏳ Slice 3 — Attributes (~280 LOC, Cluster 6)
-  - ⏳ Slice 7 — JSX (~470 LOC)
-  - ⏳ Slice 8 — Style (~830 LOC)
-    **Status:** aktiv (Claude, Slices 1+2+4+5+6 done). Differential-
-    Tests fangen Drift; jeder Slice ein Commit, byte-identische
-    React-Output-Garantie.
+  - ✅ Slice 4 — Icon (`262c1e48`, –237 LOC)
+  - ✅ Slice 3 — Attributes (–146 LOC)
+  - ⏳ Slice 7 — JSX (~470 LOC) — tightly coupled, care needed
+  - ⏳ Slice 8 — Style (~830 LOC) — tightly coupled, größter Brocken
+    **Status:** aktiv (Claude, Slices 1+2+3+4+5+6 done = 6/8).
+    Differential-Tests fangen Drift; jeder Slice ein Commit,
+    byte-identische React-Output-Garantie.
     **Notiz:** Framework-Backend-Decomp (1057 LOC, gleiche Klasse
     von Monolithik) ist deferred bis nach React-Validierung.
 
