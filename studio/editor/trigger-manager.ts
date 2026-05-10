@@ -165,7 +165,7 @@ export class EditorTriggerManager {
     }
 
     // Close CodeMirror autocomplete to prevent conflicts
-    const closeCompletion = (window as any).closeCompletion
+    const closeCompletion = window.closeCompletion
     if (typeof closeCompletion === 'function') {
       closeCompletion(view)
     }
@@ -323,14 +323,19 @@ export class EditorTriggerManager {
       selectedValue = picker.getSelectedValue() || undefined
     } else if ('getValue' in picker && typeof picker.getValue === 'function') {
       selectedValue = picker.getValue() || undefined
-    } else if ('getSelectedIndex' in picker && 'getFilteredIcons' in picker) {
+    } else if (
+      'getSelectedIndex' in picker &&
+      typeof picker.getSelectedIndex === 'function' &&
+      'getFilteredIcons' in picker &&
+      typeof picker.getFilteredIcons === 'function'
+    ) {
       // Icon picker specific
-      const index = (picker as any).getSelectedIndex()
-      const items = (picker as any).getFilteredIcons()
+      const index = picker.getSelectedIndex()
+      const items = picker.getFilteredIcons()
       if (items[index]) {
         selectedValue = items[index].name
-        if ('addToRecent' in picker) {
-          ;(picker as any).addToRecent(selectedValue)
+        if ('addToRecent' in picker && typeof picker.addToRecent === 'function') {
+          picker.addToRecent(selectedValue)
         }
       }
     }

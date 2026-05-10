@@ -52,9 +52,12 @@ export class PreviewRenderer {
   }
 
   clear(): void {
-    // Clean up global createUI function from previous renders
-    if (typeof (window as any).createUI === 'function') {
-      delete (window as any).createUI
+    // Defensive cleanup: earlier compile paths exposed `createUI` on the
+    // global. Today `new Function(...)` keeps it scoped, but we still
+    // delete it if a stray assignment happens to leak in.
+    const w = window as Window & { createUI?: unknown }
+    if (typeof w.createUI === 'function') {
+      delete w.createUI
     }
     this.container.innerHTML = ''
   }

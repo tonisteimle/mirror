@@ -145,6 +145,8 @@ export interface ComponentItem {
   comTemplate?: string
   /** Data block for charts and data-driven components */
   dataBlock?: ComponentDataBlock
+  /** Source line of the component definition (used for section grouping). */
+  line?: number
 }
 
 /**

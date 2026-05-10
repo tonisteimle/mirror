@@ -81,7 +81,7 @@ export function parseComponentSections(ast: AST, source?: string): ComponentSect
     // If we found sections, group components into them
     if (sectionBoundaries.length > 0) {
       for (const item of componentItems) {
-        const itemLine = (item as any).line ?? 0
+        const itemLine = item.line ?? 0
 
         // Find which section this component belongs to
         let belongsToSection: string | null = null

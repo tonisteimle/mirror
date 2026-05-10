@@ -17,6 +17,12 @@ export interface MinimalPicker {
   getValue?(): string
   getSelectedValue?(): string | null
   navigate?(direction: 'up' | 'down' | 'left' | 'right'): void
+  // Icon-picker subset (used by trigger-manager when commit-by-name).
+  // Declared optional here so the `in`-check narrowing in
+  // trigger-manager.ts has typed access without `as any`.
+  getSelectedIndex?(): number
+  getFilteredIcons?(): Array<{ name: string }>
+  addToRecent?(name: string): void
 }
 
 // ============================================
