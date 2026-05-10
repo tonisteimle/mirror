@@ -224,6 +224,9 @@ export const actions = {
     // This takes priority over deferredSelection because it's more specific
     // (targeting the exact line where code was inserted)
     // IMPORTANT: Synchronous resolution to prevent race conditions (PREV-005)
+    // If a resolver succeeds we're done; if it returns null (target not in new
+    // SourceMap) we fall through to the existing-selection validation so a
+    // stale prior selection doesn't survive a failed resolve.
     if (hasPendingSelection) {
       try {
         const resolvedNodeId = actions.resolvePendingSelection()
@@ -233,12 +236,13 @@ export const actions = {
           if (hasDeferredSelection) {
             state.set({ deferredSelection: null })
           }
+          return
         }
       } catch (error) {
         logState.error('Error resolving pending selection:', error)
         events.emit('state:error', { error, context: 'pending selection resolution' })
+        return
       }
-      return // Skip selection validation when we have pending selection
     }
 
     // Resolve deferred selection (unified API - for programmatic selections during compile)
@@ -249,12 +253,13 @@ export const actions = {
         const resolvedNodeId = actions.resolveDeferredSelection()
         if (resolvedNodeId) {
           logState.info(' Deferred selection resolved after compile:', resolvedNodeId)
+          return
         }
       } catch (error) {
         logState.error(' Error resolving deferred selection:', error)
         events.emit('state:error', { error, context: 'deferred selection resolution' })
+        return
       }
-      return // Skip selection validation when we have deferred selection
     }
 
     // Validate current selection against new SourceMap

@@ -86,11 +86,15 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Was:** Early-Returns bei pending/deferred Selection überspringen die
   Final-Selection-Validierung — invalide Selections aus Handlern können
   ungeprüft durchrutschen.
-  **Status:** abgewiesen — `resolvePendingSelection` /
-  `resolveDeferredSelection` validieren den aufgelösten Knoten selbst gegen
-  den neuen SourceMap und fallback'en bei Fehlschlag (`findFirstRootNode`).
-  Wenn ein pending/deferred Pick existiert ist _das_ die autoritative
-  Auswahl — die alte `selection.nodeId` braucht keine zweite Validierung.
+  **Status:** erledigt — Early-Return passiert jetzt nur noch wenn
+  Resolver erfolgreich war (`if (resolvedNodeId) return`). Schlägt
+  Resolver fehl (gibt `null` — passiert bei `pending` ohne Treffer und
+  bei `deferred` `lastChildOf`/`line` ohne Treffer; nur die `nodeId`-
+  Variante hat eingebauten Fallback), fällt der Code auf die bestehende
+  Validation durch — eine veraltete Selection wird damit auf den
+  Fallback-Root gesetzt statt stehenzubleiben. Test
+  `falls through to validate existing selection when pending resolution fails`
+  pinnt das Verhalten.
 
 - **Wo:** `studio/core/state.ts:189-205`
   **Was:** Multi-Selection-Validierung filtert Knoten still ohne

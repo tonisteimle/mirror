@@ -842,6 +842,37 @@ describe('Deferred Selection (unified API)', () => {
     actions.clearDeferredSelection()
     expect(state.get().deferredSelection).toBeNull()
   })
+
+  it('falls through to validate existing selection when pending resolution fails', async () => {
+    // Existing selection points to a node that won't exist in the new SourceMap.
+    actions.setSelection('stale-node', 'editor')
+
+    // Pending selection targets a line that has no node in the new SourceMap
+    // (resolver will return null). With the early-return fix, control should
+    // fall through to selection validation, which should pick a fallback root.
+    actions.setPendingSelection({
+      line: 999,
+      componentName: 'Nothing',
+      origin: 'editor',
+    })
+
+    const sourceMap = createHierarchicalMockSourceMap([
+      { nodeId: 'fresh-root', componentName: 'Box', line: 1 },
+    ])
+
+    actions.setCompileResult({
+      ast: createMockAST(),
+      ir: createMockIR(),
+      sourceMap,
+      errors: [],
+    })
+
+    await Promise.resolve()
+
+    // Stale selection should not survive — validation must have picked the fallback.
+    expect(state.get().selection.nodeId).toBe('fresh-root')
+    expect(state.get().pendingSelection).toBeNull()
+  })
 })
 
 describe('Hierarchy Navigation Helpers', () => {
