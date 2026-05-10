@@ -20,13 +20,19 @@ import { getChartPrimitive, getChartSlotProperty } from '../../schema/chart-prim
  * color while polluting the emitted JSON.
  */
 function stringifyChartSlotValue(value: unknown): string {
-  if (value && typeof value === 'object' && 'kind' in value) {
-    const kind = (value as { kind: string }).kind
-    if (kind === 'token') {
-      return '$' + (value as unknown as { name: string }).name
-    }
+  if (isTokenReference(value)) {
+    return '$' + value.name
   }
   return String(value)
+}
+
+function isTokenReference(value: unknown): value is TokenReference {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value as { kind?: string }).kind === 'token' &&
+    typeof (value as { name?: unknown }).name === 'string'
+  )
 }
 
 /**
