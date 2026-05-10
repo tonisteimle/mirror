@@ -176,37 +176,19 @@ export function emitAction(ctx: EventEmitterContext, action: IRAction, currentVa
     if (action.isBuiltinStateFunction) {
       // Built-in state functions: toggle(), cycle() (alias), exclusive().
       //
-      // `exclusive` does NOT have a case here. The state-machine
-      // transformer's third pass (state-machine-transformer.ts) folds every
-      // builtin-state-function event into a transition with the correct
-      // schema-aware target, and state-machine-emitter.ts emits the call.
-      // A `case 'exclusive'` here was unreachable dead code and carried the
-      // pre-Slice-27 `Object.keys(...).find(s !== 'default')` filter — the
-      // exact pattern we're trying to eliminate. Removed in Slice 29.
-      switch (action.type) {
-        case 'toggle':
-        case 'cycle': // cycle() is now an alias for toggle()
-          if (action.args && action.args.length > 0) {
-            // PascalCase single arg = element name → visibility toggle.
-            // Lowercase args = state names → state-machine cycle.
-            // Mirror's broader DSL convention is PascalCase for
-            // components/elements; following the same rule here keeps
-            // `toggle(Menu)` (show/hide Menu element) and
-            // `toggle(on, off)` (cycle between two states) both working.
-            // See `studio/test-api/suites/actions/visibility.test.ts:60`
-            // and `tests/differential/actions.test.ts` pins.
-            const isElementName = action.args.length === 1 && /^[A-Z]/.test(action.args[0])
-            if (isElementName) {
-              ctx.emit(`_runtime.toggle(_elements['${action.args[0]}'])`)
-            } else {
-              const states = action.args.map(s => `'${s}'`).join(', ')
-              ctx.emit(`_runtime.stateMachineToggle(${currentVar}, [${states}])`)
-            }
-          } else {
-            ctx.emit(`_runtime.stateMachineToggle(${currentVar})`)
-          }
-          break
-      }
+      // The state-machine transformer (state-machine-transformer.ts third
+      // pass) folds every builtin-state-function event into a transition,
+      // and state-machine-emitter.ts attaches the click listener that
+      // performs the transition. Emitting another stateMachineToggle here
+      // would attach a *second* listener; both fire on click and toggle
+      // each other off, leaving data-state unchanged while sibling
+      // actions like `increment(count)` still run — exactly the symptom
+      // tracked in the Runtime-Bug-Bucket finding (combined.test.ts:9).
+      // The action chain is therefore handled here as a no-op for
+      // builtin state functions; non-builtin actions in the same chain
+      // (increment, toast, …) still fall through to emitRuntimeAction
+      // via separate IRAction entries, so the click handler is generated
+      // around them.
     } else {
       // Known runtime functions or custom functions
       const fnName = action.type

@@ -2,12 +2,11 @@
  * Combined Actions — multiple actions on a single click
  */
 
-import { testWithSetup, testWithSetupSkip, describe, type TestCase } from '../../test-runner'
+import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 
 export const combinedActionTests: TestCase[] = describe('Combined Actions', [
-  // TODO: Runtime bug - toggle() + increment() combined actions don't both execute properly
-  testWithSetupSkip(
+  testWithSetup(
     'Multiple actions execute on single click',
     `count: 0
 
@@ -36,8 +35,7 @@ Frame pad 16, bg #1a1a1a
     }
   ),
 
-  // TODO: Runtime bug - toggle() + show() combined actions don't work correctly
-  testWithSetupSkip(
+  testWithSetup(
     'Action chain with state change and visibility',
     `Frame gap 8, pad 16, bg #1a1a1a
   Button "Submit", toggle(), show(Confirmation), bg #333, col white
@@ -62,7 +60,6 @@ Frame pad 16, bg #1a1a1a
     }
   ),
 
-  // TODO: reset() DOM bug workaround - increment after reset to show value
   testWithSetup(
     'Counter with reset and toggle state',
     `count: 0

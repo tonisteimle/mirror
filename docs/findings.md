@@ -184,30 +184,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   **Status:** erledigt — auf `calculateSourcePosition(instance.line,
 instance.column)` umgestellt. 7849/7849 vitest grün.
 
-- **Wo:** `compiler/backends/dom/event-emitter.ts:emitAction`,
-  `compiler/backends/dom/state-machine-emitter.ts:emitStateMachineListeners`
-  **Was:** Fünfter Inkrement aus dem Runtime-Bug-TODO-Bucket — echter
-  Runtime-Bug. Doppel-Click-Handler bei `Button toggle(), increment()`
-  Pattern: state-machine-emitter emittiert einen click-Listener, der
-  `transitionTo`/`stateMachineToggle` ausführt; event-emitter
-  emittiert einen ZWEITEN click-Listener, der erneut
-  `_runtime.stateMachineToggle(node)` aufruft. Beide feuern auf einen
-  Klick: erster Handler togglet default → on, zweiter Handler togglet
-  on → default. End-State: default. `data-state` bleibt scheinbar
-  unverändert, aber `increment(count)` aus dem zweiten Handler läuft
-  korrekt durch — daher die Test-Beobachtung „increment funktioniert,
-  toggle nicht". jsdom-Probe `tools/probes/combined-actions.ts`
-  reproduziert deterministisch.
-  **Status:** aktiv (Claude, 2026-05-10)
-  **Plan:** Pre-Refactor-Pin in `tests/behavior/actions.test.ts` (A10
-  Multi-Action) — Button mit `toggle(), increment(count)` und `on:`-
-  Block, click toggle 'default' → 'on' UND count 0 → 1. Fix in
-  `emitAction`: wenn `action.isBuiltinStateFunction`, Action-Emit
-  skippen — der state-machine-emitter Click-Handler übernimmt die
-  Transition. Verifizieren dass alle Differential-Pins und A10
-  weiterhin grün. Browser-Tests `combined.test.ts` (zwei
-  testWithSetupSkip) un-skippen, TODO-Kommentare entfernen.
-
 - **Wo:** `studio/test-api/suites/` — 10 `// TODO: Runtime bug …`-Marker
   in den Browser-Test-Suiten
   **Was:** Latente Production-Bugs, die als Test-Workaround dokumentiert
@@ -947,6 +923,30 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — Doppel-Click-Handler bei `toggle() + increment()` behoben
+
+- **Wo:** `compiler/backends/dom/event-emitter.ts:emitAction`,
+  `tests/behavior/actions.test.ts` (A10-Pin),
+  `studio/test-api/suites/actions/combined.test.ts`
+  **Was:** Fünfter Inkrement aus dem Runtime-Bug-TODO-Bucket — echter
+  Runtime-Bug. Bei `Button "Like", toggle(), increment(count)` (bare-
+  comma chain ohne `onclick`-Keyword) und `on:`-State emittierte der
+  state-machine-emitter einen click-Listener (transitionTo) UND der
+  event-emitter einen zweiten Listener mit
+  `_runtime.stateMachineToggle(node)`. Beide feuerten auf einen Klick
+  — erster togglet default→on, zweiter on→default — End-State:
+  default. increment lief im zweiten Handler korrekt durch, daher die
+  Beobachtung „increment funktioniert, toggle nicht". Fix:
+  builtin-state-function-Actions im event-emitter sind no-op; der
+  state-machine-emitter Click-Listener übernimmt die Transition.
+  Begleitende non-builtin Actions (increment, toast, …) feuern wie
+  gewohnt. Differential-Pins (`stateMachineToggle(X, ['on', 'off'])`)
+  bleiben grün, weil der state-machine-emitter weiterhin diese Calls
+  emittiert. 15433/15433 vitest grün. Browser-Tests
+  `combined.test.ts` (zwei `testWithSetupSkip`) un-skipped, drei
+  TODO-Marker entfernt.
+  **Status:** erledigt
 
 ### 2026-05-10 — `reset()` echter Runtime-Bug: Token-Key-Mismatch behoben
 

@@ -274,5 +274,31 @@ describe('Actions — Behavior Spec', () => {
       // increment worked
       expect(findByName(root, 'Text')!.textContent?.trim()).toBe('1')
     })
+
+    // PIN: bare-comma chain without `onclick` keyword (`Button "Like",
+    // toggle(), increment(count)`) used to double-attach click
+    // handlers — state-machine-emitter and event-emitter each emitted
+    // their own listener, both calling stateMachineToggle, canceling
+    // the toggle. increment ran fine. Probe in
+    // `tools/probes/combined-actions.ts` reproduced.
+    it('toggle() + bare-comma increment(): both actions fire correctly', () => {
+      const root = render(
+        `count: 0\n\nButton "Like", toggle(), increment(count)\n  on:\n    bg #ef4444\nText "Likes: $count"`,
+        container
+      )
+      const btn = findByName(root, 'Button') as HTMLElement
+      const text = findByName(root, 'Text') as HTMLElement
+
+      expect(btn.getAttribute('data-state')).toBe('default')
+      expect(text.textContent?.trim()).toBe('Likes: 0')
+
+      btn.click()
+      expect(btn.getAttribute('data-state')).toBe('on')
+      expect(text.textContent?.trim()).toBe('Likes: 1')
+
+      btn.click()
+      expect(btn.getAttribute('data-state')).toBe('default')
+      expect(text.textContent?.trim()).toBe('Likes: 2')
+    })
   })
 })
