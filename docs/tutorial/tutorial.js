@@ -159,10 +159,8 @@ function initializePlaygrounds() {
  */
 
 // Tutorial Navigation Structure
-// Studio (17) + Die Sprache (00-10, 16) + Komponenten-Bibliothek (11-15)
+// Sprache (00-10, 16) + Komponenten-Bibliothek (11-15) + Studio (17-28)
 const tutorialNavigation = [
-  // Studio
-  { num: '17', file: '17-ai-bauen.html', title: 'AI-Bauen', section: 'Studio' },
   // Die Sprache
   { num: '00', file: 'index.html', title: 'Intro', section: 'Sprache' },
   { num: '01', file: '01-elemente.html', title: 'Elemente' },
@@ -182,11 +180,27 @@ const tutorialNavigation = [
   { num: '13', file: '13-overlays.html', title: 'Overlays' },
   { num: '14', file: '14-tabellen.html', title: 'Tabellen' },
   { num: '15', file: '15-charts.html', title: 'Charts' },
+  // Mirror Studio
+  { num: '17', file: '17-ai-bauen.html', title: 'AI-Bauen', section: 'Studio' },
+  { num: '18', file: '18-studio.html', title: 'Bedienung Basis' },
+  { num: '19', file: '19-pickers.html', title: 'Pickers' },
+  { num: '20', file: '20-komponenten-workflow.html', title: 'Komponenten-Workflow' },
+  { num: '21', file: '21-tokens-workflow.html', title: 'Tokens-Workflow' },
+  { num: '22', file: '22-visuelles-editieren.html', title: 'Visuelles Editieren' },
+  { num: '23', file: '23-states.html', title: 'States im Studio' },
+  { num: '24', file: '24-code-editor.html', title: 'Code-Editor' },
+  { num: '25', file: '25-multi-file.html', title: 'Multi-File-Projekt' },
+  { num: '26', file: '26-run-mode.html', title: 'Run-Mode' },
+  { num: '27', file: '27-export.html', title: 'Export & Deploy' },
+  { num: '28', file: '28-reference.html', title: 'Reference' },
 ]
 
 function createTutorialSidebar() {
-  // Don't create sidebar on playground page
-  const currentFile = window.location.pathname.split('/').pop() || 'index.html'
+  // Don't create sidebar on playground page. Dev-server may strip .html from
+  // the URL — normalise so the active-link check below matches item.file.
+  let currentFile = window.location.pathname.split('/').pop() || 'index.html'
+  if (currentFile === '' || currentFile === 'tutorial') currentFile = 'index.html'
+  if (!currentFile.includes('.')) currentFile = currentFile + '.html'
   if (currentFile === 'playground.html') return
 
   // Create sidebar element
