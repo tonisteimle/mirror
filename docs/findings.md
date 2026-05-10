@@ -227,22 +227,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
-- **Wo:** Drei stale Comments referenzieren gelöschten/nie-existenten Code:
-  - `compiler/index.ts:14` — `// Note: generateStatic is not exported -
-it's an incomplete stub` referenziert das Static-Backend, das im
-    April 2026 gelöscht wurde (commit `4e1bdac9`). `generateStatic`
-    existiert nirgends mehr.
-  - `studio/core/events.ts:15` — `// DropZone type - inline definition
-(module not yet implemented)` — das geplante Modul wurde nie gebaut,
-    das Interface lebt seit Jahren inline ohne Probleme. Comment
-    suggeriert tote TODO.
-  - `studio/code-modifier/index.ts:43-47` — Zwei inline-historische
-    Notizen ("PropertyPanel moved to studio/panels", „DropZoneCalculator
-    removed in v2.2 — use studio/drag-drop instead"). Beide referenzieren
-    längst migrierte/gelöschte Symbole.
-    **Status:** aktiv (Claude-Session, 2026-05-10 ~21:10)
-    **Plan:** Alle drei Comment-Stellen aufräumen.
-
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
@@ -902,6 +886,20 @@ step-runner-selectors}.test.ts`
   (15420/15420 Tests, 585/585 Files).
   **Status:** erledigt (5 in `05cce232` parallel-bundle, 1 in `e4f378ad`
   parallel-bundle; Bookkeeping in `b099a445`)
+
+### 2026-05-10 — 3 stale Comments für gelöschten/nie-gebauten Code entfernt
+
+- **Wo:** `compiler/index.ts:14`, `studio/core/events.ts:15`,
+  `studio/code-modifier/index.ts:43-47`
+  **Was:** (1) `compiler/index.ts` referenzierte `generateStatic`-Stub
+  des Static-Backends, das im April 2026 gelöscht wurde (`4e1bdac9`);
+  (2) `events.ts` markierte das `DropZone`-Interface als „inline weil
+  Modul noch nicht gebaut" — Modul wurde nie gebaut, Interface ist
+  langlebig inline; (3) `code-modifier/index.ts` enthielt zwei
+  Migrations-Notizen für längst gelöschte Symbole (PropertyPanel-
+  Re-Export, DropZoneCalculator). Alle drei jetzt weg. 5940/5940
+  studio tests pass.
+  **Status:** erledigt (`177fd071`)
 
 ### 2026-05-10 — Orphan `prelude-service.ts` gelöscht (139 LOC)
 
