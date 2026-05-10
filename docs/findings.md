@@ -44,13 +44,31 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
     (vor Compile). Compiler-Parser braucht ganze Datei + AST-Bau,
     funktioniert nicht für diesen Use-Case.
 
-  **Status:** teilweise abgewiesen — 2 von 3 sind keine Duplikation.
-  `parseTokens`-Migration bleibt offen als Multi-Day-Slice.
-  **Notiz:** Echter Refactor wäre: Compiler exposed `parseTokensToAST`,
-  Studio mappt AST→`TokenDefinition` mit Type-Inference + Chain-
-  Resolution als post-pass. Risiko: Regex-Parser hat Subtleties (z.B.
-  Inline-Comments, Single-Property-Set-Reject) die der AST nicht 1:1
-  reproduziert. Test-First nötig.
+  **Status:** teilweise abgewiesen + Migration in Slices angefangen.
+  2 von 3 sind keine Duplikation. `parseTokens`-Migration in 5 Slices
+  zerlegt — Slice 1 (`8a509c96`), 1.5 (`8e1e9394`), 2 (`4f610c24`)
+  erledigt:
+  - **Slice 1:** `parseTokensViaAST` als parallele Implementation in
+    `studio/pickers/token/parse-via-ast.ts` (kein Replace). Mapping
+    Compiler-AST → Studio-TokenDefinition deckt single-value, suffix,
+    chain-ref, property-set ab. 13 Equivalence-Tests gegen den
+    Regex-Parser über Slice-78-Fixtures.
+  - **Slice 1.5:** Real-world fixture test gegen
+    `examples/personas-informatik/tokens.tok` (63 LOC, mixed types) —
+    Equivalence pinned bevor irgendwer cut-overt.
+  - **Slice 2:** `parseTokensFromFilesViaAST` companion mit dedup-by-
+    name (matches Regex-Verhalten). 16/16 migration-tests pass.
+  - **Slice 3 (offen):** Cut-over `studio/editor/triggers/token-
+trigger.ts:85` zur AST-Variante.
+  - **Slice 4 (offen):** Cut-over indirect consumers in
+    `panels/property/utils/tokens.ts`.
+  - **Slice 5 (offen):** Regex-Parser löschen.
+    Kompiler-Parser parst `b: $a` als 1-property propset; Mapper
+    rekonstruiert das zu kind:'single' chain-ref um Equivalence zu
+    halten. Bekannte Divergenz: `text: hello world` (single-segment
+    non-numeric body) — Regex skipt, AST kann emittieren; in
+    `parse-tokens-via-ast.test.ts` als known-divergence gepinnt für
+    cut-over-decision.
 
 - **Wo:** `compiler/parser/ops/parse-blocks.ts` (Slice 21 V-1)
   **Was:** Verbleibender silent-failure-Pfad: undefined component →
