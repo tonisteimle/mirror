@@ -59,6 +59,21 @@
         Deployment. Zurück in den Edit-Mode mit demselben Toggle —
         State des Run-Modes wird zurückgesetzt.
       </p>
+      <p>Ein typischer Test-Kandidat:</p>
+      <div class="code-block">
+        <pre>name: ""
+View
+  Input bind name, placeholder "Wie heißt du?"
+  if name
+    Text "Hallo $name", fs 18, weight 600
+  else
+    Text "(noch keine Eingabe)", col #888</pre>
+      </div>
+      <p>
+        Im Edit-Mode siehst du den <em>else</em>-Pfad. Im Run-Mode
+        kannst du tippen, der Bind aktualisiert <code>$name</code>,
+        und der Text wechselt live auf „Hallo Anna".
+      </p>
 
       <div class="tutorial-video-placeholder">
         <em>Run-Mode mit Button-Cycle und Input-Bind</em>
@@ -76,11 +91,18 @@
         zeigt einen Tooltip mit der Erklärung.
       </p>
       <p>
-        Beispiele: <code>bg #2271</code> — ungültige Hex-Länge, rot
-        markiert. <code>fs bold</code> — <code>bold</code> gehört zu
-        <code>weight</code>, nicht zu <code>fs</code>; gelbe Warnung
-        mit Hinweis. Validierung läuft live; du musst nichts manuell
-        triggern.
+        Beispiele:
+      </p>
+      <div class="code-block">
+        <pre>Frame bg #2271        // ✗ rot — ungültige Hex-Länge
+Text fs bold          // ✗ gelb — bold ist weight, nicht fs
+Card bg $unknown      // ✗ rot — Token nicht definiert
+Btn pad 10            // ✓ grün — Standard-Padding</pre>
+      </div>
+      <p>
+        Hover über die rote/gelbe Wellenlinie zeigt einen Tooltip
+        mit der Erklärung. Validierung läuft live; du musst nichts
+        manuell triggern.
       </p>
       <p>
         Lint-Status der ganzen Datei steht oben rechts: <em>0

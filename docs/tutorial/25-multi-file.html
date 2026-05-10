@@ -37,19 +37,41 @@
 
     <!-- ============================================================ -->
     <section>
+      <h2>Projekt-Struktur</h2>
+      <p>
+        Ein Multi-File-Projekt sieht typischerweise so aus:
+      </p>
+      <div class="code-block">
+        <pre>my-app/
+  data/        # *.yaml, *.yml — Datenquellen
+  tokens/      # *.tok, *.tokens — Farben, Abstände, Radien
+  components/  # *.com, *.components — wiederverwendbare Komponenten
+  layouts/     # *.mir, *.mirror — Bildschirme & Templates
+  screens/     # *.mir, *.mirror — Routen-Ziele
+  app.mir      # Entry Point</pre>
+      </div>
+      <p>
+        Der Compiler verarbeitet die Files in dieser Reihenfolge —
+        <code>data/</code> zuerst, <code>tokens/</code> zweitens,
+        dann Komponenten, Layouts, Screens, am Ende der Entry. So
+        sind beim Laden eines Layouts alle Tokens und Komponenten
+        bereits bekannt.
+      </p>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
       <h2>File-Operations im Explorer</h2>
       <p>
-        Im File-Explorer-Panel links siehst du den Projekt-Tree:
-        Ordner für <code>data/</code>, <code>tokens/</code>,
-        <code>components/</code>, <code>layouts/</code>,
-        <code>screens/</code>, plus Root-Files. Mit Rechtsklick auf
-        einen Ordner: <em>Neue Datei</em>, <em>Neuer Ordner</em>.
-        Auf einem File: <em>Umbenennen</em> (oder <kbd>F2</kbd>),
-        <em>Duplizieren</em>, <em>Löschen</em> (Bestätigung
-        nötig).
+        Im File-Explorer-Panel links siehst du den Projekt-Tree.
+        Mit Rechtsklick auf einen Ordner: <em>Neue Datei</em>,
+        <em>Neuer Ordner</em>. Auf einem File: <em>Umbenennen</em>
+        (oder <kbd>F2</kbd>), <em>Duplizieren</em>,
+        <em>Löschen</em> (mit Bestätigung).
       </p>
       <p>
-        Datei-Endung bestimmt die Datei-Art: <code>.tok</code> /
+        Die Datei-Endung bestimmt die Datei-Art: <code>.tok</code> /
         <code>.tokens</code> für Tokens, <code>.com</code> /
         <code>.components</code> für Komponenten, <code>.mir</code>
         / <code>.mirror</code> für Layouts und Screens. Studio
@@ -67,19 +89,36 @@
     <section>
       <h2>Cross-File-Effekte — wenn Token oder Komponente sich ändert</h2>
       <p>
-        Änderst du in <code>tokens.tok</code> einen Wert
-        (<code>primary.bg: #2271C1</code> → <code>#10b981</code>),
+        Änderst du in <code>tokens.tok</code> einen Wert (etwa
+        <code>primary.bg: #2271C1</code> auf <code>#10b981</code>),
         rendern alle Layouts und Komponenten, die <code>$primary</code>
         referenzieren, im Preview sofort mit der neuen Farbe — auch
         wenn du gerade nicht in dem Layout-File bist.
       </p>
       <p>
-        Dasselbe gilt für Komponenten in <code>.com</code>-Files:
-        änderst du das Padding einer Card, sehen alle Card-Instanzen
-        in allen Layouts den neuen Wert. Studio führt einen
-        <em>SyncCoordinator</em>, der sich um die Re-Compile- und
-        Re-Render-Reihenfolge kümmert; du musst nicht aktiv
-        speichern oder reloaden.
+        Beispiel: drei Files, eine Token-Änderung wirkt überall:
+      </p>
+      <div class="code-block">
+        <pre>// tokens/colors.tok
+primary.bg: #2271C1
+panel.bg: #1a1a1a
+
+// components/card.com
+Card: bg $panel, pad 16, rad 8, gap 8
+  Title: col white, fs 16
+  Action as Button: bg $primary, col white, pad 8 16, rad 6
+
+// layouts/dashboard.mir
+Card
+  Title "Heute"
+  Action "Öffnen"</pre>
+      </div>
+      <p>
+        Änderst du <code>primary.bg</code>, sind <em>alle</em>
+        Action-Buttons im ganzen Projekt sofort in der neuen Farbe.
+        Studio führt einen <em>SyncCoordinator</em>, der sich um
+        Re-Compile- und Re-Render-Reihenfolge kümmert; du musst
+        nicht aktiv speichern oder reloaden.
       </p>
       <p>
         Bei zirkulärer Komponenten-Inheritance (<code>A as B</code>
