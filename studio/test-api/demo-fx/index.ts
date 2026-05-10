@@ -142,6 +142,7 @@ export class MirrorDemoAPI {
   destroy(): void {
     this.cursor.hide()
     this.overlay.destroy()
+    this.clearStepIndicator()
   }
 
   // ===========================================================================
@@ -448,6 +449,55 @@ export class MirrorDemoAPI {
     ring.style.opacity = '0'
     await this.delay(t.fadeOutMs)
     ring.remove()
+  }
+
+  // ===========================================================================
+  // Step counter — bottom-left "step N / total" indicator. Lets viewers
+  // see how far through a demo they are at a glance.
+  // ===========================================================================
+
+  /**
+   * Show / update the step indicator. Pass `currentStep <= 0` to hide.
+   * Idempotent — calling repeatedly with the same total just updates the
+   * current-step number, so per-step calls add zero DOM churn.
+   */
+  setStepIndicator(currentStep: number, totalSteps: number, label?: string): void {
+    const id = '__demo-fx-step-indicator'
+    let el = document.getElementById(id)
+    if (currentStep <= 0 || totalSteps <= 0) {
+      el?.remove()
+      return
+    }
+    if (!el) {
+      el = document.createElement('div')
+      el.id = id
+      el.style.cssText =
+        'position:fixed;bottom:24px;left:24px;display:flex;flex-direction:column;' +
+        'gap:4px;background:rgba(0,0,0,0.78);color:white;padding:10px 16px;' +
+        'border-radius:8px;font-family:system-ui,-apple-system,sans-serif;' +
+        'box-shadow:0 4px 12px rgba(0,0,0,0.3);pointer-events:none;z-index:999996;'
+      const counter = document.createElement('div')
+      counter.dataset.role = 'counter'
+      counter.style.cssText = 'font-size:14px;font-weight:600;letter-spacing:0.02em;'
+      const labelEl = document.createElement('div')
+      labelEl.dataset.role = 'label'
+      labelEl.style.cssText = 'font-size:12px;opacity:0.8;font-weight:400;max-width:280px;'
+      el.appendChild(counter)
+      el.appendChild(labelEl)
+      document.body.appendChild(el)
+    }
+    const counter = el.querySelector<HTMLElement>('[data-role="counter"]')
+    const labelEl = el.querySelector<HTMLElement>('[data-role="label"]')
+    if (counter) counter.textContent = `Step ${currentStep} / ${totalSteps}`
+    if (labelEl) {
+      labelEl.textContent = label ?? ''
+      labelEl.style.display = label ? 'block' : 'none'
+    }
+  }
+
+  /** Remove the step indicator if shown. */
+  clearStepIndicator(): void {
+    document.getElementById('__demo-fx-step-indicator')?.remove()
   }
 
   async wait(duration: number): Promise<void> {

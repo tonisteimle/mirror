@@ -1251,6 +1251,12 @@ export class DemoRunner {
       }
 
       try {
+        // Update on-screen step indicator before executing — viewers of a
+        // headed run see "Step N / total" in the bottom-left so they know
+        // where they are. Skipped during fast-forward to avoid flicker.
+        if (!fastForward) {
+          await this.updateStepIndicator(effectiveStep, stepNum, script.steps.length)
+        }
         await this.executeStep(effectiveStep, stepNum, script.steps.length)
         // Frame capture: PNG after every "interesting" step so a reviewer
         // can leaf through the demo run statically.
@@ -2055,6 +2061,29 @@ export class DemoRunner {
       highlight: { ...base.highlight, ...custom.highlight },
       comment: { ...base.comment, ...custom.comment },
       transitions: { ...base.transitions, ...custom.transitions },
+    }
+  }
+
+  /**
+   * Push the bottom-left "Step N / total" indicator to the page so viewers
+   * of a headed run can see how far through the demo they are. The label
+   * is the step's `comment` if present, else its action name + main target.
+   */
+  private async updateStepIndicator(
+    step: DemoAction,
+    stepNum: number,
+    total: number
+  ): Promise<void> {
+    const detail = this.getStepDetail(step)
+    const comment = (step as { comment?: string }).comment
+    const label = comment || (detail ? `${step.action} ${detail}` : step.action)
+    const safeLabel = JSON.stringify(label)
+    try {
+      await this.evaluate(
+        `window.__mirrorDemo?.setStepIndicator(${stepNum}, ${total}, ${safeLabel})`
+      )
+    } catch {
+      // Indicator is cosmetic — never block step execution if it fails.
     }
   }
 

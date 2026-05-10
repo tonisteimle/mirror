@@ -174,4 +174,55 @@ describe('MirrorDemoAPI bundled module', () => {
     )
     expect(caption).toBeUndefined()
   })
+
+  it('setStepIndicator inserts, updates, and removes the indicator', () => {
+    const api = installMirrorDemo()
+    const id = '__demo-fx-step-indicator'
+
+    // No indicator before first call.
+    expect(document.getElementById(id)).toBeNull()
+
+    // First call inserts the indicator with counter + label.
+    api.setStepIndicator(1, 7, 'Open editor')
+    const el = document.getElementById(id)
+    expect(el).not.toBeNull()
+    expect(el?.querySelector('[data-role="counter"]')?.textContent).toBe('Step 1 / 7')
+    expect(el?.querySelector('[data-role="label"]')?.textContent).toBe('Open editor')
+
+    // Second call updates in place — same DOM node, updated text.
+    api.setStepIndicator(2, 7, 'Type Card definition')
+    const elAfter = document.getElementById(id)
+    expect(elAfter).toBe(el)
+    expect(elAfter?.querySelector('[data-role="counter"]')?.textContent).toBe('Step 2 / 7')
+    expect(elAfter?.querySelector('[data-role="label"]')?.textContent).toBe('Type Card definition')
+
+    // Empty label hides the label row but keeps the counter.
+    api.setStepIndicator(3, 7)
+    const labelEl = document.getElementById(id)?.querySelector<HTMLElement>('[data-role="label"]')
+    expect(labelEl?.style.display).toBe('none')
+
+    // currentStep <= 0 removes the indicator entirely.
+    api.setStepIndicator(0, 7)
+    expect(document.getElementById(id)).toBeNull()
+  })
+
+  it('clearStepIndicator removes the indicator', () => {
+    const api = installMirrorDemo()
+    api.setStepIndicator(4, 9, 'Click Save')
+    expect(document.getElementById('__demo-fx-step-indicator')).not.toBeNull()
+    api.clearStepIndicator()
+    expect(document.getElementById('__demo-fx-step-indicator')).toBeNull()
+    // Idempotent — no throw if already gone.
+    api.clearStepIndicator()
+    expect(document.getElementById('__demo-fx-step-indicator')).toBeNull()
+  })
+
+  it('destroy() also removes the step indicator', () => {
+    const api = installMirrorDemo()
+    api.setStepIndicator(2, 5, 'Step in progress')
+    expect(document.getElementById('__demo-fx-step-indicator')).not.toBeNull()
+    api.destroy()
+    expect(document.getElementById('__demo-fx-step-indicator')).toBeNull()
+    delete (globalThis as DemoGlobal).__mirrorDemo
+  })
 })
