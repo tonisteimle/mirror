@@ -625,8 +625,8 @@ export function propertyToCSS(
   // 2. Child elements in flex containers
   const isNumericValue =
     typeof value === 'number' || (typeof value === 'string' && /^\d+(\.\d+)?$/.test(value))
-  if ((name === 'width' || name === 'w' || name === 'height' || name === 'h') && isNumericValue) {
-    const isWidth = name === 'width' || name === 'w'
+  if ((canonical === 'width' || canonical === 'height') && isNumericValue) {
+    const isWidth = canonical === 'width'
     const cssValue = formatCSSValue(name, String(value))
     // Always add flex-shrink: 0 to prevent flex containers from shrinking explicit sizes
     return [

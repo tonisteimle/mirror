@@ -108,29 +108,26 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
-- **Wo:** `compiler/ir/transformers/property-transformer.ts` (~17 Stellen),
-  `compiler/ir/ops/instance-ops.ts`, `compiler/ir/ops/properties-ops.ts`,
-  `compiler/backends/react.ts:1317-1319` (mind.)
-  **Was:** Lane 2, Inkrement 1 — Property-Aliase werden mit
-  hardcoded `name === 'pad' || name === 'padding' || name === 'p'`
-  Checks gematcht statt über das Schema. `compiler/schema/parser-helpers.ts:198`
-  exportiert `getCanonicalPropertyName(alias)` — wird aber nur an
-  einer Stelle (`property-utils-transformer.ts`) verwendet. Drift-Pfad:
-  ein neuer Alias in `compiler/schema/properties.ts` wird vom Parser
-  akzeptiert (`getAllSchemaPropertyNames`), aber der IR-Transformer
-  ignoriert ihn → Property silent gedroppt.
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~18:10)
-  **Plan:**
-  1. Pre-Refactor-Pin in `tests/differential/properties.test.ts`:
-     verifizieren dass `pad N`, `padding N` und `p N` denselben IR-
-     Output liefern (ebenso `mar`/`margin`/`m`, `w`/`width`, `h`/
-     `height`).
-  2. Erste Datei umstellen: `compiler/ir/transformers/property-transformer.ts`
-     — alle `name === '<alias>' || ...`-Checks durch
-     `getCanonicalPropertyName(name) === '<canonical>'` ersetzen.
-  3. Pin + Full-Suite grün → commit.
-  4. Folge-Inkremente: `instance-ops.ts`, `properties-ops.ts`,
-     `react.ts` als separate Commits.
+- **Wo:** `compiler/ir/ops/instance-ops.ts` (4 Stellen),
+  `compiler/ir/ops/properties-ops.ts` (2 Stellen), `compiler/backends/react.ts`
+  (mehrere)
+  **Was:** Lane 2, Inkrement 2 — Folge-Refactor zu Inkrement 1.
+  Hardcoded `name === '<alias>' || ...` in IR-Ops und React-Backend
+  durch `getCanonicalPropertyName` ersetzen. Pre-Refactor-Pin aus
+  Inkrement 1 (`tests/differential/properties.test.ts:Properties —
+Alias-Equivalenz`) deckt die Drei-Alias-Equivalenz schon ab.
+  **Status:** offen
+
+- **Wo:** `compiler/schema/properties.ts` vs. `compiler/ir/transformers/property-transformer.ts`
+  **Was:** Lane 2, Inkrement 3 (Schema-Drift-Befund während Inkrement 1):
+  Der IR-Transformer akzeptiert ~8 Properties die NICHT im Schema
+  deklariert sind: `animation`/`anim`, `backdrop-blur`/`blur-bg`,
+  `blur`, `scale`, `aspect`, `scroll-ver`/`scroll-hor`/`scroll-both`
+  (`scroll-*` ist im Schema, aber als getrennte Properties statt
+  Aliases). Folgen: kein Schema-Validator-Hint, kein Studio-Picker-
+  Support, kein zentrales TypeScript-Type. Klärung: jeden Eintrag
+  einzeln: ins Schema aufnehmen (mit Aliases) ODER aus IR entfernen.
+  **Status:** offen
 
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
@@ -783,6 +780,22 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — Lane 2, Inkrement 1: Schema-driven alias resolution in `property-transformer.ts`
+
+- **Wo:** `compiler/ir/transformers/property-transformer.ts`
+  **Was:** ~14 hardcoded Alias-Disjunktionen
+  (`name === 'pad' || name === 'padding' || name === 'p'`-Stil) durch
+  `getCanonicalPropertyName(name) === '<canonical>'`-Lookups ersetzt.
+  Betroffen: padding, margin, border, radius, width, height, color,
+  background, rotate, horizontal, vertical, center, icon-size. Nicht
+  angefasst: non-schema-Properties (animation, backdrop-blur, blur,
+  scale, aspect, scroll-\*) — als Inkrement 3 separat aufgenommen.
+  Pre-Refactor-Pin (`Properties — Alias-Equivalenz`, 9 Tests in
+  `tests/differential/properties.test.ts`) deckt Drei-Alias-Output-
+  Equivalenz für padding/margin/width/height ab. 15481/15481 Tests
+  grün.
+  **Status:** erledigt
 
 ### 2026-05-10 — Lane 1, Inkrement 2: Section-Header von WATCHLIST nach KEEP
 
