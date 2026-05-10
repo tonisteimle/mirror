@@ -115,25 +115,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
-- **Wo:** `compiler/backends/framework.ts` (Stand: 446 LOC, ↓ von 1057 = 58 %)
-  — Decomposition in `compiler/backends/framework/ops/*.ts`
-  **Was:** Lane-Doc in `docs/refactoring/framework-backend-decomp.md`
-  mit 5-Slice-Plan (Helpers/CSS→Mirror/Style+Event/Props+States/
-  Node-emit). DOM-Backend ist Vorbild mit 767 LOC + `dom/ops/`-
-  Subdir. React-Lane (3273 → 343 LOC, 8 Slices) ist abgeschlossen,
-  Pattern erprobt.
-  - ✅ Slice 1 — Pure helpers (–86 LOC, helpers.ts 109 LOC)
-  - ✅ Slice 2 — CSS→Mirror reverse-mapper (–255 LOC, css-to-mirror.ts 277 LOC)
-  - ✅ Slice 3 — Style/Event/Action emit (–221 LOC, style-event.ts 234 LOC)
-  - ✅ Slice 4 — Props/States serialization (–49 LOC, props.ts 66 LOC)
-  - ⏳ Slice 5 — Node-to-M emit (~190 LOC)
-    **Status:** aktiv (Claude). Differential-Tests + Round-Trip-Pins
-    fangen Drift; jeder Slice ein Commit, byte-identische M(...)-
-    Output-Garantie.
-    **Notiz:** Anders als React: Class-basierte Struktur. Methoden
-    werden zu freien Funktionen extrahiert; Class bleibt als
-    Orchestrator für den Side-Effect-Pfad (`emit`/`emitHeader`/…).
-
 - **Wo:** `studio/demo/` (735 LOC) — DOM-Overlay-Demo-API (DemoCursor +
   KeystrokeOverlay)
   **Was:** Browser-Side-Implementation für Demo-Modus mit visuellem
@@ -907,6 +888,27 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — Framework-Backend-Decomp Lane abgeschlossen (1057 → 165 LOC, 84 % Reduktion)
+
+- **Wo:** `compiler/backends/framework.ts` → 5 Module unter `compiler/backends/framework/ops/`
+  **Was:** 5-Slice-Decomp per `docs/refactoring/framework-backend-decomp.md`
+  fertig. framework.ts ist jetzt ein dünner Side-Effect-Orchestrator —
+  die Klasse `FrameworkGenerator` behält die mutables (`indent`/`lines`)
+  und die `emit*`-Methoden für Header/Tokens/CustomIcons/Components/UI/
+  Mount; sämtliche pure-Logik ist raus. Fünf Module: helpers.ts 109,
+  css-to-mirror.ts 277, style-event.ts 234, props.ts 66, node-emit.ts 318. Differential-Tests 384/384 grün, full vitest 15441/15441.
+  Slice-Commits:
+  - Slice 1 — Pure helpers (`b3a7da56`, –86 LOC)
+  - Slice 2 — CSS→Mirror reverse-mapper (`f5ee4635`, –255 LOC)
+  - Slice 3 — Style/Event/Action emit (`e3a2135f`, –221 LOC; bundled
+    with parallel tutorial-videos commit)
+  - Slice 4 — Props/States serialization (`860e09f2`, –49 LOC)
+  - Slice 5 — Node-to-M emit (–281 LOC, letzter Slice)
+    **Status:** erledigt
+    **Notiz:** Anders als React-Lane: Class-basierte Struktur. Methoden
+    wurden zu freien Funktionen extrahiert; Indent-State wird explizit
+    als Parameter durch `nodeToM`/`eachToM`/`conditionalToM` gefädelt.
 
 ### 2026-05-10 — Orphan `compiler/runtime/element-wrapper.ts` gelöscht (287 LOC)
 

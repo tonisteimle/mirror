@@ -1,15 +1,14 @@
 # Framework-Backend Decomposition — Lane Doc
 
-**Status:** aktiv (Claude). Verlinkt aus `docs/findings.md`.
+**Status:** abgeschlossen.
 
-**Stand 2026-05-10:** Pattern aus React-Backend-Decomp ist erprobt
-(8 Slices, react.ts 3273 → 343 LOC, 89 % Reduktion). Framework-
-Backend trägt dieselbe Monolithik-Krankheit; gleicher Decomp-Ansatz
-mit Anpassung auf die Class-basierte Struktur. Slices 1+2+3+4 abgehakt
-— framework.ts: 1057 → 446 LOC (58 % Reduktion). Vier Module unter
-`compiler/backends/framework/ops/` (helpers.ts 109,
-css-to-mirror.ts 277, style-event.ts 234, props.ts 66).
-Differential-Tests 384/384 grün, full vitest 15441/15441.
+**Stand 2026-05-10:** Lane fertig — alle 5 Slices abgehakt.
+framework.ts: 1057 → 165 LOC (84 % Reduktion). Fünf Module unter
+`compiler/backends/framework/ops/` (helpers.ts 109, css-to-mirror.ts
+277, style-event.ts 234, props.ts 66, node-emit.ts 318). Die Klasse
+`FrameworkGenerator` ist jetzt schlanker Side-Effect-Orchestrator
+(emit + indent-Pfad + emitHeader/Tokens/CustomIcons/Components/UI/
+Mount). Differential-Tests 384/384 grün, full vitest 15441/15441.
 
 ## Ausgangslage
 
