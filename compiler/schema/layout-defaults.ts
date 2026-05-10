@@ -327,7 +327,7 @@ export function singleAxisCenterToFlex(
  * (or its container default) — only then is the keyword unambiguously
  * single-axis. If both axes are set explicitly, prefer `flexToNineZone`.
  *
- * Slice 5 V-2: the Framework backend reverse-walks IR styles back to Mirror
+ * Slice 5 V-4: the Framework backend reverse-walks IR styles back to Mirror
  * props. The per-style mapper previously collapsed any single `center` axis
  * to a bare `center: true`, but `Frame hor-center` and `Frame center` emit
  * different CSS (one axis vs both), so the round-trip was lossy. With this

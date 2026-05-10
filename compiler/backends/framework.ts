@@ -363,7 +363,7 @@ class FrameworkGenerator {
         consumedAlignmentStyles.add('align-items')
       }
     }
-    // Slice 5 V-2: single-axis center detection. Fires when EXACTLY ONE
+    // Slice 5 V-4: single-axis center detection. Fires when EXACTLY ONE
     // axis is `center` AND the other is unset — that's the unique IR
     // signature of `hor-center` / `ver-center` (the orthogonal axis is
     // omitted entirely, vs. `tc`/`cl`/etc. which set both). Without this
