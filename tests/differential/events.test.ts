@@ -42,3 +42,61 @@ describe('Events — DOM emits addEventListener calls', () => {
     expect(dom).toMatch(/['"]Enter['"]/)
   })
 })
+
+// =============================================================================
+// React event handlers — pure browser-API wiring (no Mirror runtime needed)
+// =============================================================================
+
+describe('Events — React emits inline JSX event handlers', () => {
+  // PIN: side-effect-only actions (toast/copy/openUrl/back/forward/scroll)
+  // translate to plain browser APIs in React. State-mutating actions
+  // (increment/set/toggle) emit a no-op comment until the React state
+  // runtime lands — generated code stays syntactically valid either way.
+
+  it('onclick toast → onClick={() => { window.alert(...) }}', () => {
+    const react = generateReact(parse(`Button "X", onclick toast("Hi")`))
+    expect(react).toMatch(/onClick=\{\(\)\s*=>\s*\{\s*window\.alert\("Hi"\)\s*\}\}/)
+  })
+
+  it('onclick copy → navigator.clipboard.writeText', () => {
+    const react = generateReact(parse(`Button "X", onclick copy("Hello")`))
+    expect(react).toContain('navigator.clipboard?.writeText("Hello")')
+  })
+
+  it('onclick openUrl → window.open with _blank tab', () => {
+    const react = generateReact(parse(`Button "X", onclick openUrl("https://example.com")`))
+    expect(react).toContain(`window.open("https://example.com", '_blank')`)
+  })
+
+  it("onhover → onMouseEnter (Mirror's mouseenter mapping)", () => {
+    const react = generateReact(parse(`Frame onhover toast("X")\n  Text "X"`))
+    expect(react).toMatch(/onMouseEnter=\{\(\)\s*=>/)
+  })
+
+  it('onkeydown(enter) → onKeyDown with e.key === "Enter" filter', () => {
+    const react = generateReact(parse(`Input onkeydown(enter) toast("Y")`))
+    expect(react).toMatch(/onKeyDown=\{\(e\)\s*=>/)
+    expect(react).toContain('e.key === "Enter"')
+  })
+
+  it('multiple onkeydown bindings coalesce into a single onKeyDown handler', () => {
+    const src = `Input onkeydown(enter) toast("E")\n  onkeydown(escape) toast("X")`
+    const react = generateReact(parse(src))
+    // Only one onKeyDown attribute on the element.
+    const matches = react.match(/onKeyDown=/g) ?? []
+    expect(matches.length).toBe(1)
+    // Both key-filter branches present.
+    expect(react).toContain('e.key === "Enter"')
+    expect(react).toContain('e.key === "Escape"')
+  })
+
+  it('unsupported actions emit a no-op comment, not garbage', () => {
+    // `increment` needs a React state runtime — until that lands, the
+    // generated handler must still be valid JS, not a parse error.
+    const react = generateReact(parse(`count: 0\n\nButton "X", onclick increment(count)`))
+    expect(react).toMatch(/onClick=\{\(\)\s*=>\s*\{[^}]*increment[^}]*\}\}/)
+    expect(
+      () => new Function(`(${react.match(/onClick=\{([^}]+\})\}/)?.[1] || '() => {}'})`)
+    ).not.toThrow()
+  })
+})
