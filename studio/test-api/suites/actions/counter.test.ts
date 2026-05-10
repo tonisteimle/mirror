@@ -89,7 +89,6 @@ Frame gap 8, pad 16, bg #1a1a1a
     }
   ),
 
-  // TODO: Fix runtime bug - reset() clears DOM text instead of setting to value
   testWithSetup(
     'reset() resets counter to initial value',
     `count: 5
@@ -112,10 +111,13 @@ Frame gap 8, pad 16, bg #1a1a1a
 
       await api.interact.click('node-3')
       await api.utils.delay(50)
+
+      api.dom.expect('node-4', { textContains: '5' })
+
       await api.interact.click('node-2')
       await api.utils.delay(100)
 
-      api.dom.expect('node-4', { textContains: '1' })
+      api.dom.expect('node-4', { textContains: '6' })
     }
   ),
 

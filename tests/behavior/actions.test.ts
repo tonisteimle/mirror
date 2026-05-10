@@ -88,6 +88,29 @@ describe('Actions — Behavior Spec', () => {
       ;(findByName(root, 'Button') as HTMLElement).click()
       expect(findByName(root, 'Text')!.textContent?.trim()).toBe('0')
     })
+
+    // PIN: `reset(count)` should restore the initial value declared in
+    // the data block, not clear the binding. Earlier `count: 5` declared
+    // `__mirrorData["count"]` (no $) but registerToken stored under
+    // `'$count'` (prefixed) — so reset() read `_initialTokens['count']`
+    // = undefined and wiped the DOM text to "".
+    it('reset() restores initial value, not undefined', () => {
+      const root = render(
+        `count: 5\n\nFrame\n  Button "+", onclick increment(count)\n  Button "Reset", onclick reset(count)\n  Text "$count"`,
+        container
+      )
+      const [incBtn, resetBtn] = allByName(root, 'Button') as HTMLElement[]
+      const text = findByName(root, 'Text')!
+
+      expect(text.textContent?.trim()).toBe('5')
+
+      incBtn.click()
+      incBtn.click()
+      expect(text.textContent?.trim()).toBe('7')
+
+      resetBtn.click()
+      expect(text.textContent?.trim()).toBe('5')
+    })
   })
 
   // ---------------------------------------------------------------------------

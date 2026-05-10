@@ -23,7 +23,10 @@ function compile(mirrorCode: string): string {
   return generateDOM(ast)
 }
 
-function compileAndExecute(mirrorCode: string, data: Record<string, unknown> = {}): {
+function compileAndExecute(
+  mirrorCode: string,
+  data: Record<string, unknown> = {}
+): {
   dom: JSDOM
   root: HTMLElement
   container: HTMLElement
@@ -325,12 +328,12 @@ Button "+", name IncBtn
       const runtime = (window as any)._runtime
 
       // Get initial state
-      expect(runtime._tokens['$count']).toBe(0)
+      expect(runtime._tokens['count']).toBe(0)
 
       click(incBtn!)
 
       // Value should be incremented
-      expect(runtime._tokens['$count']).toBe(1)
+      expect(runtime._tokens['count']).toBe(1)
     })
 
     it('erhöht mehrfach', () => {
@@ -348,7 +351,7 @@ Button "+", name IncBtn
       click(incBtn!)
       click(incBtn!)
 
-      expect(runtime._tokens['$count']).toBe(8)
+      expect(runtime._tokens['count']).toBe(8)
     })
   })
 
@@ -366,7 +369,7 @@ Button "-", name DecBtn
 
       click(decBtn!)
 
-      expect(runtime._tokens['$count']).toBe(9)
+      expect(runtime._tokens['count']).toBe(9)
     })
 
     it('kann negativ werden', () => {
@@ -383,7 +386,7 @@ Button "-", name DecBtn
       click(decBtn!)
       click(decBtn!)
 
-      expect(runtime._tokens['$count']).toBe(-2)
+      expect(runtime._tokens['count']).toBe(-2)
     })
   })
 
@@ -401,7 +404,7 @@ Button "Set 42", name SetBtn
 
       click(setBtn!)
 
-      expect(runtime._tokens['$value']).toBe(42)
+      expect(runtime._tokens['value']).toBe(42)
     })
 
     it('setzt Token auf String-Wert', () => {
@@ -417,7 +420,7 @@ Button "Set", name SetBtn
 
       click(setBtn!)
 
-      expect(runtime._tokens['$name']).toBe('updated')
+      expect(runtime._tokens['name']).toBe('updated')
     })
   })
 
@@ -437,15 +440,15 @@ Button "Reset", name ResetBtn
       const runtime = (window as any)._runtime
 
       // Initial value
-      expect(runtime._tokens['$count']).toBe(99)
+      expect(runtime._tokens['count']).toBe(99)
 
       // Increment
       click(incBtn!)
-      expect(runtime._tokens['$count']).toBe(100)
+      expect(runtime._tokens['count']).toBe(100)
 
       // Reset to initial
       click(resetBtn!)
-      expect(runtime._tokens['$count']).toBe(99)
+      expect(runtime._tokens['count']).toBe(99)
     })
 
     it('setzt Token auf benutzerdefinierten Wert', () => {
@@ -461,7 +464,7 @@ Button "Reset to 5", name ResetBtn
 
       click(resetBtn!)
 
-      expect(runtime._tokens['$count']).toBe(5)
+      expect(runtime._tokens['count']).toBe(5)
     })
   })
 
@@ -485,7 +488,7 @@ Frame hor, gap 8
       click(incBtn!)
       click(decBtn!)
 
-      expect(runtime._tokens['$count']).toBe(6)
+      expect(runtime._tokens['count']).toBe(6)
     })
 
     it('reset setzt Counter zurück', () => {
@@ -507,11 +510,11 @@ Frame gap 8
       click(incBtn!)
       click(incBtn!)
 
-      expect(runtime._tokens['$count']).toBe(3)
+      expect(runtime._tokens['count']).toBe(3)
 
       click(resetBtn!)
 
-      expect(runtime._tokens['$count']).toBe(0)
+      expect(runtime._tokens['count']).toBe(0)
     })
   })
 })
@@ -609,12 +612,12 @@ Frame hidden, name Menu
     click(incBtn!)
     click(incBtn!)
 
-    expect(runtime._tokens['$count']).toBe(2)
+    expect(runtime._tokens['count']).toBe(2)
 
     // Reset
     click(resetBtn!)
 
-    expect(runtime._tokens['$count']).toBe(0)
+    expect(runtime._tokens['count']).toBe(0)
   })
 
   it('Modal mit Counter und Dismiss', () => {
@@ -648,11 +651,11 @@ Frame hidden, name Wizard
     click(nextBtn!)
     click(nextBtn!)
 
-    expect(runtime._tokens['$step']).toBe(3)
+    expect(runtime._tokens['step']).toBe(3)
 
     click(backBtn!)
 
-    expect(runtime._tokens['$step']).toBe(2)
+    expect(runtime._tokens['step']).toBe(2)
 
     // Close
     click(closeBtn!)
@@ -700,7 +703,7 @@ Button "+", name IncBtn
 
     click(incBtn!)
 
-    expect(runtime._tokens['$newToken']).toBe(1)
+    expect(runtime._tokens['newToken']).toBe(1)
   })
 
   it('decrement mit nicht gesetztem Token startet bei 0', () => {
@@ -714,6 +717,6 @@ Button "-", name DecBtn
 
     click(decBtn!)
 
-    expect(runtime._tokens['$newToken']).toBe(-1)
+    expect(runtime._tokens['newToken']).toBe(-1)
   })
 })

@@ -82,7 +82,13 @@ export function emitRuntime(this: DOMGenerator): void {
       } else {
         value = String(token.value)
       }
-      this.emit(`_runtime.registerToken('$${tokenKey}', ${value})`)
+      // Use `tokenKey` (the canonical no-`$` name) so the registry is
+      // consistent with __mirrorData/$get/_state and with how
+      // increment/set/get/reset look up by their action arg. Pre-fix the
+      // emit prepended `$` here, which made `_initialTokens` keyed under
+      // a different name than reset() looked up — DOM text wiped on
+      // `reset(count)`.
+      this.emit(`_runtime.registerToken('${tokenKey}', ${value})`)
     }
     this.emit('')
   }

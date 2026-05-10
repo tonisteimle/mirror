@@ -67,7 +67,6 @@ Frame hor, gap 12, ver-center
     }
   ),
 
-  // TODO: reset() DOM bug workaround - use set(count, 0) instead of reset(count)
   testWithSetup(
     'Set and reset counter',
     `count: 0
@@ -76,7 +75,7 @@ Frame ver, gap 8
   Text "$count", fs 24, col white
   Frame hor, gap 8
     Button "Set to 10", pad 8 16, bg #2271C1, col white, rad 6, onclick set(count, 10)
-    Button "Set to 0", pad 8 16, bg #ef4444, col white, rad 6, onclick set(count, 0)`,
+    Button "Reset", pad 8 16, bg #ef4444, col white, rad 6, onclick reset(count)`,
     async (api: TestAPI) => {
       // Elements should exist
       api.assert.exists('node-1') // Frame
@@ -97,13 +96,13 @@ Frame ver, gap 8
       info = api.preview.inspect('node-2')
       api.assert.ok(info?.fullText === '10', `Count should be 10 after set`)
 
-      // Click "Set to 0" (workaround: set() works, reset() has DOM bug)
+      // Click "Reset" — restores initial value (0)
       await api.interact.click('node-5')
       await api.utils.delay(150)
 
       // Count should be 0
       info = api.preview.inspect('node-2')
-      api.assert.ok(info?.fullText === '0', `Count should be 0 after set(0)`)
+      api.assert.ok(info?.fullText === '0', `Count should be 0 after reset()`)
     }
   ),
 ])

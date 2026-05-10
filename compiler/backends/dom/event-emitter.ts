@@ -576,7 +576,12 @@ function emitScrollAction(
 function emitValueAction(ctx: EventEmitterContext, fnName: string, action: IRAction): void {
   if (!action.args || action.args.length === 0) return
 
-  const tokenName = action.args[0]
+  // Normalize token arg: data declarations strip `$` ($count: 5 →
+  // __mirrorData["count"]), so action arg `$count` and `count` must
+  // resolve to the same registry key. Pre-fix the runtime read
+  // `__mirrorData['$count']` (undefined) and silently fell back to 0.
+  const rawArg = action.args[0]
+  const tokenName = rawArg.startsWith('$') ? rawArg.slice(1) : rawArg
 
   switch (fnName) {
     case 'increment':
