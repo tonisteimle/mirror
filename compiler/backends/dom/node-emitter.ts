@@ -98,7 +98,7 @@ export function emitProperties(
   // components that happen to resolve to `frame` (e.g. `Btn: pad 10 20`,
   // `Item as frame: pad 8`) still render content because that's the standard
   // pattern for templating buttons/list items.
-  const skipTextContent = isLayoutPrimitive(node.name)
+  const skipTextContent = node.name ? isLayoutPrimitive(node.name) : false
   let iconName: string | null = null
 
   for (const prop of node.properties) {

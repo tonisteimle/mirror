@@ -37,7 +37,7 @@ export const EMPTY_PREVIEW_HTML = `<div class="mirror-root" style="width: 100%; 
 
 export interface SelectionManager {
   clearSelection: () => void
-  setBreadcrumb: (items: unknown[]) => void
+  setBreadcrumb: (items: { nodeId: string; name: string }[]) => void
 }
 
 /**
@@ -53,7 +53,7 @@ export function renderEmptyPreview(host: HTMLElement): void {
  * The synthetic App wrapper isn't a node the user wrote — surfacing it as
  * a breadcrumb entry would mislead, so we set [].
  */
-export function resetSelectionForEmptyCode(manager: SelectionManager | undefined): void {
+export function resetSelectionForEmptyCode(manager: SelectionManager | null | undefined): void {
   if (!manager) return
   manager.clearSelection()
   manager.setBreadcrumb([])

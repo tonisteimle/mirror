@@ -415,8 +415,9 @@ export function transformInstance(
   // hover-block is parsed as a `propset:hovered` property on the state. Without
   // expansion the IR-state-transformer never sees `bg #f00` and the hover style
   // is silently lost (Slice 25 audit B-5).
-  const expandStates = (states: typeof instance.states | undefined) =>
-    states?.map(state => ({
+  type StateLike = NonNullable<typeof instance.states>[number]
+  const expandStates = (states: typeof instance.states | undefined): StateLike[] | undefined =>
+    states?.map((state: StateLike) => ({
       ...state,
       properties: this.expandPropertySets(state.properties, primitive),
     }))

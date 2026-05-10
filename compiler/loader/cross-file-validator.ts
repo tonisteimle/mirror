@@ -140,7 +140,9 @@ function indexFile(file: ProjectFile, proseComponentPrelude?: ReadonlySet<string
     }
   }
   for (const d of c.data) {
-    if (d.type === 'Token' && isDataObject(d)) {
+    // c.data is (TokenDefinition | SchemaDefinition | IconDefinition); only
+    // TokenDefinition carries a `type` discriminator. Narrow via `'type' in d`.
+    if ('type' in d && d.type === 'Token' && isDataObject(d)) {
       dataDefs.set(d.name, d.line)
     }
     // $schema and $icons don't introduce reachable names from layouts.

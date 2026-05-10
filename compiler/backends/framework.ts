@@ -60,11 +60,32 @@ class FrameworkGenerator {
   generate(): string {
     this.emitHeader()
     this.emitTokens()
+    this.emitCustomIcons()
     this.emitComponents()
     this.emitUI()
     this.emitMount()
 
     return this.lines.join('\n')
+  }
+
+  /**
+   * Slice 51 V-2: emit `M.registerIcon(...)` calls for `$icons:` entries.
+   * Pre-Slice-51 the Framework backend silently dropped Custom-Icons —
+   * `Icon "myicon"` would compile to `M('Icon', 'myicon', { is: '24' })`
+   * which the runtime tried to fetch from Lucide-CDN (404). The mirror-
+   * runtime package exposes `M.registerIcon` (re-exported from
+   * `compiler/runtime/icons.ts`), so emitting registration calls here
+   * gives Framework targets the same custom-icon pipeline as DOM.
+   */
+  private emitCustomIcons(): void {
+    if (!this.ir.icons || this.ir.icons.length === 0) return
+    this.emit('// Custom Icons')
+    for (const icon of this.ir.icons) {
+      const viewBox = icon.viewBox || '0 0 24 24'
+      const escapedPath = icon.path.replace(/"/g, '\\"')
+      this.emit(`M.registerIcon('${icon.name}', "${escapedPath}", '${viewBox}')`)
+    }
+    this.emit('')
   }
 
   private emit(line: string): void {
@@ -236,7 +257,7 @@ class FrameworkGenerator {
    * DOM and React both refuse to render the literal.
    */
   private getContent(node: IRNode): string | null {
-    if (isLayoutPrimitive(node.name)) return null
+    if (node.name && isLayoutPrimitive(node.name)) return null
     const textContent = node.properties.find(p => p.name === 'textContent')
     if (textContent && typeof textContent.value === 'string') {
       return textContent.value

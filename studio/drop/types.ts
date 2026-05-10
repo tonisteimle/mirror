@@ -124,6 +124,7 @@ export interface CodeModifier {
     value: string,
     options?: { position?: 'first' | 'last'; afterProp?: string }
   ): ModificationResult
+  removeProperty(nodeId: string, propName: string): ModificationResult
 }
 
 export interface RobustModifier {
