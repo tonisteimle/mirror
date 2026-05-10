@@ -1216,6 +1216,24 @@ export class Validator {
       )
     }
 
+    // Slice 4 V-3: grid + flex-only alignment (`center`, 9-zone aliases)
+    // produces three different visual results across DOM/React/Framework
+    // because each backend resolves the precedence differently. Block the
+    // combination at the validator so the user-facing surface is one
+    // unambiguous error instead of a silent cross-backend disagreement.
+    if (hasGrid) {
+      const flexAlignments = ZONE_ALIGNMENT_PROPS.filter(z => propNames.has(z))
+      if (flexAlignments.length > 0) {
+        this.addError(
+          ERROR_CODES.LAYOUT_MODE_CONFLICT,
+          `Layout mode conflict: cannot combine "grid" with flex alignment "${flexAlignments[0]}"`,
+          line,
+          column,
+          'Grid uses place-items / justify-items / align-items for child positioning. Drop the flex alignment property, or remove "grid" if you wanted flex layout.'
+        )
+      }
+    }
+
     // Check 9-zone alignment (only one allowed)
     const activeZones = ZONE_ALIGNMENT_PROPS.filter(z => propNames.has(z))
     if (activeZones.length > 1) {

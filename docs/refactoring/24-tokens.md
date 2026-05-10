@@ -1,4 +1,4 @@
-# 01 — Slice 24: Single-Value-Token
+# Slice 24: Single-Value-Token
 
 **Datum:** 2026-05-09
 **Status:** Audit · Untersuchung · Entscheidungen · Phasen A/B/C umgesetzt · 8 Regression-Tests · Slice **green**

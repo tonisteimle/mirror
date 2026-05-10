@@ -1,4 +1,4 @@
-# 08 — Slice 29: `exclusive()` (Tab-Gruppe)
+# Slice 29: `exclusive()` (Tab-Gruppe)
 
 **Datum:** 2026-05-09
 **Status:** DOM-Backend ✅ · Studio-Sync ✅ (gemeinsam mit 26/27) · Browser-CDP-E2E ⚠️ offen · Studio-Roundtrip ⚠️ offen

@@ -13,6 +13,7 @@
 import type { AST } from '../parser/ast'
 import { toIR } from '../ir'
 import { isLayoutPrimitive } from '../schema/dsl'
+import { flexToNineZone } from '../schema/layout-defaults'
 import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional } from '../ir/types'
 
 const TAG_TO_TYPE: Record<string, string> = {
@@ -329,6 +330,40 @@ class FrameworkGenerator {
       props.h = 'full'
     }
 
+    // Slice 6 V-3: pre-detect grid-column-end / grid-row-end so we can
+    // suppress their `width: 100%` / `height: 100%` companions emitted by
+    // the IR property-transformer (`property-transformer.ts:436, 451`).
+    // Without this, the per-style mapper writes `w: 'full'` from `width:
+    // 100%` AFTER our `grid-column-end: span N → w: N` mapping, so the
+    // span-count gets clobbered. Mark companions for skip in the loop
+    // below.
+    const hasGridColSpan = baseStyles.some(
+      s => s.property === 'grid-column-end' && /^span\s+\d+$/.test(s.value)
+    )
+    const hasGridRowSpan = baseStyles.some(
+      s => s.property === 'grid-row-end' && /^span\s+\d+$/.test(s.value)
+    )
+
+    // Slice 4 V-2: detect 9-zone combination BEFORE the per-style loop
+    // and emit the alias instead of two individual `justify-content` /
+    // `align-items` mappings. Without this the per-style mapper either
+    // dropped `flex-start`/`flex-end` entirely (→ `(no props)` for `tl`/
+    // `tr`/`bl`/`br`) or collapsed any `center` axis to a bare
+    // `center: true` (→ ambiguous for `tc`/`cl`/`cr`/`bc`).
+    const justify = baseStyles.find(s => s.property === 'justify-content')?.value
+    const align = baseStyles.find(s => s.property === 'align-items')?.value
+    const direction =
+      baseStyles.find(s => s.property === 'flex-direction')?.value === 'row' ? 'row' : 'column'
+    const consumedAlignmentStyles = new Set<string>()
+    if (justify && align && justify !== 'space-between') {
+      const zone = flexToNineZone(justify, align, direction)
+      if (zone) {
+        props[zone] = true
+        consumedAlignmentStyles.add('justify-content')
+        consumedAlignmentStyles.add('align-items')
+      }
+    }
+
     // Convert base styles to props
     for (const style of baseStyles) {
       // Skip flex and min-width/min-height that were handled above
@@ -344,6 +379,17 @@ class FrameworkGenerator {
         (style.property === 'flex' || style.property === 'min-height')
       )
         continue
+
+      // Slice 4 V-2: skip the alignment styles already consumed by the
+      // 9-zone alias above so we don't double-emit `tl: true` plus a
+      // bare `center: true`.
+      if (consumedAlignmentStyles.has(style.property)) continue
+
+      // Slice 6 V-3: skip width: 100% / height: 100% companions of grid-
+      // span — the `grid-column-end`/`grid-row-end` mapping below already
+      // emits `w: N` / `h: N`, the 100% would clobber that.
+      if (hasGridColSpan && style.property === 'width' && style.value === '100%') continue
+      if (hasGridRowSpan && style.property === 'height' && style.value === '100%') continue
 
       const mirrorProp = this.cssPropToMirrorProp(style.property, style.value)
       if (mirrorProp) {
@@ -464,13 +510,40 @@ class FrameworkGenerator {
     if (prop === 'display' && value === 'none') return { name: 'hidden', value: true }
     if (prop === 'display' && value === 'grid') return null // Handled separately
 
-    // Grid
+    // Grid container
     if (prop === 'grid-template-columns') {
       // Parse repeat(N, 1fr) -> grid N
       const match = value.match(/repeat\((\d+), 1fr\)/)
       if (match) return { name: 'grid', value: parseInt(match[1]) }
       return { name: 'grid', value: value }
     }
+    if (prop === 'grid-auto-rows') return { name: 'row-height', value: this.parsePxValue(value) }
+    if (prop === 'grid-auto-flow' && value === 'dense') return { name: 'dense', value: true }
+    // Slice 6 V-3: grid-child positioning. Reverse-mapping for `x N`/`y N`/
+    // `w N`/`h N` in grid-parent context. The `width: 100%` / `height: 100%`
+    // companions emitted alongside `grid-column-end: span N` are dropped
+    // (they're a DOM-only artefact — Mirror DSL has just `w N`).
+    if (prop === 'grid-column-start') return { name: 'x', value: parseInt(value) }
+    if (prop === 'grid-row-start') return { name: 'y', value: parseInt(value) }
+    if (prop === 'grid-column-end') {
+      const m = value.match(/^span\s+(\d+)$/)
+      if (m) return { name: 'w', value: parseInt(m[1]) }
+      return null
+    }
+    if (prop === 'grid-row-end') {
+      const m = value.match(/^span\s+(\d+)$/)
+      if (m) return { name: 'h', value: parseInt(m[1]) }
+      return null
+    }
+
+    // Slice 6 V-2 / non-grid: `position: absolute` from `x`/`y` outside grid.
+    // The IR emits `position: absolute` plus `left: Npx` / `top: Npx`. The
+    // Framework reverse-mapper currently has no `position` branch, so we
+    // map `left`/`top` directly back to `x`/`y` and drop the `position:
+    // absolute` hint (Mirror's `x`/`y` implies absolute positioning).
+    if (prop === 'position' && value === 'absolute') return null
+    if (prop === 'left') return { name: 'x', value: this.parsePxValue(value) }
+    if (prop === 'top') return { name: 'y', value: this.parsePxValue(value) }
 
     // Flex shorthand - handled in stylesToProps for w full / h full detection
     if (prop === 'flex') return null

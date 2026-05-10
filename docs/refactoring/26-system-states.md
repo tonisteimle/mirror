@@ -1,4 +1,4 @@
-# 05 — Slice 26: System-States (`hover:`/`focus:`/`active:`/`disabled:`)
+# Slice 26: System-States (`hover:`/`focus:`/`active:`/`disabled:`)
 
 **Datum:** 2026-05-09
 **Status:** DOM-Backend ✅ · Studio-Sync ✅ (Review-Pass) · Browser-CDP-E2E ⚠️ offen · Studio-Roundtrip ⚠️ offen
@@ -171,7 +171,7 @@ Btn: bg #333, col white
 
 # 6. Review-Pass-Befunde
 
-Der Review-Pass (Step 7 in `00-plan.md`) wurde auf Slice 26+27+29 gemeinsam ausgeführt, weil sie alle dieselbe Bug-Familie betreffen (Schema-Erweiterung von 4 → 13 system-states).
+Der Review-Pass (Step 7 in `plan.md`) wurde auf Slice 26+27+29 gemeinsam ausgeführt, weil sie alle dieselbe Bug-Familie betreffen (Schema-Erweiterung von 4 → 13 system-states).
 
 ## Probe-Tabelle Post-Fix-Spiegelung
 

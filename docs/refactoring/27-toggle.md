@@ -1,4 +1,4 @@
-# 06 — Slice 27: Custom-State `toggle()`
+# Slice 27: Custom-State `toggle()`
 
 **Datum:** 2026-05-09
 **Status:** DOM-Backend ✅ · Studio-Sync ✅ (gemeinsam mit 26/29) · Browser-CDP-E2E ⚠️ offen · Studio-Roundtrip ⚠️ offen
@@ -202,7 +202,7 @@ TaskStatus: pad 8 16, toggle()
 
 # 6. Review-Pass-Befunde
 
-Der Review-Pass nach Step 7 in `00-plan.md` hat zwei zusätzliche Drift-Stellen aufgedeckt, die der ursprüngliche Slice-27-Pass übersehen hatte. Beide sind jetzt gefixt; das Doc spiegelt den Stand.
+Der Review-Pass nach Step 7 in `plan.md` hat zwei zusätzliche Drift-Stellen aufgedeckt, die der ursprüngliche Slice-27-Pass übersehen hatte. Beide sind jetzt gefixt; das Doc spiegelt den Stand.
 
 ## Was Slice 27 ursprünglich gefixt hat
 

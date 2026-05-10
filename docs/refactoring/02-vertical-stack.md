@@ -1,4 +1,4 @@
-# 09 — Slice 2: Vertical Stack (`gap N`)
+# Slice 2: Vertical Stack (`gap N`)
 
 **Datum:** 2026-05-09
 **Status:** Phase 1 (V-1..V-4) erledigt · Phase 2 (V-5..V-9) erledigt · **Quality-Gate-Pass: erledigt** — 49 RTs grün, 14864/14887 Vitest-Tests grün
@@ -171,7 +171,7 @@ Phase 1 hat den `gap`-Pfad sauber durchgereicht — alle px-Properties haben jet
 korrekten React-Output, Suffix-Lookup, Decimal-px, Var-Pass-through. Aber der
 zweite Probe-Pass hat sechs **weitere** Cross-Backend-Defizite gefunden,
 die vom ersten Audit nicht erfasst waren. Honest disclosure per Quality-Gate
-(00-plan Schritt 8): solange diese offen sind, ist Slice 2 nicht „erledigt".
+(plan Schritt 8): solange diese offen sind, ist Slice 2 nicht „erledigt".
 
 ## Probe-Tabelle (Phase 2)
 
@@ -316,7 +316,7 @@ String durchreichen wie var(--…)).
 | 2-E.1 | RT-11..RT-17 in `tests/compiler/slice-2-gap.test.ts` ergänzen (20 neue Sub-Tests)                            | -   | M       | erledigt |
 | 2-E.2 | Cross-Backend-Differential für `gap-x`/`gap-y` (in RT-17 abgedeckt)                                          | -   | S       | erledigt |
 | 2-F.1 | Probe-Tabelle (Phase 2) Post-Fix-Spiegelung                                                                  | -   | S       | erledigt |
-| 2-F.2 | Quality-Gate Status-Update (Audit + 00-plan)                                                                 | -   | S       | erledigt |
+| 2-F.2 | Quality-Gate Status-Update (Audit + plan)                                                                    | -   | S       | erledigt |
 | 2-F.3 | Bestand-Tests anpassen (GA3 in `layout-bugs.test.ts`, gap-precedence in `properties-property-based.test.ts`) | -   | S       | erledigt |
 
 ## Neue Tests (Phase 2)
@@ -338,6 +338,6 @@ String durchreichen wie var(--…)).
 - ✅ 49 Slice-2-RTs grün (29 Phase 1 + 20 Phase 2)
 - ✅ Vitest-Suite gesamt 14864 / 14887 (23 skipped, 0 failed)
 - ✅ Audit-Doc spiegelt ehrlich den Post-Fix-Stand (Status, Probe-Tabelle, Plan-Tabellen)
-- ✅ 00-plan Audit-Status auf "erledigt" gesetzt
+- ✅ plan Audit-Status auf "erledigt" gesetzt
 - ⚠️ V-8 (Studio gap-x/gap-y Surface) bewusst verschoben — eigener Studio-Slice
 - ⚠️ Browser-CDP-E2E für gap-x/gap-y existiert in `studio/test-api/suites/layout/extended.test.ts` (4 Tests; benötigt Studio-Bundle-Build, ähnlich Slice 26/27/29 — separates Gate)

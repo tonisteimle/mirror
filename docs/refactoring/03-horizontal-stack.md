@@ -1,4 +1,4 @@
-# 12 — Slice 3: Horizontal Stack (`hor`, `wrap`, `spread`)
+# Slice 3: Horizontal Stack (`hor`, `wrap`, `spread`)
 
 **Datum:** 2026-05-10
 **Status:** Audit erledigt · Phase A: V-1 React-Defaults erledigt, V-2/V-3a deferred (Sektion 6) · Phase B Quality-Gate-Pass erledigt — 31 RTs grün, 14905/14928 Vitest grün

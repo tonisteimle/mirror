@@ -1,4 +1,4 @@
-# 07 — Slice 78: Token-Picker (Studio)
+# Slice 78: Token-Picker (Studio)
 
 **Datum:** 2026-05-09
 **Status:** Audit · Phasen A/B/D umgesetzt · 18 jsdom RTs + 4 Browser-CDP-RTs · CSS gestylt · Studio-Bundle gebaut · Quality-Gate-Pass: **erledigt**

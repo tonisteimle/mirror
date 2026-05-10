@@ -1,4 +1,4 @@
-# 02 — Slice 1: Frame-Container
+# Slice 1: Frame-Container
 
 **Datum:** 2026-05-09
 **Status:** Audit erledigt · Umsetzung erledigt · Review-Pass erledigt

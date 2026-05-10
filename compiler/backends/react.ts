@@ -17,6 +17,11 @@ import type {
 } from '../parser/ast'
 import { expandPropertySets } from '../ir/transformers/property-set-expander'
 import { isLayoutPrimitive } from '../schema/dsl'
+import {
+  nineZoneToFlex,
+  resolveNineZoneAlias,
+  singleAxisCenterToFlex,
+} from '../schema/layout-defaults'
 import { getTokenSuffix } from '../schema/token-suffixes'
 
 export interface ReactExportOptions {
@@ -124,12 +129,38 @@ export function generateReact(ast: AST, options: ReactExportOptions = {}): strin
   return lines.join('\n')
 }
 
+/**
+ * Layout-context for grid-vs-flex parent discrimination.
+ *
+ * Slice 6 V-2: Mirror's `x`/`y`/`w`/`h` semantics depend on whether the
+ * parent is a CSS-Grid or a flex container. The DOM backend gets this
+ * via the IR's `parentLayoutContext` (see `property-transformer.ts:394`);
+ * the React backend bypasses the IR, so we walk the JSX tree manually
+ * and pass the parent's layout-type down to children.
+ */
+type ParentLayoutContext = { type: 'grid' | 'flex' | null }
+
+/**
+ * Detect a Frame's own layout-type from its properties — used to inform
+ * its CHILDREN about their parent's layout context. Same heuristic as
+ * the IR layout-transformer: `grid` property = grid container; `hor`/
+ * `ver`/`wrap`/`spread`/`center`/etc = flex container; otherwise the
+ * default flex-column kicks in via `withLayoutDefaults`.
+ */
+function detectLayoutContext(props: Property[]): ParentLayoutContext {
+  for (const p of props) {
+    if (p.name === 'grid') return { type: 'grid' }
+  }
+  return { type: 'flex' } // Frame default is flex; children inherit flex-context
+}
+
 function generateJSX(
   instance: Instance,
   components: Map<string, ComponentDefinition>,
   tokens: TokenDefinition[],
   propertySetMap: Map<string, Property[]>,
-  indent: string
+  indent: string,
+  parentContext: ParentLayoutContext = { type: null }
 ): string {
   // Resolve component definition
   const compDef = components.get(instance.component)
@@ -159,11 +190,21 @@ function generateJSX(
   // Merge properties: component defaults + instance overrides
   const allProps = [...expandedComp, ...expandedInst]
 
+  // Slice 6 V-2: detect THIS instance's layout-context to inform its
+  // children. Children of a `grid N` parent get `parentContext.type='grid'`,
+  // which switches their `x`/`y`/`w`/`h` interpretation from
+  // absolute/transform/numeric-px to grid-column-start/grid-row-start/
+  // grid-column-end-span/grid-row-end-span.
+  const ownLayoutContext = detectLayoutContext(allProps)
+
   // Generate style object. Layout primitives (Frame/Box and the table family)
   // get the same flex-column defaults the DOM backend's IR transformer
   // injects — without these the React render is an unstyled `<div />` while
   // the DOM render is a properly-laid-out flex container.
-  const style = withLayoutDefaults(generateStyles(allProps, tokens), instance.component)
+  const style = withLayoutDefaults(
+    generateStyles(allProps, tokens, parentContext),
+    instance.component
+  )
   const styleStr = Object.keys(style).length > 0 ? ` style={${formatStyleObject(style)}}` : ''
 
   // HTML attributes from properties (placeholder, type, href, src, etc.)
@@ -204,10 +245,13 @@ function generateJSX(
     lines.push(`${indent}  {${JSON.stringify(textContent)}}`)
   }
 
-  // Add children
+  // Add children. Slice 6 V-2: pass own layout-context so grid-children
+  // resolve `x`/`y`/`w`/`h` to grid-positioning instead of absolute/numeric.
   for (const child of instance.children) {
     if (child.type === 'Instance') {
-      lines.push(generateJSX(child, components, tokens, propertySetMap, indent + '  '))
+      lines.push(
+        generateJSX(child, components, tokens, propertySetMap, indent + '  ', ownLayoutContext)
+      )
     } else if (child.type === 'Text') {
       lines.push(`${indent}  {${JSON.stringify(child.content)}}`)
     }
@@ -409,7 +453,8 @@ function getTextContent(instance: Instance, properties: Property[]): string | nu
 
 function generateStyles(
   properties: Property[],
-  tokens: TokenDefinition[]
+  tokens: TokenDefinition[],
+  parentContext: ParentLayoutContext = { type: null }
 ): Record<string, string | number> {
   const style: Record<string, string | number> = {}
   const tokenMap = new Map<string, string | number | boolean>()
@@ -531,9 +576,44 @@ function generateStyles(
     return value as string | number
   }
 
+  // Slice 4 V-1: pre-scan for explicit `hor`/`ver` direction so 9-zone
+  // aliases can be mapped direction-aware. The IR layout-transformer does
+  // the same in two passes (collect direction first, then resolve
+  // alignment); single-pass with a pre-scan keeps the React output cross-
+  // backend-equivalent without restructuring the whole switch.
+  const layoutDirection: 'row' | 'column' = (() => {
+    for (const p of properties) {
+      if (p.values.length === 0 || (p.values.length === 1 && p.values[0] === true)) {
+        if (p.name === 'hor' || p.name === 'horizontal') return 'row'
+        if (p.name === 'ver' || p.name === 'vertical') return 'column'
+      }
+    }
+    return 'column'
+  })()
+
   for (const prop of properties) {
     // Handle flag properties (no values) first
     if (prop.values.length === 0) {
+      // Slice 4 V-1: 9-zone aliases (`tl`/`tc`/`tr`/`cl`/`cr`/`bl`/`bc`/`br`
+      // + long forms `top-left`…`bottom-right` + `cen` alias for center).
+      // Lookup-driven via `nineZoneToFlex` so the 18 aliases share the same
+      // schema-side single-source-of-truth as the IR layout-transformer.
+      const zoneFlex = nineZoneToFlex(prop.name, layoutDirection)
+      if (zoneFlex) {
+        style.display = 'flex'
+        style.justifyContent = zoneFlex.justifyContent
+        style.alignItems = zoneFlex.alignItems
+        continue
+      }
+      // Slice 5 V-2: single-axis center keywords (`hor-center`/`ver-center`)
+      // are direction-aware and pin EXACTLY ONE axis. Previously the React
+      // backend had no case for them and silently dropped both keywords.
+      const singleAxisFlex = singleAxisCenterToFlex(prop.name, layoutDirection)
+      if (singleAxisFlex) {
+        style.display = 'flex'
+        style[singleAxisFlex.property] = singleAxisFlex.value
+        continue
+      }
       switch (prop.name) {
         case 'hor':
         case 'horizontal':
@@ -544,12 +624,6 @@ function generateStyles(
         case 'vertical':
           style.display = 'flex'
           style.flexDirection = 'column'
-          break
-        case 'center':
-        case 'cen':
-          style.display = 'flex'
-          style.justifyContent = 'center'
-          style.alignItems = 'center'
           break
         case 'spread':
           style.justifyContent = 'space-between'
@@ -576,6 +650,27 @@ function generateStyles(
     const rawValue = allBareStrings ? prop.values.join(' ') : prop.values[0]
     const value = resolve(rawValue, prop.name)
 
+    // Slice 4 V-1: 9-zone aliases reach here as `values: [true]` (the parser
+    // packs boolean flags this way). Same schema-side lookup as the
+    // values.length===0 branch above so all 18 aliases share one path.
+    if (prop.values.length === 1 && prop.values[0] === true) {
+      const zoneFlex = nineZoneToFlex(prop.name, layoutDirection)
+      if (zoneFlex) {
+        style.display = 'flex'
+        style.justifyContent = zoneFlex.justifyContent
+        style.alignItems = zoneFlex.alignItems
+        continue
+      }
+      // Slice 5 V-2: single-axis center keywords (mirror of the
+      // values.length===0 branch).
+      const singleAxisFlex = singleAxisCenterToFlex(prop.name, layoutDirection)
+      if (singleAxisFlex) {
+        style.display = 'flex'
+        style[singleAxisFlex.property] = singleAxisFlex.value
+        continue
+      }
+    }
+
     switch (prop.name) {
       // Layout (with values - less common)
       case 'hor':
@@ -593,12 +688,6 @@ function generateStyles(
         break
       case 'spread':
         style.justifyContent = 'space-between'
-        break
-      case 'center':
-      case 'cen':
-        style.display = 'flex'
-        style.justifyContent = 'center'
-        style.alignItems = 'center'
         break
 
       // Alignment
@@ -646,13 +735,61 @@ function generateStyles(
         style.margin = pxify(value)
         break
 
-      // Size
+      // Slice 6 V-1: CSS Grid container. `Frame grid 12` → display: grid +
+      // grid-template-columns: repeat(12, 1fr). Mirror's `grid auto N` shape
+      // (`Frame grid auto 250`) compiles to `repeat(auto-fill, minmax(Npx,
+      // 1fr))` — but the React parser hands those as separate values
+      // (`['auto', '250']`); only the resolved number lands in `value`
+      // here, so we look at the raw `prop.values` to detect the form.
+      case 'grid': {
+        style.display = 'grid'
+        const v0 = prop.values[0]
+        const v1 = prop.values[1]
+        if (typeof v0 === 'string' && v0 === 'auto') {
+          if (typeof v1 === 'string' && /^\d+$/.test(v1)) {
+            style.gridTemplateColumns = `repeat(auto-fill, minmax(${v1}px, 1fr))`
+          }
+          // Bare `grid auto` without size → display only (matches DOM)
+        } else {
+          // Numeric form: `grid 12` → repeat(12, 1fr).
+          const numStr = String(value)
+          if (/^\d+$/.test(numStr) && Number(numStr) > 0) {
+            style.gridTemplateColumns = `repeat(${value}, 1fr)`
+          } else if (typeof value === 'string' && value.startsWith('var(')) {
+            // Token already resolved to var(--foo-grid). Wrap in repeat()
+            // so the CSS-var carries the column count.
+            style.gridTemplateColumns = `repeat(${value}, 1fr)`
+          }
+        }
+        break
+      }
+      // Slice 6 V-1: row-height for grid auto-rows.
+      case 'row-height':
+      case 'rh':
+        style.gridAutoRows = pxify(value)
+        break
+      // Slice 6 V-1: dense packing for grid-auto-flow.
+      case 'dense':
+        style.gridAutoFlow = 'dense'
+        break
+
+      // Size. Slice 6 V-2: in grid-parent context, numeric `w`/`h` are
+      // column/row spans, not pixel widths. Mirrors the IR's
+      // `parentLayoutContext?.type === 'grid'` branch in
+      // `compiler/ir/transformers/property-transformer.ts:431-454`.
       case 'w':
       case 'width':
         if (value === 'full') {
           style.width = '100%'
         } else if (value === 'hug') {
           style.width = 'fit-content'
+        } else if (
+          parentContext.type === 'grid' &&
+          /^\d+$/.test(String(value)) &&
+          Number(value) > 0
+        ) {
+          style.gridColumnEnd = `span ${value}`
+          style.width = '100%'
         } else {
           style.width = pxify(value)
         }
@@ -663,10 +800,38 @@ function generateStyles(
           style.height = '100%'
         } else if (value === 'hug') {
           style.height = 'fit-content'
+        } else if (
+          parentContext.type === 'grid' &&
+          /^\d+$/.test(String(value)) &&
+          Number(value) > 0
+        ) {
+          style.gridRowEnd = `span ${value}`
+          style.height = '100%'
         } else {
           style.height = pxify(value)
         }
         break
+      // Slice 6 V-2: `x N` and `y N` are context-dependent. Inside a grid
+      // parent → grid-column-start / grid-row-start. Outside grid → absolute
+      // positioning with left/top (matches DOM-IR
+      // property-transformer.ts:394-424).
+      case 'x':
+        if (parentContext.type === 'grid' && /^-?\d+$/.test(String(value))) {
+          style.gridColumnStart = String(value)
+        } else {
+          style.position = 'absolute'
+          style.left = pxify(value)
+        }
+        break
+      case 'y':
+        if (parentContext.type === 'grid' && /^-?\d+$/.test(String(value))) {
+          style.gridRowStart = String(value)
+        } else {
+          style.position = 'absolute'
+          style.top = pxify(value)
+        }
+        break
+
       case 'minw':
       case 'min-width':
         style.minWidth = pxify(value)

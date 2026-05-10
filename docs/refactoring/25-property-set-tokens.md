@@ -1,4 +1,4 @@
-# 03 — Slice 25: Property-Set-Token
+# Slice 25: Property-Set-Token
 
 **Datum:** 2026-05-09
 **Status:** Audit · Phasen A/B + Follow-up V-6/V-7/V-8 umgesetzt · 26 Regression-Tests · Slice **green** · DOM ≡ React

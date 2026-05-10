@@ -1,4 +1,4 @@
-# 11 — Slice 30: Cross-Element-State (`MenuBtn.open: visible`)
+# Slice 30: Cross-Element-State (`MenuBtn.open: visible`)
 
 **Datum:** 2026-05-10
 **Status:** Compile-Layer ✅ · Validator ✅ (Slice-30-Reform) · Studio-Sync ✅ · Browser-CDP-E2E ⚠️ offen · Studio-Roundtrip ⚠️ offen

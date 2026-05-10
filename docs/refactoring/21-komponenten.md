@@ -1,4 +1,4 @@
-# 03 — Slice 21: Komponenten-Definition & -Verwendung
+# Slice 21: Komponenten-Definition & -Verwendung
 
 **Datum:** 2026-05-09
 **Status:** Audit · Untersuchung · Entscheidungen · Phase A umgesetzt (V-2 + V-7) · Phase B/C deferred

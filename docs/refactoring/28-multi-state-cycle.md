@@ -1,4 +1,4 @@
-# 10 — Slice 28: Multi-State-Cycle (`todo → doing → done`)
+# Slice 28: Multi-State-Cycle (`todo → doing → done`)
 
 **Datum:** 2026-05-09
 **Status:** Compile-Layer ✅ · Studio-Sync ✅ (Cross-Slice-Probe-Funde gefixt) · Browser-CDP-E2E ⚠️ offen · Studio-Roundtrip ⚠️ offen
