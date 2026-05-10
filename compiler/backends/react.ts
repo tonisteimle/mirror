@@ -1057,7 +1057,10 @@ function renderTextSlot(
   tokens: TokenDefinition[] = []
 ): string {
   if (typeof content === 'string') {
-    return `${indent}{${JSON.stringify(content)}}`
+    // Mirror string content can carry `$name` / `$user.name` interpolations.
+    // Resolve against the `tokens` object so the React emit shows the
+    // actual data instead of a literal `$name`.
+    return `${indent}${interpolateStringForJSX(content, tokens)}`
   }
   if ('kind' in content && content.kind === 'conditional') {
     const cond = rewriteIdentifiersToTokens(content.condition, tokens)
@@ -1069,6 +1072,108 @@ function renderTextSlot(
     return `${indent}{${cond} ? ${thenBranch} : ${elseBranch}}`
   }
   return `${indent}{${content.name}}`
+}
+
+/**
+ * Convert a Mirror text-content string into a JSX-renderable expression.
+ *
+ * Mirror lets text reference data with `$name` / `$user.name` directly
+ * inside string literals: `Text "Hi $name"` and `Text "$user.name"`. The
+ * DOM backend resolves these via `$get(...)` at runtime; React has no
+ * runtime, so we compile-time-resolve into either a plain string literal
+ * (no refs), a single token-lookup expression (one ref, whole content),
+ * or a template literal that interleaves literal segments with token
+ * accesses. Identifiers not matching any token name pass through untouched
+ * — same conservative rule the conditional-rewriter uses.
+ *
+ * Outputs (always wrapped in `{...}` for JSX):
+ *   "Hello"          → `{"Hello"}`
+ *   "$name"          → `{tokens["name"]}`
+ *   "Hi $name"       → `` {`Hi ${tokens["name"]}`} ``
+ *   "$user.name"     → `{tokens["user"]?.name}`
+ */
+function interpolateStringForJSX(content: string, tokens: TokenDefinition[]): string {
+  if (tokens.length === 0 || !content.includes('$')) {
+    return `{${JSON.stringify(content)}}`
+  }
+  const tokenNames = new Set<string>()
+  for (const t of tokens) {
+    const n = t.name.startsWith('$') ? t.name.slice(1) : t.name
+    tokenNames.add(n)
+  }
+
+  type Segment = { kind: 'text'; value: string } | { kind: 'expr'; code: string }
+  const segments: Segment[] = []
+  let i = 0
+  let textBuf = ''
+  while (i < content.length) {
+    const ch = content[i]
+    if (ch === '$') {
+      // Match `$<id>(.<id>)*` — bare-identifier-with-dots. Stop on
+      // anything that isn't a valid identifier char.
+      const start = i + 1
+      let j = start
+      const isHead = (c: string) => /[A-Za-z_]/.test(c)
+      const isTail = (c: string) => /[A-Za-z0-9_]/.test(c)
+      if (j < content.length && isHead(content[j])) {
+        while (j < content.length && isTail(content[j])) j++
+        // Allow dotted access: `$user.name`, `$a.b.c`
+        while (
+          j < content.length &&
+          content[j] === '.' &&
+          j + 1 < content.length &&
+          isHead(content[j + 1])
+        ) {
+          j++ // consume `.`
+          while (j < content.length && isTail(content[j])) j++
+        }
+        const ref = content.slice(start, j)
+        const head = ref.includes('.') ? ref.slice(0, ref.indexOf('.')) : ref
+        if (tokenNames.has(head)) {
+          if (textBuf.length > 0) {
+            segments.push({ kind: 'text', value: textBuf })
+            textBuf = ''
+          }
+          // `tokens["head"]` first; chain remaining `.foo.bar` with `?.`
+          let code = `tokens[${JSON.stringify(head)}]`
+          if (ref.includes('.')) {
+            const rest = ref.slice(head.length + 1).split('.')
+            for (const part of rest) code += `?.${part}`
+          }
+          segments.push({ kind: 'expr', code })
+          i = j
+          continue
+        }
+        // Not a known token — fall through, emit the `$ref` as literal text.
+      }
+      textBuf += ch
+      i++
+      continue
+    }
+    textBuf += ch
+    i++
+  }
+  if (textBuf.length > 0) segments.push({ kind: 'text', value: textBuf })
+
+  // Pure literal (no `$ref` matched) — same shape as the no-`$` branch.
+  if (segments.every(s => s.kind === 'text')) {
+    return `{${JSON.stringify(segments.map(s => (s as { value: string }).value).join(''))}}`
+  }
+  // Single expression (e.g. just `$name`) — emit raw, no template literal.
+  if (segments.length === 1 && segments[0].kind === 'expr') {
+    return `{${segments[0].code}}`
+  }
+  // Mixed: template literal interleaves text and `${expr}` parts.
+  const parts: string[] = []
+  for (const seg of segments) {
+    if (seg.kind === 'text') {
+      // Escape backticks, backslashes, and `${` sequences for template-literal context.
+      parts.push(seg.value.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${'))
+    } else {
+      parts.push('${' + seg.code + '}')
+    }
+  }
+  return '{`' + parts.join('') + '`}'
 }
 
 /**

@@ -529,6 +529,23 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — Text-Content-Interpolation in React-Backend
+
+- **Wo:** `compiler/backends/react.ts`,
+  `tests/differential/variables.test.ts`
+  **Was:** `Text "$name"`, `Text "Hi $name"`, `Text "$user.name"`
+  blieben in React als literale Strings im JSX (nur DOM resolved sie
+  via `$get(...)`). Fix: `interpolateStringForJSX(content, tokens)`
+  parsed `$id`/`$id.id.id` Patterns, baut Segments und emittiert je
+  nach Form: pure-literal → `{"…"}`, single-ref → `{tokens["name"]}`,
+  mixed → ``{`Hi ${tokens["name"]}`}``, dotted → `tokens["user"]?.name`.
+  Unbekannte Identifier (kein Token) bleiben literal — bessere
+  Fehler-Sichtbarkeit als `undefined`.
+  **Status:** erledigt
+  **Notiz:** Pin von "React keeps literal" auf "DOM + React resolve;
+  Framework keeps literal" umgestellt + 4 Form-Pins (bare/mixed/dotted/
+  unknown) im Variables-Differential.
+
 ### 2026-05-10 — Animations in React-Backend + Shared Animation-Modul
 
 - **Wo:** `compiler/backends/animations.ts` (neu),

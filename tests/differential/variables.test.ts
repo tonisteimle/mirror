@@ -88,20 +88,48 @@ describe('Variables — Nested-object access', () => {
     }
   )
 
-  // PIN: `$user.name` interpolation INSIDE Text content is wired in DOM
-  // (`$get("user.name")` runtime call) but stays a literal string in
-  // React + Framework. Separate from data accessibility above.
+  // PIN: `$user.name` interpolation INSIDE Text content. DOM resolves
+  // via `$get("user.name")` runtime; React compiles it into a JSX
+  // expression (`tokens["user"]?.name`) so the data lands in the render;
+  // Framework still keeps the literal `$user.name` string until its
+  // backend gains compile-time interpolation.
   it.each(NESTED_CORPUS)(
-    '$name: Text-content interpolation: DOM resolves; React + Framework keep literal',
+    '$name: Text-content interpolation: DOM + React resolve; Framework keeps literal',
     ({ src }) => {
       const dom = generateDOM(parse(src))
       const react = generateReact(parse(src))
       const fw = generateFramework(parse(src))
       expect(dom).toMatch(/\$get\(['"]user\.name['"]\)/)
-      expect(react).toContain('"$user.name"')
+      expect(react).toMatch(/tokens\[['"]user['"]\]\?\.name/)
       expect(fw).toContain("'$user.name'")
     }
   )
+})
+
+describe('Variables — React text-interpolation forms', () => {
+  // Three canonical interpolation shapes the React backend now resolves
+  // at compile time, mirroring DOM's $get() runtime.
+  it('bare `$name` → expression', () => {
+    const react = generateReact(parse(`name: "Max"\n\nText "$name"`))
+    expect(react).toMatch(/\{tokens\[['"]name['"]\]\}/)
+  })
+
+  it('mixed text+ref → template literal', () => {
+    const react = generateReact(parse(`name: "Max"\n\nText "Hi $name"`))
+    expect(react).toMatch(/\{`Hi \$\{tokens\[['"]name['"]\]\}`\}/)
+  })
+
+  it('dotted `$user.name` → optional-chain access', () => {
+    const react = generateReact(parse(`user:\n  name: "Max"\n\nText "$user.name"`))
+    expect(react).toMatch(/tokens\[['"]user['"]\]\?\.name/)
+  })
+
+  it('unknown identifier passes through as literal', () => {
+    // No token named `missing` — keep `$missing` literal so authors see
+    // the typo in the rendered output instead of `undefined`.
+    const react = generateReact(parse(`name: "Max"\n\nText "$missing"`))
+    expect(react).toContain('"$missing"')
+  })
 })
 
 // =============================================================================
