@@ -3,6 +3,11 @@
  *
  * `compiler/parser/ast.ts` was 60% — type guards `isTable`,
  * `isTableColumn`, `isConditional`, `hasContent` were uncovered.
+ *
+ * 2026-05-10 update: hoisted `isTokenReference` + `isComputedExpression`
+ * predicates from inline cast-chains in chart-transformer + react.ts
+ * (commit fad36418). Direct tests pin both, including the negative
+ * cases that catch silent type-erasure regressions.
  */
 
 import { describe, it, expect } from 'vitest'
@@ -14,6 +19,8 @@ import {
   isText,
   isEach,
   isConditional,
+  isTokenReference,
+  isComputedExpression,
   hasContent,
   isTable,
   isTableColumn,
@@ -78,5 +85,64 @@ describe('AST Type Guards — negative cases', () => {
   it('hasContent rejects objects without content prop', () => {
     expect(hasContent({ name: 'X' })).toBe(false)
     expect(hasContent({})).toBe(false)
+  })
+})
+
+describe('isTokenReference', () => {
+  it('returns true for canonical TokenReference shape', () => {
+    expect(isTokenReference({ kind: 'token', name: 'primary' })).toBe(true)
+    expect(isTokenReference({ kind: 'token', name: 'card.bg' })).toBe(true)
+  })
+
+  it('rejects objects with kind != "token"', () => {
+    expect(isTokenReference({ kind: 'conditional', name: 'x' })).toBe(false)
+    expect(isTokenReference({ kind: 'expression', name: 'x' })).toBe(false)
+    expect(isTokenReference({ kind: 'loopVar', name: 'item' })).toBe(false)
+  })
+
+  it('rejects objects missing name field', () => {
+    expect(isTokenReference({ kind: 'token' })).toBe(false)
+  })
+
+  it('rejects objects with non-string name', () => {
+    expect(isTokenReference({ kind: 'token', name: 42 })).toBe(false)
+    expect(isTokenReference({ kind: 'token', name: null })).toBe(false)
+  })
+
+  it('rejects null/undefined/primitives', () => {
+    expect(isTokenReference(null)).toBe(false)
+    expect(isTokenReference(undefined)).toBe(false)
+    expect(isTokenReference('$primary')).toBe(false)
+    expect(isTokenReference(42)).toBe(false)
+  })
+})
+
+describe('isComputedExpression', () => {
+  it('returns true for canonical ComputedExpression shape', () => {
+    expect(
+      isComputedExpression({
+        kind: 'expression',
+        parts: ['Hello ', { kind: 'token', name: 'name' }],
+        operators: ['+'],
+      })
+    ).toBe(true)
+  })
+
+  it('returns true for any object with kind="expression"', () => {
+    // The predicate only checks the discriminator — narrower validation
+    // (parts/operators arrays) happens at the consumer.
+    expect(isComputedExpression({ kind: 'expression' })).toBe(true)
+  })
+
+  it('rejects objects with kind != "expression"', () => {
+    expect(isComputedExpression({ kind: 'token' })).toBe(false)
+    expect(isComputedExpression({ kind: 'conditional' })).toBe(false)
+  })
+
+  it('rejects null/undefined/primitives', () => {
+    expect(isComputedExpression(null)).toBe(false)
+    expect(isComputedExpression(undefined)).toBe(false)
+    expect(isComputedExpression('expression')).toBe(false)
+    expect(isComputedExpression(42)).toBe(false)
   })
 })
