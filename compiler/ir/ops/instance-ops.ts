@@ -19,7 +19,7 @@ import { calculateSourcePosition } from '../source-map'
 import { getPrimitiveDefaults } from '../../schema/primitives'
 import { isZagPrimitive } from '../../schema/zag-primitives'
 import { isChartPrimitive } from '../../schema/chart-primitives'
-import { transformChart as transformChartExtracted } from '../transformers/chart-transformer'
+import * as ChartTransformer from '../transformers/chart-transformer'
 import type { ParentLayoutContext } from '../transformers/transformer-context'
 import {
   applyAbsolutePositioningToChildren,
@@ -32,31 +32,19 @@ import {
   mergeProperties,
   extractValueBinding,
 } from '../transformers/property-utils-transformer'
-import {
-  resolveValue as resolveValueExtracted,
-  extractHTMLProperties as extractHTMLPropertiesExtracted,
-} from '../transformers/value-resolver'
-import {
-  resolveComponent as resolveComponentExtracted,
-  type ComponentResolverContext,
-} from '../transformers/component-resolver'
-import { childOverridesToInstances as childOverridesToInstancesExtracted } from '../transformers/slot-utils'
-import {
-  transformStates as transformStatesExtracted,
-  applyStateChildOverrides as applyStateChildOverridesExtracted,
-  type StateStylesContext,
-  type StateTransformResult,
+import { resolveValue, extractHTMLProperties } from '../transformers/value-resolver'
+import * as ComponentResolver from '../transformers/component-resolver'
+import type { ComponentResolverContext } from '../transformers/component-resolver'
+import * as SlotUtils from '../transformers/slot-utils'
+import * as StateStyles from '../transformers/state-styles-transformer'
+import type {
+  StateStylesContext,
+  StateTransformResult,
 } from '../transformers/state-styles-transformer'
-import {
-  extractInlineStatesAndEvents as extractInlineStatesAndEventsExtracted,
-  type InlineExtractionContext,
-} from '../transformers/inline-extraction'
-import {
-  transformEach as transformEachExtracted,
-  transformConditional as transformConditionalExtracted,
-  type ConditionalBlock,
-  type ControlFlowContext,
-} from '../transformers/control-flow-transformer'
+import * as InlineExtraction from '../transformers/inline-extraction'
+import type { InlineExtractionContext } from '../transformers/inline-extraction'
+import * as ControlFlow from '../transformers/control-flow-transformer'
+import type { ConditionalBlock, ControlFlowContext } from '../transformers/control-flow-transformer'
 import type { IRTransformer } from '../index'
 
 export function createEmptyNode(
@@ -135,7 +123,7 @@ export function transformChartPrimitive(
   primitive: string,
   parentLayoutContext?: ParentLayoutContext
 ): IRNode {
-  return transformChartExtracted(
+  return ChartTransformer.transformChart(
     this.createTransformerContext(),
     instance,
     resolvedComponent,
@@ -261,7 +249,9 @@ export function transformInstance(
     componentMap: this.componentMap,
     addWarning: warning => this.addWarning(warning as IRWarning),
   }
-  const resolvedComponent = component ? resolveComponentExtracted(component, resolverCtx) : null
+  const resolvedComponent = component
+    ? ComponentResolver.resolveComponent(component, resolverCtx)
+    : null
 
   // Determine primitive for defaults and layout context.
   // Always lowercase: without this, `MyIcon as Icon: …` propagated
@@ -428,12 +418,12 @@ export function transformInstance(
 
   // Add state styles from component definition
   const stateResult: StateTransformResult = resolvedComponent?.states
-    ? transformStatesExtracted(expandStates(resolvedComponent.states)!, stateCtx)
+    ? StateStyles.transformStates(expandStates(resolvedComponent.states)!, stateCtx)
     : { styles: [], hasSizeStates: false }
 
   // Add state styles from instance inline states (e.g., "Frame bg #333 hover: bg light")
   const instanceStateResult: StateTransformResult = instance.states?.length
-    ? transformStatesExtracted(expandStates(instance.states)!, stateCtx)
+    ? StateStyles.transformStates(expandStates(instance.states)!, stateCtx)
     : { styles: [], hasSizeStates: false }
 
   // Check if this node uses size-states (needs container-type: inline-size)
@@ -458,7 +448,7 @@ export function transformInstance(
   )
 
   // Convert childOverrides to instance children for slot filling
-  const childOverrideInstances = childOverridesToInstancesExtracted(instance.childOverrides || [])
+  const childOverrideInstances = SlotUtils.childOverridesToInstances(instance.childOverrides || [])
 
   // Generate node ID FIRST so we can pass it to children as their parentId
   const nodeId = this.generateId()
@@ -586,7 +576,7 @@ export function transformInstance(
   // Apply state childOverrides to children
   // This adds state-conditional styles to matching child nodes
   if (resolvedComponent?.states) {
-    applyStateChildOverridesExtracted(children, resolvedComponent.states, stateCtx)
+    StateStyles.applyStateChildOverrides(children, resolvedComponent.states, stateCtx)
   }
 
   // Auto-absolute: If parent has position: relative, all children get position: absolute
@@ -603,9 +593,7 @@ export function transformInstance(
   // Extract instanceName from 'name' property if not set via 'named' keyword
   // This allows `name MenuBtn` syntax to work for state references like `MenuBtn.open:`
   const nameProp = properties.find(p => p.name === 'name')
-  const instanceNameFromProp = nameProp
-    ? resolveValueExtracted(nameProp.values, this.tokenSet)
-    : undefined
+  const instanceNameFromProp = nameProp ? resolveValue(nameProp.values, this.tokenSet) : undefined
   const resolvedInstanceName = instance.name || instanceNameFromProp || undefined
 
   // Extract valueBinding for two-way data binding (for input and textarea)
@@ -648,7 +636,7 @@ export function transformInstance(
     primitive,
     name: instance.component,
     instanceName: resolvedInstanceName,
-    properties: extractHTMLPropertiesExtracted(properties, this.tokenSet, primitive),
+    properties: extractHTMLProperties(properties, this.tokenSet, primitive),
     styles: [...styles, ...stateResult.styles, ...instanceStateResult.styles, ...inlineStateStyles],
     events: [...events, ...instanceEvents, ...inlineEvents],
     children,
@@ -683,7 +671,7 @@ export function transformEach(this: IRTransformer, each: Each): IRNode {
       ? (nodeId, name, pos, opts) => this.sourceMapBuilder.addNode(nodeId, name, pos, opts)
       : undefined,
   }
-  return transformEachExtracted(each, ctx)
+  return ControlFlow.transformEach(each, ctx)
 }
 
 export function transformConditional(this: IRTransformer, cond: ConditionalBlock): IRNode {
@@ -696,7 +684,7 @@ export function transformConditional(this: IRTransformer, cond: ConditionalBlock
       ? (nodeId, name, pos, opts) => this.sourceMapBuilder.addNode(nodeId, name, pos, opts)
       : undefined,
   }
-  return transformConditionalExtracted(cond, ctx)
+  return ControlFlow.transformConditional(cond, ctx)
 }
 
 export function transformChild(
@@ -742,5 +730,5 @@ export function extractInlineStatesAndEvents(
   const ctx: InlineExtractionContext = {
     propertyToCSS: prop => this.propertyToCSS(prop),
   }
-  return extractInlineStatesAndEventsExtracted(children, ctx)
+  return InlineExtraction.extractInlineStatesAndEvents(children, ctx)
 }
