@@ -248,9 +248,6 @@ export function M(
   let props: MirrorProps = {}
   let children: MirrorNode[] = []
 
-  // Parse arguments based on type
-  const isContentPrimitive = ['Text', 'Icon', 'Button', 'Link'].includes(type)
-
   if (typeof arg1 === 'string') {
     // M('Text', 'content') or M('Text', 'content', props)
     content = arg1
