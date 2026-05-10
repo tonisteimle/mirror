@@ -9,6 +9,7 @@ import type { IR } from '../../compiler/ir/types'
 import type { SourceMap } from '../../compiler/ir/source-map'
 import type { ComponentDragData, ComponentChild } from '../panels/components/types'
 import type { UserSettings } from '../storage/user-settings'
+import type { AlignmentGroup } from '../visual/layout-inference/types'
 import { createLogger } from '../../compiler/utils/logger'
 
 const log = createLogger('EventBus')
@@ -282,9 +283,9 @@ export interface StudioEvents {
   /** Layout info extracted (Phase 1 of Preview Architecture) */
   'layout:updated': { version: number; count: number }
   /** Layout inference events */
-  'layout-inference:detected': { groups: unknown[] }
-  'layout-inference:converted': { group: unknown; newSource?: string }
-  'layout-inference:error': { group?: unknown; error?: string }
+  'layout-inference:detected': { groups: AlignmentGroup[] }
+  'layout-inference:converted': { group: AlignmentGroup; newSource?: string }
+  'layout-inference:error': { group?: AlignmentGroup; error?: string }
   /** Draw events */
   'draw:error': { error: string; context?: string }
   /** DrawManager state machine transitions. Listeners use these to drive
