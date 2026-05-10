@@ -115,18 +115,15 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
-- **Wo:** `compiler/ir/ops/instance-ops.ts:336` (`hasWidthFullInDescendants`)
-  **Was:** `children: any[]` Parameter — letzter Production-Code-`any` in
-  `compiler/`. Findings-Aggregat-Eintrag (Z. ~818) listet ihn explizit
-  („1× `any[]` Parameter in `compiler/ir/ops/` Layout"). Die Funktion
-  navigiert `child.properties`, `child.component`, `child.children` —
-  alles Instance-spezifisch, aber mit Optional-Chaining defensive. Fix:
-  proper Union `(Instance | Slot | Text | ZagNode | Each | ConditionalNode)[]`
-  matching `Instance.children` aus `compiler/parser/ast.ts:217`. Sehr
-  klein, kein Pin nötig (Type-Only-Change, tsc fängt Regressionen).
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~18:25)
-  **Plan:** Type aus `Instance.children` importieren, Parameter retypen,
-  inneren Code auf Type-Narrowing prüfen, full Suite + tsc grün, commit.
+- **Wo:** `tests/studio/{demo-fx,replay-loader,headed-realism-scenarios,step-runner-compile-mode,step-runner-selectors}.test.ts`
+  **Was:** 5 Test-Files importieren aus `studio/test-api/demo-fx/` und
+  `studio/test-api/step-runner/`, beide gelöscht in `8e81387f`
+  („rip out demo runner + synthetic cursor"). Tests vom Parallel-Cleanup
+  übersehen — Vitest meldet 5 Test-Files mit „no tests / import error",
+  Suite-Status rot ohne echtes Failing-Behaviour.
+  **Status:** aktiv (Claude-Session, 2026-05-10 ~18:55)
+  **Plan:** Imports + Existenz der Module verifizieren, dann Files
+  komplett löschen (kein Restwert ohne Module). Suite-Status danach grün.
 
 - **Wo:** `compiler/ir/ops/instance-ops.ts`, `compiler/ir/ops/properties-ops.ts`,
   `compiler/backends/react.ts`
@@ -928,6 +925,21 @@ Chronologisch absteigend (neueste zuerst).
   Git-History bewahrt die Files für Notfall-Restoration via
   `git show 23f2d985:<pfad>`.
   **Status:** erledigt (`3c5b2b98`)
+
+### 2026-05-10 — `any[]` Parameter aus `instance-ops.ts:hasWidthFullInDescendants`
+
+- **Wo:** `compiler/ir/ops/instance-ops.ts:336`
+  **Was:** Letzter Production-Code-`any` in `compiler/`. Parameter
+  retyped auf `(Instance | Slot | Text | ZagNode | Each | ConditionalNode)[]`
+  (matching `Instance.children`), Body auf `'foo' in child`-Guards
+  umgestellt damit TS Narrowing macht ohne `as any`-Casts. Einziger
+  Cast: rekursiver Call (`child.children as readonly DescendantNode[]`)
+  weil `Instance.children` und `Each.children` unterschiedliche
+  Sub-Unions haben — strukturell aber Subset von `DescendantNode`.
+  Kein Test-Pin (Type-Only); compiler/differential-Suite grün
+  (7736/7736).
+  **Status:** erledigt (gebündelt in `8e81387f` von Parallel-Session,
+  ursprünglich von dieser Session implementiert)
 
 ### 2026-05-10 — Lane 2, Inkrement 1: Schema-driven alias resolution in `property-transformer.ts`
 
