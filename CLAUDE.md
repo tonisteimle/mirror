@@ -1510,369 +1510,91 @@ escape, enter, space, tab, backspace, delete, arrow-up, arrow-down, arrow-left, 
 
 <!-- GENERATED:DSL-PROPERTIES:END -->
 
-## Demos (Spec-by-Example E2E)
-
-Demos sind in `tools/test-runner/demo/` und nutzen den existierenden CDP-
-Test-Runner. Sie sind gleichzeitig **Tutorials, Video-Skripte und E2E-Tests**:
-ein Skript zeigt einen User-Workflow, validiert nach jedem Schritt sowohl
-den Editor-Code als auch das gerenderte DOM, und kann sowohl headless (CI)
-als auch headed (Video) laufen.
-
-**Schnelleinstieg:**
-
-```bash
-npm run studio              # Studio-Server (Terminal 1)
-npm run test:demos          # Suite headless, alle Demos (Terminal 2)
-npm run test:demos:headed   # Suite mit sichtbarem Browser
-```
-
-**Vorhandene Demos** (`tools/test-runner/demo/scripts/`):
-
-| Demo                      | Zeigt                                               |
-| ------------------------- | --------------------------------------------------- |
-| `visual-editing.ts`       | Drag/Resize/Padding/Margin/Inline-Edit/Reorder      |
-| `property-workflow.ts`    | Cross-Panel Preview ↔ Properties ↔ Code             |
-| `ai-assisted-card.ts`     | `--`-Prompt → AI-generiertes UI → Property-Tweaking |
-| `token-system.ts`         | Multi-File `tokens.tok` + `$token`-Resolution       |
-| `responsive-design.ts`    | `canvas mobile/tablet/desktop` Presets              |
-| `state-interactions.ts`   | Hover/active States + computed-style                |
-| `component-extraction.ts` | `components.com` + 3× Card-Verwendung               |
-
-**Validation pro Demo-Schritt:**
-
-- `expectCode` — Editor-Source strict gegen Snapshot
-- `expectCodeMatches` — Editor-Source gegen RegExp (für AI-Output)
-- `expectDom` — Computed-Style/Layout (tag-spezialisiertes Schema)
-- `--snapshot-baseline=DIR` — Pixel-Diff gegen Baseline-PNGs
-
-**Iteration:**
-
-- `--from-step=N` / `--until-step=N` — schnell zum Problem-Step springen
-- `--step` — interaktiv pausen nach jedem Schritt (TTY)
-- `--watch` — Re-run on file save
-
-**Volle User-Doc:** `tools/test-runner/demo/README.md`
-**Architektur/Roadmap (archiviert):** `docs/archive/concepts/demo-infrastructure.md`
-**Headed-Verification-Checkliste (archiviert):** `docs/archive/concepts/demo-headed-verification.md`
-
-> ⚠️ **Headless validiert** Editor-Source und Computed-Style. **Cursor-
-> Animation, Pacing, Single-Cursor-Effekt, Highlights, Keystroke-Overlay**
-> sind nur im headed-Lauf sichtbar — vor Major-Releases die Headed-
-> Verification-Checkliste durchlaufen.
-
 ## Tests
 
-Tests in `tests/` — siehe `docs/test-layers.md` für die volle Layer-Map.
-Kurzversion:
+Vollständige Architektur, API-Referenz, CLI-Flags und Best-Practices:
+**`docs/TEST-FRAMEWORK.md`**. Hier nur die Layer-Map und Schnellzugriff.
 
-- `tests/compiler/` (164 files) — Compiler Unit-Tests (Parser, IR, Backends)
-- `tests/behavior/` (16) — Schicht 2: observable Feature-Semantik in jsdom
-- `tests/contract/` (16) — App-Contract-Tests für `examples/*`
-- `tests/differential/` (16) — Cross-Backend-Equivalenz (DOM ≡ React ≡ Framework)
-- `tests/integration/` (19) — Multi-Feature-Interaktionen
-- `tests/runtime/` (3) — Runtime-Module (typed TS) Unit-Tests
-- `tests/studio/` (125) — Panels, Pickers, Editor, Sync
-- `studio/test-api/suites/` — Browser-Tests via CDP (~225, separater Stack)
+### Layer-Map
 
-**Wichtig:** Kein Playwright. Browser-Tests laufen über eigenen CDP Test Runner.
+| Verzeichnis               | Files (~) | Stack        | Inhalt                                             |
+| ------------------------- | --------: | ------------ | -------------------------------------------------- |
+| `tests/compiler/`         |       194 | Vitest       | Parser, IR, Backends                               |
+| `tests/runtime/`          |         5 | Vitest       | Runtime-Module (typed TS)                          |
+| `tests/behavior/`         |        17 | Vitest+jsdom | Schicht-2 Feature-Semantik                         |
+| `tests/contract/`         |        16 | Vitest       | App-Contracts für `examples/*`                     |
+| `tests/differential/`     |        16 | Vitest       | Cross-Backend-Equivalenz (DOM ≡ React ≡ Framework) |
+| `tests/integration/`      |        25 | Vitest       | Multi-Feature                                      |
+| `tests/studio/`           |       167 | Vitest+jsdom | Panels, Pickers, Editor, Sync                      |
+| `studio/test-api/suites/` |       363 | CDP-Browser  | Real Studio E2E (separater Stack)                  |
 
-### Grundprinzip — Maus und Keyboard, nichts anderes
+### Grundprinzip — Maus und Keyboard, sonst nichts
 
-Alles, was in der Applikation passiert, wird durch genau zwei Eingabekanäle
-ausgelöst: **Maus und Keyboard.** Tests müssen denselben Pfad nehmen wie ein
-echter Benutzer.
+Browser-Tests fahren ausschließlich über **CDP-Trusted Mouse + Keyboard**.
+Verboten: synthetische `el.click()`/`dispatchEvent`, direkter Zugriff
+auf `controller.*`/`panel.*`/`editor.dispatch` als Test-Aktion. Helfer
+wie `dropFromPalette`, `setProperty` sind nur Sequenzen aus Schicht-1
+(`cdpInput.*`). Volle Begründung + Schichten-Modell:
+`docs/TEST-FRAMEWORK.md` „Grundprinzip — Maus und Keyboard".
 
-- **Erlaubt**: `cdpInput.mouseDown/Up/Move/Click/DoubleClick/wheel/keyDown/keyUp/typeText`
-  — CDP-Trusted-Events. Optional `nut-js` OS-Maus für headed Demos.
-- **Verboten**: `el.click()` / `el.dispatchEvent(...)` (synthetisch, isTrusted=false),
-  `controller.startDrag()` / `panel.changeProperty()` / `editor.dispatch()` als
-  Test-Aktion (Studio-interne APIs, kein Bedienpfad), synthetische Cursor /
-  Keystroke-Overlays / Drop-Highlights, die App-Verhalten vortäuschen.
-- **Kapselung**: Höhere Helfer (`dropFromPalette`, `setProperty`, …) sind
-  **nur** Kapselungen über `cdpInput.*`. Sie bündeln Maus-/Keyboard-Sequenzen
-  für Lesbarkeit. Sie umgehen den Eingabepfad nie.
-
-Wenn ein Test-Schritt nicht als „Maus klickt da, Keyboard tippt das" beschreibbar
-ist, geht er einen Pfad, den der Benutzer nicht nehmen kann. Volle Begründung
-
-- Beispiele: `docs/TEST-FRAMEWORK.md` Kapitel „Grundprinzip — Maus und Keyboard".
-
-### Unit Tests (Vitest)
+### Quick Commands
 
 ```bash
-npm test                    # Alle Unit Tests
-npm test -- --watch         # Watch Mode
-npm test -- parser          # Nur Parser Tests
+# Vitest (Unit + jsdom)
+npm test                            # Alle Vitest-Tests
+npm test -- --watch                 # Watch
+npm test -- parser                  # Nur Parser
+
+# CDP Browser-Tests (Studio E2E)
+npm run studio                      # Studio-Server (Terminal 1)
+npm run test:browser                # Alle Browser-Tests (Terminal 2)
+npm run test:browser:progress       # Alle Tests + Live-Bar
+npm run test:browser:drag           # Nur Drag-Suite
+npm run test:browser:headed         # Sichtbarer Browser
+npx tsx tools/test.ts --category=NAME    # Eine Kategorie
+npx tsx tools/test.ts --filter=PATTERN   # Regex-Filter
+npx tsx tools/test.ts --list             # Kategorien (21 registriert)
+
+# Parallel-Runner (4 Chrome-Instanzen)
+npx tsx tools/test-parallel.ts                      # 4 Worker default
+npx tsx tools/test-parallel.ts --workers=8
+npx tsx tools/test-parallel.ts --categories=core,layout
 ```
 
-### Browser Test Framework
+### Browser-Konsolen-Globals
 
-Eigenes Test-Framework für Studio-Tests direkt im Browser. Ersetzt Playwright.
-
-**Test-Kategorien (17 Hauptkategorien):**
-
-| Kategorie     | Beschreibung                                    |
-| ------------- | ----------------------------------------------- |
-| core          | Primitives (Frame, Text, Button, Icon, etc.)    |
-| layout        | Layout (direction, gap, grid, stacked, wrap)    |
-| styling       | Styling (colors, sizing, spacing, gradients)    |
-| visuals       | Animations & Transforms                         |
-| states        | State Management (toggle, exclusive, hover)     |
-| components    | UI Patterns (checkbox, dialog, tabs, accordion) |
-| drag          | Drag & Drop Operationen                         |
-| handles       | Visual Handles (padding, margin, gap, resize)   |
-| selection     | Multi-select, Ungroup, Spread Toggle            |
-| propertyPanel | Property Panel UI                               |
-| editor        | Bidirectional Sync, Undo/Redo, Autocomplete     |
-| data          | Data Binding, Actions, Events, Responsive       |
-| project       | Multi-File Projects, Workflows                  |
-| compiler      | Compiler Verification                           |
-| ai            | AI-Assist (Draft Lines, Draft Mode)             |
-| tutorial      | Tutorial Verification                           |
-| stress        | Stress Tests, Integration, Play Mode            |
-
-### CLI Test Runner (CDP)
-
-Headless Browser-Tests via Chrome DevTools Protocol. Modularer, sauberer Code in `tools/test-runner/`.
-
-```bash
-# Studio Server starten (Terminal 1)
-npm run studio
-
-# Tests ausführen (Terminal 2)
-npm run test:browser:parallel     # ALLE Tests parallel (4 Worker, ~9 min)
-npm run test:browser:progress     # Alle Tests sequentiell mit Fortschritt
-npm run test:browser:drag         # Nur Drag Tests
-npm run test:browser:mirror       # Nur Mirror Tests
-npm run test:browser:headed       # Mit sichtbarem Browser
-
-# Parallel-Runner Optionen
-npx tsx tools/test-parallel.ts                              # 4 Worker default
-npx tsx tools/test-parallel.ts --workers=8                  # Mehr Parallelität
-npx tsx tools/test-parallel.ts --categories=core,layout     # Subset
-
-# Erweiterte Sequential-Optionen
-npx tsx tools/test.ts --progress --category=layout
-npx tsx tools/test.ts --filter="token"
-npx tsx tools/test.ts --junit=results.xml
-npx tsx tools/test.ts --html=report.html
-```
-
-**NPM Scripts:**
-
-| Script                          | Beschreibung                                |
-| ------------------------------- | ------------------------------------------- |
-| `npm run test:browser:parallel` | **Empfohlen**: Alle Tests parallel (~9 min) |
-| `npm run test:browser:progress` | Alle Tests sequentiell mit Fortschritt      |
-| `npm run test:browser:drag`     | Nur Drag & Drop Tests                       |
-| `npm run test:browser:mirror`   | Nur Mirror Tests                            |
-| `npm run test:browser:headed`   | Mit sichtbarem Browser                      |
-
-### Test-Runner-Performance (siehe `tools/test-parallel.ts`)
-
-- **Parallel-Runner** (`tools/test-parallel.ts`): N Chrome-Instanzen,
-  Work-Stealing Queue über Kategorien. Default 4 Worker.
-- **`__compileTestCode`-Hook in `studio/app.ts`**: synchroner Test-Compile
-  ohne Debounce/Prelude-Setup. Nach Compile: rAF + Microtask flush
-  (~32ms) statt früher 150ms blanket sleep.
-- **Test-Mode-Debounce** (`studio/core/debounce.ts`): wenn
-  `window.__testMode === true`, fired alle debounced Compiles auf
-  setTimeout(fn, 0) statt nach 300ms.
-- **Compile-Generation-Counter** (`window.__compileGeneration`): wird
-  nach jedem Compile inkrementiert. `waitForCompile()` snapshotet vor
-  Aktion und wartet auf Advance — deterministisch ohne Polling-Buffer.
-- **Icon-Wait gated** (`compiler/runtime/icons.ts:waitForPendingIcons`):
-  `flushAfterCompile` wartet nur, wenn das Test-DOM Icon-Elemente ohne
-  SVG-Children enthält. Tests ohne Icons zahlen 0ms statt 250ms Bonus.
-
-**Performance-Profil pro Test (post-optimization):**
-
-| Test-Profil     | Pre    | Post   | Speedup |
-| --------------- | ------ | ------ | ------- |
-| Pure DSL-render | 153ms  | 33ms   | ~5×     |
-| Mit Icon-Fetch  | 153ms  | 200ms  | (gated) |
-| Mit Drag-Op     | 600ms  | 522ms  | 1.15×   |
-| Mit Panel-UI    | 1300ms | 1300ms | 1×      |
-
-**Klassifizierung der 414 Test-Files** (`docs/test-classification.md`):
-
-| Bucket | Count | Beschreibung                                              |
-| ------ | ----- | --------------------------------------------------------- |
-| A      | 243   | Brauchen echten Browser (Drag, Keyboard, Computed-Style)  |
-| B      | 101   | Migrierbar nach Vitest+jsdom (DSL-rein, Output-Assertion) |
-| C      | 23    | Borderline                                                |
-
-**Browser→Vitest Migration** (`tests/utils/mirror-mount.ts`,
-`tests/utils/mirror-test-adapter.ts`, `tools/migrate-browser-tests-to-vitest.ts`):
-
-10 Kategorien wurden 1:1 von Browser-Tests auf Vitest+jsdom umgestellt
-durch Import-Rewriting. Die existierenden `TestCase[]`-Arrays werden
-unverändert per `runTestCases()` adapter unter `it()` repliziert.
-
-| Kategorie             | Files   | Tests    | Browser     | Vitest    |
-| --------------------- | ------- | -------- | ----------- | --------- |
-| tutorial              | 15      | 181      | ~30 s       | ~4 s      |
-| compiler-verification | 29      | 124      | ~4 min      | ~6 s      |
-| styling               | 7       | ~70      | ~3 min      | ~2 s      |
-| compiler-browser      | 4       | ~30      | ~1 min      | ~1 s      |
-| data-binding          | 6       | ~50      | ~2 min      | ~2 s      |
-| components            | 10      | ~100     | ~3 min      | ~3 s      |
-| charts                | 4       | ~25      | ~1 min      | ~1 s      |
-| responsive            | 7       | ~70      | ~2 min      | ~2 s      |
-| primitives            | 2       | ~15      | ~30 s       | ~1 s      |
-| integration           | 4       | ~30      | ~2 min      | ~1 s      |
-| **Total**             | **107** | **~700** | **~18 min** | **~19 s** |
-
-→ ~60× speedup, 94% pass rate. ~30 Files brauchen weiterhin Runtime-
-Interaktion (`api.interact.click/focus/type/drag`) und bleiben im
-Browser-Stack — der Migrator erkennt das automatisch via `needsRuntime()`
-und überspringt sie.
-
-**Migration-Tools:**
-
-- `npm run tutorial:vitest` — wired tutorial tests per Import-Replace
-- `npx tsx tools/migrate-browser-tests-to-vitest.ts <category>` —
-  generischer Migrator für jede `studio/test-api/suites/<dir>/`-Quelle.
-- `tests/utils/mirror-mount.ts` — `mountMirror(dsl)` mountet DSL in jsdom,
-  liefert `getNodeIds()`, `inspect(id)`, `byId(id)`, `unmount()`.
-  `inspect()` returns ElementInfo-shaped data (styles, attributes,
-  dataAttributes, fullText) matching browser inspector.
-- `tests/utils/mirror-test-adapter.ts` — `runTestCases(suite, cases)`
-  läuft existierende `TestCase[]`-Arrays. Adapter maps:
-  - `api.preview.*` → `mountMirror.inspect/byId/findByText`
-  - `api.assert.*` → Vitest `expect()`
-  - `api.dom.expect/verify` → structured DOM-shape assertions
-  - `api.utils.waitForCompile/Idle` → no-op (mount is synchronous)
-- `readStyle(el, prop)` → getComputedStyle mit Color-Normalisierung
-  (`white` → `rgb(255,255,255)`).
-
-**Was bleibt im Browser-Stack:**
-
-- Tests die `api.interact.click/focus/type/keydown/drag/hover` benutzen —
-  brauchen echten Browser-Event-Loop und State-Machine-Runtime.
-- Computed-Layout-Reads (`offsetWidth`, `getBoundingClientRect` mit
-  echten Werten — jsdom returnt 0).
-- Drag-and-Drop, Property-Panel, Editor, Selection (Hauptmasse von ~243 A-
-  Files).
-
-**CLI Optionen:**
-
-| Option             | Beschreibung                                        |
-| ------------------ | --------------------------------------------------- |
-| `--progress`       | Live-Fortschrittsanzeige + Log-Datei                |
-| `--all`            | Alle Tests ausführen                                |
-| `--category=X`     | Einzelne Kategorie                                  |
-| `--filter=PATTERN` | Filter nach Name (Regex)                            |
-| `--log=PATH`       | Log-Datei Pfad (default: test-results/test-run.log) |
-
-**Kategorien:** core, layout, styling, visuals, states, components, drag, handles, selection, propertyPanel, editor, data, project, compiler, ai, tutorial, stress
-
-**Execution:**
-
-| Option         | Beschreibung              |
-| -------------- | ------------------------- |
-| `--headed`     | Browser sichtbar          |
-| `--bail`       | Bei erstem Fehler stoppen |
-| `--retries=N`  | N Retries bei Failure     |
-| `--timeout=MS` | Timeout pro Test          |
-
-**Reports:**
-
-| Option                 | Beschreibung                |
-| ---------------------- | --------------------------- |
-| `--junit=PATH`         | JUnit XML (CI-Integration)  |
-| `--html=PATH`          | HTML Report mit Screenshots |
-| `--screenshot-dir=DIR` | Screenshot-Verzeichnis      |
-| `--no-screenshot`      | Keine Screenshots           |
-
-**Geschätzte Testdauer pro Kategorie:**
-
-| Kategorie  | Tests | Dauer   | Empfehlung             |
-| ---------- | ----- | ------- | ---------------------- |
-| core       | ~50   | ~30s    | Direkt ausführen       |
-| layout     | ~80   | ~45s    | Direkt ausführen       |
-| styling    | ~60   | ~35s    | Direkt ausführen       |
-| editor     | ~40   | ~30s    | Direkt ausführen       |
-| components | ~250  | ~3min   | Direkt oder Background |
-| drag       | ~100  | ~2min   | Direkt oder Background |
-| --all      | ~2100 | ~15-20m | Background empfohlen   |
-
-**Test-Ausführung für Claude:**
-
-```bash
-# SCHNELLE TESTS (< 2 min): Direkt ausführen
-npx tsx tools/test.ts --category=layout
-
-# LÄNGERE TESTS: Mit run_in_background, dann TaskOutput prüfen
-# (Nie sleep verwenden - das wartet immer die volle Zeit!)
-
-# FILTER für gezielte Tests (am schnellsten):
-npx tsx tools/test.ts --filter="Drag Column"
-```
-
-**Architektur:** `tools/test-runner/`
-
-```
-tools/test-runner/
-├── types.ts           # Type Definitions
-├── chrome.ts          # Chrome Launcher
-├── cdp.ts             # CDP Client
-├── console-collector.ts
-├── screenshot.ts
-├── runner.ts          # Test Orchestration
-├── cli.ts             # CLI Entry Point
-└── reporters/
-    ├── console.ts     # Terminal Output
-    ├── junit.ts       # JUnit XML
-    └── html.ts        # HTML Report
-```
-
-**Output:**
-
-```
-🧪 Running Real Drag & Drop Tests...
-
-  ✅ Drop Button into empty Frame (467ms)
-  ✅ Drop Text into empty Frame (465ms)
-  ✅ Move element to first position (466ms)
-  ...
-
-Results: 40/46 passed (6 failed)
-```
-
-### Browser-Konsole APIs
-
-| API                  | Beschreibung                               |
-| -------------------- | ------------------------------------------ |
-| `__mirrorTest`       | Compiler-Tests, DOM-Inspektion, Assertions |
-| `__mirrorTestSuites` | Einheitliches Test-Suite System            |
-| `__dragTest`         | Drag-API für Interaktionen (intern)        |
-
-**Quick Start:**
+| Global            | Schicht | Beschreibung                                            |
+| ----------------- | ------- | ------------------------------------------------------- |
+| `__mirrorTest`    | Tests   | Filter / Category / Only / Debug / Inspect / Expect     |
+| `__mirrorActions` | 3       | High-level Helfer (`dropFromPalette`, `setProperty`, …) |
+| `__cdpInput`      | 1       | Atomare CDP Trusted Events (Maus + Keyboard)            |
+| `__osMouse`       | 1       | Reale macOS-Maus via nut-js (nur mit `--os-mouse`)      |
+| `__snapshot`      | -       | Pixel-Diff-Bridge (nur mit `--snapshot-dir`)            |
 
 ```javascript
-// Filter & Run Tests
-__mirrorTest.filter('Button') // Tests mit "Button" im Namen
-__mirrorTest.category('zag') // Alle Zag-Tests
+__mirrorTest.filter('Button') // Pattern-Filter
+__mirrorTest.category('drag') // Eine Kategorie
 __mirrorTest.only('Checkbox toggle') // Einzelner Test
 __mirrorTest.list() // Kategorien auflisten
+__mirrorTest.debug('Checkbox toggle') // Step-by-Step
+__mirrorTest.inspect('node-1') // Element-Snapshot
+__mirrorTest.expect('node-1').hasText('OK').hasBackground('#2271C1')
 
-// Drag & Drop Tests (unified)
-__mirrorTestSuites.runCategory('comprehensiveDrag')
-
-// Debug Mode
-__mirrorTest.debug('Checkbox toggle') // Step-by-Step Debug
-__mirrorTest.step() // Weiter zum nächsten Schritt
-__mirrorTest.abort() // Debug abbrechen
-
-// Element inspizieren
-__mirrorTest.inspect('node-1')
-// → { nodeId, tagName, styles, textContent, children, ... }
-
-// Assertions
-__mirrorTest.expect('node-1').hasText('Hello').hasBackground('#2271C1')
+await window.__mirrorActions?.dropFromPalette('Frame', { byPath: 'preview' })
+await window.__cdpInput?.mouseClick({ x: 100, y: 200 })
 ```
 
-**Test-Suites:** `studio/test-api/suites/`
+### Test-Ausführung in dieser Session
 
-**Dokumentation:** `docs/TEST-FRAMEWORK.md` (vollständige API-Referenz, Best Practices, Troubleshooting)
+- Schnelle Suiten (< 2 min): direkt ausführen (`--category=NAME` oder `--filter=PATTERN`).
+- Längere/`--all`-Läufe: `run_in_background` + Notification abwarten — kein `sleep`.
+- Performance-Hooks (`__compileTestCode`, `__testMode`, `__compileGeneration`,
+  Icon-Wait-Gating in `compiler/runtime/icons.ts`): Details in TEST-FRAMEWORK.md.
+
+### Browser→Vitest Migration
+
+10 ehemalige Browser-Suites laufen jetzt unter Vitest+jsdom über
+`tests/utils/mirror-mount.ts` + `tests/utils/mirror-test-adapter.ts`.
+Tools: `tools/migrate-browser-tests-to-vitest.ts`. Tests die echte
+Maus-/Keyboard-Pfade brauchen, bleiben im CDP-Stack — der Migrator
+erkennt das automatisch via `needsRuntime()`.
