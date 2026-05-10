@@ -1,353 +1,331 @@
-# Mirror Refactoring — Gesamtplan
+# Mirror Refactoring — Plan
 
-Vertikale, end2end prüfbare User-Fähigkeiten („Capability-Slices"). Jeder Slice wird einzeln entlang von 6 Dimensionen auditiert; Befunde werden als nummeriertes Audit-Dokument abgelegt; Follow-up-Tickets stehen am Ende jedes Audits.
+Vertikale, end2end prüfbare User-Fähigkeiten („Capability-Slices") werden einzeln entlang von 6 Dimensionen auditiert, durch einen mechanischen Quality-Gate gefahren und als nummeriertes Audit-Dokument abgelegt.
 
-**~88 Slices in 11 Surfaces.**
-
----
-
-## Vorgehen
-
-**Pro Slice:**
-
-1. Audit gemäß den 6 Prüf-Dimensionen
-2. Probes / Mini-Mirror-Beispiele dokumentieren — **Probe-Skripte committen** unter `tools/probes/slice-NN.ts` (nicht `/tmp`). Begründung aus Slice-4-Erfahrung: Cross-Slice-Re-Probes brauchen die Original-Skripte; ephemere `/tmp`-Files brechen die Reproducibility und zwingen den Nachfolger, die Probe-Geometrie selbst zu rekonstruieren.
-3. Bewertung pro Dimension (stark / mittel / schwach)
-4. Follow-up-Tickets (Bugs, Architektur, Cleanup)
-5. Ergebnis als `XX-<name>.md` ablegen (XX = Slice-Nummer 2-stellig), Audit-Status-Tabelle aktualisieren
-6. Implementierung in Runden — pro Phase ein Commit (in Praxis bündelt lint-staged / paralleles Slice-Work mehrfach; Plan-Realität: ein Commit pro Phase ist Ziel, nicht hartes Gesetz)
-7. **Review-Pass nach Implementierung** (verbindlich, kein Skip):
-   - Probe-Tabelle im Audit-Doc gegen den Post-Fix-Stand spiegeln (alle 🔴/🟡/🟠 die jetzt grün sind, müssen grün gemacht werden — sonst lügt das Doc). Re-Run gegen das committete Probe-Skript aus Step 2; Diff zwischen Skript-Output und Tabelle = sofortige Iter-N-Trigger.
-   - Jede RT aus dem Audit-Plan effektiv schreiben oder begründet streichen — ein Plan-RT ohne Test ist eine offene Lücke, kein erledigter Punkt
-   - **Schema-Drift-Grep** (verbindlich): wenn der Slice eine Schema-Liste erweitert hat (z. B. system-states von 4 → 13), repo-weit nach den alten enum-Werten greppen (`grep -rEn "['\"]hover['\"].*['\"]focus['\"]" --include="*.ts" compiler/ studio/ tests/`). Jede gefundene Stelle muss entweder schema-derived gemacht oder explizit als „bewusster Scope" dokumentiert werden. Das ist die Heuristik aus dem Slice-26/27/29-Cluster: ohne diesen Grep findet der Audit den Compiler, aber nicht den Sync-Layer / Syntax-Highlighter / etc.
-   - **Cross-Slice-Probe**: wenn ein Helper neu eingeführt wurde (z. B. `isToggleableStateName` für `toggle()`), den Helper aktiv gegen die _Nachbar-Slices_ derselben Bug-Familie testen (`exclusive()`, `cycle()`, …). Eine RT pro Nachbar-Slice mit demselben Edge-Case (System-State im Body) ist die Versicherung, dass die Reform nicht nur den auditierten Slice, sondern die Familie deckt.
-   - **Cross-Slice-Scope-Entscheidung** (wenn ein Fix Nachbar-Slices berührt — Slice-2-V-1 vs. Slice-4-V-2 Erfahrung):
-     - **In-scope-fix**, wenn: (a) ein bereits existierender Helper trivial auf den Nachbar-Pfad angewendet werden kann (Slice 2: `pxify()` einmal geschrieben → 11 properties) UND (b) der Nachbar-Slice noch kein abgeschlossenes Audit hat (kein Risiko, dort eine andere Entscheidung zu unterlaufen).
-     - **Deferred-Lock-RT**, wenn: (a) das Fixen in den Nachbar-Slice-Scope reichen würde (eigene Helper-Entscheidungen, eigene Probe-Tabelle nötig — Slice 4: `ver-center`/`hor-center` braucht `singleAxisCenterToFlex`, nicht `nineZoneToFlex`) ODER (b) der Nachbar-Slice schon „erledigt" ist (Behavior-Locks dort sind kanonisch — eine Verhaltens-Verschiebung ohne deren Audit ist Drift).
-     - Egal welcher Pfad: das Verhalten muss per RT (in-scope-Test oder deferred-state-lock-RT) festgenagelt werden, damit der Nachbar-Slice die Erwartung kennt.
-   - Alle 6 Prüf-Dimensionen gegen den neuen Stand re-verifizieren, **inklusive Cross-Backend-Konsistenz** (DOM ≡ React ≡ Framework-Export — wenn ein Backend ausgelassen wurde, ist der Slice nicht fertig) und **Studio-Roundtrip**:
-     - Idealer Modus: Click im Preview → Property-Panel → Code-Edit → DOM-Update bleibt konsistent (Browser-CDP).
-     - Pragmatischer Lower-Bar-Modus (für Slices, die nur Backend/Compiler ändern und kein neues Studio-UI bringen): **DOM-Backend cross-backend gelocked + Property-Panel-Test existiert + ggf. jsdom-Smoke-Check via studio/test-api**. Diese Variante muss im Audit-Doc explizit benannt sein („Studio-Roundtrip: Lower-Bar — DOM-Pfad gelocked via RT-X, kein CDP-Run") — anders als Hand-wave, das Slice 1/3/4 unbewusst gemacht haben.
-   - Audit-Doc-Status auf `erledigt` erst nach diesem Pass; offene Sub-Tasks bleiben nicht als „done" verkleidet stehen — entweder umsetzen oder explizit als Follow-up dokumentieren mit Begründung warum verschoben
-   - **Iterieren bis sauber:** der Review-Pass ist nicht ein einziger Durchlauf, sondern eine Schleife. Jede gefundene Issue (neue Drift, unehrliche Probe-Tabelle, fehlende RT, übersehene Cross-Slice-Wirkung) wird gefixt, danach wird der gesamte Review-Pass _erneut_ durchlaufen — denn der Fix kann selbst neue Issues erzeugen. Erst wenn ein vollständiger Durchlauf 0 neue Findings produziert, ist der Slice review-fertig. „Wir machen's beim nächsten Slice" ist Drift-Hülle, nicht Abschluss.
-   - **Re-Open-Protokoll** (wenn ein als „erledigt" markierter Slice nachträglich neue Findings bekommt — Slice-4-Erfahrung): die Iter-1-Tabelle wird **nicht überschrieben**. Stattdessen: neue „Iter N" Sektion anhängen, alte Status-Zeilen mit „(Iter 1: …)" markieren, Status-Header oben mit der höchsten Iter-Nummer aktualisieren. Damit bleibt nachvollziehbar, _was_ in Iter-1 übersehen wurde — der nächste Slice profitiert von dem Lerneffekt, statt ihn neu zu entdecken.
-8. **Quality-Gate vor Slice-Abschluss — mechanische Checkliste** (alle Punkte müssen ✅ sein, sonst Status-Reset auf „erledigt" zurücksetzen):
-   1. Audit-Doc-Probe-Tabelle enthält **keinen 🔴-Marker außer in einer expliziten „deferred"/„out-of-scope"-Spalte** (kein 🔴 das einfach nur „noch nicht gefixt" bedeutet).
-   2. Alle Phase-Tabellen-Stati ∈ {`erledigt`, `verschoben`, `verworfen`}; kein `pending`/`offen`/`in-arbeit`.
-   3. Jeder RT-Plan-Eintrag hat einen geschriebenen Test (RT-Tabelle Spalte `Status` = `erledigt`, kein `pending`).
-   4. Schema-Drift-Grep wurde explizit ausgeführt; gefundene Stellen sind entweder gefixt oder mit Begründung dokumentiert.
-   5. Cross-Slice-Wirkung wurde geprüft; betroffene Nachbar-Slices haben entweder einen In-scope-Fix oder einen Deferred-Lock-RT (siehe Cross-Slice-Scope-Entscheidung in Step 7).
-   6. Cross-Backend-Differential-RT existiert für jedes Property/Verhalten, das ≥ 2 Backends emittieren (DOM, React, Framework).
-   7. Studio-Roundtrip ist explizit benannt: entweder „CDP-Run grün" oder „Lower-Bar: DOM gelocked via RT-X". Hand-wave („Studio nutzt DOM-Backend, also ok") **zählt nicht**.
-   8. Vitest gesamt grün; vor-Slice-Vergleich bestätigt: keine Test-Subtraction, nur Addition.
-   9. Wer auf „ist das nun richtig gut?" mit „substantiell besser, aber …" antwortet, hat Punkt 1–8 nicht durchlaufen — Slice ist nicht abgeschlossen.
-9. **Schulden-Tracking & Cluster-Reviews** (verbindlich, ergänzt Step 7+8):
-   1. **Cluster-Review-Pflicht an Phasengrenzen.** Vor Übergang von „Fundament (1–25)" → „States & Daten (26–49)" → „Inhalt & Patterns (50–66)" → „Studio-Loops (67–84)" → „CLIs & Export (85–88)" muss ein **Cluster-Review** durchgeführt werden, der den mechanischen Quality-Gate-Checklist (Step 8) über alle Slices der abgeschlossenen Phase laufen lässt. Phase-Übergang ohne Cluster-Review = Drift wird in nächste Phase gebaut. Stichprobe ≥ 3 Slices pro Phase, Pflicht-Slices: jeder mit „verschoben"/„deferred"-Markern und jeder mit „⚠️ offen"-Status.
-   2. **Browser-CDP-Schuld-Limit: max 5.** Maximal 5 Slices dürfen gleichzeitig „Browser-CDP-E2E ⚠️ offen" tragen. Sobald das Limit erreicht ist, wird die CDP-Schuld der ältesten 2 Slices abgearbeitet, _bevor_ neue Slices mit Studio-Touchpoint angefangen werden. Aktueller Stand bei Plan-Update: 6 offen → schon über Limit, Slice 26 + 27 sind als nächstes fällig.
-   3. **Slice-21-Probe-Pflicht.** Jeder Slice ab #5, dessen Probe-Skript Komponenten verwendet (`Btn:` o. ä.), muss einen expliziten Probe gegen Slice-21-deferred-Cases haben — entweder „Komponenten nicht touched" oder „diese B/C-Edge-Case wurde getestet". Komponenten ist die zentrale Abstraktion; ein partial Slice 21 darf nicht silent in 50 Slices propagieren.
-   4. **Re-Open-Trigger mit Ziel-Slice.** Jedes als „deferred"/„verschoben" markierte Item bekommt einen **Ziel-Slice oder Ziel-Phase** im Audit-Doc. „Verschoben für später" ohne Adresse = unsichtbarer Drift. Format: `V-2 deferred — Ziel: Slice 5 V-3 (single-axis-center-helper)` statt `verschoben`. Beim Ziel-Slice-Audit MUSS die Re-Open-Liste mit allen darauf adressierten deferred-Items als erstes geprüft werden.
-
-**Reihenfolge:**
-
-1. Fundament zuerst (Slices 1–25): Layout, Styling, Komponenten, Tokens
-2. States & Daten (26–49)
-3. Inhalt & Patterns (50–66)
-4. Studio-Loops (67–84)
-5. CLIs & Export (85–88)
+**~88 Slices · 16 erledigt (Iter-1) · 72 offen · Sweep nötig vor neuer Arbeit.**
 
 ---
 
-## Parallel-Arbeit
+## Status (2026-05-10)
 
-Nach Slice 4–7 ist klar: lint-staged-Stomping, Commit-Absorption und überlappende
-Audit-Doc-Edits passieren, wenn mehrere Agenten gleichzeitig direkt auf `main`
-arbeiten. Folgende Konvention macht parallele Arbeit deterministisch:
+- 16 Slices durch initialer Pass (Iter-1).
+- **Iter-2-Stichprobe Slice 24 hat Iter-1-Schwäche bestätigt:** 4 von 9 Quality-Gate-Checks fail; konkreter Drift-Bug `studio/panels/property/utils/tokens.ts:204` ungesehen.
+- 6 Browser-CDP-E2E-Schulden, 1 Slice (21) mit „Phase B/C verschoben", 14 deferred V-Items ohne Re-Open-Trigger.
+- 15 012 Vitest-Tests grün.
+- Plan wurde mit mechanischem Quality-Gate (Step 8 unten) erweitert, NACHDEM die ersten 16 Slices schon „erledigt" markiert waren.
 
-### Tracks
+**Konsequenz:** Phase 1 (neue Slices) startet nicht direkt. Vorher kommt Phase 0 — Iter-2-Sweep der 12 Pre-Quality-Gate-Slices.
 
-Slices verteilen sich auf vier weitgehend orthogonale Tracks (basierend auf
-shared-file-Analysis):
+---
 
-- **Track A — Layout & Styling** (Slices 1–20): primär `compiler/backends/*`,
-  `compiler/schema/*`, `compiler/ir/transformers/*`. Stark sequentiell, weil
-  alle Slices dieselben Backend-switch-Statements anfassen.
-- **Track B — States & Daten** (Slices 26–49): primär
-  `compiler/parser/state-*`, `compiler/runtime/*`, `studio/sync/*`,
-  `studio/code-modifier/*`. Wenig Overlap mit Track A.
-- **Track C — Studio-Loops** (Slices 67–84): primär `studio/panels/*`,
-  `studio/visual/*`, `studio/pickers/*`, `studio/preview/*`. Komplett
-  separater Code-Bereich.
-- **Track D — CLIs & Export** (Slices 85–88): `compiler/cli/*`, `tools/*`.
-  Eigene Domäne.
+## Lessons aus Slices 1–7 (kondensiert)
 
-**Dependencies:** Track A ist Voraussetzung für B (States bauen auf Layout-
-Primitives auf) und C (Studio rendert Layout-Primitives). Slice 21 (Komponenten)
-ist Voraussetzung für ALLE Pattern-/Studio-Slices und MUSS vor Track-C-Start
-phase-B/C-fertig sein.
+Die folgenden Lehrsätze sind in den Quality-Gate (Step 8) und ins Vorgehen (Step 1–9) eingearbeitet:
 
-**Realistischer Parallel-Modus ab heute:**
+1. **„Substantiell besser, aber …" zählt nicht als done.** Wer das beim Quality-Gate sagt, hat ihn nicht durchlaufen.
+2. **Probe-Skripte gehören committet** (`tools/probes/slice-NN-*.ts`), nicht in `/tmp` — sonst sind sie für Cross-Slice-Re-Probes weg.
+3. **Schema-Drift-Grep ist verbindlich.** Mein Slice-24-Stichproben-Befund: `studio/panels/property/utils/tokens.ts:204` ist ein Duplikat von `compiler/schema/token-suffixes.ts.getTokenSuffix` — wurde im Iter-1 nicht gefunden, weil der Grep nicht ausgeführt wurde.
+4. **Studio-Roundtrip muss explizit benannt sein.** „Studio nutzt DOM-Backend, also ok" ist Hand-wave, kein Lock. Lower-Bar-Modus (DOM cross-backend gelocked + Property-Panel-Test existiert) ist legitim — aber muss als „Lower-Bar — DOM-Pfad gelocked via RT-X, kein CDP-Run" deklariert werden.
+5. **Re-Open ist Append-only.** Wenn ein Slice nachträglich neue Findings bekommt: neue „Iter N" Sektion anhängen, alte Status-Zeilen mit „(Iter 1: …)" markieren. Niemals überschreiben.
+6. **Cross-Slice-Wirkung muss aktiv geprüft werden.** Slice 2 V-1 (`pxify`) hat 11 properties auf einmal gefixt — weil aktiv geprobt wurde. Slice 4 V-2 hat 4 deferred Slice-5-Cases — weil aktiv geprobt wurde. Ohne Probe: Drift propagiert silent.
+7. **Hot-Files brauchen Schema-Lookups, nicht Switch-Cases.** Wenn 3+ Slices denselben Switch in `react.ts` erweitern, wird daraus ein schema-derived Lookup (Slice 4 V-1 Vorbild: `nineZoneToFlex` statt 18 cases). So kollidiert keine Phase mit der nächsten.
+8. **Themenblöcke (Tracks) sind theatralisch.** Konfliktlinien sind Hot-Files, nicht Tracks. Pool-Ansatz mit Dependencies + Hot-File-Tags arbeitet besser als rigide Track-Phasen.
 
-- Track A läuft sequentiell weiter (Slice 8+).
-- Track B kann **parallel** beginnen mit den State-Slices, deren DSL nicht
-  von Layout-Slices >7 abhängt (Slices 26, 27, 29, 30 sind bereits Phase-A
-  fertig — ideal für CDP-Schuld-Abarbeitung).
-- Track C startet erst, wenn Slice 21 vollständig erledigt ist.
-- Track D kann jederzeit als Solo-Spur laufen.
+---
 
-### Slice-Claiming-Protokoll
+## Vorgehen pro Slice (Step 1–9, knapp)
 
-Vor Beginn eines Slices wird die Audit-Status-Tabelle in `plan.md` editiert:
+1. Audit gemäß den 6 Prüf-Dimensionen.
+2. Probes als ausführbares Skript in `tools/probes/slice-NN-*.ts` committen.
+3. Bewertung pro Dimension (stark / mittel / schwach), Befunde nummerieren (V-1, V-2, …).
+4. Follow-up-Tickets (Bugs, Architektur, Cleanup), jedes mit Re-Open-Trigger (Ziel-Slice/Phase).
+5. Audit-Doc als `XX-<name>.md`, Audit-Status-Tabelle aktualisieren, Slice-Claim per `in-arbeit (Dev N)` Marker.
+6. Implementierung in Runden — pro Phase ein Commit (Ziel, kein Gesetz; lint-staged kann bündeln).
+7. **Review-Pass nach Implementierung** (verbindlich):
+   - Probe-Skript re-runnen, Probe-Tabelle gegen Output spiegeln (Pre-Fix-Zustand markiert, Post-Fix grün).
+   - Jede RT effektiv geschrieben oder begründet gestrichen — kein „pending"-Eintrag erlaubt.
+   - **Schema-Drift-Grep** repo-weit (`compiler/`/`studio/`/`tests/`) für jeden Helper/Schema-Wert, der eingeführt oder erweitert wurde.
+   - **Cross-Slice-Probe** für jeden neuen Helper gegen ≥ 2 Nachbar-Slices aus derselben Bug-Familie.
+   - **Cross-Slice-Scope-Entscheidung:** in-scope-fix wenn Helper trivial extendable + Nachbar-Slice noch offen; deferred-lock-RT wenn Nachbar-Helper neu nötig oder Nachbar erledigt.
+   - 6 Prüf-Dimensionen re-verifizieren inkl. Cross-Backend-Konsistenz und Studio-Roundtrip (Voll-Modus oder Lower-Bar).
+   - **Iterieren bis sauber.** Jedes neue Finding triggert einen weiteren Review-Pass-Durchlauf. Erst 0 neue Findings = review-fertig.
+   - **Re-Open-Append-only.** Bei nachträglichen Findings: neue Iter-N-Sektion, alte Stati markiert.
+8. **Quality-Gate — mechanische 9-Punkt-Checkliste.** Alle 9 müssen ✅, sonst Status-Reset:
+   1. Audit-Doc-Probe-Tabelle: kein 🔴 außer in expliziter „deferred"/„out-of-scope"-Spalte.
+   2. Phase-Stati ∈ {erledigt, verschoben, verworfen}; kein „pending"/„offen"/„in-arbeit".
+   3. Jeder RT-Plan-Eintrag hat einen geschriebenen Test (Status `erledigt`).
+   4. Schema-Drift-Grep ausgeführt; gefundene Stellen gefixt oder dokumentiert.
+   5. Cross-Slice-Wirkung geprüft; betroffene Nachbar-Slices haben In-scope-Fix oder Deferred-Lock-RT.
+   6. Cross-Backend-Differential-RT existiert pro Property/Verhalten, das ≥ 2 Backends emittieren.
+   7. Studio-Roundtrip explizit benannt: „CDP-Run grün" oder „Lower-Bar: DOM gelocked via RT-X". Hand-wave zählt nicht.
+   8. Vitest gesamt grün; vor-Slice-Vergleich bestätigt: keine Test-Subtraction.
+   9. Wer auf „ist das nun richtig gut?" mit „substantiell besser, aber …" antwortet, hat 1–8 nicht durchlaufen.
+9. **Schulden-Tracking & Cluster-Reviews:**
+   1. CDP-Schuld-Limit: max 5 Slices gleichzeitig „CDP-E2E ⚠️ offen". Bei Limit: 2 älteste abarbeiten bevor neue Studio-Touchpoint-Slices.
+   2. Slice-21-Probe-Pflicht: jeder Slice ab #5, der Komponenten verwendet, MUSS einen expliziten Probe gegen Slice-21-deferred-Cases haben.
+   3. Re-Open-Trigger mit Ziel: jedes deferred Item bekommt eine Adresse („V-2 deferred — Ziel: Slice 5 V-3"), nicht nur „verschoben".
+   4. Hard-Sync-Punkt: Slice 21 (Komponenten) muss vollständig erledigt sein, BEVOR Studio-Loop-Slices (67–84) angefangen werden. Sonst silent-Drift in 17 Slices.
 
-```
-| 8 | Stacked-Overlay | **in-arbeit (Agent X, 2026-05-11)** | [08-stacked.md] |
-```
+---
 
-Der Slice ist „claimed" sobald der Commit auf `main` ist. Andere Agenten
-sehen das beim eigenen `plan.md`-Read und wählen einen anderen Slice. Bei
-Slice-Abschluss wird der Status auf `erledigt — …` aktualisiert und der
-nächste Slice claimed werden.
+## Phase 0 — Iter-2-Sweep (vor neuer Arbeit, ~5 Tage)
+
+12 Slices durch das Iter-2-Protokoll. Geclustert nach gemeinsamem Code-Surface, ein Dev pro Cluster für Cross-Slice-Konsistenz.
+
+### Dev 1 — Layout-Fundament-Sweep (~2 Tage)
+
+| Slice     | Aufgabe                                                                                 |
+| --------- | --------------------------------------------------------------------------------------- |
+| 1 (Frame) | Schema-Drift-Grep für `isLayoutPrimitive`/Primitive-Markers; Studio-Roundtrip explizit  |
+| 2 (gap)   | Re-Probe Cross-Slice (gap-x/gap-y, chain-tokens); Studio-Roundtrip explizit             |
+| 3 (hor)   | V-2 Re-Open-Trigger setzen (W120 → Parser-Strict-Slice), V-3a Schema-Drift-Stand klären |
+
+**Outputs:** je Slice eine Iter-2-Sektion im Audit-Doc, gefundene Drifts gefixt oder mit Ziel-Slice deferred-tracked, vitest grün. Probe-Skripte committen unter `tools/probes/`.
+
+### Dev 2 — Komponenten/Tokens-Sweep (~3 Tage, schwerster Cluster)
+
+| Slice                      | Aufgabe                                                                                                                                                                                                                                                 |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 24 (Single-Value-Token)    | **Pilot-Iter-2** (Stichprobe-Befund). Drift-Fix: `studio/panels/property/utils/tokens.ts:204` `getTokenSuffixForProperty` durch `compiler/schema/token-suffixes.ts:getTokenSuffix` ersetzen. Plus dedizierter `tests/compiler/slice-24-tokens.test.ts`. |
+| 25 (Property-Set-Token)    | Schema-Drift-Grep (Property-Set-Resolver-Pfade in Studio); Cross-Slice-Probe gegen 24                                                                                                                                                                   |
+| 78 (Token-Picker)          | Slice 24 V-6 deferred-Item — Picker-Refactor jetzt mit-machen oder explizites Re-Open-Trigger setzen (Ziel: dedizierter Studio-Picker-Slice)                                                                                                            |
+| 21 (Komponenten Phase B/C) | **Hard-Sync-Punkt für Phase 1.** Phase B + C abschließen oder beide explizit als Re-Open-Trigger mit Ziel-Slice eintragen (z. B. „Slice 22 `as`-Inheritance"). Komponenten-Vollständigkeit ist Voraussetzung für Studio-Loops.                          |
+
+**Wichtig:** Slice 21 erst NACH 24/25/78 anfassen — die Token-Drift muss erst gefixt sein, weil Slice 21 Property-Set-Resolver berührt.
+
+### Dev 3 — States-Sweep + CDP-Schuld-Abarbeitung (~4-5 Tage, schwerste Schulden-Last)
+
+| Slice                    | Aufgabe                                                                                |
+| ------------------------ | -------------------------------------------------------------------------------------- |
+| 26 (System-States)       | Iter-2 + **CDP-Run nachholen** (Hover/Focus/Active/Disabled im Studio per Browser-CDP) |
+| 27 (toggle())            | Iter-2 + **CDP-Run nachholen** (Klick wechselt 2 Bodies live)                          |
+| 28 (Multi-State-Cycle)   | Iter-2 + **CDP-Run nachholen** (todo→doing→done bei wiederholtem Klick)                |
+| 29 (exclusive())         | Iter-2 + **CDP-Run nachholen** (Tab-Gruppe, nur einer aktiv)                           |
+| 30 (Cross-Element-State) | Iter-2 + **CDP-Run nachholen** (`MenuBtn.open: visible` wirkt cross-element)           |
+
+**Annahme:** ~0.5–1 Tag pro CDP-Run, plus Iter-2-Audit-Pass. Wenn CDP-Setup fehlt: Lower-Bar-Modus dokumentieren mit explizitem Property-Panel-Test-Lock und Re-Open-Trigger. Nach Dev 3 fertig: 0 von 6 CDP-Schulden offen → unter Limit.
+
+### Dev 4 — Phase-1-Vorlauf (parallel-safe Slices, ~5 Tage)
+
+Parallel-fähig weil keine Pre-Quality-Gate-Slice-Coupling. Liefert Lehrobjekte für die anderen Devs (zeigt: so sieht Phase 1 unter neuem Quality-Gate aus).
+
+| Slice                      | Reihenfolge                             |
+| -------------------------- | --------------------------------------- |
+| 50 (Lucide-Icons)          | Erst — kein Komponenten-Touchpoint      |
+| 51 (Custom-Icons-Registry) | Folgt direkt aus 50                     |
+| 85 (mirror-build CLI)      | Reine CLI-Spur, getrennter Code-Bereich |
+| 86 (mirror-compile CLI)    | Folgt direkt aus 85                     |
+| 87 (mirror-validate CLI)   | Schließt CLI-Cluster ab                 |
+
+**Wichtig:** Dev 4 muss `compiler/backends/*` und `compiler/validator/types.ts` (E-Code-Range) checken vor Slice-Beginn — Dev 1+3 könnten parallel daran arbeiten. Konvention: vor Edit `git pull --rebase`, Edit innerhalb von 60s pushen.
+
+### Phase-0 Sync-Punkt (Ende ~Tag 5)
+
+- Alle 12 Pre-Quality-Gate-Slices haben Iter-2-Sektion und sind durch den 9-Punkt-Quality-Gate.
+- Audit-Status-Tabelle in `plan.md` ehrlich aktualisiert.
+- CDP-Schuld-Zähler: 0 von max 5.
+- Re-Open-Tracking-Tabelle: jedes deferred Item hat Ziel-Adresse.
+- Vitest gesamt: grün, mehr Tests als am Sweep-Anfang (RT-Files dazugekommen).
+
+---
+
+## Phase 1+ — Pool-Ansatz für die 72 verbleibenden Slices
+
+Kein „Phase 1 → 2 → 3 → 4". Stattdessen ein Slice-Pool mit Dependencies + Hot-File-Tags. Devs greifen Slices vom Pool nach diesem Algorithmus:
+
+1. Slice ist offen (nicht claimed).
+2. Alle Depends-on-Slices sind erledigt.
+3. Hot-Files kollidieren nicht mit aktuell-claimed-Slices.
+4. Skill-Match (Dev mit Compiler-Erfahrung greift Compiler-heavy Slice).
+
+### Hard-Sync-Punkte (nicht-verhandelbar)
+
+| Sync-Punkt                         | Bedingung                                                           | Folge                                                         |
+| ---------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------- |
+| **HSP-1: Komponenten vollständig** | Slices 21, 22, 23 alle „erledigt"                                   | freigibt Studio-Loops (67–76) und UI-Patterns (58–65)         |
+| **HSP-2: Tokens vollständig**      | Slices 24, 25 + Token-Picker (78) alle „erledigt"                   | freigibt Token-heavy Slices (Theme-Switching, AI-Edit)        |
+| **HSP-3: Layout-Fundament**        | Slices 1–12 alle „erledigt"                                         | freigibt Studio-Drag-Resize (70), Padding/Margin-Handles (71) |
+| **HSP-4: States vollständig**      | Slices 26–33 alle „erledigt"                                        | freigibt Funktionen/Aktionen (34–43) komplett                 |
+| **HSP-5: Daten vollständig**       | Slices 44–49 alle „erledigt"                                        | freigibt Inhalt-Patterns (Tabellen 56, Charts 57)             |
+| **HSP-6: Phase-Cluster-Review**    | nach jedem 10-Slice-Block, ein Cluster-Review-Stichprobe (3 Slices) | Drift-Frühwarnung; bei systemischer Drift: Sub-Sweep          |
+
+### Slice-Skill-Aufteilung der 4 Devs (Empfehlung, nicht zwingend)
+
+| Dev   | Skill-Schwerpunkt                      | Bevorzugte Slices                                                                           |
+| ----- | -------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Dev 1 | **Compiler-Layout/Styling/Sizing**     | 8 Stacked, 9 Padding, 10 Margin, 11 Sizing, 12 Device-Presets, 13–20 Styling                |
+| Dev 2 | **Compiler-Komponenten/Tokens/Schema** | 22 `as`-Inheritance, 23 Kind-Slots, 17 Typografie-Helpers, 50/51 Icon-Schema-Erweiterungen  |
+| Dev 3 | **States/Behavior/Functions/Daten**    | 31–33 Animation, 34–43 Funktionen, 44–49 Daten, 67–69 Sync-Loops                            |
+| Dev 4 | **Inhalt/Patterns/Studio/CLI/AI**      | 52–57 Inhalt, 58–65 UI-Patterns, 66 Prose, 70–76 Studio-Visual, 77–84 Pickers/AI, 88 Export |
+
+**Wenn ein Dev frei wird**, nimmt er einen Slice vom Pool, der zu seinem Skill passt. Wenn nichts in seinem Skill verfügbar ist (alles claimed oder geblockt), nimmt er einen aus einem benachbarten Skill (z. B. Dev 1 hilft bei Inhalt 50–55 wenn alle Layout/Styling claimed sind).
+
+### Pool-Status-Tracking
+
+Die Audit-Status-Tabelle unten ist der Pool. Jeder Slice hat:
+
+- **Status:** `offen` / `in-arbeit (Dev N, JJJJ-MM-TT)` / `erledigt` / `verschoben` / `verworfen`
+- **Hot-Files:** Tags für Konflikt-Erkennung (z. B. `react.ts/switch`, `validator/types.ts:E-codes`)
+- **Depends-on:** Slice-Nummern, die vorher fertig sein müssen
+
+---
+
+## Konflikt-Prevention & Sync
+
+### Hot-Files (verbindliche Vor-Edit-Routine)
+
+Vor jedem Edit dieser Files: `git pull --rebase`. Edit + Commit innerhalb von 60s.
+
+- `compiler/backends/react.ts` — switch-cases
+- `compiler/backends/framework.ts` — reverse-mapper
+- `compiler/backends/dom/*.ts` — DOM-emitter
+- `compiler/validator/types.ts` — E-Codes (Reservierung siehe unten)
+- `compiler/validator/validator.ts` — checkLayoutConflicts u. a.
+- `compiler/schema/layout-defaults.ts` — Single-Source-of-Truth-Helper
+- `compiler/schema/dsl.ts` — Primitive-Definitionen
+- `compiler/schema/property-schema.ts` — Property-Definitionen
+- `compiler/schema/token-suffixes.ts` — Token-Suffix-Map
+- `compiler/ir/transformers/layout-transformer.ts` — IR-Transform
+- `compiler/ir/transformers/property-transformer.ts` — Property-Transform
+- `docs/refactoring/plan.md` — Audit-Status-Tabelle (Slice-Claims)
+
+### Schema-Lookup-statt-Switch-Regel
+
+Wenn ein Switch in `react.ts` / `framework.ts` von 3+ Slices erweitert werden würde: einer der Devs **muss** den Switch zu einem schema-derived Lookup refactorn (Vorbild: Slice 4 V-1 `nineZoneToFlex`). Erst dann erweitern die anderen Devs ihre Cases. Verhindert Merge-Konflikt-Hölle.
+
+### Validator-E-Code-Reservierung
+
+| Range     | Domäne                      | Belegt heute                     |
+| --------- | --------------------------- | -------------------------------- |
+| E101–E199 | Layout / Sizing / Property  | E101–E115 (durch Slice 1–7)      |
+| E200–E299 | Events                      | E200–E201                        |
+| E300–E399 | States                      | (frei)                           |
+| E400–E499 | Cross-Element / Names       | E404, E405                       |
+| E500–E599 | Tokens                      | (frei für Slice 24/25 follow-up) |
+| W004–W199 | Layout-Warnings             | W004, W110, W112, W120           |
+| W200+     | Domain-spezifische Warnings | (siehe Slices)                   |
+
+Vor neuem E-Code: `grep -E "E[0-9]{3}" compiler/validator/types.ts | sort -u` für aktuell höchsten in Domäne.
+
+### Slice-Claim-Protokoll
+
+1. Dev macht `git pull --rebase`.
+2. Editiert die Audit-Status-Tabelle: `Status` von `offen` auf `in-arbeit (Dev N, 2026-MM-TT)`.
+3. Committet diesen 1-Zeilen-Edit als eigenen Commit (`chore: claim slice NN`) und pusht innerhalb 60s.
+4. Andere Devs pull-rebase vor ihrem Slice-Pick und sehen claimed-Stati.
+
+Bei Slice-Abschluss: Status auf `erledigt` setzen, Slice-spezifischer Status-String (z. B. „erledigt — V-1, V-2, V-3 geprüft, 22 RTs grün").
 
 ### Worktree-Konvention
 
-Jeder Track nutzt ein eigenes `git worktree` unter `../mirror-trackA/`,
-`../mirror-trackB/` etc. Lint-staged läuft pro Worktree, kann andere
-Tracks nicht stomping. Merge in `main` per `git merge --no-ff` aus dem
-Worktree heraus (kein Force-Push).
+Jeder Dev arbeitet in eigenem `git worktree`:
 
-### Shared-Resource-Reservation
+- `../mirror-dev1/` für Dev 1
+- `../mirror-dev2/` für Dev 2
+- etc.
 
-Damit Tracks nicht in dieselben Number-Buckets schreiben:
-
-- **Validator Error-Codes (`compiler/validator/types.ts`):**
-  - E1xx: Layout (Track A) — bisher belegt: E101–E115
-  - E2xx: Events (Track B) — bisher belegt: E200–E201
-  - E3xx: States (Track B)
-  - E4xx: Cross-Element (Track B) — bisher belegt: E404–E405
-  - E5xx: Tokens (Track A für 24/25, sonst Track A)
-  - W-Codes pro Domain entsprechend
-- **CSS-Var-Präfixe:** `--<token-name>-<suffix>`-Konvention bleibt;
-  Track A reserviert die Layout-Suffixe (`-x`, `-y`, `-w`, `-h`, `-grid`,
-  `-pad`, `-mar`, `-gap`, `-rad`).
-- **Test-File-Namespaces:** `slice-NN-<short-name>.test.ts` — durch die
-  Slice-Nummer kollidiert nichts.
-
-### Merge-Protokoll für Track-Übergreifende Änderungen
-
-Wenn ein Track an Helper-Files muss, die ein anderer Track gerade aktiv
-nutzt (z. B. `compiler/schema/layout-defaults.ts`):
-
-1. Track-übergreifender Helper-Vorschlag wird in eigenem Commit auf `main`
-   gemergt, bevor beide Tracks ihn nutzen.
-2. Beide Tracks rebase ihre Worktrees gegen `main` vor dem nächsten Commit.
-3. Wenn beide Tracks denselben Helper gleichzeitig brauchen: einer der
-   Tracks pausiert kurz, der andere mergt zuerst, dann rebase + weiter.
-
-**Was NICHT parallel geht:** zwei Slices, die denselben switch-case in
-`react.ts` oder `framework.ts` erweitern. Beide müssen sequentiell oder
-über einen schema-derived Lookup laufen, damit es _keinen_ switch mehr
-gibt (Slice 4 V-1 ist das Vorbild — `nineZoneToFlex` statt 18 cases).
-
----
-
-## Prüf-Dimensionen
-
-1. **Architektur** — Modulgrenzen, Abhängigkeiten, Patterns, passt der Slice zur Gesamtstruktur?
-2. **Codequalität** — Lesbarkeit, Naming, Komplexität, Duplikation, Clean-Code-Prinzipien, **Dead Code** (ungenutzte Exports/Branches/Files)
-3. **Testqualität** — sind Tests sinnvoll, robust, deterministisch, gute Assertions?
-4. **Testabdeckung** — was wird abgedeckt, was nicht (Edge-Cases, Fehlerpfade)?
-5. **Funktionale Korrektheit** — tut der Slice tatsächlich, was DSL/Tutorial verspricht? Inkl. Cross-Backend-Konsistenz (DOM ≡ React ≡ Framework-Export) und DX (Fehlermeldungen bei kaputtem Input)
-6. **Studio-Roundtrip** — Code ↔ Preview ↔ Property-Panel ↔ Drag/Resize-Handles: bleibt der Slice an jeder Edit-Quelle konsistent?
-
----
-
-## Audit-Status
-
-| #   | Slice                                     | Status                                                                                                                                                                      | Dokument                                                     |
-| --- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| 24  | Single-Value-Token                        | erledigt                                                                                                                                                                    | [24-tokens.md](24-tokens.md)                                 |
-| 1   | Frame-Container                           | erledigt                                                                                                                                                                    | [01-frame.md](01-frame.md)                                   |
-| 25  | Property-Set-Token                        | erledigt                                                                                                                                                                    | [25-property-set-tokens.md](25-property-set-tokens.md)       |
-| 21  | Komponenten-Definition & -Verwendung      | Phase A erledigt · B/C verschoben                                                                                                                                           | [21-komponenten.md](21-komponenten.md)                       |
-| 26  | System-States                             | DOM+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                                                                                                                      | [26-system-states.md](26-system-states.md)                   |
-| 27  | Custom-State `toggle()`                   | DOM+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                                                                                                                      | [27-toggle.md](27-toggle.md)                                 |
-| 78  | Token-Picker (Studio)                     | erledigt                                                                                                                                                                    | [78-token-picker.md](78-token-picker.md)                     |
-| 29  | `exclusive()`                             | DOM+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                                                                                                                      | [29-exclusive.md](29-exclusive.md)                           |
-| 28  | Multi-State-Cycle                         | Compile+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                                                                                                                  | [28-multi-state-cycle.md](28-multi-state-cycle.md)           |
-| 2   | Vertical Stack (`gap N`)                  | erledigt (Phase 1 + Phase 2: gap-x/gap-y, Chain in React, Shorthand)                                                                                                        | [02-vertical-stack.md](02-vertical-stack.md)                 |
-| 3   | Horizontal Stack (`hor`/wrap/spread)      | erledigt — V-1 React-Defaults gelocked (B-1); V-2/V-3a deferred mit Code-Kommentar + Test-Lock; 31 RTs grün                                                                 | [03-horizontal-stack.md](03-horizontal-stack.md)             |
-| 30  | Cross-Element-State                       | Compile+Validator+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                                                                                                        | [30-cross-element-state.md](30-cross-element-state.md)       |
-| 6   | Grid 12-col                               | erledigt — V-1 React Grid-Container, V-2 React parent-context-Child, V-3 Framework Reverse, V-4 Token-Resolution, V-5 Validator E105; 19 RTs grün; B-1..B-9 alle zu         | [06-grid.md](06-grid.md)                                     |
-| 4   | 9-Positions                               | erledigt — V-1 React-9-zone-Lookup, V-2 Framework reverse-map, V-3 E115 grid+flex-alignment, 63 RT-Subtests grün                                                            | [04-9-positions.md](04-9-positions.md)                       |
-| 5   | center / spread / ver-center / hor-center | erledigt — V-1 Schema-Helper, V-2 React, V-3 DOM≡React-Tabelle, V-4 Framework Inverse-Helper, V-5 Studio-Disclosure (31 RTs grün)                                           | [05-center-spread.md](05-center-spread.md)                   |
-| 7   | Grid mit expliziter Position              | erledigt — V-1 Token x/y, V-2 dedup, V-3 React grid+hor, V-4/V-5 Studio Position-Section grid-aware, V-6 w/h: { min: 1 }, V-7 schema sentinel (24 RTs + 8 Studio-RTs gruen) | [07-grid-explicit-position.md](07-grid-explicit-position.md) |
+Lint-staged läuft pro Worktree, kann andere nicht stomping. Merge in `main` per `git push origin <branch>` und `git merge --no-ff` aus `main`-Worktree heraus, KEIN force-push.
 
 ---
 
 ## Re-Open-Tracking (Deferred Items mit Ziel-Slice)
 
-Per Step 9.4: jedes als „verschoben"/„deferred" markierte Item bekommt
-hier eine Adresse. Wenn der Ziel-Slice gestartet wird, MUSS diese Liste
-zuerst geprüft werden — die deferred-Items werden in den Probe-Plan und
-die Phase-Tabelle des Ziel-Slices integriert.
+Jedes als „verschoben"/„deferred" markierte Item hat eine Adresse. Beim Start des Ziel-Slice-Audits zuerst prüfen.
 
-| Quell-Slice | Item                             | Ziel                                               | Begründung                                                              |
-| ----------- | -------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------------- |
-| 1           | Phase B (Studio-Roundtrip-CDP)   | Phase-Boundary-Cluster-Review (Slice 25 → 26)      | DOM gelocked, CDP-Run nachholen vor Track-B-Übergang                    |
-| 3           | V-2 (W120 Validator-Branch)      | Slice-Cluster Parser-Strict (geplant ≈ Slice 22)   | Parser-aware Change nötig, kein Validator-only-Fix                      |
-| 3           | V-3a (Schema-Drift hor center)   | Slice 5 (center-Familie) bzw. dedicated Schema-PR  | Size-State-CSS-emit-Pfad muss mitbetrachtet werden                      |
-| 4           | V-4 (align-self+width DOM/React) | Slice 11 (Sizing)                                  | Sizing-Slice owned die stretch-vs-width-Policy                          |
-| 4           | V-5 (stacked + 9-zone)           | Slice 8 (Stacked-Overlay)                          | Stacked-Slice owned die stacked-Layout-Mode-Konflikte                   |
-| 4           | V-6 (Framework `top`/`left`/…)   | Slice 5 (Single-Axis-Center)                       | Single-axis-alignment-Familie                                           |
-| 5           | Browser-CDP-E2E                  | CDP-Schuld-Abarbeitung (vor Track-C-Start)         | Lower-Bar gelocked; CDP nachzuholen wenn Limit (Step 9.2) erreicht      |
-| 7           | Browser-CDP-Studio-Roundtrip     | CDP-Schuld-Abarbeitung (vor Track-C-Start)         | Lower-Bar gelocked; CDP nachzuholen wenn Limit (Step 9.2) erreicht      |
-| 21          | Phase B/C (Komponenten-Vollst.)  | **Slice 21 Phase B (höchste Prio vor Track C)**    | Komponenten ist Voraussetzung für Pattern/Studio-Cluster — nicht später |
-| 26          | Browser-CDP-E2E                  | CDP-Schuld-Abarbeitung (Slice 26 + 27 als nächste) | Limit-überschreitend — Track B Erst-Aktion                              |
-| 27          | Browser-CDP-E2E                  | CDP-Schuld-Abarbeitung (Slice 26 + 27 als nächste) | Limit-überschreitend — Track B Erst-Aktion                              |
-| 28          | Browser-CDP-E2E                  | CDP-Schuld-Abarbeitung (Slice 26+27 zuerst)        | Wartet hinter 26+27                                                     |
-| 29          | Browser-CDP-E2E                  | CDP-Schuld-Abarbeitung (Slice 26+27 zuerst)        | Wartet hinter 26+27                                                     |
-| 30          | Browser-CDP-E2E                  | CDP-Schuld-Abarbeitung (Slice 26+27 zuerst)        | Wartet hinter 26+27                                                     |
-
-**Aktuelle CDP-Schuld-Zähler (Step 9.2):** 6 offen → über Limit. Nächste
-Track-B-Aktion ist verpflichtend Slice 26 + 27 CDP-Run, BEVOR weitere
-Slices mit Studio-Touchpoint angefangen werden.
+| Quell-Slice | Item                             | Ziel                                              | Begründung                                                           |
+| ----------- | -------------------------------- | ------------------------------------------------- | -------------------------------------------------------------------- |
+| 1           | Phase B (Studio-Roundtrip-CDP)   | Phase-0 Sweep (Dev 1)                             | DOM gelocked, CDP nachzuholen während Sweep                          |
+| 3           | V-2 (W120 Validator-Branch)      | Slice 22 `as`-Inheritance (Parser-Strict-Cluster) | Parser-aware Change nötig                                            |
+| 3           | V-3a (Schema-Drift hor center)   | Slice 5-Cluster Re-Open (Sweep Dev 2)             | Size-State-CSS-emit-Pfad mit-betrachten                              |
+| 4           | V-4 (align-self+width DOM/React) | Slice 11 (Sizing)                                 | Sizing-Slice owned die stretch-vs-width-Policy                       |
+| 4           | V-5 (stacked + 9-zone)           | Slice 8 (Stacked-Overlay)                         | Stacked-Slice owned die stacked-Layout-Mode-Konflikte                |
+| 4           | V-6 (Framework `top`/`left`/…)   | Phase-0 Sweep (Dev 2 mit Slice 5)                 | Single-axis-alignment-Familie                                        |
+| 5           | Browser-CDP-E2E                  | Phase-0 Sweep (Dev 3 zusammen mit 26–30)          | CDP-Schuld-Abarbeitung im Sweep                                      |
+| 7           | Browser-CDP-Studio-Roundtrip     | Phase-0 Sweep (Dev 1 mit Slice 1–3)               | CDP-Schuld-Abarbeitung im Sweep                                      |
+| 21          | Phase B/C (Komponenten-Vollst.)  | **Phase-0 Sweep (Dev 2, höchste Prio)**           | HSP-1 für Studio-Loops; ohne 21-vollständig sind 17 Slices blockiert |
+| 24          | V-6 Studio-Picker-Refactor       | Phase-0 Sweep (Dev 2 mit Slice 78)                | Drift-Bug `getTokenSuffixForProperty` jetzt fixen                    |
+| 26          | Browser-CDP-E2E                  | Phase-0 Sweep (Dev 3)                             | Limit-Druck                                                          |
+| 27          | Browser-CDP-E2E                  | Phase-0 Sweep (Dev 3)                             | Limit-Druck                                                          |
+| 28          | Browser-CDP-E2E                  | Phase-0 Sweep (Dev 3)                             | Limit-Druck                                                          |
+| 29          | Browser-CDP-E2E                  | Phase-0 Sweep (Dev 3)                             | Limit-Druck                                                          |
+| 30          | Browser-CDP-E2E                  | Phase-0 Sweep (Dev 3)                             | Limit-Druck                                                          |
 
 ---
 
-## Parallel-Plan: 4 Entwickler
+## Audit-Status (Pool)
 
-**Ausgangslage:** 16 Slices erledigt, 72 Slices offen, plus Schulden-Backlog
-(6 CDP-offen, Slice 21 Phase B/C deferred, 12 deferred V-Items, 1 Iter-2-
-Stichprobe). Geschätztes Volumen: ~82 Slice-Units.
+Spalten: `Status` · `Hot-Files` · `Depends-on`. Slices in Bearbeitung kommen mit `in-arbeit (Dev N, JJJJ-MM-TT)`.
 
-**Annahme:** 4 Entwickler arbeiten parallel, jeder im eigenen `git worktree`,
-mergen periodisch über `main`. Slice-Claim per Edit der Audit-Status-Tabelle
-(siehe Parallel-Arbeit-Sektion oben).
+| #     | Slice                                     | Status                                                                                             | Dokument                                                     |
+| ----- | ----------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| 1     | Frame-Container                           | erledigt (Iter-1) · **Sweep-pending (Dev 1)**                                                      | [01-frame.md](01-frame.md)                                   |
+| 2     | Vertical Stack (`gap N`)                  | erledigt (Iter-1, Phase 1+2) · **Sweep-pending (Dev 1)**                                           | [02-vertical-stack.md](02-vertical-stack.md)                 |
+| 3     | Horizontal Stack (`hor`/wrap/spread)      | erledigt (Iter-1, V-2/V-3a deferred) · **Sweep-pending (Dev 1)**                                   | [03-horizontal-stack.md](03-horizontal-stack.md)             |
+| 4     | 9-Positions                               | erledigt (Iter-1+2) — V-1 React-Lookup, V-2 Framework Reverse, V-3 E115, 69 RTs grün               | [04-9-positions.md](04-9-positions.md)                       |
+| 5     | center / spread / ver-center / hor-center | erledigt (Iter-1) · **Sweep-pending (Dev 2 mit V-3a/V-6 aus Slice 3+4)**                           | [05-center-spread.md](05-center-spread.md)                   |
+| 6     | Grid 12-col                               | erledigt (Iter-1)                                                                                  | [06-grid.md](06-grid.md)                                     |
+| 7     | Grid mit expliziter Position              | erledigt (Iter-1, CDP deferred) · **Sweep-pending (Dev 1, CDP-Schuld)**                            | [07-grid-explicit-position.md](07-grid-explicit-position.md) |
+| 8     | Stacked-Overlay                           | offen · Hot: react.ts/switch, layout-transformer.ts · Depends: 7                                   | —                                                            |
+| 9     | Padding                                   | offen · Hot: react.ts/switch, property-schema.ts · Depends: —                                      | —                                                            |
+| 10    | Margin                                    | offen · Hot: react.ts/switch, property-schema.ts · Depends: 9 (px-Pattern)                         | —                                                            |
+| 11    | Sizing                                    | offen · Hot: react.ts/switch, layout-defaults.ts · Depends: — (löst Slice 4 V-4 ein)               | —                                                            |
+| 12    | Device-Presets                            | offen · Hot: schema/property-schema.ts · Depends: 11                                               | —                                                            |
+| 13    | Farben                                    | offen · Hot: react.ts/switch, theme-generator.ts · Depends: 24                                     | —                                                            |
+| 14    | Gradients                                 | offen · Hot: react.ts/switch, schema/colors · Depends: 13                                          | —                                                            |
+| 15    | Border                                    | offen · Hot: react.ts/switch, property-schema.ts · Depends: —                                      | —                                                            |
+| 16    | Radius                                    | offen · Hot: react.ts/switch · Depends: —                                                          | —                                                            |
+| 17    | Typografie                                | offen · Hot: react.ts/switch, schema/typography · Depends: 24                                      | —                                                            |
+| 18    | Effekte                                   | offen · Hot: react.ts/switch · Depends: —                                                          | —                                                            |
+| 19    | Sichtbarkeit & Overflow                   | offen · Hot: react.ts/switch · Depends: —                                                          | —                                                            |
+| 20    | Cursor                                    | offen · Hot: schema · Depends: —                                                                   | —                                                            |
+| 21    | Komponenten Definition+Verwendung         | erledigt (Iter-1, Phase B/C verschoben) · **Sweep-pending (Dev 2, Phase B/C abschließen — HSP-1)** | [21-komponenten.md](21-komponenten.md)                       |
+| 22    | `as`-Inheritance                          | offen · Hot: ir/transformers, property-set-expander.ts · Depends: 21                               | —                                                            |
+| 23    | Kind-Slots                                | offen · Hot: ir/transformers · Depends: 21                                                         | —                                                            |
+| 24    | Single-Value-Token                        | erledigt (Iter-1) · **Sweep-pending (Dev 2, Drift-Fix `studio/panels/property/utils/tokens.ts`)**  | [24-tokens.md](24-tokens.md)                                 |
+| 25    | Property-Set-Token                        | erledigt (Iter-1) · **Sweep-pending (Dev 2, Schema-Drift-Grep)**                                   | [25-property-set-tokens.md](25-property-set-tokens.md)       |
+| 26    | System-States                             | erledigt (Iter-1, CDP offen) · **Sweep-pending (Dev 3, CDP nachholen)**                            | [26-system-states.md](26-system-states.md)                   |
+| 27    | Custom-State `toggle()`                   | erledigt (Iter-1, CDP offen) · **Sweep-pending (Dev 3, CDP nachholen)**                            | [27-toggle.md](27-toggle.md)                                 |
+| 28    | Multi-State-Cycle                         | erledigt (Iter-1, CDP offen) · **Sweep-pending (Dev 3, CDP nachholen)**                            | [28-multi-state-cycle.md](28-multi-state-cycle.md)           |
+| 29    | `exclusive()`                             | erledigt (Iter-1, CDP offen) · **Sweep-pending (Dev 3, CDP nachholen)**                            | [29-exclusive.md](29-exclusive.md)                           |
+| 30    | Cross-Element-State                       | erledigt (Iter-1, CDP offen) · **Sweep-pending (Dev 3, CDP nachholen)**                            | [30-cross-element-state.md](30-cross-element-state.md)       |
+| 31    | Initialer State                           | offen · Hot: parser-state · Depends: 26                                                            | —                                                            |
+| 32    | State-Transitions                         | offen · Hot: schema/animation, parser-state · Depends: 26                                          | —                                                            |
+| 33    | Animation-Presets                         | offen · Hot: schema/animation · Depends: 32                                                        | —                                                            |
+| 34–43 | Funktionen / Aktionen (10)                | offen · Hot: schema/actions · Depends: 26 (States), teilweise 44–49 (Daten)                        | —                                                            |
+| 44–49 | Daten & Bedingungen (6)                   | offen · Hot: parser/data-parser, runtime/collections · Depends: 21 (Komponenten), teilweise        | —                                                            |
+| 50    | Lucide-Icons                              | offen · Hot: schema/icons · Depends: — · **Phase-0 (Dev 4 parallel)**                              | —                                                            |
+| 51    | Custom-Icons-Registry                     | offen · Hot: schema/icons · Depends: 50 · **Phase-0 (Dev 4 parallel)**                             | —                                                            |
+| 52    | Image                                     | offen · Hot: schema/primitives · Depends: —                                                        | —                                                            |
+| 53    | Link                                      | offen · Hot: schema/primitives · Depends: —                                                        | —                                                            |
+| 54    | Input                                     | offen · Hot: schema/primitives · Depends: —                                                        | —                                                            |
+| 55    | Input-Mask                                | offen · Hot: schema/primitives, runtime/input-mask · Depends: 54                                   | —                                                            |
+| 56    | Tabellen                                  | offen · Hot: schema/primitives, ir/transformers · Depends: 21, 44–49                               | —                                                            |
+| 57    | Charts                                    | offen · Hot: schema/charts, ir/transformers · Depends: 21, 44–49                                   | —                                                            |
+| 58–65 | UI-Patterns (8)                           | offen · Hot: studio/component-templates, schema/zag · Depends: HSP-1 (21+22+23)                    | —                                                            |
+| 66    | Prose-Body                                | offen · Hot: parser/prose · Depends: 21                                                            | —                                                            |
+| 67–76 | Studio Edit-Loops (10)                    | offen · Hot: studio/sync, studio/visual, studio/code-modifier · Depends: HSP-1                     | —                                                            |
+| 77    | Color-Picker-Trigger                      | offen · Hot: studio/pickers/color · Depends: 13                                                    | —                                                            |
+| 78    | Token-Picker                              | erledigt (Iter-1) · **Sweep-pending (Dev 2, V-6-Drift mit Slice 24)**                              | [78-token-picker.md](78-token-picker.md)                     |
+| 79    | Icon-Picker                               | offen · Hot: studio/pickers/icon · Depends: 50                                                     | —                                                            |
+| 80    | Animation-Picker                          | offen · Hot: studio/pickers/animation · Depends: 33                                                | —                                                            |
+| 81    | AI-Sketch-Block                           | offen · Hot: studio/agent · Depends: HSP-1, HSP-2                                                  | —                                                            |
+| 82    | AI-Edit                                   | offen · Hot: studio/agent · Depends: HSP-1, HSP-2                                                  | —                                                            |
+| 83    | Smart-Paste / Image-Drop                  | offen · Hot: studio/agent, studio/inline-edit · Depends: 81                                        | —                                                            |
+| 84    | Undo/Redo                                 | offen · Hot: studio/core/commands · Depends: HSP-1, HSP-2                                          | —                                                            |
+| 85    | mirror-build CLI                          | offen · Hot: compiler/cli · Depends: — · **Phase-0 (Dev 4 parallel)**                              | —                                                            |
+| 86    | mirror-compile CLI                        | offen · Hot: compiler/cli · Depends: 85 · **Phase-0 (Dev 4 parallel)**                             | —                                                            |
+| 87    | mirror-validate CLI                       | offen · Hot: compiler/cli · Depends: — · **Phase-0 (Dev 4 parallel)**                              | —                                                            |
+| 88    | Export-Pipeline                           | offen · Hot: tools/export · Depends: 86                                                            | —                                                            |
 
-### Rollen-Aufteilung (Phase-1, ca. 3 Wochen)
+---
 
-| Dev   | Rolle                                 | Slices Phase 1 (~10–14 Tage)                                                                                                                           | Schulden-Aufgaben                                        |
-| ----- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
-| Dev 1 | **Compiler-A: Layout**                | 8 Stacked-Overlay → 9 Padding → 10 Margin → 11 Sizing → 12 Device-Presets                                                                              | Iter-2-Stichprobe Slice 24 vor Slice 8                   |
-| Dev 2 | **Compiler-B: Komponenten + Styling** | **Slice 21 Phase B/C abschließen** (BLOCKER für Dev 4) → 22 `as`-Inheritance → 23 Kind-Slots → 13 Farben → 14 Gradients → 15 Border → 16 Radius        | Iter-2-Stichprobe Slice 21 vor Phase-B/C-Start           |
-| Dev 3 | **States & Behavior**                 | **CDP-Schuld 26 + 27 abarbeiten** (Limit-Druck) → 31 Initialer State → 32 State-Transitions → 33 Animation-Presets → CDP-Schuld 28 + 29 + 30           | Iter-2-Stichprobe Slice 26 zusammen mit CDP-Schuld       |
-| Dev 4 | **Inhalt-Primitives + CLI**           | 50 Lucide-Icons → 51 Custom-Icons → 52 Image → 53 Link → 54 Input → 55 Input-Mask + CLI-Spur: 85 mirror-build → 86 mirror-compile → 87 mirror-validate | Probe-Skripte committen für jeden Slice (Step 2 enforce) |
+## Realistische Geschwindigkeit
 
-**Phase-1-Gesamt:** 16+ Slices in 4 Tracks. Jeder Dev macht 4–6 Slices plus
-seine Schulden-Aufgabe. Ende Phase 1: ~32/88 erledigt.
+- **Phase 0 (Sweep):** ~5 Tage Wall-Clock mit 4 Devs parallel.
+- **Phase 1+ (Pool):** ~6–8 Wochen Wall-Clock für die 72 verbleibenden Slices (~10 Slices/Woche bei 4 Devs).
+- **Cluster-Reviews:** je ~0.5 Tag, alle 10 Slices → ~3.5 Tage über die Gesamtzeit.
 
-**Phase-1 Sync-Punkt** (Pflicht):
-
-- Cluster-Review **Layout 1–12** (Dev 1 zieht alle Layout-Slice-Audits durch
-  den mechanischen Quality-Gate-Checklist; Stichprobe ≥ 3 Slices).
-- Cluster-Review **States/Behavior 26–33** (Dev 3, mit CDP-Schuld als
-  Eingangstor).
-- **Vor Phase 2:** Slice 21 muss vollständig erledigt sein, sonst Dev 4
-  Phase-2-Start blockiert.
-
-### Phase 2 (ca. 3 Wochen)
-
-| Dev   | Slices Phase 2                                                                                                | Bemerkung                                                            |
-| ----- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Dev 1 | 17 Typografie → 18 Effekte → 19 Sichtbarkeit → 20 Cursor                                                      | Styling-Tail; Helper aus Slice 17 möglich groß                       |
-| Dev 2 | Cluster-Review Komponenten/Tokens 21–25 → 44 Variablen → 45 Objekte → 46 Sammlungen + each → 47 Aggregationen | Wechsel auf Daten-Cluster, Komponenten als Voraussetzung gelegt      |
-| Dev 3 | 34 Sichtbarkeit → 35 Counter → 36 Toast → 37 Input-Control → 38 Navigation → 39 Scroll → 40 Clipboard         | Functions-Cluster, kein Studio-Touchpoint nötig                      |
-| Dev 4 | 56 Tabellen → 57 Charts → 58 Dialog → 59 Tooltip → 60 Tabs → 88 Export-Pipeline                               | UI-Patterns-Start (braucht Slice 21 done) + Export-Pipeline parallel |
-
-**Phase-2-Gesamt:** 25 Slices. Ende Phase 2: ~57/88 erledigt.
-
-**Phase-2 Sync-Punkt:**
-
-- Cluster-Review **Styling 13–20** (Dev 1).
-- Cluster-Review **Komponenten/Tokens/Daten 21–25 + 44–49** (Dev 2 + Dev 3
-  gemeinsam).
-- **CDP-Schuld neu zählen** — wenn wieder über 5, Schulden vor Phase 3
-  abarbeiten.
-
-### Phase 3 (ca. 3 Wochen)
-
-| Dev   | Slices Phase 3                                                                                               | Bemerkung                                                    |
-| ----- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
-| Dev 1 | 67 Paste-DSL → 68 Bidirektional-Sync → 69 Property-Panel-Roundtrip → 70 Drag & Resize                        | Studio-Loops-Start (Studio-Edit-Pfade)                       |
-| Dev 2 | 41 CRUD → 42 Action-Verkettung → 43 List-Nav → 48 Block-Conditional → 49 Inline-Ternary + bind               | Funktionen-Tail + Daten-Tail                                 |
-| Dev 3 | 61 Select → 62 Checkbox/Switch → 63 Slider → 64 RadioGroup → 65 DatePicker → 66 Prose                        | UI-Patterns-Tail + Prose                                     |
-| Dev 4 | 71 Padding/Margin/Gap-Handles → 72 Snap → 73 Smart-Guides → 74 Multi-Selection → 75 Drop → 76 Inline-Edit/F2 | Studio Visual-Editor (großer Brocken; ggf. teilen mit Dev 1) |
-
-**Phase-3-Gesamt:** ~25 Slices. Ende Phase 3: ~82/88 erledigt.
-
-### Phase 4 — Final (ca. 1 Woche)
-
-Verbleibend: **77 Color-Picker-Trigger, 79 Icon-Picker, 80 Animation-Picker,
-81 AI-Sketch-Block, 82 AI-Edit, 83 Smart-Paste, 84 Undo/Redo**. Plus
-Cluster-Review aller fünf Phasen, Final-Quality-Gate-Sweep, ggf. Restschulden
-(deferred V-Items aus Re-Open-Tracking).
-
-| Dev   | Phase 4                                                                 |
-| ----- | ----------------------------------------------------------------------- |
-| Dev 1 | 84 Undo/Redo + Final-Cluster-Review aller Phasen                        |
-| Dev 2 | 77 Color-Picker + 79 Icon-Picker                                        |
-| Dev 3 | 80 Animation-Picker + 83 Smart-Paste                                    |
-| Dev 4 | 81 AI-Sketch-Block + 82 AI-Edit (komplex, Größenvergleich mit Slice 78) |
-
-### Konflikt-Prevention-Regeln
-
-1. **`compiler/backends/react.ts` Switch-Statements:** wenn Dev 1 + Dev 2 +
-   Dev 3 alle gleichzeitig Cases ergänzen würden → Helper extrahieren. Slice
-   4 V-1 (`nineZoneToFlex`) ist das Vorbild: schema-derived Lookup statt
-   Switch ⇒ kein Merge-Konflikt mehr. **Regel:** wenn ein Dev einen 4. Case
-   in einem Switch ergänzt, der nächste Dev macht den Refactor zu Lookup
-   bevor seine Cases dazukommen.
-
-2. **Validator E-Codes:** jeder Track reserviert seinen E-Code-Range
-   (E1xx Layout, E2xx Events, E3xx States, E4xx Cross-Element, E5xx Tokens).
-   Dev 1+2 teilen sich E1xx/E5xx; Dev 3 eigentliche E2xx+E3xx; Dev 4 W-Codes
-   für Inhalt/UI. Vor jedem neuen E-Code: `git pull` + `grep "E1[0-9][0-9]"
-compiler/validator/types.ts` um aktuell höchsten zu sehen.
-
-3. **`docs/refactoring/plan.md` Audit-Status-Tabelle:** **immer first
-   `git pull --rebase`**, dann edit+commit innerhalb von 60 Sekunden. Wer
-   eine Stunde an seinem Slice arbeitet, ohne den Status zu pushen, riskiert
-   dass zwei Devs denselben Slice claimen.
-
-4. **`tools/probes/`:** kollidiert nicht (Slice-Nummer-namespacing), aber
-   gemeinsame Helper sollten nach `tools/probes/_shared.ts` (gibt's noch
-   nicht; wer als erstes einen Helper braucht, legt das File an).
-
-5. **`compiler/schema/layout-defaults.ts` & `compiler/schema/dsl.ts`:** sind
-   Hot-Files. Vor jedem Edit: `git pull --rebase`. Bei Konflikten: Konflikt-
-   resolver konsolidiert; KEIN „nimm meine Version" force-merge.
-
-### Realistische Geschwindigkeit
-
-Annahmen:
-
-- 1 Dev fertigt 1 Slice in 1–3 Tagen (Layout: schneller, Studio: langsamer).
-- Phase-Sync-Punkte kosten je 0.5–1 Tag.
-- CDP-Schuld-Abarbeitung kostet je 0.5–1 Tag pro Slice.
-
-**Rechnung:** 4 Devs × 5 Tage/Woche × 12 Wochen × 0.7 Effizienz (Sync,
-Konflikte, Cluster-Reviews) ≈ 168 Dev-Tage = ~70–80 Slice-Units. Passt zu
-den 82 verbleibenden Units.
-
-**Realistisches Ziel: ~12 Wochen / 3 Monate für 100 % Slice-Abdeckung +
-Cluster-Reviews + Schulden-Abarbeitung mit 4 parallelen Devs.**
-
-Solo-Modus zum Vergleich: ~12 Slices/Woche × 7 Wochen = ~84 Slices, also
-ähnlich, aber **ohne Parallelisierungsgewinn nur wenn alle 4 Devs perfekt
-synchron arbeiten**. In der Praxis lassen sich 30–40 % Effizienzgewinn aus
-dem 1-Dev-Modus ziehen, was die ~12-Wochen-Schätzung halbiert auf ~6–8
-Wochen für die 4-Dev-Variante.
-
-### Was zuerst (heute / morgen)
-
-1. **Plan-Update committen** (dieses Doc).
-2. **Stichprobe Slice 24, 26, 21** (~6 h, durch einen einzelnen Dev — kann
-   Dev 1 sein) — entscheidet, ob die existierenden 16 Slices ein
-   Iter-2-Sweep brauchen.
-3. **Bei Stichprobe-Resultat „grün":** 4 Devs claimen ihre Phase-1-Slices,
-   richten Worktrees ein, fangen an.
-4. **Bei Stichprobe-Resultat „2-3 fail":** Iter-2-Sweep über 12 Pre-Plan-
-   Update-Slices (1, 2, 3, 21, 24, 25, 26, 27, 28, 29, 30, 78) durch alle
-   4 Devs parallel (3 Slices pro Dev), dann Phase 1.
+**Realistisches Ziel:** ~8 Wochen / 2 Monate von heute bis 100 % Coverage + alle Iter-2-Sweeps + alle Cluster-Reviews + 0 CDP-Schulden.
 
 ---
 
@@ -444,7 +422,7 @@ Wochen für die 4-Dev-Variante.
 
 ### 9. Prose-Mode (1)
 
-66. **Prose-Body** — `, prose` mit Markdown-Untermenge (Absätze/`-`/`1.`/`#`/Bold/Italic) → `BodyTxt`/`DashItem`/`H2`-Mappings
+66. **Prose-Body** — `, prose` mit Markdown-Untermenge → `BodyTxt`/`DashItem`/`H2`-Mappings
 
 ### 10. Studio Edit-Loops (10)
 
