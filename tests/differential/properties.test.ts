@@ -89,6 +89,17 @@ describe('Properties — DOM emits expected style values', () => {
     expect(react).toContain('transform: scale(1.05)')
   })
 
+  it('React applies flex-defaults to semantic-HTML containers', () => {
+    // Pre-2026-05-10 only `Frame`/`Box`/`Spacer` etc. (the explicit
+    // `content: false` primitives) got Frame-style flex defaults in
+    // React. Header / Section / Article / Aside / Main / Nav / Footer
+    // are containers in DOM but were rendered without flex layout in
+    // React, so children stacked as inline-blocks.
+    const react = generateReact(parse(`Header bg #333\n  Text "Title"`))
+    expect(react).toContain("display: 'flex'")
+    expect(react).toContain("flexDirection: 'column'")
+  })
+
   // Pre-2026-05-10 the React backend silently dropped a long tail of
   // common props (`italic`, `underline`, `uppercase`, `lowercase`,
   // `truncate`, `aspect`, `blur`, `backdrop-blur`, `shadow sm/md/lg`,

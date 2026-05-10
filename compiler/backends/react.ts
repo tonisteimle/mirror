@@ -24,6 +24,7 @@ import { expandPropertySets } from '../ir/transformers/property-set-expander'
 import { resolveComponent } from '../ir/transformers/component-resolver'
 import { ANIMATION_KEYFRAMES_CSS, animationShorthand } from './animations'
 import { getDevicePreset } from '../schema/dsl'
+import { isContainer as isContainerPrimitive } from '../schema/layout-defaults'
 import { isLayoutPrimitive } from '../schema/dsl'
 import { getHtmlTag as schemaGetHtmlTag, isKnownPrimitive } from '../schema/ir-helpers'
 import {
@@ -535,11 +536,11 @@ function generateJSX(
   // Generate style object. Layout primitives (Frame/Box and the table family)
   // get the same flex-column defaults the DOM backend's IR transformer
   // injects — without these the React render is an unstyled `<div />` while
-  // the DOM render is a properly-laid-out flex container.
-  const style = withLayoutDefaults(
-    generateStyles(allProps, tokens, parentContext),
-    instance.component
-  )
+  // the DOM render is a properly-laid-out flex container. Use the *rendered*
+  // HTML tag rather than the component name so a `Btn: pad 10` whose
+  // heuristic resolves to `<button>` doesn't accidentally pick up Frame
+  // flex defaults — `button` is in `NON_CONTAINER_PRIMITIVES`.
+  const style = withLayoutDefaults(generateStyles(allProps, tokens, parentContext), tag)
   const styleStr = Object.keys(style).length > 0 ? ` style={${formatStyleObject(style)}}` : ''
 
   // HTML attributes from properties (placeholder, type, href, src, etc.)
@@ -1018,7 +1019,13 @@ function withLayoutDefaults(
   style: Record<string, string | number>,
   componentName: string
 ): Record<string, string | number> {
-  if (!isLayoutPrimitive(componentName)) return style
+  // Same container-detection rule the DOM IR uses
+  // (`compiler/schema/layout-defaults.ts:isContainer`). Pre-2026-05-10 this
+  // gated on `isLayoutPrimitive` (content === false), which excluded the
+  // semantic tags `Header`/`Section`/`Article`/`Main`/`Aside`/`Nav`/`Footer`
+  // even though DOM treats them as flex containers — React rendered them
+  // as inline-block elements without flex defaults, drifting from DOM.
+  if (!isContainerPrimitive(componentName.toLowerCase())) return style
   // Slice 3 V-1: merge defaults per-key instead of skip-if-display-set.
   // The old skip-when-display-set behavior dropped `alignSelf: stretch` and
   // `alignItems: flex-start` whenever `hor`/`ver`/`grid` set display first
