@@ -1124,6 +1124,12 @@ export function installMirrorActions(): MirrorActionsAPI {
 
   const selectInPreview = async (sel: Selector): Promise<void> => {
     const nodeId = resolveSelector(sel)
+    // If the target is already selected — typically because dropFromPalette
+    // auto-selected it, or because a previous step already touched it —
+    // this is a no-op. Real users don't re-tap something they just
+    // selected, and the extra click ripple reads as "the runner is
+    // clicking on it again for no reason".
+    if (getCurrentSelectionId() === nodeId) return
     const el = document.querySelector('[data-mirror-id="' + nodeId + '"]') as HTMLElement | null
     if (!el) throw new Error('selectInPreview: element ' + nodeId + ' not in DOM')
     const r = el.getBoundingClientRect()
@@ -1134,15 +1140,9 @@ export function installMirrorActions(): MirrorActionsAPI {
     })
   }
 
-  /**
-   * Used internally by setProperty / pickColor. Skips the click + select
-   * if the node is already selected — avoids the rapid repeat clicks
-   * the user reported when chaining several setProperty calls on the
-   * same target.
-   */
+  /** Internal alias — kept so call sites read with intent. */
   const ensureSelected = async (sel: Selector): Promise<string> => {
     const nodeId = resolveSelector(sel)
-    if (getCurrentSelectionId() === nodeId) return nodeId
     await selectInPreview(sel)
     return nodeId
   }
