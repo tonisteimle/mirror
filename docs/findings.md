@@ -260,23 +260,6 @@ instance.column)` umgestellt. 7849/7849 vitest grün.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
-- **Wo:** `studio/core/events.ts:21` + `studio/compile/types.ts:48`
-  vs. kanonische `compiler/parser/ast.ts:ParseError`
-  **Was:** `ParseError` 3× definiert mit divergierenden Shapes:
-  - Canonical (`compiler/parser/ast.ts`, 5 Felder):
-    `{ message, line, column, hint?, code? }`
-  - Studio-Kopie 1 (`studio/core/events.ts`, 4 Felder, kein `code`)
-  - Studio-Kopie 2 (`studio/compile/types.ts`, 2 Felder — nur
-    `{ line, message }`)
-    Beide Studio-Versionen sind Subsets, divergiert von der echten
-    Quelle. Caller die das vollständige Shape erwarten bekommen je
-    nach Import-Pfad andere Felder. Klassische Drift-Falle wie schon
-    beim SpacingToken-Hunt.
-    **Status:** aktiv (Claude-Session, 2026-05-10 ~21:40)
-    **Plan:** Beide Studio-Kopien durch Re-Import aus
-    `compiler/parser/ast.ts` ersetzen, lokale Definitionen weg,
-    Tests grün.
-
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
@@ -959,6 +942,20 @@ step-runner-selectors}.test.ts`
   (15420/15420 Tests, 585/585 Files).
   **Status:** erledigt (5 in `05cce232` parallel-bundle, 1 in `e4f378ad`
   parallel-bundle; Bookkeeping in `b099a445`)
+
+### 2026-05-10 — `ParseError`-3×-Drift auf canonical compiler-Type konvergiert
+
+- **Wo:** `studio/core/events.ts` + `studio/compile/types.ts`
+  **Was:** `ParseError` war dreimal definiert mit divergierenden
+  Shapes: kanonisch in `compiler/parser/ast.ts` (5 Felder:
+  `{message, line, column, hint?, code?}`), als 4-Feld-Subset in
+  `studio/core/events.ts` (kein `code`), als 2-Feld-Subset in
+  `studio/compile/types.ts` (nur `{line, message}`). Beide Studio-
+  Kopien jetzt durch `import type { ParseError } from
+'../../compiler/parser/ast'` + Re-Export ersetzt; Barrels surfacen
+  weiter unter den alten Namen, jetzt aber als kanonische Quelle
+  ohne Drift-Risiko. 5940/5940 studio tests pass.
+  **Status:** erledigt (`0f0ffb2f`)
 
 ### 2026-05-10 — Dead-Export-Cluster: UI_ICONS-Chain + getPropertyIcon + cleanupStudioTestAPI
 
