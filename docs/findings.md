@@ -676,17 +676,18 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
-### 2026-05-10 — React + Framework Backend-Hunt (23-Slice-Run)
+### 2026-05-10 — React + Framework + DOM Backend-Hunt (24-Slice-Run)
 
-Eine durchgehende Hunt-Session am React- und Framework-Backend; alle
-Slices mit Differential-Test-Pin.
+Eine durchgehende Hunt-Session an allen drei Backends; alle Slices
+mit Differential-Test-Pin.
 
-**Validierung:** Alle 19 example `.mirror` Files durch esbuild TSX-
-Loader gefüttert — 0 JSX-Syntax-Fehler. Real-Example-Probes (hotel-
-checkin, portfolio-advisor, address-manager, time-tracking, hospital-
-dashboard, personas-informatik, task-app, portfolio-dashboard) — 0
-`[object Object]`, 0 literale `$token`-Strings, 0 `'foo': undefined`-
-Noise im React-Output.
+**Validierung:** Alle 19 example `.mirror` Files durch esbuild
+gefüttert — 0 Syntax-Fehler in **allen drei Backends** (React TSX,
+Framework JS, DOM JS). Pre-Hunt: React 2 Errors, DOM 1 Error.
+Real-Example-Probes (hotel-checkin, portfolio-advisor, address-
+manager, time-tracking, hospital-dashboard, personas-informatik,
+task-app, portfolio-dashboard) — 0 `[object Object]`, 0 literale
+`$token`-Strings, 0 `'foo': undefined`-Noise im React-Output.
 
 - **Wo:** `compiler/backends/react.ts` — Event-Handler wired
   **Was:** Side-effect actions (`toast`, `copy`, `openUrl`, `back`/
@@ -866,12 +867,22 @@ Compile-Time-Konvertierung zu`<strong>`/`<em>`/`<code>` JSX.
      `2` fehlte. Jetzt paren-aware-weave wie IR's
      `buildExpressionString`.
   2. Prose-Mode Bullet-Text mit `?` und `:` (z.B. `**Key**: FH vs.
-   Uni — wie wird das gesehen?`) wurde als Conditional mit invalid-
+Uni — wie wird das gesehen?`) wurde als Conditional mit invalid-
      JS Condition gespeichert (`vs.Uni wie wird das gesehen`). React
      emittierte `{vs.Uni wie wird das gesehen ? : }` — esbuild/Vite/
      oxc rejected. Jetzt eval-test der Condition durch Function;
      bei SyntaxError fallback auf literal Text.
      **Status:** erledigt (`ce4fc73e`)
+
+- **Wo:** `compiler/backends/dom/ops/resolve-templates.ts`
+  (`parseTopLevelConditional`)
+  **Was:** Same root-cause als der React-Defense-Slice, aber für DOM.
+  Prose-Mode-Bullet mit `?` und `:` produzierte
+  `formatInlineMarkdown(($get("vs.Uni") $get("wie") $get("wird") ... ? "" : ""))`
+  — adjacent function-calls ohne Operator → unparseable JS, killte das
+  ganze DOM-Bundle beim Script-Load. Gleiche eval-test-via-Function-
+  Defense; bei Parse-Fehler fallback auf then-Branch-Literal.
+  **Status:** erledigt (`8c17d930`)
 
 ### 2026-05-10 — Directional Padding/Margin/Border-Shortcuts in React
 
