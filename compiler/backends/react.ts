@@ -23,6 +23,7 @@ import type {
 import { expandPropertySets } from '../ir/transformers/property-set-expander'
 import { resolveComponent } from '../ir/transformers/component-resolver'
 import { ANIMATION_KEYFRAMES_CSS, animationShorthand } from './animations'
+import { getDevicePreset } from '../schema/dsl'
 import { isLayoutPrimitive } from '../schema/dsl'
 import { getHtmlTag as schemaGetHtmlTag, isKnownPrimitive } from '../schema/ir-helpers'
 import {
@@ -1932,6 +1933,19 @@ function generateStyles(
       case 'hidden':
         style.display = 'none'
         break
+
+      // Device size presets: `Frame device mobile` → 375×812. Mirrors the
+      // IR's properties-ops.ts `getDevicePreset` expansion. An explicit
+      // `w`/`h` after `device` still wins because it gets emitted later
+      // in the switch and overwrites the values set here.
+      case 'device': {
+        const preset = getDevicePreset(String(value))
+        if (preset) {
+          style.width = `${preset.width}px`
+          style.height = `${preset.height}px`
+        }
+        break
+      }
 
       // Animations: `Frame anim spin` → `animation: 'mirror-spin …'`.
       // The corresponding `@keyframes mirror-spin` rules are emitted as

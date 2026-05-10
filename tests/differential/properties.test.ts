@@ -99,6 +99,9 @@ describe('Properties — DOM emits expected style values', () => {
   // in CI rather than visual-only noise.
   it.each([
     ['stacked', `Frame stacked, w 100`, /position:\s*'relative'/],
+    ['device mobile', `Frame device mobile`, /width:\s*'375px'.*height:\s*'812px'/s],
+    ['device tablet', `Frame device tablet`, /width:\s*'768px'.*height:\s*'1024px'/s],
+    ['device desktop', `Frame device desktop`, /width:\s*'1440px'.*height:\s*'900px'/s],
     ['italic', `Text "Hi", italic`, /fontStyle:\s*'italic'/],
     ['underline', `Text "Hi", underline`, /textDecoration:\s*'underline'/],
     ['uppercase', `Text "Hi", uppercase`, /textTransform:\s*'uppercase'/],
