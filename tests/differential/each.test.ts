@@ -121,6 +121,48 @@ describe('Each-Loop — React loop-var values in styles', () => {
   })
 })
 
+describe('Each-Loop — Deep loop-var resolution', () => {
+  // PIN: pre-2026-05-10 the React backend's `detectLayoutContext` only
+  // returned `{ type: 'grid' | 'flex' }` and dropped `loopVars` from
+  // the parent context. So a slot four levels deep inside `each`
+  // resolved `$position.name` against (missing) `tokens.position`
+  // instead of the iterator. Result: literal `"$position.name"` strings
+  // leaked into the JSX output for every `Table` row in real examples
+  // (portfolio-advisor.mirror, address-manager.mirror).
+  //
+  // Now `ownLayoutContext` carries `loopVars` through unchanged so any
+  // descendant — regardless of depth — sees the iterator.
+  it('loop-var resolves through nested Frames inside each', () => {
+    const src = `positions:
+  p1:
+    name: "Apple"
+
+each position in $positions
+  Frame
+    Frame
+      Frame
+        Text "$position.name"`
+    const react = generateReact(parse(src))
+    expect(react).toContain('{position.name}')
+    expect(react).not.toContain('"$position.name"')
+  })
+
+  it('loop-var resolves into custom-component slot positional content', () => {
+    // The user-facing case from portfolio-advisor.mirror: `Name "$x"`
+    // is a slot inside a multi-level component, all wrapped in `each`.
+    const src = `Card: gap 4
+  Title: col white
+
+each item in [1, 2]
+  Card
+    Title "Row $item"`
+    const react = generateReact(parse(src))
+    // Loop-var path emerged from inside the slot.
+    expect(react).toMatch(/\{["'`]Row \$\{["'`]?\}|Row.*\{item\}/)
+    expect(react).not.toContain('"Row $item"')
+  })
+})
+
 describe('Each-Loop — Bug regressions', () => {
   it('Bug #17 fixed: two parallel each-loops over same collection both render', () => {
     const src = `tasks:\n  t1:\n    title: "Alpha"\n  t2:\n    title: "Beta"\n\neach task in $tasks\n  Text "1: $task.title"\n\neach task in $tasks\n  Text "2: $task.title"`

@@ -694,7 +694,15 @@ function generateJSX(
   // which switches their `x`/`y`/`w`/`h` interpretation from
   // absolute/transform/numeric-px to grid-column-start/grid-row-start/
   // grid-column-end-span/grid-row-end-span.
-  const ownLayoutContext = detectLayoutContext(allProps)
+  //
+  // Loop-vars carry through unchanged: a `Name "$position.name"` slot
+  // three levels deep inside `each position in $positions` still needs
+  // `position` in scope. Without preserving `parentContext.loopVars`
+  // here, the iterator drops out as soon as we cross a single Frame.
+  const ownLayoutContext: ParentLayoutContext = {
+    ...detectLayoutContext(allProps),
+    loopVars: parentContext.loopVars,
+  }
 
   // Generate style object. Layout primitives (Frame/Box and the table family)
   // get the same flex-column defaults the DOM backend's IR transformer
