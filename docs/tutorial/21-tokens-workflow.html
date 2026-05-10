@@ -83,14 +83,22 @@ md.fs: 14</pre>
       </p>
       <p>
         Stelle den Cursor hinter einen Wert im Code und tippe
-        <code>::</code> — z. B. <code>bg #2271C1::</code>. Studio
-        öffnet ein kleines Eingabefeld direkt neben dem Wert; tippe
-        einen Token-Namen wie <code>primary</code>. Bestätigen mit
-        <kbd>Enter</kbd> tut zweierlei: der Token wird in der
-        zugehörigen <code>.tok</code>-Datei angelegt
-        (<code>primary.bg: #2271C1</code>), und an der ursprünglichen
-        Stelle steht jetzt <code>bg $primary</code>.
+        <code>::</code>. Studio öffnet ein kleines Eingabefeld direkt
+        neben dem Wert; tippe einen Token-Namen wie <code>primary</code>
+        und bestätige mit <kbd>Enter</kbd>:
       </p>
+      <div class="code-block">
+        <pre>// Vorher
+Btn: bg #2271C1::, col white, pad 10 20
+
+// ::-Trigger → 'primary' eintippen → Enter
+
+// Nachher: Token in tokens.tok angelegt
+primary.bg: #2271C1
+
+// Und im Btn:
+Btn: bg $primary, col white, pad 10 20</pre>
+      </div>
       <p>
         Andere Stellen mit derselben Hex-Farbe ersetzt du gezielt mit
         <kbd>F2</kbd> auf dem Token-Namen oder per Find-and-Replace —

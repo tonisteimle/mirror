@@ -47,7 +47,7 @@
         bauen sich pixelgenau auf, ohne manuelles Korrigieren.
       </p>
       <p>
-        Zusätzlich gibt es ein <em>Snap-Grid</em> auf Vielfachen von
+        Zusätzlich gibt es ein <em>Snap-Grid</em> auf Vielfache von
         4: ein Frame mit Width 167 wird beim Drag zu 168. Wer das
         umgehen will, hält beim Drag <kbd>Cmd</kbd> — dann
         deaktivieren sich Snap und Smart-Guides für die Dauer der
@@ -69,13 +69,25 @@
         zweiten oder dritten Drop, dass die Children nebeneinander
         stehen sollten, und blendet beim Container einen kleinen
         Vorschlags-Button ein — z. B. <em>„→ HStack, gap 8"</em>.
-        Klick auf den Button übernimmt den Vorschlag, Studio fügt
-        <code>hor, gap 8</code> in die Container-Zeile. Klick
-        irgendwo anders verwirft.
       </p>
+      <div class="code-block">
+        <pre>// Vorher (drei Buttons in vertikalen Container gedroppt)
+Toolbar
+  Button "Speichern"
+  Button "Abbrechen"
+  Button "Hilfe"
+
+// Klick auf den Vorschlag-Button
+
+// Nachher
+Toolbar hor, gap 8
+  Button "Speichern"
+  Button "Abbrechen"
+  Button "Hilfe"</pre>
+      </div>
       <p>
         Die Inferenz erkennt auch <code>wrap</code> und
-        <code>grid 12</code> als sinnvolle Vorschläge — je nachdem
+        <code>grid 12</code> als sinnvolle Vorschläge — je nachdem,
         wie viele und wie strukturiert die Drops eintreffen.
       </p>
 

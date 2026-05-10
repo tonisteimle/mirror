@@ -42,18 +42,27 @@
     <section>
       <h2>Komponente extrahieren mit dem <code>::</code>-Trigger</h2>
       <p>
-        Du hast eine Frame-Zeile mit Properties die du wiederverwenden
-        willst. Setze den Cursor auf den Component-Namen und tippe
-        <code>::</code> direkt danach. Studio öffnet ein Popup: <em>Als
-        Komponente extrahieren?</em> mit Eingabefeld für den Namen.
+        Du hast eine Frame-Zeile mit Properties, die du wiederverwenden
+        willst. Setze den Cursor hinter den Komponenten-Namen und tippe
+        <code>::</code> direkt danach. Studio öffnet ein kleines
+        Eingabefeld für den neuen Komponenten-Namen.
       </p>
-      <p>
-        Bestätigst du mit <kbd>Enter</kbd>, geschieht zweierlei
-        gleichzeitig: oben in der Datei (oder in <code>components.com</code>,
-        wenn das File existiert) wird die Komponenten-Definition
-        eingefügt mit allen Properties. Die ursprüngliche Zeile wird
-        zur Instanz reduziert — nur Name plus eventueller Text-Inhalt.
-      </p>
+      <div class="code-block">
+        <pre>// Vorher
+Frame:: bg #1a1a1a, pad 16, rad 8, gap 8
+  Text "Titel", col white, fs 16
+  Text "Beschreibung", col #888
+
+// ::-Trigger → 'Card' eintippen → Enter
+
+// Nachher: Definition oben (oder in components.com)
+Card: bg #1a1a1a, pad 16, rad 8, gap 8
+  Text "Titel", col white, fs 16
+  Text "Beschreibung", col #888
+
+// Und an der ursprünglichen Stelle:
+Card</pre>
+      </div>
       <p>
         Wenn das Projekt mehrere identische Frames hat (gleiche
         Properties, gleiche Children), zeigt Studio die Treffer und
@@ -62,7 +71,7 @@
       </p>
 
       <div class="tutorial-video-placeholder">
-        <em><code>::</code>-Extract mit Auto-Replace, ~2 min</em>
+        <em><code>::</code>-Extract mit Auto-Replace</em>
       </div>
     </section>
 
