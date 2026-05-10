@@ -115,22 +115,22 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
-- **Wo:** `compiler/ir/ops/instance-ops.ts` (4 Stellen),
-  `compiler/ir/ops/properties-ops.ts` (2 Stellen), `compiler/backends/react.ts`
-  (mehrere)
+- **Wo:** `compiler/ir/ops/instance-ops.ts`, `compiler/ir/ops/properties-ops.ts`,
+  `compiler/backends/react.ts`
   **Was:** Lane 2, Inkrement 2 — Folge-Refactor zu Inkrement 1.
   Hardcoded `name === '<alias>' || ...` in IR-Ops und React-Backend
-  durch `getCanonicalPropertyName` ersetzen. Pre-Refactor-Pin aus
-  Inkrement 1 (`tests/differential/properties.test.ts:Properties —
-Alias-Equivalenz`) deckt die Drei-Alias-Equivalenz schon ab.
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~21:00)
-  **Plan:** (1) Helper `matchesCanonical(name, canonical)` in `parser-helpers.ts`
-  hinzufügen — `getCanonicalPropertyName(name) === canonical`. (2) Slice A:
-  `properties-ops.ts` — alle `name === 'X' || name === 'Y'`-Pärchen für
-  hor/ver/gap/gx/gy/rh/rot ersetzen. (3) Slice B: `instance-ops.ts` —
-  is/icon-size + w/width Pärchen ersetzen. (4) Slice C: `react.ts` —
-  is/ic/iw, anim/animation, hor/ver, w/width, h/height, fill/Slot-checks.
-  Nach jeder Slice: vitest + alias-equivalenz-pin.
+  durch `getCanonicalPropertyName` ersetzen.
+  **Status:** erledigt (`c3d420b5` Slice A, `f743a44c` Slice B, Slice C
+  nachfolgend) — neuer Helper `matchesCanonical(name, canonical)` in
+  `compiler/schema/parser-helpers.ts`. Konvertiert: properties-ops
+  (minw/minh/w/h/size, hor/ver, gap, gap-x/y, row-height, rotate,
+  scale), instance-ops (icon-size, width 5×, hor, keyboard-nav,
+  loop-focus, trigger-text), react.ts (animation, icon-size/color/
+  weight, width/height, hor/ver, color/background-Gradient).
+  Verbleibend `readOnly`/`readonly`, `value`/`defaultValue`, `propset`/
+  `data`, `tension`/`min`/`max`, `title`/`xLabel`/`yLabel`, `content`/
+  `textContent` — alles **keine Schema-Aliase**, sondern HTML-Attribute
+  oder Chart-spezifische Properties. 15481/15481 vitest grün.
 
 - **Wo:** `compiler/schema/properties.ts` vs. `compiler/ir/transformers/property-transformer.ts`
   **Was:** Lane 2, Inkrement 3 (Schema-Drift-Befund während Inkrement 1):

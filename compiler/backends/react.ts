@@ -45,6 +45,7 @@ import {
   singleAxisCenterToFlex,
 } from '../schema/layout-defaults'
 import { getTokenSuffix } from '../schema/token-suffixes'
+import { matchesCanonical } from '../schema/parser-helpers'
 
 export interface ReactExportOptions {
   /** Include token values as CSS variables */
@@ -420,7 +421,7 @@ function containsAnimUsage(nodes: ReadonlyArray<unknown>): boolean {
     }
     if (node.properties) {
       for (const p of node.properties) {
-        if (p.name === 'anim' || p.name === 'animation') return true
+        if (matchesCanonical(p.name, 'animation')) return true
       }
     }
     if (node.children && containsAnimUsage(node.children)) return true
@@ -1248,15 +1249,15 @@ function generateIconJSX(
 
   for (const p of instance.properties) {
     const v = p.values[0]
-    if (p.name === 'icon-size' || p.name === 'is') {
+    if (matchesCanonical(p.name, 'icon-size')) {
       propAttrs.push(`size=${formatIconPropValue(v, 'is', tokens)}`)
-    } else if (p.name === 'icon-color' || p.name === 'ic') {
+    } else if (matchesCanonical(p.name, 'icon-color')) {
       propAttrs.push(`color=${formatIconPropValue(v, 'ic', tokens)}`)
-    } else if (p.name === 'icon-weight' || p.name === 'iw') {
+    } else if (matchesCanonical(p.name, 'icon-weight')) {
       propAttrs.push(`strokeWidth=${formatIconPropValue(v, 'iw', tokens)}`)
     } else if (p.name === 'fill') {
       propAttrs.push(`fill`)
-    } else if (p.name === 'anim' || p.name === 'animation') {
+    } else if (matchesCanonical(p.name, 'animation')) {
       animValue = animationShorthand(String(v))
     }
   }
@@ -1314,9 +1315,9 @@ function generateChartJSX(instance: Instance, indent: string, tokens: TokenDefin
       } else if (typeof v === 'string' && v.startsWith('$')) {
         dataExpr = `tokens[${JSON.stringify(v.slice(1))}]`
       }
-    } else if (prop.name === 'w' || prop.name === 'width') {
+    } else if (matchesCanonical(prop.name, 'width')) {
       widthPx = `${v}px`
-    } else if (prop.name === 'h' || prop.name === 'height') {
+    } else if (matchesCanonical(prop.name, 'height')) {
       heightPx = `${v}px`
     } else if (prop.name === 'fill') {
       // Override the Area default if explicitly set.
@@ -2377,8 +2378,8 @@ function generateStyles(
   const layoutDirection: 'row' | 'column' = (() => {
     for (const p of properties) {
       if (p.values.length === 0 || (p.values.length === 1 && p.values[0] === true)) {
-        if (p.name === 'hor' || p.name === 'horizontal') return 'row'
-        if (p.name === 'ver' || p.name === 'vertical') return 'column'
+        if (matchesCanonical(p.name, 'horizontal')) return 'row'
+        if (matchesCanonical(p.name, 'vertical')) return 'column'
       }
     }
     return 'column'
@@ -2493,11 +2494,7 @@ function generateStyles(
     // React bypasses IR so we re-derive the same `linear-gradient(...)`
     // CSS here. Mirrors `compiler/ir/transformers/property-transformer.ts:118`.
     if (
-      (prop.name === 'bg' ||
-        prop.name === 'background' ||
-        prop.name === 'col' ||
-        prop.name === 'color' ||
-        prop.name === 'c') &&
+      (matchesCanonical(prop.name, 'background') || matchesCanonical(prop.name, 'color')) &&
       effectiveValues.length >= 2 &&
       typeof effectiveValues[0] === 'string' &&
       (effectiveValues[0] === 'grad' || (effectiveValues[0] as string).startsWith('grad-'))
@@ -2523,7 +2520,7 @@ function generateStyles(
         .map(v => String(resolve(v as string | number | boolean | object, prop.name)))
       if (colors.length >= 2) {
         const gradientValue = `linear-gradient(${angle}, ${colors.join(', ')})`
-        const isTextGradient = prop.name === 'col' || prop.name === 'color' || prop.name === 'c'
+        const isTextGradient = matchesCanonical(prop.name, 'color')
         if (isTextGradient) {
           // Text-gradient pattern: paint via background, clip-to-text,
           // hide foreground color. Same fallback the DOM IR uses.
