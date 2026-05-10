@@ -207,6 +207,59 @@ Btn: bg $accent`)
       expect(engine.validateName('Frame', 'component').valid).toBe(false) // reserved
     })
 
+    it('Slice 1 Iter-2 RT-16: rejects ALL DSL primitives as reserved (schema-derived via isPrimitive)', () => {
+      // Pre-fix: hardcoded reserved-list `['Frame','Text','Button','Input','Icon','Image','Link','Box']`
+      // missed 18 primitives. Post-fix: `isPrimitive()` schema-lookup catches
+      // every primitive from `compiler/schema/dsl.ts:DSL.primitives` plus
+      // their aliases (Box, Img). Lock so future schema additions are not
+      // silently accepted as user-component-names.
+      const engine = createRenameEngine()
+      const reservedSamples = [
+        // Layout primitives
+        'Frame',
+        'Box', // alias of Frame
+        'Section',
+        'Article',
+        'Header',
+        'Footer',
+        'Nav',
+        'Main',
+        'Aside',
+        // Headings
+        'H1',
+        'H2',
+        'H3',
+        'H4',
+        'H5',
+        'H6',
+        // Text/Form
+        'Text',
+        'Button',
+        'Input',
+        'Textarea',
+        'Label',
+        // Media
+        'Image',
+        'Img', // alias of Image
+        'Icon',
+        'Link',
+        // Structural
+        'Slot',
+        'Divider',
+        'Spacer',
+      ]
+      for (const name of reservedSamples) {
+        const result = engine.validateName(name, 'component')
+        expect(result.valid, `expected "${name}" to be rejected as reserved`).toBe(false)
+        expect(result.error).toContain('reserved primitive')
+      }
+
+      // Negative-lock: user-component names are accepted.
+      expect(engine.validateName('MyComponent', 'component').valid).toBe(true)
+      expect(engine.validateName('Btn', 'component').valid).toBe(true)
+      expect(engine.validateName('Card2', 'component').valid).toBe(true)
+    })
+
     it('should accept valid token names', () => {
       const engine = createRenameEngine()
 

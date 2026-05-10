@@ -1,7 +1,8 @@
 # Slice 1: Frame-Container
 
-**Datum:** 2026-05-09
-**Status:** Audit erledigt · Umsetzung erledigt · Review-Pass erledigt
+**Datum:** 2026-05-09 (Iter-1) · 2026-05-10 (Iter-2-Sweep, Dev 1)
+**Status (Iter-1):** Audit erledigt · Umsetzung erledigt · Review-Pass erledigt
+**Status (Iter-2):** Schema-Drift-Grep durchgeführt · 1 Drift-Fix (D-1 rename-engine) in-scope · 1 Drift-Befund (D-2 test-matrix) als Re-Open dokumentiert · Studio-Roundtrip explizit (Lower-Bar) · Probe-Skript committet
 
 ## Inhalt
 
@@ -497,3 +498,77 @@ Die folgenden Probes verhalten sich wie erwartet und werden hier dokumentiert um
 - Leerzeilen zwischen Frame und Child (#15) — Child trotzdem korrekt zugeordnet
 - Semicolon-Inline (#15 var.) — `Frame; Text "a"` korrekt verschachtelt
 - Box ↔ Frame (#2) — bis auf `data-component` identisches Output
+
+---
+
+# 7. Iter-2-Sweep (2026-05-10, Dev 1)
+
+Auftrag aus `plan.md` Phase 0: **Schema-Drift-Grep für `isLayoutPrimitive`/Primitive-Markers; Studio-Roundtrip explizit (CDP nachholen oder Lower-Bar deklarieren); Iter-2-Vorlage etablieren.**
+
+## 7.1 Probe-Skript
+
+`tools/probes/slice-01-frame.ts` committet — spiegelt die Iter-1-Probes (`/tmp/frame-probes.ts`) plus Iter-2-D-1-Coverage (`isPrimitive()` smoke-test über alle 26 Primitives).
+
+## 7.2 Schema-Drift-Grep
+
+Repo-weite Greps:
+
+| Such-Pattern                                             | Ergebnis                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isLayoutPrimitive`                                      | 4 Verwender: `compiler/backends/framework.ts:239`, `compiler/backends/dom/node-emitter.ts:101`, `compiler/backends/react.ts:229,379`. Alle importieren aus single canonical source `compiler/schema/dsl.ts:599`. **✅ Kein Drift.**                                                                                                                                                                                                                                                         |
+| `isPrimitive()` (allgemeiner Helper)                     | Verwender in Parser (`body-parser.ts`, `zag-parser.ts`, `parse-blocks.ts`), Loader (`cross-file-validator.ts`), Studio (`component-panel.ts`). Single canonical source `compiler/schema/dsl.ts:571`. **✅ Kein Drift.**                                                                                                                                                                                                                                                                     |
+| `data-component` / `data-mirror-name` / `data-mirror-id` | Backends emittieren konsistent: DOM (`node-emitter.ts`, runtime querySelector via diese Attrs), React (`generateMirrorAttributes`), Framework (über IR). Studio queries via `data-component` und `data-mirror-name` für Cross-Element-State, Property-Panel-Hookup, etc. **✅ Kein Drift.**                                                                                                                                                                                                 |
+| Hardcoded Primitive-Listen `['Frame', 'Text', ...]`      | **D-1 (Drift, fix in-scope):** `studio/rename/rename-engine.ts:202` listet nur `['Frame', 'Text', 'Button', 'Input', 'Icon', 'Image', 'Link', 'Box']` — 8 von 26 Primitives. Fehlen: `Section`, `Article`, `Header`, `Footer`, `Nav`, `Main`, `Aside`, `H1-H6`, `Textarea`, `Label`, `Slot`, `Divider`, `Spacer`, `Img`. **Konsequenz Pre-Fix:** User konnte eine Komponente `H1`/`Section`/`Header` nennen, F2-Rename-Engine fing die Kollision nicht. **✅ Fix:** s.u. — `isPrimitive()`. |
+| `ALL_PRIMITIVES` Test-Konstante                          | **D-2 (Drift, deferred Re-Open-Trigger):** `studio/test-api/suites/property-panel/primitive-matrix.test.ts:38` listet 11 Primitives. Fehlen die 15 weiteren. Test-Drift, nicht Runtime-Drift; Re-Open-Trigger gesetzt (siehe 7.5).                                                                                                                                                                                                                                                          |
+| Hardcoded `'Frame'` in Studio                            | 24 Hits, alle als **Default-Component-Name** beim Insert/Drop oder in Comments/Mock-Code. Kein Drift; das ist die intentionale Default-Konvention.                                                                                                                                                                                                                                                                                                                                          |
+
+## 7.3 Drift-Fix D-1 (in-scope, erledigt)
+
+**Befund:** `studio/rename/rename-engine.ts:202` hardcoded reserved-Liste.
+
+**Fix:**
+
+```diff
++ import { isPrimitive } from '../../compiler/schema/dsl'
+…
+-      const reserved = ['Frame', 'Text', 'Button', 'Input', 'Icon', 'Image', 'Link', 'Box']
+-      if (reserved.includes(trimmed)) {
++      // Slice 1 Iter-2: schema-derived via `isPrimitive()`. Pre-fix: hardcoded
++      // 8-name list missed 18 primitives.
++      if (isPrimitive(trimmed)) {
+         return { valid: false, error: `"${trimmed}" is a reserved primitive name` }
+       }
+```
+
+**Tests:** `tests/studio/rename/*` — 16/16 grün (keine Behavior-Regression). Probe `tools/probes/slice-01-frame.ts` `I1`-Block lockt Coverage über 17 Primitive-Namen + 2 User-Namen.
+
+**Lock:** RT-16 (siehe 7.5).
+
+## 7.4 Studio-Roundtrip explizit benannt
+
+**Modus:** **Lower-Bar — DOM gelocked via RT-1..RT-13 in `tests/compiler/slice-1-frame.test.ts`; Property-Panel-CDP-Coverage durch bestehende `studio/test-api/suites/property-panel/comprehensive.test.ts` + `primitive-matrix.test.ts`.**
+
+**Begründung:** Slice 1 ändert `data-component`-Attribut nicht in der Semantik (nur Casing wird canonicalisiert). Frame ist implizit in 100+ Property-Panel-Tests (jeder Container-Test verwendet Frame). Ein dedizierter Frame-Click-CDP-Run wäre Duplikat zur bestehenden Property-Panel-Suite.
+
+**Re-Open-Trigger:** keiner. Wenn Slice 67-76 (Studio-Loops) das Property-Panel-Verhalten ändern, müssen sie eigene CDP-Runs für Cross-Slice-Effekte mitbringen — Slice 1 ist die Baseline.
+
+## 7.5 Re-Open-Tracking — Iter-2-Updates
+
+| ID    | Item                                                                                                                                                                      | Ziel                               | Begründung                                                                                                                                                                                                                                                                                                                                                                         |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-2   | `studio/test-api/suites/property-panel/primitive-matrix.test.ts:38` `ALL_PRIMITIVES` schema-derived machen                                                                | Slice 50/51 (Icon-Slices, Phase-1) | Test-Drift, kein Runtime-Drift. Slice 50 (Lucide-Icons) und 51 (Custom-Icons) erweitern den Icon-Pfad — wenn der Probe-Test gegen die volle Primitive-Liste läuft, wird die Drift dort fix-zwingend (oder explizit als Test-Subset markiert: „Matrix testet nur die 11 frequenten Primitives — Section/Article/H1-H6 sind durch isPrimitive-Schema-Lookup ohnehin unbeobachtbar"). |
+| RT-16 | Lock: `isPrimitive()` aus dem Schema deckt alle 26 Primitives + Aliases (Box, Img); user-component-names false. Probe-Skript `tools/probes/slice-01-frame.ts` `I1`-Block. | innerhalb Slice 1 (Iter-2)         | Drift-Lock für D-1-Fix. Sub-test-Reihe in `tests/studio/rename` deckt das `isPrimitive()`-Replacement-Verhalten implizit (16 Tests grün).                                                                                                                                                                                                                                          |
+
+## 7.6 9-Punkt-Quality-Gate (Iter-2)
+
+| #   | Check                                           | Status                                                                                                                                                                                                                     |
+| --- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Probe-Tabelle ohne 🔴                           | ✅ alle Iter-1 🟡/🟠 sind im Iter-1-Review-Pass-Stand bereits geschlossen oder bewusst-Re-Open mit Adresse                                                                                                                 |
+| 2   | Phase-Stati ∈ {erledigt, verschoben, verworfen} | ✅ Phase A/B/C alle erledigt (Iter-1)                                                                                                                                                                                      |
+| 3   | Jeder RT geschrieben                            | ✅ RT-1..RT-13 erledigt (Iter-1); RT-14 abgedeckt durch CDP-Suite (Lower-Bar); RT-15 obsolet (begründet)                                                                                                                   |
+| 4   | Schema-Drift-Grep                               | ✅ durchgeführt (siehe 7.2); D-1 fix in-scope, D-2 als Re-Open                                                                                                                                                             |
+| 5   | Cross-Slice-Wirkung geprüft                     | ✅ `isPrimitive()` ist canonical, weder Slice 2 (gap) noch Slice 3 (hor) hat ein eigenes Primitive-Set                                                                                                                     |
+| 6   | Cross-Backend-Differential-RT                   | ✅ RT-12 (Framework), RT-5 (React data-Attrs), RT-13 (React-Default-Styles) — alle 3 Backends in der Suite                                                                                                                 |
+| 7   | Studio-Roundtrip explizit                       | ✅ Lower-Bar deklariert in 7.4 (DOM gelocked + bestehende CDP-Suite)                                                                                                                                                       |
+| 8   | Vitest gesamt grün                              | ✅ 15052/15075 (23 skipped); rename-engine 16/16 lokal grün nach D-1-Fix                                                                                                                                                   |
+| 9   | „Substantiell besser, aber …"-Test              | ✅ Antwort auf „ist das nun richtig gut?" — **Ja:** D-1 fix lockt 18 zusätzliche Primitive-Namen gegen Rename-Kollision; D-2 als deferred-Re-Open mit Ziel-Slice eingetragen; Lower-Bar Studio-Roundtrip explizit benannt. |

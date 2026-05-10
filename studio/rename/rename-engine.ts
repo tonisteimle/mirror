@@ -6,6 +6,7 @@
  */
 
 import { tokenize, type Token } from '../../compiler/parser/lexer'
+import { isPrimitive } from '../../compiler/schema/dsl'
 
 export type SymbolType = 'component' | 'token'
 
@@ -198,9 +199,12 @@ export class RenameEngine {
       if (!/^[A-Z][a-zA-Z0-9_]*$/.test(trimmed)) {
         return { valid: false, error: 'Invalid component name format' }
       }
-      // Check for reserved words
-      const reserved = ['Frame', 'Text', 'Button', 'Input', 'Icon', 'Image', 'Link', 'Box']
-      if (reserved.includes(trimmed)) {
+      // Check for reserved words — Slice 1 Iter-2: schema-derived via
+      // `isPrimitive()`. Pre-fix: hardcoded 8-name list missed 18 primitives
+      // (Section/Article/Header/Footer/Nav/Main/Aside/H1-H6/Textarea/Label/
+      // Slot/Divider/Spacer/Img alias). User could rename a component to
+      // `H1` or `Section` and the engine wouldn't catch the collision.
+      if (isPrimitive(trimmed)) {
         return { valid: false, error: `"${trimmed}" is a reserved primitive name` }
       }
     }

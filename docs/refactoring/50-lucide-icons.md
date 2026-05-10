@@ -231,6 +231,24 @@ Das Set zu suppress-en wenn Icon + data-icon-attrs:
 
 **Begründung:** Slice 51 ist meine direkte nächste Phase (51 depends on 50). Defer-Lock-RT für Slice 51 statt im Slice 50 zu fixen. Re-Open-Trigger: Slice 51 Audit.
 
+## V-8 — Re-Open-Trigger aus Slice 1 Iter-2: ALL_PRIMITIVES schema-derived
+
+**Vom Plan an Slice 50 adressiert:** `studio/test-api/suites/property-panel/primitive-matrix.test.ts:36-47` listet `ALL_PRIMITIVES` als hardcoded Subset von 11/26 Primitiven (Frame, Text, Button, Input, Textarea, Label, Image, Icon, Link, Divider, Spacer). Slice 1 Iter-2 hat das als Test-Drift gefunden, kein Runtime-Drift, aber per Plan-Lesson 6 muss Cross-Slice-Wirkung aktiv geprüft werden.
+
+**Entscheidung:** Slice 50 macht die Liste **schema-derived**. Konkret: in `studio/test-api/suites/property-panel/primitive-matrix.test.ts`:
+
+```typescript
+// Statt hardcoded Liste:
+import { PRIMITIVES } from '../../../../compiler/schema/dsl'
+const ALL_PRIMITIVES = Object.keys(PRIMITIVES) as (keyof typeof PRIMITIVES)[]
+```
+
+(Oder geeigneter Schema-Export — exact API checken).
+
+**Scope-Entscheidung (Plan-Step 7):** In-scope-fix weil Helper trivial extendable und Slice 50 ist „Lehrobjekt" für Phase-1 unter neuem Quality-Gate. Out-of-scope wäre: wenn die Test-Suite andere Erwartungen pro Primitive hat die nicht alle 26 erfüllen — dann explizites Subset mit Begründung.
+
+**Begründung:** Slice-Lehre 7: „Hot-Files brauchen Schema-Lookups, nicht Switch-Cases". Hardcoded Liste mit unklarer Vollständigkeit ist ein latentes Drift-Risiko (neue Primitives → Test rendert nicht auf neuen Primitives → silent gap).
+
 ---
 
 # 4. Umsetzungsplan & Status
@@ -245,9 +263,10 @@ Das Set zu suppress-en wenn Icon + data-icon-attrs:
 | A.6  | `setAttribute('data-icon-fill', "true")` Quote-Fix — V-5                                           | pending |
 | A.7  | Slice-50 RT-Suite — V-6 (Cross-Backend, ~22 RTs)                                                   | pending |
 | A.8  | Cross-Slice-Probe gegen Slice 51 (Custom-Icons) — V-7                                              | pending |
-| A.9  | Schema-Drift-Grep + Cross-Slice-Scope-Entscheidung                                                 | pending |
-| A.10 | Review-Pass mit Iteration bis sauber                                                               | pending |
-| A.11 | 9-Punkt Quality-Gate-Check                                                                         | pending |
+| A.9  | ALL_PRIMITIVES schema-derived in `primitive-matrix.test.ts` — V-8                                  | pending |
+| A.10 | Schema-Drift-Grep + Cross-Slice-Scope-Entscheidung                                                 | pending |
+| A.11 | Review-Pass mit Iteration bis sauber                                                               | pending |
+| A.12 | 9-Punkt Quality-Gate-Check                                                                         | pending |
 
 ---
 
