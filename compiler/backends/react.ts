@@ -543,7 +543,7 @@ function generateJSX(
   const styleStr = Object.keys(style).length > 0 ? ` style={${formatStyleObject(style)}}` : ''
 
   // HTML attributes from properties (placeholder, type, href, src, etc.)
-  const attrStr = generateHtmlAttributes(allProps)
+  const attrStr = generateHtmlAttributes(allProps) + generateBindAttribute(instance, allProps)
 
   // Mirror data-* attributes (component, mirror-name, mirror-id, state).
   // Mirrors what the DOM backend emits via dataset.* so studio/editor
@@ -1084,6 +1084,27 @@ function generateHtmlAttributes(properties: Property[]): string {
     }
   }
   return attrs.length > 0 ? ' ' + attrs.join(' ') : ''
+}
+
+/**
+ * `Input bind name` lives on the AST as `instance.bind` rather than as
+ * a property (the parser stores it directly). Emit `defaultValue` from
+ * the matching token so the initial data lands in the input, plus the
+ * `data-bind` attribute that the DOM backend uses for two-way wiring —
+ * any future React runtime can read it the same way. `Input bind X` on
+ * a checkbox-type input maps to `defaultChecked` instead.
+ */
+function generateBindAttribute(instance: Instance, allProps: Property[]): string {
+  const bind = (instance as Instance & { bind?: string }).bind
+  if (!bind) return ''
+  // Detect checkbox/radio so we use `defaultChecked` instead of `defaultValue`.
+  const typeProp = allProps.find(p => p.name === 'type')
+  const typeVal = typeProp?.values[0]
+  const isBooleanInput = typeVal === 'checkbox' || typeVal === 'radio'
+  const valueAttr = isBooleanInput ? 'defaultChecked' : 'defaultValue'
+  // Drop the leading `$` if the parser preserved it (it shouldn't, but be safe).
+  const tokenKey = bind.startsWith('$') ? bind.slice(1) : bind
+  return ` ${valueAttr}={tokens[${JSON.stringify(tokenKey)}]} data-bind=${JSON.stringify(tokenKey)}`
 }
 
 function getTextContent(

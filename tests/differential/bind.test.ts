@@ -42,6 +42,29 @@ describe('Bind — DOM emits data-bind attribute on Input', () => {
   })
 })
 
+describe('Bind — React reads token values into defaultValue / defaultChecked', () => {
+  // Pre-2026-05-10 the React backend dropped `bind` entirely. Now: emit
+  // `defaultValue={tokens["name"]}` so the initial data lands in the
+  // input, plus a `data-bind="name"` attribute matching the DOM shape.
+  // Two-way wiring still needs a runtime — defer.
+  it('text Input bind: defaultValue reads from tokens', () => {
+    const react = generateReact(parse(`name: "Max"\n\nInput bind name`))
+    expect(react).toContain('defaultValue={tokens["name"]}')
+    expect(react).toContain('data-bind="name"')
+  })
+
+  it('checkbox Input bind: defaultChecked instead of defaultValue', () => {
+    const react = generateReact(parse(`done: true\n\nInput type "checkbox", bind done`))
+    expect(react).toContain('defaultChecked={tokens["done"]}')
+    expect(react).not.toContain('defaultValue={tokens["done"]}')
+  })
+
+  it('Input without bind: no data-bind attribute', () => {
+    const react = generateReact(parse(`Input placeholder "X"`))
+    expect(react).not.toContain('data-bind')
+  })
+})
+
 describe('Bind — Fixed bugs (regression tests)', () => {
   it('Bug #30 fixed: bind in each-loop emits per-item data-bind', () => {
     const src = `items:\n  a:\n    value: "x"\n\neach item in $items\n  Input bind item.value`
