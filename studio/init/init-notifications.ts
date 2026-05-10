@@ -37,16 +37,14 @@ export function initNotifications(config: NotificationInitConfig): () => void {
   }
 
   studio.events.on('drag:dropped', ({ source, target, dragData }) => {
-    if (!target) {
-      log.warn('[Drag v3] Missing target')
-      return
-    }
     // Canvas-only state: editor has no Mirror node tree (just an empty
     // editor or a `canvas …` declaration). Mirror still synthesizes an
     // implicit wrapper node for hit-detection, but it has no source-map
     // entry, so handleStudioDropNew can't insert into it. Fall back to
     // "append as new top-level element" — what the user actually means
-    // by dropping a palette item there.
+    // by dropping a palette item there. Checked BEFORE the target null-gate
+    // because in test-mode the drag pipeline yields target=null for empty
+    // editors; the append path doesn't need target.
     if (source?.type === 'palette') {
       const before = editor?.state?.doc?.toString() ?? ''
       const trimmed = before.trim()
@@ -83,6 +81,13 @@ export function initNotifications(config: NotificationInitConfig): () => void {
         }
         return
       }
+    }
+
+    // Everything below this point requires a real drop target (the
+    // empty-canvas append path returned above).
+    if (!target) {
+      log.warn('[Drag v3] Missing target')
+      return
     }
 
     // Handle canvas element move (type: 'canvas')

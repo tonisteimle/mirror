@@ -30,14 +30,14 @@
  *   - Selektion landet automatisch auf dem neuen Knoten.
  */
 
-import { testWithSetupSkip, describe } from '../../../test-runner'
+import { testWithSetup, describe } from '../../../test-runner'
 import type { TestCase, TestAPI } from '../../../types'
 import { requireActions } from '../_shared/actions'
 import { allPreviewNodeIds } from '../_shared/selectors'
 import { FIXTURES } from '../_shared/fixtures'
 
 export const frameIntoEmptyCanvasTests: TestCase[] = describe('preview-cdp.palette-drop', [
-  testWithSetupSkip(
+  testWithSetup(
     'Drag Frame from palette to empty preview produces a single top-level Frame',
     FIXTURES.empty,
     async (api: TestAPI) => {

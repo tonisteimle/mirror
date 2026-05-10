@@ -10,5 +10,6 @@
 
 import type { TestCase } from '../../types'
 import { demoTextIntoFrame } from './01-text-into-frame.demo'
+import { tutorial01 } from './tut-01-drop-sync.demo'
 
-export const demoTests: TestCase[] = [...demoTextIntoFrame]
+export const demoTests: TestCase[] = [...demoTextIntoFrame, ...tutorial01]

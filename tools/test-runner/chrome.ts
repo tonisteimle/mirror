@@ -58,6 +58,13 @@ export async function launchChrome(options: LaunchOptions = {}): Promise<ChromeI
   const chromePath = findChromePath()
   const userDataDir = options.userDataDir || createTempDir()
 
+  // Seed Chrome Preferences to fully disable the translate bubble. The
+  // command-line flags `--disable-features=Translate,…` aren't enough on
+  // macOS: Chrome still shows the bubble for English content when the
+  // accept-lang differs. Writing translate.enabled=false at user-data-dir
+  // creation time stops that bubble cold.
+  seedNoTranslatePreferences(userDataDir)
+
   const args = buildChromeArgs(userDataDir, options)
   const process = spawn(chromePath, args, { stdio: ['pipe', 'pipe', 'pipe'] })
 
@@ -88,6 +95,23 @@ function cleanupTempDir(dir: string): void {
   }
 }
 
+function seedNoTranslatePreferences(userDataDir: string): void {
+  const profileDir = path.join(userDataDir, 'Default')
+  fs.mkdirSync(profileDir, { recursive: true })
+  const prefs = {
+    translate: { enabled: false },
+    translate_blocked_languages: ['en', 'de', 'fr', 'es', 'it'],
+    translate_site_blacklist: [],
+    intl: { accept_languages: 'en-US,en', selected_languages: 'en-US,en' },
+    profile: { default_content_setting_values: { popups: 1 } },
+  }
+  try {
+    fs.writeFileSync(path.join(profileDir, 'Preferences'), JSON.stringify(prefs))
+  } catch {
+    // Best-effort; if this fails the flag-based suppression is still in place.
+  }
+}
+
 function buildChromeArgs(userDataDir: string, options: LaunchOptions): string[] {
   const args = [
     `--user-data-dir=${userDataDir}`,
@@ -97,9 +121,12 @@ function buildChromeArgs(userDataDir: string, options: LaunchOptions): string[] 
     '--disable-background-networking',
     '--disable-sync',
     '--disable-translate',
-    '--disable-features=Translate,TranslateUI',
-    '--lang=de-DE',
-    '--accept-lang=de-DE,de',
+    // Aggressively kill the translate infobar; the German accept-lang
+    // combined with English UI text used to trigger Chrome's
+    // "Translate this page?" omnibox bubble in tutorial recordings.
+    '--disable-features=Translate,TranslateUI,TranslateSubFrames,LanguageDetectionAPI',
+    '--lang=en-US',
+    '--accept-lang=en-US,en',
     '--metrics-recording-only',
     '--safebrowsing-disable-auto-update',
     '--disable-extensions',
@@ -131,7 +158,15 @@ function buildChromeArgs(userDataDir: string, options: LaunchOptions): string[] 
     args.push(...options.args)
   }
 
-  args.push('about:blank')
+  // When `--window-size` is set we treat the run as a tutorial-recording
+  // launch and strip Chrome's UI (omnibox, tabs, translate bubble) by
+  // booting straight into app-mode. The runtime still navigates the
+  // target to studio via CDP, so `about:blank` is fine as the seed page.
+  if (options.windowSize) {
+    args.push('--app=about:blank')
+  } else {
+    args.push('about:blank')
+  }
 
   return args
 }
