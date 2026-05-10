@@ -10,7 +10,7 @@ import {
   type SectionData,
   type EventHandlerMap,
 } from '../base/section'
-import type { SpacingToken } from '../types'
+import type { PanelSpacingToken } from '../types'
 import { renderTokenButtonGroup } from '../utils/render-token-buttons'
 
 /**
@@ -64,7 +64,7 @@ export class BorderSection extends BaseSection {
   private renderRadiusSection(
     radiusValue: string,
     isOverride: boolean,
-    tokens: SpacingToken[]
+    tokens: PanelSpacingToken[]
   ): string {
     const isTokenRef = radiusValue.startsWith('$')
 

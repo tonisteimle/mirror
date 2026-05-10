@@ -23,7 +23,7 @@ import type {
   PanelEventPort,
   PropertyPanelPorts,
   CleanupFn,
-  SpacingToken,
+  PanelSpacingToken,
   ColorToken,
   PropertyChange,
   Rect,

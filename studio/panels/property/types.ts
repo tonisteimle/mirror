@@ -37,12 +37,6 @@ export interface PanelSpacingToken {
   value: string // e.g., "4", "8"
 }
 
-// Backwards-compat alias — to be retired once all imports update.
-// Kept as an alias rather than re-export so the structural type and the
-// disambiguating documentation stay co-located.
-/** @deprecated Use PanelSpacingToken — name collides with SnapSpacingToken. */
-export type SpacingToken = PanelSpacingToken
-
 /**
  * Color token
  */

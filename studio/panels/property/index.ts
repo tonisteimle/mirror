@@ -63,7 +63,6 @@ export type {
   PanelEventPort,
   CleanupFn,
   PanelSpacingToken,
-  SpacingToken, // @deprecated alias of PanelSpacingToken
   ColorToken,
   PropertyChange,
   Rect,

@@ -2,7 +2,7 @@
  * Token utilities for Property Panel
  */
 
-import type { SpacingToken, ColorToken, GetAllSourceCallback } from '../types'
+import type { PanelSpacingToken, ColorToken, GetAllSourceCallback } from '../types'
 import {
   PROPERTY_TO_TOKEN_SUFFIX,
   getTokenSuffix as getCanonicalTokenSuffix,
@@ -12,7 +12,7 @@ import {
  * Token cache manager
  */
 export class TokenCache {
-  private cachedSpacingTokens: Map<string, SpacingToken[]> = new Map()
+  private cachedSpacingTokens: Map<string, PanelSpacingToken[]> = new Map()
   private cachedColorTokens: ColorToken[] | null = null
   private cachedSourceHash: string = ''
 
@@ -41,7 +41,7 @@ export class TokenCache {
   /**
    * Get spacing tokens for a property type
    */
-  getSpacingTokens(propType: string, getSource: () => string): SpacingToken[] {
+  getSpacingTokens(propType: string, getSource: () => string): PanelSpacingToken[] {
     const source = getSource()
     const hash = this.hashSource(source)
 
@@ -58,7 +58,7 @@ export class TokenCache {
     }
 
     const lines = source.split('\n')
-    const tokenMap = new Map<string, SpacingToken>()
+    const tokenMap = new Map<string, PanelSpacingToken>()
 
     // Build regex for the specific property type
     const regex = new RegExp(`^\\$?([a-zA-Z0-9_-]+)\\.${propType}\\s*:\\s*(\\d+)$`)

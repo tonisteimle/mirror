@@ -14,7 +14,7 @@ import {
   type EventHandlerMap,
 } from '../base/section'
 import { renderTokenButtonGroup } from '../utils/render-token-buttons'
-import type { SpacingToken } from '../types'
+import type { PanelSpacingToken } from '../types'
 import { extractSides, spacingPropertyNames } from '../utils/spacing-parse'
 
 /**
@@ -97,7 +97,7 @@ export class MarginSection extends BaseSection {
     label: string,
     value: string,
     direction: string,
-    tokens: SpacingToken[],
+    tokens: PanelSpacingToken[],
     hasTokens: boolean,
     isOverride: boolean,
     rowClass: string
@@ -131,7 +131,7 @@ export class MarginSection extends BaseSection {
   private renderTokenButtons(
     activeValue: string,
     direction: string,
-    tokens: SpacingToken[]
+    tokens: PanelSpacingToken[]
   ): string {
     return renderTokenButtonGroup({
       activeValue,

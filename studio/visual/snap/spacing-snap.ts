@@ -47,10 +47,6 @@ export interface SnapSpacingToken {
   suffix: string
 }
 
-// Backwards-compat alias — to be retired once all imports update.
-/** @deprecated Use SnapSpacingToken — name collides with PanelSpacingToken. */
-export type SpacingToken = SnapSpacingToken
-
 export type SpacingPropertyType = 'pad' | 'mar' | 'gap'
 
 // ============================================================================

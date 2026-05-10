@@ -33,7 +33,7 @@ import type { Rect } from '../../visual/models/coordinate'
 
 // Re-export from types.ts (single source of truth for the panel-side
 // spacing-token shape).
-export type { PanelSpacingToken, SpacingToken } from './types'
+export type { PanelSpacingToken } from './types'
 import type { PanelSpacingToken } from './types'
 
 // Re-export from types.ts (single source of truth). The earlier inline

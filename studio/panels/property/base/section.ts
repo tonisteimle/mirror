@@ -5,7 +5,7 @@
  */
 
 import type { PropertyCategory, ExtractedProperty } from '../../../core/compiler-types'
-import type { SpacingToken, ColorToken } from '../types'
+import type { PanelSpacingToken, ColorToken } from '../types'
 
 /**
  * Data passed to sections for rendering
@@ -23,12 +23,14 @@ export interface SectionData {
   /** Whether to hide section headers (for simple primitives) */
   compact?: boolean
   // Token data
-  spacingTokens?: SpacingToken[]
+  spacingTokens?: PanelSpacingToken[]
   colorTokens?: ColorToken[]
   // All properties for the element (used by color section)
   allProperties?: ExtractedProperty[]
   // Callbacks
-  getSpacingTokens?: (propType: 'pad' | 'mar' | 'gap' | 'rad' | 'fs' | 'w' | 'h') => SpacingToken[]
+  getSpacingTokens?: (
+    propType: 'pad' | 'mar' | 'gap' | 'rad' | 'fs' | 'w' | 'h'
+  ) => PanelSpacingToken[]
   getColorTokens?: () => ColorToken[]
   /** Resolve token value. propType is needed for short references like "$s" → "$s.pad" */
   resolveTokenValue?: (tokenRef: string, propType?: string) => string | null

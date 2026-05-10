@@ -153,7 +153,7 @@ export {
   resetSpacingSnapService,
   shouldBypassSnapping,
   type SpacingSnapResult,
-  type SpacingToken,
+  type SnapSpacingToken,
   type SpacingPropertyType,
 } from './snap'
 

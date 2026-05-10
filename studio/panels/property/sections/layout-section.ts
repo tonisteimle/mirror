@@ -11,7 +11,7 @@ import {
   type SectionData,
   type EventHandlerMap,
 } from '../base/section'
-import type { SpacingToken } from '../types'
+import type { PanelSpacingToken } from '../types'
 import { getLayoutIcon } from '../../../icons'
 import { renderTokenButtonGroup } from '../utils/render-token-buttons'
 
@@ -129,7 +129,7 @@ export class LayoutSection extends BaseSection {
     `
   }
 
-  private renderGapTokens(gapValue: string, tokens: SpacingToken[]): string {
+  private renderGapTokens(gapValue: string, tokens: PanelSpacingToken[]): string {
     return renderTokenButtonGroup({
       activeValue: gapValue,
       propKey: 'gap',

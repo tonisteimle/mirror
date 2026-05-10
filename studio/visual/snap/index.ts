@@ -29,7 +29,6 @@ export {
   shouldBypassSnapping,
   type SpacingSnapResult,
   type SnapSpacingToken,
-  type SpacingToken, // @deprecated alias of SnapSpacingToken
   type SpacingPropertyType,
 } from './spacing-snap'
 

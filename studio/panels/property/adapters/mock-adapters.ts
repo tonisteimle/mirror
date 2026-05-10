@@ -20,7 +20,7 @@ import type {
   PanelEventPort,
   PropertyPanelPorts,
   CleanupFn,
-  SpacingToken,
+  PanelSpacingToken,
   ColorToken,
   PropertyChange,
   Rect,
@@ -221,7 +221,7 @@ export function createMockModificationPort(): MockModificationPort {
 // ============================================
 
 export interface MockTokenPortState {
-  spacingTokens: Map<string, SpacingToken[]>
+  spacingTokens: Map<string, PanelSpacingToken[]>
   colorTokens: ColorToken[]
   tokenValues: Map<string, string>
   cacheInvalidated: boolean
@@ -229,7 +229,7 @@ export interface MockTokenPortState {
 
 export interface MockTokenPort extends TokenPort {
   _state: MockTokenPortState
-  _setSpacingTokens(propType: string, tokens: SpacingToken[]): void
+  _setSpacingTokens(propType: string, tokens: PanelSpacingToken[]): void
   _setColorTokens(tokens: ColorToken[]): void
   _setTokenValue(ref: string, value: string): void
   _clear(): void

@@ -10,7 +10,7 @@ import {
   type SectionData,
   type EventHandlerMap,
 } from '../base/section'
-import type { SpacingToken } from '../types'
+import type { PanelSpacingToken } from '../types'
 import { extractSides, parseSidesValue, spacingPropertyNames } from '../utils/spacing-parse'
 import { renderTokenButtonGroup } from '../utils/render-token-buttons'
 
@@ -97,7 +97,7 @@ export class SpacingSection extends BaseSection {
     label: string,
     value: string,
     direction: string,
-    tokens: SpacingToken[],
+    tokens: PanelSpacingToken[],
     hasTokens: boolean,
     isOverride: boolean,
     rowClass: string
@@ -134,7 +134,7 @@ export class SpacingSection extends BaseSection {
   private renderTokenButtons(
     activeValue: string,
     direction: string,
-    tokens: SpacingToken[]
+    tokens: PanelSpacingToken[]
   ): string {
     return renderTokenButtonGroup({
       activeValue,

@@ -11,7 +11,7 @@ import {
   type SectionData,
   type EventHandlerMap,
 } from '../base/section'
-import type { SpacingToken } from '../types'
+import type { PanelSpacingToken } from '../types'
 import { renderTokenButtonGroup } from '../utils/render-token-buttons'
 
 /**
@@ -170,7 +170,7 @@ export class TypographySection extends BaseSection {
     `
   }
 
-  private renderSizeTokens(fontSizeValue: string, tokens: SpacingToken[]): string {
+  private renderSizeTokens(fontSizeValue: string, tokens: PanelSpacingToken[]): string {
     return renderTokenButtonGroup({
       activeValue: fontSizeValue,
       propKey: 'fs',

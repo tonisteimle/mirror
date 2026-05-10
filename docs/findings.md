@@ -162,26 +162,6 @@ Alias-Equivalenz`) deckt die Drei-Alias-Equivalenz schon ab.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
-- **Wo:** `studio/panels/property/{types,index}.ts` +
-  `studio/visual/snap/{spacing-snap,index}.ts` — `SpacingToken` als
-  `@deprecated` Alias
-  **Was:** Naming-Collision-Fix `3f6686f3` hat zwei `SpacingToken`-
-  Interfaces zu `PanelSpacingToken` + `SnapSpacingToken` umbenannt
-  und je einen `@deprecated SpacingToken`-Alias als Übergang behalten.
-  Heutiger Stand: Panel-Seite hat 7 Files die noch den Alias
-  importieren (`base/section.ts`, `utils/tokens.ts`, 5×
-  `sections/*-section.ts`), Snap-Seite hat **0 externe Consumer**.
-  Die Übergangs-Krücke ist nie zurückgebaut worden.
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~19:15)
-  **Plan:**
-  1. 7 Panel-Imports von `SpacingToken` auf `PanelSpacingToken`
-     umstellen (auch alle in-File Verwendungen).
-  2. `@deprecated SpacingToken`-Aliase aus `types.ts:43` und
-     `index.ts:66` entfernen.
-  3. Snap-Seite: Aliase aus `spacing-snap.ts:51` und `index.ts:32`
-     entfernen (0 Consumer, kein Migrations-Schritt nötig).
-  4. Panel-Tests grün, dann commit.
-
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
@@ -833,6 +813,20 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — `SpacingToken`-Deprecation-Aliase aus Panel + Snap entfernt
+
+- **Wo:** `studio/panels/property/{types,index,ports}.ts` +
+  `studio/visual/snap/{spacing-snap,index}.ts` + 11 Consumer-Files
+  **Was:** Übergangs-Aliase aus dem Naming-Collision-Fix `3f6686f3`
+  vollständig zurückgebaut. Migration: 7 Panel-Files (`base/section.ts`,
+  `utils/tokens.ts`, 5× `sections/*-section.ts`) + 2 Adapter
+  (`mock-adapters.ts`, `production-adapters.ts`) auf
+  `PanelSpacingToken` umgestellt; Snap-Consumer (`visual/index.ts`
+  Re-Export, `test-api/snapping-api.ts`) auf `SnapSpacingToken`.
+  Beide `@deprecated SpacingToken`-Aliase + zugehörige Re-Exports
+  in 4 Files entfernt. 6002/6002 studio tests pass.
+  **Status:** erledigt (`<spacingtoken-commit>`)
 
 ### 2026-05-10 — Probe-Hygiene: 70 throwaway `probe-*.ts` gelöscht
 

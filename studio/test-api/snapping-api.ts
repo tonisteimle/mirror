@@ -14,7 +14,7 @@ import {
   initSpacingSnapService,
   resetSpacingSnapService,
   type SpacingSnapResult,
-  type SpacingToken,
+  type SnapSpacingToken,
   type SpacingPropertyType,
 } from '../visual/snap'
 import { handleSnapSettings, gridSettings } from '../core'
@@ -30,10 +30,10 @@ export interface SnappingDebugInfo {
   sourceLength: number
   /** Parsed spacing tokens */
   tokens: {
-    all: SpacingToken[]
-    pad: SpacingToken[]
-    mar: SpacingToken[]
-    gap: SpacingToken[]
+    all: SnapSpacingToken[]
+    pad: SnapSpacingToken[]
+    mar: SnapSpacingToken[]
+    gap: SnapSpacingToken[]
   }
   /** Current settings */
   settings: {
@@ -58,11 +58,11 @@ export interface SnapTestResult {
   /** Snap result */
   result: SpacingSnapResult
   /** Available tokens for this property type */
-  availableTokens: SpacingToken[]
+  availableTokens: SnapSpacingToken[]
   /** Debug info */
   debug: {
     tokensExist: boolean
-    closestToken: SpacingToken | null
+    closestToken: SnapSpacingToken | null
     closestDistance: number | null
     wouldSnapToGrid: boolean
     gridValue: number | null
@@ -87,7 +87,7 @@ export interface SnappingAPI {
   reset(): void
 
   /** Get all parsed tokens */
-  getTokens(propertyType?: SpacingPropertyType): SpacingToken[]
+  getTokens(propertyType?: SpacingPropertyType): SnapSpacingToken[]
 
   /** Update settings for testing */
   updateSettings(settings: {
@@ -137,10 +137,10 @@ export function createSnappingAPI(): SnappingAPI {
       const gridSettingsValue = gridSettings.get()
 
       // Get tokens if service exists
-      let allTokens: SpacingToken[] = []
-      let padTokens: SpacingToken[] = []
-      let marTokens: SpacingToken[] = []
-      let gapTokens: SpacingToken[] = []
+      let allTokens: SnapSpacingToken[] = []
+      let padTokens: SnapSpacingToken[] = []
+      let marTokens: SnapSpacingToken[] = []
+      let gapTokens: SnapSpacingToken[] = []
 
       if (service) {
         allTokens = service.getSpacingTokens()
@@ -186,7 +186,7 @@ export function createSnappingAPI(): SnappingAPI {
       const settings = handleSnapSettings.get()
 
       // Find closest token for debug info
-      let closestToken: SpacingToken | null = null
+      let closestToken: SnapSpacingToken | null = null
       let closestDistance: number | null = null
       for (const token of availableTokens) {
         const distance = Math.abs(value - token.value)
@@ -233,7 +233,7 @@ export function createSnappingAPI(): SnappingAPI {
       console.log('Snapping service reset')
     },
 
-    getTokens(propertyType?: SpacingPropertyType): SpacingToken[] {
+    getTokens(propertyType?: SpacingPropertyType): SnapSpacingToken[] {
       const service = getSpacingSnapService()
       if (!service) return []
       return service.getSpacingTokens(propertyType)
