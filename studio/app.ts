@@ -1149,7 +1149,7 @@ const autoCreateFiles = createAutoCreateFiles({
   getFiles: () => files,
   saveFile,
 })
-const { autoCreateFile, readFile, autoCreateReferencedFiles } = autoCreateFiles
+const { readFile, autoCreateReferencedFiles } = autoCreateFiles
 
 // Update file icon based on current content
 function updateFileIcon(filename: string) {
