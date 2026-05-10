@@ -155,9 +155,24 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Was:** 3931 LOC über vier nahezu identische Manager-Klassen (Handles,
   Drag-State, Observer, RAF-Throttling, Snap-Logik) — massive Duplikation
   im größten Subsystem.
-  **Status:** offen
-  **Notiz:** Gemeinsame `DragHandleManager`-Basisklasse mit
-  orientierungsspezifischen Subklassen.
+  **Status:** offen — Strukturanalyse 2026-05-10 (per Explore-Agent):
+  Public API identisch (`showHandles`/`hideHandles`/`refresh`/`dispose`).
+  RAF-Mouse-Loop (`onMouseDown`/`onMouseMove`/`processMouseMove`/`onMouseUp`
+  mit `pendingMouseEvent`+`rafId`) verbatim in allen 4. Padding/Margin/Gap
+  teilen zusätzlich Observer-Setup (Resize+MutationObserver+scroll+window-
+  resize, `debouncedRefresh`) und Snap-Logik via
+  `getSpacingSnapService`. ResizeManager ist Outlier (8 Handles, Multi-
+  Selection, Grid, Sizing-Mode, double-click).
+  **Notiz:** Inkrementeller Pfad: (1) `studio/visual/raf-mouse.ts` Helper
+  für RAF-Mouse-Throttle, (2) `studio/visual/observer-pack.ts` für die
+  Observer-Tripletts der Spacing-Manager, (3) `SpacingHandleManagerBase`
+  für Padding/Margin/Gap (gleiche Modifier-Logik, gleicher Snap, gleiches
+  Overlay-Pattern), (4) ResizeManager bleibt eigenständig.
+  Tests: nur ResizeManager hat Unit-Tests
+  (`tests/studio/visual-resize-manager.test.ts`,
+  `visual/resize-manager-multi.test.ts`); Padding/Margin/Gap nur durch
+  Browser-Tests gedeckt — Refactor braucht sorgfältige headed-
+  Verification. Eigene Session, nicht inkrementell.
 
 - **Wo:** `studio/panels/property/view.ts` (1037 LOC)
   **Was:** PANEL_CONFIG mit 100+ Primitive-Typen + 12 Section-Creators in
