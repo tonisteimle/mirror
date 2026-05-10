@@ -129,6 +129,27 @@ Alias-Equivalenz`) deckt die Drei-Alias-Equivalenz schon ab.
   einzeln: ins Schema aufnehmen (mit Aliases) ODER aus IR entfernen.
   **Status:** offen
 
+- **Wo:** `compiler/schema/dsl.ts:213` (`'route'` keyword), Parser-Plumbing
+  in `compiler/parser/{lexer,parser-context,inline-property-parser,
+body-parser,parser,ops/parse-misc,ops/parse-blocks}.ts` +
+  `compiler/runtime/mirror-runtime.ts:366`
+  **Was:** Lane 1 (Dead-Feature-Watchlist) — `route`-Keyword ist im
+  Schema bereits `@deprecated - use navigate() or Tab/NavItem without
+  children instead`, aber: 0 Verwendung in `examples/`, 0 in DSL-Files
+  repo-weit, NICHT in `tests/policy/dsl-features-have-examples.test.ts`
+  WATCHLIST oder KEEP gelistet — also zwischen den Rosten. Komplette
+  Parser-Plumbing existiert (8 Files): Lexer-Token `ROUTE`, Parse-
+  Funktion `parseRouteClause`, 5 Aufrufer in `body-parser.ts`/
+  `parse-blocks.ts`/`inline-property-parser.ts`. Der `@deprecated`-
+  Hinweis suggeriert Owner-Entscheidung schon einmal getroffen, aber
+  Code nie entfernt.
+  **Status:** aktiv (Claude-Session, 2026-05-10 ~19:00)
+  **Plan:** Minimal-invasiv: WATCHLIST-Eintrag in der Policy mit
+  Deadline 2026-08-10 (gleich wie ursprüngliche Batch). Forciert
+  Owner-Entscheidung nach Frist (delete-vs-promote). Deletion wäre
+  Multi-File-Refactor (8+ Files) und braucht Owner-Sign-off — Policy-
+  Mechanismus liefert genau das.
+
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
