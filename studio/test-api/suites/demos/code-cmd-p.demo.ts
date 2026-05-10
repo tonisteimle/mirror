@@ -13,38 +13,34 @@ import { FIXTURES } from '../preview-cdp/_shared/fixtures'
 import { centerOf, querySafe, requireCdpInput, requireOsMouse, sleep } from './_shared/actions'
 
 export const codeCmdP: TestCase[] = describe('demos.tutorial', [
-  testWithSetup(
-    'code: Cmd+P quick-switch popup',
-    FIXTURES.empty,
-    async (api: TestAPI) => {
-      const osMouse = requireOsMouse()
-      const cdpInput = requireCdpInput()
+  testWithSetup('code: Cmd+P quick-switch popup', FIXTURES.empty, async (api: TestAPI) => {
+    const osMouse = requireOsMouse()
+    const cdpInput = requireCdpInput()
 
-      const editor = querySafe('.cm-content')
-      await osMouse.moveTo(centerOf(editor))
-      await sleep(500)
-      await cdpInput.mouseClick({ x: centerOf(editor).x, y: centerOf(editor).y })
-      await sleep(400)
+    const editor = querySafe('.cm-content')
+    await osMouse.moveTo(centerOf(editor))
+    await sleep(500)
+    await cdpInput.mouseClick({ x: centerOf(editor).x, y: centerOf(editor).y })
+    await sleep(400)
 
-      // Open quick-switch.
-      await cdpInput.keyDown({ key: 'p', modifiers: { meta: true } })
-      await cdpInput.keyUp({ key: 'p', modifiers: { meta: true } })
-      await sleep(800)
+    // Open quick-switch.
+    await cdpInput.keyDown({ key: 'p', modifiers: { meta: true } })
+    await cdpInput.keyUp({ key: 'p', modifiers: { meta: true } })
+    await sleep(800)
 
-      // Studio's file-palette / command-palette UI.
-      const palette = document.querySelector(
-        '#file-palette, .file-palette, .command-palette, [data-file-palette]'
-      )
-      api.assert.ok(palette, 'quick-switch palette opened (Cmd+P)')
+    // Studio's file-palette / command-palette UI.
+    const palette = document.querySelector(
+      '#file-palette, .file-palette, .command-palette, [data-file-palette]'
+    )
+    api.assert.ok(palette, 'quick-switch palette opened (Cmd+P)')
 
-      await sleep(1200)
+    await sleep(1200)
 
-      // Close it.
-      await cdpInput.keyDown({ key: 'Escape' })
-      await cdpInput.keyUp({ key: 'Escape' })
-      await sleep(500)
+    // Close it.
+    await cdpInput.keyDown({ key: 'Escape' })
+    await cdpInput.keyUp({ key: 'Escape' })
+    await sleep(500)
 
-      await osMouse.park()
-    }
-  ),
+    await osMouse.park()
+  }),
 ])

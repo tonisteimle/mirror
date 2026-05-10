@@ -24,10 +24,7 @@ export const stateHoverFocus: TestCase[] = describe('demos.tutorial', [
 
     await api.editor.setCode(BASE)
     await sleep(800)
-    api.assert.ok(
-      document.querySelector('#preview [data-mirror-id]'),
-      'Btn renders in preview'
-    )
+    api.assert.ok(document.querySelector('#preview [data-mirror-id]'), 'Btn renders in preview')
 
     // Add hover/focus blocks via setCode (visible code change).
     await api.editor.setCode(WITH_HOVER)
