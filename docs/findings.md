@@ -923,7 +923,8 @@ Chronologisch absteigend (neueste zuerst).
   (explicit-target: 3, context-aware: 5). Browser-Tests
   `testWithSetupSkip` → `testWithSetup`. Golden-Fixture
   `a06-scroll/expected.dom.js` aktualisiert. 15428/15428 vitest grün.
-  **Status:** erledigt
+  **Status:** erledigt (gebündelt in `f9041257` von Parallel-Session,
+  ursprünglich von dieser Session implementiert)
 
 ### 2026-05-10 — Dead-feature-Verdacht: alle 4 Slices entschieden
 
