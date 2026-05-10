@@ -104,7 +104,9 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
 - **Wo:** `studio/core/change-pipeline.ts:127`
   **Was:** `(ctx.intent as any).nodeId`-Cast umgeht Type-Check auf
   kritischem Pfad — Discriminated Union oder Type-Guard fehlt.
-  **Status:** offen
+  **Status:** abgewiesen — Cast ist bereits weg; nach den Type-Checks für
+  intent-Varianten ohne `nodeId` (Z. 115-123) ist die Union narrowed,
+  Direkt-Zugriff `ctx.intent.nodeId` typt korrekt.
 
 - **Wo:** `studio/sync/sync-coordinator-v2.ts:161`
   **Was:** `(... as SourceMapPortWithSetter).setSourceMap(sourceMap as any)`
@@ -219,8 +221,9 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Was:** `\`Unknown intent type: ${(intent as any).type}\``— Fallback-
 Error-Message lockert exhaustiveness check; neue Intent-Variante kann
 als`undefined`geloggt werden.
-**Status:** offen
-**Notiz:** Mit Discriminated Union +`assertNever` exhaustiv machen.
+**Status:** erledigt —`const exhaustive: never = intent`als
+Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fallback. TS schlägt jetzt an, sobald eine Intent-
+  Variante hinzukommt ohne Case.
 
 - **Wo:** `studio/tauri-bridge.ts:172-173, 265-266`
   **Was:** Zwei `} catch { return false }` / `catch { document.title = ... }`
@@ -259,7 +262,9 @@ als`undefined`geloggt werden.
   **Was:** `(middleware as any).getStats = …` — Instrumentation an
   untyped middleware angehängt; keine Validierung dass Event-System
   Stats-API exponiert.
-  **Status:** offen
+  **Status:** erledigt — `AnalyticsMiddleware`-Typ extrahiert,
+  Funktions-Return-Type beim Konstruktions-Cast festgelegt, Property-
+  Zuweisungen sind jetzt typed (kein `as any` mehr).
 
 - **Wo:** Repo-weit
   **Was:** Aggregat: 105× `as any` (53 in `studio/`, 44 in `tools/`, 8 in

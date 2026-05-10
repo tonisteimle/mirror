@@ -478,27 +478,25 @@ export function createLoggerMiddleware(
  * Built-in middleware: Analytics tracker
  * Tracks event counts and can report statistics
  */
-export function createAnalyticsMiddleware(): EventMiddleware & {
+export type AnalyticsMiddleware = EventMiddleware & {
   getStats: () => Record<string, number>
   reset: () => void
-} {
+}
+
+export function createAnalyticsMiddleware(): AnalyticsMiddleware {
   const counts: Record<string, number> = {}
 
-  const middleware: EventMiddleware = (event, payload, meta) => {
+  const middleware = ((event, payload, meta) => {
     counts[event] = (counts[event] || 0) + 1
     return { payload, meta }
-  }
+  }) as AnalyticsMiddleware
 
-  // Attach utility methods
-  ;(middleware as any).getStats = () => ({ ...counts })
-  ;(middleware as any).reset = () => {
+  middleware.getStats = () => ({ ...counts })
+  middleware.reset = () => {
     for (const key of Object.keys(counts)) delete counts[key]
   }
 
-  return middleware as EventMiddleware & {
-    getStats: () => Record<string, number>
-    reset: () => void
-  }
+  return middleware
 }
 
 export const events = new EventBus()

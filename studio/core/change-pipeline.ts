@@ -706,12 +706,17 @@ function executeIntent(
       return { success: true, newSource: source }
     }
 
-    default:
+    default: {
+      // Exhaustiveness check — TS errors here if a new ChangeIntent variant
+      // is added without a matching case above. The runtime read keeps the
+      // existing error-message shape for unexpected runtime payloads.
+      const exhaustive: never = intent
       return {
         success: false,
         newSource: modifier.getSource(),
-        error: `Unknown intent type: ${(intent as any).type}`,
+        error: `Unknown intent type: ${(exhaustive as { type?: string }).type ?? 'unknown'}`,
       }
+    }
   }
 }
 
