@@ -4,8 +4,10 @@
  * Logs compile timing metrics for slow compiles.
  */
 
+import { createLogger } from '../../compiler/utils/logger'
 import type { CompileTimings } from './types'
 
+const log = createLogger('CompilePerf')
 const SLOW_COMPILE_THRESHOLD = 50 // ms
 
 export class PerfLogger {
@@ -67,19 +69,19 @@ export class PerfLogger {
   }
 
   private logSlowCompile(totalTime: number): void {
-    console.log('[CompilePerf] ========== SLOW COMPILE ==========')
-    console.log(`[CompilePerf] Total: ${totalTime.toFixed(1)}ms`)
+    log.warn('========== SLOW COMPILE ==========')
+    log.warn(`Total: ${totalTime.toFixed(1)}ms`)
     this.logPhase('Prelude', this.timings.start, this.timings.preludeEnd)
     this.logPhase('Parse', this.timings.preludeEnd, this.timings.parseEnd)
     this.logPhase('IR', this.timings.parseEnd, this.timings.irEnd)
     this.logPhase('Codegen', this.timings.irEnd, this.timings.codegenEnd)
     this.logExecutionPhases()
-    console.log('[CompilePerf] ================================')
+    log.warn('================================')
   }
 
   private logPhase(name: string, start?: number, end?: number): void {
     if (start === undefined || end === undefined) return
-    console.log(`[CompilePerf] ${name}: ${(end - start).toFixed(1)}ms`)
+    log.warn(`${name}: ${(end - start).toFixed(1)}ms`)
   }
 
   private logExecutionPhases(): void {

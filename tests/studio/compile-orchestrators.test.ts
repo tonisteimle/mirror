@@ -33,25 +33,25 @@ beforeEach(() => {
 
 describe('PerfLogger', () => {
   it('does NOT log when total time is under threshold', () => {
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const log = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const perf = new PerfLogger()
     perf.logIfSlow() // total < 50ms
     expect(log).not.toHaveBeenCalled()
   })
 
   it('logs the slow-compile banner when total exceeds threshold', () => {
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const log = vi.spyOn(console, 'warn').mockImplementation(() => {})
     let now = 0
     vi.spyOn(performance, 'now').mockImplementation(() => now)
     const perf = new PerfLogger()
     now = 100 // 100ms total → slow
     perf.logIfSlow()
-    expect(log).toHaveBeenCalledWith(expect.stringContaining('SLOW COMPILE'))
-    expect(log).toHaveBeenCalledWith(expect.stringContaining('Total: 100.0ms'))
+    expect(log).toHaveBeenCalledWith('[CompilePerf]', expect.stringContaining('SLOW COMPILE'))
+    expect(log).toHaveBeenCalledWith('[CompilePerf]', expect.stringContaining('Total: 100.0ms'))
   })
 
   it('logs each phase when its bracket marks were called', () => {
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const log = vi.spyOn(console, 'warn').mockImplementation(() => {})
     let now = 0
     vi.spyOn(performance, 'now').mockImplementation(() => now)
     const perf = new PerfLogger() // start = 0
@@ -65,7 +65,7 @@ describe('PerfLogger', () => {
     perf.markCodegenEnd()
     now = 100 // total > 50
     perf.logIfSlow()
-    const calls = log.mock.calls.map(c => c[0])
+    const calls = log.mock.calls.map(c => c[1])
     expect(calls.some(c => c.includes('Prelude: 10.0ms'))).toBe(true)
     expect(calls.some(c => c.includes('Parse: 10.0ms'))).toBe(true)
     expect(calls.some(c => c.includes('IR: 10.0ms'))).toBe(true)
@@ -73,7 +73,7 @@ describe('PerfLogger', () => {
   })
 
   it('skips a phase whose start or end mark is missing', () => {
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const log = vi.spyOn(console, 'warn').mockImplementation(() => {})
     let now = 0
     vi.spyOn(performance, 'now').mockImplementation(() => now)
     const perf = new PerfLogger()
@@ -82,14 +82,14 @@ describe('PerfLogger', () => {
     perf.markPreludeEnd()
     now = 100
     perf.logIfSlow()
-    const calls = log.mock.calls.map(c => c[0])
+    const calls = log.mock.calls.map(c => c[1])
     expect(calls.some(c => c.includes('Prelude'))).toBe(true)
     // Parse phase has start (preludeEnd) but no end → skipped.
     expect(calls.some(c => c.includes('Parse'))).toBe(false)
   })
 
   it('logs execution phases only when execEnd was marked', () => {
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const log = vi.spyOn(console, 'warn').mockImplementation(() => {})
     let now = 0
     vi.spyOn(performance, 'now').mockImplementation(() => now)
     const perf = new PerfLogger()
@@ -117,14 +117,14 @@ describe('PerfLogger', () => {
     perf.markSyncEnd()
     now = 200
     perf.logIfSlow()
-    const calls = log.mock.calls.map(c => c[0])
+    const calls = log.mock.calls.map(c => c[1])
     expect(calls.some(c => c.includes('Exec'))).toBe(true)
     expect(calls.some(c => c.includes('UpdateStudio'))).toBe(true)
     expect(calls.some(c => c.includes('Sync'))).toBe(true)
   })
 
   it('threshold is exactly 50ms (boundary inclusive)', () => {
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
+    const log = vi.spyOn(console, 'warn').mockImplementation(() => {})
     let now = 0
     vi.spyOn(performance, 'now').mockImplementation(() => now)
     const perf = new PerfLogger()
