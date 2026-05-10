@@ -153,6 +153,12 @@ import { allTestSystemTests } from './test-system'
 // CDP keyboard/mouse path. Tests now drive the app exclusively through
 // `cdpInput.*` (see docs/TEST-FRAMEWORK.md).
 
+// Preview CDP — net-new test wave covering all preview interactions
+// (palette drop, move, nesting, padding/margin/gap, resize,
+// inline-edit, property panel) via the CDP-only helper layer. Plan:
+// docs/test-plan-preview-cdp.md.
+import { previewCdpAllTests } from './preview-cdp'
+
 // =============================================================================
 // Consolidated Categories
 // =============================================================================
@@ -247,6 +253,13 @@ export const handlesTests: TestCase[] = [
  * handles suite to enumerate).
  */
 export const stepRunnerTests: TestCase[] = []
+
+/**
+ * 8c. PREVIEW-CDP — incremental coverage of every preview interaction
+ * driven exclusively through `cdpInput.*` (CDP Trusted Mouse + Keyboard).
+ * Plan: docs/test-plan-preview-cdp.md.
+ */
+export const previewCdpTests: TestCase[] = [...previewCdpAllTests]
 
 /**
  * 9. SELECTION - Multi-select, editor multiselect, ungroup, spread toggle,
@@ -392,6 +405,7 @@ export type CategoryName =
   | 'stress'
   | 'headed'
   | 'stepRunner'
+  | 'previewCdp'
 
 export interface CategoryInfo {
   name: CategoryName
@@ -499,6 +513,11 @@ export const categories: Record<CategoryName, CategoryInfo> = {
     name: 'headed',
     description: 'Tests requiring real browser window (--headed mode)',
     tests: headedOnlyTests,
+  },
+  previewCdp: {
+    name: 'previewCdp',
+    description: 'Preview interactions via CDP Trusted Mouse + Keyboard (no synthetic events)',
+    tests: previewCdpTests,
   },
 }
 

@@ -115,16 +115,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
-- **Wo:** `tests/studio/{demo-fx,replay-loader,headed-realism-scenarios,step-runner-compile-mode,step-runner-selectors}.test.ts`
-  **Was:** 5 Test-Files importieren aus `studio/test-api/demo-fx/` und
-  `studio/test-api/step-runner/`, beide gelöscht in `8e81387f`
-  („rip out demo runner + synthetic cursor"). Tests vom Parallel-Cleanup
-  übersehen — Vitest meldet 5 Test-Files mit „no tests / import error",
-  Suite-Status rot ohne echtes Failing-Behaviour.
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~18:55)
-  **Plan:** Imports + Existenz der Module verifizieren, dann Files
-  komplett löschen (kein Restwert ohne Module). Suite-Status danach grün.
-
 - **Wo:** `compiler/ir/ops/instance-ops.ts`, `compiler/ir/ops/properties-ops.ts`,
   `compiler/backends/react.ts`
   **Was:** Lane 2, Inkrement 2 — Folge-Refactor zu Inkrement 1.

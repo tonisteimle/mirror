@@ -22,7 +22,7 @@
  */
 
 import type { CDPSession } from './types'
-import { OsMouse } from './demo/os-mouse'
+import { OsMouse } from './os-mouse'
 
 // =============================================================================
 // Wire protocol
