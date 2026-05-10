@@ -208,10 +208,10 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   Conditional-Bug.
 
 - **Wo:** `tests/differential/` (16 Files)
-  **Was:** Cross-Backend-Equivalenz nur für 16 Domänen abgedeckt — Icons
-  (custom + Lucide), Charts/Tables, Animation-Trigger und
-  Inline-Conditionals fehlen. Slice 51 hat den Custom-Icons-Drift (DOM
-  ✅ / React ✗ / Framework ✗) erst beim manuellen Probe-Lauf gefunden.
+  **Was:** Cross-Backend-Equivalenz nur für 16 Domänen abgedeckt — Charts/
+  Tables, Animation-Trigger und Inline-Conditionals fehlen. Custom-Icons-
+  Differential gehärtet in `c31df517` (per-Backend-Emit-Assertions statt
+  "compiles without throwing").
   **Status:** offen
   **Notiz:** Symptom — neue Backends/Features driften silent. Heilt nur
   durch differential-First-Policy für jeden neuen Feature-Slice.
@@ -296,6 +296,15 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — Custom-Icons Differential gehärtet
+
+- **Wo:** `tests/differential/cleanup.test.ts` (Custom Icons Block)
+  **Was:** "Compiles without throwing" durch Per-Backend-Emit-Assertions
+  ersetzt (DOM `_runtime.registerIcon`, React `_MIRROR_CUSTOM_ICONS[…]`,
+  Framework `M.registerIcon`). Multi-Path und Lucide-Mixing neu
+  abgedeckt. Slice 51 Pre-Fix wäre damit beim ersten CI-Run aufgefallen.
+  **Status:** erledigt (`c31df517`)
 
 ### 2026-05-10 — Stale s08 Golden-Fixture regeneriert
 
