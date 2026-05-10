@@ -1868,6 +1868,23 @@ function generateStyles(
       case 'animation':
         style.animation = animationShorthand(String(value))
         break
+
+      // Transforms: combine when multiple are present so `Frame rotate 45,
+      // scale 1.2` emits `transform: rotate(45deg) scale(1.2)`. Mirrors the
+      // DOM IR's TransformAccumulator semantics — single `transform` value
+      // with all parts space-joined in declaration order.
+      case 'rotate':
+      case 'rot': {
+        const deg = String(value)
+        const part = `rotate(${deg}deg)`
+        style.transform = style.transform ? `${style.transform} ${part}` : part
+        break
+      }
+      case 'scale': {
+        const part = `scale(${String(value)})`
+        style.transform = style.transform ? `${style.transform} ${part}` : part
+        break
+      }
     }
   }
 

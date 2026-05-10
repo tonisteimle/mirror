@@ -559,6 +559,19 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — `rotate` / `scale` Transforms im React-Backend
+
+- **Wo:** `compiler/backends/react.ts` (`generateStyles`),
+  `tests/differential/properties.test.ts`
+  **Was:** `Frame rotate 45` und `Frame scale 1.2` droppten in React
+  silent — kein `transform`-CSS. Auch `hover-scale 1.05` produzierte
+  `data-h` Attribut aber leeren State-Block. Fix: switch-cases für
+  `rotate`/`rot` und `scale` in generateStyles; mehrere Transforms im
+  selben Element werden zu einem CSS-`transform`-Wert mit Space-
+  Separator zusammengeführt (`rotate(45deg) scale(1.2)`).
+  **Status:** erledigt
+  **Notiz:** 2 neue Pins (rotate+scale + combined, hover-scale-rule).
+
 ### 2026-05-10 — System-State-Pseudoklassen (`hover`/`focus`/`active`/`disabled`) in React
 
 - **Wo:** `compiler/backends/react.ts`,

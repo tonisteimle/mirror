@@ -70,4 +70,22 @@ describe('Properties — DOM emits expected style values', () => {
     expect(dom).toContain('text-overflow')
     expect(dom).toContain('ellipsis')
   })
+
+  it('React emits rotate / scale as single transform property', () => {
+    // Pre-2026-05-10: rotate/scale dropped silently in React.
+    const rotate = generateReact(parse(`Frame rotate 45, w 100, h 100`))
+    expect(rotate).toContain("transform: 'rotate(45deg)'")
+
+    const scale = generateReact(parse(`Frame scale 1.2, w 100, h 100`))
+    expect(scale).toContain("transform: 'scale(1.2)'")
+
+    // Both at once → single transform with both parts joined.
+    const both = generateReact(parse(`Frame rotate 45, scale 1.2, w 100, h 100`))
+    expect(both).toContain("transform: 'rotate(45deg) scale(1.2)'")
+  })
+
+  it('React `hover-scale` reaches the state stylesheet', () => {
+    const react = generateReact(parse(`Button "X", bg #333, hover-scale 1.05`))
+    expect(react).toContain('transform: scale(1.05)')
+  })
 })
