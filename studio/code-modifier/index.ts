@@ -40,12 +40,6 @@ export {
   type ExtractToComponentResult,
 } from './code-modifier'
 
-// PropertyPanel moved to studio/panels/ - import directly from there
-// This re-export was removed to break circular dependency (compiler/ should not import from studio/)
-// If you need PropertyPanel, import from 'studio/panels' instead
-
-// DropZoneCalculator removed in v2.2 - use studio/drag-drop instead
-
 export {
   parseLine,
   updatePropertyInLine,

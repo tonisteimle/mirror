@@ -12,7 +12,6 @@ import { createLogger } from '../../compiler/utils/logger'
 
 const log = createLogger('EventBus')
 
-// DropZone type - inline definition (module not yet implemented)
 export interface DropZone {
   nodeId: string
   position: 'before' | 'after' | 'inside'

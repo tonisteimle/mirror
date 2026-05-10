@@ -11,7 +11,6 @@ export type { IRResult } from './ir'
 export { generateDOM } from './backends/dom'
 export { generateFramework } from './backends/framework'
 export { generateReact } from './backends/react'
-// Note: generateStatic is not exported - it's an incomplete stub
 export { combineProjectFiles, combineProjectFilesWithData, DIRECTORY_ORDER } from './preprocessor'
 export type { ReadFileFn, ListFilesFn, ProjectFiles } from './preprocessor'
 
