@@ -284,18 +284,27 @@ calculator.ts, snap/alignment-snap.ts}` — drei `snapPointToGrid`-
   (3 Felder). Snap-Version hat
   `{ name, fullName, value: number, suffix }` (4 Felder). Gleicher
   Name, unterschiedliche Konzepte: UI-Anzeige vs. Snap-Engine-Input.
-  **Status:** offen
-  **Notiz:** `PanelSpacingToken` vs. `SnapSpacingToken` umbenennen,
-  damit der Unterschied am Import-Pfad sichtbar ist.
+  **Status:** erledigt (`3f6686f3`) — `PanelSpacingToken` +
+  `SnapSpacingToken` als kanonische Namen, beide Files behalten
+  `@deprecated SpacingToken`-Alias als Übergang. Duplikat in
+  `panels/property/ports.ts` gleich mit dedupliziert (Re-Export aus
+  types.ts). Beide Barrels (panels/property/index.ts,
+  visual/snap/index.ts) exportieren neuen + alten Namen
+  side-by-side. 5922/5922 studio tests pass.
 
 - **Wo:** `studio/desktop-files-utils.ts`, `studio/storage/types.ts`,
   `studio/panels/components/component-templates.ts` — drei
   `getFileType`-Funktionen mit drei verschiedenen Return-Types
   (`FileTypeInfo`, `MirrorFileType`, `'mir' | 'com'`).
-  **Status:** offen
-  **Notiz:** `getFileTypeInfo` / `getFileTypeKey` / `getMirOrCom`
-  o.ä. — disambiguierende Namen. Code-Logic ist je korrekt für seinen
-  Use-Case; nur die Namen lügen.
+  **Status:** erledigt (`e9666352`) — alle drei umbenannt:
+  `getFileTypeInfo` (FileTypeInfo struct mit icon/color),
+  `getMirrorFileType` (MirrorFileType union string),
+  `getComponentTemplateFileType` (`'mir' | 'com'` Template-Wahl).
+  Alle vier Aufrufer (incl. bootstrap.ts) + drei Test-Files
+  umgeschrieben. JSDoc auf jedem listet Geschwister-Helper, damit
+  Auto-Import-Verwirrung am Definitionsort behoben wird. Vierte
+  module-private Variante in app.ts bleibt — kann nicht falsch
+  importiert werden.
 
 ### Type-Dedupe Round 2 (2026-05-10 Iter-N+2)
 
