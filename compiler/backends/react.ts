@@ -1663,6 +1663,64 @@ function generateStyles(
         style.margin = pxify(value)
         break
 
+      // Directional padding/margin shortcuts. Mirror exposes -x, -y plus
+      // -t/-r/-b/-l aliases (CLAUDE.md: `pad-x N` = horizontal,
+      // `pad-y N` = vertical, `pad-t` etc.). Schema-side longhand names
+      // (`pad-top`, `padding-top`, …) are not in the DSL — only the
+      // 4-character abbreviations.
+      case 'pad-x':
+      case 'px':
+        style.paddingLeft = pxify(value)
+        style.paddingRight = pxify(value)
+        break
+      case 'pad-y':
+      case 'py':
+        style.paddingTop = pxify(value)
+        style.paddingBottom = pxify(value)
+        break
+      case 'pad-t':
+      case 'pt':
+        style.paddingTop = pxify(value)
+        break
+      case 'pad-r':
+      case 'pr':
+        style.paddingRight = pxify(value)
+        break
+      case 'pad-b':
+      case 'pb':
+        style.paddingBottom = pxify(value)
+        break
+      case 'pad-l':
+      case 'pl':
+        style.paddingLeft = pxify(value)
+        break
+      case 'mar-x':
+      case 'mx':
+        style.marginLeft = pxify(value)
+        style.marginRight = pxify(value)
+        break
+      case 'mar-y':
+      case 'my':
+        style.marginTop = pxify(value)
+        style.marginBottom = pxify(value)
+        break
+      case 'mar-t':
+      case 'mt':
+        style.marginTop = pxify(value)
+        break
+      case 'mar-r':
+      case 'mr':
+        style.marginRight = pxify(value)
+        break
+      case 'mar-b':
+      case 'mb':
+        style.marginBottom = pxify(value)
+        break
+      case 'mar-l':
+      case 'ml':
+        style.marginLeft = pxify(value)
+        break
+
       // Slice 6 V-1: CSS Grid container. `Frame grid 12` → display: grid +
       // grid-template-columns: repeat(12, 1fr). Mirror's `grid auto N` shape
       // (`Frame grid auto 250`) compiles to `repeat(auto-fill, minmax(Npx,
@@ -1802,6 +1860,40 @@ function generateStyles(
       case 'border-color':
         style.borderColor = String(value)
         break
+
+      // Directional border-width shortcuts. `bor-t 2` → border-top-width: 2px
+      // + a `solid` style so the rule renders without `border-style`. The DOM
+      // IR uses individual `border-{side}-width` + global `border-style`;
+      // we mirror that by setting `borderTopStyle: 'solid'` (etc.) too.
+      case 'bor-t':
+      case 'bort':
+        if (typeof value === 'number' || (typeof value === 'string' && NUMERIC_RE.test(value))) {
+          style.borderTopWidth = `${value}px`
+          style.borderTopStyle = 'solid'
+        }
+        break
+      case 'bor-r':
+      case 'borr':
+        if (typeof value === 'number' || (typeof value === 'string' && NUMERIC_RE.test(value))) {
+          style.borderRightWidth = `${value}px`
+          style.borderRightStyle = 'solid'
+        }
+        break
+      case 'bor-b':
+      case 'borb':
+        if (typeof value === 'number' || (typeof value === 'string' && NUMERIC_RE.test(value))) {
+          style.borderBottomWidth = `${value}px`
+          style.borderBottomStyle = 'solid'
+        }
+        break
+      case 'bor-l':
+      case 'borl':
+        if (typeof value === 'number' || (typeof value === 'string' && NUMERIC_RE.test(value))) {
+          style.borderLeftWidth = `${value}px`
+          style.borderLeftStyle = 'solid'
+        }
+        break
+
       case 'rad':
       case 'radius':
         style.borderRadius = pxify(value)

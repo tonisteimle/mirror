@@ -634,6 +634,20 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — Directional Padding/Margin/Border-Shortcuts in React
+
+- **Wo:** `compiler/backends/react.ts` (`generateStyles`),
+  `tests/differential/properties.test.ts`
+  **Was:** **Alle** Direktion-Shortcuts wurden silent geschluckt:
+  `pad-x`/`pad-y`, `pad-t/r/b/l`, `px/py/pt/pr/pb/pl`, dito für `mar-`,
+  `bor-t/r/b/l` (+ `bort/borr/borb/borl`). Das sind alltägliche Props
+  in jedem Mirror-Layout, ohne sie waren React-Renders unbrauchbar.
+  Fix: 19 neue switch-cases. Border-Direktion setzt `border-{side}-style:
+solid` mit, damit die Regel ohne globalen `border-style` rendert.
+  **Status:** erledigt
+  **Notiz:** 11-fach `.each`-Pin in `properties.test.ts` für die
+  häufigsten Formen (alle 4 sides + xy + bor-t/b).
+
 ### 2026-05-10 — Long-Tail Props im React-Backend
 
 - **Wo:** `compiler/backends/react.ts` (`generateStyles`, `applyFlagProperty`),

@@ -116,4 +116,27 @@ describe('Properties — DOM emits expected style values', () => {
     const react = generateReact(parse(src))
     expect(react).toMatch(expectedPattern as RegExp)
   })
+
+  // Pre-2026-05-10 the React backend dropped every directional padding/
+  // margin/border shortcut. Now wired in the main switch.
+  it.each([
+    ['pad-x 16', `Frame pad-x 16, w 100`, /paddingLeft:\s*'16px'.*paddingRight:\s*'16px'/s],
+    ['pad-y 12', `Frame pad-y 12, w 100`, /paddingTop:\s*'12px'.*paddingBottom:\s*'12px'/s],
+    ['pad-t 8', `Frame pad-t 8, w 100`, /paddingTop:\s*'8px'/],
+    ['pad-r 16', `Frame pad-r 16, w 100`, /paddingRight:\s*'16px'/],
+    ['pad-b 12', `Frame pad-b 12, w 100`, /paddingBottom:\s*'12px'/],
+    ['pad-l 8', `Frame pad-l 8, w 100`, /paddingLeft:\s*'8px'/],
+    ['mar-x 16', `Frame mar-x 16, w 100`, /marginLeft:\s*'16px'.*marginRight:\s*'16px'/s],
+    ['mar-y 12', `Frame mar-y 12, w 100`, /marginTop:\s*'12px'.*marginBottom:\s*'12px'/s],
+    ['mar-t 8', `Frame mar-t 8, w 100`, /marginTop:\s*'8px'/],
+    ['bor-t 1', `Frame bor-t 1, w 100`, /borderTopWidth:\s*'1px'.*borderTopStyle:\s*'solid'/s],
+    [
+      'bor-b 2',
+      `Frame bor-b 2, w 100`,
+      /borderBottomWidth:\s*'2px'.*borderBottomStyle:\s*'solid'/s,
+    ],
+  ])('React emits CSS for directional `%s`', (_name, src, expectedPattern) => {
+    const react = generateReact(parse(src))
+    expect(react).toMatch(expectedPattern as RegExp)
+  })
 })
