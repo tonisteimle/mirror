@@ -93,6 +93,24 @@ export interface TestConfig {
    * --snapshots=DIR [--baseline=DIR] [--snapshot-threshold=N] on the CLI.
    */
   snapshots?: { dir: string; baselineDir?: string; threshold?: number }
+
+  /**
+   * Multiply effective CPU time by this rate via Emulation.setCPUThrottlingRate.
+   * 1 = no throttle (default), 4 = 4× slower (mid-range mobile), 6 = 6×
+   * slower (low-end mobile). Surfaces timing-sensitive bugs (debounce
+   * misuse, animation flicker, race conditions) that pass on a fast dev
+   * machine. Off by default — opt in with --cpu-throttle=N.
+   */
+  cpuThrottle?: number
+
+  /**
+   * Network emulation profile. 'offline' / 'slow-3g' / 'fast-3g' / '4g'
+   * map to canonical CDP Network.emulateNetworkConditions presets.
+   * Useful for catching auto-save / debounced-fetch timeouts that
+   * never happen on localhost. Off by default — opt in with
+   * --network=PROFILE.
+   */
+  networkThrottle?: 'offline' | 'slow-3g' | 'fast-3g' | '4g'
 }
 
 export const defaultConfig: TestConfig = {

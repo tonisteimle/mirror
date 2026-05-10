@@ -84,6 +84,9 @@ interface CLIArgs {
   recordFps?: number // Frame rate (default 24)
   // Browser viewport size (default 1920x1080 in chrome.ts)
   windowSize?: string // e.g. "1280x800"
+  // Headed-realism throttles
+  cpuThrottle?: number // 1 = no throttle, 4 = 4× slower
+  networkThrottle?: 'offline' | 'slow-3g' | 'fast-3g' | '4g'
 }
 
 // Panel visibility presets for test categories
@@ -175,6 +178,10 @@ function parseArgs(): CLIArgs {
       ? parseInt(getArgValue(args, '--record-fps')!, 10)
       : undefined,
     windowSize: getArgValue(args, '--window-size'),
+    cpuThrottle: getArgValue(args, '--cpu-throttle')
+      ? parseFloat(getArgValue(args, '--cpu-throttle')!)
+      : undefined,
+    networkThrottle: getArgValue(args, '--network') as CLIArgs['networkThrottle'],
   }
 }
 
@@ -249,6 +256,10 @@ ${bold('Browser Options:')}
   --os-mouse          Install the OS-mouse bridge (real macOS cursor via
                       nut-js). Used by step-runner scenarios that opt into
                       'inputMode: os'. Requires Accessibility permission.
+  --cpu-throttle=N    Slow CPU by Nx (CDP Emulation.setCPUThrottlingRate).
+                      4 ≈ mid-range mobile, 6 ≈ low-end. Surfaces timing-
+                      sensitive bugs that pass on a fast dev machine.
+  --network=PROFILE   Network throttle: offline | slow-3g | fast-3g | 4g
 
 ${bold('Execution Options:')}
   --bail              Stop on first failure
@@ -487,6 +498,8 @@ async function runDemoSuiteMode(args: CLIArgs): Promise<number> {
         : {}),
     }
   }
+  if (typeof args.cpuThrottle === 'number') config.cpuThrottle = args.cpuThrottle
+  if (args.networkThrottle) config.networkThrottle = args.networkThrottle
   const runner = new TestRunner(config)
 
   const results: SuiteResult[] = []

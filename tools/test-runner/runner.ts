@@ -458,6 +458,43 @@ export class TestRunner {
           ')'
       )
     }
+    // CPU throttle — surface timing-sensitive bugs that pass on a fast
+    // dev machine (debounce misuse, animation flicker). 1 = no throttle.
+    if (this.config.cpuThrottle && this.config.cpuThrottle > 1) {
+      await this.cdp.send('Emulation.setCPUThrottlingRate', { rate: this.config.cpuThrottle })
+      this.log(`CPU throttle: ${this.config.cpuThrottle}× slower`)
+    }
+    // Network throttle — auto-save / debounced-fetch timeouts that never
+    // fire on localhost surface here. Profiles match Chrome DevTools'
+    // canonical presets.
+    if (this.config.networkThrottle) {
+      const profiles = {
+        offline: { offline: true, latency: 0, downloadThroughput: 0, uploadThroughput: 0 },
+        // Numbers from Chrome DevTools "Slow 3G" / "Fast 3G" / "Fast 4G" presets.
+        'slow-3g': {
+          offline: false,
+          latency: 2000,
+          downloadThroughput: 50 * 1024,
+          uploadThroughput: 50 * 1024,
+        },
+        'fast-3g': {
+          offline: false,
+          latency: 562.5,
+          downloadThroughput: 188 * 1024,
+          uploadThroughput: 86 * 1024,
+        },
+        '4g': {
+          offline: false,
+          latency: 170,
+          downloadThroughput: 1.5 * 1024 * 1024,
+          uploadThroughput: 750 * 1024,
+        },
+      }
+      const profile = profiles[this.config.networkThrottle]
+      await this.cdp.send('Network.enable')
+      await this.cdp.send('Network.emulateNetworkConditions', profile)
+      this.log(`Network throttle: ${this.config.networkThrottle}`)
+    }
   }
 
   private async waitForPageLoad(): Promise<void> {
