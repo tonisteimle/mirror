@@ -908,6 +908,23 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — Orphan `compiler/runtime/element-wrapper.ts` gelöscht (287 LOC)
+
+- **Wo:** `compiler/runtime/element-wrapper.ts`
+  **Was:** 287-LOC TypeScript-Reimplementierung der `wrap()`-API
+  (ElementWrapper-Interface + Property-Accessors). Die produktive
+  Implementation lebt inline in `compiler/backends/dom/runtime-template/
+index.ts:437` als JS-String — die wird in das Bundle eingebettet.
+  Diese TS-Variante war ein April-Modularisierungs-Versuch
+  (`d588f869`, 2026-04-15), wurde aber nie wired-up: 0 Imports
+  irgendwo im Repo, 0 Test-Refs, kein Re-Export aus
+  `compiler/runtime/`. Datei gelöscht. 15441/15464 vitest grün.
+  **Status:** erledigt
+  **Notiz:** Falls die TS-Variante künftig als Type-Source-of-Truth
+  reaktiviert werden soll — Restoration via `git show <hash>:`,
+  und dann muss runtime-template/index.ts auf die generierte Version
+  switchen, nicht doppelt vorhanden bleiben.
+
 ### 2026-05-10 — React-Backend-Decomp Lane abgeschlossen (3273 → 343 LOC, 89% Reduktion)
 
 - **Wo:** `compiler/backends/react.ts` → 8 Module unter `compiler/backends/react/ops/`
