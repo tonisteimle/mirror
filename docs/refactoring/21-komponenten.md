@@ -1,7 +1,7 @@
 # Slice 21: Komponenten-Definition & -Verwendung
 
-**Datum:** 2026-05-09
-**Status:** Audit · Untersuchung · Entscheidungen · Phase A umgesetzt (V-2 + V-7) · Phase B/C deferred
+**Datum:** 2026-05-09 (Iter-1) · 2026-05-10 (Iter-2)
+**Status:** Audit · Untersuchung · Entscheidungen · Phase A umgesetzt (V-2 + V-6 + V-7) · Phase B/C als dedizierte Slice-21b/21c verschoben (Re-Open-Adressen präzisiert) · Iter-2 RT-A1..D · HSP-1 freigegeben
 
 ## Inhalt
 
@@ -283,3 +283,153 @@ Die `:` nach Inner wird vom Parser als Property-Liste-Trenner interpretiert, nic
 - Component-Composition (Component innerhalb Component)
 - `as Button` Inheritance → korrekte HTML-Tag (Slice 22 Detail)
 - Property-Override an Use-Site
+
+---
+
+# 8. Iter-2 (Phase D — HSP-1 Finalisierung, 2026-05-10)
+
+**Trigger:** Iter-2-Sweep Dev-2-Cluster (24/25/78/21). HSP-1 verlangt Slice 21
+„erledigt"; der Plan sagt explizit: „Phase B + C abschließen oder beide
+explizit als Re-Open-Trigger mit Ziel-Slice eintragen". Iter-2 wählt
+Option 2 — Phase B + C werden zu **dedizierten Successor-Slices 21b/21c**
+mit präzisen Re-Open-Triggern.
+
+## 8.1 Befunde Iter-2
+
+**B-1 (Status-Inkonsistenz, mittel).** Iter-1-Status sagte „V-2 + V-7
+implementiert", aber V-6 (E603 Doppel-Definition) stand auf „erledigt
+(bereits implementiert)" — d.h. V-6 ist auch erledigt, nur als pre-existing.
+Korrigiert in 8.4.
+
+**B-2 (HSP-1 Mehrdeutigkeit, hoch).** „Slice 21 erledigt" als Vorbedingung
+für Studio-Loops (HSP-1) wäre nie erreicht, weil Phase B/C als „verschoben"
+markiert sind, die aber nicht als eigene Slices in der Audit-Status-Tabelle
+existieren. Phase B/C werden in dieser Iter-2 als **Slice-21b** (Compile-
+strict undefined component, V-1 + V-3 + V-4) und **Slice-21c** (Studio-
+Pipeline-Validator-Hook, V-1 + Q-A) re-formuliert. HSP-1 wird neu definiert
+als „Slice 21 Phase A erledigt" — was bereits true ist.
+
+**B-3 (Cross-Slice ungeprüft, mittel).** Cross-Slice-Probe zwischen Slice 21
+(component-resolver) und Slices 22 (`as`-Inheritance) + 25 (property-set
+inside Component-Def) wurde Iter-1 nicht formell ausgeführt. Probe-Skript
+`tools/probes/slice-21-komponenten.ts` lockt jetzt RT-B + RT-C explizit.
+
+## 8.2 Probes Iter-2
+
+`tools/probes/slice-21-komponenten.ts`:
+
+| #   | Eingabe                                           | Validator                             | DOM                           | Verdikt                |
+| --- | ------------------------------------------------- | ------------------------------------- | ----------------------------- | ---------------------- |
+| A1  | `Btn:` + `btn "Save"` (lowercase)                 | E002 + suggestion „Did you mean Btn?" | Frame-Fallback (V-1 deferred) | ✅ V-2                 |
+| A2  | `Btn:` ×2 + `Btn "X"`                             | E603                                  | last-wins (#0f0)              | ✅ V-6                 |
+| A3  | `Btn:` (empty) + `Btn "X"`                        | W504 + suggestion                     | Frame-Default                 | ✅ V-7                 |
+| B1  | `PrimaryBtn as Button:` + `PrimaryBtn "Click"`    | clean                                 | `<button>`-Tag, alle props    | ✅ Cross-Slice 22      |
+| C1  | `btnbase:` set + `Btn: $btnbase, bg ..., col ...` | clean                                 | set+overrides expandiert      | ✅ Cross-Slice 25      |
+| D1  | `Tree: bg #f00\n  Tree\nTree` (Self-Recursion)    | clean (V-3 deferred)                  | terminiert mit #f00, depth 2  | ✅ deferred-state lock |
+
+## 8.3 Entscheidungen Iter-2
+
+**V-9 — Phase B retire zu Slice 21b — Status: erledigt.**
+
+Was bisher als „Phase B (Compiler stricter)" verschoben war, wird zu einem
+eigenen geplanten Slice **21b: Compile-strict undefined component**.
+
+- Scope: V-1 (Compile-Error statt Frame-Fallback) + V-3 (Self-Recursion
+  Compile-Warn) + V-4 (Nested Component-Definition Parser-Reject)
+- Re-Open-Trigger: nach HSP-1, vor Slice 67 (Paste DSL → Preview).
+  Begründung: Studio-Pipeline kann erst dann strict werden, wenn der
+  Compile-Pfad strict ist.
+- Hot-Files: `compiler/parser/ops/parse-blocks.ts`, `compiler/ir/transformers/
+component-resolver.ts`, `compiler/ir/ops/instance-ops.ts`
+
+**V-10 — Phase C retire zu Slice 21c — Status: erledigt.**
+
+Was bisher als „Phase C (Studio-Pipeline-Hook)" verschoben war, wird zu
+einem eigenen geplanten Slice **21c: Studio-Pipeline-Validator-Hook**.
+
+- Scope: Q-A („ruft Studio-Compile den Validator vor dem Compile auf?")
+  beantworten, Linter-Diagnostik im Editor surfacen.
+- Re-Open-Trigger: nach Slice 21b. Begründung: ohne strict-mode wären die
+  Editor-Linter-Diagnostiken zu lückenhaft.
+- Hot-Files: `studio/modules/compiler/`, `studio/editor/`
+
+**V-11 — HSP-1 Re-Definition — Status: erledigt.**
+
+`HSP-1: Komponenten vollständig` wird neu definiert als „Slice 21 Phase A
+erledigt + Slice 22 erledigt + Slice 23 erledigt". Phase B (21b) und Phase C
+(21c) sind Improvements für DX-Diagnostik, **kein Blocker** für Studio-Loops.
+HSP-1 ist ab Iter-2 Slice 21 Phase A erledigt — also: `21 ⊃ {Phase A}` UND
+`22 erledigt` UND `23 erledigt`.
+
+## 8.4 Status-Korrektur Phase A
+
+| ID  | Sub-Task                                                     | Aus | Iter-1             | Iter-2 (korrigiert) |
+| --- | ------------------------------------------------------------ | --- | ------------------ | ------------------- |
+| A.1 | Validator-Warn bei Self-Recursion (W-Code)                   | V-3 | verschoben         | verschoben → 21b    |
+| A.2 | E603 Component-Doppel-Definition                             | V-6 | erledigt (existed) | erledigt            |
+| A.3 | W504 Empty Component-Definition                              | V-7 | erledigt           | erledigt            |
+| A.4 | Validator-Warn bei Component-shadows-Primitive               | V-5 | verworfen          | verworfen           |
+| A.5 | Validator-Error bei nested Component-Definition              | V-4 | verschoben         | verschoben → 21b    |
+| A.6 | E002-Hilfetext: bei lowercase Component-Use Pascal-Case-Hint | V-2 | erledigt           | erledigt            |
+
+Phase A ist vollständig erledigt. Phase B und Phase C → 21b/21c.
+
+## 8.5 Cross-Slice-Probe
+
+**Slice 22 (`as`-Inheritance):** RT-B lockt — `PrimaryBtn as Button`
+resolved durch component-resolver zum echten `<button>`-Tag mit allen
+Properties expanded. Wenn Slice 22 später `as Btn` chains erweitert,
+muss component-resolver sich nicht ändern.
+
+**Slice 23 (Kind-Slots):** Out-of-scope für RT-Lock — Slice 23 ist offen.
+Der Cross-Slice-Bound liegt im Slot-Mechanismus selbst, nicht im
+component-resolver. Re-Open-Trigger Slice 23 selbst.
+
+**Slice 25 (Property-Set):** RT-C lockt — `Btn: $btnbase, bg ...` expandiert
+das Set in der Component-Definition korrekt. Slice 25 Iter-2 hat dies bereits
+backend-side gelocked (RT-17 Framework parity); RT-C lockt es jetzt
+component-side. Beide Surfaces sind gesynt.
+
+## 8.6 Studio-Roundtrip
+
+**Lower-Bar-Modus** — Phase A Diagnostik (E002 / E603 / W504) wird vom
+`mirror-validate` CLI surface-emit; CDP-Run nicht ausgeführt im Iter-2.
+Re-Open-Trigger: Slice 21c (Studio-Pipeline-Validator-Hook).
+
+## 8.7 Mechanischer 9-Punkt-Quality-Gate (Post-Iter-2)
+
+| #   | Check                                                      | Iter-1 | Iter-2                     |
+| --- | ---------------------------------------------------------- | ------ | -------------------------- |
+| 1   | Probe-Tabelle: kein 🔴 außer in „deferred"-Spalte          | ⚠️     | ✅                         |
+| 2   | Phase-Stati ∈ {erledigt, verschoben, verworfen}            | ✅     | ✅                         |
+| 3   | Jeder RT-Plan-Eintrag hat geschriebenen Test (`erledigt`)  | ⚠️     | ✅                         |
+| 4   | Schema-Drift-Grep ausgeführt; gefundene Stellen gefixt     | ⚠️     | ✅ (kein Drift gefunden)   |
+| 5   | Cross-Slice-Wirkung geprüft; Nachbar-Slices behandelt      | ⚠️     | ✅ (RT-B + RT-C)           |
+| 6   | Cross-Backend-Differential-RT existiert                    | ⚠️     | ⚠️ (deferred zu Slice 21b) |
+| 7   | Studio-Roundtrip explizit benannt (CDP-Run oder Lower-Bar) | ❌     | ✅ Lower-Bar               |
+| 8   | Vitest gesamt grün; keine Test-Subtraction                 | ✅     | ✅                         |
+| 9   | „substantiell besser, aber …"-Klausel nicht aktiv          | ❌     | ✅                         |
+
+## 8.8 Tests Iter-2
+
+| ID    | Test                                                    | Aus      | Status   |
+| ----- | ------------------------------------------------------- | -------- | -------- |
+| RT-A1 | V-2 Pascal-Case suggestion lock                         | V-2      | erledigt |
+| RT-A2 | V-6 E603 + last-wins runtime lock                       | V-6      | erledigt |
+| RT-A3 | V-7 W504 + suggestion lock                              | V-7      | erledigt |
+| RT-B  | Cross-Slice 22 (`as Button` through component-resolver) | Cross-S  | erledigt |
+| RT-C  | Cross-Slice 25 (property-set inside Component-Def)      | Cross-S  | erledigt |
+| RT-D  | V-3 deferred-state lock (self-recursion termination)    | V-3 def. | erledigt |
+
+`tests/compiler/slice-21-komponenten.test.ts` — 6 Tests, grün.
+
+## 8.9 Successor-Slices (Re-Open-Targets)
+
+| Slice | Scope                                            | Hot-Files                                 | Trigger                  |
+| ----- | ------------------------------------------------ | ----------------------------------------- | ------------------------ |
+| 21b   | Compile-strict undefined component (V-1+V-3+V-4) | parser/ops/parse-blocks.ts, ir/component- | nach HSP-1, vor Slice 67 |
+|       |                                                  | resolver.ts, ir/ops/instance-ops.ts       |                          |
+| 21c   | Studio-Pipeline-Validator-Hook (Q-A + V-1)       | studio/modules/compiler/, studio/editor/  | nach 21b                 |
+
+Slice-Status post-Iter-2: **erledigt (Phase A vollständig; 21b/21c als
+geplante Successor-Slices)**.
