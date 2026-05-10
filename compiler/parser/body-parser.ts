@@ -563,10 +563,35 @@ export function parseInstanceBody(
                   state.targetState = U.advance(ctx).value
                 } else if (isStateBlockStart(ctx)) {
                   // Nested state block (e.g. `hover:` inside `on:`) is not
-                  // supported. Skip the header so the body loop makes progress
-                  // instead of hanging in parseInlineProperties.
+                  // supported. Report a parse error so callers see the issue
+                  // — and skip header + body so the body loop makes progress
+                  // instead of hanging.
+                  const innerStateTok = U.current(ctx)
+                  U.reportError(
+                    ctx,
+                    `Nested state block "${innerStateTok.value}:" inside another state block is not supported. Flatten to one level per element.`,
+                    innerStateTok
+                  )
                   U.advance(ctx)
                   if (U.check(ctx, 'COLON')) U.advance(ctx)
+                  // Skip the indented body of the nested state block so its
+                  // properties aren't re-interpreted as the outer state's.
+                  U.skipNewlines(ctx)
+                  if (U.check(ctx, 'INDENT')) {
+                    let depth = 1
+                    U.advance(ctx)
+                    while (depth > 0 && !U.isAtEnd(ctx)) {
+                      if (U.check(ctx, 'INDENT')) {
+                        depth++
+                        U.advance(ctx)
+                      } else if (U.check(ctx, 'DEDENT')) {
+                        depth--
+                        U.advance(ctx)
+                      } else {
+                        U.advance(ctx)
+                      }
+                    }
+                  }
                 } else {
                   // Regular property
                   callbacks.parseInlineProperties(state.properties)
@@ -894,10 +919,33 @@ export function parseComponentBody(
               }
             } else if (isStateBlockStart(ctx)) {
               // Nested state block (e.g. `hover:` inside `on:`) is not
-              // supported. Skip the header so the body loop makes progress
-              // instead of hanging in parseInlineProperties.
+              // supported. Report a parse error and skip header + body so the
+              // outer body loop makes progress instead of mis-attributing the
+              // inner state's properties.
+              const innerStateTok = U.current(ctx)
+              U.reportError(
+                ctx,
+                `Nested state block "${innerStateTok.value}:" inside another state block is not supported. Flatten to one level per element.`,
+                innerStateTok
+              )
               U.advance(ctx)
               if (U.check(ctx, 'COLON')) U.advance(ctx)
+              U.skipNewlines(ctx)
+              if (U.check(ctx, 'INDENT')) {
+                let depth = 1
+                U.advance(ctx)
+                while (depth > 0 && !U.isAtEnd(ctx)) {
+                  if (U.check(ctx, 'INDENT')) {
+                    depth++
+                    U.advance(ctx)
+                  } else if (U.check(ctx, 'DEDENT')) {
+                    depth--
+                    U.advance(ctx)
+                  } else {
+                    U.advance(ctx)
+                  }
+                }
+              }
             } else {
               callbacks.parseInlineProperties(state.properties)
             }

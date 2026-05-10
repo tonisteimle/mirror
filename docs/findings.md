@@ -216,7 +216,16 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
 - **Wo:** `studio/inline-edit/` und `studio/rename/`
   **Was:** Zwei nahezu identische Setup-Flows für simple Name/Value-Edits
   (Editor + State-Management inline) ohne gemeinsame Factory.
-  **Status:** offen
+  **Status:** abgewiesen — Oberflächen-Ähnlichkeit (beide haben
+  Floating-Input + Enter/Escape) trügt. `inline-edit/` editiert
+  **Text-Content** eines Preview-DOM-Elements (Typografie-Inheritance,
+  Auto-Resize, Mouse-Drift-Detection, `state.inlineEditNodeId`).
+  `rename/` editiert **Symbol-Identifier** im Editor-Source (Label
+  „Rename component", Validation-Error-Display, Cross-File-Engine,
+  `executor.execute(RenameSymbolCommand)`). Die ~40 LOC gemeinsamer
+  Pattern (input + keydown + click-outside) sind zu wenig für eine
+  geteilte Abstraktion, und ein Forced-Common-Factory würde beide
+  Flows kompromittieren.
 
 ### Compiler Backends (Hunt 2026-05-10)
 
@@ -254,7 +263,16 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
 - **Wo:** `studio/agent/generation-pipeline.ts:378`
   **Was:** Pre-Flight-Check fängt Parser-Hang bei nested-state-Blöcken ab
   — Parser hat einen bekannten Infinite-Loop, Pre-Flight ist Pflaster.
-  **Status:** offen
+  **Status:** erledigt — Parser hängt schon länger nicht mehr (Skip-
+  Logik + MAX_ITERATIONS-Guard), aber er hat den Fehler stumm
+  geschluckt. Beide nested-state-Branches in `body-parser.ts`
+  (Instance- und Component-Pfad) melden den Fall jetzt explizit via
+  `U.reportError(...)` und überspringen den indented Body sauber, so
+  dass innere Properties nicht der äußeren State zugeschrieben werden.
+  Test `tests/compiler/parser-nested-state.test.ts` + Probe
+  `tools/probes/parser-nested-state.ts` pinnen das Verhalten. Pre-
+  Flight bleibt als günstiger Vorab-Check (Regex statt Lex+Parse),
+  ist aber kein Pflaster mehr.
 
 - **Wo:** `studio/core/change-pipeline.ts:711`
   **Was:** `\`Unknown intent type: ${(intent as any).type}\``— Fallback-
