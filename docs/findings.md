@@ -110,8 +110,9 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Was:** `(... as SourceMapPortWithSetter).setSourceMap(sourceMap as any)`
   versteckt Interface-Mismatch — Methode existiert nur optional auf der
   konkreten Implementierung.
-  **Status:** offen
-  **Notiz:** Konstruktor-Typ verschärfen statt zur Laufzeit casten.
+  **Status:** erledigt (`b856832e`) — `setSourceMap` von `unknown` auf
+  `SourceMap | null` getypt, beide Casts entfernt; Call-Site nutzt
+  Optional-Chaining.
 
 - **Wo:** `studio/sync/adapters/production-adapters.ts:148`
   **Was:** `window.setTimeout(...) as unknown as number` — Double-Cast
@@ -249,9 +250,21 @@ als`undefined`geloggt werden.
   **Was:** 7× `(window as any).__TAURI_BRIDGE__` / `(window as any).JSZip`
   — Window-Globals umgehen Type-System; JSZip-Script-Load-Race nicht
   type-guarded.
+  **Status:** erledigt — `TauriBridgeShim`, `JSZipConstructor`,
+  `JSZipInstance` in `window-globals.d.ts`; Casts entfernt; Script-Load-Race
+  durch Existenz-Check vor `resolve()` geschlossen.
+
+- **Wo:** `studio/storage/project-actions.ts` (`tauriNewProject` &c)
+  **Was:** Die vier Tauri-Helfer lesen `window.__TAURI_BRIDGE__`, das
+  produktiv **nirgends gesetzt** wird — nur Tests injizieren. Runtime hat
+  `window.TauriBridge` (anderer Name, andere Form, siehe
+  `studio/tauri-bridge.ts:412`). API-Shapes passen auch nicht zusammen
+  (`newProject(type)` vs. `TauriProject.createProject(name, path)`).
+  Heißt: in der Desktop-App fallen alle vier Stubs durch zum Else-Pfad.
   **Status:** offen
-  **Notiz:** Globals in `studio/types/window-globals.d.ts` deklarieren
-  (Datei existiert laut CLAUDE.md).
+  **Notiz:** Entweder Stubs an `window.TauriBridge.project` verdrahten
+  und die API-Shape angleichen, oder die Stubs streichen, falls die
+  Browser-Pfade die einzigen genutzten sind. Owner-Entscheidung.
 
 - **Wo:** `studio/core/events.ts:493-494`
   **Was:** `(middleware as any).getStats = …` — Instrumentation an
@@ -287,8 +300,6 @@ Chronologisch absteigend (neueste zuerst).
   AnimationParser, ExpressionParser, TokenParser, DataObjectParser,
   DeclarationParser).
   **Status:** erledigt (`44ae031a`)
-
-
 
 - **Wo:** `compiler/ir/index.ts`, `compiler/ir/transformers/validation.ts`
   **Was:** `addWarningExtracted` Alias war nur da wegen Namenskonflikt mit

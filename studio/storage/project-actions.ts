@@ -629,7 +629,7 @@ async function browserExportProject(): Promise<void> {
 
 async function tauriNewProject(type: ProjectType): Promise<void> {
   // Wird von Tauri überschrieben
-  const tauriBridge = (window as any).__TAURI_BRIDGE__
+  const tauriBridge = window.__TAURI_BRIDGE__
   if (tauriBridge?.newProject) {
     await tauriBridge.newProject(type)
   } else {
@@ -638,7 +638,7 @@ async function tauriNewProject(type: ProjectType): Promise<void> {
 }
 
 async function tauriLoadDemo(): Promise<void> {
-  const tauriBridge = (window as any).__TAURI_BRIDGE__
+  const tauriBridge = window.__TAURI_BRIDGE__
   if (tauriBridge?.loadDemo) {
     await tauriBridge.loadDemo()
   } else {
@@ -652,7 +652,7 @@ async function tauriLoadDemo(): Promise<void> {
 }
 
 async function tauriImportProject(): Promise<boolean> {
-  const tauriBridge = (window as any).__TAURI_BRIDGE__
+  const tauriBridge = window.__TAURI_BRIDGE__
   if (tauriBridge?.importProject) {
     return await tauriBridge.importProject()
   }
@@ -662,7 +662,7 @@ async function tauriImportProject(): Promise<boolean> {
 async function tauriExportProject(): Promise<void> {
   // Tauri speichert automatisch - nichts zu tun
   // Oder: "Speichern unter" Dialog
-  const tauriBridge = (window as any).__TAURI_BRIDGE__
+  const tauriBridge = window.__TAURI_BRIDGE__
   if (tauriBridge?.exportProject) {
     await tauriBridge.exportProject()
   }
@@ -716,17 +716,23 @@ async function downloadAsZip(files: Record<string, string>, filename: string): P
 /**
  * JSZip lazy laden
  */
-async function loadJSZip(): Promise<any> {
+async function loadJSZip(): Promise<NonNullable<typeof window.JSZip>> {
   // Prüfen ob bereits geladen
-  if ((window as any).JSZip) {
-    return (window as any).JSZip
+  if (window.JSZip) {
+    return window.JSZip
   }
 
   // Script laden
   return new Promise((resolve, reject) => {
     const script = document.createElement('script')
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'
-    script.onload = () => resolve((window as any).JSZip)
+    script.onload = () => {
+      if (window.JSZip) {
+        resolve(window.JSZip)
+      } else {
+        reject(new Error('JSZip loaded but global not available'))
+      }
+    }
     script.onerror = () => reject(new Error('Failed to load JSZip'))
     document.head.appendChild(script)
   })

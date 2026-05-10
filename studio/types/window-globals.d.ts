@@ -56,6 +56,35 @@ export interface CodeModifierResult {
   change?: { from: number; to: number; insert: string }
 }
 
+/**
+ * Tauri bridge shim used by `studio/storage/project-actions.ts`.
+ *
+ * Note: Production code never sets `__TAURI_BRIDGE__` today — only tests
+ * inject it. The runtime sets `window.TauriBridge` (different name, different
+ * shape, see `studio/tauri-bridge.ts`). This shim exists so the read-side
+ * call sites can be type-safe; whether they should be wired to the real
+ * `TauriBridge` is tracked in `docs/findings.md`.
+ */
+export interface TauriBridgeShim {
+  newProject?: (type: 'empty' | 'demo') => Promise<void>
+  loadDemo?: () => Promise<void>
+  importProject?: () => Promise<boolean>
+  exportProject?: () => Promise<void>
+}
+
+/**
+ * Minimal JSZip surface used by `studio/storage/project-actions.ts`.
+ * Library is lazy-loaded from CDN and attaches itself to window.
+ */
+export interface JSZipConstructor {
+  new (): JSZipInstance
+}
+
+export interface JSZipInstance {
+  file(path: string, content: string): void
+  generateAsync(options: { type: 'blob' }): Promise<Blob>
+}
+
 declare global {
   interface Window {
     /**
@@ -68,6 +97,15 @@ declare global {
      * keeping app.ts module state and core/state in sync.
      */
     __setPreludeOffset?: (offset: number) => void
+    /**
+     * Tauri bridge object — currently only set by tests; production
+     * uses `window.TauriBridge` (different shape).
+     */
+    __TAURI_BRIDGE__?: TauriBridgeShim
+    /**
+     * JSZip global, attached by the lazy-loaded CDN script.
+     */
+    JSZip?: JSZipConstructor
     // Note: window.MirrorLang is declared in studio/app.ts (MirrorLangGlobal)
     // including the optional PropertyExtractor ctor — see app.ts.
   }
