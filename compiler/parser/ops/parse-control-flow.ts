@@ -6,21 +6,13 @@
  */
 
 import type { Instance, Each, ConditionalNode, StateDependency } from '../ast'
-import { isStateBlockStart as isStateBlockStartExtracted } from '../state-detector'
-import {
-  parseEach as parseEachExtracted,
-  parseConditionalBlock as parseConditionalBlockExtracted,
-  parseArrayLiteral as parseArrayLiteralExtracted,
-  parseObjectLiteral as parseObjectLiteralExtracted,
-} from '../each-parser'
-import {
-  parseStateChildOverride as parseStateChildOverrideExtracted,
-  parseStateChildInstance as parseStateChildInstanceExtracted,
-} from '../state-child-parser'
+import { isStateBlockStart as detectStateBlockStart } from '../state-detector'
+import * as EachParser from '../each-parser'
+import * as StateChildParser from '../state-child-parser'
 import type { Parser } from '../parser'
 
 export function parseEach(this: Parser): Each | null {
-  return this.withSubParserContext(ctx => parseEachExtracted(ctx, this.eachParserCallbacks(ctx)))
+  return this.withSubParserContext(ctx => EachParser.parseEach(ctx, this.eachParserCallbacks(ctx)))
 }
 
 /**
@@ -29,7 +21,7 @@ export function parseEach(this: Parser): Each | null {
  * Returns the array as a JavaScript string representation.
  */
 export function parseArrayLiteral(this: Parser): string {
-  return this.withSubParserContext(ctx => parseArrayLiteralExtracted(ctx))
+  return this.withSubParserContext(ctx => EachParser.parseArrayLiteral(ctx))
 }
 
 /**
@@ -37,12 +29,12 @@ export function parseArrayLiteral(this: Parser): string {
  * Returns the object as a JavaScript string representation.
  */
 export function parseObjectLiteral(this: Parser): string {
-  return this.withSubParserContext(ctx => parseObjectLiteralExtracted(ctx))
+  return this.withSubParserContext(ctx => EachParser.parseObjectLiteral(ctx))
 }
 
 export function parseConditionalBlock(this: Parser): ConditionalNode {
   return this.withSubParserContext(ctx =>
-    parseConditionalBlockExtracted(ctx, this.eachParserCallbacks(ctx))
+    EachParser.parseConditionalBlock(ctx, this.eachParserCallbacks(ctx))
   )
 }
 
@@ -75,7 +67,7 @@ export function parseWhenClause(this: Parser): StateDependency {
 }
 
 export function isStateBlockStart(this: Parser): boolean {
-  return isStateBlockStartExtracted({
+  return detectStateBlockStart({
     tokens: this.tokens,
     source: this.source,
     loopVariables: this.loopVariables,
@@ -90,7 +82,7 @@ export function isStateBlockStart(this: Parser): boolean {
  */
 export function parseStateChildOverride(this: Parser): import('../ast').ChildOverride | null {
   return this.withSubParserContext(ctx =>
-    parseStateChildOverrideExtracted(ctx, this.stateChildParserCallbacks(ctx))
+    StateChildParser.parseStateChildOverride(ctx, this.stateChildParserCallbacks(ctx))
   )
 }
 
@@ -101,6 +93,6 @@ export function parseStateChildOverride(this: Parser): import('../ast').ChildOve
  */
 export function parseStateChildInstance(this: Parser): Instance | null {
   return this.withSubParserContext(ctx =>
-    parseStateChildInstanceExtracted(ctx, this.stateChildParserCallbacks(ctx))
+    StateChildParser.parseStateChildInstance(ctx, this.stateChildParserCallbacks(ctx))
   )
 }

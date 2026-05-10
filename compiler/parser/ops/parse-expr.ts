@@ -6,7 +6,7 @@
  */
 
 import type { Expression, ComputedExpression } from '../ast'
-import { parseExpression as parseExpressionExtracted } from '../expression-parser'
+import * as ExpressionParser from '../expression-parser'
 import type { Parser } from '../parser'
 
 /**
@@ -183,5 +183,5 @@ export function collectSubExpression(
 }
 
 export function parseExpression(this: Parser): Expression {
-  return this.withSubParserContext(ctx => parseExpressionExtracted(ctx))
+  return this.withSubParserContext(ctx => ExpressionParser.parseExpression(ctx))
 }

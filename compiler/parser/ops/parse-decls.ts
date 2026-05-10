@@ -12,38 +12,29 @@ import type {
   SchemaField,
   IconDefinition,
 } from '../ast'
-import {
-  parseTokenDefinition as parseTokenDefinitionExtracted,
-  parseTokenWithSuffixSingleToken as parseTokenWithSuffixSingleTokenExtracted,
-  parseTokenWithSuffix as parseTokenWithSuffixExtracted,
-  parseTokenReference as parseTokenReferenceExtracted,
-} from '../token-parser'
-import { parseDataObject as parseDataObjectExtracted } from '../data-object-parser'
-import {
-  parseSchema as parseSchemaExtracted,
-  parseSchemaField as parseSchemaFieldExtracted,
-  parseIconDefinitions as parseIconDefinitionsExtracted,
-} from '../declaration-parser'
+import * as TokenParser from '../token-parser'
+import * as DataObjectParser from '../data-object-parser'
+import * as DeclarationParser from '../declaration-parser'
 import type { Parser } from '../parser'
 import { MAX_ITERATIONS } from './limits'
 
 export function parseTokenDefinition(this: Parser, section?: string): TokenDefinition | null {
-  return this.withSubParserContext(ctx => parseTokenDefinitionExtracted(ctx, section))
+  return this.withSubParserContext(ctx => TokenParser.parseTokenDefinition(ctx, section))
 }
 
 export function parseTokenWithSuffixSingleToken(
   this: Parser,
   section?: string
 ): TokenDefinition | null {
-  return this.withSubParserContext(ctx => parseTokenWithSuffixSingleTokenExtracted(ctx, section))
+  return this.withSubParserContext(ctx => TokenParser.parseTokenWithSuffixSingleToken(ctx, section))
 }
 
 export function parseTokenWithSuffix(this: Parser, section?: string): TokenDefinition | null {
-  return this.withSubParserContext(ctx => parseTokenWithSuffixExtracted(ctx, section))
+  return this.withSubParserContext(ctx => TokenParser.parseTokenWithSuffix(ctx, section))
 }
 
 export function parseTokenReference(this: Parser, section?: string): TokenDefinition | null {
-  return this.withSubParserContext(ctx => parseTokenReferenceExtracted(ctx, section))
+  return this.withSubParserContext(ctx => TokenParser.parseTokenReference(ctx, section))
 }
 
 /**
@@ -57,7 +48,7 @@ export function parseTokenReference(this: Parser, section?: string): TokenDefini
  *     project: $projects, onDelete cascade
  */
 export function parseSchema(this: Parser): SchemaDefinition | null {
-  return this.withSubParserContext(ctx => parseSchemaExtracted(ctx))
+  return this.withSubParserContext(ctx => DeclarationParser.parseSchema(ctx))
 }
 
 /**
@@ -77,7 +68,7 @@ export function parseSchema(this: Parser): SchemaDefinition | null {
  *   - onDelete cascade|nullify|restrict
  */
 export function parseSchemaField(this: Parser): SchemaField | null {
-  return this.withSubParserContext(ctx => parseSchemaFieldExtracted(ctx))
+  return this.withSubParserContext(ctx => DeclarationParser.parseSchemaField(ctx))
 }
 
 /**
@@ -90,11 +81,11 @@ export function parseSchemaField(this: Parser): SchemaField | null {
  *     grid: "M3 3h8v8H3z M13 3h8v8h-8z"
  */
 export function parseIconDefinitions(this: Parser): IconDefinition[] {
-  return this.withSubParserContext(ctx => parseIconDefinitionsExtracted(ctx))
+  return this.withSubParserContext(ctx => DeclarationParser.parseIconDefinitions(ctx))
 }
 
 export function parseDataObject(this: Parser, section?: string): TokenDefinition | null {
-  return this.withSubParserContext(ctx => parseDataObjectExtracted(ctx, section))
+  return this.withSubParserContext(ctx => DataObjectParser.parseDataObject(ctx, section))
 }
 
 /**

@@ -50,10 +50,12 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Status:** offen
   **Notiz:** Audit in `docs/refactoring/21-komponenten.md` Section 3 (V-1, V-4).
 
-- **Wo:** Vitest 1 Test failing (von 15139, Stand 2026-05-10 09:42)
-  **Was:** Identität unbekannt — Output war abgeschnitten als ich's gesehen
-  habe. Re-run nötig mit verbose-reporter um den Test zu finden.
+- **Wo:** `tests/fixtures/states/s08-state-children/expected.dom.js`
+  **Was:** Stale golden-fixture nach Slice-50 V-1 (Icon-Defaults `16 → 24`).
+  Fixture erwartet noch alte Defaults plus `data-icon-fill` Type-Drift
+  (boolean vs `"true"`-String). Regenerieren oder Slice-50-Owner bitten.
   **Status:** offen
+  **Notiz:** Bricht keine Funktionalität — nur Snapshot ist veraltet.
 
 - **Wo:** Dead-feature-Verdacht (zu prüfen vom Owner)
   **Was:** Slices wie Stacked-Overlay (8), Custom-Icons-Registry (51),
@@ -62,6 +64,212 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   spart Wartungsaufwand.
   **Status:** offen
   **Notiz:** Braucht Owner-Entscheidung, kein Refactor-Befund.
+
+### Studio Sync/State (Hunt 2026-05-10)
+
+- **Wo:** `studio/core/state.ts:328-331`
+  **Was:** `setSelection()` schreibt im Defer-Pfad gleichzeitig
+  `deferredSelection` (neue API) und `queuedSelection` (legacy) — Dual-Write
+  öffnet Inkonsistenz, wenn beide Pfade auseinanderlaufen.
+  **Status:** offen
+  **Notiz:** Legacy-Pfad streichen.
+
+- **Wo:** `studio/core/state.ts:216-241` (`setCompileResult`)
+  **Was:** Drei überlappende Selection-Pfade (queued/pending/deferred) mit
+  separaten if/return-Blöcken — schwer zu lesen, fehleranfällig beim
+  Erweitern.
+  **Status:** offen
+  **Notiz:** Zu einem priorisierten Switch konsolidieren.
+
+- **Wo:** `studio/core/state.ts:281-305`
+  **Was:** Race-Window: `state.get()` wird **nach** `compile:completed`
+  emittiert gelesen — Handler können Selection mutieren, `latestState` ist
+  dann veraltet.
+  **Status:** offen
+  **Notiz:** State vor dem Emit lesen oder Validierung in Microtask deferen.
+
+- **Wo:** `studio/core/state.ts:243-278`
+  **Was:** Early-Returns bei pending/deferred Selection überspringen die
+  Final-Selection-Validierung — invalide Selections aus Handlern können
+  ungeprüft durchrutschen.
+  **Status:** offen
+
+- **Wo:** `studio/core/state.ts:189-205`
+  **Was:** Multi-Selection-Validierung filtert Knoten still ohne
+  `multiselection:changed`-Emit — Listener sehen geänderte Auswahl erst beim
+  nächsten expliziten Set.
+  **Status:** offen
+
+- **Wo:** `studio/core/state.ts:736-750` (`findFallbackSelection`)
+  **Was:** Simplistischer Fallback (`roots[0].nodeId`) ohne Sibling/Parent-
+  Tracking. `findFallbackWithInfo()` direkt nebenan macht es richtig.
+  **Status:** offen
+  **Notiz:** Auf `findFallbackWithInfo` umstellen.
+
+- **Wo:** `studio/core/change-pipeline.ts:127`
+  **Was:** `(ctx.intent as any).nodeId`-Cast umgeht Type-Check auf
+  kritischem Pfad — Discriminated Union oder Type-Guard fehlt.
+  **Status:** offen
+
+- **Wo:** `studio/sync/sync-coordinator-v2.ts:161`
+  **Was:** `(... as SourceMapPortWithSetter).setSourceMap(sourceMap as any)`
+  versteckt Interface-Mismatch — Methode existiert nur optional auf der
+  konkreten Implementierung.
+  **Status:** offen
+  **Notiz:** Konstruktor-Typ verschärfen statt zur Laufzeit casten.
+
+- **Wo:** `studio/sync/adapters/production-adapters.ts:148`
+  **Was:** `window.setTimeout(...) as unknown as number` — Double-Cast
+  signalisiert kaputte Typdefinition upstream (native Return ist bereits
+  `number`).
+  **Status:** offen
+
+- **Wo:** `studio/core/command-executor.ts:54-56`
+  **Was:** Re-Entrancy-Guard `if (this.executing) return { success: false }`
+  ist synchron, fängt aber keine schnell aufeinanderfolgenden Aufrufe vor
+  Abschluss.
+  **Status:** offen
+  **Notiz:** Queue oder Throw statt silent-fail.
+
+- **Wo:** `studio/bootstrap.ts:522-554`
+  **Was:** `setCommandContext()` wird nach Editor/Preview-Init aber vor
+  Sync-Setup gerufen — early Events während Editor-Setup könnten
+  unvollständigen Context sehen.
+  **Status:** offen
+
+### Studio Struktur — God-Objects & Duplikation (Hunt 2026-05-10)
+
+- **Wo:** `studio/visual/{resize,padding,margin,gap}-manager.ts`
+  **Was:** 3931 LOC über vier nahezu identische Manager-Klassen (Handles,
+  Drag-State, Observer, RAF-Throttling, Snap-Logik) — massive Duplikation
+  im größten Subsystem.
+  **Status:** offen
+  **Notiz:** Gemeinsame `DragHandleManager`-Basisklasse mit
+  orientierungsspezifischen Subklassen.
+
+- **Wo:** `studio/panels/property/view.ts` (1037 LOC)
+  **Was:** PANEL_CONFIG mit 100+ Primitive-Typen + 12 Section-Creators in
+  einer Datei — God-Objekt mit dichtem Repeat-Pattern.
+  **Status:** offen
+  **Notiz:** Pro Primitiv-Kategorie in `studio/panels/property/configs/`
+  splitten.
+
+- **Wo:** `studio/app.ts` (2557 LOC)
+  **Was:** Bootstrap-Sprawl: 30+ globale Konstanten, 5 Extensions, 8
+  Manager-Inits inline. Phase A–D verstreut, Lesbarkeit leidet.
+  **Status:** offen
+  **Notiz:** Phase-Funktionen nach `studio/init/phase-*.ts` extrahieren,
+  app.ts als reiner Orchestrator.
+
+- **Wo:** Drei `mock-adapters.ts` (`studio/editor/triggers/adapters/`,
+  `studio/editor/adapters/`, `studio/panels/property/adapters/`)
+  **Was:** ~1990 LOC über drei separate Mock-Frameworks für ähnliche
+  Use-Cases.
+  **Status:** offen
+  **Notiz:** In `studio/test-helpers/mock-adapters.ts` konsolidieren mit
+  scope-spezifischen Factories.
+
+- **Wo:** Studio-weit, `panels/`-Subsystem
+  **Was:** ~113 `.on()`/`addEventListener` Subscriptions vs. ~25
+  detektierbare Cleanups — Verdacht auf Memory-Leaks bei
+  Panel-Re-Initialisierung.
+  **Status:** offen
+  **Notiz:** Audit von `PropertyPanelController` + Section-Klassen,
+  systematisches `AbortController`-Wiring einziehen.
+
+- **Wo:** `studio/inline-edit/` und `studio/rename/`
+  **Was:** Zwei nahezu identische Setup-Flows für simple Name/Value-Edits
+  (Editor + State-Management inline) ohne gemeinsame Factory.
+  **Status:** offen
+
+### Compiler Backends (Hunt 2026-05-10)
+
+- **Wo:** `compiler/backends/react.ts:517` und `compiler/schema/ir-helpers.ts:735`
+  **Was:** Zwei parallele `getHtmlTag`-Funktionen mit unterschiedlichen
+  Signaturen — React-lokal `(componentName, compDef)` mit eigener
+  Primitive-Map plus Heuristik (`name.includes('button')` etc.),
+  Schema-Helper `(primitiveName)` ohne Heuristik. Neue Primitives müssen
+  heute an beiden Stellen ergänzt werden, sonst React-Drift.
+  **Status:** offen
+  **Notiz:** DOM-Backend nutzt den Schema-Helper, React nicht. React auf
+  Schema-Helper umstellen, Heuristik separat (oder löschen, wenn nicht
+  durch Tests gedeckt).
+
+- **Wo:** `compiler/backends/dom/ops/resolve-templates.ts:132-220`
+  `resolveConditionalExpression`
+  **Was:** Hand-rolled String-Position-Parser mit `inConditional`-Flag,
+  Depth-Counter und Marker-Lookahead (`__conditional:`, `__loopVar:`).
+  Funktioniert, aber jeder neue Marker oder Edge-Case (String-Literal mit
+  `:`, Token-Reference im else-Zweig) zwingt einen weiteren Sonderfall in
+  die Loop. Smell, kein gemeldeter Bug.
+  **Status:** offen
+  **Notiz:** Re-Open bei nächster Marker-Erweiterung oder
+  Conditional-Bug.
+
+- **Wo:** `tests/differential/` (16 Files)
+  **Was:** Cross-Backend-Equivalenz nur für 16 Domänen abgedeckt — Icons
+  (custom + Lucide), Charts/Tables, Animation-Trigger und
+  Inline-Conditionals fehlen. Slice 51 hat den Custom-Icons-Drift (DOM
+  ✅ / React ✗ / Framework ✗) erst beim manuellen Probe-Lauf gefunden.
+  **Status:** offen
+  **Notiz:** Symptom — neue Backends/Features driften silent. Heilt nur
+  durch differential-First-Policy für jeden neuen Feature-Slice.
+
+### Bug-Patterns & Type-Escapes (Hunt 2026-05-10)
+
+- **Wo:** `studio/agent/generation-pipeline.ts:335`
+  **Was:** Workaround filtert phantom Token-Refs aus String-Literalen —
+  TODO verweist auf Parser-Root-Cause: Parser/Lexer emittiert Token-Refs
+  innerhalb von Strings.
+  **Status:** offen
+  **Notiz:** Fix gehört in `compiler/parser/`.
+
+- **Wo:** `studio/agent/generation-pipeline.ts:378`
+  **Was:** Pre-Flight-Check fängt Parser-Hang bei nested-state-Blöcken ab
+  — Parser hat einen bekannten Infinite-Loop, Pre-Flight ist Pflaster.
+  **Status:** offen
+
+- **Wo:** `studio/core/change-pipeline.ts:711`
+  **Was:** `\`Unknown intent type: ${(intent as any).type}\``— Fallback-
+Error-Message lockert exhaustiveness check; neue Intent-Variante kann
+als`undefined`geloggt werden.
+**Status:** offen
+**Notiz:** Mit Discriminated Union +`assertNever` exhaustiv machen.
+
+- **Wo:** `studio/tauri-bridge.ts:172-173, 265-266`
+  **Was:** Zwei `} catch { return false }` / `catch { document.title = ... }`
+  schlucken Tauri-Fehler stumm — Permission/Plattform-Fehler werden
+  unsichtbar.
+  **Status:** offen
+
+- **Wo:** `studio/tauri-bridge.ts:54, 63, 273, 281, 289` (5×)
+  **Was:** `@ts-expect-error` für ESM-URL-Imports von CDN
+  (`esm.sh/@tauri-apps`) — bei Interface-Drift kompiliert es weiter,
+  crashed zur Laufzeit.
+  **Status:** offen
+  **Notiz:** Lokales Type-Stub-Modul mit `declare module` bauen.
+
+- **Wo:** `studio/storage/project-actions.ts:632, 641, 655, 665, 721, 722, 729`
+  **Was:** 7× `(window as any).__TAURI_BRIDGE__` / `(window as any).JSZip`
+  — Window-Globals umgehen Type-System; JSZip-Script-Load-Race nicht
+  type-guarded.
+  **Status:** offen
+  **Notiz:** Globals in `studio/types/window-globals.d.ts` deklarieren
+  (Datei existiert laut CLAUDE.md).
+
+- **Wo:** `studio/core/events.ts:493-494`
+  **Was:** `(middleware as any).getStats = …` — Instrumentation an
+  untyped middleware angehängt; keine Validierung dass Event-System
+  Stats-API exponiert.
+  **Status:** offen
+
+- **Wo:** Repo-weit
+  **Was:** Aggregat: 105× `as any` (53 in `studio/`, 44 in `tools/`, 8 in
+  `compiler/`), 7× `@ts-expect-error` (5 davon in `tauri-bridge.ts`), 1×
+  `any[]` Parameter in `compiler/ir/ops/` Layout.
+  **Status:** offen
+  **Notiz:** Numerische Baseline — bei jedem Refactor sollte die Zahl
+  runter.
 
 ---
 

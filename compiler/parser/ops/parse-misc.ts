@@ -8,11 +8,9 @@
 import { Token } from '../lexer'
 import type { CanvasDefinition, JavaScriptBlock, AnimationDefinition, ZagNode } from '../ast'
 import { isDevicePreset } from '../../schema/dsl'
-import {
-  parseZagComponent as parseZagComponentExtracted,
-  type ZagParserCallbacks,
-} from '../zag-parser'
-import { parseAnimationDefinition as parseAnimationDefinitionExtracted } from '../animation-parser'
+import * as ZagParser from '../zag-parser'
+import type { ZagParserCallbacks } from '../zag-parser'
+import * as AnimationParser from '../animation-parser'
 import type { ParserContext } from '../parser-context'
 import { type EachParserCallbacks } from '../each-parser'
 import { type StateChildParserCallbacks } from '../state-child-parser'
@@ -240,7 +238,7 @@ export function parseZagComponentWithContext(
     },
   }
 
-  const result = parseZagComponentExtracted(ctx, nameToken, callbacks, colonAlreadyConsumed)
+  const result = ZagParser.parseZagComponent(ctx, nameToken, callbacks, colonAlreadyConsumed)
   this.pos = ctx.pos
   this.errors = ctx.errors
   return result
@@ -262,7 +260,7 @@ export function parseAnimationDefinitionWithContext(
     errors: this.errors,
   }
 
-  const result = parseAnimationDefinitionExtracted(ctx, nameToken)
+  const result = AnimationParser.parseAnimationDefinition(ctx, nameToken)
   this.pos = ctx.pos
   this.errors = ctx.errors
   return result
