@@ -274,22 +274,29 @@ instance.column)` umgestellt. 7849/7849 vitest grün.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
-- **Wo:** Tutorial-Demos (neue Initiative, kein Befund-Code)
-  **Was:** Tutorial-Videos werden über den neuen CDP-Runner gedreht:
-  `--headed --os-mouse --record=*.webm`. nut-js bewegt den realen
-  macOS-Cursor (`mouseSpeed = 1500`, „deliberate but watchable" laut
-  Code-Comment), CDP fired Trusted-Events, CDP-Screencast →
-  ffmpeg-VP9-WebM. Erstes Allerkleinstes-Beispiel: `Text` aus Palette
-  in existierenden `Frame` droppen (Test
-  `Drag Text from palette into existing Frame appends a Text child`).
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~23:00)
+- **Wo:** Tutorial-Demos für `docs/tutorial/18-studio.html`
+  **Was:** Acht Tutorial-Videos für Studio-Kapitel 18. Pipeline
+  etabliert in `c58773c8` (`tools/test-runner/recording.ts` +
+  `--os-mouse`-Bridge): nut-js bewegt den realen macOS-Cursor mit
+  `mouseSpeed = 1500`, CDP fired Trusted-Events parallel, CDP-
+  Screencast → ffmpeg-VP9-WebM in `docs/tutorial/videos/`. Pattern
+  pro Demo: ein File `studio/test-api/suites/demos/tut-NN-*.demo.ts`,
+  Cursor-Beats vor State-Changes (`osMouse.moveTo` + `sleep`),
+  deterministische Mutation via `api.editor.setCode` oder
+  `__mirrorActions`, Asserts am Ende, `osMouse.park()` als Closer.
+  **Status:** aktiv (Claude-Session, 2026-05-10) — 5 von 8 Videos
+  committed (`d3115504` tut-01 drop-sync, `7790b2b8` tut-02 inline-
+  edit, `99f47eec` tut-03 resize, `a29aaa00` tut-04 padding-margin,
+  `554b51c8` tut-05 property-panel).
   **Plan:**
-  1. `demos/`-Verzeichnis anlegen + `.gitignore`-Eintrag für `*.webm`.
-  2. Bestehenden Test mit `--headed --os-mouse --record=demos/01-text-into-frame.webm --record-fps=30` laufen lassen.
-  3. Video inspizieren — ist die Cursor-Bewegung smooth, ist der
-     Drop sichtbar, ist die Dauer angenehm?
-  4. Wenn das erste Video sauber rauskommt: Pattern für weitere
-     Demos festhalten.
+  1. tut-06 reorder — Drei Frames `hor`, gelb nach vorne, rot ans
+     Ende per `__mirrorActions.reorderChild` (oder `editor.setCode`
+     wenn Reorder-Action nicht im API-Set ist).
+  2. tut-07 code-edit — Vom leeren Canvas vier Zeilen tippen (Frame
+     - 2× Text + Button). `cdpInput.keyType` mit pacing.
+  3. tut-08 multi-file — `tokens.tok` anlegen via File-Tree-Action,
+     drei Tokens reinschreiben, zurück nach `index.mir` via Cmd+P,
+     Frame-Zeile auf `bg $primary, rad $card` umstellen.
 
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
