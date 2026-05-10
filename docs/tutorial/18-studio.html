@@ -142,28 +142,34 @@
         oder ersetzt.
       </p>
 
-      <!-- VIDEO PLACEHOLDER: tut-05-property-panel.webm -->
-      <div class="tutorial-video-placeholder">
-        <em>(Video folgt: Property-Panel)</em>
+      <div class="tutorial-video">
+        <video src="videos/tut-05-property-panel.webm" autoplay loop muted playsinline disablepictureinpicture controlslist="nodownload"></video>
+        <div class="tutorial-video-caption">
+          Frame anklicken im Preview, dann <code>padding</code>,
+          <code>bg</code> und <code>radius</code> über das Property-Panel
+          ändern. Jeder Wert wird sofort in die Code-Zeile eingefügt.
+        </div>
       </div>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Color- &amp; Token-Picker</h2>
+      <h2>Drag-Reorder — Reihenfolge im Preview ändern</h2>
       <p>
-        Color-Properties (<code>bg</code>, <code>col</code>,
-        <code>boc</code>, <code>ic</code>) öffnen einen Picker mit zwei
-        Tabs: <em>Hex</em> für freie Farben und <em>Tokens</em> für die
-        im Projekt definierten Design-Tokens. Wählst du einen Token,
-        landet <code>$tokenname</code> im Code — wird der Token später
-        geändert, ändert sich überall die Farbe mit.
+        Innerhalb eines Containers ziehst du Kinder per Drag an eine neue
+        Position. Während des Drags zeigt eine Linie an, zwischen welchen
+        Elementen das gezogene landet. Sobald du loslässt, sortieren sich
+        die entsprechenden Mirror-Zeilen im Code um.
       </p>
 
-      <!-- VIDEO PLACEHOLDER: tut-06-color-token-picker.webm -->
-      <div class="tutorial-video-placeholder">
-        <em>(Video folgt: Color- &amp; Token-Picker)</em>
+      <div class="tutorial-video">
+        <video src="videos/tut-06-reorder.webm" autoplay loop muted playsinline disablepictureinpicture controlslist="nodownload"></video>
+        <div class="tutorial-video-caption">
+          Drei farbige Frames in einer Zeile — gelb wandert per Drag nach
+          vorne, rot ans Ende. Die drei <code>Frame</code>-Zeilen im
+          Code tauschen sich entsprechend um.
+        </div>
       </div>
     </section>
 
@@ -173,19 +179,21 @@
     <!-- ============================================================ -->
 
     <section>
-      <h2>Komponente extrahieren</h2>
+      <h2>Code → Preview — die andere Richtung</h2>
       <p>
-        Hast du dasselbe Element-Muster mehrfach verwendet, kannst du es
-        zu einer Komponente refactoren: Element selektieren, im Tree- oder
-        Property-Panel <em>„Komponente extrahieren"</em> wählen, Name
-        vergeben — Studio fügt die Komponenten-Definition oben ein und
-        ersetzt alle Instanzen durch den neuen Namen. Wiederholungen
-        werden zu einer Definition plus mehreren Verwendungen.
+        Bisher ging es darum, was im Preview eine Spur im Code hinterlässt.
+        Andersrum: tippst du Mirror-Zeilen direkt im Editor, baut das
+        Preview live mit. Eine neue Zeile bedeutet sofort ein neues
+        Element; ein Property-Wechsel ist als visueller Diff sichtbar,
+        bevor der Cursor weiterspringt.
       </p>
 
-      <!-- VIDEO PLACEHOLDER: tut-07-extract-component.webm -->
-      <div class="tutorial-video-placeholder">
-        <em>(Video folgt: Komponente extrahieren)</em>
+      <div class="tutorial-video">
+        <video src="videos/tut-07-code-edit.webm" autoplay loop muted playsinline disablepictureinpicture controlslist="nodownload"></video>
+        <div class="tutorial-video-caption">
+          Vom leeren Canvas in vier Zeilen zur Card: Frame, zwei Texte,
+          Button — jede Zeile rendert direkt nach dem Tippen.
+        </div>
       </div>
     </section>
 
@@ -205,9 +213,14 @@
         überall im Projekt verfügbar — keine Imports.
       </p>
 
-      <!-- VIDEO PLACEHOLDER: tut-08-multi-file.webm -->
-      <div class="tutorial-video-placeholder">
-        <em>(Video folgt: Multi-File)</em>
+      <div class="tutorial-video">
+        <video src="videos/tut-08-multi-file.webm" autoplay loop muted playsinline disablepictureinpicture controlslist="nodownload"></video>
+        <div class="tutorial-video-caption">
+          <code>tokens.tok</code> wird angelegt mit drei Tokens, dann
+          schaltet das Studio zurück nach <code>index.mir</code>. Die
+          Frame-Zeile referenziert die Tokens via <code>$primary</code>
+          und <code>$card</code> — Studio löst sie projekt-weit auf.
+        </div>
       </div>
     </section>
 
@@ -230,15 +243,16 @@
     <div class="summary">
       <h2>Das Wichtigste</h2>
       <table class="ref-table">
-        <tr><th>Geste im Preview</th><th>Effekt im Code</th></tr>
+        <tr><th>Geste</th><th>Effekt im Code</th></tr>
         <tr><td>Element aus Palette ziehen</td><td>neue Mirror-Zeile am Drop-Punkt</td></tr>
         <tr><td>Doppelklick auf Text</td><td>String in der Zeile ändern</td></tr>
         <tr><td>Resize-Handle ziehen</td><td><code>w</code> / <code>h</code> updaten</td></tr>
-        <tr><td>Padding-Handle ziehen</td><td><code>pad</code> updaten</td></tr>
-        <tr><td>Margin-Handle ziehen</td><td><code>mar</code> updaten</td></tr>
+        <tr><td>Padding-Handle ziehen</td><td><code>pad</code> / <code>pad-t</code> updaten</td></tr>
+        <tr><td>Margin-Handle ziehen</td><td><code>mar</code> / <code>mar-t</code> updaten</td></tr>
         <tr><td>Property im Panel ändern</td><td>Property-Wert in der Zeile</td></tr>
-        <tr><td>Color-Picker → Token wählen</td><td><code>$tokenname</code> statt Hex</td></tr>
-        <tr><td>„Extract Component"</td><td>Definition + Verwendungen</td></tr>
+        <tr><td>Kind im Container draggen</td><td>Code-Zeilen sortieren sich um</td></tr>
+        <tr><td>Code-Zeile tippen</td><td>Element erscheint im Preview</td></tr>
+        <tr><td>File anlegen / wechseln</td><td>Tokens und Komponenten projekt-weit</td></tr>
       </table>
 
       <p><strong>Das Prinzip:</strong> Studio ist kein eigenständiger Editor neben dem Code — es ist eine zweite Eingabe-Methode für genau dieselbe Datei. Was du im Preview tust, ist im Code lesbar; was du im Code änderst, ist im Preview sichtbar.</p>
