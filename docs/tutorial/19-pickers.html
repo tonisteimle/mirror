@@ -30,59 +30,97 @@
       Property-Panel-Felder, deren Wert nicht einfach eine Zahl ist,
       öffnen einen <em>Picker</em> als kleines Floating-Fenster. Studio
       hat fünf davon — jeder ist auf seinen Werte-Typ optimiert: der
-      Color-Picker zeigt Swatch-Grids und Hex-Eingabe, der
-      Token-Picker filtert nach Property-Kontext (vgl.
+      Color-Picker mit HSV-Eingabe und Palette-Tabs, der Token-Picker
+      filtert nach Property-Kontext (vgl.
       <a href="03-tokens.html">03-Tokens</a>), der Icon-Picker hat
-      eine Suche durch 1000+ Lucide-Icons und so weiter. Alle Pickers
-      sind erreichbar über das Property-Panel oder über
-      <kbd>Ctrl</kbd>+<kbd>Space</kbd> im Editor.
+      eine Suche durch 1000+ Lucide-Icons und so weiter.
     </p>
+
+    <div class="bridge">
+      Das Property-Panel sitzt im Studio rechts vom Preview — siehe
+      <a href="18-studio.html">Kapitel 18 (Bedienung)</a>, falls du es
+      noch nicht kennst.
+    </div>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Color-Picker — Hex-Tab</h2>
+      <h2>Color-Picker — Custom (HSV + Hex)</h2>
       <p>
-        Klick auf ein Color-Trigger im Property-Panel
+        Klick auf einen Color-Trigger im Property-Panel
         (<code>bg</code>, <code>col</code>, <code>boc</code>,
-        <code>ic</code>) öffnet den Color-Picker. Der <em>Hex</em>-Tab
-        ist der Default: ein Swatch-Grid mit kuratierten Standard-
-        Farben, ein freies Hex-Input und ein Eyedropper für
-        Bildschirm-Pick.
+        <code>ic</code>) öffnet den Color-Picker. Der <em>Custom</em>-Tab
+        ist die Default-Ansicht: HSV-Farbfeld mit Hue- und Alpha-Slider,
+        Hex-Input und Eyedropper für Bildschirm-Pick.
       </p>
       <p>
-        Das Swatch-Grid ist nicht beliebig — die Farben sind die
-        Tailwind-Skala (50/100/200…/900) für 22 Farbtöne — etablierte
-        Werte, die im Mirror-Code visuell konsistent bleiben.
-        Recent-Colors am unteren Rand merken sich die zuletzt im Projekt
-        benutzten Farben.
+        Im Code landet ein gepickter Wert direkt als Hex:
       </p>
+      <div class="code-block">
+        <pre>// Vorher
+Btn: bg #333
+
+// Color-Picker → #2271C1 → Enter
+Btn: bg #2271C1</pre>
+      </div>
 
       <div class="tutorial-video-placeholder">
-        <em>Color-Picker Hex-Tab</em>
+        <em>Color-Picker Custom-Tab mit HSV + Hex</em>
       </div>
     </section>
 
 
     <!-- ============================================================ -->
     <section>
-      <h2>Color-Picker — Token-Tab</h2>
+      <h2>Color-Picker — Palette-Tabs (Tailwind, Open, Material)</h2>
       <p>
-        Im selben Picker steht oben ein zweiter Tab: <em>Tokens</em>.
-        Hier werden die im Projekt definierten Color-Tokens (aus
-        <code>.tok</code>-Files oder oben im aktuellen File) gelistet,
-        jeweils mit ihrem Visual-Swatch. Klickst du einen Token an,
-        landet <code>$tokenname</code> im Code statt der Hex-Wert.
+        Neben <em>Custom</em> gibt es drei Palette-Tabs mit kuratierten
+        Farbskalen: <em>Tailwind</em>, <em>Open</em> (Open Color),
+        <em>Material</em>. Jede Palette zeigt ihre Farbtöne als Grid;
+        Klick übernimmt den Hex-Wert in den Code.
       </p>
       <p>
-        Der Vorteil ist nicht die Bequemlichkeit beim Auswählen —
-        sondern dass spätere Token-Änderungen alle Verwendungen
-        gleichzeitig anpassen. Ein neues Brand-Blau in einer Zeile
-        umsetzen statt in 47.
+        Der Sinn: etablierte Skalen sind in sich konsistent, du
+        kombinierst nicht versehentlich zwei Blau-Töne, die nicht
+        zueinanderpassen. Wer ein Design-System mit eigenen Farben
+        baut, nutzt stattdessen Tokens (siehe nächste Sektion).
       </p>
 
       <div class="tutorial-video-placeholder">
-        <em>Color-Picker Token-Tab</em>
+        <em>Wechsel zwischen Tailwind/Open/Material-Tabs</em>
+      </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <section>
+      <h2>Color-Picker — Tokens-Section</h2>
+      <p>
+        Über den Palette-Tabs zeigt der Picker eine
+        <em>Tokens</em>-Section mit allen im Projekt definierten
+        Color-Tokens (aus <code>.tok</code>-Files oder oben im
+        aktuellen File), jeweils mit Visual-Swatch. Klickst du einen
+        Token an, landet <code>$tokenname</code> im Code — nicht der
+        Hex-Wert:
+      </p>
+      <div class="code-block">
+        <pre>// tokens/colors.tok
+primary.bg: #2271C1
+
+// Vorher
+Btn: bg #333
+
+// Token-Section → primary → Enter
+Btn: bg $primary</pre>
+      </div>
+      <p>
+        Der Vorteil ist nicht die Bequemlichkeit — sondern dass spätere
+        Token-Änderungen alle Verwendungen gleichzeitig anpassen. Ein
+        neues Brand-Blau in einer Zeile umsetzen statt in 47.
+      </p>
+
+      <div class="tutorial-video-placeholder">
+        <em>Color-Picker Tokens-Section</em>
       </div>
     </section>
 
