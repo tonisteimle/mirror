@@ -766,9 +766,27 @@ function generateJSX(
   // from `compDef.children`. Skip the fallback when the instance carries
   // its own text content (covers `Btn "Custom"` overriding the default
   // text via positional content).
+  //
+  // Variant-children: if the instance starts in a custom state
+  // (`LikeBtn, on`) and the matching state block defines its own
+  // children (`on:\n  Text "Liked!"`), those replace the base children
+  // — same Figma-Variants semantics the DOM runtime offers via state
+  // child swapping. Without this branch the React render would always
+  // show the base children even when the instance is in a state with
+  // its own variant.
+  let stateVariantChildren: ReadonlyArray<unknown> | undefined
+  if (instance.initialState && compDef?.states) {
+    const stateBlock = compDef.states.find(s => s.name === instance.initialState)
+    if (stateBlock?.children && stateBlock.children.length > 0) {
+      stateVariantChildren = stateBlock.children
+    }
+  }
+  const fallbackChildren = stateVariantChildren ?? compDef?.children ?? []
   const useDefaultChildren =
-    instance.children.length === 0 && !textContent && (compDef?.children?.length ?? 0) > 0
-  const effectiveChildren = useDefaultChildren ? compDef!.children : instance.children
+    instance.children.length === 0 && !textContent && fallbackChildren.length > 0
+  const effectiveChildren = useDefaultChildren
+    ? (fallbackChildren as typeof instance.children)
+    : instance.children
 
   // Has children? Includes Each blocks — they render as `.map()` output.
   const hasChildren = effectiveChildren.length > 0 || textContent

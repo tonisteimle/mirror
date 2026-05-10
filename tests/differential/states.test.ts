@@ -119,6 +119,26 @@ describe('States — React folds initial-state props into inline style', () => {
     expect(inactive).not.toContain('#2271C1')
   })
 
+  it('state-variant children: `on:` block with own children replaces base children', () => {
+    // PIN: Figma-Variants semantics. A state block can carry its own
+    // children — if the instance starts in that state, those children
+    // render instead of the component's base children. DOM/runtime do
+    // this via child-swap; React folds it at compile time.
+    const src = `LikeBtn: bg #333, col #888, pad 12 20, toggle()\n  Text "Like"\n  on:\n    bg #ef4444\n    col white\n    Text "Liked!"\n\nLikeBtn, on`
+    const react = generateReact(parse(src))
+    expect(react).toContain('Liked!')
+    expect(react).not.toContain('"Like"')
+  })
+
+  it('state-variant children skipped when instance carries own positional content', () => {
+    const src = `LikeBtn: bg #333, toggle()\n  Text "Like"\n  on:\n    Text "Liked!"\n\nLikeBtn "Custom", on`
+    const react = generateReact(parse(src))
+    expect(react).toContain('Custom')
+    // Instance positional content wins over both base and variant.
+    expect(react).not.toContain('Liked!')
+    expect(react).not.toContain('"Like"')
+  })
+
   it('exclusive() with `selected` initial state lands as inline override', () => {
     const src = `Tab: pad 12 20, col #888, exclusive()\n  selected:\n    col white\n\nFrame hor\n  Tab "A", selected\n  Tab "B"`
     const react = generateReact(parse(src))
