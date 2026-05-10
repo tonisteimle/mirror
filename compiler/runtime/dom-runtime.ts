@@ -81,7 +81,14 @@ export { showAt, showBelow, showAbove, showLeft, showRight, showModal, dismiss }
 // ============================================
 
 export type { ScrollToOptions } from './scroll'
-export { scrollTo, scrollBy, scrollToTop, scrollToBottom } from './scroll'
+export {
+  scrollTo,
+  scrollBy,
+  scrollToTop,
+  scrollToBottom,
+  scrollContainerToTop,
+  scrollContainerToBottom,
+} from './scroll'
 
 // ============================================
 // VALUE FUNCTIONS + CRUD — re-exported from data.ts (single source of truth)

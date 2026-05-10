@@ -34,6 +34,12 @@ export interface CdpMouseArgs {
   y: number
   button?: 'left' | 'middle' | 'right'
   modifiers?: CdpModifiers
+  /**
+   * CDP `buttons` mask. Default: mouseDown/Up/Click=1, mouseMove=0.
+   * For mid-drag motion between mouseDown and mouseUp, pass `buttons: 1`
+   * so Chrome arms HTML5 dragstart/dragover.
+   */
+  buttons?: number
 }
 
 export interface CdpKeyArgs {

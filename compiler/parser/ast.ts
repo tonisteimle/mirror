@@ -779,6 +779,25 @@ export function isConditional(node: unknown): node is Conditional {
   )
 }
 
+/** Check if value is a TokenReference (kind: 'token', name: string) */
+export function isTokenReference(value: unknown): value is TokenReference {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value as { kind?: string }).kind === 'token' &&
+    typeof (value as { name?: unknown }).name === 'string'
+  )
+}
+
+/** Check if value is a ComputedExpression (kind: 'expression') */
+export function isComputedExpression(value: unknown): value is ComputedExpression {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value as { kind?: string }).kind === 'expression'
+  )
+}
+
 /** Check if node has content (Text-like) */
 export function hasContent(node: unknown): node is { content: string } {
   return typeof node === 'object' && node !== null && 'content' in node

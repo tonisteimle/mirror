@@ -48,6 +48,14 @@ interface MouseArgs {
   y: number
   button?: 'left' | 'middle' | 'right'
   modifiers?: Modifiers
+  /**
+   * CDP `buttons` mask override. By default `mouseMove` reports
+   * `buttons: 0` (no button held) and `mouseDown/Up/Click` report
+   * `buttons: 1` (left held). For drag motion between mouseDown and
+   * mouseUp, callers MUST pass `buttons: 1` so Chrome arms HTML5
+   * dragstart/dragover. 0=none, 1=left, 2=right, 4=middle.
+   */
+  buttons?: number
 }
 
 interface KeyArgs {
@@ -185,12 +193,16 @@ async function dispatchMouse(
   type: 'mousePressed' | 'mouseReleased' | 'mouseMoved',
   args: MouseArgs & { clickCount?: number }
 ): Promise<void> {
+  // Default buttons mask: mousePressed/Released = 1 (left), mouseMoved = 0
+  // (no button). Override via args.buttons when dragging — moves between
+  // mouseDown/Up MUST carry buttons=1 so Chrome arms HTML5 dragstart.
+  const defaultButtons = type === 'mouseMoved' ? 0 : 1
   await cdp.send('Input.dispatchMouseEvent', {
     type,
     x: args.x,
     y: args.y,
-    button: args.button ?? (type === 'mouseMoved' ? 'none' : 'left'),
-    buttons: type === 'mouseMoved' ? 0 : 1,
+    button: args.button ?? (type === 'mouseMoved' && (args.buttons ?? 0) === 0 ? 'none' : 'left'),
+    buttons: args.buttons ?? defaultButtons,
     clickCount: args.clickCount ?? (type === 'mouseMoved' ? 0 : 1),
     modifiers: modifiersBit(args.modifiers),
   })

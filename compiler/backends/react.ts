@@ -19,18 +19,11 @@ import type {
   DataAttribute,
   Conditional,
   ConditionalNode,
+  ComputedExpression,
   Event as EventNode,
   Action,
 } from '../parser/ast'
-
-// Local alias for the inline-expression value the parser emits as
-// `{ kind: 'expression', parts, operators }`. The exported `Expression`
-// type is a plain string alias and unrelated.
-interface ComputedExpression {
-  kind: 'expression'
-  parts: unknown[]
-  operators: string[]
-}
+import { isText, isTokenReference, isComputedExpression } from '../parser/ast'
 import { expandPropertySets } from '../ir/transformers/property-set-expander'
 import { resolveComponent } from '../ir/transformers/component-resolver'
 import { mergeSlotPropertiesIntoFiller } from '../ir/transformers/slot-utils'
@@ -1097,9 +1090,13 @@ function generateEachJSX(
           stateContext
         )
       )
-    } else if ((child as { type: string }).type === 'Text') {
-      const c = child as unknown as { content: string }
-      childLines.push(`${indent}    {${JSON.stringify(c.content)}}`)
+    } else if (isText(child as unknown)) {
+      // each.children's static union excludes Text, but the parser can emit
+      // Text nodes here for inline content (e.g. `each t in $tasks\n  Text t.title`).
+      // The type-guard narrows safely at runtime.
+      childLines.push(
+        `${indent}    {${JSON.stringify((child as unknown as { content: string }).content)}}`
+      )
     }
   }
 
@@ -2449,12 +2446,7 @@ function generateStyles(
     // Expression node. They typically reference loop variables or runtime
     // data the React backend can't statically evaluate. Drop the property
     // silently — better than `width: [object Object]` in the inline style.
-    if (
-      typeof firstVal === 'object' &&
-      firstVal !== null &&
-      'kind' in firstVal &&
-      (firstVal as { kind?: string }).kind === 'expression'
-    ) {
+    if (isComputedExpression(firstVal)) {
       continue
     }
 
@@ -2468,13 +2460,8 @@ function generateStyles(
     // any token whose name starts with `<head>.` as a match too — only the
     // truly-orphaned head names are loop variables we can't statically
     // evaluate.
-    if (
-      typeof firstVal === 'object' &&
-      firstVal !== null &&
-      'kind' in firstVal &&
-      (firstVal as { kind?: string }).kind === 'token'
-    ) {
-      const tokenName = (firstVal as unknown as { name: string }).name
+    if (isTokenReference(firstVal)) {
+      const tokenName = firstVal.name
       const head = tokenName.includes('.') ? tokenName.slice(0, tokenName.indexOf('.')) : tokenName
       const headExists = tokenMap.has(head) || tokenMap.has('$' + head)
       const suffixExists =

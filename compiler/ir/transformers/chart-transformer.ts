@@ -5,7 +5,8 @@
  * Extracted from ir/index.ts for modularity.
  */
 
-import type { Instance, ComponentDefinition, Property, TokenReference } from '../../parser/ast'
+import type { Instance, ComponentDefinition, Property } from '../../parser/ast'
+import { isTokenReference } from '../../parser/ast'
 import type { IRNode, IRProperty, IRChartSlot } from '../types'
 import type { TransformerContext, ParentLayoutContext } from './transformer-context'
 import { getChartPrimitive, getChartSlotProperty } from '../../schema/chart-primitives'
@@ -24,15 +25,6 @@ function stringifyChartSlotValue(value: unknown): string {
     return '$' + value.name
   }
   return String(value)
-}
-
-function isTokenReference(value: unknown): value is TokenReference {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    (value as { kind?: string }).kind === 'token' &&
-    typeof (value as { name?: unknown }).name === 'string'
-  )
 }
 
 /**
@@ -105,13 +97,8 @@ export function transformChart(
     dataBinding = String(textContentProp.values[0])
   } else if (propsetProp?.values[0]) {
     const val = propsetProp.values[0]
-    if (
-      typeof val === 'object' &&
-      val !== null &&
-      'kind' in val &&
-      (val as TokenReference).kind === 'token'
-    ) {
-      dataBinding = '$' + (val as TokenReference).name
+    if (isTokenReference(val)) {
+      dataBinding = '$' + val.name
     } else if (typeof val === 'string' && val.startsWith('$')) {
       dataBinding = val
     }

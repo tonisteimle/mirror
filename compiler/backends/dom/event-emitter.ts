@@ -529,14 +529,19 @@ function emitScrollAction(
       if (action.args && action.args.length > 0) {
         ctx.emit(`_runtime.scrollToTop(_elements['${action.args[0]}'] || '${action.args[0]}')`)
       } else {
-        ctx.emit(`_runtime.scrollToTop()`)
+        // No explicit target → context-aware: walk up from the click
+        // source to find the closest scrollable ancestor. Avoids the
+        // pre-fix bug where `scrollToTop()` always scrolled the window
+        // even when the button was inside a `Frame h 150, scroll`
+        // container (see findings.md "scroll runtime").
+        ctx.emit(`_runtime.scrollContainerToTop(${currentVar})`)
       }
       break
     case 'scrollToBottom':
       if (action.args && action.args.length > 0) {
         ctx.emit(`_runtime.scrollToBottom(_elements['${action.args[0]}'] || '${action.args[0]}')`)
       } else {
-        ctx.emit(`_runtime.scrollToBottom()`)
+        ctx.emit(`_runtime.scrollContainerToBottom(${currentVar})`)
       }
       break
   }

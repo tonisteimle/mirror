@@ -115,6 +115,26 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
+- **Wo:** `studio/init/init-notifications.ts:39-43` (drag:dropped handler)
+  **Was:** Empty-canvas drop fails inside suite tests when the editor
+  source is set via `__compileTestCode('')` (which sets
+  `testModeActive = true`). Studio's `drag:dropped` handler does
+  `if (!target) return` BEFORE the Empty-Canvas-Fallback (lines 50-86)
+  can run; in suite-test setup with empty editor + testMode the drop
+  arrives with `target=null` and is silently dropped. Atomic test 6
+  (`tools/atomic-input-tests.ts`) executes the IDENTICAL CDP-mouse
+  sequence against an empty preview and produces a `Frame` correctly,
+  because there the editor is set via `editor.dispatch({...})`
+  WITHOUT going through `__compileTestCode` / testMode. Test
+  `studio/test-api/suites/preview-cdp/01-palette-drop/frame-into-empty-canvas.test.ts`
+  is `testWithSetupSkip` until this is fixed.
+  **Status:** offen — needs either a testMode-aware path through the
+  Empty-Canvas-Fallback or a different setup helper (`setEditorSource`
+  via `editor.dispatch` instead of `__compileTestCode`).
+  **Notiz:** All non-empty-canvas drops work fine through both
+  \_\_mirrorActions.dropFromPalette AND bare cdpInput.\* — the bug is
+  specific to `editor source = ''` + testMode.
+
 - **Wo:** `compiler/ir/ops/instance-ops.ts:transformInstance` (signature)
   **Was:** Signature ist `instance: Instance | Each | any`. Versuch der
   Tightening (2026-05-10 Claude-Session) deckte cascading mismatches

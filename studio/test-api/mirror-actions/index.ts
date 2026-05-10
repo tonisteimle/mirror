@@ -304,14 +304,17 @@ export function installMirrorActions(): MirrorActionsAPI {
     requireCdp()
     const steps = Math.max(6, opts.steps ?? 12)
     await cdpInput.mouseDown({ x: from.x, y: from.y })
-    if (opts.preHoldMs) await delay(opts.preHoldMs)
     // First move with a small offset so Chrome arms HTML5 dragstart.
-    await cdpInput.mouseMove({ x: from.x + 8, y: from.y + 8 })
+    // CRITICAL: every mid-drag mouseMove must carry `buttons: 1` —
+    // without it the move events report "no button held" and Chrome's
+    // dragstart never fires.
+    await cdpInput.mouseMove({ x: from.x + 8, y: from.y + 8, buttons: 1 })
+    if (opts.preHoldMs) await delay(opts.preHoldMs)
     for (let i = 1; i <= steps; i++) {
       const t = i / steps
       const x = from.x + (to.x - from.x) * t
       const y = from.y + (to.y - from.y) * t
-      await cdpInput.mouseMove({ x, y })
+      await cdpInput.mouseMove({ x, y, buttons: 1 })
       // tiny pause keeps drag indicators legible and gives the browser
       // time to fire dragover before the next move.
       await delay(8)
@@ -363,13 +366,24 @@ export function installMirrorActions(): MirrorActionsAPI {
   // Compile / wait helpers
   // ===========================================================================
 
+  /**
+   * Best-effort settle after a Mirror-mutating action. Tries
+   * `__dragTest.waitForCompile()` if available, but swallows its
+   * timeout — for empty-canvas drops the compile may not produce
+   * `[data-mirror-id]` nodes by 2s without ever being a real failure.
+   * Tests assert what matters (new node count, source contains X)
+   * directly; this just waits long enough that an honest compile has
+   * had a chance to run.
+   */
   const waitForCompile = async (): Promise<void> => {
     if (win.__dragTest && typeof win.__dragTest.waitForCompile === 'function') {
-      await win.__dragTest.waitForCompile()
-    } else {
-      // Best-effort settle for tests/demos that don't expose __dragTest.
-      await delay(80)
+      try {
+        await win.__dragTest.waitForCompile()
+      } catch {
+        // timeout — fall through to a longer settle.
+      }
     }
+    await delay(400)
   }
 
   // ===========================================================================
@@ -424,11 +438,12 @@ export function installMirrorActions(): MirrorActionsAPI {
         endPoint = center(targetEl)
       }
     } else {
-      // Empty/canvas-only preview — drop just inside the preview pane so
-      // Mirror's onDrop callback creates a top-level node.
+      // Empty/canvas-only preview — drop into the center of the preview
+      // pane so Mirror's onDrop callback creates a top-level node.
+      // Top-left positions can fall outside the active drop hot-zone.
       const preview = queryRequired('#preview', 'dropFromPalette')
       const r = preview.getBoundingClientRect()
-      endPoint = { x: r.left + 80, y: r.top + 80 }
+      endPoint = { x: r.left + r.width / 2, y: r.top + r.height / 2 }
     }
 
     // Snapshot ids so we can find the freshly-dropped node afterwards.

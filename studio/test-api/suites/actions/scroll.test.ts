@@ -2,12 +2,11 @@
  * Scroll Actions — scrollToTop, scrollToBottom, scrollTo
  */
 
-import { testWithSetup, testWithSetupSkip, describe, type TestCase } from '../../test-runner'
+import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 
 export const scrollActionTests: TestCase[] = describe('Scroll Actions', [
-  // TODO: Runtime bug - scrollToTop() doesn't scroll container in headless tests
-  testWithSetupSkip(
+  testWithSetup(
     'scrollToTop() scrolls container to top on click',
     `Frame h 150, scroll, bg #1a1a1a
   Frame h 400, pad 16, gap 8
@@ -33,8 +32,7 @@ export const scrollActionTests: TestCase[] = describe('Scroll Actions', [
     }
   ),
 
-  // TODO: Runtime bug - scrollToBottom() doesn't scroll container in headless tests
-  testWithSetupSkip(
+  testWithSetup(
     'scrollToBottom() scrolls container to bottom on click',
     `Frame h 150, scroll, bg #1a1a1a
   Frame h 400, pad 16, gap 8

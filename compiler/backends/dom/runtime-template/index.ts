@@ -42,6 +42,9 @@ import {
   scrollBy as scrollByTyped,
   scrollToTop as scrollToTopTyped,
   scrollToBottom as scrollToBottomTyped,
+  scrollContainerToTop as scrollContainerToTopTyped,
+  scrollContainerToBottom as scrollContainerToBottomTyped,
+  findScrollableAncestor as findScrollableAncestorTyped,
 } from '../../../runtime/scroll'
 import { createToastModule } from '../../../runtime/toast'
 import { createBatchingModule } from '../../../runtime/batching'
@@ -158,6 +161,9 @@ const SCROLL_TO_SRC = stamp(scrollToTyped)
 const SCROLL_BY_SRC = stamp(scrollByTyped)
 const SCROLL_TO_TOP_SRC = stamp(scrollToTopTyped)
 const SCROLL_TO_BOTTOM_SRC = stamp(scrollToBottomTyped)
+const FIND_SCROLLABLE_ANCESTOR_SRC = stamp(findScrollableAncestorTyped)
+const SCROLL_CONTAINER_TO_TOP_SRC = stamp(scrollContainerToTopTyped)
+const SCROLL_CONTAINER_TO_BOTTOM_SRC = stamp(scrollContainerToBottomTyped)
 
 // Stamp the toast factory. createToastModule.toString() yields a
 // self-contained closure that owns its own counter + active-toast map.
@@ -290,6 +296,9 @@ ${SCROLL_TO_SRC}
 ${SCROLL_BY_SRC}
 ${SCROLL_TO_TOP_SRC}
 ${SCROLL_TO_BOTTOM_SRC}
+${FIND_SCROLLABLE_ANCESTOR_SRC}
+${SCROLL_CONTAINER_TO_TOP_SRC}
+${SCROLL_CONTAINER_TO_BOTTOM_SRC}
 
 // Toast module (stamped factory from compiler/runtime/toast.ts).
 // Invoke once to get a fresh counter + active-toast map; expose the
@@ -627,6 +636,8 @@ const _runtime = {
   scrollBy,
   scrollToTop,
   scrollToBottom,
+  scrollContainerToTop,
+  scrollContainerToBottom,
 
   // ============================================
   // FEEDBACK: Toast Notifications

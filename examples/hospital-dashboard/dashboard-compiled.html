@@ -6556,6 +6556,47 @@ function scrollToBottom(element, behavior = "smooth") {
 		behavior
 	});
 }
+function findScrollableAncestor(start) {
+	if (!start) return null;
+	let cur = start.parentElement;
+	while (cur && cur !== document.body && cur !== document.documentElement) {
+		const style = getComputedStyle(cur);
+		const overflowY = style.overflowY;
+		if ((overflowY === "auto" || overflowY === "scroll") && cur.scrollHeight > cur.clientHeight) {
+			return cur;
+		};
+		cur = cur.parentElement;
+	};
+	return null;
+}
+function scrollContainerToTop(context, behavior = "smooth") {
+	const ancestor = findScrollableAncestor(context ?? null);
+	if (ancestor) {
+		ancestor.scrollTo({
+			top: 0,
+			behavior
+		});
+		return;
+	};
+	window.scrollTo({
+		top: 0,
+		behavior
+	});
+}
+function scrollContainerToBottom(context, behavior = "smooth") {
+	const ancestor = findScrollableAncestor(context ?? null);
+	if (ancestor) {
+		ancestor.scrollTo({
+			top: ancestor.scrollHeight,
+			behavior
+		});
+		return;
+	};
+	window.scrollTo({
+		top: document.body.scrollHeight,
+		behavior
+	});
+}
 
 // Toast module (stamped factory from compiler/runtime/toast.ts).
 // Invoke once to get a fresh counter + active-toast map; expose the
@@ -7513,6 +7554,8 @@ const _runtime = {
   scrollBy,
   scrollToTop,
   scrollToBottom,
+  scrollContainerToTop,
+  scrollContainerToBottom,
 
   // ============================================
   // FEEDBACK: Toast Notifications

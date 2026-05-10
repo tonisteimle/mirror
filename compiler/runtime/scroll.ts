@@ -73,3 +73,57 @@ export function scrollToBottom(
   const el = resolveElement(element)
   if (el) el.scrollTo({ top: el.scrollHeight, behavior })
 }
+
+/**
+ * Walk up the parent chain from `start` and return the first ancestor
+ * that has `overflow-y: auto|scroll` *and* actual overflow content
+ * (`scrollHeight > clientHeight`). Returns `null` when none is found —
+ * caller should fall back to window scroll. `start` itself is not
+ * considered: the click source is usually a button which is not
+ * scrollable; we want the scrollable container around it.
+ */
+export function findScrollableAncestor(start: HTMLElement | null): HTMLElement | null {
+  if (!start) return null
+  let cur: HTMLElement | null = start.parentElement
+  while (cur && cur !== document.body && cur !== document.documentElement) {
+    const style = getComputedStyle(cur)
+    const overflowY = style.overflowY
+    if ((overflowY === 'auto' || overflowY === 'scroll') && cur.scrollHeight > cur.clientHeight) {
+      return cur
+    }
+    cur = cur.parentElement
+  }
+  return null
+}
+
+/**
+ * Context-aware companion to `scrollToTop`: when no explicit target was
+ * given in DSL (`Button "↑", scrollToTop()`), the click source is passed
+ * here. We walk up to find the closest scrollable ancestor and scroll
+ * *that*, falling back to window. Pre-fix the no-arg form always hit
+ * `window.scrollTo`, which was useless inside a `Frame h 150, scroll`
+ * container — see findings.md "scrollToTop/Bottom Container-Scroll".
+ */
+export function scrollContainerToTop(
+  context?: HTMLElement | null,
+  behavior: ScrollBehavior = 'smooth'
+): void {
+  const ancestor = findScrollableAncestor(context ?? null)
+  if (ancestor) {
+    ancestor.scrollTo({ top: 0, behavior })
+    return
+  }
+  window.scrollTo({ top: 0, behavior })
+}
+
+export function scrollContainerToBottom(
+  context?: HTMLElement | null,
+  behavior: ScrollBehavior = 'smooth'
+): void {
+  const ancestor = findScrollableAncestor(context ?? null)
+  if (ancestor) {
+    ancestor.scrollTo({ top: ancestor.scrollHeight, behavior })
+    return
+  }
+  window.scrollTo({ top: document.body.scrollHeight, behavior })
+}
