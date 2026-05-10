@@ -58,6 +58,7 @@ import {
 } from './dom-bridge'
 import { createFixturesAPI, type Fixture, type FixturesAPI } from './fixtures'
 import { installCdpInputClient, isCdpInputAvailable, cdpInput } from './cdp-input-client'
+import { trustedInteractions, type TrustedInteractionAPI } from './trusted-interactions'
 import { createStudioAPI } from './studio-api'
 import { createSnappingAPI, setupSnappingAPI, type SnappingAPI } from './snapping-api'
 import {
@@ -430,6 +431,13 @@ export interface MirrorTestAPI {
   // Full APIs
   preview: PreviewInspector
   interact: Interactions
+  /**
+   * Opt-in trusted-event input via CDP. Only available when running under
+   * the CDP test runner (`trusted.isAvailable() === true`); throws
+   * otherwise. Use this for tests that need real focus/IME/dragstart
+   * semantics; use `interact` for everything else.
+   */
+  trusted: TrustedInteractionAPI
   runner: TestRunner
 
   // Fixtures
@@ -664,6 +672,7 @@ function createMirrorTestAPI(): MirrorTestAPI {
     // Full APIs
     preview: inspector,
     interact: interactions,
+    trusted: trustedInteractions,
     runner,
 
     // Fixtures
