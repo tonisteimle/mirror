@@ -46,6 +46,7 @@ import { alert } from './dialog'
 import {
   initNotifications,
   initGridOverlay,
+  installEditorDispatchWrapper,
   renderEditorFileTabs as renderEditorFileTabsImpl,
 } from './init'
 import { debounce } from './core/debounce'
@@ -285,6 +286,12 @@ declare global {
      * so they compile.
      */
     files?: Record<string, string>
+    /**
+     * CodeMirror EditorView exposed for debugging and the test-runner
+     * (drag/test-runner.ts reads this to dispatch transactions). Set in
+     * app.ts at boot; not required for production reads.
+     */
+    editor?: EditorView
   }
 }
 
@@ -1041,41 +1048,9 @@ function renderEditorFileTabs(activeFilename: string): void {
 // Initial render — tabs need to exist before the user clicks anything.
 renderEditorFileTabs(currentFile)
 
-// Update undo/redo button states based on history
-function updateUndoRedoButtons() {
-  if (!editor || !undoBtn || !redoBtn) return
-
-  // Use undoDepth/redoDepth to check history availability
-  undoBtn.disabled = undoDepth(editor.state) === 0
-  redoBtn.disabled = redoDepth(editor.state) === 0
-}
-
-// Call on editor transactions
-const originalDispatch = editor.dispatch.bind(editor)
-;(editor as unknown as { __originalDispatch: typeof originalDispatch }).__originalDispatch =
-  originalDispatch // Expose for testing
-editor.dispatch = ((...args: Parameters<EditorView['dispatch']>) => {
-  try {
-    originalDispatch(...args)
-  } catch (e) {
-    // CodeMirror throws "Position N is out of range for changeset of
-    // length M" when a stale source-map (post test-suite reset, debounced
-    // panel commit racing with a fresh setCode) builds change positions
-    // against an older doc. Swallowing these here keeps the editor and
-    // subsequent test setups alive — without this guard one test's stale
-    // dispatch poisons every subsequent test's setup. Real range bugs
-    // still surface via console for debugging.
-    if (e instanceof RangeError && /Position \d+ is out of range/.test(e.message)) {
-      log.warn('[editor.dispatch] dropped stale change:', e.message)
-      return
-    }
-    throw e
-  }
-  updateUndoRedoButtons()
-}) as EditorView['dispatch']
-
-// Initial state
-updateUndoRedoButtons()
+// Editor dispatch wrapper (RangeError-swallow + undo/redo button sync) —
+// extracted to studio/init/init-editor-dispatch.ts.
+installEditorDispatchWrapper(editor, undoBtn, redoBtn)
 
 // Folder toggle
 document.querySelectorAll('.folder-header').forEach(header => {

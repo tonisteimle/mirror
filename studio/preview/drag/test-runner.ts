@@ -27,6 +27,7 @@ import { lookupComponentByName } from './test-api-helpers'
 import { cellCenterOffset } from '../../visual/snap/grid-cell-snap'
 import type { AnimationConfig, BrowserTestResult } from './test-api-types'
 import { DEFAULT_ANIMATION } from './test-api-types'
+import type { EditorView } from '@codemirror/view'
 
 export class BrowserTestRunner {
   private animationConfig: AnimationConfig = DEFAULT_ANIMATION
@@ -44,10 +45,11 @@ export class BrowserTestRunner {
   }
 
   /**
-   * Get editor instance (fetched dynamically)
+   * Get editor instance (fetched dynamically). app.ts publishes the live
+   * CodeMirror view onto window.editor at boot — see studio/app.ts.
    */
-  private get editor(): any {
-    return (window as any).editor
+  private get editor(): EditorView | undefined {
+    return window.editor
   }
 
   /**
@@ -211,7 +213,7 @@ export class BrowserTestRunner {
       }
 
       // Set the code directly
-      const editor = (window as any).editor
+      const editor = window.editor
       if (!editor) {
         return this.errorResult(description, 'Editor not available', startTime, codeBefore)
       }
