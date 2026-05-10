@@ -120,8 +120,11 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Was:** Re-Entrancy-Guard `if (this.executing) return { success: false }`
   ist synchron, fängt aber keine schnell aufeinanderfolgenden Aufrufe vor
   Abschluss.
-  **Status:** offen
-  **Notiz:** Queue oder Throw statt silent-fail.
+  **Status:** erledigt — `execute`/`runHistoryOp`/`executeInSession`
+  werfen jetzt `Error('CommandExecutor: re-entrant ...')` statt
+  silent-fail. Test in `tests/studio/core.test.ts` pinnt das Verhalten.
+  Re-Entrancy ist ein Programmierfehler (Command triggert synchron
+  anderen Command) — soll laut sein, nicht stumm geschluckt.
 
 - **Wo:** `studio/bootstrap.ts:522-554`
   **Was:** `setCommandContext()` wird nach Editor/Preview-Init aber vor

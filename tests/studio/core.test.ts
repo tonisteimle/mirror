@@ -19,6 +19,7 @@ import {
   setCommandContext,
   type CommandContext,
   type StudioState,
+  type Command,
 } from '../../studio/core'
 
 // ===========================================
@@ -213,7 +214,12 @@ describe('Actions', () => {
     })
 
     it('should handle different origins', () => {
-      const origins: Array<'editor' | 'preview' | 'panel' | 'keyboard'> = ['editor', 'preview', 'panel', 'keyboard']
+      const origins: Array<'editor' | 'preview' | 'panel' | 'keyboard'> = [
+        'editor',
+        'preview',
+        'panel',
+        'keyboard',
+      ]
 
       origins.forEach(origin => {
         actions.setSelection('test-node', origin)
@@ -229,7 +235,7 @@ describe('Actions', () => {
 
       expect(handler).toHaveBeenCalledWith({
         nodeId: 'test-node',
-        origin: 'preview'
+        origin: 'preview',
       })
 
       unsub()
@@ -325,7 +331,6 @@ describe('Actions', () => {
       expect(state.get().source).toBe(multiline)
     })
   })
-
 })
 
 // ===========================================
@@ -348,7 +353,11 @@ describe('Event Bus', () => {
       const handler = vi.fn()
       const unsub = events.on('source:changed', handler)
 
-      const eventData = { source: 'Box pad 10', origin: 'editor', change: { from: 0, to: 0, insert: 'Box' } }
+      const eventData = {
+        source: 'Box pad 10',
+        origin: 'editor',
+        change: { from: 0, to: 0, insert: 'Box' },
+      }
       events.emit('source:changed', eventData)
 
       expect(handler).toHaveBeenCalledWith(eventData)
@@ -668,6 +677,29 @@ describe('Command Executor', () => {
     })
   })
 
+  describe('Re-entrancy Guard', () => {
+    it('should throw if a command synchronously triggers executor.execute()', () => {
+      const inner: Command = {
+        type: 'INNER',
+        description: 'inner',
+        execute: vi.fn().mockReturnValue({ success: true }),
+        undo: vi.fn().mockReturnValue({ success: true }),
+      }
+      const outer: Command = {
+        type: 'OUTER',
+        description: 'outer',
+        execute: () => {
+          executor.execute(inner)
+          return { success: true }
+        },
+        undo: () => ({ success: true }),
+      }
+      expect(() => executor.execute(outer)).toThrow(/re-entrant execute/)
+      // Outer aborted by exception → not pushed to history.
+      expect(executor.canUndo()).toBe(false)
+    })
+  })
+
   describe('History Limit', () => {
     it('should respect max history limit', () => {
       // Create many commands
@@ -704,19 +736,28 @@ describe('BatchCommand', () => {
       const cmd1 = {
         type: 'TEST1',
         description: 'Test 1',
-        execute: vi.fn().mockImplementation(() => { order.push(1); return { success: true } }),
+        execute: vi.fn().mockImplementation(() => {
+          order.push(1)
+          return { success: true }
+        }),
         undo: vi.fn().mockReturnValue({ success: true }),
       }
       const cmd2 = {
         type: 'TEST2',
         description: 'Test 2',
-        execute: vi.fn().mockImplementation(() => { order.push(2); return { success: true } }),
+        execute: vi.fn().mockImplementation(() => {
+          order.push(2)
+          return { success: true }
+        }),
         undo: vi.fn().mockReturnValue({ success: true }),
       }
       const cmd3 = {
         type: 'TEST3',
         description: 'Test 3',
-        execute: vi.fn().mockImplementation(() => { order.push(3); return { success: true } }),
+        execute: vi.fn().mockImplementation(() => {
+          order.push(3)
+          return { success: true }
+        }),
         undo: vi.fn().mockReturnValue({ success: true }),
       }
 
@@ -730,7 +771,7 @@ describe('BatchCommand', () => {
     it('should use provided description', () => {
       const batch = new BatchCommand({
         commands: [],
-        description: 'Custom batch description'
+        description: 'Custom batch description',
       })
 
       expect(batch.description).toBe('Custom batch description')
@@ -765,13 +806,19 @@ describe('BatchCommand', () => {
         type: 'TEST1',
         description: 'Test 1',
         execute: vi.fn().mockReturnValue({ success: true }),
-        undo: vi.fn().mockImplementation(() => { undoOrder.push(1); return { success: true } }),
+        undo: vi.fn().mockImplementation(() => {
+          undoOrder.push(1)
+          return { success: true }
+        }),
       }
       const cmd2 = {
         type: 'TEST2',
         description: 'Test 2',
         execute: vi.fn().mockReturnValue({ success: true }),
-        undo: vi.fn().mockImplementation(() => { undoOrder.push(2); return { success: true } }),
+        undo: vi.fn().mockImplementation(() => {
+          undoOrder.push(2)
+          return { success: true }
+        }),
       }
       const cmd3 = {
         type: 'TEST3',
@@ -795,19 +842,28 @@ describe('BatchCommand', () => {
         type: 'TEST1',
         description: 'Test 1',
         execute: vi.fn().mockReturnValue({ success: true }),
-        undo: vi.fn().mockImplementation(() => { order.push(1); return { success: true } }),
+        undo: vi.fn().mockImplementation(() => {
+          order.push(1)
+          return { success: true }
+        }),
       }
       const cmd2 = {
         type: 'TEST2',
         description: 'Test 2',
         execute: vi.fn().mockReturnValue({ success: true }),
-        undo: vi.fn().mockImplementation(() => { order.push(2); return { success: true } }),
+        undo: vi.fn().mockImplementation(() => {
+          order.push(2)
+          return { success: true }
+        }),
       }
       const cmd3 = {
         type: 'TEST3',
         description: 'Test 3',
         execute: vi.fn().mockReturnValue({ success: true }),
-        undo: vi.fn().mockImplementation(() => { order.push(3); return { success: true } }),
+        undo: vi.fn().mockImplementation(() => {
+          order.push(3)
+          return { success: true }
+        }),
       }
 
       const batch = new BatchCommand({ commands: [cmd1, cmd2, cmd3] })
@@ -871,7 +927,7 @@ describe('RecordedChangeCommand', () => {
       const cmd = new RecordedChangeCommand({
         change: { from: 0, to: 5, insert: 'hello' },
         inverseChange: { from: 0, to: 5, insert: 'world' },
-        description: 'Test change'
+        description: 'Test change',
       })
 
       const result = cmd.execute(ctx)
@@ -885,7 +941,7 @@ describe('RecordedChangeCommand', () => {
       const cmd = new RecordedChangeCommand({
         change,
         inverseChange: { from: 0, to: 5, insert: 'world' },
-        description: 'Test change'
+        description: 'Test change',
       })
 
       const result = cmd.execute(ctx)
@@ -900,7 +956,7 @@ describe('RecordedChangeCommand', () => {
       const cmd = new RecordedChangeCommand({
         change: { from: 0, to: 5, insert: 'hello' },
         inverseChange,
-        description: 'Test change'
+        description: 'Test change',
       })
 
       cmd.execute(ctx)
@@ -915,7 +971,7 @@ describe('RecordedChangeCommand', () => {
       const cmd = new RecordedChangeCommand({
         change: { from: 0, to: 5, insert: 'hello' },
         inverseChange,
-        description: 'Test change'
+        description: 'Test change',
       })
 
       cmd.execute(ctx)
@@ -931,7 +987,7 @@ describe('RecordedChangeCommand', () => {
       const cmd = new RecordedChangeCommand({
         change,
         inverseChange: { from: 0, to: 5, insert: 'world' },
-        description: 'Test change'
+        description: 'Test change',
       })
 
       cmd.execute(ctx)
@@ -952,7 +1008,7 @@ describe('RecordedChangeCommand', () => {
       const cmd = new RecordedChangeCommand({
         change,
         inverseChange,
-        description: 'Test change'
+        description: 'Test change',
       })
 
       // First execute (no-op)
@@ -985,7 +1041,7 @@ describe('RecordedChangeCommand', () => {
       const cmd = new RecordedChangeCommand({
         change: { from: 0, to: 5, insert: 'hello' },
         inverseChange: { from: 0, to: 5, insert: 'world' },
-        description: 'My custom description'
+        description: 'My custom description',
       })
 
       expect(cmd.description).toBe('My custom description')
@@ -1080,7 +1136,7 @@ describe('Integration: Executor with Commands', () => {
     const cmd = new RecordedChangeCommand({
       change: { from: 0, to: 0, insert: 'Box' },
       inverseChange: { from: 0, to: 3, insert: '' },
-      description: 'Add Box'
+      description: 'Add Box',
     })
 
     executor.execute(cmd)

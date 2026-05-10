@@ -52,7 +52,11 @@ export class CommandExecutor {
 
   execute(command: Command): CommandResult {
     if (this.executing) {
-      return { success: false, error: 'Execution already in progress' }
+      throw new Error(
+        `CommandExecutor: re-entrant execute() call detected (incoming: ${command.type}). ` +
+          'Commands must not synchronously trigger other commands. ' +
+          'Use a microtask or post-command hook instead.'
+      )
     }
 
     this.executing = true
@@ -82,7 +86,10 @@ export class CommandExecutor {
     if (!entry) return { success: false, error: emptyError }
     if (this.executing) {
       from.push(entry)
-      return { success: false, error: 'Execution already in progress' }
+      throw new Error(
+        `CommandExecutor: re-entrant ${event} call detected (entry: ${entry.command.type}). ` +
+          'Commands must not synchronously trigger undo/redo.'
+      )
     }
     this.executing = true
     try {
@@ -163,7 +170,10 @@ export class CommandExecutor {
   executeInSession(command: Command): CommandResult {
     if (!this.session) return this.execute(command)
     if (this.executing) {
-      return { success: false, error: 'Execution already in progress' }
+      throw new Error(
+        `CommandExecutor: re-entrant executeInSession() call detected (incoming: ${command.type}). ` +
+          'Commands must not synchronously trigger other commands inside a session.'
+      )
     }
 
     this.executing = true
