@@ -171,21 +171,21 @@ npx tsx tools/test.ts --filter="Palette →"  # alle palette-Tests
 
 Jede Wave: **bauen → atomic-tests grün → 1-3 neue Tests → build:studio → Tests laufen → committen.** Kein Wave-Sprung ohne grünen Suite-Lauf.
 
-| Wave | Bereich | Tests | Verifikation |
-|------|---------|-------|--------------|
-| 1 | Infrastruktur | `_shared/fixtures.ts`, `_shared/selectors.ts`, neue Kategorie in `categories.ts` (leer), erste Test-Datei als Smoke | Suite-Runner findet die Kategorie, leere Liste läuft grün |
-| 2 | 01-palette-drop | Frame→empty, Frame→Frame, Text→Frame | 3/3 grün |
-| 3 | 01-palette-drop (cont.) | Button, Icon, append-vs-index, zone-alignment | 7/7 grün |
-| 4 | 02-move | reorder up/down, into-different, out-of, escape-cancels | 5/5 grün |
-| 5 | 03-nesting | Frame→Frame, Text→nested, two-levels | 3/3 grün |
-| 6 | 04-deep-nesting | drei, fünf, in-each | 3/3 grün |
-| 7 | 05-padding | uniform, axis-h, axis-v, vier Single-Sides, arrow-key, escape | 9/9 grün |
-| 8 | 06-margin | uniform, axis, single, arrow | 4/4 grün |
-| 9 | 07-gap | hor, ver, arrow | 3/3 grün |
-| 10 | 08-resize | east, west, south, corner, snap-sibling, snap-token | 6/6 grün |
-| 11 | 09-inline-edit | double-click, escape, enter | 3/3 grün |
-| 12 | 10-property-panel (numerische) | width, height, radius, border, gap, padding-uniform, padding-side, margin, opacity | 9/9 grün |
-| 13 | 10-property-panel (visual) | direction, alignment, color-picker × 4 (bg/text/border/icon) | 6/6 grün |
+| Wave | Bereich                        | Tests                                                                                                               | Verifikation                                              |
+| ---- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| 1    | Infrastruktur                  | `_shared/fixtures.ts`, `_shared/selectors.ts`, neue Kategorie in `categories.ts` (leer), erste Test-Datei als Smoke | Suite-Runner findet die Kategorie, leere Liste läuft grün |
+| 2    | 01-palette-drop                | Frame→empty, Frame→Frame, Text→Frame                                                                                | 3/3 grün                                                  |
+| 3    | 01-palette-drop (cont.)        | Button, Icon, append-vs-index, zone-alignment                                                                       | 7/7 grün                                                  |
+| 4    | 02-move                        | reorder up/down, into-different, out-of, escape-cancels                                                             | 5/5 grün                                                  |
+| 5    | 03-nesting                     | Frame→Frame, Text→nested, two-levels                                                                                | 3/3 grün                                                  |
+| 6    | 04-deep-nesting                | drei, fünf, in-each                                                                                                 | 3/3 grün                                                  |
+| 7    | 05-padding                     | uniform, axis-h, axis-v, vier Single-Sides, arrow-key, escape                                                       | 9/9 grün                                                  |
+| 8    | 06-margin                      | uniform, axis, single, arrow                                                                                        | 4/4 grün                                                  |
+| 9    | 07-gap                         | hor, ver, arrow                                                                                                     | 3/3 grün                                                  |
+| 10   | 08-resize                      | east, west, south, corner, snap-sibling, snap-token                                                                 | 6/6 grün                                                  |
+| 11   | 09-inline-edit                 | double-click, escape, enter                                                                                         | 3/3 grün                                                  |
+| 12   | 10-property-panel (numerische) | width, height, radius, border, gap, padding-uniform, padding-side, margin, opacity                                  | 9/9 grün                                                  |
+| 13   | 10-property-panel (visual)     | direction, alignment, color-picker × 4 (bg/text/border/icon)                                                        | 6/6 grün                                                  |
 
 Total: ~62 Tests, 13 Waves.
 
