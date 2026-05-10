@@ -174,7 +174,14 @@ function parseArgs(): CLIArgs {
     // Snapshots (C4)
     demoSnapshots: getArgValue(args, '--snapshot-dir'),
     demoSnapshotBaseline: getArgValue(args, '--snapshot-baseline'),
-    osMouse: args.includes('--driver=os') || args.includes('--os-mouse'),
+    // OS-mouse default: ON when running headed (a viewer expects to see
+    // the real OS cursor and Studio's actual drag visuals — synthetic
+    // SVG cursors and fake highlights don't match the app's real
+    // behavior). Headless runs default OFF since there's no display.
+    // Explicit flags still override.
+    osMouse: args.includes('--no-os-mouse')
+      ? false
+      : args.includes('--driver=os') || args.includes('--os-mouse') || args.includes('--headed'),
     framesDir: getArgValue(args, '--frames'),
     demoSnapshotThreshold: getArgValue(args, '--snapshot-threshold')
       ? parseFloat(getArgValue(args, '--snapshot-threshold')!)
