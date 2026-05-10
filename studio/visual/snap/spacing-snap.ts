@@ -9,7 +9,7 @@
  * - Cmd/Ctrl: Bypass all snapping (free drag)
  */
 
-import { handleSnapSettings, gridSettings, events } from '../../core'
+import { handleSnapSettings, gridSettings } from '../../core'
 
 // ============================================================================
 // Types
