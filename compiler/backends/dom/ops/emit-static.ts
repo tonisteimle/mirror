@@ -6,9 +6,9 @@
  */
 
 import { DOM_RUNTIME_CODE } from '../../dom/runtime-template'
-import { emitTokens as emitTokensExtracted } from '../../dom/token-emitter'
-import { emitAnimations as emitAnimationsExtracted } from '../../dom/animation-emitter'
-import { emitPublicAPI as emitPublicAPIExtracted } from '../../dom/api-emitter'
+import * as TokenEmitter from '../../dom/token-emitter'
+import * as AnimationEmitter from '../../dom/animation-emitter'
+import * as ApiEmitter from '../../dom/api-emitter'
 import type { DOMGenerator } from '../../dom'
 
 export function emitCustomIcons(this: DOMGenerator): void {
@@ -26,7 +26,7 @@ export function emitCustomIcons(this: DOMGenerator): void {
 
 export function emitAnimations(this: DOMGenerator): void {
   const ctx = this.createAnimationEmitterContext()
-  emitAnimationsExtracted(ctx, this.ir.animations)
+  AnimationEmitter.emitAnimations(ctx, this.ir.animations)
 }
 
 export function emitHeader(this: DOMGenerator): void {
@@ -38,7 +38,7 @@ export function emitHeader(this: DOMGenerator): void {
 export function emitTokens(this: DOMGenerator): void {
   // Delegate to extracted token emitter
   const ctx = this.createTokenEmitterContext()
-  emitTokensExtracted(ctx, {
+  TokenEmitter.emitTokens(ctx, {
     tokens: this.ir.tokens,
     dataFiles: this.dataFiles,
   })
@@ -47,7 +47,7 @@ export function emitTokens(this: DOMGenerator): void {
 export function emitPublicAPI(this: DOMGenerator): void {
   const ctx = this.createAPIEmitterContext()
   const namedNodes = this.collectNamedNodes(this.ir.nodes)
-  emitPublicAPIExtracted(ctx, namedNodes)
+  ApiEmitter.emitPublicAPI(ctx, namedNodes)
 }
 
 export function emitRuntime(this: DOMGenerator): void {

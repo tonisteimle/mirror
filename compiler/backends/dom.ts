@@ -49,11 +49,11 @@ import {
   emitAppendToParent,
 } from './dom/node-emitter'
 import type { NodeEmitterContext } from './dom/node-emitter'
-import { emitInitialization as emitInitializationExtracted } from './dom/api-emitter'
+import { emitInitialization } from './dom/api-emitter'
 import type { APIEmitterContext } from './dom/api-emitter'
 import { emitChartSetup } from './dom/chart-emitter'
 import type { ChartEmitterContext } from './dom/chart-emitter'
-import { emitStyles as emitStylesExtracted } from './dom/style-emitter'
+import { emitStyles } from './dom/style-emitter'
 import type { StyleEmitterContext } from './dom/style-emitter'
 
 // Re-export types for external consumers
@@ -409,7 +409,7 @@ export class DOMGenerator {
     this.emit('')
 
     // Inject CSS (variables + system state styles)
-    emitStylesExtracted(this.createStyleEmitterContext())
+    emitStyles(this.createStyleEmitterContext())
 
     // Generate each node (first node is the main root)
     let isFirstNode = true
@@ -762,6 +762,6 @@ export class DOMGenerator {
   emitInitialization(): void {
     const ctx = this.createAPIEmitterContext()
     const namedNodes = this.collectNamedNodes(this.ir.nodes)
-    emitInitializationExtracted(ctx, namedNodes, this.javascript)
+    emitInitialization(ctx, namedNodes, this.javascript)
   }
 }

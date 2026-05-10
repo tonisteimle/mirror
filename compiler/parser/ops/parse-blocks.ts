@@ -29,16 +29,10 @@ import { isZagPrimitive } from '../../schema/zag-primitives'
 import { getChartSlot } from '../../schema/chart-primitives'
 import type { ChartSlotNode } from '../ast'
 import type { ParserContext } from '../parser-context'
-import {
-  parseInlineProperties as parseInlinePropertiesExtracted,
-  type InlinePropertiesCallbacks,
-} from '../inline-property-parser'
-import {
-  parseInstanceBody as parseInstanceBodyExtracted,
-  parseComponentBody as parseComponentBodyExtracted,
-  type InstanceBodyCallbacks,
-  type ComponentBodyCallbacks,
-} from '../body-parser'
+import * as InlinePropertyParser from '../inline-property-parser'
+import type { InlinePropertiesCallbacks } from '../inline-property-parser'
+import * as BodyParser from '../body-parser'
+import type { InstanceBodyCallbacks, ComponentBodyCallbacks } from '../body-parser'
 import type { Parser } from '../parser'
 import { MAX_LOOKAHEAD } from './limits'
 
@@ -699,7 +693,7 @@ export function parseComponentBody(this: Parser, component: ComponentDefinition)
     },
   }
 
-  parseComponentBodyExtracted(ctx, component, callbacks)
+  BodyParser.parseComponentBody(ctx, component, callbacks)
   this.pos = ctx.pos
   this.errors = ctx.errors
 }
@@ -801,7 +795,7 @@ export function parseInstanceBody(this: Parser, instance: Instance): void {
     },
   }
 
-  parseInstanceBodyExtracted(ctx, instance, callbacks)
+  BodyParser.parseInstanceBody(ctx, instance, callbacks)
   this.pos = ctx.pos
   this.errors = ctx.errors
 }
@@ -995,7 +989,7 @@ export function parseInlineProperties(
         return result
       },
     }
-    parseInlinePropertiesExtracted(ctx, properties, callbacks, events, options)
+    InlinePropertyParser.parseInlineProperties(ctx, properties, callbacks, events, options)
   })
 }
 
