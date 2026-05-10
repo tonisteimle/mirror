@@ -519,6 +519,272 @@ export function getElementValidationCode(): string {
       return { valid: issues.filter(i => !i.warning && !i.passed).length === 0, issues, changes };
     }
 
+    // =========================================================================
+    // Action-Specific Validation (extended — Mirror mutating actions)
+    // =========================================================================
+
+    /**
+     * Validate dropFromPalette: preview should grow, editor should grow,
+     * and the new element of the dropped tag should now be present.
+     */
+    validateDropFromPalette(component, preState, postState) {
+      const issues = [];
+      const changes = this.compareStates(preState, postState);
+      if (!changes.editorChanged) {
+        issues.push({ check: 'editor-grew', passed: false,
+          message: 'Editor source did not change after dropFromPalette ' + component });
+      } else if (changes.editorDiff && changes.editorDiff.charsDiff <= 0) {
+        issues.push({ check: 'editor-grew', passed: false,
+          message: 'Editor source shrank instead of grew during dropFromPalette ' + component });
+      }
+      if (!changes.previewChanged) {
+        issues.push({ check: 'preview-grew', passed: false, warning: true,
+          message: 'Preview did not gain elements after dropFromPalette ' + component });
+      } else if (changes.previewDiff && changes.previewDiff.after <= changes.previewDiff.before) {
+        issues.push({ check: 'preview-grew', passed: false, warning: true,
+          message: 'Preview lost elements instead of gaining during dropFromPalette ' + component,
+          details: changes.previewDiff });
+      }
+      if (changes.newErrors) {
+        issues.push({ check: 'console-errors', passed: false,
+          message: 'Console errors during dropFromPalette ' + component });
+      }
+      return { valid: issues.filter(i => !i.warning && !i.passed).length === 0, issues, changes };
+    }
+
+    /**
+     * Validate moveElement: editor source should change but preview element
+     * count is unchanged (move != add/remove). Source's parent in preview
+     * should now equal targetId.
+     */
+    validateMoveElement(sourceId, targetId, preState, postState) {
+      const issues = [];
+      const changes = this.compareStates(preState, postState);
+      if (!changes.editorChanged) {
+        issues.push({ check: 'editor-changed', passed: false,
+          message: 'Editor source unchanged after moveElement ' + sourceId + ' → ' + targetId });
+      }
+      if (changes.previewChanged && changes.previewDiff &&
+          changes.previewDiff.after !== changes.previewDiff.before) {
+        issues.push({ check: 'preview-count-stable', passed: false, warning: true,
+          message: 'Preview element count changed during moveElement (expected stable)',
+          details: changes.previewDiff });
+      }
+      const moved = document.querySelector('[data-mirror-id="' + sourceId + '"]');
+      const target = document.querySelector('[data-mirror-id="' + targetId + '"]');
+      if (moved && target && !target.contains(moved)) {
+        issues.push({ check: 'parent-updated', passed: false,
+          message: 'After moveElement, ' + sourceId + ' is not a descendant of ' + targetId });
+      }
+      if (changes.newErrors) {
+        issues.push({ check: 'console-errors', passed: false,
+          message: 'Console errors during moveElement' });
+      }
+      return { valid: issues.filter(i => !i.warning && !i.passed).length === 0, issues, changes };
+    }
+
+    /**
+     * Validate dragResize: editor source should change, target's width or
+     * height should have moved in the direction of the delta.
+     */
+    validateDragResize(sourceId, deltaX, deltaY, preRect, preState, postState) {
+      const issues = [];
+      const changes = this.compareStates(preState, postState);
+      if (!changes.editorChanged) {
+        issues.push({ check: 'editor-changed', passed: false,
+          message: 'Editor source unchanged after dragResize ' + sourceId });
+      }
+      const el = document.querySelector('[data-mirror-id="' + sourceId + '"]');
+      if (el && preRect) {
+        const r = el.getBoundingClientRect();
+        const dw = r.width - preRect.width;
+        const dh = r.height - preRect.height;
+        // Either width or height should have moved by a meaningful amount in the
+        // direction of the delta (no strict match — drag has snapping/clamping).
+        const wantsW = Math.abs(deltaX) >= 4;
+        const wantsH = Math.abs(deltaY) >= 4;
+        if (wantsW && Math.sign(dw) !== Math.sign(deltaX) && Math.abs(dw) < 4) {
+          issues.push({ check: 'width-moved', passed: false, warning: true,
+            message: 'Width did not move in deltaX direction',
+            details: { deltaX, dw, before: preRect.width, after: r.width } });
+        }
+        if (wantsH && Math.sign(dh) !== Math.sign(deltaY) && Math.abs(dh) < 4) {
+          issues.push({ check: 'height-moved', passed: false, warning: true,
+            message: 'Height did not move in deltaY direction',
+            details: { deltaY, dh, before: preRect.height, after: r.height } });
+        }
+      }
+      if (changes.newErrors) {
+        issues.push({ check: 'console-errors', passed: false,
+          message: 'Console errors during dragResize' });
+      }
+      return { valid: issues.filter(i => !i.warning && !i.passed).length === 0, issues, changes };
+    }
+
+    /**
+     * Validate dragPadding / dragMargin: editor source should change.
+     * Computed-style assertion is skipped because mode='all'/'axis' branches
+     * the result across multiple sides.
+     */
+    validateDragSpacing(kind, sourceId, side, delta, preState, postState) {
+      const issues = [];
+      const changes = this.compareStates(preState, postState);
+      if (!changes.editorChanged) {
+        issues.push({ check: 'editor-changed', passed: false,
+          message: 'Editor source unchanged after ' + kind + ' on ' + sourceId });
+      }
+      if (changes.newErrors) {
+        issues.push({ check: 'console-errors', passed: false,
+          message: 'Console errors during ' + kind });
+      }
+      return { valid: issues.filter(i => !i.warning && !i.passed).length === 0, issues, changes };
+    }
+
+    /**
+     * Validate inlineEdit: target's textContent should contain the new
+     * text and the editor source should reflect it.
+     */
+    validateInlineEdit(sourceId, text, preState, postState) {
+      const issues = [];
+      const changes = this.compareStates(preState, postState);
+      if (!changes.editorChanged) {
+        issues.push({ check: 'editor-changed', passed: false,
+          message: 'Editor source unchanged after inlineEdit ' + sourceId });
+      }
+      const el = document.querySelector('[data-mirror-id="' + sourceId + '"]');
+      if (el && text && !(el.textContent || '').includes(text)) {
+        issues.push({ check: 'text-applied', passed: false,
+          message: 'Element ' + sourceId + ' textContent does not contain "' + text + '"',
+          details: { actual: (el.textContent || '').slice(0, 60) } });
+      }
+      if (text && postState.editorContent && !postState.editorContent.includes(text)) {
+        issues.push({ check: 'editor-contains-text', passed: false,
+          message: 'Editor source does not contain "' + text + '" after inlineEdit' });
+      }
+      if (changes.newErrors) {
+        issues.push({ check: 'console-errors', passed: false,
+          message: 'Console errors during inlineEdit' });
+      }
+      return { valid: issues.filter(i => !i.warning && !i.passed).length === 0, issues, changes };
+    }
+
+    /**
+     * Validate selectInPreview: a Mirror node should be selected and the
+     * property panel should reflect that selection.
+     */
+    validateSelectInPreview(sourceId, preState, postState) {
+      const issues = [];
+      const changes = this.compareStates(preState, postState);
+      const sel = document.querySelector('#preview [data-mirror-id].selected');
+      if (!sel) {
+        issues.push({ check: 'has-selection', passed: false, warning: true,
+          message: 'No element marked .selected in preview after selectInPreview' });
+      } else if (sel.getAttribute('data-mirror-id') !== sourceId) {
+        issues.push({ check: 'selection-matches', passed: false, warning: true,
+          message: 'Selected element is ' + sel.getAttribute('data-mirror-id') +
+            ', expected ' + sourceId });
+      }
+      const panel = document.querySelector('#property-panel');
+      if (panel && !panel.querySelector('input,select,[data-prop]')) {
+        issues.push({ check: 'property-panel-rendered', passed: false, warning: true,
+          message: 'Property panel has no inputs after selectInPreview' });
+      }
+      if (changes.newErrors) {
+        issues.push({ check: 'console-errors', passed: false,
+          message: 'Console errors during selectInPreview' });
+      }
+      return { valid: issues.filter(i => !i.warning && !i.passed).length === 0, issues, changes };
+    }
+
+    /**
+     * Validate setProperty: editor source should now contain the new value
+     * for the given property name.
+     */
+    validateSetProperty(propName, value, preState, postState) {
+      const issues = [];
+      const changes = this.compareStates(preState, postState);
+      if (!changes.editorChanged) {
+        issues.push({ check: 'editor-changed', passed: false,
+          message: 'Editor source unchanged after setProperty ' + propName + '=' + value });
+      }
+      // Heuristic: editor source contains "<propName> <value>" or "<propName>: <value>".
+      const src = postState.editorContent || '';
+      const needle1 = propName + ' ' + value;
+      const needle2 = propName + ': ' + value;
+      if (!src.includes(needle1) && !src.includes(needle2)) {
+        issues.push({ check: 'editor-contains-prop', passed: false, warning: true,
+          message: 'Editor source does not contain "' + needle1 + '" or "' + needle2 + '"',
+          details: { propName, value } });
+      }
+      if (changes.newErrors) {
+        issues.push({ check: 'console-errors', passed: false,
+          message: 'Console errors during setProperty' });
+      }
+      return { valid: issues.filter(i => !i.warning && !i.passed).length === 0, issues, changes };
+    }
+
+    /**
+     * Validate pickColor: editor source should now contain the color value.
+     */
+    validatePickColor(propName, color, preState, postState) {
+      const issues = [];
+      const changes = this.compareStates(preState, postState);
+      if (!changes.editorChanged) {
+        issues.push({ check: 'editor-changed', passed: false,
+          message: 'Editor source unchanged after pickColor ' + propName + '=' + color });
+      }
+      const src = postState.editorContent || '';
+      // Color match is case-insensitive and tolerant of #rrggbb vs #RRGGBB.
+      if (!src.toLowerCase().includes(color.toLowerCase())) {
+        issues.push({ check: 'editor-contains-color', passed: false, warning: true,
+          message: 'Editor source does not contain "' + color + '" after pickColor',
+          details: { propName, color } });
+      }
+      if (changes.newErrors) {
+        issues.push({ check: 'console-errors', passed: false,
+          message: 'Console errors during pickColor' });
+      }
+      return { valid: issues.filter(i => !i.warning && !i.passed).length === 0, issues, changes };
+    }
+
+    /**
+     * Validate clearEditor: editor source should be empty (or trimmed-empty).
+     */
+    validateClearEditor(preState, postState) {
+      const issues = [];
+      const changes = this.compareStates(preState, postState);
+      const src = (postState.editorContent || '').trim();
+      if (src.length > 0) {
+        issues.push({ check: 'editor-empty', passed: false,
+          message: 'Editor not empty after clearEditor (got ' + src.length + ' chars)' });
+      }
+      if (changes.newErrors) {
+        issues.push({ check: 'console-errors', passed: false,
+          message: 'Console errors during clearEditor' });
+      }
+      return { valid: issues.filter(i => !i.warning && !i.passed).length === 0, issues, changes };
+    }
+
+    /**
+     * Validate switchFile: the file should now be marked active.
+     */
+    validateSwitchFile(path, preState, postState) {
+      const issues = [];
+      const changes = this.compareStates(preState, postState);
+      const active = document.querySelector('[data-path].active, [data-path].selected');
+      const activePath = active && active.getAttribute('data-path');
+      if (activePath !== path) {
+        issues.push({ check: 'active-file-matches', passed: false,
+          message: 'After switchFile, active file is ' + JSON.stringify(activePath) +
+            ', expected ' + JSON.stringify(path) });
+      }
+      if (changes.newErrors) {
+        issues.push({ check: 'console-errors', passed: false,
+          message: 'Console errors during switchFile' });
+      }
+      return { valid: issues.filter(i => !i.warning && !i.passed).length === 0, issues, changes };
+    }
+
     /**
      * Validate preview updated
      */
@@ -638,7 +904,7 @@ export function getElementValidationCode(): string {
 
   window.__demoValidation = new DemoValidation();
 })();
-`.trim();
+`.trim()
 }
 
 // =============================================================================

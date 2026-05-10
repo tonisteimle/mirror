@@ -152,8 +152,11 @@ function parseArgs(): CLIArgs {
     demoOverlay: !args.includes('--no-overlay'),
     demoValidate: args.includes('--demo-validate'),
     demoTiming: args.includes('--timing'),
-    // Validation options
-    demoAutoValidate: args.includes('--validate') || args.includes('--auto-validate'),
+    // Validation options. Auto-validation is on by default — every mutating
+    // action runs its post-validator (preview grew, editor changed, no
+    // console errors, etc.). Pass `--no-validate` to opt out for a quick
+    // exploratory run.
+    demoAutoValidate: !args.includes('--no-validate') && !args.includes('--no-auto-validate'),
     demoValidationLevel: getArgValue(args, '--validation-level') as CLIArgs['demoValidationLevel'],
     // Iteration helpers (C3)
     fromStep: getArgValue(args, '--from-step')

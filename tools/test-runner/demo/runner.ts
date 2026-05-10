@@ -267,12 +267,6 @@ export class DemoRunner {
       }
 
       try {
-        // Update on-screen step indicator before executing — viewers of a
-        // headed run see "Step N / total" in the bottom-left so they know
-        // where they are. Skipped during fast-forward to avoid flicker.
-        if (!fastForward) {
-          await this.updateStepIndicator(effectiveStep, stepNum, script.steps.length)
-        }
         await this.executeStep(effectiveStep, stepNum, script.steps.length)
         // Frame capture: PNG after every "interesting" step so a reviewer
         // can leaf through the demo run statically.
@@ -414,12 +408,32 @@ export class DemoRunner {
   }
 
   /**
-   * Check if action changes state
+   * Check if action changes state. Every mutating step we want covered by
+   * post-validation goes here — the existing parse-health and DOM-hierarchy
+   * checks fire for every mutating step regardless, but action-specific
+   * post-validators (validateDropFromPalette / validateSetProperty / …)
+   * only fire when this returns true.
    */
   private changesState(step: DemoAction): boolean {
-    return ['click', 'doubleClick', 'type', 'pressKey', 'createFile', 'clearEditor'].includes(
-      step.action
-    )
+    return [
+      'click',
+      'doubleClick',
+      'type',
+      'pressKey',
+      'createFile',
+      'switchFile',
+      'clearEditor',
+      'dropFromPalette',
+      'drawInGrid',
+      'moveElement',
+      'dragResize',
+      'dragPadding',
+      'dragMargin',
+      'inlineEdit',
+      'selectInPreview',
+      'setProperty',
+      'pickColor',
+    ].includes(step.action)
   }
 
   /**
@@ -538,12 +552,134 @@ export class DemoRunner {
           }
           return { valid: result.valid }
         }
+
+        case 'switchFile':
+          return this.runValidator(
+            stepNum,
+            step.action,
+            `validateSwitchFile(${JSON.stringify(step.path)}, ${JSON.stringify(preState)}, ${JSON.stringify(postState)})`
+          )
+
+        case 'clearEditor':
+          return this.runValidator(
+            stepNum,
+            step.action,
+            `validateClearEditor(${JSON.stringify(preState)}, ${JSON.stringify(postState)})`
+          )
+
+        case 'dropFromPalette':
+          return this.runValidator(
+            stepNum,
+            step.action,
+            `validateDropFromPalette(${JSON.stringify(step.component)}, ${JSON.stringify(preState)}, ${JSON.stringify(postState)})`
+          )
+
+        case 'moveElement': {
+          const sourceId = await this.resolveSelectorId(step.source)
+          const targetId = await this.resolveSelectorId(step.target)
+          if (!sourceId || !targetId) return { valid: true }
+          return this.runValidator(
+            stepNum,
+            step.action,
+            `validateMoveElement(${JSON.stringify(sourceId)}, ${JSON.stringify(targetId)}, ${JSON.stringify(preState)}, ${JSON.stringify(postState)})`
+          )
+        }
+
+        case 'inlineEdit': {
+          const sourceId = await this.resolveSelectorId(step.selector)
+          if (!sourceId) return { valid: true }
+          return this.runValidator(
+            stepNum,
+            step.action,
+            `validateInlineEdit(${JSON.stringify(sourceId)}, ${JSON.stringify(step.text)}, ${JSON.stringify(preState)}, ${JSON.stringify(postState)})`
+          )
+        }
+
+        case 'selectInPreview': {
+          const sourceId = await this.resolveSelectorId(step.selector)
+          if (!sourceId) return { valid: true }
+          return this.runValidator(
+            stepNum,
+            step.action,
+            `validateSelectInPreview(${JSON.stringify(sourceId)}, ${JSON.stringify(preState)}, ${JSON.stringify(postState)})`
+          )
+        }
+
+        case 'setProperty':
+          return this.runValidator(
+            stepNum,
+            step.action,
+            `validateSetProperty(${JSON.stringify(step.prop)}, ${JSON.stringify(String(step.value))}, ${JSON.stringify(preState)}, ${JSON.stringify(postState)})`
+          )
+
+        case 'pickColor':
+          return this.runValidator(
+            stepNum,
+            step.action,
+            `validatePickColor(${JSON.stringify(step.prop)}, ${JSON.stringify(step.color)}, ${JSON.stringify(preState)}, ${JSON.stringify(postState)})`
+          )
+
+        case 'dragPadding': {
+          const sourceId = await this.resolveSelectorId(step.selector)
+          return this.runValidator(
+            stepNum,
+            step.action,
+            `validateDragSpacing("dragPadding", ${JSON.stringify(sourceId)}, ${JSON.stringify(step.side)}, ${step.delta}, ${JSON.stringify(preState)}, ${JSON.stringify(postState)})`
+          )
+        }
+
+        case 'dragMargin': {
+          const sourceId = await this.resolveSelectorId(step.selector)
+          return this.runValidator(
+            stepNum,
+            step.action,
+            `validateDragSpacing("dragMargin", ${JSON.stringify(sourceId)}, ${JSON.stringify(step.side)}, ${step.delta}, ${JSON.stringify(preState)}, ${JSON.stringify(postState)})`
+          )
+        }
       }
 
       return { valid: true }
     } catch {
       return { valid: true }
     }
+  }
+
+  /** Resolve a structured Selector to a concrete data-mirror-id via __mirrorActions. */
+  private async resolveSelectorId(sel: unknown): Promise<string | null> {
+    if (!sel) return null
+    try {
+      return await this.evaluate<string | null>(
+        `(() => { try { return window.__mirrorActions?.resolveSelector(${JSON.stringify(sel)}) ?? null } catch { return null } })()`
+      )
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Invoke a `window.__demoValidation.<call>` and fold its issues into the
+   * runner's validationIssues stream. All new action validators go through
+   * this so the wiring stays uniform.
+   */
+  private async runValidator(
+    stepNum: number,
+    action: string,
+    call: string
+  ): Promise<{ valid: boolean }> {
+    const result = await this.evaluate<{
+      valid: boolean
+      issues: Array<{ check: string; passed: boolean; message: string; warning?: boolean }>
+    }>(`window.__demoValidation?.${call} || { valid: true, issues: [] }`)
+    for (const issue of result.issues) {
+      this.validationIssues.push({
+        level: issue.warning ? 'warning' : issue.passed ? 'info' : 'error',
+        stepIndex: stepNum,
+        action,
+        check: issue.check,
+        message: issue.message,
+      })
+    }
+    return { valid: result.valid }
   }
 
   /**
@@ -1094,29 +1230,6 @@ export class DemoRunner {
   }
 
   /**
-   * Push the bottom-left "Step N / total" indicator to the page so viewers
-   * of a headed run can see how far through the demo they are. The label
-   * is the step's `comment` if present, else its action name + main target.
-   */
-  private async updateStepIndicator(
-    step: DemoAction,
-    stepNum: number,
-    total: number
-  ): Promise<void> {
-    const detail = this.getStepDetail(step)
-    const comment = (step as { comment?: string }).comment
-    const label = comment || (detail ? `${step.action} ${detail}` : step.action)
-    const safeLabel = JSON.stringify(label)
-    try {
-      await this.evaluate(
-        `window.__mirrorDemo?.setStepIndicator(${stepNum}, ${total}, ${safeLabel})`
-      )
-    } catch {
-      // Indicator is cosmetic — never block step execution if it fails.
-    }
-  }
-
-  /**
    * Execute a single demo step
    */
   private async executeStep(step: DemoAction, stepNum: number, total: number): Promise<void> {
@@ -1224,14 +1337,6 @@ export class DemoRunner {
 
       case 'comment':
         console.log(`${prefix} 📝 ${step.text}`)
-        // Render the comment as a top-center caption in the page so
-        // headed runs and video recordings show what's happening
-        // without forcing the viewer to read the terminal.
-        await this.evaluate(
-          `__mirrorDemo.showComment(${JSON.stringify(step.text)}${
-            step.duration ? `, ${step.duration}` : ''
-          })`
-        )
         break
 
       case 'execute':
