@@ -370,7 +370,11 @@ export function extractHTMLProperties(
       })
     }
     if (prop.name === 'fill') {
-      htmlProps.push({ name: 'data-icon-fill', value: true })
+      // Slice 50 V-5: emit string "true" instead of boolean. Runtime checks
+      // `el.dataset.iconFill === 'true'` (string compare) — boolean works
+      // by accident (DOM coerces) but type-confused. Consistent with other
+      // data-icon-* attrs which are all strings.
+      htmlProps.push({ name: 'data-icon-fill', value: 'true' })
     }
     // Focusable - makes element keyboard-focusable
     if (prop.name === 'focusable') {

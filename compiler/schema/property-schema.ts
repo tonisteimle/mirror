@@ -2064,11 +2064,19 @@ export const SCHEMA: Record<string, PropertyDef> = {
     category: 'icon',
     description: 'Icon stroke weight',
 
+    // Slice 50 V-4: `iw` / `icon-weight` ist KEIN CSS-Property — der Wert
+    // wird über `data-icon-weight` Attribut emittiert (siehe
+    // `compiler/ir/transformers/value-resolver.ts:366`) und vom Runtime
+    // (`compiler/runtime/icons.ts:applyIconToElement`) auf das innere
+    // <svg>'s `stroke-width` appliziert. Pre-fix mappte das Schema irrtümlich
+    // zu `font-weight` CSS — irrelevant für SVG, aber Bundle-Bloat und
+    // verwirrend in DevTools. `css: []` lässt die Schema-Pipeline
+    // korrekterweise no-op fallen.
     numeric: {
-      description: 'Icon weight (100-900)',
+      description: 'Icon stroke-width (typically 1-3)',
       unit: '',
-      css: n => [{ property: 'font-weight', value: String(n) }],
-      example: 'Icon icon-weight 300',
+      css: () => [],
+      example: 'Icon "check", iw 1',
     },
   },
 

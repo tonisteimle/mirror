@@ -2655,7 +2655,7 @@ exports[`Tutorial IR Snapshots > 01 - elemente > Example 11 1`] = `
                 },
                 {
                   "name": "data-icon-fill",
-                  "value": true,
+                  "value": "true",
                 },
               ],
               "styles": [
@@ -23538,7 +23538,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                       },
                       {
                         "name": "data-icon-fill",
-                        "value": true,
+                        "value": "true",
                       },
                     ],
                     "styles": [
@@ -23842,7 +23842,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                       },
                       {
                         "name": "data-icon-fill",
-                        "value": true,
+                        "value": "true",
                       },
                     ],
                     "styles": [
@@ -27321,7 +27321,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
                   },
                   {
                     "name": "data-icon-fill",
-                    "value": true,
+                    "value": "true",
                   },
                 ],
                 "styles": [
@@ -32143,7 +32143,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
                       },
                       {
                         "name": "data-icon-fill",
-                        "value": true,
+                        "value": "true",
                       },
                     ],
                     "styles": [

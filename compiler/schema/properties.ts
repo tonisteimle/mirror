@@ -493,10 +493,12 @@ export const properties: PropertyDefinition[] = [
     aliases: ['iw'],
     type: 'number',
     category: 'icon',
-    description: 'Icon stroke weight',
-    min: 100,
-    max: 700,
-    defaultValue: 400,
+    description: 'Icon stroke-width (typically 1-3, applied to inner SVG)',
+    // Slice 50 V-1+V-4: Lucide stroke-width canonical = 2.
+    // Pre-fix: 400 (font-weight value) — Copy-Paste-Bug vom Typography-Schema.
+    min: 1,
+    max: 4,
+    defaultValue: 2,
   },
   {
     name: 'icon-color',
