@@ -275,6 +275,40 @@ instance.column)` umgestellt. 7849/7849 vitest grün.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
+- **Wo:** `CLAUDE.md` Tests-Block (~370 LOC, Z. 1513–1878)
+  **Was:** Massive Drift seit dem CDP-Test-Runner-Refactor (`8e81387f`).
+  Konkret:
+  (1) Komplette „Demos (Spec-by-Example E2E)"-Section (Z. 1513–1561)
+  ist tot — verweist auf gelöschte `tools/test-runner/demo/`-Subsysteme,
+  entfernte `npm run test:demos`/`test:demos:headed`-Scripts (siehe
+  `c0f550f2`), entfernte CLI-Flags `--from-step`/`--until-step`/`--step`,
+  fehlende `docs/archive/concepts/demo-*.md`.
+  (2) Test-Counts in der Tests-Übersicht systematisch falsch:
+  `tests/compiler/` 164→194, `tests/behavior/` 16→17, `tests/runtime/`
+  3→5, `tests/integration/` 19→25, `tests/studio/` 125→167,
+  `studio/test-api/suites/` ~225→363.
+  (3) „Browser Test Framework — 17 Hauptkategorien" — tatsächlich
+  21 registriert; fehlen `previewCdp` (der neue!), `headed`,
+  `ai.realLlm`, `stepRunner`.
+  (4) `npm run test:browser:parallel` (Z. 1643, 1665) existiert nicht
+  in package.json.
+  (5) `docs/test-classification.md` und `docs/test-layers.md`
+  referenziert, beide jetzt unter `docs/archive/`.
+  (6) `tools/test-runner/` Verzeichnis-Tree (Z. 1813–1828) zeigt
+  7 Files, hat tatsächlich 17 (CDP-Input-Bridge, OS-Maus-Bridge,
+  Snapshot-Bridge, Pixel-Diff, Recording, …).
+  (7) Browser-Konsolen-API-Tabelle fehlen `__cdpInput`,
+  `__mirrorActions`, `__osMouse`, `__snapshot`.
+  Außerdem dupliziert die Tests-Sektion teilweise was jetzt in
+  `docs/TEST-FRAMEWORK.md` lebt — Drift-Risiko bleibt selbst nach
+  Korrektur.
+  **Status:** aktiv (Claude-Session, 2026-05-10 ~22:30)
+  **Plan:** Kürzen statt korrigieren — „Demos"-Section komplett
+  raus, Tests-Block auf eine kompakte Zusammenfassung reduzieren
+  (Layer-Map + Counts + Verweis auf `docs/TEST-FRAMEWORK.md`),
+  damit jede Detail-Drift künftig nur an einer Stelle (TEST-FRAMEWORK)
+  passiert.
+
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
