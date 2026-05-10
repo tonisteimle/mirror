@@ -467,3 +467,82 @@ describe('Properties — Alias-Equivalenz (Schema-driven match)', () => {
     expect(fwMar).toBe(fwM)
   })
 })
+
+// =============================================================================
+// Combined Transforms — multiple transform-emitting properties on one element
+//
+// Mirror has several properties that all map to CSS `transform:`:
+//   x-offset N → translateX(Npx)
+//   y-offset N → translateY(Npx)
+//   scale N    → scale(N)
+//   rotate N   → rotate(Ndeg)
+//
+// Pre-fix: x-offset and y-offset went through the schema's numeric handler,
+// each emitting its own `transform:` style — last-wins overwriting. scale/
+// rotate went through properties-ops's transformContext.transforms[] which
+// joined them into a single transform — but the join also overrode any
+// schema-level transform emit, dropping x/y-offset entirely.
+//
+// Post-fix: x/y-offset go through transformContext too. All four combine
+// into one `transform: translateX(20px) translateY(15px) scale(1.2) rotate(45deg)`.
+//
+// Probe: tools/probes/transform-combine.ts.
+// =============================================================================
+
+describe('Properties — Combined Transforms', () => {
+  // The DOM bundle contains animation @keyframes that already use translateX
+  // / translateY / scale / rotate; first-occurrence search would find those.
+  // Limit the search to the user-emitted style-object after the runtime
+  // section by chopping everything before the createUI() function.
+  function userStyleSection(dom: string): string {
+    const start = dom.indexOf('function createUI')
+    return start === -1 ? dom : dom.slice(start)
+  }
+
+  // Find every `transform: '<value>'` (or `'transform': '<value>'`) inside
+  // user-emitted style assignments. Each occurrence corresponds to one
+  // `el.style.transform = ...` or `'transform': '...'` entry — duplicates
+  // are the bug we want to catch.
+  function transformAssignments(dom: string): string[] {
+    const section = userStyleSection(dom)
+    const matches = section.match(/(?:'transform'|transform):\s*'([^']+)'/g) || []
+    return matches.map(m => m.replace(/(?:'transform'|transform):\s*'([^']+)'/, '$1'))
+  }
+
+  it('x-offset alone → single transform assignment with translateX', () => {
+    const dom = generateDOM(parse(`Frame x-offset 20`))
+    expect(transformAssignments(dom)).toEqual(['translateX(20px)'])
+  })
+
+  it('y-offset alone → single transform assignment with translateY', () => {
+    const dom = generateDOM(parse(`Frame y-offset 15`))
+    expect(transformAssignments(dom)).toEqual(['translateY(15px)'])
+  })
+
+  it('x-offset + y-offset combine into ONE transform assignment (no last-wins overwrite)', () => {
+    const dom = generateDOM(parse(`Frame x-offset 20, y-offset 15`))
+    const transforms = transformAssignments(dom)
+    expect(transforms.length).toBe(1)
+    expect(transforms[0]).toContain('translateX(20px)')
+    expect(transforms[0]).toContain('translateY(15px)')
+  })
+
+  it('x-offset + scale + rotate combine into ONE transform assignment', () => {
+    const dom = generateDOM(parse(`Frame x-offset 20, scale 1.2, rotate 45`))
+    const transforms = transformAssignments(dom)
+    expect(transforms.length).toBe(1)
+    expect(transforms[0]).toContain('translateX(20px)')
+    expect(transforms[0]).toContain('scale(1.2)')
+    expect(transforms[0]).toContain('rotate(45deg)')
+  })
+
+  it('all four combine into ONE transform assignment', () => {
+    const dom = generateDOM(parse(`Frame x-offset 20, y-offset 15, scale 1.2, rotate 45`))
+    const transforms = transformAssignments(dom)
+    expect(transforms.length).toBe(1)
+    expect(transforms[0]).toContain('translateX(20px)')
+    expect(transforms[0]).toContain('translateY(15px)')
+    expect(transforms[0]).toContain('scale(1.2)')
+    expect(transforms[0]).toContain('rotate(45deg)')
+  })
+})

@@ -240,7 +240,12 @@ export function transformProperties(
       continue
     }
 
-    // Collect transform properties (rotate, scale, translate)
+    // Collect transform properties (rotate, scale, translate). Each goes
+    // into transformContext.transforms[] so that the final emit produces
+    // ONE `transform:` style — without this, the schema-level numeric
+    // handler for `x-offset`/`y-offset` would emit its own `transform:`
+    // entry, and the JS object-literal "last wins" semantics would drop
+    // earlier values when these combine on the same element.
     if (matchesCanonical(name, 'rotate')) {
       const deg = String(prop.values[0])
       transformContext.transforms.push(`rotate(${deg}deg)`)
@@ -249,6 +254,16 @@ export function transformProperties(
     if (matchesCanonical(name, 'scale')) {
       const val = String(prop.values[0])
       transformContext.transforms.push(`scale(${val})`)
+      continue
+    }
+    if (name === 'x-offset') {
+      const val = String(prop.values[0])
+      transformContext.transforms.push(`translateX(${val}px)`)
+      continue
+    }
+    if (name === 'y-offset') {
+      const val = String(prop.values[0])
+      transformContext.transforms.push(`translateY(${val}px)`)
       continue
     }
   }
@@ -291,6 +306,8 @@ export function transformProperties(
     // Skip transform properties (already handled in first pass)
     if (matchesCanonical(name, 'rotate')) continue
     if (matchesCanonical(name, 'scale')) continue
+    if (name === 'x-offset') continue
+    if (name === 'y-offset') continue
 
     const cssStyles = this.propertyToCSS(prop, primitive, transformContext, parentLayoutContext)
     styles.push(...cssStyles)
