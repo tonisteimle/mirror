@@ -174,17 +174,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
-- **Wo:** `studio/panels/components/usage-tracker.ts` (123 LOC)
-  **Was:** Komplettes Modul (`UsageTracker` Klasse + `getUsageTracker()`
-  Singleton + `createUsageTracker()` Factory + `UsageTrackerConfig`
-  Interface, plus localStorage-Persistenz für „recent components") ohne
-  einen einzigen Consumer im Repo. Suche über `*.ts/*.tsx/*.json/*.md`
-  liefert 0 Treffer für `UsageTracker`/`usage-tracker`/`getUsageTracker`/
-  `createUsageTracker`. Vermutlich Vorstufe für ein nie geliefertes
-  Recent-Components-Feature.
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~20:50)
-  **Plan:** Datei löschen, Tests grün halten.
-
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
@@ -850,6 +839,18 @@ step-runner-selectors}.test.ts`
   (15420/15420 Tests, 585/585 Files).
   **Status:** erledigt (5 in `05cce232` parallel-bundle, 1 in `e4f378ad`
   parallel-bundle; Bookkeeping in `b099a445`)
+
+### 2026-05-10 — Orphan `usage-tracker.ts` gelöscht (123 LOC)
+
+- **Wo:** `studio/panels/components/usage-tracker.ts`
+  **Was:** Komplettes 123-LOC-Modul (`UsageTracker`-Klasse +
+  Singleton-Helpers + Config-Interface + localStorage-Persistenz für
+  Recent-Components) ohne einen einzigen Consumer im Repo. 0 Treffer
+  für `UsageTracker`, `usage-tracker`, `getUsageTracker`,
+  `createUsageTracker` repo-weit (alle File-Typen). Vorstufe für ein
+  nie geliefertes Recent-Components-Feature. 5940/5940 studio tests
+  pass nach Deletion.
+  **Status:** erledigt (`5efd49ba`)
 
 ### 2026-05-10 — `studio/agent/types.ts` dead-code gelöscht
 
