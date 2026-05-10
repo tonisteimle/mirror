@@ -500,7 +500,31 @@ export function installMirrorActions(): MirrorActionsAPI {
    * Callers should keep the ring visible for ≥600ms so the eye has time
    * to read the chip and match it to the preview update.
    */
-  const highlightField = (el: HTMLElement, valueLabel: string): (() => void) => {
+  /**
+   * Type `value` into a focused input character-by-character so viewers see
+   * real character entry instead of an instant whole-string replacement.
+   * Existing content is cleared first; each char fires an `input` event so
+   * Mirror's reactive bindings update incrementally.
+   */
+  const typeIntoInput = async (
+    input: HTMLInputElement,
+    value: string,
+    charDelayMs = 65
+  ): Promise<void> => {
+    // Clear existing content first so the viewer sees the field empty
+    // before the new value appears.
+    input.value = ''
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    await delay(80)
+    for (const ch of value) {
+      input.value += ch
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+      // Light variance (±25%) so the typing feels natural rather than mechanical.
+      await delay(charDelayMs * (0.75 + Math.random() * 0.5))
+    }
+  }
+
+  const highlightField = (el: HTMLElement, valueLabel: string, showChip = true): (() => void) => {
     const rect = el.getBoundingClientRect()
 
     const ring = document.createElement('div')
@@ -527,45 +551,51 @@ export function installMirrorActions(): MirrorActionsAPI {
       'opacity:0;transition:opacity 220ms ease-out;'
     document.body.appendChild(ring)
 
-    const chip = document.createElement('div')
-    const trimmed = valueLabel.length > 28 ? valueLabel.slice(0, 28) + '…' : valueLabel
-    chip.textContent = '→ ' + trimmed
-    chip.style.cssText =
-      'position:fixed;' +
-      'left:' +
-      (rect.right + 12) +
-      'px;' +
-      'top:' +
-      (rect.top + rect.height / 2 - 14) +
-      'px;' +
-      'background:rgba(91,168,245,0.95);' +
-      'color:white;' +
-      'padding:6px 12px;' +
-      'border-radius:6px;' +
-      'font-family:ui-monospace,SFMono-Regular,Menlo,monospace;' +
-      'font-size:13px;font-weight:600;' +
-      'white-space:nowrap;' +
-      'box-shadow:0 4px 12px rgba(0,0,0,0.3);' +
-      'pointer-events:none;z-index:999993;' +
-      'opacity:0;transform:translateX(-6px);' +
-      'transition:opacity 220ms ease-out,transform 220ms ease-out;'
-    document.body.appendChild(chip)
+    const chip = showChip ? document.createElement('div') : null
+    if (chip) {
+      const trimmed = valueLabel.length > 28 ? valueLabel.slice(0, 28) + '…' : valueLabel
+      chip.textContent = '→ ' + trimmed
+      chip.style.cssText =
+        'position:fixed;' +
+        'left:' +
+        (rect.right + 12) +
+        'px;' +
+        'top:' +
+        (rect.top + rect.height / 2 - 14) +
+        'px;' +
+        'background:rgba(91,168,245,0.95);' +
+        'color:white;' +
+        'padding:6px 12px;' +
+        'border-radius:6px;' +
+        'font-family:ui-monospace,SFMono-Regular,Menlo,monospace;' +
+        'font-size:13px;font-weight:600;' +
+        'white-space:nowrap;' +
+        'box-shadow:0 4px 12px rgba(0,0,0,0.3);' +
+        'pointer-events:none;z-index:999993;' +
+        'opacity:0;transform:translateX(-6px);' +
+        'transition:opacity 220ms ease-out,transform 220ms ease-out;'
+      document.body.appendChild(chip)
+    }
 
     requestAnimationFrame(() => {
       ring.style.opacity = '1'
-      chip.style.opacity = '1'
-      chip.style.transform = 'translateX(0)'
+      if (chip) {
+        chip.style.opacity = '1'
+        chip.style.transform = 'translateX(0)'
+      }
     })
 
     return (): void => {
       ring.style.transition = 'opacity 260ms ease-in'
-      chip.style.transition = 'opacity 220ms ease-in,transform 220ms ease-in'
       ring.style.opacity = '0'
-      chip.style.opacity = '0'
-      chip.style.transform = 'translateX(-6px)'
+      if (chip) {
+        chip.style.transition = 'opacity 220ms ease-in,transform 220ms ease-in'
+        chip.style.opacity = '0'
+        chip.style.transform = 'translateX(-6px)'
+      }
       setTimeout(() => {
         ring.remove()
-        chip.remove()
+        if (chip) chip.remove()
       }, 280)
     }
   }
@@ -1053,13 +1083,10 @@ export function installMirrorActions(): MirrorActionsAPI {
     if (input) {
       const r = input.getBoundingClientRect()
       const endPoint: Point = { x: r.left + r.width / 2, y: r.top + r.height / 2 }
-      // Highlight the field with a chip showing the new value, so viewers
-      // can connect cursor → field → preview update. The ring stays up
-      // through the focus/set/blur dance and a 600ms dwell after, then
-      // fades — long enough for the eye to read the chip and match it
-      // against the preview change that just rendered.
-      const releaseHighlight = highlightField(input, propName + ' ' + value)
       if (input.tagName.toLowerCase() === 'select') {
+        // Selects can't be typed into — keep the ring + chip so the viewer
+        // sees what value the dropdown was set to.
+        const releaseHighlight = highlightField(input, propName + ' ' + value, true)
         await withCursorSync(endPoint, 250, async () => {
           input!.focus()
           ;(input as HTMLSelectElement).value = value
@@ -1067,14 +1094,21 @@ export function installMirrorActions(): MirrorActionsAPI {
           await delay(100)
           input!.blur()
         })
+        await delay(600)
+        releaseHighlight()
       } else {
+        // Text input: ring only, no chip — the chip would spoil the value
+        // before the typing reveals it. The actual character-by-character
+        // typing is the visible signal.
+        const releaseHighlight = highlightField(input, '', false)
         await withCursorSync(endPoint, 250, async () => {
           input!.focus()
           ;(input as HTMLInputElement).select()
-          await delay(60)
-          ;(input as HTMLInputElement).value = value
-          input!.dispatchEvent(new Event('input', { bubbles: true }))
-          await delay(100)
+          // Brief dwell so the viewer sees the focus + selection state
+          // before content is replaced.
+          await delay(220)
+          await typeIntoInput(input as HTMLInputElement, value)
+          await delay(140)
           input!.dispatchEvent(new Event('change', { bubbles: true }))
           input!.dispatchEvent(
             new KeyboardEvent('keydown', {
@@ -1084,12 +1118,14 @@ export function installMirrorActions(): MirrorActionsAPI {
               cancelable: true,
             })
           )
-          await delay(80)
+          await delay(120)
           input!.blur()
         })
+        // Hold the ring after blur so the eye can lock on the new value
+        // long enough to compare with the preview update.
+        await delay(500)
+        releaseHighlight()
       }
-      await delay(600)
-      releaseHighlight()
     } else {
       const panelEl = document.querySelector('#property-panel') as HTMLElement | null
       if (panelEl) {
@@ -1128,10 +1164,11 @@ export function installMirrorActions(): MirrorActionsAPI {
       )
     }
     const triggerRect = trigger.getBoundingClientRect()
-    // Glow ring around the color swatch trigger plus a chip with the
-    // new color literal — viewers see "this swatch → #2196F3" before
-    // the picker pops, then the preview updates with the same color.
-    const releaseHighlight = highlightField(trigger, propName + ' ' + color)
+    // Glow ring around the color swatch trigger so viewers see which
+    // property is being edited. No chip — the typing into the hex input
+    // (and the trigger swatch updating to the new color) is the visible
+    // signal.
+    const releaseHighlight = highlightField(trigger, propName + ' ' + color, false)
     await withCursorSync(
       {
         x: triggerRect.left + triggerRect.width / 2,
@@ -1140,22 +1177,76 @@ export function installMirrorActions(): MirrorActionsAPI {
       250,
       async () => {
         trigger.click()
-        // Hold the picker open longer than before so the viewer registers
-        // that a color picker actually appeared.
-        await delay(550)
+        await delay(420)
       }
     )
-    document.body.click()
-    await delay(150)
-    const studio = win.__mirrorStudio__
-    const panel = studio && studio.propertyPanel
-    if (!panel || typeof panel.changeProperty !== 'function') {
-      throw new Error('pickColor: studio.propertyPanel.changeProperty not available')
+
+    // Wait for the picker's hex input to appear, then type the color into
+    // it character by character — same UX as a human entering a hex code.
+    // Falls back to the API call if the picker has no visible hex input.
+    let hexInput: HTMLInputElement | null = null
+    for (let i = 0; i < 30; i++) {
+      hexInput =
+        (document.getElementById('color-picker-hex-input') as HTMLInputElement | null) ||
+        (document.querySelector('.canvas-color-picker-hex-input') as HTMLInputElement | null) ||
+        (document.querySelector('.color-picker-hex-input') as HTMLInputElement | null)
+      if (hexInput) break
+      await delay(40)
     }
-    panel.changeProperty(propName, color)
-    // Hold the highlight a beat after the color applies so the eye can
-    // link the chip ("→ #2196F3") to the preview's new background.
-    await delay(700)
+
+    if (hexInput) {
+      // Move the cursor to the hex input so viewers see WHERE the color
+      // is being typed, then type the value.
+      const cursor = win.__mirrorDemo && win.__mirrorDemo.cursor
+      const inputRect = hexInput.getBoundingClientRect()
+      const inputPoint: Point = {
+        x: inputRect.left + inputRect.width / 2,
+        y: inputRect.top + inputRect.height / 2,
+      }
+      if (cursor) await cursor.moveTo(inputPoint, 350)
+
+      hexInput.focus()
+      hexInput.select()
+      await delay(220)
+      // Strip the leading '#' — the picker's hex input usually accepts
+      // either form but typing without it feels more deliberate.
+      await typeIntoInput(hexInput, color.replace(/^#/, ''))
+      await delay(180)
+      hexInput.dispatchEvent(new Event('change', { bubbles: true }))
+      hexInput.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Enter',
+          code: 'Enter',
+          bubbles: true,
+          cancelable: true,
+        })
+      )
+      // Hold so the viewer sees the picker's preview update before it closes.
+      await delay(500)
+      // Close the picker the natural way — Escape key.
+      hexInput.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Escape',
+          code: 'Escape',
+          bubbles: true,
+          cancelable: true,
+        })
+      )
+      document.body.click()
+    } else {
+      // Fallback: API path (older / different picker variants).
+      document.body.click()
+      await delay(150)
+      const studio = win.__mirrorStudio__
+      const panel = studio && studio.propertyPanel
+      if (!panel || typeof panel.changeProperty !== 'function') {
+        throw new Error('pickColor: studio.propertyPanel.changeProperty not available')
+      }
+      panel.changeProperty(propName, color)
+    }
+    // Hold the highlight ring after the picker closes so the eye locks
+    // on the swatch trigger and registers the new color.
+    await delay(500)
     releaseHighlight()
   }
 
