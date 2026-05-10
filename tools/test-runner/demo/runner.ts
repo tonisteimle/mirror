@@ -2471,18 +2471,23 @@ export class DemoRunner {
       }
     }
 
-    // Prefer the bundled `window.__mirrorDemo` (studio/test-api/demo-fx)
-    // over the legacy ~300 LOC inline-eval'd string. The bundled
-    // version is typed, testable, and shared with the Step-Runner.
-    // We pass timings explicitly so the bundled API uses the same
-    // CLI-derived (`--pacing × --typing-speed × …`) values.
+    // The bundled `window.__mirrorDemo` (studio/test-api/demo-fx) is
+    // installed by `setupMirrorTestAPI()` at studio bootstrap. We rely
+    // on it being present and pass timings explicitly so the bundled
+    // API uses the same CLI-derived (`--pacing × --typing-speed × …`)
+    // values the demo runner has computed.
     //
-    // Fallback to the inline injection if the bundled API isn't
-    // present — preserves backwards compat with older studio bundles.
+    // The legacy inline-eval'd `getDemoAPISource` is kept as a temporary
+    // fallback for studio bundles that pre-date this commit; remove it
+    // once a release rolls out and no scenarios depend on it.
     const hasBundledDemoApi = await this.evaluate<boolean>(
       `typeof window.__mirrorDemo !== 'undefined' && typeof window.__mirrorDemo.init === 'function'`
     )
     if (!hasBundledDemoApi) {
+      console.warn(
+        '   ⚠️  bundled window.__mirrorDemo missing — falling back to inline injection.\n' +
+          '       This means the studio bundle is older than the demo-runner; rebuild via `npm run build:studio`.'
+      )
       const apiCode = getDemoAPISource(effectiveTimings)
       await this.evaluate(apiCode)
     }

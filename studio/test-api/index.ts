@@ -994,6 +994,38 @@ export function setupMirrorTestAPI(): void {
   // Setup snapping debug API
   setupSnappingAPI()
 
+  // Install the in-browser test bridges (CDP input, OS mouse, snapshot,
+  // replay recorder, demo FX). All install paths are idempotent and gated
+  // by their respective Node-side bridges; if a bridge isn't present, the
+  // client just sits dormant.
+  try {
+    installCdpInputClient()
+  } catch (e) {
+    console.warn('[test-api] CDP input client install failed:', e)
+  }
+  try {
+    installOsMouseClient()
+  } catch (e) {
+    console.warn('[test-api] OS-mouse client install failed:', e)
+  }
+  try {
+    installSnapshotClient()
+  } catch (e) {
+    console.warn('[test-api] snapshot client install failed:', e)
+  }
+  try {
+    installReplayRecorder()
+  } catch (e) {
+    console.warn('[test-api] replay recorder install failed:', e)
+  }
+  // Bundled MirrorDemoAPI replaces the demo-runner's inline-eval'd
+  // window.__mirrorDemo. Same shape as the legacy class.
+  try {
+    installMirrorDemo()
+  } catch (e) {
+    console.warn('[test-api] Mirror Demo API install failed:', e)
+  }
+
   // Also expose test suites for CDP access
   setupTestSuites()
 
