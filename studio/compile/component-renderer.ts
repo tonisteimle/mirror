@@ -5,7 +5,15 @@
  * Each function is focused and < 10 lines.
  */
 
-import type { Component, AST, MirrorLangAPI } from './types'
+import type { Component, AST, MirrorLangAPI, Token } from './types'
+
+/**
+ * Shape of the value `createUI()` returns at runtime — a wrapper object
+ * with `root` (the rendered HTMLElement) plus other runtime state. The
+ * component-renderer only needs `root`. Some legacy paths return the
+ * Element directly; the union covers both.
+ */
+type UIResult = { root?: HTMLElement } | HTMLElement
 import { STATE_NAMES } from '../../compiler/schema/parser-helpers'
 import { PX_PROPERTY_NAMES } from '../../compiler/schema/property-schema'
 
@@ -268,18 +276,19 @@ export class ComponentRenderer {
     return tokens + '\n' + current + '\n' + comp.name
   }
 
-  private executeCode(code: string): any {
+  private executeCode(code: string): UIResult | null {
     const ast = this.deps.MirrorLang.parse(code)
     const js = this.deps.MirrorLang.generateDOM(ast).replace(
       'export function createUI',
       'function createUI'
     )
-    const fn = new Function(js + '\nreturn createUI ? createUI() : null;')
+    const fn = new Function(js + '\nreturn createUI ? createUI() : null;') as () => UIResult | null
     return fn()
   }
 
-  private extractElement(ui: any, state: string): HTMLElement | null {
-    const root = ui?.root || (ui instanceof Element ? ui : null)
+  private extractElement(ui: UIResult | null, state: string): HTMLElement | null {
+    if (!ui) return null
+    const root = ui instanceof Element ? ui : ui.root
     if (!root || root.children.length === 0) return null
 
     const element = root.children[root.children.length - 1] as HTMLElement
@@ -326,7 +335,7 @@ export class ComponentRenderer {
     }
   }
 
-  private buildTokenCSS(tokens: any[]): string {
+  private buildTokenCSS(tokens: Token[]): string {
     const tokenMap = new Map<string, string>()
     for (const t of tokens) {
       tokenMap.set(t.name, t.value)
@@ -346,7 +355,7 @@ export class ComponentRenderer {
    * Format CSS value with proper units based on token name suffix.
    * Tokens like `l.pad: 16` need to become `--l-pad: 16px` for valid CSS.
    */
-  private formatCSSValue(tokenName: string, value: any): string {
+  private formatCSSValue(tokenName: string, value: string | number): string {
     // If value is not a number, return as-is (e.g., colors, strings)
     if (typeof value !== 'number' && (typeof value !== 'string' || isNaN(Number(value)))) {
       return String(value)
@@ -368,7 +377,7 @@ export class ComponentRenderer {
     return stripped.replace(/\./g, '-')
   }
 
-  private resolveValue(value: any, tokenMap: Map<string, string>): any {
+  private resolveValue(value: string | number, tokenMap: Map<string, string>): string | number {
     if (typeof value === 'string' && value.startsWith('$')) {
       const resolved = tokenMap.get(value)
       if (resolved) return this.resolveValue(resolved, tokenMap)
