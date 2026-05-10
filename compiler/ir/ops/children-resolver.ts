@@ -12,7 +12,7 @@ import type { ParentLayoutContext } from '../transformers/transformer-context'
 import {
   applyDeepSubstitutions,
   collectAllSlotNames,
-  mergeSlotPropertiesIntoFiller as mergeSlotPropertiesIntoFillerExtracted,
+  mergeSlotPropertiesIntoFiller,
 } from '../transformers/slot-utils'
 import type { IRTransformer } from '../index'
 
@@ -168,7 +168,7 @@ export function resolveChildren(
       // Process ALL instances for this slot (there may be multiple)
       const fillers = slotFillers.get(childName) || []
       for (const filler of fillers) {
-        const mergedFiller = mergeSlotPropertiesIntoFillerExtracted(filler, slotProperties)
+        const mergedFiller = mergeSlotPropertiesIntoFiller(filler, slotProperties)
         const node = this.transformChild(mergedFiller, parentId, parentLayoutContext)
         if (slotVisibleWhen && !node.visibleWhen) {
           node.visibleWhen = slotVisibleWhen
@@ -241,7 +241,7 @@ export function resolveChildren(
           // Inherit styles and visibility conditions from slot definition
           for (const filler of fillers) {
             // Merge slot properties with filler properties (filler wins on conflict)
-            const mergedFiller = mergeSlotPropertiesIntoFillerExtracted(filler, slotProperties)
+            const mergedFiller = mergeSlotPropertiesIntoFiller(filler, slotProperties)
             const node = this.transformChild(mergedFiller, parentId, parentLayoutContext)
             // Transfer slot's visibleWhen to filler if slot has one
             if (slotVisibleWhen && !node.visibleWhen) {
@@ -307,10 +307,7 @@ export function resolveChildren(
         if (fillers && fillers.length > 0) {
           for (const filler of fillers) {
             // Merge slot properties into filler (slot provides defaults)
-            const mergedFiller = mergeSlotPropertiesIntoFillerExtracted(
-              filler,
-              slotObj.properties || []
-            )
+            const mergedFiller = mergeSlotPropertiesIntoFiller(filler, slotObj.properties || [])
             result.push(this.transformChild(mergedFiller, parentId, parentLayoutContext))
           }
           slotFillers.delete(slotObj.name)
