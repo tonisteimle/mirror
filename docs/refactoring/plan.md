@@ -271,7 +271,7 @@ Spalten: `Status` · `Hot-Files` · `Depends-on`. Slices in Bearbeitung kommen m
 
 | #     | Slice                                     | Status                                                                                             | Dokument                                                     |
 | ----- | ----------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| 1     | Frame-Container                           | erledigt (Iter-1) · **Sweep-pending (Dev 1)**                                                      | [01-frame.md](01-frame.md)                                   |
+| 1     | Frame-Container                           | in-arbeit (Dev 1, 2026-05-10) — Iter-2-Sweep                                                       | [01-frame.md](01-frame.md)                                   |
 | 2     | Vertical Stack (`gap N`)                  | erledigt (Iter-1, Phase 1+2) · **Sweep-pending (Dev 1)**                                           | [02-vertical-stack.md](02-vertical-stack.md)                 |
 | 3     | Horizontal Stack (`hor`/wrap/spread)      | erledigt (Iter-1, V-2/V-3a deferred) · **Sweep-pending (Dev 1)**                                   | [03-horizontal-stack.md](03-horizontal-stack.md)             |
 | 4     | 9-Positions                               | erledigt (Iter-1+2) — V-1 React-Lookup, V-2 Framework Reverse, V-3 E115, 69 RTs grün               | [04-9-positions.md](04-9-positions.md)                       |
