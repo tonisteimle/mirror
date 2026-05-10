@@ -233,6 +233,16 @@ export function transformInstance(
     return this.transformConditional(instance)
   }
 
+  // Handle Slots (defensive: Each.children/Conditional.then|else type
+  // includes Slot per ast.ts, even if the parser never produces it
+  // there in practice — see `tools/probes/slot-in-each.ts`). Without
+  // this dispatch a Slot would fall through to the missing-component
+  // guard and emit a misleading „Instance missing component name"
+  // warning. Slice 2 of the transformInstance signature cleanup.
+  if (isSlot(instance)) {
+    return this.transformSlotPrimitive(instance, parentId)
+  }
+
   // Guard against missing component name
   if (!instance.component) {
     this.addWarning({
