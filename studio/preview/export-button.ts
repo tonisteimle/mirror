@@ -21,6 +21,9 @@
  */
 
 import { state } from '../core'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('ExportButton')
 
 const BRIDGE_URL = 'http://localhost:3456'
 
@@ -235,7 +238,7 @@ async function runExport(overlay: HTMLElement): Promise<void> {
     )
     submitBtn.disabled = false
     submitBtn.textContent = 'Erneut versuchen'
-    console.error('export failed', err)
+    log.error('export failed', err)
   }
 }
 

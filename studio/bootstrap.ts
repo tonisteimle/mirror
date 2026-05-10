@@ -542,7 +542,7 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
       // (e.g. a coalesced compile racing with a property edit).
       const docLength = config.editor.state.doc.length
       if (change.from < 0 || change.to > docLength || change.from > change.to) {
-        console.warn('[applyChange] dropped out-of-range change', {
+        logBootstrap.warn('[applyChange] dropped out-of-range change', {
           from: change.from,
           to: change.to,
           docLength,

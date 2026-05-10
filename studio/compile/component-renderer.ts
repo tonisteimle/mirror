@@ -6,6 +6,11 @@
  */
 
 import type { Component, AST, MirrorLangAPI, Token } from './types'
+import { STATE_NAMES } from '../../compiler/schema/parser-helpers'
+import { PX_PROPERTY_NAMES } from '../../compiler/schema/property-schema'
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('ComponentRenderer')
 
 /**
  * Shape of the value `createUI()` returns at runtime — a wrapper object
@@ -14,8 +19,6 @@ import type { Component, AST, MirrorLangAPI, Token } from './types'
  * Element directly; the union covers both.
  */
 type UIResult = { root?: HTMLElement } | HTMLElement
-import { STATE_NAMES } from '../../compiler/schema/parser-helpers'
-import { PX_PROPERTY_NAMES } from '../../compiler/schema/property-schema'
 
 // ============================================
 // TYPES
@@ -331,7 +334,7 @@ export class ComponentRenderer {
       const css = this.buildTokenCSS(ast.tokens)
       this.injectStyle(css)
     } catch (e) {
-      console.warn('Failed to inject component preview styles:', e)
+      log.warn('Failed to inject component preview styles:', e)
     }
   }
 

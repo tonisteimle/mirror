@@ -14,6 +14,10 @@
  * already gathered from in-memory.
  */
 
+import { createLogger } from '../../compiler/utils/logger'
+
+const log = createLogger('TokensSource')
+
 export type TokenFileType = 'tokens' | 'data' | 'layout' | 'component' | string
 
 export interface CollectTokensSourceDeps {
@@ -54,7 +58,7 @@ export function collectTokensSource(deps: CollectTokensSourceDeps): string {
       }
     }
   } catch (e) {
-    console.warn('[collectTokensSource] Failed to read from localStorage:', e)
+    log.warn('Failed to read from localStorage:', e)
   }
 
   return tokensSource
