@@ -421,7 +421,7 @@ function containsAnimUsage(nodes: ReadonlyArray<unknown>): boolean {
     }
     if (node.properties) {
       for (const p of node.properties) {
-        if (matchesCanonical(p.name, 'animation')) return true
+        if (p.name && matchesCanonical(p.name, 'animation')) return true
       }
     }
     if (node.children && containsAnimUsage(node.children)) return true

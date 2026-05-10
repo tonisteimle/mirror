@@ -192,7 +192,7 @@ export interface ComponentDefinition extends BaseNode {
   states: State[]
   events: Event[]
   children: (Instance | Slot)[]
-  slots?: Record<string, unknown> // Zag-component slots inherited via `as DatePicker` etc.
+  slots?: Record<string, ZagSlotDef> // Zag-component slots inherited via `as DatePicker` etc.
   initialState?: string // initial state: "closed" → initialState: "closed"
   selection?: string // selection binding: "selection $selected" → selection: "$selected"
   bind?: string // bind active exclusive() child: "bind value" → bind: "value"

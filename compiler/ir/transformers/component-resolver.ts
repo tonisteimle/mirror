@@ -5,8 +5,16 @@
  * Extracted from IRTransformer for modularity.
  */
 
-import type { State, Property, ComponentDefinition, SourcePosition } from '../../parser/ast'
+import type {
+  State,
+  Property,
+  ComponentDefinition,
+  SourcePosition,
+  ZagSlotDef,
+} from '../../parser/ast'
 import { mergeProperties } from './property-utils-transformer'
+
+type SlotMap = Record<string, ZagSlotDef>
 
 /**
  * Merge states (child state properties override parent state properties for same state name)
@@ -87,8 +95,8 @@ export function resolveComponent(
           line: component.line ?? 0,
           column: component.column ?? 0,
           endLine: component.line ?? 0,
-          endColumn: component.column ?? 0
-        }
+          endColumn: component.column ?? 0,
+        },
       })
     }
     return component // Return unresolved to prevent infinite recursion
@@ -124,7 +132,9 @@ export function resolveComponent(
   return {
     ...component,
     // If we inherited via primitive name, use the parent's actual primitive
-    primitive: inheritFromPrimitive ? resolvedParent.primitive : (component.primitive || resolvedParent.primitive),
+    primitive: inheritFromPrimitive
+      ? resolvedParent.primitive
+      : component.primitive || resolvedParent.primitive,
     properties: mergeProperties(resolvedParent.properties, component.properties),
     states: mergeStates(resolvedParent.states, component.states),
     events: [...resolvedParent.events, ...component.events],
@@ -138,21 +148,21 @@ export function resolveComponent(
  * Merge parent and child slots (child overrides parent)
  */
 function mergeSlots(
-  parentSlots: Record<string, any> | undefined,
-  childSlots: Record<string, any> | undefined
-): Record<string, any> | undefined {
+  parentSlots: SlotMap | undefined,
+  childSlots: SlotMap | undefined
+): SlotMap | undefined {
   if (!parentSlots && !childSlots) return undefined
   if (!parentSlots) return childSlots
   if (!childSlots) return parentSlots
 
-  const merged: Record<string, any> = { ...parentSlots }
+  const merged: SlotMap = { ...parentSlots }
   for (const [slotName, childSlot] of Object.entries(childSlots)) {
-    if (merged[slotName]) {
-      // Merge slot properties (child overrides parent)
+    const existing = merged[slotName]
+    if (existing) {
       merged[slotName] = {
-        ...merged[slotName],
+        ...existing,
         ...childSlot,
-        properties: mergeProperties(merged[slotName].properties || [], childSlot.properties || []),
+        properties: mergeProperties(existing.properties || [], childSlot.properties || []),
       }
     } else {
       merged[slotName] = childSlot

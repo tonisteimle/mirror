@@ -184,21 +184,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
-- **Wo:** `studio/agent/types.ts` (19 LOC) +
-  `studio/agent/index.ts:66` Re-Export +
-  `studio/index.ts:120` stale Kollisions-Kommentar
-  **Was:** `studio/agent/types.ts` definiert `FileType` und `FileInfo`
-  als Residue aus einer früheren multi-file `fix()`/`quickFix()`-Flow-
-  Deletion (Doc-Comment des Files dokumentiert das selbst). Konsumenten
-  heute: 0. Die Datei existiert nur, weil das Agent-Barrel sie
-  re-exportiert. Andere `FileType`-Definitionen in `compile/types.ts`
-  und `rename/rename-engine.ts` haben echte Consumer und sind die
-  legitimen Quellen.
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~20:25)
-  **Plan:** `studio/agent/types.ts` löschen, Re-Export aus
-  `agent/index.ts` entfernen, Kommentar in `studio/index.ts:120` um
-  agent-FileType-Mention bereinigen, Tests grün.
-
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
@@ -850,6 +835,24 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — `studio/agent/types.ts` dead-code gelöscht
+
+- **Wo:** `studio/agent/types.ts`, `studio/agent/index.ts`,
+  `studio/index.ts`
+  **Was:** 19-LOC-Datei mit `FileType` und `FileInfo` aus einem
+  früheren multi-file `fix()`/`quickFix()`-Flow, der vor langem
+  entfernt wurde. 0 Consumer; nur das Agent-Barrel re-exportierte
+  noch. Datei + Re-Export + stale Kollisions-Kommentar in
+  `studio/index.ts:120` weg.
+  **Status:** erledigt (`934b58e0`)
+  **Notiz:** Während ich den Befund als `aktiv` markiert hatte und
+  meine eigenen lokalen Edits vorbereitete, hat die parallele Session
+  exakt den gleichen Cleanup committed — gleiche 3 Files, plus Bonus
+  `studio/test-api/replay-recorder.ts` als finaler Demo-Runner-Orphan.
+  Lehrstück zur Parallelitäts-Regel: ohne den `aktiv`-Mark hätten wir
+  doppelt gearbeitet; mit dem Mark wurde der Befund einfach von der
+  schnelleren Seite abgeschlossen.
 
 ### 2026-05-10 — `compiler/runtime/test-api.ts` Wrapper inlined
 
