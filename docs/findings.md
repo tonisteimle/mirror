@@ -249,19 +249,6 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Notiz:** Re-Open bei nächster Marker-Erweiterung oder
   Conditional-Bug.
 
-- **Wo:** `tests/differential/` (16 Files)
-  **Was:** Cross-Backend-Equivalenz für 16 Domänen. Custom-Icons gehärtet
-  in `c31df517`, Tables + Charts in `46d69e95` (3 Divergenzen gepinnt:
-  React droppt `each` in Tables; React + Framework haben keine
-  Chart-Rendering-Wiring). Inline-Conditionals sind in
-  `tests/differential/conditionals.test.ts` schon per-Backend gepinnt
-  inkl. T1-T8 plus Bug #23-#26 Regressions. Animations werden in
-  `cleanup.test.ts` für DOM gepinnt — React/Framework `anim`-Trigger
-  noch ungeprüft.
-  **Status:** offen
-  **Notiz:** Restlicher Gap: React/Framework Animation-Trigger. Sowie
-  jeder neue Feature-Slice braucht ab Tag 1 differential-Test.
-
 ### Bug-Patterns & Type-Escapes (Hunt 2026-05-10)
 
 - **Wo:** `studio/agent/generation-pipeline.ts:335`
@@ -357,6 +344,27 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — Differential Coverage Gap geschlossen
+
+- **Wo:** `tests/differential/` (16 Files)
+  **Was:** Alle vorher genannten Drift-Domänen jetzt per-Backend gepinnt:
+  Icons (`c31df517`), Tables + Charts (`46d69e95`), Animations
+  (`dba64f03`). Inline-Conditionals waren schon abgedeckt
+  (`conditionals.test.ts`). Differential ist nicht mehr "compiles
+  without throwing" — jeder gerichtete Drift erzeugt jetzt einen
+  CI-Fail.
+  **Status:** erledigt (`dba64f03`)
+  **Notiz:** Differential-First-Policy für neue Feature-Slices bleibt
+  laufende Konvention.
+
+### 2026-05-10 — Animations Cross-Backend gepinnt
+
+- **Wo:** `tests/differential/cleanup.test.ts` (Animations Block)
+  **Was:** Pin: nur DOM emittiert `@keyframes mirror-*` und die
+  `animation`-CSS-Property; React und Framework droppen den
+  `anim`-Trigger silent. Gleiche Drift-Klasse wie Charts.
+  **Status:** erledigt (`dba64f03`)
 
 ### 2026-05-10 — Tables + Charts Differential gehärtet
 
