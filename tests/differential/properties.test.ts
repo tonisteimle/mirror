@@ -276,4 +276,31 @@ describe('Properties — DOM emits expected style values', () => {
     expect(fw).toContain("bor: '0 0 1 0'")
     expect(fw).not.toContain("'border-style'")
   })
+
+  it('Framework round-trips `tracking N` from letter-spacing', () => {
+    // PIN: pre-2026-05-10 `Text "X", tracking 0.05` produced
+    // `M('Text', 'X')` with no tracking. IR emits `letter-spacing: Nem`
+    // correctly; only the reverse-mapping was missing.
+    const fw = generateFramework(parse(`Text "X", tracking 0.05`))
+    expect(fw).toContain('tracking: 0.05')
+  })
+
+  it('Framework round-trips `ver-baseline` from align-items: baseline', () => {
+    const fw = generateFramework(parse(`Frame hor, ver-baseline\n  Text "A"\n  Text "B"`))
+    expect(fw).toContain("'ver-baseline': true")
+  })
+
+  it('Framework round-trips `align bottom` (single-axis flex-end in row)', () => {
+    // PIN: pre-2026-05-10 `align bottom`/`align right` collapsed to
+    // single-axis flex-end with no Mirror-keyword reverse. Now mapped
+    // back to `align: 'bottom'` / `align: 'right'`. `align top` in row
+    // and `align left` in column stay unmapped because they share the
+    // IR signature with the implicit flex-default and disambiguation
+    // would need provenance the IR doesn't carry.
+    const r = generateFramework(parse(`Frame hor, align bottom\n  Frame w 50`))
+    expect(r).toContain("align: 'bottom'")
+
+    const v = generateFramework(parse(`Frame ver, align right\n  Frame w 50`))
+    expect(v).toContain("align: 'right'")
+  })
 })

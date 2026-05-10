@@ -555,6 +555,59 @@ class FrameworkGenerator {
       }
     }
 
+    // `align top|bottom|left|right` reverse mapping. The IR's layout-
+    // transformer collapses these to a single-axis flex value
+    // (`align-items: flex-end`, `justify-content: flex-start`, etc.)
+    // depending on direction. Pre-2026-05-10 the Framework reverse-
+    // mapper had no branch — single-axis flex-start/flex-end values
+    // dropped as "default" or were collapsed to nothing. Now we map
+    // them back to `align <value>` strings the Mirror parser accepts.
+    //
+    // direction=row:
+    //   align-items: flex-start  → `align top`
+    //   align-items: flex-end    → `align bottom`
+    //   justify-content: flex-end → `align right`
+    //   (justify-content: flex-start is the default — drop)
+    // direction=column:
+    //   align-items: flex-end    → `align right`
+    //   align-items: flex-start  → drop (default)
+    //   justify-content: flex-start → `align top`
+    //   justify-content: flex-end   → `align bottom`
+    if (!consumedAlignmentStyles.has('align-items') && align && align !== 'center') {
+      let keyword: string | null = null
+      if (direction === 'row') {
+        if (align === 'flex-end') keyword = 'bottom'
+        // align-items: flex-start is the default; round-trip from
+        // explicit `align top` would need provenance the IR doesn't
+        // carry. Skip to avoid emitting noisy `align: 'top'` on every
+        // default-aligned row.
+      } else {
+        if (align === 'flex-end') keyword = 'right'
+      }
+      if (keyword) {
+        props.align = keyword
+        consumedAlignmentStyles.add('align-items')
+      }
+    }
+    if (
+      !consumedAlignmentStyles.has('justify-content') &&
+      justify &&
+      justify !== 'center' &&
+      justify !== 'space-between'
+    ) {
+      let keyword: string | null = null
+      if (direction === 'row') {
+        if (justify === 'flex-end') keyword = 'right'
+      } else {
+        if (justify === 'flex-end') keyword = 'bottom'
+        if (justify === 'flex-start') keyword = 'top'
+      }
+      if (keyword) {
+        props.align = keyword
+        consumedAlignmentStyles.add('justify-content')
+      }
+    }
+
     // Convert base styles to props
     for (const style of baseStyles) {
       // Skip flex and min-width/min-height that were handled above
@@ -630,6 +683,11 @@ class FrameworkGenerator {
     // Alignment
     if (prop === 'justify-content' && value === 'center') return { name: 'center', value: true }
     if (prop === 'align-items' && value === 'center') return { name: 'center', value: true }
+    // Cross-axis baseline alignment for mixed-size text rows.
+    // Pre-2026-05-10 dropped silently from Framework export.
+    if (prop === 'align-items' && value === 'baseline') {
+      return { name: 'ver-baseline', value: true }
+    }
 
     // Sizing
     if (prop === 'width') {
@@ -677,6 +735,14 @@ class FrameworkGenerator {
     }
     if (prop === 'line-height') return { name: 'line', value: value }
     if (prop === 'font-family') return { name: 'font', value: value }
+    // Letter-spacing: IR emits `Nem`. Reverse to `tracking N` (the
+    // documented Mirror keyword). Pre-2026-05-10 the prop dropped
+    // silently from Framework round-trips.
+    if (prop === 'letter-spacing') {
+      const m = value.match(/^(-?\d+(?:\.\d+)?)em$/)
+      if (m) return { name: 'tracking', value: parseFloat(m[1]) }
+      return { name: 'tracking', value: value }
+    }
     if (prop === 'text-align') return { name: 'text-align', value: value }
     if (prop === 'font-style' && value === 'italic') return { name: 'italic', value: true }
     if (prop === 'text-decoration' && value === 'underline')
