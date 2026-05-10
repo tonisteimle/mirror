@@ -167,12 +167,22 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   `(Instance | Slot | ZagNode | Each | ConditionalNode | Text)[]`
   durchgereicht (Instance.children-Type). Filtert defensiv via
   `isInstance`, aber Type-System-Lüge.
-  **Status:** offen — Pre-Refactor-Pin nötig, dann Multi-Slice (alle
-  drei Mismatches getrennt).
-  **Notiz:** Kollateral-Fund: `instance.position` wurde dreimal
-  gelesen, existiert nicht (BaseNode hat line/column, kein
-  position-Objekt) — silent-undefined an `addWarning`. Fixed in
-  Bystander-Slice unten.
+  **Status:** aktiv (Claude, 2026-05-10) — Slice 1 von 3:
+  ConditionalBlock-vs-ConditionalNode konvergieren.
+  **Plan:** Probe `tools/probes/slot-in-each.ts` zeigt: nested-if
+  - each-in-if funktionieren runtime-korrekt — der Typ ist nur eine
+    Lüge, kein observable bug. Slice 1: `ConditionalBlock` aus
+    control-flow-transformer.ts droppen, `ConditionalNode` aus ast.ts
+    importieren (Single Source of Truth). Mapper-Callback-Typen
+    widen von `(Instance | Slot)` auf `(Instance | Slot | ConditionalNode
+| Each)`. Slice 2/3 (Slot-EachChild + extractInlineStates) bleiben
+    offen — Probe zeigt dass Slot in Each-Children parser-seitig nie
+    produziert wird, also möglicherweise dead code. Erst Slice 1
+    liefern.
+    **Notiz:** Kollateral-Fund: `instance.position` wurde dreimal
+    gelesen, existiert nicht (BaseNode hat line/column, kein
+    position-Objekt) — silent-undefined an `addWarning`. Fixed in
+    Bystander-Slice unten.
 
 - **Wo:** `compiler/ir/ops/instance-ops.ts:transformInstance`
   (3 `addWarning`-Aufrufe)
