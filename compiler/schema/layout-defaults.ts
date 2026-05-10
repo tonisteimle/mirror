@@ -239,7 +239,7 @@ export function resolveNineZoneAlias(name: string): NineZonePosition | null {
 /**
  * Get semantic v/h alignment for a 9-zone position. Returns null for non-zone names.
  */
-export function nineZoneToSemantic(name: string): SemanticAlignment | null {
+function nineZoneToSemantic(name: string): SemanticAlignment | null {
   const zone = resolveNineZoneAlias(name)
   return zone === null ? null : ZONE_TO_SEMANTIC[zone]
 }

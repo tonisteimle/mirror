@@ -552,20 +552,6 @@ export { SCHEMA }
 // ============================================================================
 
 /**
- * Check if a word is a reserved keyword
- */
-export function isReservedKeyword(word: string): boolean {
-  return (DSL.keywords.reserved as readonly string[]).includes(word)
-}
-
-/**
- * Get all reserved keywords
- */
-export function getReservedKeywords(): readonly string[] {
-  return DSL.keywords.reserved
-}
-
-/**
  * Check if a name is a primitive
  */
 export function isPrimitive(name: string): boolean {
@@ -672,16 +658,6 @@ export function getPropertiesByCategory(category: PropertyDef['category']): Prop
 }
 
 /**
- * Get keyword values for autocomplete
- */
-export function getKeywordsForProperty(nameOrAlias: string): string[] {
-  const prop = findProperty(nameOrAlias)
-  if (!prop?.keywords) return []
-
-  return Object.keys(prop.keywords).filter(k => k !== '_standalone')
-}
-
-/**
  * Get all property names and aliases
  */
 export function getAllPropertyNames(): string[] {
@@ -760,13 +736,6 @@ export function getState(name: string): StateDef | undefined {
 }
 
 /**
- * Check if a key is valid for onkeydown
- */
-export function isValidKey(key: string): boolean {
-  return (DSL.keys as readonly string[]).includes(key.toLowerCase())
-}
-
-/**
  * Get all events
  */
 export function getAllEvents(): string[] {
@@ -778,22 +747,6 @@ export function getAllEvents(): string[] {
  */
 export function getAllActions(): string[] {
   return Object.keys(DSL.actions)
-}
-
-/**
- * Get all states (system and custom)
- */
-export function getAllStates(): string[] {
-  return Object.keys(DSL.states)
-}
-
-/**
- * Get system states only
- */
-export function getSystemStates(): string[] {
-  return Object.entries(DSL.states)
-    .filter(([_, def]) => def.system)
-    .map(([name]) => name)
 }
 
 /**

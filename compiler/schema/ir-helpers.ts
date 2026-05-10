@@ -16,33 +16,6 @@ export interface CSSResult {
 }
 
 /**
- * Get the canonical CSS property name for a DSL property.
- * Returns the CSS property name or undefined if not found.
- */
-export function getCSSPropertyName(dslProperty: string): string | undefined {
-  const prop = findProperty(dslProperty)
-  if (!prop) return undefined
-
-  // For properties with numeric values, extract the CSS property
-  if (prop.numeric) {
-    const cssOutput = prop.numeric.css(0)
-    if (cssOutput.length > 0) {
-      return cssOutput[0].property
-    }
-  }
-
-  // For color properties
-  if (prop.color) {
-    const cssOutput = prop.color.css('#000')
-    if (cssOutput.length > 0) {
-      return cssOutput[0].property
-    }
-  }
-
-  return undefined
-}
-
-/**
  * Non-CSS properties that are valid but don't produce CSS output.
  * These are HTML attributes or special Mirror properties.
  */
@@ -226,72 +199,6 @@ export const PROPERTY_TO_CSS: Record<string, string> = {
 }
 
 /**
- * Check if a property has a keyword value in the schema.
- */
-export function hasKeywordValue(propName: string, value: string): boolean {
-  const prop = findProperty(propName)
-  if (!prop?.keywords) return false
-  return value in prop.keywords
-}
-
-/**
- * Get CSS output for a keyword value.
- * Returns the CSS styles or empty array if not a valid keyword.
- */
-export function getKeywordCSS(propName: string, value: string): CSSOutput[] {
-  const prop = findProperty(propName)
-  if (!prop?.keywords) return []
-
-  // hasOwnProperty guard prevents matching prototype methods (valueOf, toString, etc.)
-  if (!Object.prototype.hasOwnProperty.call(prop.keywords, value)) return []
-  const keyword = prop.keywords[value]
-  if (!keyword || !keyword.css) return []
-
-  return keyword.css
-}
-
-/**
- * Get CSS output for a numeric value.
- * Returns the CSS styles or empty array if not numeric property.
- */
-export function getNumericCSS(propName: string, value: number): CSSOutput[] {
-  const prop = findProperty(propName)
-  if (!prop?.numeric) return []
-
-  return prop.numeric.css(value)
-}
-
-/**
- * Get CSS output for a color value.
- * Returns the CSS styles or empty array if not color property.
- */
-export function getColorCSS(propName: string, value: string): CSSOutput[] {
-  const prop = findProperty(propName)
-  if (!prop?.color) return []
-
-  return prop.color.css(value)
-}
-
-/**
- * Get CSS output for a standalone (boolean) property.
- * Returns the CSS styles or empty array if not standalone.
- */
-export function getStandaloneCSS(propName: string): CSSOutput[] {
-  const prop = findProperty(propName)
-  if (!prop?.keywords?._standalone) return []
-
-  return prop.keywords._standalone.css
-}
-
-/**
- * Check if a property is a standalone (boolean) property.
- */
-export function isStandaloneProperty(propName: string): boolean {
-  const prop = findProperty(propName)
-  return !!prop?.keywords?._standalone
-}
-
-/**
  * Try to convert a property value to CSS using the schema.
  *
  * @returns CSSResult with handled=true if schema handled it, false otherwise
@@ -465,7 +372,7 @@ export function simplePropertyToCSS(propName: string, value: string | number): C
  * Properties that support hover- prefix variants.
  * Maps base property name to CSS property.
  */
-export const HOVER_PROPERTIES: Record<string, string> = {
+const HOVER_PROPERTIES: Record<string, string> = {
   bg: 'background',
   background: 'background',
   col: 'color',
@@ -616,70 +523,6 @@ export const BORDER_DIRECTION_MAP: Record<string, string[]> = DIRECTION_MAP
  */
 export function isDirection(value: string): boolean {
   return value in DIRECTION_MAP
-}
-
-/**
- * Check if a value is a corner keyword.
- */
-export function isCorner(value: string): boolean {
-  return value in CORNER_MAP
-}
-
-/**
- * Get direction suffixes for a direction keyword.
- */
-export function getDirections(keyword: string): string[] {
-  return DIRECTION_MAP[keyword] || []
-}
-
-/**
- * Get corner suffixes for a corner keyword.
- */
-export function getCorners(keyword: string): string[] {
-  return CORNER_MAP[keyword] || []
-}
-
-// ============================================================================
-// Property Categories
-// ============================================================================
-
-// Memoized property-category lookups. SCHEMA is module-frozen at load time;
-// these can be built once on first access.
-let _tokenAcceptingProperties: string[] | null = null
-let _colorAcceptingProperties: string[] | null = null
-
-/**
- * Get all properties that accept tokens.
- */
-export function getTokenAcceptingProperties(): string[] {
-  if (!_tokenAcceptingProperties) {
-    const result: string[] = []
-    for (const prop of Object.values(SCHEMA)) {
-      if (prop.token) {
-        result.push(prop.name)
-        result.push(...prop.aliases)
-      }
-    }
-    _tokenAcceptingProperties = result
-  }
-  return _tokenAcceptingProperties
-}
-
-/**
- * Get all properties that accept colors.
- */
-export function getColorAcceptingProperties(): string[] {
-  if (!_colorAcceptingProperties) {
-    const result: string[] = []
-    for (const prop of Object.values(SCHEMA)) {
-      if (prop.color) {
-        result.push(prop.name)
-        result.push(...prop.aliases)
-      }
-    }
-    _colorAcceptingProperties = result
-  }
-  return _colorAcceptingProperties
 }
 
 // ============================================================================
