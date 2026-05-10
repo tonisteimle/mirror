@@ -29,6 +29,9 @@ import { codeAutocompleteProps } from './code-autocomplete-props.demo'
 import { codeAutocompleteTokens } from './code-autocomplete-tokens.demo'
 import { codeCmdP } from './code-cmd-p.demo'
 import { codeRename } from './code-rename.demo'
+import { tokCreate } from './tok-create.demo'
+import { tokExtract } from './tok-extract.demo'
+import { tokRename } from './tok-rename.demo'
 
 export const demoTests: TestCase[] = [
   ...demoTextIntoFrame,
@@ -51,4 +54,7 @@ export const demoTests: TestCase[] = [
   ...codeAutocompleteTokens,
   ...codeCmdP,
   ...codeRename,
+  ...tokCreate,
+  ...tokExtract,
+  ...tokRename,
 ]
