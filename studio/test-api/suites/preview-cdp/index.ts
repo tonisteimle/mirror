@@ -20,6 +20,9 @@ import { buttonIntoFrameTests } from './01-palette-drop/button-into-frame.test'
 import { iconIntoFrameTests } from './01-palette-drop/icon-into-frame.test'
 import { appendAtEndVsIndexTests } from './01-palette-drop/append-at-end-vs-index.test'
 
+import { moveIntoDifferentContainerTests } from './02-move/move-into-different-container.test'
+import { reorderSiblingsTests } from './02-move/reorder-siblings.test'
+
 // Wave 1 — Smoke (verifies the helper layer is reachable).
 export const previewCdpSmokeTests: TestCase[] = [...smokeTests]
 
@@ -33,8 +36,15 @@ export const previewCdpPaletteDropTests: TestCase[] = [
   ...appendAtEndVsIndexTests,
 ]
 
+// Wave 4 — move (preview → preview).
+export const previewCdpMoveTests: TestCase[] = [
+  ...moveIntoDifferentContainerTests,
+  ...reorderSiblingsTests,
+]
+
 // Aggregate — every wave above flows into this list.
 export const previewCdpAllTests: TestCase[] = [
   ...previewCdpSmokeTests,
   ...previewCdpPaletteDropTests,
+  ...previewCdpMoveTests,
 ]
