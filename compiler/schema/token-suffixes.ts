@@ -122,10 +122,17 @@ const SIZE_SUFFIXES = new Set([
 /**
  * Suffixes that are numeric counts/indices (no `px` suffix), but still
  * classified as 'size' for token-picker/validator purposes (Slice 6 V-4 +
- * Slice 7 V-1). Separate from SIZE_SUFFIXES because `needsPxUnit` must NOT
- * append `px` to grid column counts or grid-line indices.
+ * Slice 7 V-1 + Slice 78 Iter-2). Separate from SIZE_SUFFIXES because
+ * `needsPxUnit` must NOT append `px` to grid column counts, grid-line
+ * indices or font-weight numerics.
+ *
+ * `.weight` (font-weight, e.g. 100..900): numeric, unitless — Slice 78 Iter-2
+ * surfaced that the picker reported `getTokenTypesForProperty('weight') →
+ * ['other']` because no classifier owned `.weight`. Putting it in
+ * COUNT_SUFFIXES makes the picker reach weight tokens AND keeps `weight: 700`
+ * unitless in the emitted CSS.
  */
-const COUNT_SUFFIXES = new Set(['.grid', '.x', '.y'])
+const COUNT_SUFFIXES = new Set(['.grid', '.x', '.y', '.weight'])
 
 /** Suffixes that carry font semantics (typeface tokens). */
 const FONT_SUFFIXES = new Set(['.font'])

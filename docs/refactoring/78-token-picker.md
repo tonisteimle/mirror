@@ -1,7 +1,7 @@
 # Slice 78: Token-Picker (Studio)
 
-**Datum:** 2026-05-09
-**Status:** Audit · Phasen A/B/D umgesetzt · 18 jsdom RTs + 4 Browser-CDP-RTs · CSS gestylt · Studio-Bundle gebaut · Quality-Gate-Pass: **erledigt**
+**Datum:** 2026-05-09 (Iter-1) · 2026-05-10 (Iter-2)
+**Status:** Audit · Phasen A/B/D + Iter-2 V-7 (Schema-Fallback) umgesetzt · 18 jsdom RTs + 4 Browser-CDP-RTs + RT-19 (Iter-2) · Quality-Gate 9/9 ✅: **erledigt**
 
 ## Inhalt
 
@@ -307,3 +307,127 @@ picker shows tokenState.allTokens (which excluded all sets)
 // Property-Sets landen im `tokens`-Bucket, korrekt mit `properties` Array.
 // IR baut `propertySetMap` daraus.
 ```
+
+---
+
+# 7. Iter-2 (Phase E — Schema-Drift-Fallback, 2026-05-10)
+
+**Trigger:** Iter-2-Sweep Dev-2-Cluster (24/25/78 zusammen). Iter-1 hatte
+V-6 verschoben („Picker hat eigenen Token-Parser, Refactor folgt im Studio-
+Picker-Slice"); Iter-2 macht den narrow-scope-Drift-Fix der die User-DX
+sofort spürbar verbessert, ohne den großen V-6-Refactor zu starten.
+
+## 7.1 Befunde
+
+**B-12 (Drift, hoch).** `studio/pickers/token/types.ts:PROPERTY_TOKEN_TYPES`
+hat **25 Properties weniger** als `compiler/schema/token-suffixes.ts:
+PROPERTY_TO_TOKEN_SUFFIX`. Folge: bei `Frame c $`, `Frame p $`, `Frame m $`,
+`Frame mar $`, `Frame font-family $`, `Frame weight $`, `Frame ls $`,
+`Frame tracking $`, `Frame min-height $`, `Frame max-height $`, `Frame ic $`,
+`Frame is $`, `Frame x $`, `Frame y $`, … fiel `getTokenTypesForProperty`
+auf `['other']` zurück, sodass keine Tokens im Picker erschienen.
+
+**B-13 (Schema-Lücke, mittel).** `.weight` (font-weight) war in keiner
+Schema-Klassifizierungsliste — weder SIZE_SUFFIXES noch COUNT_SUFFIXES
+noch FONT_SUFFIXES. `inferTokenTypeFromSuffix('.weight')` returnte
+`undefined`. Im Picker landete das auf `['other']`. Im Compile-Pfad
+funktionierten Weight-Tokens trotzdem (eigener Branch in property-emitter)
+— die Lücke betraf nur Picker und Validator.
+
+## 7.2 Probes Iter-2
+
+`tools/probes/slice-78-token-picker.ts`:
+
+| #   | Eingabe                                   | Pre-Iter-2 (Bug)                      | Post-Iter-2 (Fix)                  |
+| --- | ----------------------------------------- | ------------------------------------- | ---------------------------------- |
+| A   | Schema-vs-Picker-Diff                     | 25 properties blind, picker=['other'] | 0 properties blind (alle resolved) |
+| B   | `getTokenTypesForProperty('c')`           | ['other']                             | ['color']                          |
+| B   | `getTokenTypesForProperty('mar')`         | ['other']                             | ['size','spacing']                 |
+| B   | `getTokenTypesForProperty('font-family')` | ['other']                             | ['font']                           |
+| B   | `getTokenTypesForProperty('weight')`      | ['other']                             | ['size','spacing']                 |
+| C   | Pre-existing `bg`/`pad`/`w`/`font`        | unchanged                             | unchanged                          |
+
+## 7.3 Entscheidungen Iter-2
+
+**V-7 — Schema-Fallback in `getTokenTypesForProperty` — Status: erledigt.**
+
+Resolution-Reihenfolge:
+
+1. Picker-explizite `PROPERTY_TOKEN_TYPES` (UI-Vokabular mit `'spacing'`-
+   Distinction) — bewahrt Iter-1-Verhalten für die 30 explizit gepflegten
+   Properties.
+2. Fallback auf `compiler/schema/token-suffixes.ts:getTokenSuffix` +
+   `inferTokenTypeFromSuffix`. Mapping ins Picker-Vokabular:
+   - `'color'` → `['color']`
+   - `'size'` → `['size', 'spacing']` (most permissive)
+   - `'font'` → `['font']`
+   - `'icon'` → `['other']` (kein Picker-UI für icon-typed Tokens)
+3. `['other']` für unbekannte Properties.
+
+**Begründung:** Schmaler in-scope-fix. V-6 (kompletter Picker-Parser-
+Refactor) bleibt verschoben für den Studio-Picker-Cluster-Slice. Der
+Fallback macht das Picker-UI sofort vollständig, ohne den Architektur-
+Refactor zu starten. Existing Tests (PROPERTY_TOKEN_TYPES-Konstante)
+bleiben unberührt.
+
+**V-8 — Schema-Lücke `.weight` schließen — Status: erledigt.**
+
+`.weight` zu `COUNT_SUFFIXES` hinzugefügt. Klassifizierung ist jetzt 'size'
+(picker findet weight-Tokens), aber ohne `px`-Append (weight ist unitless,
+genau wie `.grid`/`.x`/`.y`).
+
+## 7.4 Cross-Slice-Probe
+
+Slice 24 (Single-Value-Token Iter-2): `getTokenSuffixForProperty` und
+`TOKEN_SUFFIX_MAP` delegieren bereits an den Schema-Helper. Slice 78
+Iter-2 V-7 nutzt denselben Helper — keine zusätzliche Drift-Quelle.
+
+Slice 25 (Property-Set-Token Iter-2): RT-17 lockt Framework-Backend-
+Property-Set-Parität. Picker-seitige Property-Sets bleiben unbetroffen
+vom V-7-Refactor (V-7 berührt nur `getTokenTypesForProperty`, nicht
+`parseTokens`).
+
+## 7.5 Studio-Roundtrip
+
+**Voll-Modus** — Iter-1 hat 1 Browser-CDP-Test (Click-Insert + Render).
+Iter-2 erweitert die Test-Coverage um RT-19 (jsdom): `getTokenTypesForProperty`
+für die 25 fixed-up Aliases. Browser-CDP nicht erweitert; bestehender
+Test bleibt das End-to-End-Lock.
+
+## 7.6 Mechanischer 9-Punkt-Quality-Gate (Post-Iter-2)
+
+| #   | Check                                                      | Iter-1            | Iter-2 |
+| --- | ---------------------------------------------------------- | ----------------- | ------ |
+| 1   | Probe-Tabelle: kein 🔴 außer in „deferred"-Spalte          | ✅                | ✅     |
+| 2   | Phase-Stati ∈ {erledigt, verschoben, verworfen}            | ✅                | ✅     |
+| 3   | Jeder RT-Plan-Eintrag hat geschriebenen Test (`erledigt`)  | ✅                | ✅     |
+| 4   | Schema-Drift-Grep ausgeführt; gefundene Stellen gefixt     | ❌                | ✅     |
+| 5   | Cross-Slice-Wirkung geprüft; Nachbar-Slices behandelt      | ⚠️                | ✅     |
+| 6   | Cross-Backend-Differential-RT existiert                    | n/a (Studio-only) | n/a    |
+| 7   | Studio-Roundtrip explizit benannt (CDP-Run oder Lower-Bar) | ✅                | ✅     |
+| 8   | Vitest gesamt grün; keine Test-Subtraction                 | ✅                | ✅     |
+| 9   | „substantiell besser, aber …"-Klausel nicht aktiv          | ⚠️                | ✅     |
+
+## 7.7 Tests Iter-2
+
+| ID    | Test                                                           | Aus | Status   |
+| ----- | -------------------------------------------------------------- | --- | -------- |
+| RT-19 | Schema-Fallback resolves 25 previously-blind properties        | V-7 | erledigt |
+| RT-20 | `.weight` classified as 'size' for picker, unitless in compile | V-8 | erledigt |
+
+`tests/studio/picker-token-picker.test.ts` + `tests/studio/pickers-token-picker.test.ts`
+bleiben grün (121 Tests). RT-19/RT-20 als neue Cases in
+`tests/studio/pickers-token-picker.test.ts` angefügt.
+
+## 7.8 Commits Iter-2
+
+- `tools/probes/slice-78-token-picker.ts` — Probe-Skript
+- `studio/pickers/token/types.ts` — Schema-Fallback in getTokenTypesForProperty
+- `compiler/schema/token-suffixes.ts` — `.weight` zu COUNT_SUFFIXES
+- `tests/studio/pickers-token-picker.test.ts` — RT-19/RT-20
+
+V-6 (Picker-Parser-Refactor) bleibt verschoben — Re-Open-Trigger:
+**Studio-Picker-Cluster-Slice** (separater Slice für vollständigen
+Studio-eigenen Parser durch Compiler-Parser ersetzen).
+
+Slice-Status post-Iter-2: **erledigt (Iter-1+2 — V-7/V-8 + RT-19/RT-20)**.

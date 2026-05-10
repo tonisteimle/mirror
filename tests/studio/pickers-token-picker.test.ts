@@ -46,6 +46,60 @@ describe('getTokenTypesForProperty', () => {
   it('PROPERTY_TOKEN_TYPES exports the registry', () => {
     expect(PROPERTY_TOKEN_TYPES.bg).toEqual(['color'])
   })
+
+  // ---------------------------------------------------------------------------
+  // Slice 78 Iter-2 / RT-19 — Schema-Fallback for compiler-known aliases.
+  // Pre-Iter-2: 25 properties were missing from PROPERTY_TOKEN_TYPES so the
+  // picker fell through to ['other'] and showed no tokens. Iter-2 added a
+  // schema-fallback via compiler/schema/token-suffixes.ts.
+  // ---------------------------------------------------------------------------
+  describe('Slice 78 Iter-2 / RT-19 — schema fallback for missing aliases', () => {
+    it('color aliases (`c`, `ic`, `icon-color`) resolve to ["color"]', () => {
+      expect(getTokenTypesForProperty('c')).toEqual(['color'])
+      expect(getTokenTypesForProperty('ic')).toEqual(['color'])
+      expect(getTokenTypesForProperty('icon-color')).toEqual(['color'])
+    })
+
+    it('spacing/size aliases (`p`, `m`, `mar`, `g`) resolve to ["size","spacing"]', () => {
+      expect(getTokenTypesForProperty('p')).toEqual(['size', 'spacing'])
+      expect(getTokenTypesForProperty('m')).toEqual(['size', 'spacing'])
+      expect(getTokenTypesForProperty('mar')).toEqual(['size', 'spacing'])
+      expect(getTokenTypesForProperty('g')).toEqual(['size', 'spacing'])
+    })
+
+    it('typography aliases (`font-family`, `ls`, `tracking`, `letter-spacing`)', () => {
+      expect(getTokenTypesForProperty('font-family')).toEqual(['font'])
+      expect(getTokenTypesForProperty('ls')).toEqual(['size', 'spacing'])
+      expect(getTokenTypesForProperty('tracking')).toEqual(['size', 'spacing'])
+      expect(getTokenTypesForProperty('letter-spacing')).toEqual(['size', 'spacing'])
+    })
+
+    it('min/max sizing aliases (`min-height`, `max-height`)', () => {
+      expect(getTokenTypesForProperty('min-height')).toEqual(['size', 'spacing'])
+      expect(getTokenTypesForProperty('max-height')).toEqual(['size', 'spacing'])
+    })
+
+    it('grid + position aliases (`x`, `y`, `grid`, `row-height`, `rh`)', () => {
+      expect(getTokenTypesForProperty('x')).toEqual(['size', 'spacing'])
+      expect(getTokenTypesForProperty('y')).toEqual(['size', 'spacing'])
+      expect(getTokenTypesForProperty('grid')).toEqual(['size', 'spacing'])
+      expect(getTokenTypesForProperty('row-height')).toEqual(['size', 'spacing'])
+      expect(getTokenTypesForProperty('rh')).toEqual(['size', 'spacing'])
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // Slice 78 Iter-2 / RT-20 — `.weight` classified for picker AND unitless in compile.
+  // Pre-Iter-2: `.weight` was in no schema classification set, so picker returned
+  // ['other'] and `inferTokenTypeFromSuffix('.weight')` returned undefined. The
+  // schema bug was orthogonal to picker — fixing it unblocks both surfaces.
+  // ---------------------------------------------------------------------------
+  describe('Slice 78 Iter-2 / RT-20 — `.weight` classifier coverage', () => {
+    it('`weight` and `font-weight` resolve via schema fallback', () => {
+      expect(getTokenTypesForProperty('weight')).toEqual(['size', 'spacing'])
+      expect(getTokenTypesForProperty('font-weight')).toEqual(['size', 'spacing'])
+    })
+  })
 })
 
 describe('parseTokens', () => {

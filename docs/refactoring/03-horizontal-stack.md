@@ -1,7 +1,8 @@
 # Slice 3: Horizontal Stack (`hor`, `wrap`, `spread`)
 
 **Datum:** 2026-05-10
-**Status:** Audit erledigt · Phase A: V-1 React-Defaults erledigt, V-2/V-3a deferred (Sektion 6) · Phase B Quality-Gate-Pass erledigt — 31 RTs grün, 14905/14928 Vitest grün
+**Status (Iter-1):** Audit erledigt · Phase A: V-1 React-Defaults erledigt, V-2/V-3a deferred (Sektion 6) · Phase B Quality-Gate-Pass erledigt — 31 RTs grün, 14905/14928 Vitest grün
+**Status (Iter-2, 2026-05-10, Dev 1):** V-2 Re-Open-Adresse präzisiert (Slice 21 Phase B/C oder dedizierter Parser-Audit-Slice) · V-3a Drift-Stand bestätigt (real+intentional, Schema-IR-Sync via Slice-5-Cluster Sweep Dev 2) · Probe-Skript Iter-2 committet · Studio-Roundtrip Lower-Bar explizit
 
 ## Inhalt
 
@@ -401,3 +402,55 @@ V-2 und V-3a sind ehrlich als **deferred** markiert, mit Schema-Kommentar (V-3a)
 - ✅ ≥12 RTs (31 Sub-Tests, 13 RT-Gruppen)
 - ✅ Vitest gesamt 14905/14928 grün (23 skipped, 0 failed)
 - ✅ Deferred-Items dokumentiert mit Code-Kommentar + Test-Lock
+
+---
+
+# 7. Iter-2-Sweep (2026-05-10, Dev 1)
+
+Auftrag aus `plan.md` Phase 0: **V-2 Re-Open-Trigger setzen (W120 → Parser-Strict-Slice), V-3a Schema-Drift-Stand klären.**
+
+## 7.1 Probe-Skript
+
+`tools/probes/slice-03-horizontal-stack-iter2.ts` committet — Iter-2-Re-Probes für V-2 + V-3a:
+
+- **A. Parser-AST-Lock:** `Frame hor 5` und `Frame hor` produzieren identisches AST (`hor: [true]`). Werte werden silent geschluckt — Validator hat kein Signal. Lock für V-2-Verschiebung.
+- **B. Schema-IR-Drift:** Schema `horizontal._standalone.css` enthält `align-items: center`; IR-Pfad (layout-transformer `FLEX_DEFAULTS`) emittet `align-items: flex-start`. Beide Pfade aktiv, beide Werte fließen je nach Pfad durch.
+- **C. PURE_FLAG_PROPERTIES schema-derived:** 65 Einträge, alle aus Schema. Drift-frei.
+
+## 7.2 V-2 Re-Open-Trigger geschärft
+
+**Vorher (Re-Open-Tracking, Iter-1):** Slice 22 `as`-Inheritance (Parser-Strict-Cluster).
+
+**Nachher (Iter-2):** Slice 22 ist `as`-Inheritance, nicht Parser-Strict — die canonical Adresse ist **Slice 21 Phase B/C (Komponenten-Vollständigkeit)** ODER ein dedizierter Parser-Strict-Slice. Slice 21 Phase B/C ist von Dev 2 in seinem Iter-2-Sweep gesetzt; wenn dort ein Parser-Strict-Mode landet, wird V-2 dort eingelöst. Sonst verbleibt V-2 als Trigger an einen späteren dedizierten Parser-Audit-Slice (post-Phase-1).
+
+**Konkrete Bedingung für Re-Open:** sobald der Parser `prop.extraValues` o.ä. AST-Signal bietet, ist die Validator-Anbindung trivial (`PURE_FLAG_PROPERTIES.has(name) && prop.extraValues.length > 0 → W120`). Lesson 7 (Hot-Files brauchen Schema-Lookups, nicht Switch-Cases) wird hier gelten — der Validator-Branch wird die schon existierende `PURE_FLAG_PROPERTIES`-Set verwenden.
+
+## 7.3 V-3a Schema-Drift-Stand geklärt
+
+**Bewerten:** Drift ist **real und intentional** im aktuellen Code-Zustand. Beide Pfade existieren parallel, weil das size-state-CSS-emit (`schemaPropertyToCSS` für `wide: hor`) Schema-direkt liest, während der normale Layout-Pfad über IR `FLEX_DEFAULTS` geht.
+
+**Re-Open-Adresse Iter-1:** "Slice 5-Cluster Re-Open (Sweep Dev 2)" — bestätigt. Dev 2 würde im Iter-2-Sweep der Slices 5 (center/spread/ver-center/hor-center) den Schema-IR-Sync angehen, weil die `hor-center`/`ver-center`-Cases im Schema ähnliche Single-Source-Lücken haben.
+
+**Konkrete Bedingung für Re-Open:** Schema und IR `FLEX_DEFAULTS` zusammen anfassen, Tutorial-Snapshot für `wide: hor` (Tutorial-Kapitel 04, Beispiele 14+16) als Cross-Slice-Lock mitziehen. RT-1 in der bestehenden Slice-3-Suite lockt aktuell beide Seiten der Drift — wenn die Reform kommt, fällt RT-1 in Stücke und zeigt damit, _wo_ die Reform ansetzen muss.
+
+## 7.4 Studio-Roundtrip explizit benannt
+
+**Modus:** **Lower-Bar — DOM gelocked via 31 RTs in `tests/compiler/slice-3-horizontal-stack.test.ts`; Property-Panel-Coverage durch `studio/test-api/suites/property-panel/comprehensive.test.ts` (alle Layout-Properties, inkl. hor/wrap/spread).**
+
+**Begründung:** `hor`/`wrap`/`spread` sind reine flag-only Layout-Properties ohne State-Verhalten. Property-Panel emittet sie als Toggles (boolean-Flags), die durch comprehensive.test.ts mit-getestet werden.
+
+**Re-Open-Trigger:** keiner. Slice 67-69 (Studio-Loops) bringen ihre eigenen CDP-Runs für Cross-Slice-Effekte mit.
+
+## 7.5 9-Punkt-Quality-Gate (Iter-2)
+
+| #   | Check                                           | Status                                                                                                                                                                                                                                                                                                            |
+| --- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Probe-Tabelle ohne 🔴                           | ✅ Iter-1-Phase-A erledigt, V-2/V-3a explizit als 🟡 deferred mit Re-Open-Adressen                                                                                                                                                                                                                                |
+| 2   | Phase-Stati ∈ {erledigt, verschoben, verworfen} | ✅ Phase A V-1 erledigt; A.2 (V-3a) und A.4 (V-2) als verschoben mit Iter-2-Schärfung                                                                                                                                                                                                                             |
+| 3   | Jeder RT geschrieben                            | ✅ 31 RT-Sub-Tests (13 RT-Gruppen)                                                                                                                                                                                                                                                                                |
+| 4   | Schema-Drift-Grep                               | ✅ durchgeführt (Iter-1 Phase B.2 + Iter-2 Probe-Re-Run); kein neuer Drift                                                                                                                                                                                                                                        |
+| 5   | Cross-Slice-Wirkung geprüft                     | ✅ V-3a Cross-Slice mit Slice 5 dokumentiert; V-4 (9-zone) auf Slice 4 verschoben (Iter-1 erledigt); V-5 (grid) auf Slice 6 (Iter-1 erledigt)                                                                                                                                                                     |
+| 6   | Cross-Backend-Differential-RT                   | ✅ RT-5..RT-8 lockt DOM/React/Framework Symmetrie für hor/wrap/spread/center                                                                                                                                                                                                                                      |
+| 7   | Studio-Roundtrip explizit                       | ✅ Lower-Bar deklariert in 7.4                                                                                                                                                                                                                                                                                    |
+| 8   | Vitest gesamt grün                              | ✅ 15066/15089 (23 skipped); kein Test-Subtraktion gegenüber Pre-Iter-2                                                                                                                                                                                                                                           |
+| 9   | „Substantiell besser, aber …"-Test              | ✅ Antwort auf „ist das nun richtig gut?" — **Ja:** V-2 Re-Open-Adresse präzisiert (Slice 21 Phase B/C oder dedizierter Parser-Audit-Slice, nicht Slice 22). V-3a-Drift ist real-und-intentional dokumentiert mit Slice-5-Cross-Slice-Adresse. Beide Iter-1-deferred-Items haben jetzt klare Re-Open-Bedingungen. |

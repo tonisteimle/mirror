@@ -2,6 +2,8 @@
  * Token Picker Types
  */
 
+import { getTokenSuffix, inferTokenTypeFromSuffix } from '../../../compiler/schema/token-suffixes'
+
 export type TokenType = 'color' | 'spacing' | 'size' | 'font' | 'other'
 
 /** A single property inside a property-set (`cardstyle: bg #1a1a1a, pad 16, …`). */
@@ -74,11 +76,36 @@ export const PROPERTY_TOKEN_TYPES: Record<string, TokenType[]> = {
 }
 
 /**
- * Get allowed token types for a property
+ * Get allowed token types for a property.
+ *
+ * Resolution order (Slice 78 Iter-2):
+ *   1. Picker-explicit `PROPERTY_TOKEN_TYPES` (UI-vocabulary, includes the
+ *      picker-only `'spacing'` distinction).
+ *   2. Schema-derived fallback via `compiler/schema/token-suffixes.ts`. Maps
+ *      the compiler `TokenType` to picker vocabulary:
+ *        'color' → ['color']
+ *        'size'  → ['size', 'spacing']  (most permissive — picker-`spacing`
+ *                                         is a UI-grouping, not a schema concept)
+ *        'font'  → ['font']
+ *        'icon'  → ['other']            (no picker UI for icon-typed tokens yet)
+ *   3. `['other']` for unknown properties.
+ *
+ * Iter-1 stopped at step 1, leaving the picker blind for 25 compiler-known
+ * aliases (`c`, `p`, `m`, `mar`, `font-family`, `weight`, `ls`, `tracking`,
+ * `min-height`, `max-height`, etc.). Iter-2 adds the schema fallback so any
+ * future compiler-schema addition is reachable from the picker without
+ * editing this map.
  */
 export function getTokenTypesForProperty(property: string): TokenType[] {
   const normalized = property.toLowerCase().replace(/[-_]/g, '')
-  return PROPERTY_TOKEN_TYPES[normalized] || ['other']
+  if (normalized in PROPERTY_TOKEN_TYPES) return PROPERTY_TOKEN_TYPES[normalized]
+  const canonicalSuffix = getTokenSuffix(property)
+  if (!canonicalSuffix) return ['other']
+  const schemaType = inferTokenTypeFromSuffix(canonicalSuffix)
+  if (schemaType === 'color') return ['color']
+  if (schemaType === 'size') return ['size', 'spacing']
+  if (schemaType === 'font') return ['font']
+  return ['other']
 }
 
 /** Word that looks like a Mirror property name (used to detect property-set values). */
