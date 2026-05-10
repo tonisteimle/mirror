@@ -20,6 +20,7 @@ import { getPrimitiveDefaults } from '../../schema/primitives'
 import { isPrimitive } from '../../schema/dsl'
 import { isZagPrimitive } from '../../schema/zag-primitives'
 import { isChartPrimitive } from '../../schema/chart-primitives'
+import { matchesCanonical } from '../../schema/parser-helpers'
 import * as ChartTransformer from '../transformers/chart-transformer'
 import type { ParentLayoutContext } from '../transformers/transformer-context'
 import {
@@ -316,7 +317,7 @@ export function transformInstance(
   // `Object.assign` only happens to override last-wins. Filter them upfront.
   if (primitive === 'icon') {
     const hasIconSize = [...(resolvedComponent?.properties ?? []), ...expandedInstanceProps].some(
-      p => p.name === 'is' || p.name === 'icon-size'
+      p => matchesCanonical(p.name, 'icon-size')
     )
     if (hasIconSize) {
       primitiveDefaults = primitiveDefaults.filter(p => p.name !== 'w' && p.name !== 'h')
@@ -337,7 +338,7 @@ export function transformInstance(
       // Check direct properties for w full
       if (child.properties) {
         const hasDirectWidthFull = child.properties.some(
-          (p: Property) => (p.name === 'w' || p.name === 'width') && p.values[0] === 'full'
+          (p: Property) => matchesCanonical(p.name, 'width') && p.values[0] === 'full'
         )
         if (hasDirectWidthFull) return true
 
@@ -351,8 +352,7 @@ export function transformInstance(
               const referencedComponent = this.componentMap.get(p.name)
               if (referencedComponent) {
                 const hasComponentWidthFull = referencedComponent.properties.some(
-                  (cp: Property) =>
-                    (cp.name === 'w' || cp.name === 'width') && cp.values[0] === 'full'
+                  (cp: Property) => matchesCanonical(cp.name, 'width') && cp.values[0] === 'full'
                 )
                 if (hasComponentWidthFull) return true
               }
@@ -366,7 +366,7 @@ export function transformInstance(
         const childComponent = this.componentMap.get(child.component)
         if (childComponent) {
           const hasComponentWidthFull = childComponent.properties.some(
-            (p: Property) => (p.name === 'w' || p.name === 'width') && p.values[0] === 'full'
+            (p: Property) => matchesCanonical(p.name, 'width') && p.values[0] === 'full'
           )
           if (hasComponentWidthFull) return true
         }
@@ -376,7 +376,7 @@ export function transformInstance(
       if (child.children && child.children.length > 0) {
         // Only recurse if this child doesn't have explicit width (otherwise it constrains its children)
         const childHasExplicitWidth = child.properties?.some(
-          (p: Property) => (p.name === 'w' || p.name === 'width') && p.values[0] !== 'full'
+          (p: Property) => matchesCanonical(p.name, 'width') && p.values[0] !== 'full'
         )
         if (!childHasExplicitWidth && hasWidthFullInDescendants(child.children)) {
           return true
@@ -396,8 +396,8 @@ export function transformInstance(
   // For root elements (no parent), convert flex-based "full" to explicit 100%
   // This is needed because "w full, h full" becomes flex styles which don't work at root level
   if (!parentId) {
-    const hasExplicitWidth = properties.some(p => p.name === 'w' || p.name === 'width')
-    const hasExplicitHeight = properties.some(p => p.name === 'h' || p.name === 'height')
+    const hasExplicitWidth = properties.some(p => matchesCanonical(p.name, 'width'))
+    const hasExplicitHeight = properties.some(p => matchesCanonical(p.name, 'height'))
 
     if (hasExplicitWidth || hasExplicitHeight) {
       // Remove flex-based styles and add explicit dimensions
@@ -482,7 +482,7 @@ export function transformInstance(
   // For flex containers, track direction so w full / h full can use appropriate strategy
   const isGridContainer = styles.some(s => s.property === 'display' && s.value === 'grid')
   const isAbsoluteContainer = styles.some(s => s.property === 'position' && s.value === 'relative')
-  const isHorizontal = properties.some(p => p.name === 'hor' || p.name === 'horizontal')
+  const isHorizontal = properties.some(p => matchesCanonical(p.name, 'horizontal'))
   let childLayoutContext: ParentLayoutContext | undefined
   if (isGridContainer) {
     // Extract grid columns count if it's a simple repeat(N, 1fr)
@@ -643,16 +643,16 @@ export function transformInstance(
   }
 
   // Check for keyboard-nav property (enables form keyboard navigation)
-  const hasKeyboardNav = properties.some(p => p.name === 'keyboard-nav' || p.name === 'keynav')
+  const hasKeyboardNav = properties.some(p => matchesCanonical(p.name, 'keyboard-nav'))
 
   // Check for loop-focus property (enables focus looping at start/end)
-  const hasLoopFocus = properties.some(p => p.name === 'loop-focus' || p.name === 'loopfocus')
+  const hasLoopFocus = properties.some(p => matchesCanonical(p.name, 'loop-focus'))
 
   // Check for typeahead property (enables typeahead navigation)
   const hasTypeahead = properties.some(p => p.name === 'typeahead')
 
   // Check for trigger-text property (updates trigger text on selection)
-  const hasTriggerText = properties.some(p => p.name === 'trigger-text' || p.name === 'triggertext')
+  const hasTriggerText = properties.some(p => matchesCanonical(p.name, 'trigger-text'))
 
   return {
     id: nodeId,
