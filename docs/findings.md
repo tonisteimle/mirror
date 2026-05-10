@@ -676,6 +676,135 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — React + Framework Backend-Hunt (16-Slice-Run)
+
+Eine durchgehende Hunt-Session am React- und Framework-Backend; alle
+Slices mit Differential-Test-Pin. Real-Example-Probes zeigen jetzt 0
+`[object Object]`, 0 literal `$token`-Strings und 0 `'foo': undefined`-
+Noise im React-Output für hotel-checkin / portfolio-advisor /
+address-manager / time-tracking / hospital-dashboard.
+
+- **Wo:** `compiler/backends/react.ts` — Event-Handler wired
+  **Was:** Side-effect actions (`toast`, `copy`, `openUrl`, `back`/
+  `forward`, `scrollTo*`) emittieren jetzt JSX-Handler (`onClick`,
+  `onMouseEnter`, `onKeyDown`, `onFocus`/`onBlur`) → reine Browser-APIs,
+  kein Mirror-Runtime nötig. State-Mutation (`increment`/`set`/`toggle`)
+  bleibt no-op-Comment bis zur React-State-Runtime.
+  **Status:** erledigt (`6c5946f1`)
+
+- **Wo:** `compiler/backends/react.ts` — Default Children
+  **Was:** `Btn: pad 10\n  Text "Save"\n\nBtn` rendete als leeres
+  `<div />` weil React-Backend Comp-Def-Children nicht las. Jetzt
+  Fallback durch `compDef.children` wenn Instance keine Kinder hat.
+  Skip wenn Instance positional content trägt (`Btn "Custom"`).
+  **Status:** erledigt (`13d2cf5a`)
+
+- **Wo:** `compiler/backends/react.ts` — Initial-State Inline-Style
+  **Was:** `Btn "Active", on` zeigte gleich aus wie `Btn "Off"` — kein
+  click-runtime, also state-block-props müssen schon im ersten Render
+  drin sein. Jetzt vor generateStyles in allProps merged.
+  **Status:** erledigt (`2ef8ca5e`)
+
+- **Wo:** `compiler/backends/react.ts` — State-Variant Children
+  **Was:** Figma-Variants-Semantik. State-Block kann eigene Children
+  tragen (`on:\n  Text "Liked!"`); bei Initial-State müssen die statt
+  Base-Children rendern. Jetzt am Compile-Time gefolded.
+  **Status:** erledigt (`9f4e09ac`)
+
+- **Wo:** `compiler/backends/react.ts` (`detectLayoutContext`)
+  **Was:** `loopVars` wurden bei jedem Frame-Recurse gedroppt. Slot 4
+  Levels tief in `each position in $positions` resolvte
+  `$position.name` gegen (fehlende) `tokens.position` — literal
+  `"$position.name"`-Strings im JSX in portfolio-advisor &
+  address-manager. Jetzt durchgereicht.
+  **Status:** erledigt (`62b39dab`)
+
+- **Wo:** `compiler/backends/react.ts` (`generateStyles` final pass)
+  **Was:** `boc $accent` wenn nur `accent.bg`/`accent.col` definiert ist
+  → `borderColor: '$accent'` (invalid CSS) im Inline-Style. DOM dropt
+  silent. Jetzt React auch — final-pass leak-guard strippt jeden
+  Style-Eintrag mit `$`-prefix-String-Wert.
+  **Status:** erledigt (`dbc659c1`)
+
+- **Wo:** `compiler/backends/framework.ts` (`nodeToProps` final pass)
+  **Was:** Same leak-shape wie React, aber für M-runtime prop bag.
+  `selected: { boc: '$accent' }` und `ic: '$accent'` (icon-color) leakten
+  durch. Jetzt nur **style-shaped** props gestrippt
+  (bg/col/boc/ic/fs/gap/rad/pad/mar/...) — runtime-data bindings
+  (`Line $data`, M.each collection refs, dotted text-content) bleiben
+  unangetastet.
+  **Status:** erledigt (`0f5bfbca`)
+
+- **Wo:** `compiler/backends/react.ts` — Slot-Fill-Merge
+  **Was:** `Card: bg #000\n  Title: col white, fs 18\n\nCard\n  Title "X"`
+  → `<h2>X</h2>` ohne Slot-Def-Styles. Jetzt nutzt React den existierenden
+  IR-helper `mergeSlotPropertiesIntoFiller` direkt im Children-Loop.
+  Filler überschreibt Slot-Def auf Konflikt.
+  **Status:** erledigt (`2e5be64e`)
+
+- **Wo:** `compiler/backends/react.ts` (`formatIconPropValue`)
+  **Was:** `Icon "check", ic done ? green : gray` → `color="[object
+Object]"` weil Conditional via `JSON.stringify(String(v))` lief.
+  MirrorIcon spreadet color auf SVG → React-Crash. Jetzt JSX-expression
+  `color={tokens["done"] ? "green" : "gray"}`.
+  **Status:** erledigt (`69bc84d7`)
+
+- **Wo:** `compiler/backends/framework.ts` — Aspect/Backdrop-Filter
+  **Was:** `Frame aspect square` und `Frame backdrop-blur 8` wurden
+  silent gedropt — `cssPropToMirrorProp` hatte keine Branch für
+  `aspect-ratio`, `backdrop-filter`, `filter`. IR emittiert korrekt;
+  nur Reverse-Mapping fehlte. + `-webkit-backdrop-filter` Companion
+  gedropt.
+  **Status:** erledigt (`a23b93c1`)
+
+- **Wo:** `compiler/backends/framework.ts` — Transforms/Borders
+  **Was:** `rotate Ndeg`, `scale N`, `position: fixed/relative`,
+  `border-left/right/top/bottom`, `border-width: 0 0 1px 0` (4-value
+  Shorthand) und `border-style: solid` Companion alle reverse-gemappt.
+  Real-Example-Round-Trip-Loss eliminiert.
+  **Status:** erledigt (`73fa7dfd`)
+
+- **Wo:** `compiler/backends/react.ts` (`generateEachJSX`)
+  **Was:** Named-Index `each task,i in $tasks` — React hardcodete `_idx`
+  und droppte `i`. orderBy `by <key>` wurde komplett ignoriert. Jetzt
+  beide gewired: Index-Name geht in loopVars, orderBy emittiert
+  `[...src].sort((a, b) => ...)` vor dem `.map()`.
+  **Status:** erledigt (`ebf60742`)
+
+- **Wo:** `compiler/backends/react.ts` (`generateEachJSX`)
+  **Was:** `each x in [1, 2, 3]` (inline array) → `tokens["[1, 2, 3]"]`
+  (always undefined). Jetzt detect leading `[` → array literal verbatim.
+  **Status:** erledigt (`c839dae5`)
+
+- **Wo:** `compiler/backends/react.ts` (`getTextContent`,
+  neuer `expressionPartsToJS`)
+  **Was:** `Text "Total: " + count` → leeres `<span />` weil
+  `getTextContent` nur string/loopVar/conditional kannte. Jetzt
+  Expression auch handled — Parts werden zu JS-expression mit Token-
+  und Loop-Var-Resolution gewoven.
+  **Status:** erledigt (`3fc8b8d7`)
+
+- **Wo:** `compiler/backends/react.ts` (`generateHtmlAttributes`)
+  **Was:** `Input placeholder "Hi " + $name`, `Link "View", href "/items/" + $id`
+  → Attribute komplett gedropt weil HTML-attr-emitter nur
+  string/number/boolean akzeptierte. Jetzt computed expressions in attrs
+  emittieren JSX-expression. String-values mit `$name`-Interpolation
+  ebenso.
+  **Status:** erledigt (`e7fcb842`)
+
+- **Wo:** `compiler/backends/react.ts` (`generateEachJSX`,
+  `generateJSX` Top-Level-Wrap)
+  **Was:** Two related drops:
+  1. `each + Conditional`: each-loop body mit `if/else` → empty Fragment
+     weil generateEachJSX nur Instance/Each handled, Conditional/Text
+     nicht.
+  2. Explicit `visible-when X`: parser-desugared `visibleWhen` aus
+     `if/else`-blocks im Parent wurde gehandhabt, aber `Frame
+   visible-when X` als reguläre Property nicht. Auch: top-level Fragment
+     wrap wenn visible-when-expression-only-root-item — `return
+   ({cond ? ... : null})` ist invalid JSX.
+     **Status:** erledigt (`da17ef6c`)
+
 ### 2026-05-10 — Directional Padding/Margin/Border-Shortcuts in React
 
 - **Wo:** `compiler/backends/react.ts` (`generateStyles`),
