@@ -320,6 +320,34 @@ export function singleAxisCenterToFlex(
 }
 
 /**
+ * Inverse of `singleAxisCenterToFlex` — given an axis with `center` and the
+ * layout direction, return `'hor-center'` or `'ver-center'`.
+ *
+ * The caller is responsible for confirming that the *other* axis is unset
+ * (or its container default) — only then is the keyword unambiguously
+ * single-axis. If both axes are set explicitly, prefer `flexToNineZone`.
+ *
+ * Slice 5 V-2: the Framework backend reverse-walks IR styles back to Mirror
+ * props. The per-style mapper previously collapsed any single `center` axis
+ * to a bare `center: true`, but `Frame hor-center` and `Frame center` emit
+ * different CSS (one axis vs both), so the round-trip was lossy. With this
+ * inverse the framework can re-emit `hor-center: true` / `ver-center: true`
+ * for the unambiguous single-axis cases.
+ */
+export function flexToSingleAxisCenter(
+  axis: 'justify-content' | 'align-items',
+  direction: 'column' | 'row' = 'column'
+): 'hor-center' | 'ver-center' | null {
+  if (axis === 'justify-content') {
+    return direction === 'column' ? 'ver-center' : 'hor-center'
+  }
+  if (axis === 'align-items') {
+    return direction === 'column' ? 'hor-center' : 'ver-center'
+  }
+  return null
+}
+
+/**
  * Inverse of `nineZoneToFlex` — given a `justify-content` + `align-items`
  * combination plus the layout direction, return the canonical 9-zone alias
  * (`tl`/`tc`/…/`br`) or null if the combination doesn't fit any zone.

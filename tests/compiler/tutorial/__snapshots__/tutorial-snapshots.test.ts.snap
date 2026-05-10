@@ -14737,10 +14737,6 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 11 1`] = `
               "value": "0px",
             },
             {
-              "property": "position",
-              "value": "absolute",
-            },
-            {
               "property": "top",
               "value": "0px",
             },
@@ -14799,10 +14795,6 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 11 1`] = `
             {
               "property": "left",
               "value": "170px",
-            },
-            {
-              "property": "position",
-              "value": "absolute",
             },
             {
               "property": "top",
@@ -14865,10 +14857,6 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 11 1`] = `
               "value": "0px",
             },
             {
-              "property": "position",
-              "value": "absolute",
-            },
-            {
               "property": "top",
               "value": "120px",
             },
@@ -14929,10 +14917,6 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 11 1`] = `
               "value": "170px",
             },
             {
-              "property": "position",
-              "value": "absolute",
-            },
-            {
               "property": "top",
               "value": "120px",
             },
@@ -14991,10 +14975,6 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 11 1`] = `
             {
               "property": "left",
               "value": "80px",
-            },
-            {
-              "property": "position",
-              "value": "absolute",
             },
             {
               "property": "top",
@@ -15280,10 +15260,6 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 12 1`] = `
                   "value": "30px",
                 },
                 {
-                  "property": "position",
-                  "value": "absolute",
-                },
-                {
                   "property": "top",
                   "value": "-4px",
                 },
@@ -15486,10 +15462,6 @@ exports[`Tutorial IR Snapshots > 04 - layout > Example 12 1`] = `
                 {
                   "property": "left",
                   "value": "30px",
-                },
-                {
-                  "property": "position",
-                  "value": "absolute",
                 },
                 {
                   "property": "top",
@@ -45343,10 +45315,6 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 5 1`] = `
               "value": "28px",
             },
             {
-              "property": "position",
-              "value": "absolute",
-            },
-            {
               "property": "top",
               "value": "-4px",
             },
@@ -51105,10 +51073,6 @@ exports[`Tutorial IR Snapshots > 15 - charts > Example 8 1`] = `
         {
           "property": "left",
           "value": "name",
-        },
-        {
-          "property": "position",
-          "value": "absolute",
         },
         {
           "property": "top",

@@ -1456,17 +1456,24 @@ export const SCHEMA: Record<string, PropertyDef> = {
   // POSITION
   // ---------------------------------------------------------------------------
 
+  // Slice 7 V-3 (B-7): `x`/`y` semantics are context-dependent (grid-line
+  // start vs. absolute offset) and therefore handled in the IR pipeline at
+  // `compiler/ir/transformers/property-transformer.ts:402-435`, not via the
+  // schema CSS-mapping. The schema-declared `transform: translate*` is
+  // dead code — the IR override always wins. The empty `css` here is a
+  // sentinel so the schema's "supports numeric" claim still holds for
+  // validator/picker, but no CSS is emitted from this layer.
   x: {
     name: 'x',
     aliases: [],
     category: 'transform',
-    description: 'X offset using translateX transform',
+    description: 'X position. In grid: grid-column-start. Outside grid: absolute left offset.',
 
     numeric: {
-      description: 'X offset in pixels',
+      description: 'X position (grid-line index in grid context, px offset otherwise)',
       unit: 'px',
-      css: n => [{ property: 'transform', value: `translateX(${n}px)` }],
-      example: 'Box x 100',
+      css: () => [],
+      example: 'Frame grid 12\n  Frame x 1, w 12',
     },
   },
 
@@ -1474,13 +1481,13 @@ export const SCHEMA: Record<string, PropertyDef> = {
     name: 'y',
     aliases: [],
     category: 'transform',
-    description: 'Y offset using translateY transform',
+    description: 'Y position. In grid: grid-row-start. Outside grid: absolute top offset.',
 
     numeric: {
-      description: 'Y offset in pixels',
+      description: 'Y position (grid-line index in grid context, px offset otherwise)',
       unit: 'px',
-      css: n => [{ property: 'transform', value: `translateY(${n}px)` }],
-      example: 'Box y 50',
+      css: () => [],
+      example: 'Frame grid 12\n  Frame x 1, y 1, w 12, h 2',
     },
   },
 

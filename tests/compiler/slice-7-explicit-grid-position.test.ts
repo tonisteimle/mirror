@@ -311,4 +311,50 @@ Frame grid 12
     expect(child).toContain("'grid-column-end': 'span 4'")
     expect(child).not.toContain('grid-column-start')
   })
+
+  // ===========================================================================
+  // Phase B — IR + Backend Cleanup
+  // ===========================================================================
+
+  // V-2 (B-2): position: absolute dedup when both x and y are out-of-grid.
+  it('RT-16 — position:absolute emitted only once for x+y out-of-grid', () => {
+    const src = `Frame
+  Frame x 100, y 50, w 80, h 80, bg red`
+    const out = dom(src)
+    const child = domNode(out, 2)
+    const positionMatches = child.match(/'position':\s*'absolute'/g) ?? []
+    expect(positionMatches.length).toBe(1)
+  })
+
+  // V-3 (B-4): React grid container drops flexDirection (defensive vs hor/ver).
+  it('RT-17 — React grid container omits flexDirection from layout-defaults', () => {
+    const src = `Frame grid 12
+  Frame w 6`
+    const out = react(src)
+    const container = reactStyle(out, 0)
+    expect(container).toContain("display: 'grid'")
+    expect(container).toContain("gridTemplateColumns: 'repeat(12, 1fr)'")
+    expect(container).not.toContain('flexDirection')
+  })
+
+  // V-3 (B-4): React `grid + hor` forces grid to win and emits gridAutoFlow.
+  it('RT-18 — React grid + hor → display:grid + gridAutoFlow:row (no flexDirection)', () => {
+    const src = `Frame grid 4, hor
+  Frame x 1, y 1, w 2, bg red
+  Frame x 3, y 1, w 2, bg blue`
+    const out = react(src)
+    const container = reactStyle(out, 0)
+    expect(container).toContain("display: 'grid'")
+    expect(container).toContain("gridAutoFlow: 'row'")
+    expect(container).not.toContain('flexDirection')
+  })
+
+  // V-7 (B-7): Schema `x`/`y` CSS-mapping is sentinel-empty — IR pipeline owns
+  // the semantics. This RT locks the dead-code-removal so future schema-derived
+  // refactors don't accidentally re-introduce `transform: translateX(Npx)`.
+  it('RT-19 — Schema x/y emit no CSS via schema-direct path (IR-only)', async () => {
+    const { SCHEMA } = await import('../../compiler/schema/property-schema')
+    expect(SCHEMA.x.numeric?.css(10, [10])).toEqual([])
+    expect(SCHEMA.y.numeric?.css(50, [50])).toEqual([])
+  })
 })

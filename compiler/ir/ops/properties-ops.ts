@@ -327,10 +327,30 @@ export function transformProperties(
       if (s.property === 'min-height' && s.value === '0' && hasExplicitMinHeight) return false
       return true
     })
-    return filteredStyles
+    return dedupePositionAbsolute(filteredStyles)
   }
 
-  return styles
+  return dedupePositionAbsolute(styles)
+}
+
+/**
+ * Slice 7 V-2 (B-2): when both `x` and `y` emit `position: absolute` (out-of-
+ * grid path) the IR ends up with two identical `{property: 'position', value:
+ * 'absolute'}` entries. Object.assign-based renderers dedupe at runtime, but
+ * downstream tools that read the IR (Framework reverse-map, snapshot tests,
+ * computed-style probes) trip over the doubled entry. Keep only the first.
+ */
+function dedupePositionAbsolute(
+  styles: import('../types').IRStyle[]
+): import('../types').IRStyle[] {
+  let seen = false
+  return styles.filter(s => {
+    if (s.property === 'position' && s.value === 'absolute' && !s.state) {
+      if (seen) return false
+      seen = true
+    }
+    return true
+  })
 }
 
 /**

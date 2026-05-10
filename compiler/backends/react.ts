@@ -387,7 +387,13 @@ function withLayoutDefaults(
   // container still gets alignSelf: 'stretch' for parent-flex-fill.
   const merged: Record<string, string | number> = { ...style }
   if (merged.display === undefined) merged.display = 'flex'
-  if (merged.flexDirection === undefined) merged.flexDirection = 'column'
+  // Slice 7 V-3 (B-4): grid containers never need `flexDirection` — DOM-IR
+  // emits `grid-auto-flow` instead. Without this gate the default
+  // `flexDirection: 'column'` leaked into grid containers and confused
+  // computed-style assertions.
+  if (merged.display !== 'grid' && merged.flexDirection === undefined) {
+    merged.flexDirection = 'column'
+  }
   if (merged.alignSelf === undefined) merged.alignSelf = 'stretch'
   if (merged.alignItems === undefined) merged.alignItems = 'flex-start'
   return merged
@@ -913,6 +919,24 @@ function generateStyles(
         style.display = 'none'
         break
     }
+  }
+
+  // Slice 7 V-3 (B-4): when both `grid` and `hor`/`ver` are set on a
+  // container, the switch-cases above both write `display`. The
+  // outcome depends on property order — either case leaves an
+  // inconsistent style object: `display: flex + gridTemplateColumns`
+  // (grid CSS without grid display, ignored by browser) or
+  // `display: grid + flexDirection` (flex axis ignored). Force grid to
+  // win when both signals are present: DOM-IR (layout-transformer.ts)
+  // already emits `grid-auto-flow: row/column` instead of
+  // `flexDirection`, and Validator E110 catches the conflict —
+  // defensive React output keeps backends symmetric when validation is
+  // skipped.
+  if (style.gridTemplateColumns) {
+    style.display = 'grid'
+    if (style.flexDirection === 'row') style.gridAutoFlow = 'row'
+    else if (style.flexDirection === 'column') style.gridAutoFlow = 'column'
+    delete style.flexDirection
   }
 
   return style
