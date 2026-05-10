@@ -376,15 +376,21 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
   **Was:** Aggregat: 105× `as any` (53 in `studio/`, 44 in `tools/`, 8 in
   `compiler/`), 7× `@ts-expect-error` (5 davon in `tauri-bridge.ts`), 1×
   `any[]` Parameter in `compiler/ir/ops/` Layout.
-  **Status:** weitgehend erledigt — alle 5 `@ts-expect-error` in
-  `tauri-bridge.ts` weg (siehe oben). 7 von 8 `compiler/` `as any` weg;
-  verbleibt 1 in `animations.ts:262` (motion-Lib-API-Shape-Mismatch).
-  In `studio/` (Production-Code, ohne `test-api/`) sind alle echten
-  Casts weg — letzte zwei in `preview/drag/test-runner.ts` durch
-  `editor?: EditorView` auf Window beseitigt. `tools/` (44 Casts) sind
-  Probes/Diagnostik, nicht Produktionspfad.
-  **Notiz:** Numerische Baseline — bei jedem Refactor sollte die Zahl
-  runter.
+  **Status:** weitgehend erledigt — Stand 2026-05-10:
+  - `compiler/`: 1 von 8 verbleibt (`animations.ts:262`,
+    motion-Lib-API-Shape-Mismatch).
+  - `studio/` Production-Code (ohne `test-api/`/`test-runner`):
+    **0 echte Casts**. Verbleibende 5 grep-Treffer sind Kommentare /
+    Doku-Strings, die das Wort "as any" erwähnen — keine echten
+    Type-Escapes.
+  - `studio/test-api/` + Browser-Test-Infrastruktur: ~110 Casts,
+    bewusst gelassen (Test-Surface-Fakes, opaque Window-Globals).
+  - `tools/`: 37 (war 44; 7 weg via `skipPrelude`-Cleanup
+    `19682af2`). Probes/Diagnostik, nicht Produktionspfad.
+  - `@ts-expect-error`: alle 5 in `tauri-bridge.ts` weg
+    (`4606e8c6`); 1× `@ts-ignore` für EyeDropper weg (`3e206764`).
+    **Notiz:** Production-Code-Ziel ist erreicht; weitere Reduktion
+    betrifft Test-Infra (geringerer Wert).
 
 ---
 
