@@ -322,13 +322,11 @@ export function parseInstanceBody(
     }
 
     // Each loop: each item in collection
-    // Note: Each is treated as a special child type (not standard Instance.children)
     if (U.check(ctx, 'EACH')) {
       const each = callbacks.parseEach()
       if (each) {
         if (!instance.children) instance.children = []
-        // Each loops are handled specially in IR transformation
-        instance.children.push(each as unknown as Instance)
+        instance.children.push(each)
       }
       continue
     }
@@ -750,12 +748,11 @@ export function parseComponentBody(
   // parsed as prose and synthesized into the same shapes the use-site
   // would produce. The prose property remains on the definition so that
   // use-sites of this component also enter prose mode.
-  if (
-    shouldParseAsProse(
-      component as unknown as { component?: string; properties: Property[] },
-      makeProseCallbacks(callbacks)
-    )
-  ) {
+  // ComponentDefinition has `properties: Property[]` and no `component`
+  // field — shouldParseAsProse's parent shape is `{ component?: ...,
+  // properties: ... }`, so the optional discriminator just stays
+  // undefined here and the structural check works directly.
+  if (shouldParseAsProse(component, makeProseCallbacks(callbacks))) {
     const range = parseProseBody(ctx, component, makeProseCallbacks(callbacks))
     callbacks.recordProseRange?.(range)
     return
