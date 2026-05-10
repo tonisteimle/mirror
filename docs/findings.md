@@ -115,20 +115,20 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
-- **Wo:** `compiler/backends/react.ts` (Stand: 2947 LOC, ↓ von 3273)
+- **Wo:** `compiler/backends/react.ts` (Stand: 2792 LOC, ↓ von 3273)
   — Decomposition in `compiler/backends/react/ops/*.ts`
   **Was:** Lane-Doc in `docs/refactoring/react-backend-decomp.md`
   mit 8-Slice-Plan (Layout/Events/Attributes/Icon/Chart/Text/JSX/
   Style). DOM-Backend ist Vorbild mit 767 LOC + `dom/ops/`-Subdir.
   - ✅ Slice 1 — Layout & Component (`a9f52c64`, –189 LOC)
   - ✅ Slice 2 — Events (`fe11e256`, –137 LOC)
-  - ⏳ Slice 3 — Attributes (~280 LOC, Cluster 6)
-  - ⏳ Slice 4 — Icon (~120 LOC)
-  - ⏳ Slice 5 — Chart (~100 LOC)
-  - ⏳ Slice 6 — Text (~430 LOC)
+  - ✅ Slice 5 — Chart (–155 LOC)
+  - ⏳ Slice 3 — Attributes (~280 LOC, Cluster 6) — braucht Text-Helpers
+  - ⏳ Slice 4 — Icon (~120 LOC) — braucht Text-Helpers
+  - ⏳ Slice 6 — Text (~430 LOC) — unblocked 3+4
   - ⏳ Slice 7 — JSX (~470 LOC)
   - ⏳ Slice 8 — Style (~830 LOC)
-    **Status:** aktiv (Claude, Slices 1+2 done). Differential-Tests
+    **Status:** aktiv (Claude, Slices 1+2+5 done). Differential-Tests
     fangen Drift; jeder Slice ein Commit, byte-identische React-
     Output-Garantie.
     **Notiz:** Framework-Backend-Decomp (1057 LOC, gleiche Klasse
