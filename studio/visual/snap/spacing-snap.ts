@@ -26,7 +26,17 @@ export interface SpacingSnapResult {
   gridSnapped?: boolean
 }
 
-export interface SpacingToken {
+/**
+ * Spacing-token shape used by the snap engine — carries the numeric
+ * value and CSS-property suffix needed to compare candidate snap
+ * positions against existing tokens.
+ *
+ * Distinct from `PanelSpacingToken` (panels/property/types.ts) which is
+ * a display struct (string value, no suffix). Same name in earlier code,
+ * different concerns — renamed to make the difference visible at every
+ * import site.
+ */
+export interface SnapSpacingToken {
   /** Short name (e.g., "s", "m", "l") */
   name: string
   /** Full name with suffix (e.g., "s.pad", "m.mar") */
@@ -37,6 +47,10 @@ export interface SpacingToken {
   suffix: string
 }
 
+// Backwards-compat alias — to be retired once all imports update.
+/** @deprecated Use SnapSpacingToken — name collides with PanelSpacingToken. */
+export type SpacingToken = SnapSpacingToken
+
 export type SpacingPropertyType = 'pad' | 'mar' | 'gap'
 
 // ============================================================================
@@ -44,7 +58,7 @@ export type SpacingPropertyType = 'pad' | 'mar' | 'gap'
 // ============================================================================
 
 export class SpacingSnapService {
-  private spacingTokens: SpacingToken[] = []
+  private spacingTokens: SnapSpacingToken[] = []
   private getSource: () => string
   private cachedSourceHash: string = ''
 
@@ -88,8 +102,8 @@ export class SpacingSnapService {
    * Looks for patterns like: s.pad: 4, m.mar: 8, l.gap: 16
    * Allows optional leading whitespace and optional $ prefix
    */
-  private parseSpacingTokens(source: string): SpacingToken[] {
-    const tokens: SpacingToken[] = []
+  private parseSpacingTokens(source: string): SnapSpacingToken[] {
+    const tokens: SnapSpacingToken[] = []
 
     // Match patterns like: s.pad: 4 or $s.pad: 4 (with optional leading whitespace)
     // ^\\s* allows leading whitespace at start of line
@@ -122,7 +136,7 @@ export class SpacingSnapService {
   /**
    * Get spacing tokens filtered by property type
    */
-  getSpacingTokens(propertyType?: SpacingPropertyType): SpacingToken[] {
+  getSpacingTokens(propertyType?: SpacingPropertyType): SnapSpacingToken[] {
     this.refreshTokens()
 
     if (propertyType) {
@@ -154,7 +168,7 @@ export class SpacingSnapService {
     const relevantTokens = this.getSpacingTokens(propertyType)
 
     // Find the CLOSEST token within threshold (not just the first one)
-    let closestToken: SpacingToken | null = null
+    let closestToken: SnapSpacingToken | null = null
     let closestDistance = Infinity
 
     for (const token of relevantTokens) {

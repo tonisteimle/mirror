@@ -31,11 +31,10 @@ import type { CleanupFn } from '../../core/state-types'
 export type { Rect } from '../../visual/models/coordinate'
 import type { Rect } from '../../visual/models/coordinate'
 
-export interface SpacingToken {
-  name: string // e.g., "sm", "md", "lg"
-  fullName: string // e.g., "sm.pad", "md.rad"
-  value: string // e.g., "4", "8"
-}
+// Re-export from types.ts (single source of truth for the panel-side
+// spacing-token shape).
+export type { PanelSpacingToken, SpacingToken } from './types'
+import type { PanelSpacingToken } from './types'
 
 export interface ColorToken {
   name: string // e.g., "primary", "danger"
@@ -145,7 +144,7 @@ export interface TokenPort {
    * Gets spacing tokens for a specific property type.
    * @param propType - 'pad', 'mar', 'gap', or 'rad'
    */
-  getSpacingTokens(propType: 'pad' | 'mar' | 'gap' | 'rad' | 'fs' | 'w' | 'h'): SpacingToken[]
+  getSpacingTokens(propType: 'pad' | 'mar' | 'gap' | 'rad' | 'fs' | 'w' | 'h'): PanelSpacingToken[]
 
   /**
    * Gets all color tokens.

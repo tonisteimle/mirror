@@ -23,13 +23,25 @@ export interface SelectionProvider {
 }
 
 /**
- * Token info extracted from source
+ * Token info extracted from source for property-panel display.
+ *
+ * Distinct from `SnapSpacingToken` in `studio/visual/snap/spacing-snap.ts`
+ * which is the spacing-snap engine's internal shape — same name in
+ * earlier code, but different fields (numeric value, separate `suffix`).
+ * The display variant keeps the value as a string so the panel can
+ * render it verbatim (e.g. `"4"` vs `"$gap-md"`).
  */
-export interface SpacingToken {
+export interface PanelSpacingToken {
   name: string // e.g., "sm", "md", "lg"
   fullName: string // e.g., "sm.pad", "md.rad"
   value: string // e.g., "4", "8"
 }
+
+// Backwards-compat alias — to be retired once all imports update.
+// Kept as an alias rather than re-export so the structural type and the
+// disambiguating documentation stay co-located.
+/** @deprecated Use PanelSpacingToken — name collides with SnapSpacingToken. */
+export type SpacingToken = PanelSpacingToken
 
 /**
  * Color token

@@ -28,7 +28,8 @@ export {
   resetSpacingSnapService,
   shouldBypassSnapping,
   type SpacingSnapResult,
-  type SpacingToken,
+  type SnapSpacingToken,
+  type SpacingToken, // @deprecated alias of SnapSpacingToken
   type SpacingPropertyType,
 } from './spacing-snap'
 
