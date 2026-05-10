@@ -209,6 +209,13 @@ export function transformChartPrimitive(
  */
 export function transformInstance(
   this: IRTransformer,
+  // Loose union: callers actually pass Instance | Each | ConditionalNode | Slot.
+  // Tightening this triggers cascading mismatches across transformConditional
+  // (ConditionalBlock vs ConditionalNode), extractInlineStatesAndEvents
+  // ((Instance | Text)[] vs the broader children list) and Slot dispatch —
+  // tracked as a separate finding. `any` documented to allow incremental
+  // fixes without one-shot mega-refactor.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   instance: Instance | Each | any,
   parentId?: string,
   isEachTemplate?: boolean,
@@ -230,7 +237,7 @@ export function transformInstance(
     this.addWarning({
       type: 'invalid-instance',
       message: 'Instance missing component name',
-      position: instance.position,
+      position: calculateSourcePosition(instance.line, instance.column),
     })
     return this.createEmptyNode(instance)
   }
@@ -254,7 +261,7 @@ export function transformInstance(
     this.addWarning({
       type: 'recursive-component',
       message: `Component '${instance.component}' references itself recursively (cycle: ${[...this.componentInstantiationStack, instance.component].join(' → ')}). Recursion stopped — Mirror does not support self-referential components.`,
-      position: instance.position,
+      position: calculateSourcePosition(instance.line, instance.column),
     })
     return this.createEmptyNode(instance, {
       name: instance.component,
@@ -282,7 +289,7 @@ export function transformInstance(
     this.addWarning({
       type: 'undefined-component',
       message: `Component "${instance.component}" is not defined — falling back to a div.`,
-      position: instance.position,
+      position: calculateSourcePosition(instance.line, instance.column),
     })
   }
 

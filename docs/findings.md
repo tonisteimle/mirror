@@ -115,6 +115,40 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
+- **Wo:** `compiler/ir/ops/instance-ops.ts:transformInstance` (signature)
+  **Was:** Signature ist `instance: Instance | Each | any`. Versuch der
+  Tightening (2026-05-10 Claude-Session) deckte cascading mismatches
+  auf: (1) `transformConditional` erwartet `ConditionalBlock`
+  (control-flow-transformer-lokaler Type), aber AST liefert
+  `ConditionalNode`. Beide haben `type: 'Conditional'` aber
+  unterschiedliche `then`/`else`-Element-Unions. Runtime-equivalent für
+  `condition` (Expression = string-Alias), divergent für nested
+  Each/Conditional in then-Branch. (2) Slot wird via EachChild-Pfad
+  durchgereicht aber nie als `instance.type === 'Slot'` erkannt —
+  fällt in `if (!instance.component)` und produziert
+  „Instance missing component name"-Warnung statt durch
+  `transformSlotPrimitive` zu gehen. (3) `extractInlineStatesAndEvents`
+  Signatur ist `(Instance | Text)[]`, bekommt aber
+  `(Instance | Slot | ZagNode | Each | ConditionalNode | Text)[]`
+  durchgereicht (Instance.children-Type). Filtert defensiv via
+  `isInstance`, aber Type-System-Lüge.
+  **Status:** offen — Pre-Refactor-Pin nötig, dann Multi-Slice (alle
+  drei Mismatches getrennt).
+  **Notiz:** Kollateral-Fund: `instance.position` wurde dreimal
+  gelesen, existiert nicht (BaseNode hat line/column, kein
+  position-Objekt) — silent-undefined an `addWarning`. Fixed in
+  Bystander-Slice unten.
+
+- **Wo:** `compiler/ir/ops/instance-ops.ts:transformInstance`
+  (3 `addWarning`-Aufrufe)
+  **Was:** Bystander-Bug: Drei Warnungen (`invalid-instance`,
+  `recursive-component`, `undefined-component`) lasen `instance.position`,
+  was auf Instance/Each/ConditionalNode nicht existiert (BaseNode hat
+  flat `line`/`column`). `position`-Field war silent `undefined` →
+  Warnungen ohne Source-Position für IDE-Hervorhebung.
+  **Status:** erledigt — auf `calculateSourcePosition(instance.line,
+instance.column)` umgestellt. 7849/7849 vitest grün.
+
 - **Wo:** `compiler/runtime/scroll.ts:50-75`,
   `compiler/backends/dom/event-emitter.ts:528-541`
   **Was:** Runtime-Bug aus dem TODO-Bucket: `scrollToTop()` und
