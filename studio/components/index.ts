@@ -52,19 +52,7 @@ export type { NumericInputConfig } from '../visual/position-controls/types'
 // Component Factory (convenience API)
 // ============================================
 
-import type {
-  SectionConfig,
-  PropRowConfig,
-  ToggleGroupConfig,
-  ColorInputConfig,
-  AlignGridConfig,
-  SelectConfig,
-  InputConfig,
-  IconButtonConfig,
-  SliderConfig,
-  ToggleConfig,
-  AlignPosition,
-} from './types'
+import type { AlignPosition } from './types'
 
 import { Section } from './section'
 import { PropRow } from './prop-row'
@@ -178,34 +166,21 @@ export const PP = {
   /**
    * Create a text input
    */
-  input(
-    value: string,
-    onChange: (value: string) => void,
-    placeholder?: string
-  ): Input {
+  input(value: string, onChange: (value: string) => void, placeholder?: string): Input {
     return new Input({ value, onChange, placeholder })
   },
 
   /**
    * Create a number input with unit
    */
-  number(
-    value: number | string,
-    onChange: (value: string) => void,
-    unit?: string
-  ): Input {
+  number(value: number | string, onChange: (value: string) => void, unit?: string): Input {
     return new Input({ value: String(value), onChange, unit })
   },
 
   /**
    * Create an icon button
    */
-  iconBtn(
-    icon: string,
-    title: string,
-    onClick: () => void,
-    active?: boolean
-  ): IconButton {
+  iconBtn(icon: string, title: string, onClick: () => void, active?: boolean): IconButton {
     const iconSvg = ICONS[icon as keyof typeof ICONS] || icon
     return new IconButton({ icon: iconSvg, title, onClick, active })
   },

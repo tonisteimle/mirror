@@ -14,7 +14,7 @@
  * - Correct property boundary detection
  */
 
-import type { SourceMap, NodeMapping } from '../../compiler/ir/source-map'
+import type { SourceMap } from '../../compiler/ir/source-map'
 import type { SourcePosition } from '../../compiler/ir/types'
 import { logCodeModifier as log } from '../../compiler/utils/logger'
 import * as eventOps from './event-ops'
@@ -36,17 +36,6 @@ export type SemanticZone =
   | 'bottom-left'
   | 'bottom-center'
   | 'bottom-right'
-import {
-  parseLine,
-  updatePropertyInLine,
-  addPropertyToLine,
-  removePropertyFromLine,
-  findPropertyInLine,
-  getCanonicalName,
-  isSameProperty,
-  type ParsedLine,
-} from './line-property-parser'
-import { adjustTemplateIndentation } from '../../compiler/schema/component-templates'
 
 /**
  * Result of a code modification

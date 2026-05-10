@@ -20,7 +20,6 @@ import type {
   TableNode,
   Text,
   Event,
-  Action,
 } from '../../compiler/parser/ast'
 
 /**

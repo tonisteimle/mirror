@@ -289,26 +289,6 @@ export function runPipeline(
 // INTENT EXECUTOR
 // ============================================================================
 
-import type {
-  SetPropertyIntent,
-  IncrementPropertyIntent,
-  RemovePropertyIntent,
-  SetDirectionIntent,
-  ToggleDirectionIntent,
-  SetAlignmentIntent,
-  SetSizeIntent,
-  DeleteNodeIntent,
-  AddChildIntent,
-  MoveNodeIntent,
-  GroupNodesIntent,
-  UngroupIntent,
-  DuplicateNodeIntent,
-  UpdateTextIntent,
-  DistributeIntent,
-  MultiMoveIntent,
-  MultiResizeIntent,
-  ApplyLayoutIntent,
-} from './change-types'
 import {
   calculateBoundingBoxFromDOM,
   calculateMovedPositions,
