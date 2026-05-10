@@ -148,7 +148,10 @@ import { allPlayModeTests } from './playmode'
 import { allTestSystemTests } from './test-system'
 
 // Step-Runner Examples (new declarative test framework)
-import { allStepRunnerExampleTests } from './step-runner-examples'
+// step-runner suite was removed together with the demo runner — its
+// scenarios encoded actions as state-machine "steps" that bypassed the
+// CDP keyboard/mouse path. Tests now drive the app exclusively through
+// `cdpInput.*` (see docs/TEST-FRAMEWORK.md).
 
 // =============================================================================
 // Consolidated Categories
@@ -243,7 +246,7 @@ export const handlesTests: TestCase[] = [
  * iteration on step-runner scenarios doesn't have to wait for the full
  * handles suite to enumerate).
  */
-export const stepRunnerTests: TestCase[] = [...allStepRunnerExampleTests]
+export const stepRunnerTests: TestCase[] = []
 
 /**
  * 9. SELECTION - Multi-select, editor multiselect, ungroup, spread toggle,

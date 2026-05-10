@@ -35,6 +35,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { SCHEMA } from '../../../compiler/schema/property-schema'
+import { properties as PANEL_PROPERTIES } from '../../../compiler/schema/properties'
 import { PROPERTY_TO_CSS } from '../../../compiler/schema/ir-helpers'
 import { PROPERTY_TO_TOKEN_SUFFIX } from '../../../compiler/schema/token-suffixes'
 
@@ -121,5 +122,50 @@ describe('schema map coherence — single source of truth', () => {
       }
     }
     expect(violations).toEqual([])
+  })
+
+  // -----------------------------------------------------------------
+  // Inverse of the orphan-key check: any property name the IR
+  // property-transformer accepts MUST also be visible to the Studio
+  // property-panel (`compiler/schema/properties.ts`). The transformer
+  // is the de-facto source of truth for "what does the parser produce";
+  // if it accepts a name the panel-schema doesn't know, the picker
+  // can't show it, the autocomplete misses it, and the validator
+  // silently OKs typos.
+  //
+  // Two schema files exist:
+  //   - `property-schema.ts` (SCHEMA)        — IR-side, complete coverage
+  //   - `properties.ts`      (PANEL_PROPERTIES) — Studio-side, smaller
+  //
+  // The drift between them is the Lane 2 / Inkrement 3 forcing function.
+  // -----------------------------------------------------------------
+  it('every property the IR transformer accepts is in PANEL_PROPERTIES', () => {
+    // List mined from `compiler/ir/transformers/property-transformer.ts`
+    // — every `name === '<X>'` or `name === '<X>' || name === '<Y>'`
+    // arm in `propertyToCSS()`. Update this list when adding a new
+    // first-class IR-handler arm; the test then forces the matching
+    // panel-schema entry.
+    const irAcceptedNames = [
+      // visual / transform — special handlers in property-transformer
+      'rotate',
+      'rot',
+      'scale',
+      'aspect',
+      'blur',
+      'backdrop-blur',
+      'blur-bg',
+      'animation',
+      'anim',
+    ]
+    const known = new Set<string>()
+    for (const def of PANEL_PROPERTIES) {
+      known.add(def.name)
+      for (const alias of def.aliases) known.add(alias)
+    }
+    const missing = irAcceptedNames.filter(n => !known.has(n))
+    expect(
+      missing,
+      `IR transformer accepts these properties but PANEL_PROPERTIES doesn't list them: ${missing.join(', ')}`
+    ).toEqual([])
   })
 })

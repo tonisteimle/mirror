@@ -1,19 +1,17 @@
 #!/usr/bin/env npx tsx
 /**
- * Test Runner CLI
+ * Test Runner CLI — runs Mirror's browser test suites via CDP.
  *
- * Clean command-line interface for the test runner.
+ * The old demo-runner (`--demo` / `--demo-suite` and the SVG-cursor /
+ * keystroke-overlay layer) is gone. Tests now drive the app exclusively
+ * through `cdpInput.*` (see `docs/TEST-FRAMEWORK.md`, „Grundprinzip —
+ * Maus und Keyboard").
  */
 
 import { TestRunner } from './runner'
 import { ConsoleReporter, JUnitReporter, HTMLReporter, ProgressReporter } from './reporters'
-import { FileExplorer } from './file-explorer'
-import { DemoRunner, loadDemoScript } from './demo'
 import type { TestConfig, TestSuite } from './types'
 import { defaultConfig } from './types'
-import type { DemoConfig } from './demo/types'
-import * as fsSync from 'fs'
-import * as pathSync from 'path'
 
 // =============================================================================
 // CLI Arguments
@@ -25,11 +23,11 @@ interface CLIArgs {
   url: string
   filter?: string
   category?: string
-  test?: string // Single test by exact name
-  list: boolean // List available tests
-  explore: boolean // File explorer / diagnose mode
-  debugTokens?: string // Debug token extraction for a property type
-  newProject: boolean // Create new project with default tokens
+  test?: string
+  list: boolean
+  explore: boolean
+  debugTokens?: string
+  newProject: boolean
   all: boolean
   mirror: boolean
   drag: boolean
@@ -43,71 +41,45 @@ interface CLIArgs {
   watch: boolean
   verbose: boolean
   silent: boolean
-  progress: boolean // Show progress bar instead of individual test results
-  log?: string // Log file path for test results
-  hidePanels?: string // Comma-separated list of panels to hide
-  panelMode?: 'test' | 'focus' | 'normal' | 'minimal' // Predefined panel modes
-  // Demo mode options
-  demo?: string // Path to demo script
-  demoSuite?: string // Directory containing demo scripts (.ts)
-  demoSpeed?: 'slow' | 'normal' | 'fast' // Demo speed preset (legacy)
-  demoPacing?: 'video' | 'presentation' | 'tutorial' | 'testing' | 'instant' // Pacing profile
-  // Speed multipliers (1.0 = baseline; 2.0 = twice as fast; 0.5 = half speed)
-  globalSpeed?: number
-  typingSpeed?: number
-  dropSpeed?: number
-  handleSpeed?: number
-  editSpeed?: number
-  clickSpeed?: number
-  demoOverlay: boolean // Show keystroke overlay (default: true)
-  demoValidate: boolean // Only validate demo script (dry-run)
-  demoTiming: boolean // Show timing report
-  // Validation options
-  demoAutoValidate: boolean // Enable auto-validation for all actions
-  demoValidationLevel?: 'strict' | 'normal' | 'lenient' // Validation strictness
-  // Iteration helpers (C3)
-  fromStep?: number
-  untilStep?: number
-  stepMode?: boolean
-  // AI mock (B2)
-  aiMock?: string
-  // Snapshots (C4)
-  demoSnapshots?: string
-  demoSnapshotBaseline?: string
-  demoSnapshotThreshold?: number
-  // OS mouse driver (real macOS cursor)
+  progress: boolean
+  log?: string
+  hidePanels?: string
+  panelMode?: 'test' | 'focus' | 'normal' | 'minimal'
+  /** Real macOS cursor via nut-js. Off by default (CDP input is enough). */
   osMouse?: boolean
-  // Frame capture (one PNG per mutating step, for static review)
-  framesDir?: string
-  // Video recording (CDP screencast → ffmpeg → WebM)
-  record?: string // Output path for the recorded video (.webm)
-  recordFps?: number // Frame rate (default 24)
-  // Browser viewport size (default 1920x1080 in chrome.ts)
-  windowSize?: string // e.g. "1280x800"
-  // Headed-realism throttles
-  cpuThrottle?: number // 1 = no throttle, 4 = 4× slower
+  /** Pixel-diff bridge directory; off unless set. */
+  snapshotDir?: string
+  snapshotBaseline?: string
+  snapshotThreshold?: number
+  /** Video recording (CDP screencast → ffmpeg → WebM). */
+  record?: string
+  recordFps?: number
+  /** Browser viewport size override. */
+  windowSize?: string
+  /** Headed-realism throttles. */
+  cpuThrottle?: number
   networkThrottle?: 'offline' | 'slow-3g' | 'fast-3g' | '4g'
 }
 
 // Panel visibility presets for test categories
 const categoryPanelPresets: Record<string, string[]> = {
-  // Drag tests: Only need preview (and optionally property for verification)
   paddingDrag: ['files', 'components', 'code', 'prompt'],
   stackedDrag: ['files', 'components', 'code', 'prompt'],
   flexReorder: ['files', 'components', 'code', 'prompt'],
-  // Visual tests: Hide sidebars, keep preview prominent
   animations: ['files', 'components', 'prompt'],
   transforms: ['files', 'components', 'prompt'],
   gradients: ['files', 'components', 'prompt'],
-  // Layout tests: Need preview and code for bidirectional
   layout: ['files', 'components', 'prompt'],
-  // Property panel tests: Need property and preview
   propertyPanel: ['files', 'components', 'prompt'],
+}
+
+function getArgValue(args: string[], flag: string): string | undefined {
+  const arg = args.find(a => a.startsWith(`${flag}=`))
+  return arg?.split('=')[1]
 }
 
 function parseArgs(): CLIArgs {
   const args = process.argv.slice(2)
-
   return {
     help: args.includes('--help') || args.includes('-h'),
     headed: args.includes('--headed'),
@@ -138,45 +110,10 @@ function parseArgs(): CLIArgs {
       (args.includes('--progress') ? 'test-results/test-run.log' : undefined),
     hidePanels: getArgValue(args, '--hide-panels'),
     panelMode: getArgValue(args, '--panel-mode') as CLIArgs['panelMode'],
-    // Demo mode
-    demo: getArgValue(args, '--demo'),
-    demoSuite: getArgValue(args, '--demo-suite'),
-    demoSpeed: (getArgValue(args, '--demo-speed') || 'normal') as CLIArgs['demoSpeed'],
-    // Default pacing depends on mode: headed runs are for humans (video),
-    // headless runs are for CI / smoke (instant). Explicit --pacing wins.
-    demoPacing: (getArgValue(args, '--pacing') ||
-      (args.includes('--headed') ? 'video' : 'instant')) as CLIArgs['demoPacing'],
-    globalSpeed: parseSpeedFlag(args, '--global-speed'),
-    typingSpeed: parseSpeedFlag(args, '--typing-speed'),
-    dropSpeed: parseSpeedFlag(args, '--drop-speed'),
-    handleSpeed: parseSpeedFlag(args, '--handle-speed'),
-    editSpeed: parseSpeedFlag(args, '--edit-speed'),
-    clickSpeed: parseSpeedFlag(args, '--click-speed'),
-    demoOverlay: !args.includes('--no-overlay'),
-    demoValidate: args.includes('--demo-validate'),
-    demoTiming: args.includes('--timing'),
-    // Validation options. Auto-validation is on by default — every mutating
-    // action runs its post-validator (preview grew, editor changed, no
-    // console errors, etc.). Pass `--no-validate` to opt out for a quick
-    // exploratory run.
-    demoAutoValidate: !args.includes('--no-validate') && !args.includes('--no-auto-validate'),
-    demoValidationLevel: getArgValue(args, '--validation-level') as CLIArgs['demoValidationLevel'],
-    // Iteration helpers (C3)
-    fromStep: getArgValue(args, '--from-step')
-      ? parseInt(getArgValue(args, '--from-step')!, 10)
-      : undefined,
-    untilStep: getArgValue(args, '--until-step')
-      ? parseInt(getArgValue(args, '--until-step')!, 10)
-      : undefined,
-    stepMode: args.includes('--step'),
-    // AI mock (B2)
-    aiMock: getArgValue(args, '--ai-mock'),
-    // Snapshots (C4)
-    demoSnapshots: getArgValue(args, '--snapshot-dir'),
-    demoSnapshotBaseline: getArgValue(args, '--snapshot-baseline'),
     osMouse: args.includes('--driver=os') || args.includes('--os-mouse'),
-    framesDir: getArgValue(args, '--frames'),
-    demoSnapshotThreshold: getArgValue(args, '--snapshot-threshold')
+    snapshotDir: getArgValue(args, '--snapshot-dir'),
+    snapshotBaseline: getArgValue(args, '--snapshot-baseline'),
+    snapshotThreshold: getArgValue(args, '--snapshot-threshold')
       ? parseFloat(getArgValue(args, '--snapshot-threshold')!)
       : undefined,
     record: getArgValue(args, '--record'),
@@ -191,51 +128,19 @@ function parseArgs(): CLIArgs {
   }
 }
 
-function appendQuery(url: string, key: string, value: string): string {
-  try {
-    const u = new URL(url)
-    u.searchParams.set(key, value)
-    return u.toString()
-  } catch {
-    return url + (url.includes('?') ? '&' : '?') + key + '=' + value
-  }
-}
-
-function getArgValue(args: string[], flag: string): string | undefined {
-  const arg = args.find(a => a.startsWith(`${flag}=`))
-  return arg?.split('=')[1]
-}
-
-function parseSpeedFlag(args: string[], flag: string): number | undefined {
-  const raw = getArgValue(args, flag)
-  if (raw === undefined) return undefined
-  const n = parseFloat(raw)
-  if (!Number.isFinite(n) || n <= 0) {
-    throw new Error(`${flag}=${raw} must be a positive number (e.g. ${flag}=2.0)`)
-  }
-  return n
-}
-
-function buildSpeedMultipliers(args: CLIArgs): Record<string, number> | undefined {
-  const m: Record<string, number> = {}
-  if (args.globalSpeed !== undefined) m.global = args.globalSpeed
-  if (args.typingSpeed !== undefined) m.typing = args.typingSpeed
-  if (args.dropSpeed !== undefined) m.drop = args.dropSpeed
-  if (args.handleSpeed !== undefined) m.handle = args.handleSpeed
-  if (args.editSpeed !== undefined) m.edit = args.editSpeed
-  if (args.clickSpeed !== undefined) m.click = args.clickSpeed
-  return Object.keys(m).length > 0 ? m : undefined
-}
-
 // =============================================================================
-// Help Text
+// Help
 // =============================================================================
+
+function bold(text: string): string {
+  return `\x1b[1m${text}\x1b[0m`
+}
 
 function printHelp(): void {
   console.log(`
 ${bold('Mirror Browser Test Runner')}
 
-Runs browser-based tests for Mirror Studio using CDP (Chrome DevTools Protocol).
+Runs browser-based suite tests for Mirror Studio via CDP.
 
 ${bold('Usage:')}
   npm run test:browser [-- options]
@@ -245,7 +150,7 @@ ${bold('Test Selection (one required):')}
   --category=NAME     Run specific category (see --list)
   --test="NAME"       Run a single test by exact name
   --filter=PATTERN    Filter tests by name pattern (regex)
-  --all               Run ALL tests (~1000+ tests, takes long!)
+  --all               Run ALL tests (long!)
   --drag              Run comprehensive drag & drop tests
   --mirror            Run all mirror tests (includes drag tests)
   --list              List all categories with test counts
@@ -260,150 +165,69 @@ ${bold('Browser Options:')}
   --headed            Run with visible browser window
   --url=URL           Custom Studio URL (default: localhost:5173/studio/)
   --os-mouse          Install the OS-mouse bridge (real macOS cursor via
-                      nut-js). Used by step-runner scenarios that opt into
-                      'inputMode: os'. Requires Accessibility permission.
+                      nut-js). Optional — CDP trusted input works without
+                      it. Requires Accessibility permission.
   --cpu-throttle=N    Slow CPU by Nx (CDP Emulation.setCPUThrottlingRate).
-                      4 ≈ mid-range mobile, 6 ≈ low-end. Surfaces timing-
-                      sensitive bugs that pass on a fast dev machine.
   --network=PROFILE   Network throttle: offline | slow-3g | fast-3g | 4g
+  --window-size=WxH   Viewport size override.
 
 ${bold('Execution Options:')}
   --bail              Stop on first failure
   --retries=N         Retry failed tests N times (default: 0)
   --timeout=MS        Test timeout in milliseconds (default: 30000)
-  --watch             Watch mode - rerun on file changes
+  --watch             Watch mode — rerun on file changes
 
 ${bold('Panel Options:')}
-  --hide-panels=LIST  Hide specific panels (comma-separated: files,components,code,property,prompt)
+  --hide-panels=LIST  Hide specific panels (comma-separated)
   --panel-mode=MODE   Predefined modes: test|focus|normal|minimal
-                      - test: Only code + preview
-                      - focus: Only preview
-                      - minimal: Preview + property (for visual tests)
-                      - normal: All panels visible
-  Note: Some categories auto-hide panels (paddingDrag, animations, etc.)
 
 ${bold('Output Options:')}
   --junit=PATH        Generate JUnit XML report
   --html=PATH         Generate HTML report
   --screenshot-dir=   Screenshot directory (default: test-results/screenshots)
   --no-screenshot     Disable screenshots on failure
-  --verbose           Show all test output (default)
   --quiet             Reduce output
   --silent            No output except errors
-  --progress          Show progress bar with live updates (recommended for large test runs)
-  --log=PATH          Log results to file (default: test-results/test-run.log when --progress)
+  --progress          Live progress bar
+  --log=PATH          Log file (default: test-results/test-run.log)
 
-${bold('Demo Mode (for video recording):')}
-  --demo=PATH         Run a demo script (TypeScript or JSON)
-  --pacing=PROFILE    Pacing profile with optimized action timings:
-                      - video: Comfortable viewing (default) - 45ms/char, 400ms mouse
-                      - presentation: Slower, dramatic - 65ms/char, 600ms mouse
-                      - tutorial: Balanced learning - 55ms/char, 500ms mouse
-                      - testing: Fast but visible - 15ms/char, 150ms mouse
-                      - instant: No delays (CI/validation only)
-  --demo-speed=SPEED  Legacy speed preset: slow, normal, fast
-  --no-overlay        Disable keystroke overlay
-  --global-speed=N    Speed multiplier for ALL classes (1.0 = baseline,
-                      2.0 = twice as fast, 0.5 = half speed)
-  --typing-speed=N    Multiplier just for typing (composes with --global-speed)
-  --drop-speed=N      Multiplier just for palette/component drops
-  --handle-speed=N    Multiplier just for resize/padding/margin handle drags
-  --edit-speed=N      Multiplier just for inline-edit / setProperty / pickColor
-  --click-speed=N     Multiplier just for plain selection clicks
-  --demo-validate     Validate demo script with built-in checks (test mode)
-  --timing            Show detailed timing report with optimization suggestions
-
-${bold('Demo Auto-Validation:')}
-  --validate          Enable comprehensive auto-validation for all actions:
-                      • Pre-validation: Check element exists, visible, interactable
-                      • Post-validation: Verify actions had expected effect
-                      • Console monitoring: Catch runtime errors
-                      • State tracking: Compare before/after snapshots
-  --auto-validate     Alias for --validate
-  --validation-level  Strictness level:
-                      - strict: Fail on any warning or error
-                      - normal: Fail only on errors (default when enabled)
-                      - lenient: Max retries, longer timeouts
-
-${bold('Main Categories (17):')}
-  core        Primitives (Frame, Text, Button, Icon, etc.)
-  layout      Layout (direction, gap, grid, stacked, wrap)
-  styling     Styling (colors, sizing, spacing, borders, gradients)
-  visuals     Animations & transforms
-  states      State management (toggle, exclusive, hover)
-  components  UI patterns (checkbox, dialog, tabs, accordion)
-  drag        Drag & drop operations
-  handles     Visual handles (padding, margin, gap, resize, snapping)
-  selection   Multi-select, ungroup, spread toggle
-  propertyPanel  Property panel UI
-  editor      Bidirectional sync, undo/redo, autocomplete
-  data        Data binding, actions, events, responsive
-  project     Multi-file projects, workflows
-  compiler    Compiler verification
-  ai          AI-assist (draft lines, draft mode)
-  tutorial    Tutorial verification
-  stress      Stress tests, integration, play mode
+${bold('Snapshots / Recording:')}
+  --snapshot-dir=DIR        Pixel-diff baseline directory
+  --snapshot-baseline=DIR   Baseline reference for comparison
+  --snapshot-threshold=N    Threshold (0-1, default 0.01)
+  --record=PATH             CDP screencast → WebM
+  --record-fps=N            Frame rate (default 24)
 
 ${bold('Examples:')}
-  npx tsx tools/test.ts --list                                # List all categories
-  npx tsx tools/test.ts --category=layout                     # All layout tests
-  npx tsx tools/test.ts --category=components                 # UI pattern tests
-  npx tsx tools/test.ts --category=drag                       # Drag & drop tests
-  npx tsx tools/test.ts --category=handles                    # Visual handles tests
-  npx tsx tools/test.ts --category=ai                         # AI-assist tests
-  npx tsx tools/test.ts --test="Drop Avatar" --headed         # Single test, visible
-  npx tsx tools/test.ts --filter="Button"                     # Filter by pattern
-  npx tsx tools/test.ts --progress --category=layout          # With progress bar
-  npx tsx tools/test.ts --explore                             # Show file structure
-
-${bold('Demo Examples:')}
-  npx tsx tools/test.ts --demo=tools/test-runner/demo/scripts/example.ts --headed
-  npx tsx tools/test.ts --demo=scripts/intro.ts --pacing=presentation --headed  # Slow, dramatic
-  npx tsx tools/test.ts --demo=scripts/card-workflow.ts --pacing=video --headed # Optimal for recording
-  npx tsx tools/test.ts --demo=demo.json --no-overlay --headed
-  npx tsx tools/test.ts --demo=scripts/card-workflow.ts --demo-validate          # Fast validation
-  npx tsx tools/test.ts --demo=scripts/card-workflow.ts --timing                 # Timing analysis
-
-${bold('Validation Examples:')}
-  npx tsx tools/test.ts --demo=scripts/workflow.ts --validate --headed           # With auto-validation
-  npx tsx tools/test.ts --demo=scripts/test.ts --validate --validation-level=strict  # Strict mode
-  npx tsx tools/test.ts --demo=scripts/test.ts --validate --timing               # Combined reports
+  npx tsx tools/test.ts --list
+  npx tsx tools/test.ts --category=layout
+  npx tsx tools/test.ts --test="Drop Avatar" --headed
+  npx tsx tools/test.ts --filter="Button" --progress
+  npx tsx tools/test.ts --all --progress
+  npx tsx tools/test.ts --explore
 `)
-}
-
-function bold(text: string): string {
-  return `\x1b[1m${text}\x1b[0m`
 }
 
 // =============================================================================
 // Panel Configuration
 // =============================================================================
 
-// Panel mode presets
 const panelModePresets: Record<string, string[]> = {
-  test: ['files', 'components', 'prompt', 'property'], // Only code + preview
-  focus: ['files', 'components', 'code', 'property', 'prompt'], // Only preview
-  minimal: ['files', 'components', 'code', 'prompt'], // Preview + property
-  normal: [], // All visible
+  test: ['files', 'components', 'prompt', 'property'],
+  focus: ['files', 'components', 'code', 'property', 'prompt'],
+  minimal: ['files', 'components', 'code', 'prompt'],
+  normal: [],
 }
 
 async function configurePanels(runner: TestRunner, args: CLIArgs): Promise<string[]> {
   let panelsToHide: string[] = []
-
-  // Priority 1: Explicit --hide-panels flag
   if (args.hidePanels) {
     panelsToHide = args.hidePanels.split(',').map(p => p.trim())
-  }
-  // Priority 2: --panel-mode flag
-  else if (args.panelMode && panelModePresets[args.panelMode]) {
+  } else if (args.panelMode && panelModePresets[args.panelMode]) {
     panelsToHide = panelModePresets[args.panelMode]
-  }
-  // Priority 3: Category preset (auto-hide for certain test categories)
-  else if (args.category && categoryPanelPresets[args.category]) {
+  } else if (args.category && categoryPanelPresets[args.category]) {
     panelsToHide = categoryPanelPresets[args.category]
   }
-
-  // Apply panel visibility
   if (panelsToHide.length > 0) {
     for (const panel of panelsToHide) {
       await runner.evaluate<void>(`
@@ -416,478 +240,7 @@ async function configurePanels(runner: TestRunner, args: CLIArgs): Promise<strin
       `)
     }
   }
-
   return panelsToHide
-}
-
-// =============================================================================
-// Demo Mode
-// =============================================================================
-
-// =============================================================================
-// Demo Suite Mode (C1) — multiple demos sequentially against one browser
-// =============================================================================
-
-interface SuiteResult {
-  file: string
-  name: string
-  success: boolean
-  durationMs: number
-  failedValidations: number
-  errors: number
-  errorMessage?: string
-}
-
-async function runDemoSuiteMode(args: CLIArgs): Promise<number> {
-  const dir = pathSync.resolve(args.demoSuite!)
-  if (!fsSync.existsSync(dir) || !fsSync.statSync(dir).isDirectory()) {
-    console.error(`❌ --demo-suite=${args.demoSuite} is not a directory`)
-    return 1
-  }
-
-  // Discover .ts/.js demo scripts. Skip files starting with _ (smokes/legacy).
-  const allFiles = fsSync
-    .readdirSync(dir)
-    .filter(f => /\.(ts|js)$/.test(f) && !f.startsWith('_'))
-    .map(f => pathSync.join(dir, f))
-    .sort()
-
-  const filterRe = args.filter ? new RegExp(args.filter, 'i') : null
-  const files = filterRe ? allFiles.filter(f => filterRe.test(pathSync.basename(f))) : allFiles
-
-  if (files.length === 0) {
-    console.error(
-      `❌ No demo scripts found in ${dir}` + (filterRe ? ` matching /${args.filter}/i` : '')
-    )
-    return 1
-  }
-
-  console.log(`\n🎬 ${bold('Demo Suite')}\n`)
-  console.log(`📁 Directory: ${dir}`)
-  console.log(
-    `📄 Scripts:   ${files.length}` + (filterRe ? ` (filtered by /${args.filter}/i)` : '')
-  )
-
-  // Shared AI mock fixtures
-  let aiMockFixtures: Record<string, string> | undefined
-  if (args.aiMock) {
-    try {
-      const raw = fsSync.readFileSync(pathSync.resolve(args.aiMock), 'utf-8')
-      aiMockFixtures = JSON.parse(raw)
-      console.log(
-        `🤖 AI mock:   ${Object.keys(aiMockFixtures!).length} fixture(s) from ${args.aiMock}`
-      )
-    } catch (err) {
-      console.error(`❌ Cannot load AI mock from ${args.aiMock}: ${(err as Error).message}`)
-      return 1
-    }
-  }
-  console.log('')
-
-  const config: Partial<TestConfig> = {
-    headless: !args.headed,
-    url: args.url,
-    verbose: args.verbose,
-    silent: args.silent,
-    osMouse: args.osMouse,
-  }
-  // Reuse the existing --snapshot-dir / --snapshot-baseline / --snapshot-threshold
-  // flags to also drive the Phase-7 Step-Runner snapshot bridge. The demo
-  // runner has its own consumer (demoSnapshots*); we mirror them into the
-  // bridge config so a single flag covers both.
-  if (args.demoSnapshots) {
-    config.snapshots = {
-      dir: args.demoSnapshots,
-      ...(args.demoSnapshotBaseline ? { baselineDir: args.demoSnapshotBaseline } : {}),
-      ...(typeof args.demoSnapshotThreshold === 'number'
-        ? { threshold: args.demoSnapshotThreshold }
-        : {}),
-    }
-  }
-  if (typeof args.cpuThrottle === 'number') config.cpuThrottle = args.cpuThrottle
-  if (args.networkThrottle) config.networkThrottle = args.networkThrottle
-  const runner = new TestRunner(config)
-
-  const results: SuiteResult[] = []
-  const suiteStart = Date.now()
-  const pacing = args.demoPacing || 'instant'
-
-  try {
-    await runner.start()
-    const cdp = (runner as any).cdp
-    if (!cdp) throw new Error('Could not access CDP session')
-
-    for (const file of files) {
-      const rel = pathSync.relative(process.cwd(), file)
-      const t0 = Date.now()
-      const result: SuiteResult = {
-        file: rel,
-        name: pathSync.basename(file),
-        success: false,
-        durationMs: 0,
-        failedValidations: 0,
-        errors: 0,
-      }
-      try {
-        const script = await loadDemoScript(file)
-        result.name = script.name
-        await runner.navigate(appendQuery(args.url, 'demo', 'blank'))
-        await new Promise(r => setTimeout(r, 1500))
-        // Auto-discover per-demo AI fixture: scripts/<name>.ts → fixtures/<name>.json
-        const demoBasename = pathSync.basename(file, pathSync.extname(file))
-        const demoFixturePath = pathSync.join(
-          pathSync.dirname(file),
-          '..',
-          'fixtures',
-          `${demoBasename}.json`
-        )
-        let perDemoAiMock = aiMockFixtures
-        if (fsSync.existsSync(demoFixturePath)) {
-          try {
-            const raw = fsSync.readFileSync(demoFixturePath, 'utf-8')
-            const fix = JSON.parse(raw)
-            perDemoAiMock = { ...(aiMockFixtures || {}), ...fix }
-            console.log(
-              `   🤖 Loaded ${Object.keys(fix).length} AI fixture(s) from ${pathSync.basename(demoFixturePath)}`
-            )
-          } catch (err) {
-            console.warn(
-              `   ⚠️  Could not load fixture ${demoFixturePath}: ${(err as Error).message}`
-            )
-          }
-        }
-        const demoConfig: Partial<DemoConfig> & {
-          timing?: boolean
-          autoValidate?: boolean
-          aiMock?: Record<string, string>
-          snapshotDir?: string
-          snapshotBaselineDir?: string
-          snapshotThreshold?: number
-        } = {
-          speed: args.demoSpeed || 'fast',
-          pacing: pacing as any,
-          showKeystrokeOverlay: false,
-          timing: args.demoTiming,
-          autoValidate: args.demoAutoValidate,
-          aiMock: perDemoAiMock,
-          snapshotDir: args.demoSnapshots
-            ? pathSync.join(args.demoSnapshots, pathSync.basename(file, pathSync.extname(file)))
-            : undefined,
-          snapshotBaselineDir: args.demoSnapshotBaseline,
-          snapshotThreshold: args.demoSnapshotThreshold,
-          speedMultipliers: buildSpeedMultipliers(args),
-        }
-        const demoRunner = new DemoRunner(cdp, demoConfig)
-        const runRes = await demoRunner.run(script)
-        result.success = runRes.success
-        result.failedValidations = runRes.failedValidations.length
-        result.errors = runRes.errors.length
-      } catch (err) {
-        result.errorMessage = err instanceof Error ? err.message : String(err)
-        result.errors = 1
-      }
-      result.durationMs = Date.now() - t0
-      results.push(result)
-      const icon = result.success ? '✅' : '❌'
-      const dur = (result.durationMs / 1000).toFixed(1)
-      console.log(`${icon} ${result.name.padEnd(40)} ${dur.padStart(6)}s   ${rel}`)
-      if (!result.success && result.errorMessage) {
-        console.log(`     ${result.errorMessage}`)
-      }
-      if (args.bail && !result.success) {
-        console.log('\n⏹  --bail set; stopping after first failure.\n')
-        break
-      }
-    }
-  } finally {
-    await runner.stop()
-  }
-
-  const totalMs = Date.now() - suiteStart
-  const passed = results.filter(r => r.success).length
-  const failed = results.length - passed
-  console.log('\n' + '─'.repeat(70))
-  console.log(`Suite: ${passed} passed, ${failed} failed in ${(totalMs / 1000).toFixed(1)}s`)
-  if (failed > 0) {
-    console.log('\nFailing demos:')
-    for (const r of results) if (!r.success) console.log(`  • ${r.name} (${r.file})`)
-  }
-  console.log('')
-
-  if (args.junit) {
-    writeDemoSuiteJUnit(results, totalMs, args.junit)
-    console.log(`📄 JUnit report:  ${args.junit}`)
-  }
-  if (args.html) {
-    writeDemoSuiteHTML(results, totalMs, args.html)
-    console.log(`📄 HTML report:   ${args.html}`)
-  }
-  if (args.junit || args.html) console.log('')
-
-  return failed === 0 ? 0 : 1
-}
-
-function escapeXml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-}
-
-function writeDemoSuiteJUnit(results: SuiteResult[], totalMs: number, outputPath: string): void {
-  fsSync.mkdirSync(pathSync.dirname(pathSync.resolve(outputPath)), { recursive: true })
-  const passed = results.filter(r => r.success).length
-  const failed = results.length - passed
-  const totalSec = (totalMs / 1000).toFixed(3)
-  const cases = results
-    .map(r => {
-      const time = (r.durationMs / 1000).toFixed(3)
-      const fileAttr = escapeXml(r.file)
-      if (r.success) {
-        return `    <testcase classname="demos" name="${escapeXml(r.name)}" time="${time}" file="${fileAttr}"/>`
-      }
-      const msg = r.errorMessage ?? `${r.failedValidations} failed validations, ${r.errors} errors`
-      return [
-        `    <testcase classname="demos" name="${escapeXml(r.name)}" time="${time}" file="${fileAttr}">`,
-        `      <failure message="${escapeXml(msg)}"></failure>`,
-        `    </testcase>`,
-      ].join('\n')
-    })
-    .join('\n')
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="demos" tests="${results.length}" failures="${failed}" time="${totalSec}">
-  <testsuite name="demos" tests="${results.length}" failures="${failed}" time="${totalSec}">
-${cases}
-  </testsuite>
-</testsuites>
-`
-  fsSync.writeFileSync(outputPath, xml, 'utf-8')
-}
-
-function writeDemoSuiteHTML(results: SuiteResult[], totalMs: number, outputPath: string): void {
-  fsSync.mkdirSync(pathSync.dirname(pathSync.resolve(outputPath)), { recursive: true })
-  const passed = results.filter(r => r.success).length
-  const failed = results.length - passed
-  const totalSec = (totalMs / 1000).toFixed(1)
-  const rows = results
-    .map(r => {
-      const dur = (r.durationMs / 1000).toFixed(1)
-      const status = r.success
-        ? '<span class="ok">✅ pass</span>'
-        : '<span class="bad">❌ fail</span>'
-      const detail = r.success
-        ? ''
-        : r.errorMessage
-          ? `<div class="err">${escapeXml(r.errorMessage)}</div>`
-          : `<div class="err">${r.failedValidations} failed validations, ${r.errors} errors</div>`
-      return `      <tr><td>${status}</td><td>${escapeXml(r.name)}</td><td class="dur">${dur}s</td><td class="file">${escapeXml(r.file)}</td></tr>${detail ? `\n      <tr><td colspan="4">${detail}</td></tr>` : ''}`
-    })
-    .join('\n')
-  const html = `<!doctype html>
-<html><head><meta charset="utf-8"><title>Mirror Demos — Suite Report</title>
-<style>
-  body { font: 14px/1.5 system-ui, sans-serif; margin: 2rem; color: #1a1a1a; }
-  h1 { margin: 0 0 0.5rem; }
-  .summary { color: #555; margin-bottom: 1.5rem; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { padding: 8px 12px; border-bottom: 1px solid #eee; text-align: left; }
-  th { background: #f5f5f5; }
-  .ok { color: #10b981; font-weight: 600; }
-  .bad { color: #ef4444; font-weight: 600; }
-  .dur { font-variant-numeric: tabular-nums; color: #666; }
-  .file { font-family: ui-monospace, monospace; font-size: 0.85em; color: #666; }
-  .err { color: #b91c1c; padding: 4px 12px 12px; font-family: ui-monospace, monospace; font-size: 0.85em; }
-</style></head>
-<body>
-  <h1>Mirror Demos</h1>
-  <div class="summary">${passed} passed, ${failed} failed in ${totalSec}s</div>
-  <table>
-    <thead><tr><th>Status</th><th>Demo</th><th>Time</th><th>Script</th></tr></thead>
-    <tbody>
-${rows}
-    </tbody>
-  </table>
-</body></html>
-`
-  fsSync.writeFileSync(outputPath, html, 'utf-8')
-}
-
-async function runDemoMode(args: CLIArgs): Promise<number> {
-  const isValidateMode = args.demoValidate
-
-  if (isValidateMode) {
-    console.log(`\n🔍 ${bold('Demo Validation Mode')}\n`)
-  } else {
-    console.log(`\n🎬 ${bold('Demo Mode')}\n`)
-    if (!args.headed) {
-      console.log('⚠️  Demo mode works best with --headed flag for video recording\n')
-    }
-  }
-
-  try {
-    // Load demo script
-    console.log(`📄 Loading demo script: ${args.demo}`)
-    const script = await loadDemoScript(args.demo!)
-    console.log(`   Name: ${script.name}`)
-    console.log(`   Steps: ${script.steps.length}`)
-
-    // Count validation steps
-    const validationSteps = script.steps.filter(s => s.action === 'validate').length
-    if (validationSteps > 0) {
-      console.log(`   Validations: ${validationSteps}`)
-    }
-    console.log('')
-
-    // Create test runner for browser control
-    const config: Partial<TestConfig> = {
-      headless: !args.headed,
-      url: args.url,
-      verbose: args.verbose,
-      silent: args.silent,
-      windowSize: args.windowSize,
-    }
-
-    const runner = new TestRunner(config)
-
-    try {
-      await runner.start()
-      // Demo runs navigate with ?demo=blank so Studio starts with an empty
-      // index.mir, untainted by the previous session's localStorage.
-      const demoUrl = appendQuery(args.url, 'demo', 'blank')
-      await runner.navigate(demoUrl)
-
-      // Wait for page to be ready
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
-      // Determine pacing profile
-      let pacing = args.demoPacing || 'video'
-      if (isValidateMode) {
-        pacing = 'testing' // Use testing profile for validation
-      }
-
-      // Load AI mock fixtures if given (--ai-mock=PATH explicit + auto-discovered
-      // sidecar at fixtures/<demo-name>.json — same convention as suite mode).
-      let aiMockFixtures: Record<string, string> | undefined
-      if (args.aiMock) {
-        try {
-          const raw = fsSync.readFileSync(pathSync.resolve(args.aiMock), 'utf-8')
-          aiMockFixtures = JSON.parse(raw)
-          const count = Object.keys(aiMockFixtures!).length
-          console.log(`🤖 AI mock: ${count} fixture${count === 1 ? '' : 's'} from ${args.aiMock}`)
-        } catch (err) {
-          throw new Error(`Cannot load AI mock from ${args.aiMock}: ${(err as Error).message}`)
-        }
-      }
-      if (args.demo) {
-        const demoBasename = pathSync.basename(args.demo, pathSync.extname(args.demo))
-        const sidecar = pathSync.join(
-          pathSync.dirname(args.demo),
-          '..',
-          'fixtures',
-          `${demoBasename}.json`
-        )
-        if (fsSync.existsSync(sidecar)) {
-          try {
-            const fix = JSON.parse(fsSync.readFileSync(sidecar, 'utf-8'))
-            aiMockFixtures = { ...(aiMockFixtures || {}), ...fix }
-            console.log(
-              `🤖 AI mock: +${Object.keys(fix).length} fixture(s) from ${pathSync.basename(sidecar)}`
-            )
-          } catch (err) {
-            console.warn(`   ⚠️  Could not load fixture ${sidecar}: ${(err as Error).message}`)
-          }
-        }
-      }
-
-      // Create demo config with validation options + iteration + snapshots
-      const demoConfig: Partial<DemoConfig> & {
-        timing?: boolean
-        autoValidate?: boolean
-        validationLevel?: 'strict' | 'normal' | 'lenient'
-        fromStep?: number
-        untilStep?: number
-        stepMode?: boolean
-        aiMock?: Record<string, string>
-        snapshotDir?: string
-        snapshotBaselineDir?: string
-        snapshotThreshold?: number
-        osMouse?: boolean
-        framesDir?: string
-      } = {
-        speed: isValidateMode ? 'fast' : args.demoSpeed || 'normal',
-        pacing: pacing as any,
-        showKeystrokeOverlay: isValidateMode ? false : args.demoOverlay,
-        timing: args.demoTiming,
-        autoValidate: args.demoAutoValidate,
-        validationLevel: args.demoValidationLevel,
-        fromStep: args.fromStep,
-        untilStep: args.untilStep,
-        stepMode: args.stepMode,
-        aiMock: aiMockFixtures,
-        snapshotDir: args.demoSnapshots,
-        snapshotBaselineDir: args.demoSnapshotBaseline,
-        snapshotThreshold: args.demoSnapshotThreshold,
-        osMouse: args.osMouse,
-        framesDir: args.framesDir,
-        speedMultipliers: buildSpeedMultipliers(args),
-      }
-
-      // Get CDP session for demo runner
-      const cdp = (runner as any).cdp
-      if (!cdp) {
-        throw new Error('Could not access CDP session')
-      }
-
-      // Optional video recording (CDP screencast → ffmpeg → WebM).
-      // Started AFTER the navigate + initial wait so the studio is mounted
-      // and the first frame already shows the editor, not chrome:about.
-      let recording: import('./recording').RecordingHandle | null = null
-      if (args.record) {
-        const { startRecording } = await import('./recording')
-        recording = await startRecording(cdp, {
-          outputPath: args.record,
-          fps: args.recordFps ?? 24,
-        })
-        console.log(`🎥 Recording → ${args.record}`)
-      }
-
-      // Create and run demo
-      const demoRunner = new DemoRunner(cdp, demoConfig)
-      if (recording) demoRunner.recording = recording
-      const result = await demoRunner.run(script)
-
-      if (recording) {
-        const frames = recording.framesCaptured()
-        await recording.stop()
-        console.log(`🎥 Saved ${args.record} (${frames} frames)`)
-      }
-
-      // Keep browser open for a moment at the end (only in non-validate mode)
-      if (!isValidateMode) {
-        await new Promise(resolve => setTimeout(resolve, 2000))
-      }
-
-      // Return exit code based on validation results
-      if (result.success) {
-        if (isValidateMode) {
-          console.log('\n🎉 All validations passed!\n')
-        }
-        return 0
-      } else {
-        if (isValidateMode) {
-          console.log('\n💥 Validation failed!\n')
-        }
-        return 1
-      }
-    } finally {
-      await runner.stop()
-    }
-  } catch (err) {
-    console.error('❌ Demo error:', err)
-    return 1
-  }
 }
 
 // =============================================================================
@@ -902,10 +255,9 @@ async function main(): Promise<void> {
     process.exit(0)
   }
 
-  // Handle --list flag to show categories
   if (args.list) {
     console.log(`\n${bold('Mirror Browser Test Categories')}\n`)
-    console.log(`${bold('Main Categories (17):')}\n`)
+    console.log(`${bold('Main Categories:')}\n`)
     const mainCategories = [
       { name: 'core', desc: 'Basic primitives (Frame, Text, Button, Icon)' },
       { name: 'layout', desc: 'Layout (direction, gap, grid, stacked, wrap)' },
@@ -935,18 +287,6 @@ async function main(): Promise<void> {
     process.exit(0)
   }
 
-  // Handle demo suite mode (multiple demo scripts)
-  if (args.demoSuite) {
-    const exitCode = await runDemoSuiteMode(args)
-    process.exit(exitCode)
-  }
-
-  // Handle single demo mode
-  if (args.demo) {
-    const exitCode = await runDemoMode(args)
-    process.exit(exitCode)
-  }
-
   const config: Partial<TestConfig> = {
     headless: !args.headed,
     url: args.url,
@@ -962,54 +302,34 @@ async function main(): Promise<void> {
     silent: args.silent,
     osMouse: args.osMouse,
   }
-  // Phase 7/8 — snapshot bridge + headed-realism throttles. Same wiring
-  // as runDemoMode / runDemoSuiteMode above so all entry points share
-  // the headed-realism plumbing.
-  if (args.demoSnapshots) {
+  if (args.snapshotDir) {
     config.snapshots = {
-      dir: args.demoSnapshots,
-      ...(args.demoSnapshotBaseline ? { baselineDir: args.demoSnapshotBaseline } : {}),
-      ...(typeof args.demoSnapshotThreshold === 'number'
-        ? { threshold: args.demoSnapshotThreshold }
-        : {}),
+      dir: args.snapshotDir,
+      ...(args.snapshotBaseline ? { baselineDir: args.snapshotBaseline } : {}),
+      ...(typeof args.snapshotThreshold === 'number' ? { threshold: args.snapshotThreshold } : {}),
     }
   }
   if (typeof args.cpuThrottle === 'number') config.cpuThrottle = args.cpuThrottle
   if (args.networkThrottle) config.networkThrottle = args.networkThrottle
+  if (args.windowSize) config.windowSize = args.windowSize
 
   const runner = new TestRunner(config)
 
-  // Add reporters
   let progressReporter: ProgressReporter | null = null
-
   if (args.progress) {
-    // Use ProgressReporter for live progress bar
-    progressReporter = new ProgressReporter({
-      logFile: args.log,
-    })
+    progressReporter = new ProgressReporter({ logFile: args.log })
     runner.addReporter(progressReporter)
-
-    // Connect progress callback
     runner.onProgress(update => {
       progressReporter!.handleProgressUpdate(update)
     })
   } else {
-    // Use standard ConsoleReporter
-    runner.addReporter(
-      new ConsoleReporter({
-        verbose: args.verbose,
-        silent: args.silent,
-      })
-    )
+    runner.addReporter(new ConsoleReporter({ verbose: args.verbose, silent: args.silent }))
   }
+  if (args.junit) runner.addReporter(new JUnitReporter(args.junit))
+  if (args.html) runner.addReporter(new HTMLReporter(args.html))
 
-  if (args.junit) {
-    runner.addReporter(new JUnitReporter(args.junit))
-  }
-
-  if (args.html) {
-    runner.addReporter(new HTMLReporter(args.html))
-  }
+  // Optional video recording (separate path from suite tests).
+  let recording: import('./recording').RecordingHandle | null = null
 
   try {
     await runner.start()
@@ -1020,32 +340,34 @@ async function main(): Promise<void> {
       console.error('❌ Test API not found. Is the Studio running?')
       process.exit(1)
     }
-
-    // Wait for test suites to be loaded (async import)
     const hasSuites = await runner.waitForTestSuites()
     if (!hasSuites) {
-      // Try to get the actual error
       const loadError = await runner.evaluate<string>(`window.__suitesLoadError || 'Unknown error'`)
       console.error('❌ Test suites not loaded. Error:', loadError)
       process.exit(1)
     }
-
     console.log('✅ Test API available\n')
 
-    // Configure panel visibility
+    // Optional video recording.
+    if (args.record) {
+      const { startRecording } = await import('./recording')
+      const cdp = (runner as unknown as { cdp: import('./types').CDPSession }).cdp
+      recording = await startRecording(cdp, {
+        outputPath: args.record,
+        ...(args.recordFps !== undefined ? { fps: args.recordFps } : {}),
+      })
+      console.log(`🎥 Recording → ${args.record}`)
+    }
+
     const panelsToHide = await configurePanels(runner, args)
     if (panelsToHide.length > 0) {
       console.log(`🔲 Hidden panels: ${panelsToHide.join(', ')}\n`)
     }
 
-    // Handle new project creation (inject tokens)
     if (args.newProject) {
       console.log('🆕 Injecting default tokens...')
-
-      // Inject tokens directly into the running project
       const success = await runner.evaluate<boolean>(`
         (() => {
-          // Add tokens file
           const tokensContent = \`// Spacing Tokens
 s.pad: 4
 m.pad: 8
@@ -1067,43 +389,29 @@ surface.bg: #27272a
 canvas.bg: #18181b
 muted.col: #a1a1aa
 \`
-
           if (window.files) {
             window.files['tokens.tok'] = tokensContent
-            console.log('[Test] Added tokens.tok')
             return true
           }
           return false
         })()
       `)
-
       if (success) {
         console.log('✅ Tokens injected')
-        // Trigger recompile to update token cache
-        await runner.evaluate<void>(`
-          window.studio?.events?.emit('compile:requested', {})
-        `)
-        // Wait for compile to finish
+        await runner.evaluate<void>(`window.studio?.events?.emit('compile:requested', {})`)
         await new Promise(resolve => setTimeout(resolve, 1000))
         console.log('✅ Recompiled')
-
-        // Select an element to trigger panel render with new tokens
         await runner.evaluate<void>(`
           (async () => {
             const preview = document.getElementById('preview')
             const el = preview?.querySelector('[data-mirror-id]')
-            if (el) {
-              el.click()
-              await new Promise(r => setTimeout(r, 300))
-            }
+            if (el) { el.click(); await new Promise(r => setTimeout(r, 300)) }
           })()
         `)
         console.log('✅ Element selected\n')
       } else {
         console.log('⚠️  Could not inject tokens\n')
       }
-
-      // Continue to explore/debug if those flags are also set
       if (!args.explore && !args.debugTokens) {
         const explorer = runner.getFileExplorer()
         await explorer.printReport()
@@ -1112,10 +420,8 @@ muted.col: #a1a1aa
       }
     }
 
-    // Handle explore/diagnose mode
     if (args.explore || args.debugTokens) {
       const explorer = runner.getFileExplorer()
-
       if (args.debugTokens) {
         console.log(`\n🔍 Debugging token extraction for: ${args.debugTokens}\n`)
         const debug = await explorer.debugTokenExtraction(args.debugTokens)
@@ -1124,100 +430,25 @@ muted.col: #a1a1aa
         debug.matches.forEach(m => console.log('  ', m))
         console.log('\nExtracted tokens:')
         debug.tokens.forEach(t => console.log(`  ${t.name} = ${t.value}`))
-        if (debug.tokens.length === 0) {
-          console.log('  ⚠️  No tokens matched!')
-        }
-        console.log('\nSource preview (first 1000 chars):')
-        console.log(debug.source)
-
-        // Also check property panel
-        console.log('\n📋 Property Panel Debug:')
-        const panelDebug = await explorer.debugPropertyPanel()
-        console.log('  hasPanel (legacy):', panelDebug.hasPanel)
-        console.log('  hasStudioPanel:', panelDebug.hasStudioPanel)
-        console.log('  hasController:', panelDebug.hasController)
-        console.log('  hasPorts:', panelDebug.hasPorts)
-        console.log('  sourceLength:', panelDebug.sourceLength)
-        console.log('  spacingTokens:', panelDebug.spacingTokens.length, panelDebug.spacingTokens)
-        console.log(
-          '  colorTokens (from ports):',
-          panelDebug.colorTokens.length,
-          panelDebug.colorTokens.slice(0, 5)
-        )
-        if (panelDebug.colorTokensAfterInvalidate) {
-          console.log(
-            '  colorTokens (after invalidate):',
-            panelDebug.colorTokensAfterInvalidate.length,
-            panelDebug.colorTokensAfterInvalidate.slice(0, 5)
-          )
-        }
-        if (panelDebug.manualColorTokens) {
-          console.log(
-            '  manualColorTokens (regex):',
-            panelDebug.manualColorTokens.length,
-            panelDebug.manualColorTokens.slice(0, 5)
-          )
-        }
-        if (panelDebug.getAllSourceResult) {
-          console.log('  getAllSourceResult:', panelDebug.getAllSourceResult)
-        }
-        if (panelDebug.sourcePreview) {
-          console.log('  sourcePreview (first 200 chars):')
-          console.log('   ', panelDebug.sourcePreview.substring(0, 200).replace(/\n/g, '\n    '))
-        }
+        if (debug.tokens.length === 0) console.log('  ⚠️  No tokens matched!')
       } else {
         await explorer.printReport()
       }
-
-      // Always check UI tokens after explore/debug
-      console.log('\n🎯 Checking Token UI visibility...')
-      const uiCheck = await explorer.checkTokensInUI()
-      console.log('  selectedElement:', uiCheck.selectedElement)
-      console.log('  propPanelVisible:', uiCheck.propPanelVisible)
-      console.log('  hasTokenGroup:', uiCheck.hasTokenGroup)
-      console.log('  tokenButtonCount:', uiCheck.tokenButtonCount)
-      console.log('  tokenDetails:')
-      uiCheck.tokenDetails.forEach(t => {
-        console.log(`    - "${t.text}" title="${t.title}" data=${t.dataset}`)
-      })
-      console.log('  spacingSectionPreview:')
-      console.log('   ', uiCheck.spacingSectionPreview.substring(0, 300).replace(/\n/g, ' '))
-      console.log('  viewTokensDebug (from view.ports):')
-      console.log('   ', uiCheck.viewTokensDebug)
-      console.log('  sourceDebug:', uiCheck.sourceDebug)
-
-      // Check if the token buttons have proper labels (s, m, l, xl)
-      const hasProperTokens = uiCheck.tokenDetails.some(t => ['s', 'm', 'l', 'xl'].includes(t.text))
-      if (hasProperTokens) {
-        console.log('\n✅ Tokens are visible in Property Panel UI!')
-      } else if (uiCheck.tokenButtonCount > 0) {
-        console.log('\n⚠️  Token buttons found but labels are not spacing tokens')
-      } else {
-        console.log('\n❌ No token buttons found in Property Panel UI')
-      }
-
       await runner.stop()
       process.exit(0)
     }
 
     const suites: TestSuite[] = []
-
-    // Check if any test selection was made
     const hasTestSelection =
       args.test || args.category || args.filter || args.all || args.drag || args.mirror
-
     if (!hasTestSelection) {
-      // No selection made - show error and category list
       console.log('❌ No test selection specified.\n')
       console.log('Please specify one of:')
       console.log('  --category=NAME   Run a specific category')
       console.log('  --test="NAME"     Run a single test by name')
       console.log('  --filter=PATTERN  Filter tests by pattern')
-      console.log('  --all             Run all tests (~1000+)')
+      console.log('  --all             Run all tests')
       console.log('  --list            Show all categories\n')
-      console.log('Example: npx tsx tools/test.ts --category=propertyPanel\n')
-
-      // Show available categories
       const categories = await runner.getCategories()
       if (categories && categories.length > 0) {
         console.log('📁 Available categories:\n')
@@ -1226,16 +457,13 @@ muted.col: #a1a1aa
         }
         console.log('')
       }
-
       await runner.stop()
       process.exit(1)
     }
 
-    // Calculate total tests and suite count for progress reporting
     if (args.progress && progressReporter) {
       let totalTests = 0
       let suiteCount = 0
-
       if (args.test) {
         totalTests = 1
         suiteCount = 1
@@ -1245,60 +473,54 @@ muted.col: #a1a1aa
         totalTests = cat?.count || 0
         suiteCount = 1
       } else if (args.drag && !args.all) {
-        // Drag tests are now part of unified system
         const categories = await runner.getCategories()
         const cat = categories.find(c => c.name === 'comprehensiveDrag')
         totalTests = cat?.count || 0
         suiteCount = 1
       } else if (args.filter) {
-        // Can't easily know filter count, will be updated dynamically
         suiteCount = 1
       } else {
-        // Get total from all categories that will be run
         totalTests = await runner.getTotalTestCount()
         suiteCount = 1
       }
-
-      if (totalTests > 0) {
-        progressReporter.setTotalTests(totalTests, suiteCount)
-      }
+      if (totalTests > 0) progressReporter.setTotalTests(totalTests, suiteCount)
     }
 
-    // If --test is specified, run only that single test
     if (args.test) {
       console.log(`🎯 Running single test: "${args.test}"\n`)
-      const suite = await runner.runSingleTestByName(args.test)
-      suites.push(suite)
+      suites.push(await runner.runSingleTestByName(args.test))
     } else if (args.category) {
-      // If --category is specified, run ONLY that category (no drag tests)
       console.log(`📁 Running category: ${args.category}\n`)
       suites.push(await runner.runMirrorTests(args.category))
     } else if (args.filter) {
-      // If --filter is specified, run only Mirror tests with filter (no drag tests)
       console.log(`🔍 Running filtered tests: "${args.filter}"\n`)
       suites.push(await runner.runMirrorTests(undefined, args.filter))
     } else if (args.all || args.drag || args.mirror) {
-      // Explicit selection to run multiple test suites
       const runMirror = args.all || args.mirror
-
       if (args.drag && !args.all) {
-        // --drag flag now runs comprehensiveDrag category from unified system
         console.log('📁 Running category: comprehensiveDrag\n')
         suites.push(await runner.runMirrorTests('comprehensiveDrag'))
       }
-
       if (runMirror) {
         suites.push(await runner.runMirrorTests())
       }
     }
 
-    // Finalize and generate reports
     const summary = await runner.finalize(suites)
-
-    // Exit with appropriate code
+    if (recording) {
+      await recording.stop()
+      console.log(`🎥 Recorded → ${args.record}`)
+    }
     process.exit(summary.totalFailed > 0 ? 1 : 0)
   } catch (err) {
     console.error('❌ Error:', err)
+    if (recording) {
+      try {
+        await recording.stop()
+      } catch {
+        // ignore — primary error already logged
+      }
+    }
     process.exit(1)
   } finally {
     await runner.stop()

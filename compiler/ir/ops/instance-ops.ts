@@ -5,7 +5,16 @@
  * and are bound on the class via class-field assignment.
  */
 
-import type { ComponentDefinition, Instance, Property, Each, Slot, Text } from '../../parser/ast'
+import type {
+  ComponentDefinition,
+  ConditionalNode,
+  Instance,
+  Property,
+  Each,
+  Slot,
+  Text,
+  ZagNode,
+} from '../../parser/ast'
 import { isZagComponent, isSlot, isText, hasContent } from '../../parser/ast'
 import type {
   IRNode,
@@ -333,18 +342,27 @@ export function transformInstance(
   // Check if any descendants have w full (recursive check)
   // If so, parent should NOT use fit-content (children need space to expand into)
   // This also checks component references (like InputField) that might bring in w full
-  const hasWidthFullInDescendants = (children: any[]): boolean => {
+  //
+  // Type matches `Instance.children` from `compiler/parser/ast.ts:217`. The
+  // function reads `properties`/`component`/`children` defensively — only
+  // Instance has all three; Slot has optional `properties`; Each has `children`
+  // of a narrower union; ConditionalNode/ZagNode/Text don't expose any of
+  // them. `'foo' in child` guards keep TS happy without disabling
+  // narrowing.
+  type DescendantNode = Instance | Slot | Text | ZagNode | Each | ConditionalNode
+  const hasWidthFullInDescendants = (children: readonly DescendantNode[]): boolean => {
     for (const child of children) {
-      // Check direct properties for w full
-      if (child.properties) {
-        const hasDirectWidthFull = child.properties.some(
-          (p: Property) => matchesCanonical(p.name, 'width') && p.values[0] === 'full'
+      // Check direct properties for w full (Instance + Slot only)
+      if ('properties' in child && child.properties) {
+        const props = child.properties
+        const hasDirectWidthFull = props.some(
+          p => matchesCanonical(p.name, 'width') && p.values[0] === 'full'
         )
         if (hasDirectWidthFull) return true
 
         // Check component references used as style mixins (e.g., InputField)
         // These are properties with PascalCase names and empty values
-        for (const p of child.properties) {
+        for (const p of props) {
           if (p.values.length === 0 && p.name.length > 0) {
             const firstChar = p.name[0]
             if (firstChar === firstChar.toUpperCase() && firstChar !== firstChar.toLowerCase()) {
@@ -362,7 +380,7 @@ export function transformInstance(
       }
 
       // Check if child's base component has w full (e.g., MyInput as Input: w full)
-      if (child.component) {
+      if ('component' in child && child.component) {
         const childComponent = this.componentMap.get(child.component)
         if (childComponent) {
           const hasComponentWidthFull = childComponent.properties.some(
@@ -372,13 +390,18 @@ export function transformInstance(
         }
       }
 
-      // Recursively check children's children
-      if (child.children && child.children.length > 0) {
+      // Recursively check children's children (Instance + Each have children;
+      // their child types are narrower subsets of DescendantNode, so the cast
+      // is structurally safe).
+      if ('children' in child && child.children && child.children.length > 0) {
         // Only recurse if this child doesn't have explicit width (otherwise it constrains its children)
-        const childHasExplicitWidth = child.properties?.some(
-          (p: Property) => matchesCanonical(p.name, 'width') && p.values[0] !== 'full'
-        )
-        if (!childHasExplicitWidth && hasWidthFullInDescendants(child.children)) {
+        const childHasExplicitWidth =
+          'properties' in child &&
+          child.properties?.some(p => matchesCanonical(p.name, 'width') && p.values[0] !== 'full')
+        if (
+          !childHasExplicitWidth &&
+          hasWidthFullInDescendants(child.children as readonly DescendantNode[])
+        ) {
           return true
         }
       }

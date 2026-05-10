@@ -1576,6 +1576,27 @@ Kurzversion:
 
 **Wichtig:** Kein Playwright. Browser-Tests laufen über eigenen CDP Test Runner.
 
+### Grundprinzip — Maus und Keyboard, nichts anderes
+
+Alles, was in der Applikation passiert, wird durch genau zwei Eingabekanäle
+ausgelöst: **Maus und Keyboard.** Tests müssen denselben Pfad nehmen wie ein
+echter Benutzer.
+
+- **Erlaubt**: `cdpInput.mouseDown/Up/Move/Click/DoubleClick/wheel/keyDown/keyUp/typeText`
+  — CDP-Trusted-Events. Optional `nut-js` OS-Maus für headed Demos.
+- **Verboten**: `el.click()` / `el.dispatchEvent(...)` (synthetisch, isTrusted=false),
+  `controller.startDrag()` / `panel.changeProperty()` / `editor.dispatch()` als
+  Test-Aktion (Studio-interne APIs, kein Bedienpfad), synthetische Cursor /
+  Keystroke-Overlays / Drop-Highlights, die App-Verhalten vortäuschen.
+- **Kapselung**: Höhere Helfer (`dropFromPalette`, `setProperty`, …) sind
+  **nur** Kapselungen über `cdpInput.*`. Sie bündeln Maus-/Keyboard-Sequenzen
+  für Lesbarkeit. Sie umgehen den Eingabepfad nie.
+
+Wenn ein Test-Schritt nicht als „Maus klickt da, Keyboard tippt das" beschreibbar
+ist, geht er einen Pfad, den der Benutzer nicht nehmen kann. Volle Begründung
+
+- Beispiele: `docs/TEST-FRAMEWORK.md` Kapitel „Grundprinzip — Maus und Keyboard".
+
 ### Unit Tests (Vitest)
 
 ```bash

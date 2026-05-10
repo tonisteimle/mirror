@@ -2,6 +2,28 @@
 
 Umfassendes Test-Framework für das Mirror Studio mit Browser-basierter End-to-End-Testausführung.
 
+## Grundprinzip — Maus und Keyboard, nichts anderes
+
+**Alles, was in der Applikation passiert, wird durch genau zwei Eingabekanäle ausgelöst: Maus und Keyboard.** Tests müssen denselben Pfad nehmen, den ein echter Benutzer nimmt — sonst testen sie etwas anderes als das, was Benutzer erleben.
+
+### Erlaubt (kanonischer Pfad)
+
+- **Maus**: `cdpInput.mouseDown / mouseUp / mouseMove / mouseClick / mouseDoubleClick / wheel` — CDP-getriebene Trusted-Events. Lösen die volle Browser-Pipeline aus (HTML5-Drag mit `dataTransfer`, native Focus, IME, …).
+- **Keyboard**: `cdpInput.keyDown / keyUp / typeText` — Trusted-KeyEvents inklusive `windowsVirtualKeyCode`. Lösen native Shortcut-Handler (Cmd+S, F2, Tab, …) und CodeMirror-Keymaps korrekt aus.
+- **Headed mit echter OS-Maus**: optional via `nut-js` (`tools/test-runner/demo/os-mouse.ts`). Bewegt den realen macOS-Cursor und liefert dieselben Events wie ein Mensch. Braucht Accessibility-Permission.
+
+### Verboten
+
+- `el.click()` / `el.focus()` / `el.dispatchEvent(new MouseEvent(...))` — synthetische Events mit `isTrusted=false`. Umgehen Focus-Management, HTML5-Drag und native Pipelines.
+- `controller.startDrag()` / `panel.changeProperty()` / `editor.dispatch()` als **Test-Aktion**. Diese sind Studio-interne APIs, kein Bedienpfad.
+- Synthetische Cursor / Keystroke-Overlays / Drop-Indicator-Highlights, die App-Verhalten _vortäuschen_. Was im Test sichtbar wird, muss aus der echten App kommen.
+
+### Kapselung
+
+Höhere Test-Helfer (`dropFromPalette`, `setProperty`, `pickColor`, `inlineEdit`, …) sind **nur Kapselungen über `cdpInput.*`**. Sie bündeln eine Sequenz von Maus- und Keyboard-Aktionen für Lesbarkeit. Sie umgehen den Eingabepfad nie. Wer einen Helper schreibt, der direkt in Studio's State greift, hat den Test gebrochen.
+
+**Daumenregel:** Wenn du einen Test-Schritt nicht als Reihe von "Maus klickt da, Keyboard tippt das" beschreiben kannst, geht er einen Pfad, den der Benutzer nicht nehmen kann.
+
 ## Übersicht
 
 Das Framework bietet:

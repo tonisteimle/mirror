@@ -60,9 +60,7 @@ import { createFixturesAPI, type Fixture, type FixturesAPI } from './fixtures'
 import { installCdpInputClient, isCdpInputAvailable, cdpInput } from './cdp-input-client'
 import { installOsMouseClient, isOsMouseAvailable, osMouse } from './os-mouse-client'
 import { installSnapshotClient, isSnapshotAvailable, snapshotClient } from './snapshot-client'
-import { installMirrorDemo, isMirrorDemoInstalled } from './demo-fx'
 import { installMirrorActions } from './mirror-actions'
-import { installReplayRecorder, replayRecorder } from './replay-recorder'
 import { trustedInteractions, type TrustedInteractionAPI } from './trusted-interactions'
 import { createStudioAPI } from './studio-api'
 import { createSnappingAPI, setupSnappingAPI, type SnappingAPI } from './snapping-api'
@@ -304,10 +302,10 @@ export function initStudioTestAPI(_studio?: unknown, _editor?: unknown): void {
     log.warn('Failed to install CDP input client:', e)
   }
 
-  // OS-mouse client: same response-handler pattern. Bridge is only
-  // present when the test runner was started with --os-mouse, otherwise
-  // isOsMouseAvailable() stays false and step-runner scenarios refusing
-  // to use synthetic fall-back will surface that loudly.
+  // OS-mouse client: optional, only present when the test runner was
+  // started with --os-mouse (real macOS cursor via nut-js). Otherwise
+  // isOsMouseAvailable() stays false; the runner / helpers fall back
+  // to CDP-only input.
   try {
     installOsMouseClient()
     log.info(
@@ -315,32 +313,6 @@ export function initStudioTestAPI(_studio?: unknown, _editor?: unknown): void {
     )
   } catch (e) {
     log.warn('Failed to install OS-mouse client:', e)
-  }
-
-  // Replay recorder — passive event listener that captures click/key/
-  // editor-change events when started. Doesn't fire by itself; callers
-  // explicitly call window.__replayRecorder.start() to begin a session.
-  try {
-    installReplayRecorder()
-    log.info('Replay recorder installed at window.__replayRecorder')
-  } catch (e) {
-    log.warn('Failed to install replay recorder:', e)
-  }
-
-  // Mirror Demo API — bundled animated cursor + keystroke overlay.
-  // Replaces the ~300 LOC inline-eval'd string the demo-runner used to
-  // inject. Demo runner detects this via `typeof window.__mirrorDemo`
-  // and skips its own inline injection. Step-Runner headed runs can
-  // also call __mirrorDemo.click(...) for visual feedback.
-  try {
-    installMirrorDemo()
-    log.info(
-      `Mirror Demo API installed at window.__mirrorDemo (${
-        isMirrorDemoInstalled() ? 'ready' : 'install-failed'
-      })`
-    )
-  } catch (e) {
-    log.warn('Failed to install Mirror Demo API:', e)
   }
 
   // Snapshot client — pixel-diff via the Node bridge. Off unless the
@@ -359,8 +331,6 @@ export function initStudioTestAPI(_studio?: unknown, _editor?: unknown): void {
     ;(window as Window & { __STUDIO_TEST__?: StudioTestAPI }).__STUDIO_TEST__ = api
     ;(window as unknown as { __cdpInput?: typeof cdpInput }).__cdpInput = cdpInput
     ;(window as unknown as { __osMouse?: typeof osMouse }).__osMouse = osMouse
-    ;(window as unknown as { __replayRecorder?: typeof replayRecorder }).__replayRecorder =
-      replayRecorder
     ;(window as unknown as { __snapshot?: typeof snapshotClient }).__snapshot = snapshotClient
   }
 
@@ -1014,20 +984,9 @@ export function setupMirrorTestAPI(): void {
   } catch (e) {
     console.warn('[test-api] snapshot client install failed:', e)
   }
-  try {
-    installReplayRecorder()
-  } catch (e) {
-    console.warn('[test-api] replay recorder install failed:', e)
-  }
-  // Bundled MirrorDemoAPI replaces the demo-runner's inline-eval'd
-  // window.__mirrorDemo. Same shape as the legacy class.
-  try {
-    installMirrorDemo()
-  } catch (e) {
-    console.warn('[test-api] Mirror Demo API install failed:', e)
-  }
-  // Bundled MirrorActionsAPI — replaces the demo-runner's MIRROR_ACTIONS_API
-  // inline-eval'd string. Same shape as the legacy IIFE-installed object.
+  // Bundled MirrorActionsAPI — high-level test helpers built on top of
+  // cdpInput.* (Maus + Keyboard, see docs/TEST-FRAMEWORK.md). The old
+  // synthetic-cursor / replay-recorder layers are gone.
   try {
     installMirrorActions()
   } catch (e) {
