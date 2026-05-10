@@ -3,14 +3,13 @@
 **Status:** aktiv. Verlinkt aus `docs/findings.md`.
 
 **Stand 2026-05-10:** Slice 1 (Layout & Component, `a9f52c64`),
-Slice 2 (Events, `fe11e256`), Slice 5 (Chart, `eb046dfa`) und
-Slice 6 (Text) abgehakt. react.ts: 3273 → 2343 LOC, vier Module
-unter `compiler/backends/react/ops/` (layout.ts 239 LOC,
-events.ts 149 LOC, chart.ts 175 LOC, text.ts 490 LOC).
-Differential-Tests 384/384 grün, full vitest 15441/15441. Slice 3
-(Attributes) und Slice 4 (Icon) sind jetzt unblocked — text-cluster
-exports (`rewriteIdentifiersToTokens`, `interpolateStringForJSX`)
-sind aus react/ops/text re-importierbar.
+Slice 2 (Events, `fe11e256`), Slice 5 (Chart, `eb046dfa`),
+Slice 6 (Text, `8dd62a42`) und Slice 4 (Icon) abgehakt.
+react.ts: 3273 → 2106 LOC, fünf Module unter
+`compiler/backends/react/ops/` (layout.ts 239, events.ts 149,
+chart.ts 175, text.ts 490, icon.ts 251). Differential-Tests
+384/384 grün, full vitest 15441/15441. Slice 3 (Attributes),
+Slice 7 (JSX), Slice 8 (Style) bleiben offen.
 
 ## Ausgangslage
 
