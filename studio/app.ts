@@ -56,6 +56,7 @@ import {
   findUninstancedComponents,
   appendImplicitInstances,
 } from './compile/augment-local-components'
+import { executeMirrorJS } from './compile/execute-mirror-js'
 
 // New architecture imports
 import {
@@ -1377,44 +1378,13 @@ function compile(code: string) {
         sourceMap = augmentedIrResult.sourceMap
       }
 
-      const hasAutoInit = finalJsCode.includes('// Auto-initialization')
-
       // Inject YAML data into __mirrorData before UI creation
       const yamlInjection = generateYAMLDataInjection({
         getFiles: () => window.desktopFiles?.getFiles?.() || files,
       })
       timings.prepExecStart = performance.now()
 
-      let ui
-      if (hasAutoInit) {
-        let execCode = finalJsCode
-          .replace('export function createUI', 'function createUI')
-          .replace('document.body.appendChild(_ui.root)', '')
-
-        // Inject YAML data after __mirrorData is defined (search for end of object + newline)
-        if (yamlInjection) {
-          execCode = execCode.replace(
-            /(__mirrorData = \{[\s\S]*?\n\})/,
-            match => match + yamlInjection
-          )
-        }
-
-        const fn = new Function(execCode + '\nreturn _ui;')
-        ui = fn()
-      } else {
-        let execCode = finalJsCode.replace('export function createUI', 'function createUI')
-
-        // Inject YAML data after __mirrorData is defined (search for end of object + newline)
-        if (yamlInjection) {
-          execCode = execCode.replace(
-            /(__mirrorData = \{[\s\S]*?\n\})/,
-            match => match + yamlInjection
-          )
-        }
-
-        const fn = new Function(execCode + '\nreturn createUI ? createUI() : null;')
-        ui = fn()
-      }
+      const ui = executeMirrorJS(finalJsCode, yamlInjection)
       timings.execEnd = performance.now()
 
       // IMPORTANT: Update studio BEFORE DOM update so SourceMap is ready for clicks
@@ -1422,7 +1392,12 @@ function compile(code: string) {
       timings.updateStudioEnd = performance.now()
 
       // DOM backend returns element directly, not { root: element }
-      const rootEl = ui?.root || (ui instanceof Element ? ui : null)
+      const rootEl: Element | null = (() => {
+        if (!ui) return null
+        if (ui instanceof Element) return ui
+        const root = (ui as { root?: unknown }).root
+        return root instanceof Element ? root : null
+      })()
       if (rootEl) {
         preview.appendChild(rootEl)
         timings.domAppendEnd = performance.now()
