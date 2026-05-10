@@ -211,13 +211,21 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Notiz:** Phase-Funktionen nach `studio/init/phase-*.ts` extrahieren,
   app.ts als reiner Orchestrator.
 
-- **Wo:** Drei `mock-adapters.ts` (`studio/editor/triggers/adapters/`,
-  `studio/editor/adapters/`, `studio/panels/property/adapters/`)
-  **Was:** ~1990 LOC über drei separate Mock-Frameworks für ähnliche
-  Use-Cases.
-  **Status:** offen
-  **Notiz:** In `studio/test-helpers/mock-adapters.ts` konsolidieren mit
-  scope-spezifischen Factories.
+- **Wo:** Fünf `mock-adapters.ts` (`studio/editor/triggers/adapters/`,
+  `studio/editor/adapters/`, `studio/panels/property/adapters/`,
+  `studio/autocomplete/adapters/`, `studio/sync/adapters/`)
+  **Was:** ~2986 LOC über fünf Mock-Files. Audit zeigt: keine echte
+  Duplikation — jede Datei mockt scope-spezifische Port-Interfaces,
+  keine zwei Files exportieren dieselbe Factory. `createMockSelectionPort`,
+  `createMockSourceMapPort`, `createMockTriggerPort`, `createMockPickerPort`
+  etc. sind disjunkt. Das einzige was sich wiederholt sind triviale
+  `new Map()`-Initializer für Mock-State (3 / 23 / 17 / 7 / 1 Verwendungen).
+  Konsolidierung zu einer Datei würde Modularität verlieren ohne
+  meaningful Code-Reduktion.
+  **Status:** abgewiesen — keine Duplikation; jeder Mock ist
+  scope-spezifisch nötig. Ggf. extra-kleine Helper für Mock-State-
+  Storage in einem `mock-base.ts` (5-10 LOC), aber Aufwand/Nutzen
+  steht nicht im Verhältnis.
 
 - **Wo:** Studio-weit, `panels/`-Subsystem
   **Was:** ~113 `.on()`/`addEventListener` Subscriptions vs. ~25
