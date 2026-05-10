@@ -941,8 +941,12 @@ function generateEachJSX(
   stateContext: ReactStateContext | null = null
 ): string {
   // `each.collection` carries the leading `$` from the source (`$tasks`);
-  // tokens are keyed without it so strip before the lookup.
-  const collection = each.collection.startsWith('$') ? each.collection.slice(1) : each.collection
+  // tokens are keyed without it so strip before the lookup. Inline-array
+  // collections (`each x in [1, 2, 3]`) arrive as a JS-array-literal
+  // string and bypass the token lookup entirely.
+  const collectionRaw = each.collection
+  const isInlineArray = collectionRaw.startsWith('[')
+  const collection = collectionRaw.startsWith('$') ? collectionRaw.slice(1) : collectionRaw
   const item = each.item // 'task'
   // Optional named index (`each task,i in $tasks` → index = 'i').
   // Without this binding the user's `$i` reference inside the loop body
@@ -991,8 +995,11 @@ function generateEachJSX(
 
   // Coerce object-keyed collections to arrays so .map() works regardless
   // of how the data was authored. Mirrors the DOM backend's runtime
-  // coercion (compiler/backends/dom/ops/emit-loops.ts).
-  const coerced = `Array.isArray(tokens[${JSON.stringify(collection)}]) ? tokens[${JSON.stringify(collection)}] : Object.values(tokens[${JSON.stringify(collection)}] || {})`
+  // coercion (compiler/backends/dom/ops/emit-loops.ts). Inline arrays
+  // pass through verbatim — they're already JS-array literals.
+  const coerced = isInlineArray
+    ? collectionRaw
+    : `Array.isArray(tokens[${JSON.stringify(collection)}]) ? tokens[${JSON.stringify(collection)}] : Object.values(tokens[${JSON.stringify(collection)}] || {})`
 
   // Optional `where` filter (`each t in $tasks where t.done`). The filter
   // expression is JS-compatible and references the loop variable directly,

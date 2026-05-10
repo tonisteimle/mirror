@@ -185,6 +185,17 @@ describe('Each-Loop — Named index + orderBy in React', () => {
     expect(react).toMatch(/\.sort\(\(a,\s*b\)\s*=>/)
     expect(react).toContain('a["pri"]')
   })
+
+  it('inline array `each x in [1, 2, 3]` emits a JS array literal, not tokens["[1,2,3]"]', () => {
+    // PIN: pre-2026-05-10 the React backend wrapped the collection
+    // string in `tokens[...]` unconditionally, so `each x in [1, 2, 3]`
+    // looked up `tokens["[1, 2, 3]"]` (always undefined). The loop
+    // rendered nothing.
+    const src = `each x in [1, 2, 3]\n  Text "$x"`
+    const react = generateReact(parse(src))
+    expect(react).not.toContain('tokens["[1, 2, 3]"]')
+    expect(react).toMatch(/\[1, 2, 3\]\)?\.map/)
+  })
 })
 
 describe('Each-Loop — Bug regressions', () => {
