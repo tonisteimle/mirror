@@ -71,6 +71,26 @@ describe('Each-Loop — DOM-only runtime semantics', () => {
 // Bug regressions
 // =============================================================================
 
+describe('Each-Loop — React loop-var values in styles', () => {
+  // Pre-2026-05-10: a loop-var reference inside a style prop (like
+  // `bg $project.color` or `w $project.progress + "%"`) emitted as
+  // `backgroundColor: '$project.color'` (literal) or `width: [object Object]`.
+  // React has no runtime for loop scope, so the safest fall-through is to
+  // drop those properties silently rather than emit garbage.
+  it('drops loop-var token reference in style props (no garbage)', () => {
+    const src = `projects:\n  p1:\n    color: "#2271C1"\n\neach project in $projects\n  Frame bg $project.color, w 50, h 50`
+    const react = generateReact(parse(src))
+    expect(react).not.toContain("'$project.color'")
+    expect(react).not.toContain('[object Object]')
+  })
+
+  it('drops computed expression (loop-var arithmetic) in style props', () => {
+    const src = `projects:\n  p1:\n    progress: 50\n\neach project in $projects\n  Frame w $project.progress + "%", h 6`
+    const react = generateReact(parse(src))
+    expect(react).not.toContain('[object Object]')
+  })
+})
+
 describe('Each-Loop — Bug regressions', () => {
   it('Bug #17 fixed: two parallel each-loops over same collection both render', () => {
     const src = `tasks:\n  t1:\n    title: "Alpha"\n  t2:\n    title: "Beta"\n\neach task in $tasks\n  Text "1: $task.title"\n\neach task in $tasks\n  Text "2: $task.title"`

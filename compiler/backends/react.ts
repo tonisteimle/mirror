@@ -1557,6 +1557,49 @@ function generateStyles(
       }
     }
 
+    // Computed expressions (`w $project.progress + "%"`) carry a multi-part
+    // Expression node. They typically reference loop variables or runtime
+    // data the React backend can't statically evaluate. Drop the property
+    // silently — better than `width: [object Object]` in the inline style.
+    if (
+      typeof firstVal === 'object' &&
+      firstVal !== null &&
+      'kind' in firstVal &&
+      (firstVal as { kind?: string }).kind === 'expression'
+    ) {
+      continue
+    }
+
+    // Token references with dotted names that don't resolve (typically loop
+    // variables: `bg $project.color` inside `each project in $projects`).
+    // Without this guard, `resolve()` falls back to the literal source string,
+    // producing `'$project.color'` as the CSS value. DOM resolves them at
+    // runtime via `$get`; React has no runtime for loop scope, so drop them.
+    //
+    // Suffix-aware: a `gap $sp` reference may resolve via `sp.gap`. Treat
+    // any token whose name starts with `<head>.` as a match too — only the
+    // truly-orphaned head names are loop variables we can't statically
+    // evaluate.
+    if (
+      typeof firstVal === 'object' &&
+      firstVal !== null &&
+      'kind' in firstVal &&
+      (firstVal as { kind?: string }).kind === 'token'
+    ) {
+      const tokenName = (firstVal as { name: string }).name
+      const head = tokenName.includes('.') ? tokenName.slice(0, tokenName.indexOf('.')) : tokenName
+      const headExists = tokenMap.has(head) || tokenMap.has('$' + head)
+      const suffixExists =
+        !headExists &&
+        Array.from(tokenMap.keys()).some(k => {
+          const stripped = typeof k === 'string' && k.startsWith('$') ? k.slice(1) : k
+          return typeof stripped === 'string' && stripped.startsWith(head + '.')
+        })
+      if (!headExists && !suffixExists) {
+        continue
+      }
+    }
+
     // Gradient shorthand on bg / col: `bg grad #2271C1 #7c3aed`,
     // `bg grad-ver #f59e0b #ef4444`, `bg grad 45 #10b981 #2271C1`.
     // The IR's property-transformer handles this for the DOM backend;
