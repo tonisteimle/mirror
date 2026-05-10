@@ -894,6 +894,22 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — 10 orphan scripts/ Throwaway-Probes gelöscht (303 LOC)
+
+- **Wo:** `scripts/{check-{dup-warn,fi,mono,nested-comp,propset,show,
+slot-dup,toggle},analyze-parens,build-example}.ts`
+  **Was:** 8 single-source `check-*`-Probes (je 7–30 LOC, hardcoded
+  Mirror-source + `parse(...)`-Aufruf zur Diagnose) + `analyze-parens.ts`
+  (65 LOC) + `build-example.ts` (105 LOC, longst überholt durch
+  `mirror-build` CLI in `compiler/build-cli.ts`). Alle 10 Files mit
+  0 Konsumenten in package.json/Doku/source. Letzte Aktivität
+  2026-04 bis 2026-05-08. Pendant zur 70-Probe + 6-Tools-Bereinigung.
+  Verbleibend in `scripts/`: aktive `eval-*-quality`-Familie
+  (eval-driver-Lib), `eval-functional` ↔ `eval-llm-pipeline` ↔
+  `eval-reclassify` (mit Tests), `verify-personas-*`/`verify-tutorial`
+  (importieren aus dem owner-exklusiven `tools/test-runner/`).
+  **Status:** erledigt
+
 ### 2026-05-10 — 6 orphan tools/ Throwaway-Scripts gelöscht (1019 LOC)
 
 - **Wo:** `tools/{debug-tauri-mode,diagnose-colors,probe-personas-live,
