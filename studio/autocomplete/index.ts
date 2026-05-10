@@ -11,10 +11,7 @@ import {
   isZagComponent,
   getZagSlotsForComponent,
   getZagPropsForComponent,
-  getZagEventsForComponent,
   getZagItemKeywords,
-  generateKeywordCompletions,
-  generateIconNameCompletions,
 } from './schema-completions'
 
 export interface Completion {

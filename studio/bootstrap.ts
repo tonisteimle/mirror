@@ -15,7 +15,6 @@ import {
   createStudioContext,
   setStudioContext,
   adjustChangeForWrap,
-  type Command,
   type CommandContext,
   type StudioContext,
 } from './core'
@@ -59,7 +58,7 @@ import type { InlineEditController } from './inline-edit'
 import { initDrawManager, initInlineEdit, initSync } from './init'
 import { initUserSettings } from './storage/user-settings'
 import { initStudioTestAPI } from './test-api'
-import { triggerRename, isRenameActive, closeRename } from './rename'
+import { triggerRename } from './rename'
 import type { AST, IR, SourceMap } from '../compiler'
 import type { CodeChange } from './code-modifier'
 import type { EditorView } from '@codemirror/view'
@@ -199,9 +198,6 @@ let propertyPanelContainer: HTMLElement | null = null
 
 // Store component panel container for lazy initialization
 let componentPanelContainer: HTMLElement | null = null
-
-// Store tokens panel container for lazy initialization
-const tokensPanelContainer: HTMLElement | null = null
 
 // Store user components panel container for lazy initialization
 let userComponentsPanelContainer: HTMLElement | null = null
