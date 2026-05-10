@@ -318,18 +318,15 @@ export const translateOffsetTests: TestCase[] = describe('Translate Offset', [
     }
   ),
 
-  // Note: Currently, multiple transform properties (x-offset + y-offset) don't combine properly
-  // The runtime overwrites transforms instead of combining them. This is a known limitation.
-  // TODO: Fix runtime to combine multiple transforms
   testWithSetup(
     'Element with both offsets',
-    `Frame w 80, h 80, bg #10b981, y-offset 15`,
+    `Frame w 80, h 80, bg #10b981, x-offset 10, y-offset 15`,
     async (api: TestAPI) => {
       await api.utils.waitForCompile()
       api.assert.exists('node-1')
 
       const element = await api.utils.waitForElement('node-1')
-      await api.utils.delay(100) // Ensure transform styles are applied
+      await api.utils.delay(100)
       const style = window.getComputedStyle(element)
 
       api.assert.ok(
@@ -337,9 +334,17 @@ export const translateOffsetTests: TestCase[] = describe('Translate Offset', [
         `Should have translate transform, got: "${style.transform}"`
       )
 
-      // Verify y-offset is applied (single offset works correctly)
+      // Both offsets compose into ONE transform via properties-ops
+      // transformContext (rotate/scale/translateX/translateY collected
+      // in pass 1, joined with spaces, emitted as a single
+      // `transform:` style — last-wins object-literal semantics never
+      // apply). Pre-fix only translateY survived (last-wins).
       const translate = getTranslateFromMatrix(style.transform)
       api.assert.ok(translate !== null, `Transform should be a matrix, got: "${style.transform}"`)
+      api.assert.ok(
+        Math.abs(translate!.x - 10) < 1,
+        `X offset should be ~10px, got: ${translate!.x}px`
+      )
       api.assert.ok(
         Math.abs(translate!.y - 15) < 1,
         `Y offset should be ~15px, got: ${translate!.y}px`
