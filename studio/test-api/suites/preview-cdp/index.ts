@@ -16,15 +16,21 @@ import { smokeTests } from './01-palette-drop/_smoke.test'
 import { frameIntoEmptyCanvasTests } from './01-palette-drop/frame-into-empty-canvas.test'
 import { frameIntoExistingFrameTests } from './01-palette-drop/frame-into-existing-frame.test'
 import { textIntoFrameTests } from './01-palette-drop/text-into-frame.test'
+import { buttonIntoFrameTests } from './01-palette-drop/button-into-frame.test'
+import { iconIntoFrameTests } from './01-palette-drop/icon-into-frame.test'
+import { appendAtEndVsIndexTests } from './01-palette-drop/append-at-end-vs-index.test'
 
 // Wave 1 — Smoke (verifies the helper layer is reachable).
 export const previewCdpSmokeTests: TestCase[] = [...smokeTests]
 
-// Wave 2 — palette drop atomic scenarios (filled wave-by-wave).
+// Wave 2-3 — palette drop atomic scenarios (filled wave-by-wave).
 export const previewCdpPaletteDropTests: TestCase[] = [
   ...frameIntoEmptyCanvasTests,
   ...frameIntoExistingFrameTests,
   ...textIntoFrameTests,
+  ...buttonIntoFrameTests,
+  ...iconIntoFrameTests,
+  ...appendAtEndVsIndexTests,
 ]
 
 // Aggregate — every wave above flows into this list.

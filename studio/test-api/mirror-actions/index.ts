@@ -246,16 +246,28 @@ export function installMirrorActions(): MirrorActionsAPI {
     const children = Array.from(targetEl.children).filter(
       el => el.hasAttribute && el.hasAttribute('data-mirror-id')
     ) as HTMLElement[]
+    const containerRect = targetEl.getBoundingClientRect()
     if (children.length === 0) {
-      const r = targetEl.getBoundingClientRect()
-      return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+      return {
+        x: containerRect.left + containerRect.width / 2,
+        y: containerRect.top + containerRect.height / 2,
+      }
     }
     if (index >= children.length) {
-      const r = children[children.length - 1].getBoundingClientRect()
-      return { x: r.left + r.width / 2, y: r.bottom + 8 }
+      // After the last child, but stay inside the container so Studio's
+      // drop-target detection picks the container (not its parent).
+      const last = children[children.length - 1].getBoundingClientRect()
+      const cx = last.left + last.width / 2
+      // Halfway between last child's bottom and the container's bottom.
+      // Clamp into the container's interior with at least 4px headroom.
+      const cy = Math.min(last.bottom + 8, containerRect.bottom - 4)
+      return { x: cx, y: cy }
     }
+    // Insertion BEFORE child[index] — drop just above its top edge but
+    // never above the container.
     const r = children[index].getBoundingClientRect()
-    return { x: r.left + r.width / 2, y: r.top - 4 }
+    const cy = Math.max(r.top - 4, containerRect.top + 4)
+    return { x: r.left + r.width / 2, y: cy }
   }
 
   const center = (el: HTMLElement): Point => {
@@ -302,22 +314,24 @@ export function installMirrorActions(): MirrorActionsAPI {
     opts: { steps?: number; preHoldMs?: number; dwellMs?: number; settleMs?: number } = {}
   ): Promise<void> => {
     requireCdp()
-    const steps = Math.max(6, opts.steps ?? 12)
+    const steps = Math.max(6, opts.steps ?? 14)
+    const stepDelay = 14
     await cdpInput.mouseDown({ x: from.x, y: from.y })
     // First move with a small offset so Chrome arms HTML5 dragstart.
     // CRITICAL: every mid-drag mouseMove must carry `buttons: 1` —
     // without it the move events report "no button held" and Chrome's
     // dragstart never fires.
-    await cdpInput.mouseMove({ x: from.x + 8, y: from.y + 8, buttons: 1 })
+    await cdpInput.mouseMove({ x: from.x + 12, y: from.y + 12, buttons: 1 })
     if (opts.preHoldMs) await delay(opts.preHoldMs)
     for (let i = 1; i <= steps; i++) {
       const t = i / steps
       const x = from.x + (to.x - from.x) * t
       const y = from.y + (to.y - from.y) * t
       await cdpInput.mouseMove({ x, y, buttons: 1 })
-      // tiny pause keeps drag indicators legible and gives the browser
-      // time to fire dragover before the next move.
-      await delay(8)
+      // Per-step pause gives Chrome time to fire dragover before the
+      // next move and keeps drop-indicators legible. 14ms matches
+      // atomic-input-tests test 6 which is empirically reliable.
+      await delay(stepDelay)
     }
     if (opts.dwellMs) await delay(opts.dwellMs)
     await cdpInput.mouseUp({ x: to.x, y: to.y })
@@ -455,9 +469,9 @@ export function installMirrorActions(): MirrorActionsAPI {
 
     await drag(startPoint, endPoint, {
       steps: 14,
-      preHoldMs: 60,
-      dwellMs: 140,
-      settleMs: 120,
+      preHoldMs: 30,
+      dwellMs: 80,
+      settleMs: 0,
     })
 
     await waitForCompile()

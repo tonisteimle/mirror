@@ -115,6 +115,21 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
+- **Wo:** `studio/test-api/mirror-actions/index.ts:dropChildIndexPoint`
+  - Studios Drop-Target-Detection (`studio/preview/drag/...`)
+    **Was:** Drop into a container tight-packed with children (3 children
+    `w 100 h 60` inside `w 320 h 240, pad 12, gap 8` — 220px of 240px
+    vertical space occupied) gets rejected. My `dropChildIndexPoint`
+    clamps the y to `containerRect.bottom - 4`, but Studio's drop-target
+    detection seems to treat the last ~4-12px before the container edge
+    as "outside" and ignores the drop. Test
+    `studio/test-api/suites/preview-cdp/01-palette-drop/append-at-end-vs-index.test.ts`
+    is `testWithSetupSkip` until Studio's drop-zone hot-zone math is
+    documented and the helper offsets adjusted.
+    **Status:** offen — needs (1) inspect Studio's hot-zone calculation
+    for "after last child" insertion line, (2) align helper to land
+    inside both the container AND the hot-zone.
+
 - **Wo:** `studio/init/init-notifications.ts:39-43` (drag:dropped handler)
   **Was:** Empty-canvas drop fails inside suite tests when the editor
   source is set via `__compileTestCode('')` (which sets
