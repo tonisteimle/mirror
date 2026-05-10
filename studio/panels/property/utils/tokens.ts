@@ -3,6 +3,10 @@
  */
 
 import type { SpacingToken, ColorToken, GetAllSourceCallback } from '../types'
+import {
+  PROPERTY_TO_TOKEN_SUFFIX,
+  getTokenSuffix as getCanonicalTokenSuffix,
+} from '../../../../compiler/schema/token-suffixes'
 
 /**
  * Token cache manager
@@ -165,44 +169,31 @@ export class TokenCache {
 }
 
 /**
- * Map property name to token suffix
+ * Map property name to token suffix.
+ *
+ * Derived from `compiler/schema/token-suffixes.ts:PROPERTY_TO_TOKEN_SUFFIX`
+ * (the canonical SoT) with the leading dot stripped — Slice 24 V-2 expanded
+ * the helper to be schema-derived; Slice 24 Iter-2 closes the drift loop by
+ * replacing the studio-side hand-maintained copy with this lookup. New
+ * property/suffix entries: add to compiler schema, picked up here for free.
+ *
+ * Slice 24 Iter-2 surfaced bug: previous local map had `margin → 'm'`, while
+ * the compiler emits `name.mar: …`. Studio token-picker therefore could not
+ * find any margin tokens. Switching to canonical `mar` suffix fixes that.
  */
-export const TOKEN_SUFFIX_MAP: Record<string, string> = {
-  pad: 'pad',
-  padding: 'pad',
-  p: 'pad',
-  gap: 'gap',
-  g: 'gap',
-  bg: 'bg',
-  background: 'bg',
-  col: 'col',
-  color: 'col',
-  c: 'col',
-  rad: 'rad',
-  radius: 'rad',
-  bor: 'bor',
-  border: 'bor',
-  boc: 'boc',
-  'border-color': 'boc',
-  fs: 'fs',
-  'font-size': 'fs',
-  line: 'line',
-  o: 'o',
-  opacity: 'o',
-  opa: 'o',
-  m: 'm',
-  margin: 'm',
-  w: 'w',
-  width: 'w',
-  h: 'h',
-  height: 'h',
-}
+export const TOKEN_SUFFIX_MAP: Record<string, string> = Object.fromEntries(
+  Object.entries(PROPERTY_TO_TOKEN_SUFFIX).map(([prop, sfx]) => [prop, sfx.slice(1)])
+)
 
 /**
- * Get token suffix for a property name
+ * Get token suffix for a property name (without leading dot, e.g. `'pad'`).
+ *
+ * Delegates to the compiler-side canonical helper and strips the leading dot
+ * for studio-side string-concatenation use (regex `[a-z]+\.${suffix}\s*:`).
  */
 export function getTokenSuffixForProperty(propName: string): string | undefined {
-  return TOKEN_SUFFIX_MAP[propName]
+  const canonical = getCanonicalTokenSuffix(propName)
+  return canonical ? canonical.slice(1) : undefined
 }
 
 /**

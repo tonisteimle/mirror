@@ -15,7 +15,10 @@ import type { Token } from './lexer'
 import type { TokenDefinition } from './ast'
 import type { ParserContext } from './parser-context'
 import { ParserUtils } from './parser-context'
-import { inferTokenTypeFromSuffix as inferTypeFromCanonicalSuffix } from '../schema/token-suffixes'
+import {
+  inferTokenTypeFromSuffix as inferTypeFromCanonicalSuffix,
+  stripDollar,
+} from '../schema/token-suffixes'
 
 const U = ParserUtils
 
@@ -81,11 +84,6 @@ export function inferTokenType(
 function inferTypeFromSuffix(suffix: string): 'color' | 'size' | 'font' | 'icon' {
   // Schema-canonical helper expects a leading dot.
   return inferTypeFromCanonicalSuffix('.' + suffix) ?? 'color'
-}
-
-/** Strip a leading `$` (legacy syntax kept for backwards compatibility). */
-function stripDollar(name: string): string {
-  return name.startsWith('$') ? name.slice(1) : name
 }
 
 /**

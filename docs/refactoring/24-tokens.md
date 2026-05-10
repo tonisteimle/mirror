@@ -1,7 +1,7 @@
 # Slice 24: Single-Value-Token
 
-**Datum:** 2026-05-09
-**Status:** Audit · Untersuchung · Entscheidungen · Phasen A/B/C umgesetzt · 8 Regression-Tests · Slice **green**
+**Datum:** 2026-05-09 (Iter-1) · 2026-05-10 (Iter-2)
+**Status:** Audit · Untersuchung · Entscheidungen · Phasen A/B/C umgesetzt · 8+8 Regression-Tests · Slice **green** (Iter-2 Phase D)
 
 ## Inhalt
 
@@ -258,3 +258,125 @@ Eingabe:
 Validator (`mirror-validate`):
   ⚠ [W500] Token "$primry" is not defined
 ```
+
+---
+
+# 7. Iter-2 (Phase D — Cross-Driver-Drift-Fix, 2026-05-10)
+
+**Trigger:** Iter-2-Stichprobe als Pilot. Mechanischer 9-Punkt-Quality-Gate
+gegen Iter-1: 4/9 ❌. Auslöser: Schema-Drift-Grep wurde im Iter-1 nicht
+ausgeführt; Drift in Studio-Helpern ungesehen.
+
+## 7.1 Befunde
+
+**B-1 (Drift, Bug, hoch).** `studio/panels/property/utils/tokens.ts`
+hat eigene `TOKEN_SUFFIX_MAP` + `getTokenSuffixForProperty` mit
+**falscher Suffix-Zuordnung für `margin`:** `margin → 'm'`. Der
+Compiler emittiert aber `name.mar: 12`. Folge: Property-Panel-Picker
+findet **keine** `mar`-Tokens (Regex `\.${propType}` matched nicht).
+
+**B-2 (Drift, lossy, mittel).** `studio/editor/triggers/token-extract-trigger.ts`
+hat eigene `PROPERTY_SUFFIXES` mit lossy Mapping `minw → 'w'`,
+`maxw → 'w'`, `minh → 'h'`, `maxh → 'h'`. Folge: Token-Extract aus
+`minw default::100` erzeugt `default.w: 100` statt `default.minw: 100`
+— die min-Spezifizität geht verloren.
+
+**B-3 (Drift, trivial, niedrig).** `compiler/parser/token-parser.ts:87`
+hat lokale `function stripDollar` als Duplikat von
+`compiler/schema/token-suffixes.ts:stripDollar`.
+
+## 7.2 Probes
+
+Probe-Skript `tools/probes/slice-24-tokens.ts` lockt:
+
+| #   | Eingabe                                  | Pre-Iter-2 (Bug)  | Post-Iter-2 (Fix) |
+| --- | ---------------------------------------- | ----------------- | ----------------- |
+| A   | `getTokenSuffix('margin')` (Schema)      | ✅ `.mar`         | ✅ `.mar`         |
+| B-1 | `getTokenSuffixForProperty('margin')`    | ❌ `m`            | ✅ `mar`          |
+| B-2 | `getTokenSuffixForProperty('minw')`      | ❌ `undefined`    | ✅ `minw`         |
+| B-3 | `getTokenSuffixForProperty('font')`      | ❌ `undefined`    | ✅ `font`         |
+| B-4 | `TOKEN_SUFFIX_MAP['mar']`                | ❌ `undefined`    | ✅ `mar`          |
+| C   | `s.mar: 12` + `Frame mar $s` Roundtrip   | ❌ Picker blind   | ✅ Picker findet  |
+| D   | `bor`/`opacity` (compiler nicht bekannt) | ⚠️ false-positive | ✅ undefined      |
+
+## 7.3 Entscheidungen Iter-2
+
+**V-7 — Studio-Token-Helper auf Schema-Helper umstellen — Status: erledigt.**
+
+Beide Studio-Stellen (Property-Panel + Token-Extract-Trigger) delegieren auf
+`compiler/schema/token-suffixes.ts:getTokenSuffix` mit `.slice(1)` für die
+studio-seitige Format-Konvention (ohne führenden Punkt).
+
+`TOKEN_SUFFIX_MAP` wird über `Object.fromEntries` aus
+`PROPERTY_TO_TOKEN_SUFFIX` abgeleitet — keine händisch gepflegte Kopie mehr.
+
+**V-8 — Compiler-`stripDollar`-Duplikat löschen — Status: erledigt.**
+
+`compiler/parser/token-parser.ts` importiert jetzt `stripDollar` aus dem
+Schema-Helper. Lokale Definition entfernt.
+
+**V-9 — Studio-only-Properties (`bor`/`opacity`) — Status: gelöscht.**
+
+Pre-Iter-2 hatte die Studio-Map Einträge für `bor`/`border`/`o`/`opacity`/
+`opa`, die der Compiler gar nicht als Token-aware kennt. Tokens für diese
+Properties wären zur Compile-Zeit unauflösbar. Dead-UX entfernt — Picker
+zeigt jetzt nur noch Tokens für Properties an, die der Compiler tatsächlich
+auflösen kann.
+
+## 7.4 Cross-Slice-Probe
+
+Slice 25 (Property-Set-Token) und Slice 78 (Token-Picker) konsumieren dieselbe
+Suffix-Surface. RT-19 lockt:
+
+- Chain-Token (Slice 25-relevante Surface) resolved unverändert
+- Property-Set-Spread (Slice 25 Hauptpfad) emittiert die erwarteten Werte
+- Alle 23 Aliase (V-1-Surface) lookupen kanonisch
+
+**Cross-Slice-Scope-Entscheidung:** in-scope-fix für Slice 24, da der Helper
+bereits existierte und der Drift mechanisch beseitigt werden konnte. Slice 78
+deferred-Item (V-6 Picker-Refactor) bleibt deferred — der größere Refactor
+(eigener Studio-Picker-Parser durch geteilten Compiler-Parser ersetzen)
+gehört in Slice-78-Sweep.
+
+## 7.5 Studio-Roundtrip
+
+**Lower-Bar-Modus** — DOM-Pfad gelocked via RT-18 + RT-19 (compile-side
+End-to-End mit `mar`-Token); Studio-Suffix-Lookup gelocked via RT-17
+(drift-immun durch RT-20). Picker-CDP-Run nicht ausgeführt; deferred zum
+Studio-Picker-Slice (V-6).
+
+## 7.6 Mechanischer 9-Punkt-Quality-Gate (Post-Iter-2)
+
+| #   | Check                                                           | Iter-1 | Iter-2 |
+| --- | --------------------------------------------------------------- | ------ | ------ |
+| 1   | Probe-Tabelle: kein 🔴 außer in „deferred"-Spalte               | ⚠️     | ✅     |
+| 2   | Phase-Stati ∈ {erledigt, verschoben, verworfen}                 | ✅     | ✅     |
+| 3   | Jeder RT-Plan-Eintrag hat geschriebenen Test (`erledigt`)       | ⚠️     | ✅     |
+| 4   | Schema-Drift-Grep ausgeführt; gefundene Stellen gefixt          | ❌     | ✅     |
+| 5   | Cross-Slice-Wirkung geprüft; Nachbar-Slices behandelt           | ⚠️     | ✅     |
+| 6   | Cross-Backend-Differential-RT existiert (DOM ≡ React für Chain) | ✅     | ✅     |
+| 7   | Studio-Roundtrip explizit benannt (CDP-Run oder Lower-Bar)      | ❌     | ✅     |
+| 8   | Vitest gesamt grün; keine Test-Subtraction                      | ✅     | ✅     |
+| 9   | „substantiell besser, aber …"-Klausel nicht aktiv               | ❌     | ✅     |
+
+## 7.7 Tests Iter-2 (delta zu Iter-1)
+
+| ID    | Test                                                            | Aus | Status   |
+| ----- | --------------------------------------------------------------- | --- | -------- |
+| RT-17 | TOKEN_SUFFIX_MAP derives from schema (keine Drift möglich)      | V-7 | erledigt |
+| RT-18 | Margin-Drift-Fix (Lookup + End-to-End-Roundtrip)                | B-1 | erledigt |
+| RT-19 | Cross-Slice property surface (23 Aliase + Chain + Property-Set) | V-7 | erledigt |
+| RT-20 | Lower-Bar-Lock — TOKEN_SUFFIX_MAP nicht hand-maintained         | V-7 | erledigt |
+
+`tests/compiler/slice-24-tokens.test.ts` — 8 Tests, grün.
+
+## 7.8 Commits Iter-2
+
+- `tools/probes/slice-24-tokens.ts` — Probe-Skript (Schema-Drift-Lock)
+- `studio/panels/property/utils/tokens.ts` — derived from schema
+- `studio/editor/triggers/token-extract-trigger.ts` — delegate to schema
+- `compiler/parser/token-parser.ts` — drop local `stripDollar`
+- `tests/compiler/slice-24-tokens.test.ts` — RT-17..20
+
+Alles in einem Commit; Slice-Status post-commit: **erledigt (Iter-2 — V-7,
+V-8, V-9 + 4 RTs)**.

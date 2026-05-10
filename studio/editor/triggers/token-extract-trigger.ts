@@ -18,6 +18,7 @@ import { EditorView, ViewUpdate } from '@codemirror/view'
 import { Transaction } from '@codemirror/state'
 import type { Extension } from '@codemirror/state'
 import { createLogger } from '../../../compiler/utils/logger'
+import { getTokenSuffix as getCanonicalTokenSuffix } from '../../../compiler/schema/token-suffixes'
 import { findSegmentMatches, type SegmentMatch } from '../extract/pattern-match'
 import { applySegmentReplace } from '../extract/apply-batch-replace'
 import { showBatchReplaceDialog } from '../extract/batch-replace-dialog'
@@ -31,53 +32,6 @@ export const TOKEN_EXTRACT_TRIGGER_ID = 'token-extract'
 // The :: was just typed, so we look for: property name::
 const EXTRACT_PATTERN = /\b([a-z][a-zA-Z0-9-]*)\s+([a-z][a-zA-Z0-9]*)::$/
 
-// Property aliases to canonical names (for token suffix)
-const PROPERTY_SUFFIXES: Record<string, string> = {
-  // Colors
-  bg: 'bg',
-  background: 'bg',
-  col: 'col',
-  color: 'col',
-  c: 'col',
-  boc: 'boc',
-  'border-color': 'boc',
-  ic: 'ic',
-  'icon-color': 'ic',
-  // Spacing
-  pad: 'pad',
-  padding: 'pad',
-  p: 'pad',
-  mar: 'mar',
-  margin: 'mar',
-  m: 'mar',
-  gap: 'gap',
-  g: 'gap',
-  'pad-x': 'pad',
-  'pad-y': 'pad',
-  px: 'pad',
-  py: 'pad',
-  // Sizing
-  w: 'w',
-  width: 'w',
-  h: 'h',
-  height: 'h',
-  minw: 'w',
-  maxw: 'w',
-  minh: 'h',
-  maxh: 'h',
-  // Border
-  rad: 'rad',
-  radius: 'rad',
-  bor: 'bor',
-  border: 'bor',
-  // Typography
-  fs: 'fs',
-  'font-size': 'fs',
-  // Icon
-  is: 'is',
-  'icon-size': 'is',
-}
-
 interface TokenExtractCallbacks {
   /** Get all project files */
   getFiles: () => { name: string; type: string; code: string }[]
@@ -90,10 +44,18 @@ interface TokenExtractCallbacks {
 let callbacks: TokenExtractCallbacks | null = null
 
 /**
- * Get the token suffix for a property
+ * Get the token suffix for a property (without leading dot).
+ *
+ * Delegates to the compiler-side canonical helper
+ * (`compiler/schema/token-suffixes.ts:getTokenSuffix`) — Slice 24 Iter-2
+ * dropped the local PROPERTY_SUFFIXES copy that drifted (e.g. `minw → 'w'`
+ * was lossy; canonical `minw → 'minw'` preserves the constraint). Unknown
+ * properties fall back to the property name itself, preserving the
+ * pre-Iter-2 behaviour for properties the schema does not yet know.
  */
 function getTokenSuffix(property: string): string {
-  return PROPERTY_SUFFIXES[property] || property
+  const canonical = getCanonicalTokenSuffix(property)
+  return canonical ? canonical.slice(1) : property
 }
 
 /**
