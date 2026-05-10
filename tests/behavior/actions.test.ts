@@ -330,49 +330,4 @@ describe('Actions — Behavior Spec', () => {
       expect(text.textContent?.trim()).toBe('Likes: 2')
     })
   })
-
-  // ---------------------------------------------------------------------------
-  // A11: navigate(View) combined with show(View) + hide(OtherView)
-  // ---------------------------------------------------------------------------
-
-  describe('A11: navigate + show/hide combined', () => {
-    // PIN: navigate(View) walks parent's children, hides non-target siblings,
-    // shows target. Combined with show()/hide() in the same action chain
-    // produces the expected display states. The browser-test bucket marked
-    // this "Runtime bug — combinations don't work correctly" but the probe
-    // (`tools/probes/navigation-combined.ts`) and this pin both show the
-    // runtime is correct. Bucket entry was stale, like remove().
-    it('navigate(View), show(View), hide(OtherView) chain switches displayed view', () => {
-      const root = render(
-        `Frame hor, w 400
-  Frame gap 4, pad 8, w 100
-    Button "Home", navigate(HomeView), show(HomeView), hide(SettingsView)
-    Button "Settings", navigate(SettingsView), show(SettingsView), hide(HomeView)
-
-  Frame w full, pad 16
-    Frame name HomeView
-      Text "Home Content"
-    Frame name SettingsView, hidden
-      Text "Settings Content"`,
-        container
-      )
-
-      const homeView = findByName(root, 'HomeView') as HTMLElement
-      const settingsView = findByName(root, 'SettingsView') as HTMLElement
-      const [homeBtn, settingsBtn] = allByName(root, 'Button') as HTMLElement[]
-
-      const isVisible = (el: HTMLElement) => el.style.display !== 'none'
-
-      expect(isVisible(homeView)).toBe(true)
-      expect(isVisible(settingsView)).toBe(false)
-
-      settingsBtn.click()
-      expect(isVisible(homeView)).toBe(false)
-      expect(isVisible(settingsView)).toBe(true)
-
-      homeBtn.click()
-      expect(isVisible(homeView)).toBe(true)
-      expect(isVisible(settingsView)).toBe(false)
-    })
-  })
 })
