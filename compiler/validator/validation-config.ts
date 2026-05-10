@@ -138,6 +138,11 @@ export const PROPERTY_RANGES: Record<string, PropertyRange> = {
   rad: { min: 0, description: 'greater than or equal to 0' },
   gap: { min: 0, description: 'greater than or equal to 0' },
   g: { min: 0, description: 'greater than or equal to 0' },
+  // Slice 6 V-5: grid column count must be a positive integer.
+  // `grid 0` produces `repeat(0, 1fr)` — visible browser bug (no columns).
+  // Negative counts are nonsensical. Token form (`grid $cols`) bypasses this
+  // check — runtime token-resolution validates separately.
+  grid: { min: 1, description: 'positive integer (1 or more)' },
   padding: { min: 0, description: 'greater than or equal to 0' },
   pad: { min: 0, description: 'greater than or equal to 0' },
   p: { min: 0, description: 'greater than or equal to 0' },
