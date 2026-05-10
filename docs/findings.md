@@ -115,6 +115,21 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
+- **Wo:** `studio/demo/` (735 LOC) — DOM-Overlay-Demo-API (DemoCursor +
+  KeystrokeOverlay)
+  **Was:** Browser-Side-Implementation für Demo-Modus mit visuellem
+  Cursor und Keystroke-Overlay. 735 LOC, letzte Code-Aktivität
+  2026-04-22 (3 Wochen). 0 Konsumenten irgendwo im Repo
+  (`setupDemoAPI`/`DemoAPI`/`DemoCursor`/`KeystrokeOverlay` keine
+  Refs). Vermutlich ersetzt durch die neue Owner-Pipeline (real OS
+  cursor via nut-js + CDP-Screencast in `tools/test-runner/`). Da
+  konzeptuell zur Demo-Pipeline gehörig, ist Deletion **owner-
+  Entscheidung** — Claude-Sessions tasten `studio/demo/` nicht an,
+  bis der Owner bestätigt dass die Browser-Overlay-Variante
+  obsoleted ist.
+  **Status:** offen — Owner-Entscheidung
+  **Notiz:** Wenn Deletion gewünscht: Trivial, 0 Imports zu ziehen.
+
 - **Wo:** `studio/test-api/mirror-actions/index.ts:dropChildIndexPoint`
   - Studios Drop-Target-Detection (`studio/preview/drag/...`)
     **Was:** Drop into a container tight-packed with children (3 children
