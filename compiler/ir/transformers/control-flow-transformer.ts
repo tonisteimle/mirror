@@ -15,18 +15,6 @@ import { fixLoopVariableReferences, markLoopVariablesInFilter } from './loop-uti
 type EachChild = Instance | Slot | ConditionalNode | Each
 
 /**
- * Conditional block node structure - 'if condition' blocks in Mirror DSL
- */
-export interface ConditionalBlock {
-  type: 'Conditional'
-  condition: string
-  then: (Instance | Slot)[]
-  else?: (Instance | Slot)[]
-  line: number
-  column: number
-}
-
-/**
  * Context for control flow transformation
  */
 export interface ControlFlowContext {
@@ -112,16 +100,14 @@ export function transformEach(each: Each, ctx: ControlFlowContext): IRNode {
  * @param ctx Transformation context
  * @returns IRNode with conditional data
  */
-export function transformConditional(cond: ConditionalBlock, ctx: ControlFlowContext): IRNode {
+export function transformConditional(cond: ConditionalNode, ctx: ControlFlowContext): IRNode {
   const nodeId = ctx.generateId()
   const conditionalData: IRConditional = {
     id: nodeId,
     condition: cond.condition,
-    then: cond.then.map((child: Instance | Slot) =>
-      ctx.transformInstance(child, nodeId, false, true)
-    ),
+    then: cond.then.map(child => ctx.transformInstance(child, nodeId, false, true)),
     else: cond.else?.length
-      ? cond.else.map((child: Instance | Slot) => ctx.transformInstance(child, nodeId, false, true))
+      ? cond.else.map(child => ctx.transformInstance(child, nodeId, false, true))
       : undefined,
   }
 
