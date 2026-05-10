@@ -40,10 +40,14 @@ function compileAll(label: string, src: string): void {
     const domIcon = dom.match(/data-icon[^"]*="[^"]*"/g)?.join(' | ') ?? '(no data-icon)'
     const domLoad = dom.match(/_runtime\.loadIcon\([^)]*\)/g)?.join(' | ') ?? '(no loadIcon)'
     const domStyle = dom.match(/Object\.assign\([^,]+\.style,\s*\{[^}]+\}\)/g)
+    // Slice 50 V-2 post-fix: React backend emits <MirrorIcon ... />.
+    // Pre-fix this regex looked for <span data-component="Icon">{"check"}
+    // </span> — that path is dead. Probe iter-2 update: prefer MirrorIcon.
     const reactIcon =
+      react.match(/<MirrorIcon[^/]*\/>/g)?.[0] ??
       react.match(/<span[^>]*data-icon[^>]*>/g)?.[0] ??
       react.match(/<span[^>]*>[^<]*<\/span>/g)?.join(' | ') ??
-      '(no span)'
+      '(no MirrorIcon)'
     const fwIcon =
       fw.match(/M\('Icon'[^\]]*\]\)/g)?.[0] ?? fw.match(/M\('Icon',[^)]+\)/g)?.[0] ?? '(no Icon)'
     console.log('  DOM data-icon:  ', domIcon)

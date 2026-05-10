@@ -200,6 +200,20 @@ Icon "check", is $iconSize`
     expect(fw(src)).toMatch(/iconSize/)
   })
 
+  it('RT-13b — Suffix-aware var-name in React MirrorIcon (Iter-2 fix)', () => {
+    // Review-Pass Iter-2 finding: pre-fix React emitted `var(--iconSize)`
+    // (no suffix) while DOM declared `--iconSize-is` — Cross-Backend
+    // Variable-Name-Mismatch. Post-fix: React MirrorIcon uses suffix.
+    const src = `iconSize.is: 24
+primary.ic: #2271C1
+heavy.iw: 3
+Icon "check", is $iconSize, ic $primary, iw $heavy`
+    const reactOut = react(src)
+    expect(reactOut).toContain(`size="var(--iconSize-is)"`)
+    expect(reactOut).toContain(`color="var(--primary-ic)"`)
+    expect(reactOut).toContain(`strokeWidth="var(--heavy-iw)"`)
+  })
+
   it('RT-14 — `Icon "x", ic $primary` cross-backend (with .ic suffix)', () => {
     // Note: ic-suffix is `.ic` per token-suffixes.ts:80. User must define
     // `primary.ic` (NOT `primary.col`) for this token to resolve.

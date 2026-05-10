@@ -13,6 +13,7 @@
 
 import type { IRNode, IRStateMachine, IRStateTransition, IRStateAnimation } from '../../ir/types'
 import type { StateMachineEmitterContext, DeferredWhenWatcher } from './base-emitter-context'
+import { ICON_DEFAULTS } from '../../schema/primitives'
 import { isToggleableStateName } from '../../schema/parser-helpers'
 
 // Re-export for backwards compatibility
@@ -80,9 +81,11 @@ function emitStateChildNested(
     const iconProp = node.properties.find(p => p.name === 'textContent')
     if (iconProp && typeof iconProp.value === 'string') {
       const iconName = iconProp.value
-      const iconSize = node.styles.find(s => s.property === 'fontSize')?.value || '24'
-      const iconColor = node.styles.find(s => s.property === 'color')?.value || 'currentColor'
-      const iconWeight = node.styles.find(s => s.property === 'strokeWidth')?.value || '2'
+      const iconSize =
+        node.styles.find(s => s.property === 'fontSize')?.value || String(ICON_DEFAULTS.size)
+      const iconColor = node.styles.find(s => s.property === 'color')?.value || ICON_DEFAULTS.color
+      const iconWeight =
+        node.styles.find(s => s.property === 'strokeWidth')?.value || String(ICON_DEFAULTS.weight)
       ctx.emit(`${varName}.dataset.iconSize = '${iconSize.replace('px', '')}'`)
       ctx.emit(`${varName}.dataset.iconColor = '${iconColor}'`)
       ctx.emit(`${varName}.dataset.iconWeight = '${iconWeight}'`)
@@ -139,9 +142,11 @@ function emitStateChild(ctx: StateMachineEmitterContext, node: IRNode, index: nu
     const iconProp = node.properties.find(p => p.name === 'textContent')
     if (iconProp && typeof iconProp.value === 'string') {
       const iconName = iconProp.value
-      const iconSize = node.styles.find(s => s.property === 'fontSize')?.value || '24'
-      const iconColor = node.styles.find(s => s.property === 'color')?.value || 'currentColor'
-      const iconWeight = node.styles.find(s => s.property === 'strokeWidth')?.value || '2'
+      const iconSize =
+        node.styles.find(s => s.property === 'fontSize')?.value || String(ICON_DEFAULTS.size)
+      const iconColor = node.styles.find(s => s.property === 'color')?.value || ICON_DEFAULTS.color
+      const iconWeight =
+        node.styles.find(s => s.property === 'strokeWidth')?.value || String(ICON_DEFAULTS.weight)
       ctx.emit(`${varName}.dataset.iconSize = '${iconSize.replace('px', '')}'`)
       ctx.emit(`${varName}.dataset.iconColor = '${iconColor}'`)
       ctx.emit(`${varName}.dataset.iconWeight = '${iconWeight}'`)

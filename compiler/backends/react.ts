@@ -422,11 +422,11 @@ function generateIconJSX(instance: Instance, indent: string): string {
   for (const p of instance.properties) {
     const v = p.values[0]
     if (p.name === 'icon-size' || p.name === 'is') {
-      propAttrs.push(`size=${formatIconPropValue(v)}`)
+      propAttrs.push(`size=${formatIconPropValue(v, 'is')}`)
     } else if (p.name === 'icon-color' || p.name === 'ic') {
-      propAttrs.push(`color=${formatIconPropValue(v)}`)
+      propAttrs.push(`color=${formatIconPropValue(v, 'ic')}`)
     } else if (p.name === 'icon-weight' || p.name === 'iw') {
-      propAttrs.push(`strokeWidth=${formatIconPropValue(v)}`)
+      propAttrs.push(`strokeWidth=${formatIconPropValue(v, 'iw')}`)
     } else if (p.name === 'fill') {
       propAttrs.push(`fill`)
     }
@@ -447,24 +447,33 @@ function getIconName(instance: Instance): string {
   return ''
 }
 
-function formatIconPropValue(v: unknown): string {
+/**
+ * Slice 50 V-2: format a property value for the MirrorIcon JSX prop.
+ *
+ * `propAlias` is the short Mirror name (`is`/`ic`/`iw`) so we can apply
+ * the same suffix resolution the IR token-resolver uses (`is` → `.is`,
+ * `ic` → `.ic`, etc.). Without this the React backend emitted
+ * `var(--iconSize)` while the DOM backend declared the CSS variable as
+ * `--iconSize-is` — cross-backend variable-name mismatch, MirrorIcon
+ * would silently fall back to default size.
+ */
+function formatIconPropValue(v: unknown, propAlias: 'is' | 'ic' | 'iw'): string {
   if (v == null) return '{undefined}'
   if (typeof v === 'number') return `{${v}}`
   if (typeof v === 'boolean') return `{${v}}`
   if (typeof v === 'string') {
-    // Token references: parser stores `$primary` as object {kind:'token',name:'primary'}.
     // Bare numeric strings → number JSX expression.
     if (/^-?\d+(\.\d+)?$/.test(v)) return `{${v}}`
     return JSON.stringify(v)
   }
   if (typeof v === 'object' && v !== null && 'name' in v) {
-    // Token reference — emit as `var(--<name>-<suffix>)` string. The
-    // suffix is property-specific; the resolver in generateStyles handles
-    // suffix-aware token resolution. For Icon-props we just emit the
-    // bare token name as `var(--<name>)`. The custom-property is set
-    // by the surrounding style pipeline as long as the token exists.
+    // Token reference — emit as `var(--<name>-<suffix>)` string matching
+    // the suffix-aware CSS variable declaration emitted by the DOM/state
+    // pipeline. The suffix is the same one `compiler/schema/token-suffixes.ts`
+    // uses (alias-keyed: `is`→`.is`, `ic`→`.ic`, `iw`→`.iw`).
     const tokenName = (v as { name: string }).name.replace(/^\$/, '')
-    return JSON.stringify(`var(--${tokenName.replace(/\./g, '-')})`)
+    const cssVarName = `${tokenName.replace(/\./g, '-')}-${propAlias}`
+    return JSON.stringify(`var(--${cssVarName})`)
   }
   return JSON.stringify(String(v))
 }

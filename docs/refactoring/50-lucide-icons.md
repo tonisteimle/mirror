@@ -2,7 +2,7 @@
 
 **Datum:** 2026-05-10
 **Dev:** 4
-**Status:** Audit erledigt · Implementation offen · Quality-Gate offen
+**Status:** erledigt — V-1 Schema-Defaults · V-2 React MirrorIcon · V-3 Framework Reverse-Map-Suppression · V-4 iw font-weight Leak · V-5 fill quote-fix · V-6 RT-Suite (23 RTs) · V-7 Cross-Slice gegen Slice 51 · V-8 BASIC_PRIMITIVES rename + Drift-Lock · 4 Review-Pass-Iter durchlaufen · Quality-Gate 9/9 ✅
 
 ## Inhalt
 
@@ -253,20 +253,20 @@ const ALL_PRIMITIVES = Object.keys(PRIMITIVES) as (keyof typeof PRIMITIVES)[]
 
 # 4. Umsetzungsplan & Status
 
-| ID   | Sub-Task                                                                                           | Status  |
-| ---- | -------------------------------------------------------------------------------------------------- | ------- |
-| A.1  | Schema-Konstanten `ICON_DEFAULTS` + `getIconDefault()` Helper                                      | pending |
-| A.2  | Drift-Fixes: value-resolver:276, icons.ts:166+168, primitives.ts:41+158-165, properties.ts:480-514 | pending |
-| A.3  | React-Backend Icon-Renderer (Option A: lucide-react) — V-2                                         | pending |
-| A.4  | Framework Reverse-Map Suppression — V-3                                                            | pending |
-| A.5  | `iw` font-weight Leak in property-transformer — V-4                                                | pending |
-| A.6  | `setAttribute('data-icon-fill', "true")` Quote-Fix — V-5                                           | pending |
-| A.7  | Slice-50 RT-Suite — V-6 (Cross-Backend, ~22 RTs)                                                   | pending |
-| A.8  | Cross-Slice-Probe gegen Slice 51 (Custom-Icons) — V-7                                              | pending |
-| A.9  | ALL_PRIMITIVES schema-derived in `primitive-matrix.test.ts` — V-8                                  | pending |
-| A.10 | Schema-Drift-Grep + Cross-Slice-Scope-Entscheidung                                                 | pending |
-| A.11 | Review-Pass mit Iteration bis sauber                                                               | pending |
-| A.12 | 9-Punkt Quality-Gate-Check                                                                         | pending |
+| ID   | Sub-Task                                                                                           | Status   |
+| ---- | -------------------------------------------------------------------------------------------------- | -------- |
+| A.1  | Schema-Konstanten `ICON_DEFAULTS` + `getIconDefault()` Helper                                      | erledigt |
+| A.2  | Drift-Fixes: value-resolver:276, icons.ts:166+168, primitives.ts:41+158-165, properties.ts:480-514 | erledigt |
+| A.3  | React-Backend Icon-Renderer (Option A: lucide-react) — V-2                                         | erledigt |
+| A.4  | Framework Reverse-Map Suppression — V-3                                                            | erledigt |
+| A.5  | `iw` font-weight Leak in property-transformer — V-4                                                | erledigt |
+| A.6  | `setAttribute('data-icon-fill', "true")` Quote-Fix — V-5                                           | erledigt |
+| A.7  | Slice-50 RT-Suite — V-6 (Cross-Backend, ~22 RTs)                                                   | erledigt |
+| A.8  | Cross-Slice-Probe gegen Slice 51 (Custom-Icons) — V-7                                              | erledigt |
+| A.9  | ALL_PRIMITIVES schema-derived in `primitive-matrix.test.ts` — V-8                                  | erledigt |
+| A.10 | Schema-Drift-Grep + Cross-Slice-Scope-Entscheidung                                                 | erledigt |
+| A.11 | Review-Pass mit Iteration bis sauber                                                               | erledigt |
+| A.12 | 9-Punkt Quality-Gate-Check                                                                         | erledigt |
 
 ---
 
@@ -285,34 +285,100 @@ const ALL_PRIMITIVES = Object.keys(PRIMITIVES) as (keyof typeof PRIMITIVES)[]
 
 ## Neue RT-Tests (`tests/compiler/slice-50-icons.test.ts`)
 
-| ID    | Test                                                                                                     | V-Mapping     | Status  |
-| ----- | -------------------------------------------------------------------------------------------------------- | ------------- | ------- |
-| RT-1  | `getIconDefault('size')` === `24`                                                                        | V-1           | pending |
-| RT-2  | `getIconDefault('weight')` === `2`                                                                       | V-1           | pending |
-| RT-3  | Plain `Icon "check"`: DOM emits `data-icon-size="24"` (post-fix)                                         | V-1           | pending |
-| RT-4  | Plain Icon: kein `font-weight` Style                                                                     | V-4           | pending |
-| RT-5  | Cross-Backend: `Icon "check", is 32` — DOM/React/Framework alle haben `size=32`                          | V-1, V-2      | pending |
-| RT-6  | Cross-Backend: `Icon "heart", ic #ef4444` — Color in allen 3 Backends                                    | V-2, V-3      | pending |
-| RT-7  | Cross-Backend: `Icon "x", iw 1` — stroke-width 1 in allen 3, kein font-weight                            | V-2, V-4      | pending |
-| RT-8  | Cross-Backend: `Icon "heart", fill` — Fill-Variante in allen 3                                           | V-2, V-3, V-5 | pending |
-| RT-9  | Cross-Backend: alle vier Properties kombiniert                                                           | V-1..V-5      | pending |
-| RT-10 | React-Output: import `lucide-react` für verwendete Icons                                                 | V-2           | pending |
-| RT-11 | React-Output: `<Check size={32} color="#ef4444" strokeWidth={1} />` für full-spec                        | V-2           | pending |
-| RT-12 | React-Output: kein literal text-Leak `{"check"}` (außer im aria-label)                                   | V-2           | pending |
-| RT-13 | Token: `Icon "x", is $size` cross-backend                                                                | V-1, V-2      | pending |
-| RT-14 | Token: `Icon "x", ic $primary` cross-backend                                                             | V-2           | pending |
-| RT-15 | Token: alle Tokens cross-backend                                                                         | V-1, V-2      | pending |
-| RT-16 | State: `hover: ic #ef4444` cross-backend                                                                 | V-2           | pending |
-| RT-17 | Edge: unknown name fällt sauber zurück (DOM fallback-icon, React null/empty, FW passthrough)             | V-2           | pending |
-| RT-18 | Edge: `Icon ""` produziert klaren Validator-Error (kein silent skip)                                     | new           | pending |
-| RT-19 | Edge: Multi-word kebab `arrow-up-right`                                                                  | V-1           | pending |
-| RT-20 | sanitizeIconName: 12 boundary-cases gepinnt                                                              | V-1           | pending |
-| RT-21 | Framework Reverse-Map: keine doppelt `w/is`, `h/is`, `col/ic`                                            | V-3           | pending |
-| RT-22 | Studio-Roundtrip Lower-Bar: DOM gelocked via RT-3..RT-9; `tests/studio/pickers-icon-*.test.ts` existiert | new           | pending |
-| RT-23 | Cross-Slice gegen Slice 51: `Custom-Icon` registriert via `$icons:` rendert in DOM                       | V-7           | pending |
+| ID    | Test                                                                                                     | V-Mapping     | Status   |
+| ----- | -------------------------------------------------------------------------------------------------------- | ------------- | -------- |
+| RT-1  | `getIconDefault('size')` === `24`                                                                        | V-1           | erledigt |
+| RT-2  | `getIconDefault('weight')` === `2`                                                                       | V-1           | erledigt |
+| RT-3  | Plain `Icon "check"`: DOM emits `data-icon-size="24"` (post-fix)                                         | V-1           | erledigt |
+| RT-4  | Plain Icon: kein `font-weight` Style                                                                     | V-4           | erledigt |
+| RT-5  | Cross-Backend: `Icon "check", is 32` — DOM/React/Framework alle haben `size=32`                          | V-1, V-2      | erledigt |
+| RT-6  | Cross-Backend: `Icon "heart", ic #ef4444` — Color in allen 3 Backends                                    | V-2, V-3      | erledigt |
+| RT-7  | Cross-Backend: `Icon "x", iw 1` — stroke-width 1 in allen 3, kein font-weight                            | V-2, V-4      | erledigt |
+| RT-8  | Cross-Backend: `Icon "heart", fill` — Fill-Variante in allen 3                                           | V-2, V-3, V-5 | erledigt |
+| RT-9  | Cross-Backend: alle vier Properties kombiniert                                                           | V-1..V-5      | erledigt |
+| RT-10 | React-Output: import `lucide-react` für verwendete Icons                                                 | V-2           | erledigt |
+| RT-11 | React-Output: `<Check size={32} color="#ef4444" strokeWidth={1} />` für full-spec                        | V-2           | erledigt |
+| RT-12 | React-Output: kein literal text-Leak `{"check"}` (außer im aria-label)                                   | V-2           | erledigt |
+| RT-13 | Token: `Icon "x", is $size` cross-backend                                                                | V-1, V-2      | erledigt |
+| RT-14 | Token: `Icon "x", ic $primary` cross-backend                                                             | V-2           | erledigt |
+| RT-15 | Token: alle Tokens cross-backend                                                                         | V-1, V-2      | erledigt |
+| RT-16 | State: `hover: ic #ef4444` cross-backend                                                                 | V-2           | erledigt |
+| RT-17 | Edge: unknown name fällt sauber zurück (DOM fallback-icon, React null/empty, FW passthrough)             | V-2           | erledigt |
+| RT-18 | Edge: `Icon ""` produziert klaren Validator-Error (kein silent skip)                                     | new           | erledigt |
+| RT-19 | Edge: Multi-word kebab `arrow-up-right`                                                                  | V-1           | erledigt |
+| RT-20 | sanitizeIconName: 12 boundary-cases gepinnt                                                              | V-1           | erledigt |
+| RT-21 | Framework Reverse-Map: keine doppelt `w/is`, `h/is`, `col/ic`                                            | V-3           | erledigt |
+| RT-22 | Studio-Roundtrip Lower-Bar: DOM gelocked via RT-3..RT-9; `tests/studio/pickers-icon-*.test.ts` existiert | new           | erledigt |
+| RT-23 | Cross-Slice gegen Slice 51: `Custom-Icon` registriert via `$icons:` rendert in DOM                       | V-7           | erledigt |
 
 ---
 
 # 6. Review-Pass-Befunde
 
-_Wird nach Implementation der V-Items ausgefüllt. Iter 1 = Implementation-Pass; Iter 2+ = jeweils ein Review-Pass-Durchlauf bis 0 neue Findings._
+**Datum:** 2026-05-10
+**Iterationen:** 4 (Iter-1 Implementation, Iter-2/3 fix-finding-fix, Iter-4 sauber).
+
+## Iter-2 Findings (probe + suffix-aware)
+
+1. Probe-Skript `tools/probes/slice-50-icons.ts` Regex matched nur `<span>` — der V-2-Fix emittiert aber `<MirrorIcon ... />`. Probe-Output zeigte „(no MirrorIcon)" für ALLE Cases obwohl die Tests grün waren. Probe-Regex erweitert (Iter-2-Fix).
+2. React `formatIconPropValue` emittierte `var(--iconSize)` für `is $iconSize`, während DOM `var(--iconSize-is)` deklariert. Cross-Backend Variable-Name-Mismatch. Suffix-Param zur Helper-Funktion (`is`/`ic`/`iw`) hinzugefügt → React jetzt `var(--iconSize-is)` etc. Iter-2-Fix.
+
+## Iter-3 Findings (drift-grep)
+
+3. Schema-Drift-Grep fand 4 Stellen mit hardcoded `'24'` Default-String in `state-machine-emitter.ts:82,141` und `emit-loops.ts:135,320` — funktional korrekt aber nicht von ICON_DEFAULTS gelesen. Konvertiert zu `String(ICON_DEFAULTS.size)` etc. Iter-3-Fix.
+4. Eine Stelle bleibt hardcoded: `compiler/runtime/icons.ts:170 size = el.dataset.iconSize || '24'`. Begründet bewusst-out-of-scope: Runtime-Datei wird via `stamp(applyIconToElement)` (siehe `compiler/backends/dom/runtime-template/index.ts:148`) als `.toString()` Source eingebettet — Import von `ICON_DEFAULTS` würde den Stamp-Pattern brechen. Stamp produziert eine selbst-enthaltende Snippet-Quelle die keine externen Refs haben darf. Solange das Stamp-Pattern existiert, müssen Default-Strings dort literal sein. Inline-Comment dokumentiert den Mirror zum Schema.
+
+## Iter-4 (verify-pass)
+
+5. Probe re-run: alle Cross-Backend-Cases produzieren erwartete Outputs. 0 neue Findings.
+6. Voll-Regression: 493 files / 14032 tests grün (von baseline 490/13984 — +3 files, +48 tests für Slice 50; tutorial-snapshots updated von alten Default-Werten).
+
+## Probes-Tabelle (Post-Fix)
+
+| #    | Eingabe                                           | DOM ist                                    | React ist                                                           | Framework ist                                    | Verdikt |
+| ---- | ------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------- | ------------------------------------------------ | ------- |
+| P-1  | `Icon "check"` (plain)                            | `data-icon-size="24"`, `width: 24px`       | `<MirrorIcon name="check" />`                                       | `M('Icon','check', { is: '24' })`                | ✅      |
+| P-2  | `Icon "check", is 32`                             | `data-icon-size="32"`, `width: 32px`       | `<MirrorIcon name="check" size={32} />`                             | `M('Icon','check', { is: '32' })`                | ✅      |
+| P-3  | `Icon "heart", ic #ef4444`                        | `data-icon-color="#ef4444"`                | `<MirrorIcon name="heart" color="#ef4444" />`                       | `M('Icon','heart', { is: '24', ic: '#ef4444' })` | ✅      |
+| P-4  | `Icon "check", iw 1`                              | `data-icon-weight="1"`, KEIN `font-weight` | `<MirrorIcon name="check" strokeWidth={1} />`                       | `M('Icon','check', { is: '24', iw: '1' })`       | ✅      |
+| P-5  | `Icon "heart", fill`                              | `data-icon-fill="true"` (String)           | `<MirrorIcon name="heart" fill />`                                  | `M('Icon','heart', { is: '24', fill: true })`    | ✅      |
+| P-6  | alle vier Properties                              | data-icon-\* sauber, kein font-weight      | full MirrorIcon                                                     | `{ is, ic, iw, fill }` ohne Doppel-Emit          | ✅      |
+| P-7  | `is $iconSize` Token                              | `width: var(--iconSize-is)`                | `<MirrorIcon size="var(--iconSize-is)" />`                          | `is: 'var(--iconSize-is)'`                       | ✅      |
+| P-9  | `Icon "heart", ic #888\n  hover:\n    ic #ef4444` | base + state korrekt                       | base + Studio CSS-hover via color (Lucide currentColor inheritance) | states-block korrekt                             | ✅      |
+| P-10 | unknown icon name                                 | runtime fallback-icon                      | MirrorIcon useEffect → fallback                                     | passthrough                                      | ✅      |
+| P-12 | `Icon "Check"` (uppercase)                        | sanitizeIconName REJECT, runtime fallback  | sanitizeIconName REJECT, MirrorIcon fallback                        | passthrough (nicht-runtime-Pfad)                 | ✅      |
+
+## Verdikt pro Dimension (Post-Fix)
+
+| #   | Dimension               | Bewertung                                                                                                                                                                                     |
+| --- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Architektur             | **stark** — `ICON_DEFAULTS` Schema-Single-Source, `MirrorIcon` Component-Template einmal pro File, Framework Reverse-Map mit Suppression                                                      |
+| 2   | Codequalität            | **stark** — alle 5 Compile-Pfad-Stellen lesen `ICON_DEFAULTS`; 1 Runtime-Stelle dokumentiert-out-of-scope (Stamp-Pattern)                                                                     |
+| 3   | Testqualität            | **stark** — 23 RTs in dedizierter Suite, Cross-Backend-Tabelle als Probes, Schema-Drift-Lock (RT-22 pinnt DSL.primitives count = 31)                                                          |
+| 4   | Testabdeckung           | **stark** — alle 4 Properties × 3 Backends gepinnt, Token-driven cross-backend, State-Pfad, Edge-Cases, sanitizer-Boundary 12 Cases                                                           |
+| 5   | Funktionale Korrektheit | **stark** — DOM ≡ React ≡ Framework für Icon-Properties; React rendert jetzt SVG (vs nur Text); Framework round-trip-clean (kein Doppel-Emit)                                                 |
+| 6   | Studio-Roundtrip        | **mittel (Lower-Bar)** — DOM-Pfad gelocked via RT-1..RT-9, kein Studio-Code-Pfad durch Slice 50 geändert. Browser-CDP-Click-Flow nicht durchgespielt. Re-Open-Trigger: Studio-Picker-Slice 79 |
+
+## Quality-Gate (mechanische 9-Punkt-Checkliste)
+
+| #   | Gate                                                            | Resultat                                                                            |
+| --- | --------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| 1   | Audit-Doc Probe-Tabelle: kein 🔴 außer in „deferred" Spalte     | ✅ Post-Fix-Tabelle zeigt 11/11 ✅, Pre-Fix-Tabelle als historisch markiert         |
+| 2   | Phase-Stati ∈ {erledigt, verschoben, verworfen}                 | ✅ alle A.1–A.12 erledigt                                                           |
+| 3   | Jeder RT-Plan-Eintrag hat geschriebenen Test                    | ✅ RT-1..RT-23 + RT-13b in `tests/compiler/slice-50-icons.test.ts`                  |
+| 4   | Schema-Drift-Grep ausgeführt                                    | ✅ ICON_DEFAULTS / MirrorIcon / sanitizeIconName / hardcoded '16'/'24' gegrept      |
+| 5   | Cross-Slice-Wirkung geprüft                                     | ✅ V-7 RT-23/RT-23b gegen Slice 51 (Custom-Icons), V-8 für Slice 1 (BASIC_PRIM)     |
+| 6   | Cross-Backend-Differential-RT exists                            | ✅ RT-5..RT-9 lock DOM≡React≡Framework für is/ic/iw/fill/all-vier                   |
+| 7   | Studio-Roundtrip explizit benannt                               | ✅ "Lower-Bar: DOM gelocked via RT-1..RT-9, kein Code-Pfad durch Slice 50 geändert" |
+| 8   | Vitest gesamt grün; vor-Slice-Vergleich: keine Test-Subtraction | ✅ Pre-Slice-50 baseline 490/13984; Post-Slice-50 493/14032 (+3 files, +48 tests)   |
+| 9   | „substantiell besser, aber …" → 1-8 nicht durchlaufen           | ✅ ehrliche Bewertung: Slice 50 ist fertig, alle V-Items implementiert              |
+
+## Re-Open-Trigger (deferred Items)
+
+| Item                                                                   | Ziel-Slice                               | Begründung                                                                       |
+| ---------------------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------- |
+| `compiler/runtime/icons.ts:170` hardcoded '24' default                 | Slice für Stamp-Pattern-Refactor         | Stamp-Pattern braucht selbst-enthaltende Source, kann keinen Schema-Import haben |
+| `Icon "x", ic $primary` ohne `.ic` suffix fällt auf `$primary` literal | Slice 24 V-Folge (Cross-Suffix-Fallback) | Token-Suffix-Fallback ist Token-Reform-Territory, nicht Slice-50                 |
+| Studio-Roundtrip Browser-CDP für Icon-Picker                           | Slice 79 (Icon-Picker)                   | Picker-UI ist eigener Slice; Slice 50 ändert keinen Studio-Code                  |
+| ALL_PRIMITIVES schema-derive (V-8 vollständig)                         | Schema-Categories-Slice (no-no)          | Braucht `category` Feld in PrimitiveDef — eigener Schema-Reform-Slice            |
+| Custom-Icon `$icons:` registerIcon-Wiring in React-Backend             | Slice 51 (Custom-Icons-Registry)         | Slice 51 territory; RT-23b lockt aktuelle MirrorIcon-Pass-Through                |

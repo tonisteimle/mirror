@@ -10,6 +10,7 @@ import {
   emitEachLoop as emitEachLoopExtracted,
   emitConditional as emitConditionalExtracted,
 } from '../../dom/loop-emitter'
+import { ICON_DEFAULTS } from '../../../schema/primitives'
 import type { DOMGenerator } from '../../dom'
 
 export function emitEachLoop(this: DOMGenerator, each: IREach, parentVar: string): void {
@@ -131,15 +132,19 @@ export function emitConditionalTemplateNode(
       const iconSizeProp = node.properties.find(p => p.name === 'data-icon-size')
       const iconColorProp = node.properties.find(p => p.name === 'data-icon-color')
       const iconWeightProp = node.properties.find(p => p.name === 'data-icon-weight')
-      // Slice 50 V-1: schema-derived default 24 (was 16).
+      // Slice 50 V-1: schema-derived default 24 (was 16) via ICON_DEFAULTS.
       const iconSize =
-        iconSizeProp?.value || node.styles.find(s => s.property === 'fontSize')?.value || '24'
+        iconSizeProp?.value ||
+        node.styles.find(s => s.property === 'fontSize')?.value ||
+        String(ICON_DEFAULTS.size)
       const iconColor =
         iconColorProp?.value ||
         node.styles.find(s => s.property === 'color')?.value ||
-        'currentColor'
+        ICON_DEFAULTS.color
       const iconWeight =
-        iconWeightProp?.value || node.styles.find(s => s.property === 'strokeWidth')?.value || '2'
+        iconWeightProp?.value ||
+        node.styles.find(s => s.property === 'strokeWidth')?.value ||
+        String(ICON_DEFAULTS.weight)
       // resolveContentValue handles both literals (quoted) and loop-var
       // markers (unquoted JS reference). Without it, `ic feature.accent`
       // would emit dataset.iconColor = '__loopVar:feature.accent' as a
@@ -317,15 +322,19 @@ export function emitEachTemplateNodeContent(
       const iconSizeProp = node.properties.find(p => p.name === 'data-icon-size')
       const iconColorProp = node.properties.find(p => p.name === 'data-icon-color')
       const iconWeightProp = node.properties.find(p => p.name === 'data-icon-weight')
-      // Slice 50 V-1: schema-derived default 24 (was 16).
+      // Slice 50 V-1: schema-derived default 24 (was 16) via ICON_DEFAULTS.
       const iconSize =
-        iconSizeProp?.value || node.styles.find(s => s.property === 'fontSize')?.value || '24'
+        iconSizeProp?.value ||
+        node.styles.find(s => s.property === 'fontSize')?.value ||
+        String(ICON_DEFAULTS.size)
       const iconColor =
         iconColorProp?.value ||
         node.styles.find(s => s.property === 'color')?.value ||
-        'currentColor'
+        ICON_DEFAULTS.color
       const iconWeight =
-        iconWeightProp?.value || node.styles.find(s => s.property === 'strokeWidth')?.value || '2'
+        iconWeightProp?.value ||
+        node.styles.find(s => s.property === 'strokeWidth')?.value ||
+        String(ICON_DEFAULTS.weight)
       // See note in the first emit-loops icon block above — same fix for the
       // template-clone path: route every icon-* dataset write through
       // resolveContentValue so loop-var bindings (`is f.size`, `ic f.color`,
