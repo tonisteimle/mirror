@@ -56,15 +56,20 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Was:** `setSelection()` schreibt im Defer-Pfad gleichzeitig
   `deferredSelection` (neue API) und `queuedSelection` (legacy) — Dual-Write
   öffnet Inkonsistenz, wenn beide Pfade auseinanderlaufen.
-  **Status:** offen
-  **Notiz:** Legacy-Pfad streichen.
+  **Status:** erledigt — alle 6 Caller in `commands.ts` (Delete/Move/
+  MoveWithLayout je execute+undo) auf
+  `actions.setDeferredSelection({ type: 'nodeId', … })` migriert. Dual-
+  Write entfernt, `queuedSelection`-Block in `setCompileResult` raus,
+  Feld aus `state-types.ts` und Initial-State entfernt, 5 Tests
+  umgeschrieben. 5815/5815 studio passes.
 
 - **Wo:** `studio/core/state.ts:216-241` (`setCompileResult`)
   **Was:** Drei überlappende Selection-Pfade (queued/pending/deferred) mit
   separaten if/return-Blöcken — schwer zu lesen, fehleranfällig beim
   Erweitern.
-  **Status:** offen
-  **Notiz:** Zu einem priorisierten Switch konsolidieren.
+  **Status:** teilweise erledigt — `queuedSelection`-Block entfernt
+  (siehe oben). Bleiben pending+deferred mit zwei Early-Returns; siehe
+  unten unter `state.ts:243-278`.
 
 - **Wo:** `studio/core/state.ts:281-305`
   **Was:** Race-Window: `state.get()` wird **nach** `compile:completed`

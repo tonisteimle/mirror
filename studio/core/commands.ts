@@ -407,8 +407,8 @@ export class DeleteNodeCommand implements Command {
         this.fallbackInfo.parentId
 
       if (fallbackId) {
-        // Queue selection to be resolved after compile
-        state.set({ queuedSelection: { nodeId: fallbackId, origin: 'keyboard' } })
+        // Defer selection to be resolved after compile
+        actions.setDeferredSelection({ type: 'nodeId', nodeId: fallbackId, origin: 'keyboard' })
       } else if (ctx.clearSelection) {
         ctx.clearSelection('keyboard')
       } else {
@@ -427,7 +427,7 @@ export class DeleteNodeCommand implements Command {
       insert: this.deletedContent,
     }
     ctx.applyChange(undoChange)
-    state.set({ queuedSelection: { nodeId: this.nodeId, origin: 'keyboard' } })
+    actions.setDeferredSelection({ type: 'nodeId', nodeId: this.nodeId, origin: 'keyboard' })
     return { success: true, change: undoChange }
   }
 }
@@ -465,7 +465,7 @@ export class MoveNodeCommand implements Command {
     this.change = result.change
     const editorChange = adjustChangeForEditor(result.change, ctx)
     ctx.applyChange(editorChange)
-    state.set({ queuedSelection: { nodeId: this.nodeId, origin: 'keyboard' } })
+    actions.setDeferredSelection({ type: 'nodeId', nodeId: this.nodeId, origin: 'keyboard' })
     return { success: true, change: editorChange }
   }
 
@@ -478,7 +478,7 @@ export class MoveNodeCommand implements Command {
       insert: this.originalSource,
     }
     ctx.applyChange(undoChange)
-    state.set({ queuedSelection: { nodeId: this.nodeId, origin: 'keyboard' } })
+    actions.setDeferredSelection({ type: 'nodeId', nodeId: this.nodeId, origin: 'keyboard' })
     return { success: true, change: undoChange }
   }
 }
@@ -629,7 +629,7 @@ export class MoveNodeWithLayoutCommand implements Command {
     }
 
     ctx.applyChange(editorChange)
-    state.set({ queuedSelection: { nodeId: this.nodeId, origin: 'drag-drop' } })
+    actions.setDeferredSelection({ type: 'nodeId', nodeId: this.nodeId, origin: 'drag-drop' })
     return { success: true, change: editorChange }
   }
 
@@ -642,7 +642,7 @@ export class MoveNodeWithLayoutCommand implements Command {
       insert: this.originalSource,
     }
     ctx.applyChange(undoChange)
-    state.set({ queuedSelection: { nodeId: this.nodeId, origin: 'drag-drop' } })
+    actions.setDeferredSelection({ type: 'nodeId', nodeId: this.nodeId, origin: 'drag-drop' })
     return { success: true, change: undoChange }
   }
 }

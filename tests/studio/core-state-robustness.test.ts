@@ -437,8 +437,6 @@ describe('Selection Validation', () => {
       nodeId: 'new-node',
       origin: 'editor',
     })
-    // Also check legacy queuedSelection for backward compatibility
-    expect(state.get().queuedSelection).toEqual({ nodeId: 'new-node', origin: 'editor' })
     // Logger adds '[State]' prefix as first argument
     expect(logSpy).toHaveBeenCalledWith(
       '[State]',
@@ -562,7 +560,7 @@ describe('Fallback Selection', () => {
       multiSelection: [],
       sourceMap: null,
       compiling: false,
-      queuedSelection: null,
+      deferredSelection: null,
     })
   })
 
@@ -665,12 +663,16 @@ describe('Fallback Selection', () => {
     expect(state.get().selection.nodeId).toBe('root')
   })
 
-  it('queued selection resolves after compile', () => {
-    // Queue a selection during compile
+  it('deferred selection resolves after compile', () => {
+    // Defer a selection during compile (setSelection routes to deferredSelection)
     state.set({ sourceMap: null, compiling: true })
     actions.setSelection('node-1', 'keyboard')
 
-    expect(state.get().queuedSelection).toEqual({ nodeId: 'node-1', origin: 'keyboard' })
+    expect(state.get().deferredSelection).toEqual({
+      type: 'nodeId',
+      nodeId: 'node-1',
+      origin: 'keyboard',
+    })
 
     // Now complete compile with the node present
     const sourceMap = createMockSourceMap(['node-1', 'node-2'])
@@ -682,20 +684,24 @@ describe('Fallback Selection', () => {
     })
 
     expect(state.get().selection.nodeId).toBe('node-1')
-    expect(state.get().queuedSelection).toBeNull()
+    expect(state.get().deferredSelection).toBeNull()
   })
 
-  it('queued selection falls back when node not found', () => {
+  it('deferred selection falls back when node not found', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {})
     vi.spyOn(console, 'log').mockImplementation(() => {})
 
-    // Queue a selection during compile
+    // Defer a selection during compile
     state.set({ sourceMap: null, compiling: true })
     actions.setSelection('deleted-node', 'keyboard')
 
-    expect(state.get().queuedSelection).toEqual({ nodeId: 'deleted-node', origin: 'keyboard' })
+    expect(state.get().deferredSelection).toEqual({
+      type: 'nodeId',
+      nodeId: 'deleted-node',
+      origin: 'keyboard',
+    })
 
-    // Now complete compile WITHOUT the queued node
+    // Now complete compile WITHOUT the deferred node
     const sourceMap = createHierarchicalMockSourceMap([
       { nodeId: 'root', line: 1 },
       { nodeId: 'other', line: 2 },
@@ -709,7 +715,7 @@ describe('Fallback Selection', () => {
 
     // Should fallback to first root
     expect(state.get().selection.nodeId).toBe('root')
-    expect(state.get().queuedSelection).toBeNull()
+    expect(state.get().deferredSelection).toBeNull()
   })
 })
 
@@ -720,7 +726,6 @@ describe('Deferred Selection (unified API)', () => {
       sourceMap: null,
       compiling: false,
       deferredSelection: null,
-      queuedSelection: null,
       pendingSelection: null,
       preludeOffset: 0,
     })

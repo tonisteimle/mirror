@@ -142,7 +142,6 @@ const initialState: StudioState = {
   preludeLineOffset: 0,
   isWrappedWithApp: false,
   pendingSelection: null,
-  queuedSelection: null,
   deferredSelection: null,
   inlineEditActive: false,
   inlineEditNodeId: null,
@@ -183,7 +182,6 @@ export const actions = {
     const currentState = state.get()
     const newVersion = currentState.compileVersion + 1
     const hasPendingSelection = currentState.pendingSelection !== null
-    const hasQueuedSelection = currentState.queuedSelection !== null
     const hasDeferredSelection = currentState.deferredSelection !== null
 
     // Validate multi-selection against new SourceMap
@@ -216,33 +214,6 @@ export const actions = {
       version: newVersion,
       hasErrors: result.errors.length > 0,
     })
-
-    // Resolve queued selection first (direct nodeId-based)
-    // This takes priority over pending selection but doesn't skip validation
-    if (hasQueuedSelection) {
-      const queued = currentState.queuedSelection!
-      state.set({ queuedSelection: null })
-      // Validate that node still exists
-      if (result.sourceMap.getNodeById(queued.nodeId)) {
-        logState.info(' Resolving queued selection:', queued.nodeId)
-        actions.setSelection(queued.nodeId, queued.origin)
-      } else {
-        // Node no longer exists - find a fallback
-        logState.warn(' Queued selection no longer exists:', queued.nodeId)
-        const fallbackId = actions.findFirstRootNode(result.sourceMap)
-        if (fallbackId) {
-          logState.info(' Using fallback for queued selection:', fallbackId)
-          actions.setSelection(fallbackId, queued.origin)
-          // Notify that fallback was used
-          events.emit('selection:fallback', {
-            requestedId: queued.nodeId,
-            resolvedId: fallbackId,
-            reason: 'node_deleted',
-          })
-        }
-      }
-      // Continue to check pendingSelection (don't return early)
-    }
 
     // Resolve pending selection FIRST (line-based, from drop operations)
     // This takes priority over deferredSelection because it's more specific
@@ -327,12 +298,9 @@ export const actions = {
     // Handle missing SourceMap during compile - defer for later
     if (nodeId !== null && !currentState.sourceMap) {
       if (currentState.compiling) {
-        // Use unified deferred selection mechanism
         logState.info(` Deferring selection during compile: ${nodeId}`)
         state.set({
           deferredSelection: { type: 'nodeId', nodeId, origin },
-          // Also set legacy queuedSelection for backward compatibility
-          queuedSelection: { nodeId, origin },
         })
         return
       }
@@ -588,7 +556,8 @@ export const actions = {
   /**
    * Set a deferred selection to be resolved after compile completes
    *
-   * This is the unified API that replaces both setPendingSelection and queuedSelection.
+   * This is the unified deferred-selection API used by all callers (drag-drop,
+   * keyboard delete/move, drop-into-empty, etc.).
    *
    * @param deferred - Either { type: 'nodeId', nodeId, origin } or { type: 'line', line, componentName, origin }
    */

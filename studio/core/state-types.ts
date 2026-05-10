@@ -202,9 +202,7 @@ export interface StudioState {
   isWrappedWithApp: boolean
   /** Pending selection to be resolved after compile completes (line-based) */
   pendingSelection: PendingSelection | null
-  /** Queued selection when SourceMap not yet available (nodeId-based) */
-  queuedSelection: { nodeId: string; origin: SelectionOrigin } | null
-  /** Unified deferred selection - replaces pendingSelection and queuedSelection */
+  /** Unified deferred selection — covers both line-based and nodeId-based deferred picks */
   deferredSelection: DeferredSelection | null
   /** Inline text editing state */
   inlineEditActive: boolean
