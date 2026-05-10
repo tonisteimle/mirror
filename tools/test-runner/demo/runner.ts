@@ -2166,7 +2166,14 @@ export class DemoRunner {
 
       case 'comment':
         console.log(`${prefix} 📝 ${step.text}`)
-        // Comments are just for logging, no browser action
+        // Render the comment as a top-center caption in the page so
+        // headed runs and video recordings show what's happening
+        // without forcing the viewer to read the terminal.
+        await this.evaluate(
+          `__mirrorDemo.showComment(${JSON.stringify(step.text)}${
+            step.duration ? `, ${step.duration}` : ''
+          })`
+        )
         break
 
       case 'execute':

@@ -458,6 +458,59 @@ export class MirrorDemoAPI {
   }
 
   // ===========================================================================
+  // Caption overlay — comments rendered as on-screen text instead of
+  // console-only logs. Demo scripts already carry `comment: "..."` on
+  // every step; this surfaces them so video-watchers see what the demo
+  // is doing without staring at the terminal.
+  // ===========================================================================
+
+  /**
+   * Show a top-center caption with the given text. Duration is derived
+   * from the current `CommentTiming` profile (reading speed × word
+   * count, clamped to min/max). When `duration` is provided it
+   * overrides the auto-calculation.
+   *
+   * The caption fades in, sits, fades out. Method awaits the full
+   * lifecycle so demo steps don't race past the display.
+   */
+  async showComment(text: string, duration?: number): Promise<void> {
+    if (!text) return
+    const t = this.timings.comment
+    const wordCount = Math.max(1, text.split(/\s+/).length)
+    const readMs = (wordCount / t.readingSpeedWPM) * 60 * 1000
+    const total = duration ?? Math.max(t.minMs, Math.min(t.maxMs, t.baseMs + Math.round(readMs)))
+    if (total === 0) return
+
+    const caption = document.createElement('div')
+    caption.id = `__demo-fx-caption-${Date.now()}`
+    caption.textContent = text
+    caption.style.cssText =
+      'position:fixed;top:32px;left:50%;transform:translateX(-50%) translateY(-12px);' +
+      'background:rgba(0,0,0,0.85);color:white;padding:14px 28px;border-radius:10px;' +
+      'font-family:system-ui,-apple-system,sans-serif;font-size:18px;font-weight:500;' +
+      'line-height:1.35;max-width:min(720px,80vw);text-align:center;' +
+      'box-shadow:0 8px 24px rgba(0,0,0,0.4);pointer-events:none;z-index:999996;' +
+      'opacity:0;transition:opacity 250ms ease-out,transform 250ms ease-out;'
+    document.body.appendChild(caption)
+
+    // Fade in
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+    caption.style.opacity = '1'
+    caption.style.transform = 'translateX(-50%) translateY(0)'
+
+    // Sit
+    const fadeMs = 250
+    const sitMs = Math.max(0, total - fadeMs * 2)
+    await this.delay(sitMs)
+
+    // Fade out + remove
+    caption.style.opacity = '0'
+    caption.style.transform = 'translateX(-50%) translateY(-12px)'
+    await this.delay(fadeMs)
+    caption.remove()
+  }
+
+  // ===========================================================================
   // Helpers
   // ===========================================================================
 

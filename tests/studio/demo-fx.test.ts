@@ -141,4 +141,37 @@ describe('MirrorDemoAPI bundled module', () => {
     api.init({ speed: 'slow' })
     expect(api.getSpeedPreset()).toEqual({ mouseMs: 1200, charMs: 150 })
   })
+
+  it('showComment renders a top-center caption and removes it', async () => {
+    const api = installMirrorDemo()
+    // Drive the timing tiny so the caption fades fast in tests.
+    api.init({
+      timings: {
+        ...api.getTimings(),
+        comment: { readingSpeedWPM: 200, minMs: 80, maxMs: 80, baseMs: 0 },
+      },
+    })
+    const promise = api.showComment('Hello caption')
+    // After the next frame, a caption element exists in the DOM.
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+    const caption = Array.from(document.body.children).find(
+      el => el.id.startsWith('__demo-fx-caption-') && el.textContent === 'Hello caption'
+    )
+    expect(caption).toBeDefined()
+    await promise
+    // Once the lifecycle completes, the caption is gone.
+    const after = Array.from(document.body.children).find(el =>
+      el.id.startsWith('__demo-fx-caption-')
+    )
+    expect(after).toBeUndefined()
+  })
+
+  it('showComment is a no-op for empty text', async () => {
+    const api = installMirrorDemo()
+    await api.showComment('')
+    const caption = Array.from(document.body.children).find(el =>
+      el.id.startsWith('__demo-fx-caption-')
+    )
+    expect(caption).toBeUndefined()
+  })
 })
