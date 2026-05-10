@@ -1,7 +1,8 @@
 # Slice 2: Vertical Stack (`gap N`)
 
-**Datum:** 2026-05-09
-**Status:** Phase 1 (V-1..V-4) erledigt · Phase 2 (V-5..V-9) erledigt · **Quality-Gate-Pass: erledigt** — 49 RTs grün, 14864/14887 Vitest-Tests grün
+**Datum:** 2026-05-09 (Iter-1) · 2026-05-10 (Iter-2-Sweep, Dev 1)
+**Status (Iter-1):** Phase 1 (V-1..V-4) erledigt · Phase 2 (V-5..V-9) erledigt · **Quality-Gate-Pass: erledigt** — 49 RTs grün, 14864/14887 Vitest-Tests grün
+**Status (Iter-2):** Schema-Drift-Grep durchgeführt (0 Funde) · Cross-Slice-Probe gegen 6 Nachbar-Properties (5 grün, 1 🟡 mit Re-Open-Adresse Slice 11) · Studio-Roundtrip explizit (Lower-Bar) · Probe-Skript committet
 
 > **Honest update (Phase 2 audit, 2026-05-09):** Eine zweite Probe-Reihe gegen
 > den committed Stand (Phase 1, `67f108f2`) hatte fünf weitere Cross-Backend-Bugs
@@ -341,3 +342,58 @@ String durchreichen wie var(--…)).
 - ✅ plan Audit-Status auf "erledigt" gesetzt
 - ⚠️ V-8 (Studio gap-x/gap-y Surface) bewusst verschoben — eigener Studio-Slice
 - ⚠️ Browser-CDP-E2E für gap-x/gap-y existiert in `studio/test-api/suites/layout/extended.test.ts` (4 Tests; benötigt Studio-Bundle-Build, ähnlich Slice 26/27/29 — separates Gate)
+
+---
+
+# 6. Iter-2-Sweep (2026-05-10, Dev 1)
+
+Auftrag aus `plan.md` Phase 0: **Re-Probe Cross-Slice (gap-x/gap-y, chain-tokens); Studio-Roundtrip explizit.**
+
+## 6.1 Probe-Skript
+
+`tools/probes/slice-02-vertical-stack.ts` committet — spiegelt Iter-1-Probes (`/tmp/gap-probes.ts`) plus Iter-2-Cross-Slice-Block (Sektion F: `pxify` aktiv gegen 6 Nachbar-Properties pad/mar/w/rad/fs/minw). Lesson 6 — Cross-Slice-Wirkung MUSS aktiv geprüft werden.
+
+## 6.2 Schema-Drift-Grep
+
+| Such-Pattern                            | Ergebnis                                                                                                                                                                                                                                                                                                              |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gap` / `gap-x` / `gap-y` Schema-Hits   | **✅ Single-Source.** `compiler/schema/property-schema.ts:308/613/629` definiert `gap` + `gap-x` + `gap-y`; `compiler/schema/ir-helpers.ts:157-161` mappt sie auf CSS (`gap`, `column-gap`, `row-gap`). Studio-Verwender (`autocomplete/index.ts:67`, `panels/property/ports.ts:148`) verweisen auf die Schema-Namen. |
+| `pxify` Verwender                       | **✅ Single-Source.** 17+ Verwender in `compiler/backends/react.ts` (gap, columnGap, rowGap, padding, margin, gridAutoRows, width, height, left, top, minWidth, maxWidth, minHeight, maxHeight, borderRadius, fontSize, …). Slice 2 V-1 hat den Helper konsistent durchgezogen.                                       |
+| Direkter `${value}px`-Append ohne pxify | **✅ Nur intentional.** L756 `gridTemplateColumns: repeat(auto-fill, minmax(${v1}px, 1fr))` und L874 `${value}px solid` sind Format-Konstrukte mit Zusatz-Tokens, kein pxify-Bypass.                                                                                                                                  |
+
+## 6.3 Cross-Slice-Probe-Lauf (Lesson 6)
+
+`pxify` aktiv gegen 6 Nachbar-Properties (Probe Sektion F):
+
+| Case                          | DOM                                                  | React                               | FW                  | Status                                                          |
+| ----------------------------- | ---------------------------------------------------- | ----------------------------------- | ------------------- | --------------------------------------------------------------- |
+| F1 `pad 12` (Slice 9)         | `'12px'`                                             | `'12px'`                            | `pad: 12`           | ✅                                                              |
+| F2 `mar 16` (Slice 10)        | `'16px'`                                             | `'16px'`                            | `mar: 16`           | ✅                                                              |
+| F3 `w 200` (Slice 11)         | `'200px'`                                            | `'200px'`                           | `w: 200`            | ✅                                                              |
+| F4 `rad 8` (Slice 16)         | `'8px'`                                              | `'8px'`                             | `rad: 8`            | ✅                                                              |
+| F5 `fs 24` (Slice 17)         | `'24px'`                                             | `'24px'`                            | `fs: 24`            | ✅                                                              |
+| F6 `minw 100, w 200` (Sl. 11) | `min-width: '100px', width: '200px', flex-shrink: 0` | `minWidth: '100px', width: '200px'` | `minw: 100, w: 200` | 🟡 Cross-Backend-Diff in flex-shrink — Out-of-scope für Slice 2 |
+
+**Befund:** F1-F5 sind Cross-Backend-konsistent. F6 zeigt einen latenten Cross-Backend-Diff (`flex-shrink: 0` nur im DOM, nicht in React) — **gehört zu Slice 11 (Sizing)**. Ist bereits in der `Re-Open-Tracking`-Tabelle als Slice-4-V-4-Verschiebung („align-self+width DOM/React → Slice 11") gesetzt; F6 bestätigt dass die Lücke real ist.
+
+## 6.4 Studio-Roundtrip explizit benannt
+
+**Modus:** **Lower-Bar — DOM gelocked via 49 RTs in `tests/compiler/slice-2-gap.test.ts`; Property-Panel gap-Coverage durch `studio/test-api/suites/property-panel/comprehensive.test.ts` + `studio/test-api/suites/layout/extended.test.ts` (4 gap-x/gap-y CDP-Tests, Studio-Bundle-Build vorausgesetzt).**
+
+**Begründung:** gap/gap-x/gap-y sind reine Layout-Properties ohne State-Verhalten. Property-Panel-Roundtrip wird durch `comprehensive.test.ts` für alle Spacing-Properties abgedeckt. Eigenständiger gap-spezifischer CDP-Run wäre Duplikat.
+
+**Re-Open-Trigger:** keiner. V-8 (Studio gap-x/gap-y Surface) bleibt Iter-1-Schuld an einen zukünftigen dedizierten Studio-Slice (verschoben mit Begründung).
+
+## 6.5 9-Punkt-Quality-Gate (Iter-2)
+
+| #   | Check                                           | Status                                                                                                                                                                                                  |
+| --- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Probe-Tabelle ohne 🔴                           | ✅ alle Iter-1-Phase-1+2-Befunde grün; F6 als 🟡 mit Re-Open-Adresse Slice 11                                                                                                                           |
+| 2   | Phase-Stati ∈ {erledigt, verschoben, verworfen} | ✅ Phase 1+2 erledigt; V-8 explizit verschoben mit Re-Open-Ziel                                                                                                                                         |
+| 3   | Jeder RT geschrieben                            | ✅ 49 RTs grün                                                                                                                                                                                          |
+| 4   | Schema-Drift-Grep                               | ✅ durchgeführt (siehe 6.2); kein Drift                                                                                                                                                                 |
+| 5   | Cross-Slice-Wirkung geprüft                     | ✅ Sektion F des Probe-Skripts (pad/mar/w/rad/fs/minw) — 5/6 grün, 1 latente Diff mit Re-Open-Adresse                                                                                                   |
+| 6   | Cross-Backend-Differential-RT                   | ✅ RT-17 (gap-x/gap-y/chain Cross-Backend) erledigt                                                                                                                                                     |
+| 7   | Studio-Roundtrip explizit                       | ✅ Lower-Bar deklariert in 6.4                                                                                                                                                                          |
+| 8   | Vitest gesamt grün                              | ✅ 15066/15089 (23 skipped); kein Test-Subtraktion gegenüber Pre-Iter-2                                                                                                                                 |
+| 9   | „Substantiell besser, aber …"-Test              | ✅ Antwort auf „ist das nun richtig gut?" — **Ja:** Schema-Drift-Grep hat 0 Funde. Cross-Slice-Probe lockt 5 Nachbar-Slices als pxify-Gewinner. F6-Diff ist explizit als Slice-11-Re-Open dokumentiert. |
