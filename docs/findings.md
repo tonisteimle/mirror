@@ -250,13 +250,17 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   Conditional-Bug.
 
 - **Wo:** `tests/differential/` (16 Files)
-  **Was:** Cross-Backend-Equivalenz nur für 16 Domänen abgedeckt — Charts/
-  Tables, Animation-Trigger und Inline-Conditionals fehlen. Custom-Icons-
-  Differential gehärtet in `c31df517` (per-Backend-Emit-Assertions statt
-  "compiles without throwing").
+  **Was:** Cross-Backend-Equivalenz für 16 Domänen. Custom-Icons gehärtet
+  in `c31df517`, Tables + Charts in `46d69e95` (3 Divergenzen gepinnt:
+  React droppt `each` in Tables; React + Framework haben keine
+  Chart-Rendering-Wiring). Inline-Conditionals sind in
+  `tests/differential/conditionals.test.ts` schon per-Backend gepinnt
+  inkl. T1-T8 plus Bug #23-#26 Regressions. Animations werden in
+  `cleanup.test.ts` für DOM gepinnt — React/Framework `anim`-Trigger
+  noch ungeprüft.
   **Status:** offen
-  **Notiz:** Symptom — neue Backends/Features driften silent. Heilt nur
-  durch differential-First-Policy für jeden neuen Feature-Slice.
+  **Notiz:** Restlicher Gap: React/Framework Animation-Trigger. Sowie
+  jeder neue Feature-Slice braucht ab Tag 1 differential-Test.
 
 ### Bug-Patterns & Type-Escapes (Hunt 2026-05-10)
 
@@ -353,6 +357,17 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — Tables + Charts Differential gehärtet
+
+- **Wo:** `tests/differential/tables-charts.test.ts`
+  **Was:** "Compiles without throwing" für React/Framework durch
+  Per-Backend-Pins ersetzt. Drei Divergenzen explizit dokumentiert:
+  React droppt `each`-Block in Tables; React und Framework haben kein
+  Chart-Rendering (kein `createChart`, kein `Chart.js`); Framework
+  rendert each-Tables via `M.each(...)`. CI fängt damit, wenn ein
+  Backend einen der Pfade gewinnt oder verliert.
+  **Status:** erledigt (`46d69e95`)
 
 ### 2026-05-10 — Self-Recursion Marker (Slice 21 V-3)
 
