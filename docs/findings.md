@@ -79,8 +79,25 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   Prose-Mode (66), Section-Header-Parsing (Slice 25 E002 Probe 22) — werden
   diese in echten Mirror-Projekten benutzt? Wenn nein, ersatzlos streichen
   spart Wartungsaufwand.
-  **Status:** offen
-  **Notiz:** Braucht Owner-Entscheidung, kein Refactor-Befund.
+  **Status:** offen — Audit 2026-05-10:
+  - **Stacked-Overlay**: USED — `examples/hospital-dashboard/dashboard.mirror:218`.
+    Behalten.
+  - **Prose-Mode**: USED — 4× in
+    `examples/personas-informatik/components.com` (`prose` als
+    Frame-Property). Behalten.
+  - **Custom-Icons-Registry (`$icons:`)**: keine Verwendung in
+    `examples/`. Test-Coverage in 4 Test-Files (slice-50, slice-51,
+    behavior/cleanup, differential/cleanup) + Probe
+    `tools/probes/slice-51-custom-icons.ts`. **Owner-Entscheidung
+    nötig**: Feature dokumentiert in CLAUDE.md, kein Realnutzer.
+  - **Section-Header-Parsing (`--- Title ---`)**: keine Verwendung in
+    `examples/` _oder_ irgendwelchen DSL-Files (`*.mir`/`.com`/`.tok`)
+    repo-weit. Test-Coverage in 5 Test-Files (lexer-sections,
+    tokens-coverage, lexer-bugs, parser-components, lexer-additional).
+    **Owner-Entscheidung nötig**: Feature parst, aber niemand nutzt.
+    **Notiz:** Braucht Owner-Entscheidung für die zwei verbleibenden
+    Kandidaten (`$icons:` + section-header). Audit-Daten oben sollten
+    reichen.
 
 ### Studio Sync/State (Hunt 2026-05-10)
 
