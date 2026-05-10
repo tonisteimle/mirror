@@ -17,18 +17,16 @@ export interface ValidationContext {
 }
 
 /**
- * Add a validation warning to the context.
- * Avoids duplicate warnings with same type, message, and property.
+ * Add a validation warning to the context, deduplicating against existing
+ * warnings (same type + message + property is treated as the same warning).
  *
  * @param ctx Validation context with warnings array
  * @param warning The warning to add
  */
-export function addWarning(ctx: ValidationContext, warning: IRWarning): void {
+export function pushUniqueWarning(ctx: ValidationContext, warning: IRWarning): void {
   // Avoid duplicate warnings
-  const isDuplicate = ctx.warnings.some(w =>
-    w.type === warning.type &&
-    w.message === warning.message &&
-    w.property === warning.property
+  const isDuplicate = ctx.warnings.some(
+    w => w.type === warning.type && w.message === warning.message && w.property === warning.property
   )
   if (!isDuplicate) {
     ctx.warnings.push(warning)
@@ -74,7 +72,7 @@ export function validateProperty(
     if (isKnownProperty(baseProp)) {
       return true
     }
-    addWarning(ctx, {
+    pushUniqueWarning(ctx, {
       type: 'unknown-property',
       message: `Unknown property: '${propName}'`,
       property: propName,
@@ -89,7 +87,7 @@ export function validateProperty(
   }
 
   // Unknown property - add warning
-  addWarning(ctx, {
+  pushUniqueWarning(ctx, {
     type: 'unknown-property',
     message: `Unknown property: '${propName}'`,
     property: propName,

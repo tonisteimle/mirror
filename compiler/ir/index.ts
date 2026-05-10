@@ -24,7 +24,7 @@ import { contrastForeground, derivePaletteVariables } from '../schema/color-util
 import type { TransformerContext } from './transformers/transformer-context'
 import { transformDataAttributes, transformAnimation } from './transformers/data-transformer'
 import { mergeProperties } from './transformers/property-utils-transformer'
-import { addWarning as addWarningExtracted } from './transformers/validation'
+import { pushUniqueWarning } from './transformers/validation'
 
 export type { IR, IRWarning } from './types'
 export {
@@ -223,7 +223,7 @@ export class IRTransformer {
    * Add a validation warning
    */
   addWarning(warning: IRWarning): void {
-    addWarningExtracted({ warnings: this.warnings }, warning)
+    pushUniqueWarning({ warnings: this.warnings }, warning)
   }
 
   /**
