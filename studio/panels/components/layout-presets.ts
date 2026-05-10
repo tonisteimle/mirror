@@ -336,11 +336,5 @@ AccordionItem
  */
 export const LAYOUT_COMPONENTS = LAYOUT_SECTION
 export const BASIC_PRIMITIVES: ComponentItem[] = []
-export const FORM_COMPONENTS: ComponentItem[] = []
-export const OVERLAY_COMPONENTS: ComponentItem[] = []
-export const NAVIGATION_COMPONENTS: ComponentItem[] = []
-export const DATA_COMPONENTS: ComponentItem[] = []
 export const CHART_COMPONENTS: ComponentItem[] = []
-export const MEDIA_COMPONENTS: ComponentItem[] = []
-export const FEEDBACK_COMPONENTS: ComponentItem[] = []
 export const BASIC_COMPONENTS: ComponentItem[] = []

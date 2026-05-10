@@ -162,19 +162,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
-- **Wo:** `studio/panels/components/layout-presets.ts:338-345`
-  **Was:** 6 dead Legacy-Exports — leere Arrays mit 0 Konsumenten:
-  `FORM_COMPONENTS`, `OVERLAY_COMPONENTS`, `NAVIGATION_COMPONENTS`,
-  `DATA_COMPONENTS`, `MEDIA_COMPONENTS`, `FEEDBACK_COMPONENTS`.
-  Alle als `: ComponentItem[] = []` deklariert für angebliche
-  „backwards compatibility", aber keiner importiert sie repo-weit
-  (auch nicht via JSON/MD/Tests). Die anderen 4 Legacy-Exports
-  derselben Stelle (`LAYOUT_COMPONENTS`, `BASIC_PRIMITIVES`,
-  `CHART_COMPONENTS`, `BASIC_COMPONENTS`) haben echte Consumer und
-  bleiben.
-  **Status:** aktiv (Claude-Session, 2026-05-10 ~19:35)
-  **Plan:** Die 6 leeren Exports löschen, Tests grün halten, commit.
-
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
@@ -826,6 +813,20 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — 6 leere Legacy-Exports aus `layout-presets.ts` gelöscht
+
+- **Wo:** `studio/panels/components/layout-presets.ts`
+  **Was:** Sechs als „Legacy exports for backwards compatibility"
+  markierte Konstanten waren `: ComponentItem[] = []` mit 0 Konsumenten
+  repo-weit: `FORM_COMPONENTS`, `OVERLAY_COMPONENTS`,
+  `NAVIGATION_COMPONENTS`, `DATA_COMPONENTS`, `MEDIA_COMPONENTS`,
+  `FEEDBACK_COMPONENTS`. Vermutlich Stubs aus einer Frühphase, in
+  der die Komponenten-Sektionen anders gruppiert waren — nie befüllt,
+  nie gelöscht. Die anderen 4 Geschwister-Exports (`LAYOUT_COMPONENTS`,
+  `BASIC_PRIMITIVES`, `CHART_COMPONENTS`, `BASIC_COMPONENTS`) haben
+  Consumer und bleiben unverändert. 6002/6002 studio tests pass.
+  **Status:** erledigt (`<layout-presets-commit>`)
 
 ### 2026-05-10 — `SpacingToken`-Deprecation-Aliase aus Panel + Snap entfernt
 
