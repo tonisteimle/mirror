@@ -121,10 +121,14 @@ describe('Tutorial 01 — Icons', () => {
     expect(icon.dataset.iconFill).toBeTruthy()
   })
 
-  it('Icon default size when no `is` provided is 16', () => {
+  it('Icon default size when no `is` provided is 24 (Slice 50 V-1: ICON_DEFAULTS.size)', () => {
     const { root } = renderWithRuntime(`Icon "settings"`, container)
     const icon = root.querySelector('[data-mirror-name="Icon"]') as HTMLElement
-    expect(icon.dataset.iconSize).toBe('16')
+    // Slice 50 V-1 unified the icon-size default. Pre-fix: 7 different
+    // default sources (16 in value-resolver, 20 in primitives, 24 in
+    // properties + CLAUDE.md doc, 16 in runtime fallback). Post-fix:
+    // single source `compiler/schema/primitives.ts:ICON_DEFAULTS.size = 24`.
+    expect(icon.dataset.iconSize).toBe('24')
   })
 })
 

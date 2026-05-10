@@ -131,8 +131,9 @@ export function emitConditionalTemplateNode(
       const iconSizeProp = node.properties.find(p => p.name === 'data-icon-size')
       const iconColorProp = node.properties.find(p => p.name === 'data-icon-color')
       const iconWeightProp = node.properties.find(p => p.name === 'data-icon-weight')
+      // Slice 50 V-1: schema-derived default 24 (was 16).
       const iconSize =
-        iconSizeProp?.value || node.styles.find(s => s.property === 'fontSize')?.value || '16'
+        iconSizeProp?.value || node.styles.find(s => s.property === 'fontSize')?.value || '24'
       const iconColor =
         iconColorProp?.value ||
         node.styles.find(s => s.property === 'color')?.value ||
@@ -316,8 +317,9 @@ export function emitEachTemplateNodeContent(
       const iconSizeProp = node.properties.find(p => p.name === 'data-icon-size')
       const iconColorProp = node.properties.find(p => p.name === 'data-icon-color')
       const iconWeightProp = node.properties.find(p => p.name === 'data-icon-weight')
+      // Slice 50 V-1: schema-derived default 24 (was 16).
       const iconSize =
-        iconSizeProp?.value || node.styles.find(s => s.property === 'fontSize')?.value || '16'
+        iconSizeProp?.value || node.styles.find(s => s.property === 'fontSize')?.value || '24'
       const iconColor =
         iconColorProp?.value ||
         node.styles.find(s => s.property === 'color')?.value ||

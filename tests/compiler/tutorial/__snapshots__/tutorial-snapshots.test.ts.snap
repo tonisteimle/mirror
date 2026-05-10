@@ -23544,7 +23544,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                     "styles": [
                       {
                         "property": "width",
-                        "value": "20px",
+                        "value": "24px",
                       },
                       {
                         "property": "flex-shrink",
@@ -23552,7 +23552,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                       },
                       {
                         "property": "height",
-                        "value": "20px",
+                        "value": "24px",
                       },
                       {
                         "property": "flex-shrink",
@@ -23848,7 +23848,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                     "styles": [
                       {
                         "property": "width",
-                        "value": "20px",
+                        "value": "24px",
                       },
                       {
                         "property": "flex-shrink",
@@ -23856,7 +23856,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 4 1`] = `
                       },
                       {
                         "property": "height",
-                        "value": "20px",
+                        "value": "24px",
                       },
                       {
                         "property": "flex-shrink",
@@ -24186,7 +24186,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 5 1`] = `
                 "styles": [
                   {
                     "property": "width",
-                    "value": "20px",
+                    "value": "24px",
                   },
                   {
                     "property": "flex-shrink",
@@ -24194,7 +24194,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 5 1`] = `
                   },
                   {
                     "property": "height",
-                    "value": "20px",
+                    "value": "24px",
                   },
                   {
                     "property": "flex-shrink",
@@ -24333,7 +24333,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 6 1`] = `
                 "styles": [
                   {
                     "property": "width",
-                    "value": "20px",
+                    "value": "24px",
                   },
                   {
                     "property": "flex-shrink",
@@ -24341,7 +24341,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 6 1`] = `
                   },
                   {
                     "property": "height",
-                    "value": "20px",
+                    "value": "24px",
                   },
                   {
                     "property": "flex-shrink",
@@ -24393,7 +24393,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 6 1`] = `
                 "styles": [
                   {
                     "property": "width",
-                    "value": "20px",
+                    "value": "24px",
                   },
                   {
                     "property": "flex-shrink",
@@ -24401,7 +24401,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 6 1`] = `
                   },
                   {
                     "property": "height",
-                    "value": "20px",
+                    "value": "24px",
                   },
                   {
                     "property": "flex-shrink",
@@ -24453,7 +24453,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 6 1`] = `
                 "styles": [
                   {
                     "property": "width",
-                    "value": "20px",
+                    "value": "24px",
                   },
                   {
                     "property": "flex-shrink",
@@ -24461,7 +24461,7 @@ exports[`Tutorial IR Snapshots > 06 - states > Example 6 1`] = `
                   },
                   {
                     "property": "height",
-                    "value": "20px",
+                    "value": "24px",
                   },
                   {
                     "property": "flex-shrink",
@@ -27327,7 +27327,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
                 "styles": [
                   {
                     "property": "width",
-                    "value": "20px",
+                    "value": "24px",
                   },
                   {
                     "property": "flex-shrink",
@@ -27335,7 +27335,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 4 1`] = `
                   },
                   {
                     "property": "height",
-                    "value": "20px",
+                    "value": "24px",
                   },
                   {
                     "property": "flex-shrink",
@@ -28603,7 +28603,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
                 "styles": [
                   {
                     "property": "width",
-                    "value": "20px",
+                    "value": "24px",
                   },
                   {
                     "property": "flex-shrink",
@@ -28611,7 +28611,7 @@ exports[`Tutorial IR Snapshots > 07 - animationen > Example 9 1`] = `
                   },
                   {
                     "property": "height",
-                    "value": "20px",
+                    "value": "24px",
                   },
                   {
                     "property": "flex-shrink",
@@ -32149,7 +32149,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
                     "styles": [
                       {
                         "property": "width",
-                        "value": "20px",
+                        "value": "24px",
                       },
                       {
                         "property": "flex-shrink",
@@ -32157,7 +32157,7 @@ exports[`Tutorial IR Snapshots > 08 - functions > Example 10 1`] = `
                       },
                       {
                         "property": "height",
-                        "value": "20px",
+                        "value": "24px",
                       },
                       {
                         "property": "flex-shrink",
@@ -43295,7 +43295,7 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 1 1`] = `
                       "properties": [
                         {
                           "name": "data-icon-size",
-                          "value": "16",
+                          "value": "24",
                         },
                         {
                           "name": "textContent",
@@ -43309,7 +43309,7 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 1 1`] = `
                       "styles": [
                         {
                           "property": "width",
-                          "value": "20px",
+                          "value": "24px",
                         },
                         {
                           "property": "flex-shrink",
@@ -43317,7 +43317,7 @@ exports[`Tutorial IR Snapshots > 13 - overlays > Example 1 1`] = `
                         },
                         {
                           "property": "height",
-                          "value": "20px",
+                          "value": "24px",
                         },
                         {
                           "property": "flex-shrink",

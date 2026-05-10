@@ -163,7 +163,11 @@ export function applyIconToElement(el: MirrorElement, svgText: string): void {
   const svg = el.querySelector('svg')
   if (!svg) return
 
-  const size = el.dataset.iconSize || '16'
+  // Slice 50 V-1: defaults align with `compiler/schema/primitives.ts`
+  // ICON_DEFAULTS. The runtime fallbacks ('24'/'2'/'currentColor'/false)
+  // here mirror the schema constants. Both sides must match — the schema
+  // helper is the source of truth, this is the runtime mirror.
+  const size = el.dataset.iconSize || '24'
   const color = el.dataset.iconColor || 'currentColor'
   const strokeWidth = el.dataset.iconWeight || '2'
   const isFilled = el.dataset.iconFill === 'true'

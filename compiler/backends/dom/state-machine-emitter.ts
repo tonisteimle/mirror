@@ -74,12 +74,13 @@ function emitStateChildNested(
     }
   }
 
-  // Handle icon loading
+  // Handle icon loading. Slice 50 V-1: defaults schema-derived from
+  // `compiler/schema/primitives.ts` ICON_DEFAULTS (24/2/currentColor).
   if (node.primitive === 'icon') {
     const iconProp = node.properties.find(p => p.name === 'textContent')
     if (iconProp && typeof iconProp.value === 'string') {
       const iconName = iconProp.value
-      const iconSize = node.styles.find(s => s.property === 'fontSize')?.value || '16'
+      const iconSize = node.styles.find(s => s.property === 'fontSize')?.value || '24'
       const iconColor = node.styles.find(s => s.property === 'color')?.value || 'currentColor'
       const iconWeight = node.styles.find(s => s.property === 'strokeWidth')?.value || '2'
       ctx.emit(`${varName}.dataset.iconSize = '${iconSize.replace('px', '')}'`)
@@ -132,13 +133,13 @@ function emitStateChild(ctx: StateMachineEmitterContext, node: IRNode, index: nu
     }
   }
 
-  // Handle icon loading (special case for Icon primitive)
+  // Handle icon loading (special case for Icon primitive). Slice 50 V-1:
+  // schema-derived defaults from ICON_DEFAULTS.
   if (node.primitive === 'icon') {
     const iconProp = node.properties.find(p => p.name === 'textContent')
     if (iconProp && typeof iconProp.value === 'string') {
       const iconName = iconProp.value
-      // Store icon properties for loading
-      const iconSize = node.styles.find(s => s.property === 'fontSize')?.value || '16'
+      const iconSize = node.styles.find(s => s.property === 'fontSize')?.value || '24'
       const iconColor = node.styles.find(s => s.property === 'color')?.value || 'currentColor'
       const iconWeight = node.styles.find(s => s.property === 'strokeWidth')?.value || '2'
       ctx.emit(`${varName}.dataset.iconSize = '${iconSize.replace('px', '')}'`)

@@ -23,6 +23,7 @@ type PropertyValue =
   | ComputedExpression
 import type { IRProperty } from '../types'
 import { PROPERTY_TO_TOKEN_SUFFIX } from '../../schema/token-suffixes'
+import { ICON_DEFAULTS } from '../../schema/primitives'
 import { buildExpressionString } from './expression-transformer'
 
 /**
@@ -269,11 +270,12 @@ export function extractHTMLProperties(
     htmlProps.push({ name: 'type', value: 'radio' })
   }
 
-  // Default icon size (can be overridden via icon-size or is property)
+  // Default icon size (can be overridden via icon-size or is property).
+  // Slice 50 V-1: schema-derived default (was hardcoded '16').
   if (primitive === 'icon') {
     const hasIconSize = properties.some(p => p.name === 'icon-size' || p.name === 'is')
     if (!hasIconSize) {
-      htmlProps.push({ name: 'data-icon-size', value: '16' })
+      htmlProps.push({ name: 'data-icon-size', value: String(ICON_DEFAULTS.size) })
     }
   }
 
