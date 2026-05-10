@@ -19,6 +19,13 @@ import { setCurrentDragData, clearCurrentDragData } from '../../preview/drag-pre
 import { getFixture } from '../../preview/drag/test-api/fixtures'
 import { LAYOUT_SECTION, COMPONENTS_SECTION } from '../../panels/components/layout-presets'
 
+/**
+ * Selectorish — a structured Selector OR a string shorthand. The runner
+ * accepts strings like `'#node-2'`, `'node-2'`, `'"Save"'`, or
+ * `'Card > Title'` and resolves them via the same rules as Selector.
+ */
+export type Selectorish = Selector | string
+
 type Point = { x: number; y: number }
 
 type SnapshotResult = Record<string, unknown>
@@ -38,14 +45,14 @@ type ManualDragOpts = {
 }
 
 export interface MirrorActionsAPI {
-  resolveSelector(sel: Selector): string
+  resolveSelector(sel: Selectorish): string
   dropChildIndexPoint(targetEl: HTMLElement, index: number): Point
   snapshotElement(nodeId: string, extras?: string[]): SnapshotResult
   snapshotAllByPreviewOrder(): { selector: { byId: string }; snapshot: SnapshotResult }[]
   dropFromPalette(
     component: string,
-    targetSel: Selector,
-    at: { kind: 'index'; index: number } | { kind: 'zone'; zone: string }
+    targetSel: Selectorish,
+    at?: { kind: 'index'; index: number } | { kind: 'zone'; zone: string }
   ): Promise<void>
   drawInGrid(
     componentName: string,
@@ -146,7 +153,32 @@ export function installMirrorActions(): MirrorActionsAPI {
 
   const selectorDescription = (sel: unknown): string => JSON.stringify(sel)
 
-  const resolveSelector = (sel: Selector): string => {
+  const resolveSelector = (sel: Selector | string): string => {
+    // String shorthand. Accepted forms:
+    //   '#node-2'  → { byId: 'node-2' }   (CSS-id-like)
+    //   'node-2'   → { byId: 'node-2' }   (raw mirror id)
+    //   '"Save"'   → { byText: 'Save' }   (quoted text)
+    //   anything else → byPath
+    // Lifts selector boilerplate out of every script — scripts can pass
+    // the most common forms as plain strings and the runner DWIMs.
+    if (typeof sel === 'string') {
+      const trimmed = sel.trim()
+      if (trimmed.startsWith('#')) {
+        return resolveSelector({ byId: trimmed.slice(1) })
+      }
+      if (
+        (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+        (trimmed.startsWith("'") && trimmed.endsWith("'"))
+      ) {
+        return resolveSelector({ byText: trimmed.slice(1, -1) })
+      }
+      // Looks like a Mirror node id (e.g. "node-2")?
+      if (/^node-\d+$/.test(trimmed)) {
+        return resolveSelector({ byId: trimmed })
+      }
+      // Default to byPath ('Card > Title' style).
+      return resolveSelector({ byPath: trimmed })
+    }
     if (!sel || typeof sel !== 'object') {
       throw new Error('Selector must be a structured object, got: ' + JSON.stringify(sel))
     }
@@ -655,8 +687,24 @@ export function installMirrorActions(): MirrorActionsAPI {
   const dropFromPalette = async (
     component: string,
     targetSel: Selector,
-    at: { kind: 'index'; index: number } | { kind: 'zone'; zone: string }
+    at?: { kind: 'index'; index: number } | { kind: 'zone'; zone: string }
   ): Promise<void> => {
+    // If the script omits `at`, default to "append at the end" of the
+    // target container. That's what most demo scripts mean — they just
+    // want the new node added inside the container, position doesn't
+    // matter — and the boilerplate `at: { kind: 'index', index: 0 }`
+    // hidden in every drop step is noise.
+    if (!at) {
+      const targetForCount = document.querySelector(
+        '[data-mirror-id="' +
+          (typeof targetSel === 'string' ? targetSel : (targetSel as any).byId || '') +
+          '"]'
+      ) as HTMLElement | null
+      const childCount = targetForCount
+        ? Array.from(targetForCount.children).filter(c => c.hasAttribute('data-mirror-id')).length
+        : 0
+      at = { kind: 'index', index: childCount }
+    }
     const lower = component.toLowerCase()
     const paletteEl =
       (document.querySelector(

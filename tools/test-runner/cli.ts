@@ -142,7 +142,10 @@ function parseArgs(): CLIArgs {
     demo: getArgValue(args, '--demo'),
     demoSuite: getArgValue(args, '--demo-suite'),
     demoSpeed: (getArgValue(args, '--demo-speed') || 'normal') as CLIArgs['demoSpeed'],
-    demoPacing: (getArgValue(args, '--pacing') || 'video') as CLIArgs['demoPacing'],
+    // Default pacing depends on mode: headed runs are for humans (video),
+    // headless runs are for CI / smoke (instant). Explicit --pacing wins.
+    demoPacing: (getArgValue(args, '--pacing') ||
+      (args.includes('--headed') ? 'video' : 'instant')) as CLIArgs['demoPacing'],
     globalSpeed: parseSpeedFlag(args, '--global-speed'),
     typingSpeed: parseSpeedFlag(args, '--typing-speed'),
     dropSpeed: parseSpeedFlag(args, '--drop-speed'),
