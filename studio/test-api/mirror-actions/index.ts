@@ -382,6 +382,109 @@ export function installMirrorActions(): MirrorActionsAPI {
     }
   }
 
+  /**
+   * Synthesize a drop-zone preview around `targetEl` plus an insertion line
+   * at `endPoint`. Used by `dropFromPalette` so the viewer sees *where* the
+   * dragged item will land before the cursor finishes moving — same colors
+   * and z-indices as the empty-canvas branch's indicators so both flows
+   * feel identical. Returns a `destroy()` that fades them out.
+   *
+   * Insertion-line orientation follows the target's flex-direction:
+   *   - horizontal layout → vertical line between siblings
+   *   - vertical layout (default) → horizontal line between siblings
+   */
+  const showDropIndicators = (targetEl: HTMLElement, endPoint: Point): (() => void) => {
+    const targetRect = targetEl.getBoundingClientRect()
+    const targetStyle = window.getComputedStyle(targetEl)
+    const isHor =
+      targetStyle.display.startsWith('flex') &&
+      (targetStyle.flexDirection || 'row').startsWith('row')
+
+    const containerRing = document.createElement('div')
+    containerRing.style.cssText =
+      'position:fixed;' +
+      'left:' +
+      targetRect.left +
+      'px;' +
+      'top:' +
+      targetRect.top +
+      'px;' +
+      'width:' +
+      targetRect.width +
+      'px;' +
+      'height:' +
+      targetRect.height +
+      'px;' +
+      'border:2px dashed #5BA8F5;' +
+      'border-radius:8px;' +
+      'background:rgba(91,168,245,0.05);' +
+      'box-sizing:border-box;' +
+      'pointer-events:none;z-index:999990;' +
+      'opacity:0;transition:opacity 240ms ease-out;'
+    document.body.appendChild(containerRing)
+
+    const insertionLine = document.createElement('div')
+    if (isHor) {
+      // Vertical line between two horizontal siblings.
+      insertionLine.style.cssText =
+        'position:fixed;' +
+        'left:' +
+        (endPoint.x - 1) +
+        'px;' +
+        'top:' +
+        (targetRect.top + 6) +
+        'px;' +
+        'width:3px;' +
+        'height:' +
+        Math.max(20, targetRect.height - 12) +
+        'px;' +
+        'background:#5BA8F5;' +
+        'box-shadow:0 0 8px rgba(91,168,245,0.6);' +
+        'border-radius:2px;' +
+        'pointer-events:none;z-index:999991;' +
+        'opacity:0;transition:opacity 200ms ease-out;'
+    } else {
+      // Horizontal line between two stacked siblings.
+      insertionLine.style.cssText =
+        'position:fixed;' +
+        'left:' +
+        (targetRect.left + 6) +
+        'px;' +
+        'top:' +
+        (endPoint.y - 1) +
+        'px;' +
+        'width:' +
+        Math.max(40, targetRect.width - 12) +
+        'px;' +
+        'height:3px;' +
+        'background:#5BA8F5;' +
+        'box-shadow:0 0 8px rgba(91,168,245,0.6);' +
+        'border-radius:2px;' +
+        'pointer-events:none;z-index:999991;' +
+        'opacity:0;transition:opacity 200ms ease-out;'
+    }
+    document.body.appendChild(insertionLine)
+
+    // Reveal just before the cursor arrives so the viewer's eye lands on
+    // them at the same beat as the drop, not while the cursor is still far.
+    const showAt = setTimeout(() => {
+      containerRing.style.opacity = '1'
+      insertionLine.style.opacity = '1'
+    }, 600)
+
+    return (): void => {
+      clearTimeout(showAt)
+      containerRing.style.transition = 'opacity 280ms ease-in'
+      insertionLine.style.transition = 'opacity 200ms ease-in'
+      containerRing.style.opacity = '0'
+      insertionLine.style.opacity = '0'
+      setTimeout(() => {
+        containerRing.remove()
+        insertionLine.remove()
+      }, 300)
+    }
+  }
+
   const pressPaletteItem = (el: HTMLElement | null): (() => void) => {
     if (!el) return () => {}
     const prev = {
@@ -543,6 +646,10 @@ export function installMirrorActions(): MirrorActionsAPI {
 
     const releasePalette = pressPaletteItem(paletteEl)
     const destroyGhost = attachDragGhost(component)
+    // Drop-zone preview: dashed ring around the target container plus an
+    // insertion line at the predicted landing point, so the viewer sees
+    // where the new node will land before the cursor finishes its glide.
+    const destroyDropIndicators = showDropIndicators(targetEl, endPoint)
 
     let result: any
     try {
@@ -555,6 +662,7 @@ export function installMirrorActions(): MirrorActionsAPI {
     } finally {
       releasePalette()
       destroyGhost()
+      destroyDropIndicators()
     }
     if (!result || !result.success) {
       throw new Error('Drop failed: ' + ((result && result.error) || 'unknown'))
