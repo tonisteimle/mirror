@@ -184,6 +184,27 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   **Status:** erledigt — auf `calculateSourcePosition(instance.line,
 instance.column)` umgestellt. 7849/7849 vitest grün.
 
+- **Wo:** `compiler/backends/dom/ops/emit-static.ts:85`,
+  `compiler/backends/dom/event-emitter.ts:emitValueAction`
+  **Was:** Vierter Inkrement aus dem Runtime-Bug-TODO-Bucket — diesmal
+  ein **echter** Runtime-Bug. Token-Key-Mismatch zwischen Data-Layer
+  und Token-Registry: Quellsyntax `count: 5` emittiert
+  `__mirrorData["count"] = 5` (ohne `$`), aber
+  `_runtime.registerToken('$count', 5)` (mit `$`-Prefix). Action
+  `reset(count)` emittiert `_runtime.reset('count')` (ohne `$`). Im
+  Runtime liest `reset()` dann `_initialTokens['count']` → undefined →
+  `__mirrorData['count']` wird auf `undefined` gesetzt → DOM-Text wird
+  leer. jsdom-Probe `tools/probes/reset-action.ts` reproduziert: nach
+  `reset` ist `text = ""` und `__mirrorData.count = undefined`.
+  **Status:** aktiv (Claude, 2026-05-10)
+  **Plan:** Pre-Refactor-Pin in `tests/behavior/actions.test.ts` (A1
+  reset-Block) — dass nach `reset(count)` der DOM-Text wieder den
+  initialen Wert zeigt. Fix: emit-static.ts dropt `$`-Prefix in
+  `registerToken`-Emit; emitValueAction stripped `$` von Token-Args
+  bevor sie in Runtime-Calls landen. Integration-Test-Assertions
+  `_tokens['$count']` → `_tokens['count']` aktualisieren. Browser-Test
+  TODO-Kommentar entfernen, in Erledigt verschieben mit Hash.
+
 - **Wo:** `studio/test-api/suites/` — 10 `// TODO: Runtime bug …`-Marker
   in den Browser-Test-Suiten
   **Was:** Latente Production-Bugs, die als Test-Workaround dokumentiert
