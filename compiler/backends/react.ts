@@ -1485,31 +1485,7 @@ function generateStyles(
         style[singleAxisFlex.property] = singleAxisFlex.value
         continue
       }
-      switch (prop.name) {
-        case 'hor':
-        case 'horizontal':
-          style.display = 'flex'
-          style.flexDirection = 'row'
-          break
-        case 'ver':
-        case 'vertical':
-          style.display = 'flex'
-          style.flexDirection = 'column'
-          break
-        case 'spread':
-          style.justifyContent = 'space-between'
-          break
-        case 'wrap':
-          style.flexWrap = 'wrap'
-          break
-        case 'scroll':
-          style.overflowY = 'auto'
-          break
-        case 'hidden':
-          style.display = 'none'
-          break
-      }
-      continue
+      if (applyFlagProperty(prop.name, style)) continue
     }
 
     // Inline ternaries on style props (`Frame bg active ? #2271C1 : #333`)
@@ -1616,6 +1592,11 @@ function generateStyles(
         style[singleAxisFlex.property] = singleAxisFlex.value
         continue
       }
+      // Most other flags reach here too — `italic`, `underline`, `truncate`,
+      // `absolute`, `fixed`, `relative`, etc. The parser packs them as
+      // `[true]` rather than empty values; route through the same dispatch
+      // so layout/typography/position flags share one source of truth.
+      if (applyFlagProperty(prop.name, style)) continue
     }
 
     switch (prop.name) {
@@ -1885,6 +1866,55 @@ function generateStyles(
         style.transform = style.transform ? `${style.transform} ${part}` : part
         break
       }
+
+      // Aspect ratio: keywords `square`/`video` plus raw `N/M` or `N`.
+      // Mirrors the DOM IR's aspect-ratio handling.
+      case 'aspect': {
+        const map: Record<string, string> = { square: '1', video: '16/9' }
+        const v = String(value)
+        style.aspectRatio = map[v] ?? v
+        break
+      }
+
+      // Blur effects: numeric values get `px`; pre-suffixed strings pass through.
+      case 'blur': {
+        const v = String(value)
+        const px = /^\d+(\.\d+)?$/.test(v) ? `${v}px` : v
+        style.filter = `blur(${px})`
+        break
+      }
+      case 'backdrop-blur':
+      case 'blur-bg': {
+        const v = String(value)
+        const px = /^\d+(\.\d+)?$/.test(v) ? `${v}px` : v
+        style.backdropFilter = `blur(${px})`
+        ;(style as Record<string, string | number>)['WebkitBackdropFilter'] = `blur(${px})`
+        break
+      }
+
+      // Box-shadow keyword presets: sm / md / lg map to standard depths.
+      case 'shadow': {
+        const v = String(value)
+        const presets: Record<string, string> = {
+          sm: '0 1px 2px rgba(0,0,0,0.1)',
+          md: '0 4px 6px rgba(0,0,0,0.15)',
+          lg: '0 10px 25px rgba(0,0,0,0.2)',
+        }
+        style.boxShadow = presets[v] ?? v
+        break
+      }
+
+      // Stack order.
+      case 'z':
+      case 'z-index':
+        style.zIndex = value
+        break
+
+      // Text alignment + decoration values.
+      case 'text-align':
+      case 'align-text':
+        style.textAlign = String(value)
+        break
     }
   }
 
@@ -1907,6 +1937,104 @@ function generateStyles(
   }
 
   return style
+}
+
+/**
+ * Single-source-of-truth for flag-style Mirror properties (no value, or
+ * `[true]`). Returns true when the name was recognized and a style was
+ * applied so the caller can `continue` past the value-bearing pipeline.
+ *
+ * The parser produces both empty-values and `[true]`-values shapes for
+ * flags depending on context, so the calling switch in `generateStyles`
+ * routes both forms through here to keep one definition per CSS effect.
+ * 9-zone and single-axis-center aliases stay at the call site since they
+ * need the layout-direction context that flows from a sibling `hor`/`ver`.
+ */
+function applyFlagProperty(name: string, style: Record<string, string | number>): boolean {
+  switch (name) {
+    case 'hor':
+    case 'horizontal':
+      style.display = 'flex'
+      style.flexDirection = 'row'
+      return true
+    case 'ver':
+    case 'vertical':
+      style.display = 'flex'
+      style.flexDirection = 'column'
+      return true
+    case 'spread':
+      style.justifyContent = 'space-between'
+      return true
+    case 'wrap':
+      style.flexWrap = 'wrap'
+      return true
+
+    // Overflow.
+    case 'scroll':
+    case 'scroll-ver':
+      style.overflowY = 'auto'
+      return true
+    case 'scroll-hor':
+      style.overflowX = 'auto'
+      return true
+    case 'scroll-both':
+      style.overflow = 'auto'
+      return true
+    case 'clip':
+      style.overflow = 'hidden'
+      return true
+
+    // Visibility.
+    case 'hidden':
+      style.display = 'none'
+      return true
+    case 'visible':
+      style.display = 'flex'
+      return true
+
+    // Position.
+    case 'absolute':
+    case 'abs':
+      style.position = 'absolute'
+      return true
+    case 'fixed':
+      style.position = 'fixed'
+      return true
+    case 'relative':
+      style.position = 'relative'
+      return true
+
+    // Typography flags.
+    case 'italic':
+      style.fontStyle = 'italic'
+      return true
+    case 'underline':
+      style.textDecoration = 'underline'
+      return true
+    case 'uppercase':
+      style.textTransform = 'uppercase'
+      return true
+    case 'lowercase':
+      style.textTransform = 'lowercase'
+      return true
+    case 'truncate':
+      // Triplet matches DOM IR's ellipsis-truncation output.
+      style.overflow = 'hidden'
+      style.textOverflow = 'ellipsis'
+      style.whiteSpace = 'nowrap'
+      return true
+
+    // Flex-child shorthand flags.
+    case 'grow':
+      style.flexGrow = 1
+      return true
+    case 'shrink':
+      style.flexShrink = 1
+      return true
+
+    default:
+      return false
+  }
 }
 
 function formatStyleObject(style: Record<string, string | number>): string {

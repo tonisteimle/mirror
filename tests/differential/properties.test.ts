@@ -88,4 +88,32 @@ describe('Properties — DOM emits expected style values', () => {
     const react = generateReact(parse(`Button "X", bg #333, hover-scale 1.05`))
     expect(react).toContain('transform: scale(1.05)')
   })
+
+  // Pre-2026-05-10 the React backend silently dropped a long tail of
+  // common props (`italic`, `underline`, `uppercase`, `lowercase`,
+  // `truncate`, `aspect`, `blur`, `backdrop-blur`, `shadow sm/md/lg`,
+  // `z N`, `absolute`/`fixed`/`relative`, `grow`/`shrink`,
+  // `text-align`, `scroll-hor`/`scroll-both`, `clip`, `visible`).
+  // Now wired through `applyFlagProperty` (boolean flags) + main switch
+  // (value-bearing). Pin a representative sample so regressions surface
+  // in CI rather than visual-only noise.
+  it.each([
+    ['italic', `Text "Hi", italic`, /fontStyle:\s*'italic'/],
+    ['underline', `Text "Hi", underline`, /textDecoration:\s*'underline'/],
+    ['uppercase', `Text "Hi", uppercase`, /textTransform:\s*'uppercase'/],
+    ['truncate', `Text "X", truncate, w 100`, /textOverflow:\s*'ellipsis'/],
+    ['absolute', `Frame absolute, w 100`, /position:\s*'absolute'/],
+    ['fixed', `Frame fixed, w 100`, /position:\s*'fixed'/],
+    ['aspect square', `Frame aspect square, w 100`, /aspectRatio:\s*'1'/],
+    ['blur 4', `Frame blur 4, w 100`, /filter:\s*'blur\(4px\)'/],
+    ['backdrop-blur 8', `Frame backdrop-blur 8, w 100`, /backdropFilter:\s*'blur\(8px\)'/],
+    ['shadow md', `Frame shadow md, w 100`, /boxShadow:\s*'0 4px 6px/],
+    ['z 5', `Frame z 5, w 100`, /zIndex:\s*['"]?5/],
+    ['scroll-hor', `Frame scroll-hor, w 100`, /overflowX:\s*'auto'/],
+    ['grow', `Frame grow, bg red`, /flexGrow:\s*1/],
+    ['text-align center', `Text "Hi", text-align center`, /textAlign:\s*'center'/],
+  ])('React emits CSS for `%s`', (_name, src, expectedPattern) => {
+    const react = generateReact(parse(src))
+    expect(react).toMatch(expectedPattern as RegExp)
+  })
 })

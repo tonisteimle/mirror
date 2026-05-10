@@ -559,6 +559,23 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — Long-Tail Props im React-Backend
+
+- **Wo:** `compiler/backends/react.ts` (`generateStyles`, `applyFlagProperty`),
+  `tests/differential/properties.test.ts`
+  **Was:** ~17 häufige Properties wurden silent geschluckt. Audit-Liste:
+  `italic`, `underline`, `uppercase`, `lowercase`, `truncate`,
+  `aspect square|video|N/M`, `blur N`, `backdrop-blur N`,
+  `shadow sm|md|lg`, `z N`, `absolute`/`fixed`/`relative`/`abs`,
+  `grow`/`shrink`, `text-align center`, `scroll-hor`/`scroll-both`/`clip`,
+  `visible`. Fix: neue Helper-Funktion `applyFlagProperty(name, style)` als
+  Single-Source-of-Truth für Flag-Form-Props (`[]` und `[true]`-Variante
+  routen beide durch den selben Pfad), plus value-bearing Cases im
+  Haupt-Switch. 14-fach `.each`-Pin in `properties.test.ts`.
+  **Status:** erledigt
+  **Notiz:** Bisher mussten Designer-Layouts via Tokens `$truncate-class`
+  oder ähnliche Workarounds gehen — jetzt cross-backend identisch.
+
 ### 2026-05-10 — `rotate` / `scale` Transforms im React-Backend
 
 - **Wo:** `compiler/backends/react.ts` (`generateStyles`),
