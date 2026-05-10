@@ -1,0 +1,52 @@
+// Custom-Icons-Demo — Lane 1, Inkrement 1.
+//
+// Demonstriert die `$icons:` Registry (Slice 51): SVG-Pfade direkt in
+// Mirror definieren, dann mit `Icon "name"` wie Lucide-Icons benutzen.
+// Custom-Icons gehen VOR Lucide-CDN — wenn registriert, kein Fetch.
+// Mehrere SVG-Pfade pro Icon werden mit `|` getrennt; ViewBox default
+// `0 0 24 24`.
+
+$icons:
+  hbox: "M3 3h18v18H3zM9 3v18M15 3v18"
+  vbox: "M3 3h18v18H3zM21 9H3M21 15H3"
+  cube: "M21 16.5l-9 5-9-5v-9l9-5 9 5zM12 22V11M3.27 6.96L12 12.01l8.73-5.05"
+
+bg.canvas: #0a0a0a
+panel.bg: #1a1a1a
+panel.pad: 16
+panel.rad: 12
+text.col: white
+muted.col: #888
+accent.col: #2271C1
+btn.pad: 8 14
+btn.rad: 6
+
+DirectionBtn as Frame: pad $btn, rad $btn, hor, gap 6, ver-center, cursor pointer
+  hover:
+    bg #222
+
+Frame bg $bg, pad 24, gap 16
+  Text "Layout-Richtung", col $text, fs 18, weight 600
+
+  Frame bg $panel, rad $panel, pad $panel, gap 12
+    Text "Custom-Icons (registriert via $icons:)", col $muted, fs 12, uppercase
+
+    Frame hor, gap 8
+      DirectionBtn
+        Icon "hbox", is 18, ic $accent
+        Text "Horizontal", col $text, fs 14
+      DirectionBtn
+        Icon "vbox", is 18, ic $muted
+        Text "Vertikal", col $text, fs 14
+      DirectionBtn
+        Icon "cube", is 18, ic $muted
+        Text "3D", col $text, fs 14
+
+  Frame bg $panel, rad $panel, pad $panel, gap 12
+    Text "Custom + Lucide gemischt", col $muted, fs 12, uppercase
+
+    Frame hor, gap 12, ver-center
+      Icon "hbox", is 24, ic $accent
+      Icon "check", is 24, ic #10b981
+      Icon "vbox", is 24, ic $muted
+      Icon "x", is 24, ic #ef4444

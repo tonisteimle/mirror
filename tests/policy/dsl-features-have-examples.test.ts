@@ -81,6 +81,14 @@ const KEEP: Feature[] = [
     name: 'Prose mode (Markdown-like body inside Frame)',
     pattern: /,\s*prose(\s|,|$)/m,
   },
+  {
+    name: '$icons: custom-icon registry',
+    // `$icons:` declaration block at line start. Slice 51 (2026-05-10)
+    // RT-validated the feature in all three backends; example
+    // `examples/custom-icons.mirror` (Lane 1, Inkrement 1) demonstrates
+    // it. Promoted from WATCHLIST.
+    pattern: /^\$icons:/m,
+  },
 ]
 
 // =============================================================================
@@ -94,15 +102,6 @@ const KEEP: Feature[] = [
 //       and remove the entry here.
 //
 const WATCHLIST: WatchlistEntry[] = [
-  {
-    name: '$icons: custom-icon registry',
-    // `$icons:` declaration block at line start. Negative lookbehind would
-    // be cleaner, but `m` + start-of-line is enough — compiled artifacts
-    // are filtered out by SOURCE_EXTENSIONS.
-    pattern: /^\$icons:/m,
-    deadline: '2026-08-10',
-    context: 'docs/findings.md "Dead-feature-Verdacht" → "Custom-Icons-Registry"',
-  },
   {
     name: 'Section-header parsing (--- Title ---)',
     // Three or more dashes, identifier word, three or more dashes,
