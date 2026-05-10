@@ -523,19 +523,20 @@ Hunting durch das Tutorial-Konzept `docs/concepts/studio-tutorial.md`
 ergibt eine kleine Anzahl konkreter Lücken, die produktion-blocking sind
 für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
 
+> **Status der Sektion (2026-05-10 ~19:05):** Drei der vier ursprünglichen
+> Einträge sind stale geworden, weil `8e81387f` das gesamte demo-runner +
+> step-runner-Subsystem gerippt hat (`tools/test-runner/demo/`,
+> `studio/test-api/step-runner/`). Tutorial-Vollausbau braucht nun einen
+> neuen Architektur-Entscheid (eigene Lane-Doc), nicht mehr punktuelle
+> Inkremente in einem nicht mehr existierenden System. Siehe neuer
+> Eintrag „Tutorial-Loop-Infrastruktur" weiter unten.
+
 - **Wo:** `tools/test-runner/demo/types.ts` (DemoAction-Union)
   **Was:** Vier in `studio/test-api/step-runner/types.ts` existierende
-  Test-Actions sind im Demo-Runner nicht verfügbar:
-  `extractComponent`, `extractToken`, `batchReplace`, sowie die
-  `switchFile`-Variante mit Cmd+P-Quick-Switch-Animation. Tutorial
-  Kapitel 20 (Komponenten-Workflow geführt) und 21 (Token-Extract)
-  brauchen sie als Demo-Actions, sonst lässt sich der Workflow nicht
-  als Loop-Video aufnehmen.
-  **Status:** offen
-  **Notiz:** Lösung: dünner Demo-Runner-Wrapper, der die existierenden
-  step-runner-Actions als DemoAction-Variante exposed (Wiederverwendung
-  der step-runner-Logik, nur eigenes Pacing/Cursor-Animation).
-  ~50–100 LOC pro Action.
+  Test-Actions waren im Demo-Runner nicht verfügbar (extractComponent,
+  extractToken, batchReplace, switchFile mit Cmd+P).
+  **Status:** abgewiesen — Demo-Runner-Subsystem gelöscht in `8e81387f`,
+  Finding moot.
 
 - **Wo:** Studio-Keyboard
   **Was:** Cmd+P-Quick-Switch (Fuzzy-Search-File-Palette) ist im
@@ -548,34 +549,32 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
   close ohne Switch. Filter rankt startsWith vor contains, beide
   case-insensitive. 19 Unit-Tests in jsdom pinnen Lifecycle, Filter,
   Keyboard, Maus, Error-Handling. 5953/5953 studio tests pass.
-  Erste der vier Tutorial-Blocking-Gaps geschlossen — die anderen
-  drei (Demo-Runner-Actions, generischer Picker-Handler, Tutorial-
-  Mode-Selektor-Versionierung) bleiben offen.
 
 - **Wo:** `tools/test-runner/demo/types.ts` (PickColorAction)
-  **Was:** `pickColor` ist die einzige Picker-Action im Demo-Runner.
-  Tutorial Kapitel 19 plant Loops für 5 Pickers: Color (Hex+Token-
-  Tab), Token, Icon, Animation, Action. Kein generischer
-  `openPicker`/`selectPickerOption`/`pickerTabSwitch` heute.
-  **Status:** offen
-  **Notiz:** Drei Wege:
-  1. `pickColor` → `pickValue` mit `pickerType`-Diskriminator.
-  2. Eigene Actions pro Picker (`pickToken`, `pickIcon`,
-     `pickAnimation`, `pickAction`).
-  3. Generisch: `openPicker` + `pickerSelect` + `pickerTabSwitch`.
-     Variante 3 ist am kleinsten — nutzt die schon existierenden
-     Picker-DOM-Patterns (`base/picker.ts`).
+  **Was:** `pickColor` als einzige Picker-Action im Demo-Runner;
+  Tutorial Kapitel 19 plant 5-Picker-Loops.
+  **Status:** abgewiesen — Demo-Runner-Subsystem gelöscht in `8e81387f`,
+  Finding moot.
 
 - **Wo:** Tutorial-Mode-Setup, Selektoren
-  **Was:** Tutorial-Mode (`tools/test-runner/demo/fragments/tutorial-mode.ts`)
-  versteckt Panels per Class-Toggle. Bei Studio-UI-Änderungen
-  (Panel-Layout-Refactor, neue Selektoren) brechen alle Tutorials
-  gleichzeitig — keine Versionierung der Selektor-Verträge.
-  **Status:** offen
-  **Notiz:** Niedrige Priorität, aber: ein `data-testid`-basierter
-  Selector-Vertrag in `tools/test-runner/demo/selectors.ts` würde
-  Tutorial-Resilience erhöhen. Keine produktion-blocking Lücke,
-  eher Wartungs-Hygiene wenn der Vollausbau läuft.
+  **Was:** Tutorial-Mode in `tools/test-runner/demo/fragments/tutorial-mode.ts`
+  versteckte Panels per Class-Toggle ohne Selektor-Versionierung.
+  **Status:** abgewiesen — Demo-Runner-Subsystem gelöscht in `8e81387f`,
+  Finding moot.
+
+- **Wo:** Tutorial-Loop-Infrastruktur insgesamt
+  **Was:** Nach dem Demo-Runner-Rip-Out (`8e81387f`, 2026-05-10) gibt
+  es kein laufendes System mehr für die Tutorial-Loop-Videos
+  (`docs/concepts/studio-tutorial.md` Kapitel 19–24). Vor weiterem
+  Tutorial-Build muss eine Architektur-Entscheidung fallen: (a)
+  CDP-basierten Test-Runner um Cursor/Pacing/Recording erweitern
+  (sauber, aber Aufwand), (b) eigenständiges Tutorial-Recording-Tool
+  bauen (separate Toolchain), (c) Tutorial-Konzept einstellen oder
+  vereinfachen (nur statische Screenshots/Videos via externer Tools).
+  **Status:** offen — Owner-Entscheidung
+  **Notiz:** Wenn (a) gewählt wird, eigene Lane-Doc unter
+  `docs/refactoring/` bevor Code geschrieben wird (Größe + Cross-
+  System-Touchpoints). Findings-Eintrag-Größe gesprengt.
 
 ### Compiler/CLI Hunt (2026-05-10 Iter-N)
 
