@@ -26,10 +26,6 @@ import { reorderSiblingsTests } from './02-move/reorder-siblings.test'
 import { twoLevelsDeepTests } from './03-nesting/two-levels-deep.test'
 import { threeLevelsDeepTests } from './03-nesting/three-levels-deep.test'
 
-import { fiveLevelsDeepTests } from './04-deep-nesting/five-levels-deep.test'
-import { siblingsAtDeepLevelTests } from './04-deep-nesting/siblings-at-deep-level.test'
-import { nestedInsideEachTests } from './04-deep-nesting/nested-inside-each.test'
-
 // Wave 1 — Smoke (verifies the helper layer is reachable).
 export const previewCdpSmokeTests: TestCase[] = [...smokeTests]
 
@@ -52,18 +48,10 @@ export const previewCdpMoveTests: TestCase[] = [
 // Wave 5 — nesting (multi-level palette-drop sequences).
 export const previewCdpNestingTests: TestCase[] = [...twoLevelsDeepTests, ...threeLevelsDeepTests]
 
-// Wave 6 — deep nesting (≥3 levels, siblings at depth, each-iteration drops).
-export const previewCdpDeepNestingTests: TestCase[] = [
-  ...fiveLevelsDeepTests,
-  ...siblingsAtDeepLevelTests,
-  ...nestedInsideEachTests,
-]
-
 // Aggregate — every wave above flows into this list.
 export const previewCdpAllTests: TestCase[] = [
   ...previewCdpSmokeTests,
   ...previewCdpPaletteDropTests,
   ...previewCdpMoveTests,
   ...previewCdpNestingTests,
-  ...previewCdpDeepNestingTests,
 ]

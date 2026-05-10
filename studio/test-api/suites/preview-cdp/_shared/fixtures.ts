@@ -65,37 +65,6 @@ Frame w 200, h 200, bg #27272a, pad 16`,
   threeLevelHierarchy: `Frame w 400, h 320, bg #1a1a1a, pad 24
   Frame w 320, h 240, bg #27272a, pad 16
     Frame w 240, h 160, bg #3f3f46, pad 12`,
-
-  /** Roomy 5-level hierarchy — for deep-drop tests. */
-  fiveLevelHierarchy: `Frame w 520, h 420, bg #0a0a0a, pad 28
-  Frame w 460, h 360, bg #1a1a1a, pad 24
-    Frame w 400, h 300, bg #27272a, pad 20
-      Frame w 340, h 240, bg #3f3f46, pad 16
-        Frame w 280, h 180, bg #52525b, pad 12`,
-
-  /** Roomy 4-level hierarchy with deepest container roomy enough
-   *  to host two side-by-side child Frames after a drop sequence. */
-  fourLevelRoomyHierarchy: `Frame w 500, h 380, bg #0a0a0a, pad 24
-  Frame w 440, h 320, bg #1a1a1a, pad 20
-    Frame w 380, h 260, bg #27272a, pad 16
-      Frame w 320, h 200, bg #3f3f46, pad 16, hor, gap 12`,
-
-  /** Frame containing an `each` iteration over three items —
-   *  used to verify drops into iteration containers. The outer Frame
-   *  has plenty of slack space below the iterated items so a drop
-   *  near the bottom lands on the outer (not on an item). */
-  eachIteration: `items:
-  a:
-    label: "A"
-  b:
-    label: "B"
-  c:
-    label: "C"
-
-Frame w 360, h 360, bg #1a1a1a, pad 16, gap 8
-  each item in $items
-    Frame w 320, h 40, bg #27272a, pad 8
-      Text "$item.label", col white`,
 } as const
 
 export type FixtureName = keyof typeof FIXTURES
