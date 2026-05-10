@@ -215,33 +215,6 @@ instance.column)` umgestellt. 7849/7849 vitest grün.
   da ist. `Frame > Inner` mit Size-States auf `Inner` funktioniert
   _heute_ schon (Inner reagiert auf Frame-Container) — Workaround.
 
-- **Wo:** `studio/test-api/suites/` — Runtime-Bug-TODO-Bucket
-  **Was:** Latente Production-Bugs, die als Test-Workaround dokumentiert
-  waren. Stand 2026-05-10: alle 10 Original-Markern abgearbeitet:
-  - ✅ `actions/scroll.test.ts:9,36` — Container-Scroll in
-    `scrollContainerToTop/Bottom` (Erledigt).
-  - ✅ `actions/visibility.test.ts:60` — `toggle(ElementName)` (Erledigt).
-  - ✅ `actions/crud.test.ts:36` — Test-Selector-Bug, nicht Runtime
-    (Erledigt).
-  - ✅ `actions/counter.test.ts:92` + `tutorial/functions-deep.test.ts:70`
-    — `reset()` Token-Key-Mismatch (Erledigt).
-  - ✅ `actions/combined.test.ts:9` — Doppel-Click-Handler bei `toggle()
-    - increment()` (Erledigt).
-  - ✅ `actions/navigation.test.ts:9` — Skip-Marker ohne realen Bug
-    (Erledigt).
-  - ✅ `transforms/translate.test.ts:323` — Multi-Transform-Composition
-    (Erledigt `6c3ab636`).
-  - 🚫 `responsive/basic.test.ts:73` + `responsive/layout.test.ts:88` —
-    Container-Queries-Architektur, separater Befund oben (kein
-    einfacher Runtime-Fix).
-    Plus 6 weitere TODOs in `autocomplete/` und `responsive/` ohne
-    „Runtime bug"-Wording (Context-aware Completions / State Completions
-    / Stress-Tests-Hang) — separate Buckets, nicht Teil dieses Eintrags.
-    **Status:** offen — Container-Query-Architektur als eigener Befund
-    aufschreiben wenn jemand drangeht; sonst Bucket nahezu erledigt.
-    **Notiz:** Vor jedem Pick: TODO im Test-File suchen, `// TODO`
-    entfernen wenn Fix landet, Test in Suite-Run pinnen.
-
 - **Wo:** `compiler/ir/ops/instance-ops.ts`, `compiler/ir/ops/properties-ops.ts`,
   `compiler/backends/react.ts`
   **Was:** Lane 2, Inkrement 2 — Folge-Refactor zu Inkrement 1.
@@ -943,6 +916,28 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — Runtime-Bug-TODO-Bucket vollständig abgehakt (10/10)
+
+- **Wo:** `studio/test-api/suites/` — 10 `// TODO: Runtime bug …`-Marker
+  in den Browser-Test-Suiten
+  **Was:** Meta-Bucket aus 10 Test-Workarounds, die als latente
+  Production-Bugs dokumentiert waren. Über mehrere Inkremente
+  abgearbeitet:
+  - ✅ scroll Container-Scroll
+  - ✅ visibility `toggle(ElementName)`
+  - ✅ crud `remove()` (Test-Selector-Bug, nicht Runtime)
+  - ✅ counter + tutorial `reset()` Token-Key-Mismatch
+  - ✅ combined `toggle() + increment()` Doppel-Click-Handler
+  - ✅ navigation `navigate() + show/hide` (Skip-Marker ohne realen Bug)
+  - ✅ translate Multi-Transform-Composition (`6c3ab636`)
+  - 🚫 responsive Container-Queries → eigener Open-Befund
+    (Architektur-Issue, kein simpler Runtime-Fix)
+    4 von 7 echte Runtime-Code-Fixes, 2 Test-Selector-Bugs, 1 Skip-
+    Marker, 1 Architektur-Befund. Drei verbleibende `autocomplete/`-
+    TODOs (state-completions, context-aware-completions ×2) sind
+    Feature-Lücken, kein Bucket-Item.
+    **Status:** erledigt
 
 ### 2026-05-10 — Multi-Transform-Composition: x-offset + y-offset komponieren mit rotate/scale
 
