@@ -299,7 +299,29 @@ class FrameworkGenerator {
           if (iconProp === 'size') props.is = prop.value
           else if (iconProp === 'color') props.ic = prop.value
           else if (iconProp === 'weight') props.iw = prop.value
+          else if (iconProp === 'fill') props.fill = prop.value === 'true' || prop.value === true
         }
+      }
+    }
+
+    // Slice 50 V-3: Icon-Reverse-Map Suppression. Wenn Icon UND data-icon-*
+    // Attribute vorhanden sind, sind die korrespondierenden CSS-Reverses
+    // (`width→w`, `height→h`, `color→col`) Doubletten — der User hat
+    // ursprünglich `is`/`ic`/`iw`/`fill` geschrieben, nicht beide Wege.
+    // Pre-fix emittierte Framework `{ w: 24, h: 24, col: '#f00', is: '24',
+    // ic: '#f00' }` — round-trip-lossy weil Re-Compile beide Wege liest.
+    if (node.primitive === 'icon') {
+      if (props.is !== undefined) {
+        delete props.w
+        delete props.h
+      }
+      if (props.ic !== undefined) {
+        delete props.col
+      }
+      if (props.iw !== undefined) {
+        // V-4 hat font-weight CSS-Emit unterdrückt — diese Suppression ist
+        // defensiv für Pfade die das doch noch durchlassen würden.
+        delete props.weight
       }
     }
 
