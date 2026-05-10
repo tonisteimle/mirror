@@ -38,7 +38,8 @@ function createMockSourceMap(nodeIds: string[]): SourceMap {
   return {
     getNodeById: (id: string) => nodes.get(id) || null,
     getAllNodeIds: () => Array.from(nodes.keys()),
-    getNodeAtLine: (line: number) => Array.from(nodes.values()).find(n => n.position.line === line) || null,
+    getNodeAtLine: (line: number) =>
+      Array.from(nodes.values()).find(n => n.position.line === line) || null,
     getChildren: () => [],
     getRootNodes: () => Array.from(nodes.values()).filter(n => !n.parentId),
     getSiblings: () => [],
@@ -58,7 +59,12 @@ function createHierarchicalMockSourceMap(configs: MockNodeConfig[]): SourceMap {
       nodeId: config.nodeId,
       parentId: config.parentId,
       componentName: config.componentName ?? 'Box',
-      position: { line: config.line ?? index + 1, column: 0, endLine: (config.line ?? index + 1), endColumn: 10 },
+      position: {
+        line: config.line ?? index + 1,
+        column: 0,
+        endLine: config.line ?? index + 1,
+        endColumn: 10,
+      },
       properties: new Map(),
       isDefinition: false,
     })
@@ -67,7 +73,8 @@ function createHierarchicalMockSourceMap(configs: MockNodeConfig[]): SourceMap {
   return {
     getNodeById: (id: string) => nodes.get(id) || null,
     getAllNodeIds: () => Array.from(nodes.keys()),
-    getNodeAtLine: (line: number) => Array.from(nodes.values()).find(n => n.position.line === line) || null,
+    getNodeAtLine: (line: number) =>
+      Array.from(nodes.values()).find(n => n.position.line === line) || null,
     getChildren: (parentId: string) => {
       return Array.from(nodes.values())
         .filter(n => n.parentId === parentId)
@@ -295,9 +302,7 @@ describe('Atomic Compile Result Updates', () => {
 
     actions.setCompileResult({ ast, ir, sourceMap, errors })
 
-    expect(handler).toHaveBeenCalledWith(
-      expect.objectContaining({ hasErrors: true })
-    )
+    expect(handler).toHaveBeenCalledWith(expect.objectContaining({ hasErrors: true }))
   })
 
   it('invalidates selection when node no longer exists', () => {
@@ -427,7 +432,11 @@ describe('Selection Validation', () => {
     actions.setSelection('new-node', 'editor')
 
     // Selection should be deferred, not applied immediately
-    expect(state.get().deferredSelection).toEqual({ type: 'nodeId', nodeId: 'new-node', origin: 'editor' })
+    expect(state.get().deferredSelection).toEqual({
+      type: 'nodeId',
+      nodeId: 'new-node',
+      origin: 'editor',
+    })
     // Also check legacy queuedSelection for backward compatibility
     expect(state.get().queuedSelection).toEqual({ nodeId: 'new-node', origin: 'editor' })
     // Logger adds '[State]' prefix as first argument
@@ -557,19 +566,19 @@ describe('Fallback Selection', () => {
     })
   })
 
-  it('findFallbackSelection returns first root when available', () => {
+  it('findFirstRootNode returns first root when available', () => {
     const sourceMap = createHierarchicalMockSourceMap([
       { nodeId: 'root-1', line: 1 },
       { nodeId: 'root-2', line: 5 },
     ])
 
-    const fallback = actions.findFallbackSelection('deleted-node', sourceMap)
+    const fallback = actions.findFirstRootNode(sourceMap)
     expect(fallback).toBe('root-1')
   })
 
-  it('findFallbackSelection returns null for empty sourceMap', () => {
+  it('findFirstRootNode returns null for empty sourceMap', () => {
     const sourceMap = createMockSourceMap([])
-    const fallback = actions.findFallbackSelection('deleted-node', sourceMap)
+    const fallback = actions.findFirstRootNode(sourceMap)
     expect(fallback).toBeNull()
   })
 
@@ -602,9 +611,7 @@ describe('Fallback Selection', () => {
   })
 
   it('findFallbackWithInfo falls back to parent', () => {
-    const sourceMap = createHierarchicalMockSourceMap([
-      { nodeId: 'parent', line: 1 },
-    ])
+    const sourceMap = createHierarchicalMockSourceMap([{ nodeId: 'parent', line: 1 }])
 
     const fallback = actions.findFallbackWithInfo(
       { nextSiblingId: 'deleted', prevSiblingId: 'also-deleted', parentId: 'parent' },

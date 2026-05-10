@@ -205,6 +205,10 @@ export const actions = {
       ...(multiSelectionChanged ? { multiSelection: validMultiSelection } : {}),
     })
 
+    if (multiSelectionChanged) {
+      events.emit('multiselection:changed', { nodeIds: validMultiSelection })
+    }
+
     events.emit('compile:completed', {
       ast: result.ast,
       ir: result.ir,
@@ -225,7 +229,7 @@ export const actions = {
       } else {
         // Node no longer exists - find a fallback
         logState.warn(' Queued selection no longer exists:', queued.nodeId)
-        const fallbackId = actions.findFallbackSelection(queued.nodeId, result.sourceMap)
+        const fallbackId = actions.findFirstRootNode(result.sourceMap)
         if (fallbackId) {
           logState.info(' Using fallback for queued selection:', fallbackId)
           actions.setSelection(fallbackId, queued.origin)
@@ -287,7 +291,7 @@ export const actions = {
         logState.warn(` Selection ${currentSelection} no longer exists after compile`)
 
         // Find a fallback selection instead of clearing
-        const fallbackId = actions.findFallbackSelection(currentSelection, result.sourceMap)
+        const fallbackId = actions.findFirstRootNode(result.sourceMap)
 
         if (fallbackId) {
           logState.info(` Fallback selection: ${fallbackId}`)
@@ -634,7 +638,7 @@ export const actions = {
 
       // Node doesn't exist - find fallback
       logState.warn(' Deferred nodeId no longer exists:', deferred.nodeId)
-      const fallbackId = actions.findFallbackSelection(deferred.nodeId, sourceMap)
+      const fallbackId = actions.findFirstRootNode(sourceMap)
       if (fallbackId) {
         logState.info(' Using fallback for deferred selection:', fallbackId)
         actions.setSelection(fallbackId, deferred.origin)
@@ -733,20 +737,20 @@ export const actions = {
    * @param sourceMap - The current SourceMap to search in
    * @returns The fallback node ID, or null if no fallback found
    */
-  findFallbackSelection(invalidNodeId: string, sourceMap: SourceMap): string | null {
-    // Guard against mock/incomplete SourceMap implementations
+  /**
+   * Last-resort fallback: just pick the first root node.
+   *
+   * Despite the historical name, this never used the invalid-nodeId hint —
+   * by the time it ran, the old SourceMap was already gone. Use
+   * `findFallbackWithInfo` when you can pre-compute sibling/parent info from
+   * the OLD SourceMap before it's discarded.
+   */
+  findFirstRootNode(sourceMap: SourceMap): string | null {
     if (!sourceMap || typeof sourceMap.getRootNodes !== 'function') {
       return null
     }
-
-    // For setCompileResult, we don't have the old sourceMap
-    // So we need a different approach - find any selectable element
     const roots = sourceMap.getRootNodes()
-    if (roots.length > 0) {
-      return roots[0].nodeId
-    }
-
-    return null
+    return roots.length > 0 ? roots[0].nodeId : null
   },
 
   /**
