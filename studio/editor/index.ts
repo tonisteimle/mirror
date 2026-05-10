@@ -393,19 +393,3 @@ export class EditorController {
 export function createEditorController(config: EditorConfig): EditorController {
   return new EditorController(config)
 }
-
-let globalEditor: EditorController | null = null
-
-/**
- * @deprecated Use getStudioContext().editor instead
- */
-export function getEditorController(): EditorController | null {
-  return globalEditor
-}
-
-/**
- * @deprecated Use setStudioContext() with context.editor instead
- */
-export function setEditorController(controller: EditorController): void {
-  globalEditor = controller
-}

@@ -92,20 +92,6 @@ export function getZagSlotCompletions(componentName: string): Completion[] {
 }
 
 /**
- * Get all Zag slot completions (prefixed with component name)
- */
-export function generateAllZagSlotCompletions(): Completion[] {
-  return Object.entries(ZAG_PRIMITIVES).flatMap(([name, def]) =>
-    def.slots.map(slot => ({
-      label: `${name}${slot}`,
-      detail: `Slot of ${name}`,
-      type: 'component',
-      boost: 6,
-    }))
-  )
-}
-
-/**
  * Get Zag slot completions grouped by component
  * Used for context-sensitive completion within a component
  */
@@ -497,30 +483,6 @@ export function getActionsWithTarget(): string[] {
         ['show', 'hide', 'toggle', 'open', 'close', 'select', 'focus', 'page'].includes(_)
     )
     .map(([name]) => name)
-}
-
-/**
- * Get all possible targets for actions
- */
-export function getAllActionTargets(): string[] {
-  const targets = new Set<string>()
-
-  // Collect targets from schema
-  for (const def of Object.values(DSL.actions)) {
-    if (def.targets) {
-      for (const target of def.targets) {
-        targets.add(target)
-      }
-    }
-  }
-
-  // Add common targets not in schema
-  const commonTargets = ['self', 'all', 'none', 'highlighted', 'selected']
-  for (const target of commonTargets) {
-    targets.add(target)
-  }
-
-  return Array.from(targets)
 }
 
 // ============================================================================
@@ -980,68 +942,4 @@ export function getAllPropertyNames(): string[] {
   }
 
   return names
-}
-
-/**
- * Get standalone properties (no value required)
- */
-export function getStandaloneProperties(): string[] {
-  const standalone: string[] = []
-
-  for (const [name, def] of Object.entries(SCHEMA)) {
-    if (def.keywords?._standalone) {
-      standalone.push(name)
-      standalone.push(...def.aliases)
-    }
-  }
-
-  return standalone
-}
-
-/**
- * Get color properties (accept hex colors)
- */
-export function getColorProperties(): string[] {
-  const colors: string[] = []
-
-  for (const [name, def] of Object.entries(SCHEMA)) {
-    if (def.color) {
-      colors.push(name)
-      colors.push(...def.aliases)
-    }
-  }
-
-  return colors
-}
-
-/**
- * Get numeric properties (accept numbers)
- */
-export function getNumericProperties(): string[] {
-  const numeric: string[] = []
-
-  for (const [name, def] of Object.entries(SCHEMA)) {
-    if (def.numeric) {
-      numeric.push(name)
-      numeric.push(...def.aliases)
-    }
-  }
-
-  return numeric
-}
-
-/**
- * Get token properties (accept $tokens)
- */
-export function getTokenProperties(): string[] {
-  const tokens: string[] = []
-
-  for (const [name, def] of Object.entries(SCHEMA)) {
-    if (def.token) {
-      tokens.push(name)
-      tokens.push(...def.aliases)
-    }
-  }
-
-  return tokens
 }

@@ -26,7 +26,7 @@ import {
   type AutocompleteRequest,
   type AutocompleteResult,
 } from './autocomplete'
-import { EditorController, createEditorController, setEditorController } from './editor'
+import { EditorController, createEditorController } from './editor'
 import {
   PreviewController,
   createPreviewController,
@@ -445,7 +445,6 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   }
   const editorController = createEditorController({ container: editorContainer })
   editorController.initialize(config.editor)
-  setEditorController(editorController)
   studioContext.editor = editorController
   studio.editor = editorController
 

@@ -154,14 +154,6 @@ export function resolveGrid(prop: Property): { columns: string | null; rowCount:
   return { columns: null, rowCount: null }
 }
 
-/**
- * Backwards-compatible columns-only resolver. New code should call
- * `resolveGrid` to also receive the row count from the `grid X Y` form.
- */
-export function resolveGridColumns(prop: Property): string | null {
-  return resolveGrid(prop).columns
-}
-
 /** True if the value parses as a positive integer count (not "auto", not
  *  a px/% sized string). Bounds the count form so absurd inputs like
  *  `grid 1000 1000` don't materialize 1M cells. */

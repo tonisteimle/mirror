@@ -62,11 +62,6 @@ function describeDropTarget(target: DropTarget | null): string {
   }
 }
 
-/** Get current drag data */
-export function getCurrentDragData(): ComponentDragData | null {
-  return currentDragData
-}
-
 /** Clear current drag data (called on dragend) */
 export function clearCurrentDragData(): void {
   currentDragData = null
