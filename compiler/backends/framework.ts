@@ -15,40 +15,14 @@ import { toIR } from '../ir'
 import { isLayoutPrimitive } from '../schema/dsl'
 import { flexToNineZone, flexToSingleAxisCenter } from '../schema/layout-defaults'
 import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional } from '../ir/types'
-import { ANIMATION_SHORTHAND } from './animations'
-
-/**
- * Reverse `mirror-X 0.3s ease forwards` strings back to the `anim X`
- * keyword. Pre-built from the shared shorthand map so any future
- * keyword stays in sync automatically.
- */
-const ANIMATION_REVERSE: Record<string, string> = Object.fromEntries(
-  Object.entries(ANIMATION_SHORTHAND).map(([keyword, css]) => [css, keyword])
-)
-
-/**
- * Parse a `grid-column-end` / `grid-row-end` value into a Mirror-style
- * span count. Accepts `span N` (number of grid tracks) and
- * `span var(--token)` (token-resolved span). Returns null when the value
- * doesn't match either form, which the caller treats as drop-this-prop.
- */
-function parseGridSpan(value: string): number | string | null {
-  const num = value.match(/^span\s+(\d+)$/)
-  if (num) return parseInt(num[1])
-  const tokenVar = value.match(/^span\s+(var\(--[^)]+\))$/)
-  if (tokenVar) return tokenVar[1]
-  return null
-}
-
-const TAG_TO_TYPE: Record<string, string> = {
-  div: 'Box',
-  span: 'Text',
-  button: 'Button',
-  input: 'Input',
-  textarea: 'Textarea',
-  img: 'Image',
-  a: 'Link',
-}
+import {
+  ANIMATION_REVERSE,
+  TAG_TO_TYPE,
+  dataValueToJS,
+  escapeString,
+  parseGridSpan,
+  parsePxValue,
+} from './framework/ops/helpers'
 
 /**
  * Generate M() framework calls from Mirror AST
@@ -70,32 +44,6 @@ export function generateFramework(ast: AST): string {
   const ir = toIR(ast)
   const generator = new FrameworkGenerator(ir)
   return generator.generate()
-}
-
-/**
- * Convert an IR data-value (nested object, list, or scalar) to a JS literal
- * the M(...) runtime can iterate at render time. Mirrors the React backend's
- * `dataAttributesToJSObject` semantics — nested objects round-trip as object
- * literals, bare-list forms as arrays, scalars as quoted/raw values.
- */
-function dataValueToJS(value: unknown): string {
-  if (value === null) return 'null'
-  if (Array.isArray(value)) {
-    return '[' + value.map(v => dataValueToJS(v)).join(', ') + ']'
-  }
-  if (typeof value === 'object' && value !== null) {
-    // Skip data-references (`__ref: true` markers) — their resolution
-    // happens at runtime; emit as a plain placeholder string for now.
-    if ('__ref' in value && (value as { __ref: boolean }).__ref) {
-      const ref = value as unknown as { collection: string; entry: string }
-      return JSON.stringify(`$${ref.collection}.${ref.entry}`)
-    }
-    const entries = Object.entries(value as Record<string, unknown>).map(
-      ([k, v]) => `${JSON.stringify(k)}: ${dataValueToJS(v)}`
-    )
-    return '{ ' + entries.join(', ') + ' }'
-  }
-  return JSON.stringify(value)
 }
 
 class FrameworkGenerator {
@@ -256,16 +204,16 @@ class FrameworkGenerator {
     // Build M() call
     if (content && propsStr && hasChildren) {
       // M('Text', 'content', { props }, [children])
-      return `M(${parts[0]}, '${this.escapeString(content)}', ${propsStr}, [\n${this.indentLines(children.join(',\n'))}\n${this.currentIndent()}])`
+      return `M(${parts[0]}, '${escapeString(content)}', ${propsStr}, [\n${this.indentLines(children.join(',\n'))}\n${this.currentIndent()}])`
     } else if (content && propsStr) {
       // M('Text', 'content', { props })
-      return `M(${parts[0]}, '${this.escapeString(content)}', ${propsStr})`
+      return `M(${parts[0]}, '${escapeString(content)}', ${propsStr})`
     } else if (content && hasChildren) {
       // M('Text', 'content', [children])
-      return `M(${parts[0]}, '${this.escapeString(content)}', [\n${this.indentLines(children.join(',\n'))}\n${this.currentIndent()}])`
+      return `M(${parts[0]}, '${escapeString(content)}', [\n${this.indentLines(children.join(',\n'))}\n${this.currentIndent()}])`
     } else if (content) {
       // M('Text', 'content')
-      return `M(${parts[0]}, '${this.escapeString(content)}')`
+      return `M(${parts[0]}, '${escapeString(content)}')`
     } else if (propsStr && hasChildren) {
       // M('Box', { props }, [children])
       return `M(${parts[0]}, ${propsStr}, [\n${this.indentLines(children.join(',\n'))}\n${this.currentIndent()}])`
@@ -684,12 +632,12 @@ class FrameworkGenerator {
     if (prop === 'display' && value === 'flex') return null // Implicit
     if (prop === 'flex-direction' && value === 'row') return { name: 'hor', value: true }
     if (prop === 'flex-direction' && value === 'column') return null // Default
-    if (prop === 'gap') return { name: 'gap', value: this.parsePxValue(value) }
+    if (prop === 'gap') return { name: 'gap', value: parsePxValue(value) }
     // Slice 2 V-5: gap-x → column-gap, gap-y → row-gap (Aliases gx/gy
     // map to the same CSS in the IR layout-transformer). Without these
     // branches, Framework export silently dropped both axes.
-    if (prop === 'column-gap') return { name: 'gap-x', value: this.parsePxValue(value) }
-    if (prop === 'row-gap') return { name: 'gap-y', value: this.parsePxValue(value) }
+    if (prop === 'column-gap') return { name: 'gap-x', value: parsePxValue(value) }
+    if (prop === 'row-gap') return { name: 'gap-y', value: parsePxValue(value) }
     if (prop === 'justify-content' && value === 'space-between')
       return { name: 'spread', value: true }
     if (prop === 'flex-wrap' && value === 'wrap') return { name: 'wrap', value: true }
@@ -707,21 +655,21 @@ class FrameworkGenerator {
     if (prop === 'width') {
       if (value === '100%') return { name: 'w', value: 'full' }
       if (value === 'fit-content') return { name: 'w', value: 'hug' }
-      return { name: 'w', value: this.parsePxValue(value) }
+      return { name: 'w', value: parsePxValue(value) }
     }
     if (prop === 'height') {
       if (value === '100%') return { name: 'h', value: 'full' }
       if (value === 'fit-content') return { name: 'h', value: 'hug' }
-      return { name: 'h', value: this.parsePxValue(value) }
+      return { name: 'h', value: parsePxValue(value) }
     }
-    if (prop === 'min-width') return { name: 'minw', value: this.parsePxValue(value) }
-    if (prop === 'max-width') return { name: 'maxw', value: this.parsePxValue(value) }
-    if (prop === 'min-height') return { name: 'minh', value: this.parsePxValue(value) }
-    if (prop === 'max-height') return { name: 'maxh', value: this.parsePxValue(value) }
+    if (prop === 'min-width') return { name: 'minw', value: parsePxValue(value) }
+    if (prop === 'max-width') return { name: 'maxw', value: parsePxValue(value) }
+    if (prop === 'min-height') return { name: 'minh', value: parsePxValue(value) }
+    if (prop === 'max-height') return { name: 'maxh', value: parsePxValue(value) }
 
     // Spacing
-    if (prop === 'padding') return { name: 'pad', value: this.parsePxValue(value) }
-    if (prop === 'margin') return { name: 'margin', value: this.parsePxValue(value) }
+    if (prop === 'padding') return { name: 'pad', value: parsePxValue(value) }
+    if (prop === 'margin') return { name: 'margin', value: parsePxValue(value) }
 
     // Colors
     if (prop === 'background' || prop === 'background-color') return { name: 'bg', value: value }
@@ -730,13 +678,13 @@ class FrameworkGenerator {
 
     // Border
     if (prop === 'border') return { name: 'bor', value: value }
-    if (prop === 'border-radius') return { name: 'rad', value: this.parsePxValue(value) }
+    if (prop === 'border-radius') return { name: 'rad', value: parsePxValue(value) }
 
     // Typography
     // Prefer Mirror's short alias (`fs`) over the CSS-name form so the
     // round-tripped M(...) bag uses bare-identifier keys (`fs: 14`)
     // instead of quoted hyphenated keys (`'font-size': 14`).
-    if (prop === 'font-size') return { name: 'fs', value: this.parsePxValue(value) }
+    if (prop === 'font-size') return { name: 'fs', value: parsePxValue(value) }
     if (prop === 'font-weight') {
       // Convert numeric weights back to keywords for readability
       const weightKeywords: Record<string, string> = {
@@ -820,7 +768,7 @@ class FrameworkGenerator {
       if (match) return { name: 'grid', value: parseInt(match[1]) }
       return { name: 'grid', value: value }
     }
-    if (prop === 'grid-auto-rows') return { name: 'row-height', value: this.parsePxValue(value) }
+    if (prop === 'grid-auto-rows') return { name: 'row-height', value: parsePxValue(value) }
     if (prop === 'grid-auto-flow' && value === 'dense') return { name: 'dense', value: true }
     // Slice 6 V-3: grid-child positioning. Reverse-mapping for `x N`/`y N`/
     // `w N`/`h N` in grid-parent context. The `width: 100%` / `height: 100%`
@@ -853,8 +801,8 @@ class FrameworkGenerator {
     if (prop === 'position' && value === 'absolute') return null
     if (prop === 'position' && value === 'fixed') return { name: 'fixed', value: true }
     if (prop === 'position' && value === 'relative') return { name: 'relative', value: true }
-    if (prop === 'left') return { name: 'x', value: this.parsePxValue(value) }
-    if (prop === 'top') return { name: 'y', value: this.parsePxValue(value) }
+    if (prop === 'left') return { name: 'x', value: parsePxValue(value) }
+    if (prop === 'top') return { name: 'y', value: parsePxValue(value) }
 
     // Transforms — `rotate Ndeg` and `scale N` produce a `transform:`
     // string. Pre-2026-05-10 there was no reverse mapping so both
@@ -1007,40 +955,6 @@ class FrameworkGenerator {
       return `${stateName}: { ${propParts.join(', ')} }`
     })
     return `{ ${parts.join(', ')} }`
-  }
-
-  /**
-   * Parse px values to numbers. Pass-through for CSS-vars (`var(--sp-gap)`)
-   * and other already-CSS-shaped values — without that guard the value
-   * occasionally got truncated by downstream string handling. Slice 2 V-3.
-   *
-   * Multi-value shorthand (`12px 8px`) is preserved as the original CSS
-   * string — the M-runtime accepts space-separated values directly. Slice 2 V-7.
-   *
-   * Decimals (`12.5px`) preserved via parseFloat instead of parseInt — the
-   * old `parseInt` truncated `12.5` to `12`. Slice 2 V-9.
-   */
-  private parsePxValue(value: string): string | number {
-    if (value.startsWith('var(')) return value
-    // Multi-value shorthand: keep as CSS string — the M-runtime understands
-    // `gap: '12px 8px'` literally, no need to convert to a single number.
-    if (/\s/.test(value.trim())) return value
-    if (value.endsWith('px')) {
-      const num = parseFloat(value)
-      if (!isNaN(num)) return num
-    }
-    // Bare numeric strings (e.g. `'0'` from `left: 0` in stacked-overlay
-    // children) — round-trip back to a number so the M(...) bag stays
-    // numeric-typed and re-compile produces the same IR. Pre-2026-05-10
-    // these emitted as quoted strings (`x: '0'` in M-prop bag).
-    if (/^-?\d+(\.\d+)?$/.test(value.trim())) {
-      return parseFloat(value)
-    }
-    return value
-  }
-
-  private escapeString(s: string): string {
-    return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
   }
 
   private currentIndent(): string {

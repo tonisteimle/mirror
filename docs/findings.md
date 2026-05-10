@@ -115,14 +115,14 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
-- **Wo:** `compiler/backends/framework.ts` (Stand: 1057 LOC)
+- **Wo:** `compiler/backends/framework.ts` (Stand: 971 LOC, ↓ von 1057)
   — Decomposition in `compiler/backends/framework/ops/*.ts`
   **Was:** Lane-Doc in `docs/refactoring/framework-backend-decomp.md`
   mit 5-Slice-Plan (Helpers/CSS→Mirror/Style+Event/Props+States/
   Node-emit). DOM-Backend ist Vorbild mit 767 LOC + `dom/ops/`-
   Subdir. React-Lane (3273 → 343 LOC, 8 Slices) ist abgeschlossen,
   Pattern erprobt.
-  - ⏳ Slice 1 — Pure helpers (~150 LOC)
+  - ✅ Slice 1 — Pure helpers (–86 LOC, helpers.ts 109 LOC)
   - ⏳ Slice 2 — CSS→Mirror reverse-mapper (~257 LOC)
   - ⏳ Slice 3 — Style/Event/Action emit (~280 LOC)
   - ⏳ Slice 4 — Props/States serialization (~110 LOC)
