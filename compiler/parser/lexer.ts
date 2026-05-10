@@ -555,7 +555,6 @@ export class Lexer {
 
     // Hex color
     if (this.peek() === '#') {
-      const startColumn = this.column
       value += this.advance()
       while (this.isHexDigit(this.peek())) {
         value += this.advance()

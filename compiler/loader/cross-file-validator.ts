@@ -57,18 +57,6 @@ export interface CrossFileError {
 // ============================================================================
 
 /**
- * Walk every Property in an Instance + its children, calling visit() on
- * each. Used to collect token references. Only the value side is
- * inspected (token refs live in property values, not in property names).
- */
-function visitProperties(node: Instance, visit: (prop: Property) => void): void {
-  for (const prop of node.properties) visit(prop)
-  for (const child of node.children) {
-    if (child.type === 'Instance') visitProperties(child, visit)
-  }
-}
-
-/**
  * Collect every TokenReference name from a property's values, including
  * nested expressions / conditionals.
  */

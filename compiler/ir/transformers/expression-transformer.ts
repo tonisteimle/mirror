@@ -45,7 +45,6 @@ export function buildExpressionString(parts: ExpressionPart[], operators: string
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i]
     const prev = i > 0 ? parts[i - 1] : null
-    const isOpenParen = typeof part === 'string' && part === '('
     const isCloseParen = typeof part === 'string' && part === ')'
     const prevIsOpenParen = typeof prev === 'string' && prev === '('
 

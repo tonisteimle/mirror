@@ -27,7 +27,7 @@ import type {
 
 import type { ParserContext } from './parser-context'
 import { ParserUtils } from './parser-context'
-import { MAX_ITERATIONS, MAX_LOOKAHEAD } from './ops/limits'
+import { MAX_ITERATIONS } from './ops/limits'
 import { getZagPrimitive, isZagSlot } from '../schema/zag-primitives'
 import { isPrimitive } from '../schema/dsl'
 import {
