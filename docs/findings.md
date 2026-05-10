@@ -130,7 +130,11 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Was:** `setCommandContext()` wird nach Editor/Preview-Init aber vor
   Sync-Setup gerufen — early Events während Editor-Setup könnten
   unvollständigen Context sehen.
-  **Status:** offen
+  **Status:** erledigt — `events.on('handle:drag-end', …)` (einziger
+  Bootstrap-Subscriber, der `executor.execute` aufruft) ist in den
+  „Wire events"-Block nach `setCommandContext` verschoben. Auch wenn
+  zur Bootzeit normalerweise keine Events feuern, kann der Handler
+  jetzt unmöglich vor dem Context aufgerufen werden.
 
 ### Studio Struktur — God-Objects & Duplikation (Hunt 2026-05-10)
 

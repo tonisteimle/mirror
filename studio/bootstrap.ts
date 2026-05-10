@@ -497,14 +497,6 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
     studio.breadcrumb = breadcrumb
   }
 
-  // Wire handle drag events to code modification
-  eventUnsubscribes.push(
-    events.on('handle:drag-end', ({ nodeId, property, value }) => {
-      // Use executor to apply property change (supports undo/redo)
-      executor.execute(new SetPropertyCommand({ nodeId, property, value: String(value) }))
-    })
-  )
-
   // Sync Coordinator - uses hexagonal architecture with ports
   const { syncCoordinator } = initSync({
     editorController,
@@ -554,6 +546,16 @@ export function initializeStudio(config: BootstrapConfig): StudioInstance {
   })
 
   // Wire events
+  // handle:drag-end calls executor.execute(...) which needs CommandContext —
+  // subscribe AFTER setCommandContext above so an early emit can never see an
+  // uninitialized context.
+  eventUnsubscribes.push(
+    events.on('handle:drag-end', ({ nodeId, property, value }) => {
+      // Use executor to apply property change (supports undo/redo)
+      executor.execute(new SetPropertyCommand({ nodeId, property, value: String(value) }))
+    })
+  )
+
   editorController.onContentChange(content => state.set({ source: content }))
   editorController.onCursorMove(position => {
     actions.setCursor(position.line, position.column)
