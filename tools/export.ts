@@ -26,6 +26,7 @@ import { resolve, join, basename, extname, relative, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawn, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
+import { DSL_VERSION } from '../compiler/schema/dsl-version'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(__dirname, '..')
@@ -399,7 +400,10 @@ export function buildBundle(opts: Options) {
     }
   }
 
-  // Manifest with project summary
+  // Manifest with project summary. dslVersion is the contract handle —
+  // the agent (or any bundle consumer) can refuse to operate against
+  // a major it doesn't understand. Bumping rules in
+  // compiler/schema/dsl-version.ts.
   const manifest = {
     project: basename(projectAbs),
     sourceFiles: files.map(relPath),
@@ -410,6 +414,7 @@ export function buildBundle(opts: Options) {
     hasVisualReference: !!opts.visualReference && existsSync(resolve(opts.visualReference)),
     hasRenderSnapshot: snapshotIncluded,
     generatedAt: new Date().toISOString(),
+    dslVersion: DSL_VERSION,
   }
   writeJSON(join(outAbs, 'manifest.json'), manifest)
 

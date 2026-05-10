@@ -5,6 +5,7 @@
  */
 
 export { parse } from './parser'
+export { DSL_VERSION, DSL_MAJOR } from './schema/dsl-version'
 export { toIR, SourceMap, SourceMapBuilder } from './ir'
 export type { IRResult } from './ir'
 export { generateDOM } from './backends/dom'

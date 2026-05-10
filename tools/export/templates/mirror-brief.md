@@ -4,6 +4,12 @@ You are converting source files written in **Mirror**, a UI design DSL,
 to a target framework. This brief covers exactly the constructs likely to
 appear. Read carefully — Mirror's short syntax is precise, not approximate.
 
+The exact DSL version this bundle was generated against is recorded in
+`manifest.json` as `dslVersion` (SemVer). If you encounter syntax in the
+source that this brief doesn't describe, the bundle may be from a
+newer minor or patch version — fall back to "treat as unknown property,
+preserve in output" rather than guessing semantics.
+
 ## Files
 
 | Extension | Purpose                           |
