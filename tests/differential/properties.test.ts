@@ -190,4 +190,34 @@ describe('Properties — DOM emits expected style values', () => {
     const fw = generateFramework(parse(`Frame blur 4, w 100`))
     expect(fw).toContain('blur: 4')
   })
+
+  it('Framework round-trips `rotate N`', () => {
+    const fw = generateFramework(parse(`Frame rotate 45, w 50`))
+    expect(fw).toContain('rotate: 45')
+  })
+
+  it('Framework round-trips `scale N`', () => {
+    const fw = generateFramework(parse(`Frame scale 1.2, w 50`))
+    expect(fw).toContain('scale: 1.2')
+  })
+
+  it('Framework round-trips `fixed`', () => {
+    const fw = generateFramework(parse(`Frame fixed, x 10, y 20, bg red`))
+    expect(fw).toContain('fixed: true')
+  })
+
+  it('Framework round-trips directional `bor-l/r/t/b`', () => {
+    const fw = generateFramework(parse(`Frame bor-l 1, bor-r 2, w 100, boc red`))
+    expect(fw).toContain("'bor-l': 1")
+    expect(fw).toContain("'bor-r': 2")
+  })
+
+  it('Framework round-trips `bor 0 0 1 0` (multi-value)', () => {
+    // PIN: 4-value `bor` shorthand from `border-style: solid` +
+    // `border-width: 0 0 1px 0`. The lone `border-style: solid` is
+    // dropped to avoid noise.
+    const fw = generateFramework(parse(`Frame bor 0 0 1 0, w 100, boc red`))
+    expect(fw).toContain("bor: '0 0 1 0'")
+    expect(fw).not.toContain("'border-style'")
+  })
 })

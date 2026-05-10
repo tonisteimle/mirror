@@ -774,8 +774,62 @@ class FrameworkGenerator {
     // map `left`/`top` directly back to `x`/`y` and drop the `position:
     // absolute` hint (Mirror's `x`/`y` implies absolute positioning).
     if (prop === 'position' && value === 'absolute') return null
+    if (prop === 'position' && value === 'fixed') return { name: 'fixed', value: true }
+    if (prop === 'position' && value === 'relative') return { name: 'relative', value: true }
     if (prop === 'left') return { name: 'x', value: this.parsePxValue(value) }
     if (prop === 'top') return { name: 'y', value: this.parsePxValue(value) }
+
+    // Transforms — `rotate Ndeg` and `scale N` produce a `transform:`
+    // string. Pre-2026-05-10 there was no reverse mapping so both
+    // dropped from Framework export entirely.
+    if (prop === 'transform') {
+      const r = value.match(/^rotate\((-?\d+(?:\.\d+)?)deg\)$/)
+      if (r) return { name: 'rotate', value: parseFloat(r[1]) }
+      const s = value.match(/^scale\((-?\d+(?:\.\d+)?)\)$/)
+      if (s) return { name: 'scale', value: parseFloat(s[1]) }
+      // Combined transforms (`rotate(45deg) scale(1.2)`) round-trip as a
+      // raw `transform:` string; users who wrote the shorthand get
+      // separate properties anyway.
+      return { name: 'transform', value: value }
+    }
+
+    // Directional borders — `bor-l N` / `bor-r N` / `bor-t N` / `bor-b N`.
+    // The IR emits `border-left: Npx solid currentColor`. Pre-fix all
+    // four directionals dropped silently from Framework export.
+    if (
+      prop === 'border-left' ||
+      prop === 'border-right' ||
+      prop === 'border-top' ||
+      prop === 'border-bottom'
+    ) {
+      const m = value.match(/^(\d+)px\s+solid/)
+      const dir =
+        prop === 'border-left'
+          ? 'l'
+          : prop === 'border-right'
+            ? 'r'
+            : prop === 'border-top'
+              ? 't'
+              : 'b'
+      if (m) return { name: `bor-${dir}`, value: parseInt(m[1]) }
+      return { name: `bor-${dir}`, value: value }
+    }
+
+    // `bor 0 0 1 0` produces `border-style: solid` + `border-width: 0 0 1px 0`.
+    // Round-trip the multi-value form back into a `bor` shorthand.
+    // `border-style: solid` alone is implicit when border-width is set —
+    // drop it to avoid a stray `bor-style: 'solid'` in the M(...) bag.
+    if (prop === 'border-style' && value === 'solid') return null
+    if (prop === 'border-width') {
+      const parts = value.trim().split(/\s+/)
+      if (parts.length === 4) {
+        const nums = parts.map(p => p.match(/^(\d+)px?$/)?.[1] ?? p)
+        return { name: 'bor', value: nums.join(' ') }
+      }
+      const m = value.match(/^(\d+)px$/)
+      if (m) return { name: 'bor', value: parseInt(m[1]) }
+      return { name: 'bor', value: value }
+    }
 
     // Flex shorthand - handled in stylesToProps for w full / h full detection
     if (prop === 'flex') return null
