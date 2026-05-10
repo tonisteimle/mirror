@@ -25,6 +25,38 @@ function expectNestedStateError(src: string): void {
   )
 }
 
+describe('Parser — nested inheritance definition', () => {
+  it('reports error for `Inner extends Btn:` inside a component body', () => {
+    const ast = parse(`Outer:
+  Inner extends Btn:
+    bg #f00
+`)
+    expect(ast.errors ?? []).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          message: expect.stringMatching(
+            /Nested component inheritance "Inner extends …" is not supported/
+          ),
+        }),
+      ])
+    )
+  })
+
+  it('still allows nested `as Frame:` definition inside a component body', () => {
+    const ast = parse(`Outer:
+  Inner as Frame:
+    bg #f00
+`)
+    expect(ast.errors ?? []).toEqual([])
+    const outer = ast.components.find(c => c.name === 'Outer')
+    expect(outer).toBeDefined()
+    expect(outer?.children).toHaveLength(1)
+    const child = outer?.children[0] as { type: string; name?: string }
+    expect(child.type).toBe('Component')
+    expect(child.name).toBe('Inner')
+  })
+})
+
 describe('Parser — nested state blocks', () => {
   it('reports an error for hover inside on (instance state)', () => {
     expectNestedStateError(`Btn "X", toggle()

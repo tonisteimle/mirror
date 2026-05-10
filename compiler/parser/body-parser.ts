@@ -1390,6 +1390,44 @@ export function parseComponentBody(
       continue
     }
 
+    // Nested inheritance definition: ChildName extends Parent:
+    // Without this branch the IDENTIFIER falls through to parseInstance
+    // below, where `extends` is read as a property name and the parent
+    // name as another property — silently producing a malformed
+    // Instance. Report a clear parse error and recover by skipping the
+    // header + body so the loop progresses. (Mirror does not support
+    // nested inheritance definitions; users hitting this almost always
+    // meant a top-level definition or a slot.)
+    if (U.check(ctx, 'IDENTIFIER') && U.checkNext(ctx, 'EXTENDS')) {
+      const childName = U.current(ctx)
+      U.reportError(
+        ctx,
+        `Nested component inheritance "${childName.value} extends …" is not supported. Define the component at the top level.`,
+        childName
+      )
+      U.advance(ctx) // consume name
+      U.advance(ctx) // consume EXTENDS
+      if (U.check(ctx, 'IDENTIFIER')) U.advance(ctx) // consume parent name
+      if (U.check(ctx, 'COLON')) U.advance(ctx)
+      U.skipNewlines(ctx)
+      if (U.check(ctx, 'INDENT')) {
+        let depth = 1
+        U.advance(ctx)
+        while (depth > 0 && !U.isAtEnd(ctx)) {
+          if (U.check(ctx, 'INDENT')) {
+            depth++
+            U.advance(ctx)
+          } else if (U.check(ctx, 'DEDENT')) {
+            depth--
+            U.advance(ctx)
+          } else {
+            U.advance(ctx)
+          }
+        }
+      }
+      continue
+    }
+
     // String content as Text child (for component definitions)
     if (U.check(ctx, 'STRING')) {
       component.children.push(callbacks.createTextChild(U.advance(ctx)))

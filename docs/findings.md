@@ -34,15 +34,22 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
     **Status:** offen
     **Notiz:** Architektur-Entscheidung nötig, kein einzelner Refactor.
 
-- **Wo:** `compiler/parser/ops/parse-blocks.ts` (Slice 21 V-1/V-4)
-  **Was:** Zwei silent-failure-Pfade verbleiben: undefined component →
-  Frame-Fallback ohne Hinweis (V-1); nested-`Name:`-Definition wird zu
-  Instance reinterpretiert und Definition geht verloren (V-4). Validator
-  E002 fängt nur den ersten Fall. V-3 (self-recursion `data-component=
-"Unknown"`) erledigt in `e0ba0bda` — Marker ist jetzt
-  `data-recursion-stopped="<Name>"`.
-  **Status:** offen
-  **Notiz:** Audit in `docs/refactoring/21-komponenten.md` Section 3 (V-1, V-4).
+- **Wo:** `compiler/parser/ops/parse-blocks.ts` (Slice 21 V-1)
+  **Was:** Verbleibender silent-failure-Pfad: undefined component →
+  Frame-Fallback ohne Hinweis. Validator E002 fängt es im Studio-Pfad,
+  aber Single-File-Compile (CLI) sollte ebenfalls fehlschlagen.
+  V-3 (self-recursion `data-component="Unknown"`) erledigt in
+  `e0ba0bda` — Marker ist jetzt `data-recursion-stopped="<Name>"`.
+  V-4: `Name:` als Slot ist intentional gültiges Mirror — nur die
+  Sub-Variante `ChildName extends Parent:` innerhalb einer
+  Component-Body war wirklich silent-broken (wurde zu malformed
+  Instance mit `extends` als Property-Name). body-parser.ts meldet
+  jetzt einen Parse-Error und überspringt den Body sauber. Test in
+  `parser-nested-state.test.ts`.
+  **Status:** offen — V-1 bleibt; V-4 erledigt.
+  **Notiz:** V-1 ist eigener Build-Pfad-Refactor (CLI-Verhalten
+  - Studio-Pipeline-Validator-Hook). Audit in
+    `docs/refactoring/21-komponenten.md` Section 3 (V-1).
 
 - **Wo:** Dead-feature-Verdacht (zu prüfen vom Owner)
   **Was:** Slices wie Stacked-Overlay (8), Custom-Icons-Registry (51),
