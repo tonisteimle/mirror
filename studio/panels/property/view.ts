@@ -10,20 +10,7 @@ import type { PropertyPanelPorts, PropertyChange } from './ports'
 import type { PanelState } from './state-machine'
 import { PropertyPanelController, createPropertyPanelController } from './controller'
 import { escapeHtml, getDisplayLabel } from './utils'
-import {
-  createContentSection,
-  createPositionSection,
-  createEventsSection,
-  createLayoutSection,
-  createSizingSection,
-  createSpacingSection,
-  createMarginSection,
-  createBorderSection,
-  createColorSection,
-  createTypographySection,
-  createBehaviorSection,
-  createVisualSection,
-} from './sections'
+import { SECTION_FACTORIES } from './sections'
 import type { BaseSection, SectionData, EventHandlerMap, SectionDependencies } from './base/section'
 import { dirToSpacingProp } from './utils/spacing-parse'
 import { getPanelConfig } from './panel-config'
@@ -134,19 +121,9 @@ export class PropertyPanelView {
 
   private initializeSections(): void {
     const deps = this.createSectionDependencies()
-
-    this.sections.set('content', createContentSection(deps))
-    this.sections.set('position', createPositionSection(deps))
-    this.sections.set('events', createEventsSection(deps))
-    this.sections.set('layout', createLayoutSection(deps))
-    this.sections.set('sizing', createSizingSection(deps))
-    this.sections.set('spacing', createSpacingSection(deps))
-    this.sections.set('margin', createMarginSection(deps))
-    this.sections.set('border', createBorderSection(deps))
-    this.sections.set('color', createColorSection(deps))
-    this.sections.set('typography', createTypographySection(deps))
-    this.sections.set('behavior', createBehaviorSection(deps))
-    this.sections.set('visual', createVisualSection(deps))
+    for (const [name, factory] of Object.entries(SECTION_FACTORIES)) {
+      this.sections.set(name, factory(deps))
+    }
   }
 
   private createSectionDependencies(): SectionDependencies {
