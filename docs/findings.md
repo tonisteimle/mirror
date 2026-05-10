@@ -826,6 +826,19 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — 6 stale Test-Files für gelöschte demo-fx/step-runner-Module entfernt
+
+- **Wo:** `tests/studio/{demo-fx,replay-loader,replay-recorder,
+headed-realism-scenarios,step-runner-compile-mode,
+step-runner-selectors}.test.ts`
+  **Was:** Sechs Test-Files importierten aus
+  `studio/test-api/demo-fx/`, `studio/test-api/step-runner/` und
+  `studio/test-api/replay-recorder.ts` — alle gelöscht im Rip-Out
+  `8e81387f` (Demo-Runner + Step-Runner-Subsystem). Tests sind ohne
+  Module nutzlos. Komplett entfernt; Suite-Status grün
+  (15420/15420 Tests, 585/585 Files).
+  **Status:** erledigt
+
 ### 2026-05-10 — `studio/agent/types.ts` dead-code gelöscht
 
 - **Wo:** `studio/agent/types.ts`, `studio/agent/index.ts`,
