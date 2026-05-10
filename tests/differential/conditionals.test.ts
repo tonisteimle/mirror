@@ -177,6 +177,23 @@ describe('Conditionals — Bug #23-#26 fixed: regression pins', () => {
     expect(dom).toContain('#def')
   })
 
+  it('React: computed Text expression resolves through tokens / loop-vars', () => {
+    // PIN: pre-2026-05-10 `Text "Total: " + count` and
+    // `Text $first + " " + $last` rendered as empty `<span />` in
+    // React because `getTextContent` only handled string / loopVar /
+    // ternary kinds and dropped Expression silently.
+    const r1 = generateReact(parse(`count: 5\n\nText "Total: " + count`))
+    expect(r1).toContain('"Total: " + tokens["count"]')
+
+    // Loop-scoped: `t.pri + "%"` inside `each t in $tasks` resolves
+    // against the iterator, not tokens.
+    const r2 = generateReact(
+      parse(`tasks:\n  t1:\n    pri: 50\n\neach t in $tasks\n  Text $t.pri + "%"`)
+    )
+    expect(r2).toContain('t.pri + "%"')
+    expect(r2).not.toContain('tokens["t"]')
+  })
+
   it('Bug #26 fixed: ternary in Text with interpolated string-branches resolves', () => {
     const dom = generateDOM(parse(`count: 3\n\nText count > 0 ? "Items: $count" : "Empty"`))
     // The interpolation now produces a template-literal substitution

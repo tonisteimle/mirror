@@ -22,6 +22,15 @@ import type {
   Event as EventNode,
   Action,
 } from '../parser/ast'
+
+// Local alias for the inline-expression value the parser emits as
+// `{ kind: 'expression', parts, operators }`. The exported `Expression`
+// type is a plain string alias and unrelated.
+interface ComputedExpression {
+  kind: 'expression'
+  parts: unknown[]
+  operators: string[]
+}
 import { expandPropertySets } from '../ir/transformers/property-set-expander'
 import { resolveComponent } from '../ir/transformers/component-resolver'
 import { mergeSlotPropertiesIntoFiller } from '../ir/transformers/slot-utils'
@@ -1619,7 +1628,7 @@ function generateEventHandlers(events: EventNode[] | undefined): string {
 function getTextContent(
   instance: Instance,
   properties: Property[]
-): string | LoopVarReference | Conditional | null {
+): string | LoopVarReference | Conditional | ComputedExpression | null {
   // Check for content property
   for (const prop of properties) {
     if (prop.name === 'content' && prop.values.length > 0) {
@@ -1637,6 +1646,14 @@ function getTextContent(
       // expression with token names rewritten to `tokens["…"]`.
       if (typeof v === 'object' && v !== null && 'kind' in v && v.kind === 'conditional') {
         return v as Conditional
+      }
+      // Computed concatenation/arithmetic in Text content
+      // (`Text "Total: " + count`, `Text $first + " " + $last`).
+      // Pre-2026-05-10 this fell through and returned null — the React
+      // backend rendered an empty `<span />`. Now we forward the
+      // expression so renderTextSlot emits a real JSX expression.
+      if (typeof v === 'object' && v !== null && 'kind' in v && v.kind === 'expression') {
+        return v as ComputedExpression
       }
     }
   }
@@ -1669,7 +1686,7 @@ function dataAttributesToJSObject(attrs: DataAttribute[]): string {
  * references that surface inside `each` blocks, and inline ternaries.
  */
 function renderTextSlot(
-  content: string | LoopVarReference | Conditional,
+  content: string | LoopVarReference | Conditional | ComputedExpression,
   indent: string,
   tokens: TokenDefinition[] = [],
   loopVars: ReadonlySet<string> | undefined = undefined
@@ -1691,7 +1708,71 @@ function renderTextSlot(
     const elseBranch = rewriteIdentifiersToTokens(ternaryBranchToJS(content.else), tokens)
     return `${indent}{${cond} ? ${thenBranch} : ${elseBranch}}`
   }
+  if ('kind' in content && content.kind === 'expression') {
+    // Computed expression in Text content (`Text "Total: " + count`,
+    // `Text $first + " " + $last`). The parser emits a list of `parts`
+    // separated by `operators`. Translate each part to a JS expression
+    // and weave operators between them.
+    return `${indent}{${expressionPartsToJS(content as ComputedExpression, tokens, loopVars)}}`
+  }
   return `${indent}{${content.name}}`
+}
+
+/**
+ * Translate a `ComputedExpression` (parts + operators) to a JS string
+ * expression. Each part is one of:
+ *   - string literal       → JSON.stringify(part)
+ *   - number literal       → numeric form
+ *   - LoopVarReference     → `task.title` (loop scope) or
+ *                            `tokens["task"]?.title` (token scope)
+ *   - TokenReference       → `tokens["count"]`
+ *
+ * Used for Text content (where we wrap the result in `{...}`) and
+ * could be reused later for style props once raw-JSX style values are
+ * supported.
+ */
+function expressionPartsToJS(
+  expr: ComputedExpression,
+  tokens: TokenDefinition[],
+  loopVars: ReadonlySet<string> | undefined
+): string {
+  const tokenNames = new Set<string>()
+  for (const t of tokens) {
+    const n = t.name.startsWith('$') ? t.name.slice(1) : t.name
+    tokenNames.add(n)
+  }
+  const partToJS = (part: unknown): string => {
+    if (typeof part === 'string') return JSON.stringify(part)
+    if (typeof part === 'number') return String(part)
+    if (part && typeof part === 'object' && 'kind' in part) {
+      const head = (part as { name?: string }).name ?? ''
+      const headRoot = head.includes('.') ? head.slice(0, head.indexOf('.')) : head
+      const rest = head.includes('.') ? head.slice(head.indexOf('.') + 1).split('.') : []
+      // LoopVarReference resolves against the .map callback's iterator
+      // when the head is in scope, otherwise we fall back to the token
+      // bag (the parser uses `loopVar` for any bare identifier inside
+      // an interpolation context, even when it's a top-level token).
+      const isLoopScoped = loopVars?.has(headRoot) ?? false
+      if (isLoopScoped) {
+        return rest.length ? `${headRoot}.${rest.join('.')}` : headRoot
+      }
+      if (tokenNames.has(headRoot)) {
+        let code = `tokens[${JSON.stringify(headRoot)}]`
+        for (const part of rest) code += `?.${part}`
+        return code
+      }
+      // Unknown identifier: best-effort emit the bare path.
+      return rest.length ? `${headRoot}.${rest.join('.')}` : headRoot
+    }
+    return JSON.stringify(String(part))
+  }
+  // Weave parts and operators: parts[0] op[0] parts[1] op[1] parts[2] ...
+  const out: string[] = []
+  for (let i = 0; i < expr.parts.length; i++) {
+    out.push(partToJS(expr.parts[i]))
+    if (i < expr.operators.length) out.push(expr.operators[i])
+  }
+  return out.join(' ')
 }
 
 /**
