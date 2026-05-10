@@ -1,10 +1,47 @@
 # Konzept: Tauri-Desktop-Strategie
 
-> Status: Entscheidungs-Vorlage · 2026-05-10 · Owner-Decision pending
+> Status: **ENTSCHIEDEN 2026-05-10** — Option A (Commit). Mirror wird
+> als eigene lokale Tauri-Anwendung ausgeliefert. Folgt aus
+> `positioning.md`: Designer-Customer mit lokalem git + lokalem
+> Claude-Code-Abo. Kein Hosting, kein Cloud-Backend.
 >
-> **Zweck:** den Schwebezustand „Tauri-Code existiert, ist aber nicht
-> nutzbar" auflösen. Drei klar geschnittene Optionen, mit dem
-> Engineer-View der Trade-offs für jede.
+> Die Drei-Optionen-Analyse unten bleibt als historische Begründung
+> stehen.
+
+## Decision-Log (2026-05-10)
+
+| Entscheidung                    | Antwort                                                                                                             |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Option**                      | A — Commit                                                                                                          |
+| **Begründung**                  | Designer-Customer (B in `positioning.md`) braucht Tool-Distribution, nicht Browser-Tab.                             |
+| **Hosting-Bedarf**              | Keiner. Mirror ist 100% lokal. AI-Bridge-Server-Idee entfällt — `claude` läuft beim User.                           |
+| **Authentication**              | Keine eigene. User authentifiziert via seinem Claude-Code-Abo.                                                      |
+| **File-Storage**                | Files-on-Disk in Git-Repo. localStorage nur für Browser-Demo.                                                       |
+| **Wer baut (Code)**             | Engineering: Stub-Wiring + Native-Dialog-Plumbing (Slices 1–4 unten).                                               |
+| **Wer bezahlt (Infrastruktur)** | Owner: Code-Signing-Zertifikate (~100€/Jahr Apple, ~200€/Jahr Windows-EV), CI Multi-Platform-Runner, Update-Server. |
+
+## Implementation-Plan (5 unabhängig shippable Slices)
+
+| #   | Slice                                                                                                                                  | Geschätzt | Status |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------- | --------- | ------ |
+| 1   | `tauriNewProject` → `TauriDialog.open(directory: true)` + `TauriProject.createProject(name, path)` + `loadProject(path)`               | ~50 LOC   | offen  |
+| 2   | `tauriImportProject` → `TauriDialog.open(directory: true)` + `TauriProject.openProject(path)` + Files laden                            | ~40 LOC   | offen  |
+| 3   | `tauriExportProject` → Studio-Toolbar-Integration für Spec-Bundle-Export via `TauriAgent.runAgent`. „Als React/Vue/Svelte exportieren" | ~80 LOC   | offen  |
+| 4   | Recent-Projects-Menü im File-Tree (UI für `TauriProject.getRecentProjects()`, Code schon da)                                           | ~80 LOC   | offen  |
+| 5   | Code-Signing + Auto-Update-Pipeline (Tauri-Updater-Setup + CI macOS/Windows-Runner + Cert-Setup)                                       | ~1 Woche  | Owner  |
+
+Slices 1–4 sind reine Engineering-Arbeit, ich schiebe sie über die
+nächsten Sessions. Slice 5 braucht externe Infrastruktur und ist
+Owner-Workstream.
+
+**Wichtig:** Slice 3 (Spec-Bundle via TauriAgent) ist nicht nur das
+„Export-Project"-Menü, sondern macht das ganze AI-Code-Generation-
+Produkt-Versprechen aus `positioning.md` (Hypothese A) im Studio
+sichtbar. Designer klickt einen Knopf, Mirror packt Spec-Bundle, ruft
+lokales `claude` auf, Output landet in `./generated/`. Kein Terminal
+nötig, keine Cloud-Auth.
+
+---
 
 ## Aktueller Zustand (was im Code steckt)
 

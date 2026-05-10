@@ -1,12 +1,88 @@
 # Konzept: Positioning — Wer ist Mirror's Customer?
 
-> Status: Entscheidungs-Vorlage · 2026-05-10 · Owner-Decision pending
+> Status: **ENTSCHIEDEN 2026-05-10** — Mirror ist eine lokale Tauri-
+> Anwendung für Designer mit wenig Code-Skills, die Claude Code lokal
+> abonniert haben und git lokal nutzen. Tutorial wird stark ausgebaut
+> (Owner-Workstream, Engineering schafft die Voraussetzungen).
+> Multi-File wird zukünftig als Pricing-Differentiator zwischen
+> gratis/bezahlt verwendet.
 >
-> **Zweck:** die latente Drei-Produkt-Spannung sichtbar machen, die
-> heute jede Code-Investition gleichzeitig auf drei verschiedene
-> Hypothesen verteilt. Eine schriftliche Primary-Customer-Wahl
-> würde Engineering-Energie auf einen Kanal fokussieren statt sie
-> gleichmässig zu verdünnen.
+> Die Drei-Produkt-Analyse unten bleibt als historische Begründung
+> stehen. Engineering-Investment-Reihenfolge folgt jetzt aus diesem
+> Decision-Log.
+
+## Decision-Log (2026-05-10)
+
+| Frage                       | Antwort                                                                                                       |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Primary Customer**        | Designer mit wenig Code-Skills, **mit lokal installiertem git + aktivem Claude-Code-Abo**.                    |
+| **Distribution**            | Eigene lokale Anwendung (Tauri). Kein Hosting, kein Cloud-Backend.                                            |
+| **AI-Workflow**             | Mirror shellt lokal zu `claude` (via `TauriAgent.runAgent`). User bezahlt sein Abo selbst, wir hosten nichts. |
+| **File-Storage**            | Files-on-Disk in Git-Repo (Tauri); localStorage nur für Browser-Demo-Pfad.                                    |
+| **Tutorial**                | Unglaublich ausgebaut (Owner-Workstream). Engineering schafft Voraussetzungen, produziert keine Videos.       |
+| **Multi-File**              | Zukünftig Pricing-Differentiator. Code bleibt vollständig; Entitlement-Gating wenn Pricing-Modell steht.      |
+| **AI-DSL/Spec-Bundle (A)**  | Engine, nicht eigenes Produkt. Wird in Studio integriert, kein eigenes CLI-Marketing.                         |
+| **Production-Compiler (C)** | Substrate. Backend-Quality + Differential-Tests bleiben, aber kein eigener Pitch.                             |
+
+**Wichtige Klarstellung zum Customer-Profile:** „Designer mit wenig
+Code-Skills" heisst nicht „Anfänger der Terminal scheut". Der Customer
+hat git installiert und Claude-Code abonniert — beides setzt
+technisches Mindest-Comfort voraus. Die „wenig Code-Skills" beziehen
+sich auf das **Schreiben von React/CSS/Framework-Code**, nicht auf
+Tool-Setup. Das schärft die UX-Prioritäten: keine pseudo-anfänger-
+Wizards, sondern direkte Manipulation + AI-Assist über lokales
+Tooling.
+
+## Architektur-Konsequenzen aus dem Local-Tool-Modell
+
+Das Local-Tool-Modell (Tauri + lokales git + lokales claude) löst
+mehrere zuvor offene Architektur-Fragen automatisch:
+
+- **Kein WASM-Claude / kein Hosted-Backend** — `claude` ist auf dem
+  Rechner des Users, Mirror shellt direkt dort hin.
+- **Kein eigener Auth-Stack** — User authentifiziert sich gegen
+  Anthropic via seines Claude-Code-Abos, Mirror muss keine User-
+  Datenbank pflegen.
+- **Kein eigenes File-Storage-Backend** — Files leben in einem
+  Git-Repo des Users, Mirror ist Editor + Renderer dazu.
+- **Spec-Bundle bleibt dasselbe Format** — die `--run`-Variante des
+  CLI wird in Studio über Tauri-Process-Spawn als „Generate React/
+  Vue/Svelte"-Button verfügbar gemacht (`TauriAgent.runAgent` ist
+  schon da, fehlt nur die Studio-Toolbar-Integration).
+- **AI-Bridge-Server-Idee entfällt** — war für Browser-Pfad gedacht,
+  Tauri löst denselben Use-Case ohne Server.
+
+## Engineering-Investment-Reihenfolge (post-decision)
+
+1. **Tauri-Commit-Wiring** (`tauri-strategy.md` Option A umsetzen)
+   — entblockt Distribution. Vier Stub-Functions in
+   `studio/storage/project-actions.ts` werden echte Native-Dialog-
+   Flows.
+2. **Studio-Toolbar-Integration für Spec-Bundle-Export via TauriAgent**
+   — Designer klickt „Als React exportieren", Studio shellt zu
+   lokalem `claude` mit dem Spec-Bundle als Input. Engine + UX in
+   einem.
+3. **Demo-Runner-Action-Voraussetzungen** für Tutorial-Vollausbau
+   (extractComponent/extractToken/batchReplace, generic picker
+   handler, selector versioning).
+4. **Studio-Performance-Charakterisierung bei grossen Projekten**
+   — wird mit echten Designer-Workflows kritisch.
+5. **Code-Signing + Auto-Update-Pipeline** (Owner-Workstream:
+   Apple-Cert, Windows-EV-Cert, Update-Server-Hosting für Tauri-
+   Updater).
+
+Items mit niedrigerer Priorität nach Decision (waren vorher unklar):
+
+- **WASM-Claude / hosted backend** — entfällt komplett.
+- **Browser-only Export-Pfad** — entfällt komplett.
+- **AI-Bridge-Server** — entfällt komplett (ggf. archivieren).
+- **DSL-Versionierungs-Strict-Policy:** balanciert (Designer toleriert
+  kleine Bumps wenn Studio-Migration auto-greift) — nicht strict.
+- **Production-Compiler-Editor-Plugins (VSCode etc.):** kein
+  Investment.
+- **NPM-Marketing als „Production-Compiler":** kein Investment.
+
+---
 
 ## Symptom: drei parallele Produkte im selben Repo
 
