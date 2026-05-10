@@ -16,11 +16,11 @@ Ein Tutorial, das jemandem ohne Mirror-Vorerfahrung in **<60 Minuten** beibringt
 
 ## Was bisher existiert
 
-| Kapitel | Inhalt | Format | Status |
-| --- | --- | --- | --- |
-| 01-16 | DSL (Sprache) | Prosa + Playgrounds | ✓ |
-| 17 | AI-bauen (Sketches, Trailing) | Prosa + 2 Loop-Videos | ✓ |
-| 18 | Studio bedienen (Drop, Inline-Edit, Resize, Padding/Margin, Property-Panel, Reorder, Code→Preview, Multi-File) | Prosa + 8 Loop-Videos | ✓ |
+| Kapitel | Inhalt                                                                                                         | Format                | Status |
+| ------- | -------------------------------------------------------------------------------------------------------------- | --------------------- | ------ |
+| 01-16   | DSL (Sprache)                                                                                                  | Prosa + Playgrounds   | ✓      |
+| 17      | AI-bauen (Sketches, Trailing)                                                                                  | Prosa + 2 Loop-Videos | ✓      |
+| 18      | Studio bedienen (Drop, Inline-Edit, Resize, Padding/Margin, Property-Panel, Reorder, Code→Preview, Multi-File) | Prosa + 8 Loop-Videos | ✓      |
 
 10 Loop-Videos insgesamt, alle aufgenommen via `tools/test-runner/demo/scripts/tut-*.ts`, validiert per `expectCode`-Snapshots. Reproduzierbar.
 
@@ -30,21 +30,21 @@ Ein Tutorial, das jemandem ohne Mirror-Vorerfahrung in **<60 Minuten** beibringt
 
 Aus `studio/`-Modulen abgeleitet:
 
-| Bereich | Fehlt heute | Wieviele Loops/Sektionen geschätzt |
-| --- | --- | --- |
-| **Pickers** (`studio/pickers/`) | Color-Hex+Token-Tab, Token-Picker mit Kontext, Icon-Picker (Lucide+Custom), Animation-Picker, Action-Picker | 4-5 |
-| **Visuelle Operationen** (`studio/visual/`) | Smart-Guides + Snap, Grid-Layout draw-mode, Layout-Inference (Drop multiple → auto `hor`), Position-Controls (absolute/grid), Stack-Selection | 4-6 |
-| **Komponenten-Workflow** (`studio/panels/components/`) | Komponente extrahieren (`::`-Trigger), Slot-Editing, Komponenten-Bibliothek-Panel, Komponente in `.com`-File auslagern | 3-4 |
-| **Tokens-Workflow** (`studio/pickers/token/`) | Token-Extraktion (Wert → Token + alle Vorkommen ersetzen), Token rename, Token referenzieren in `.tok` | 2-3 |
-| **States im Studio** (`studio/panels/property/`) | State-Editor im Property-Panel, hover/focus/active-Tabs, Custom-State-Definition | 2-3 |
-| **Refactoring** (`studio/rename/`) | F2-Rename cross-file, Move-Across-Files, Sync-Coordinator-Verhalten | 2 |
-| **Code-Editor** (`studio/editor/`, `studio/autocomplete/`) | Autocomplete für Properties, Token-Completion, Component-Slot-Completion, Cmd+P, Cmd+F | 2-3 |
-| **Tree-Panel** (`studio/panels/tree/`) | AST-Navigation, Element selektieren, Drag-im-Tree | 1-2 |
-| **Settings & Theme** (`studio/panels/settings/`) | User-Settings, Default-Werte, Theme-Switch | 1 |
-| **Run/Play-Mode** (`studio/preview/`) | Interaktives Preview, States triggern, Form-Inputs testen | 1-2 |
-| **Validierung & Errors** (`compiler/validator/`) | Lint-Hinweise im Editor, Fehlerquick-Fix, Schema-Mismatches | 1 |
-| **Export** (`tools/export.ts`) | Mirror → Spec-Bundle, AI-Bridge, Run-Claude-Knopf | 1-2 |
-| **Tastatur** | Globale Shortcuts (Esc/Tab/Cmd+Z/Cmd+P/F2/…) | 1 Reference-Tabelle |
+| Bereich                                                    | Fehlt heute                                                                                                                                   | Wieviele Loops/Sektionen geschätzt |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| **Pickers** (`studio/pickers/`)                            | Color-Hex+Token-Tab, Token-Picker mit Kontext, Icon-Picker (Lucide+Custom), Animation-Picker, Action-Picker                                   | 4-5                                |
+| **Visuelle Operationen** (`studio/visual/`)                | Smart-Guides + Snap, Grid-Layout draw-mode, Layout-Inference (Drop multiple → auto `hor`), Position-Controls (absolute/grid), Stack-Selection | 4-6                                |
+| **Komponenten-Workflow** (`studio/panels/components/`)     | Komponente extrahieren (`::`-Trigger), Slot-Editing, Komponenten-Bibliothek-Panel, Komponente in `.com`-File auslagern                        | 3-4                                |
+| **Tokens-Workflow** (`studio/pickers/token/`)              | Token-Extraktion (Wert → Token + alle Vorkommen ersetzen), Token rename, Token referenzieren in `.tok`                                        | 2-3                                |
+| **States im Studio** (`studio/panels/property/`)           | State-Editor im Property-Panel, hover/focus/active-Tabs, Custom-State-Definition                                                              | 2-3                                |
+| **Refactoring** (`studio/rename/`)                         | F2-Rename cross-file, Move-Across-Files, Sync-Coordinator-Verhalten                                                                           | 2                                  |
+| **Code-Editor** (`studio/editor/`, `studio/autocomplete/`) | Autocomplete für Properties, Token-Completion, Component-Slot-Completion, Cmd+P, Cmd+F                                                        | 2-3                                |
+| **Tree-Panel** (`studio/panels/tree/`)                     | AST-Navigation, Element selektieren, Drag-im-Tree                                                                                             | 1-2                                |
+| **Settings & Theme** (`studio/panels/settings/`)           | User-Settings, Default-Werte, Theme-Switch                                                                                                    | 1                                  |
+| **Run/Play-Mode** (`studio/preview/`)                      | Interaktives Preview, States triggern, Form-Inputs testen                                                                                     | 1-2                                |
+| **Validierung & Errors** (`compiler/validator/`)           | Lint-Hinweise im Editor, Fehlerquick-Fix, Schema-Mismatches                                                                                   | 1                                  |
+| **Export** (`tools/export.ts`)                             | Mirror → Spec-Bundle, AI-Bridge, Run-Claude-Knopf                                                                                             | 1-2                                |
+| **Tastatur**                                               | Globale Shortcuts (Esc/Tab/Cmd+Z/Cmd+P/F2/…)                                                                                                  | 1 Reference-Tabelle                |
 
 → Vollständige Coverage: **25-35 weitere Loop-Videos** + **3-5 längere geführte Videos** (für komplexere Workflows) + **1-2 Reference-Tabellen** verteilt auf **6-8 neue Kapitel**.
 
@@ -52,7 +52,7 @@ Aus `studio/`-Modulen abgeleitet:
 
 Nicht jede Studio-Bedienung verträgt das gleiche Format. Vorschlag:
 
-### Loop-Video (25-45s, autoplay/loop, ohne Audio) — *bevorzugte Form*
+### Loop-Video (25-45s, autoplay/loop, ohne Audio) — _bevorzugte Form_
 
 **Wann:** ein Workflow mit klarem Anfang und Ende, der sich in 30s zeigen lässt.
 **Stärke:** kein Audio nötig (international), Loop schließt sich naturgemäß, im Browser-Tab unauffällig.
@@ -164,6 +164,7 @@ Dies ist die komplexeste Studio-Funktion und braucht ein **geführtes Video**.
 ### Kapitel 25 — Multi-File (vertieft)
 
 Aufbauend auf tut-08:
+
 - **Loop 1: File-Operations.** Erstellen/Umbenennen/Löschen via Explorer, Drag-Reorder.
 - **Loop 2: Cross-File-Effekte.** Token in `.tok` ändern → Layouts updaten live. Component in `.com` ändern → Instanzen updaten.
 
@@ -224,13 +225,13 @@ Verbindlich für jeden neuen Inhalt:
 
 ### Was bricht und wann?
 
-| Trigger | Was bricht | Wie schnell entdeckt? |
-| --- | --- | --- |
-| Compiler-Backend ändert Default-Werte (z.B. neue dropFromPalette-Default-Properties) | `expectCode`-Asserts | Sofort (CI / nächster instant-Run) |
-| Studio-UI ändert sich (Panel-Layout, Selektoren, Picker-Aufbau) | Selektoren in Demo-Scripts | Beim nächsten headed-Re-Run |
-| Property-Panel ändert `data-prop`-Attribute | `setProperty`-Inputs nicht mehr findbar | instant-Run zeigt Fallback-Warnung |
-| Tutorial-Mode (panel-hide) ändert sich | Tutorial-Mode-Fragment muss aktualisiert werden | Headed-Run zeigt unerwünschte Panels |
-| Mirror-DSL ändert Property-Aliase | Code-Snapshots stimmen nicht mehr | `expectCode`-MISMATCH |
+| Trigger                                                                              | Was bricht                                      | Wie schnell entdeckt?                |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------- | ------------------------------------ |
+| Compiler-Backend ändert Default-Werte (z.B. neue dropFromPalette-Default-Properties) | `expectCode`-Asserts                            | Sofort (CI / nächster instant-Run)   |
+| Studio-UI ändert sich (Panel-Layout, Selektoren, Picker-Aufbau)                      | Selektoren in Demo-Scripts                      | Beim nächsten headed-Re-Run          |
+| Property-Panel ändert `data-prop`-Attribute                                          | `setProperty`-Inputs nicht mehr findbar         | instant-Run zeigt Fallback-Warnung   |
+| Tutorial-Mode (panel-hide) ändert sich                                               | Tutorial-Mode-Fragment muss aktualisiert werden | Headed-Run zeigt unerwünschte Panels |
+| Mirror-DSL ändert Property-Aliase                                                    | Code-Snapshots stimmen nicht mehr               | `expectCode`-MISMATCH                |
 
 ### Wartungs-Routine
 
@@ -320,17 +321,17 @@ Nur die wirklich häufigen Workflows:
 
 ## Wichtige Dateien (zur Orientierung)
 
-| Datei | Zweck |
-| --- | --- |
-| `docs/tutorial/index.html` | DSL-Tutorial-Übersicht (Kap. 01-16) |
-| `docs/tutorial/17-ai-bauen.html` | AI-Workflows (heute) |
-| `docs/tutorial/18-studio.html` | Studio-Bedienung Basis (heute) |
-| `docs/tutorial/videos/tut-*.webm` | 10 Loop-Videos (heute) |
-| `tools/test-runner/demo/scripts/tut-*.ts` | Reproduzierbare Demo-Scripts |
-| `tools/test-runner/demo/types.ts` | Demo-Action-Vokabular (was im Runner unterstützt ist) |
-| `tools/test-runner/demo/fragments/setup.ts` | `resetCanvas`, `validateStudioReady` |
-| `tools/test-runner/demo/fragments/tutorial-mode.ts` | Panels für Tutorial-Aufnahme verstecken |
-| `tools/test-runner/demo/fragments/multi-file.ts` | `resetMultiFileProject` |
+| Datei                                               | Zweck                                                 |
+| --------------------------------------------------- | ----------------------------------------------------- |
+| `docs/tutorial/index.html`                          | DSL-Tutorial-Übersicht (Kap. 01-16)                   |
+| `docs/tutorial/17-ai-bauen.html`                    | AI-Workflows (heute)                                  |
+| `docs/tutorial/18-studio.html`                      | Studio-Bedienung Basis (heute)                        |
+| `docs/tutorial/videos/tut-*.webm`                   | 10 Loop-Videos (heute)                                |
+| `tools/test-runner/demo/scripts/tut-*.ts`           | Reproduzierbare Demo-Scripts                          |
+| `tools/test-runner/demo/types.ts`                   | Demo-Action-Vokabular (was im Runner unterstützt ist) |
+| `tools/test-runner/demo/fragments/setup.ts`         | `resetCanvas`, `validateStudioReady`                  |
+| `tools/test-runner/demo/fragments/tutorial-mode.ts` | Panels für Tutorial-Aufnahme verstecken               |
+| `tools/test-runner/demo/fragments/multi-file.ts`    | `resetMultiFileProject`                               |
 
 ## Anhang — Demo-Action-Repertoire (was geht heute)
 
