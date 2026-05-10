@@ -369,6 +369,28 @@ class FrameworkGenerator {
           else if (iconProp === 'color') props.ic = prop.value
           else if (iconProp === 'weight') props.iw = prop.value
           else if (iconProp === 'fill') props.fill = prop.value === 'true' || prop.value === true
+        } else if (
+          // Chart-specific properties carry the data binding + render
+          // hints (`chartType`, `data`, `fill`, `tension`, `title`,
+          // `xLabel`, `yLabel`, `min`/`max`, `step`, `colors`). The
+          // Mirror runtime needs them on the M-prop bag to wire up
+          // Chart.js. Pre-fix every chart compiled to
+          // `M('Line', { w: 350, h: 180 })` with no data — the runtime
+          // had nothing to bind.
+          node.primitive === 'chart' &&
+          (prop.name === 'chartType' ||
+            prop.name === 'data' ||
+            prop.name === 'fill' ||
+            prop.name === 'tension' ||
+            prop.name === 'title' ||
+            prop.name === 'xLabel' ||
+            prop.name === 'yLabel' ||
+            prop.name === 'min' ||
+            prop.name === 'max' ||
+            prop.name === 'step' ||
+            prop.name === 'colors')
+        ) {
+          props[prop.name] = prop.value
         }
       }
     }

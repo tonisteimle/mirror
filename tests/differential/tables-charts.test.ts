@@ -97,18 +97,22 @@ describe('Charts — Backend support', () => {
     expect(code).toContain('_runtime.createChart')
   })
 
-  // PIN current behavior: only DOM wires up Chart.js. React + Framework
-  // emit a placeholder element with the chart name as `data-component` /
-  // `M('Line', …)` but no rendering setup, no data binding, no canvas.
-  // Flipping this means the backend gained Chart support.
-  it('React/Framework chart output lacks chart-rendering wiring', () => {
+  // PIN: only DOM owns Chart.js wiring. React drops chart entirely (no
+  // canvas, no `createChart`). Framework now passes the chart props
+  // (`chartType`, `data`, `fill`, `tension` + axis hints) through to
+  // mirror-runtime, so any future runtime can hook Chart.js the same
+  // way DOM does. Flipping any of these means the backend gained or
+  // lost Chart support.
+  it('React drops chart wiring; Framework passes data + chartType through', () => {
     const react = generateReact(parse(CHART_LINE))
     const fw = generateFramework(parse(CHART_LINE))
 
     expect(react).not.toContain('createChart')
     expect(react).not.toMatch(/Chart\.js|chart\.js/)
     expect(fw).not.toContain('createChart')
-    // FW emits only the M('Line', …) placeholder with sizing
     expect(fw).toMatch(/M\(\s*['"]Line['"]/)
+    // Framework now carries the data binding through to the M-prop bag.
+    expect(fw).toMatch(/chartType:\s*['"]line['"]/)
+    expect(fw).toMatch(/data:\s*['"]\$data['"]/)
   })
 })
