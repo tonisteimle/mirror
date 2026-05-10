@@ -676,13 +676,17 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
-### 2026-05-10 — React + Framework Backend-Hunt (19-Slice-Run)
+### 2026-05-10 — React + Framework Backend-Hunt (23-Slice-Run)
 
 Eine durchgehende Hunt-Session am React- und Framework-Backend; alle
-Slices mit Differential-Test-Pin. Real-Example-Probes zeigen jetzt 0
-`[object Object]`, 0 literal `$token`-Strings und 0 `'foo': undefined`-
-Noise im React-Output für hotel-checkin / portfolio-advisor /
-address-manager / time-tracking / hospital-dashboard.
+Slices mit Differential-Test-Pin.
+
+**Validierung:** Alle 19 example `.mirror` Files durch esbuild TSX-
+Loader gefüttert — 0 JSX-Syntax-Fehler. Real-Example-Probes (hotel-
+checkin, portfolio-advisor, address-manager, time-tracking, hospital-
+dashboard, personas-informatik, task-app, portfolio-dashboard) — 0
+`[object Object]`, 0 literale `$token`-Strings, 0 `'foo': undefined`-
+Noise im React-Output.
 
 - **Wo:** `compiler/backends/react.ts` — Event-Handler wired
   **Was:** Side-effect actions (`toast`, `copy`, `openUrl`, `back`/
@@ -827,6 +831,47 @@ visible-when X` als reguläre Property nicht. Auch: top-level Fragment
   layout-transformer. Jetzt direction-aware Mapping in React
   reproduziert (`hor` vs `column` mirroren Achsen).
   **Status:** erledigt (`76e08045`)
+
+- **Wo:** `compiler/backends/framework.ts` — Round-trip-Erweiterungen
+  **Was:** Drei weitere reverse-mapping-Lücken: `letter-spacing: Nem`
+  → `tracking: N`, `align-items: baseline` → `'ver-baseline': true`,
+  und `align <value>` für single-axis flex-end (`align bottom` in row,
+  `align right` in column, etc.). `align top` in row und `align left`
+  in column bleiben unmapped — Default-Signature kann nicht von
+  expliziter User-Intention unterschieden werden ohne IR-Provenance.
+  **Status:** erledigt (`d65d2350`)
+
+- **Wo:** `compiler/backends/react.ts` (root-item dispatcher)
+  **Was:** DatePicker (einzige verbliebene Zag-Komponente in Mirror)
+  emittierte nur `not supported in React backend`-Comment. Jetzt als
+  natives `<input type="date">` mit allen dokumentierten Properties
+  (placeholder/min/max/value/disabled/readOnly). Range-Mode bleibt
+  Comment — braucht zwei Inputs + State-Tracking.
+  **Status:** erledigt (`f2165eaf`)
+
+- **Wo:** `compiler/backends/react.ts` (`interpolateStringForJSX` +
+  `inlineMarkdownToJSX`)
+  **Was:** Inline-Markdown (`**bold**`, `*italic*`, `\`code\``) wurde
+in React als raw Text mit Markdown-Markers gerendert — DOM nutzt
+`formatInlineMarkdown`Runtime, React hat keinen. Jetzt
+Compile-Time-Konvertierung zu`<strong>`/`<em>`/`<code>` JSX.
+**Status:** erledigt (`99a74646`)
+
+- **Wo:** `compiler/backends/react.ts` (`expressionPartsToJS`,
+  `renderTextSlot` Conditional-Branch)
+  **Was:** Zwei JSX-Syntax-Fehler in real-example React-Output,
+  surfaced via esbuild-TSX-Loader-Test:
+  1. `Text "+" + ($count - 2)` produzierte `{"+" + "(" - count 2 ")"}`
+     — Parens als Literale behandelt, Operator zwischen `count` und
+     `2` fehlte. Jetzt paren-aware-weave wie IR's
+     `buildExpressionString`.
+  2. Prose-Mode Bullet-Text mit `?` und `:` (z.B. `**Key**: FH vs.
+   Uni — wie wird das gesehen?`) wurde als Conditional mit invalid-
+     JS Condition gespeichert (`vs.Uni wie wird das gesehen`). React
+     emittierte `{vs.Uni wie wird das gesehen ? : }` — esbuild/Vite/
+     oxc rejected. Jetzt eval-test der Condition durch Function;
+     bei SyntaxError fallback auf literal Text.
+     **Status:** erledigt (`ce4fc73e`)
 
 ### 2026-05-10 — Directional Padding/Margin/Border-Shortcuts in React
 
