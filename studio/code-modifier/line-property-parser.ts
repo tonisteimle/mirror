@@ -88,6 +88,52 @@ export function getCanonicalName(name: string): string {
 }
 
 /**
+ * Properties whose Mirror-conventional written form is a short alias rather
+ * than the (verbose) canonical schema name. Used when ADDING a new property
+ * to source via the Property Panel — without this, the panel writes
+ * `radius 12` instead of the expected `rad 12`. Updating an EXISTING property
+ * still preserves whatever name is in source (handled by updatePropertyInLine).
+ *
+ * Only properties listed here get aliased; everything else (e.g. `gap`,
+ * `weight`, `cursor`, `pad-x`) keeps its canonical name because either the
+ * canonical is already short or the alias is too cryptic for typical use.
+ */
+const PREFERRED_ALIAS: Record<string, string> = {
+  width: 'w',
+  height: 'h',
+  'min-width': 'minw',
+  'max-width': 'maxw',
+  'min-height': 'minh',
+  'max-height': 'maxh',
+  background: 'bg',
+  color: 'col',
+  border: 'bor',
+  'border-color': 'boc',
+  radius: 'rad',
+  padding: 'pad',
+  margin: 'mar',
+  'font-size': 'fs',
+  'icon-size': 'is',
+  'icon-color': 'ic',
+  'icon-weight': 'iw',
+  horizontal: 'hor',
+  vertical: 'ver',
+}
+
+/**
+ * Pick the conventional Mirror name to write for a property. If the caller
+ * already passed an alias (e.g. `rad`), keep it as-is. If they passed the
+ * canonical name and we have an explicit short form, return that. Otherwise
+ * return the canonical (no preferred alias defined).
+ */
+export function getPreferredWriteName(name: string): string {
+  const canonical = aliasMap.get(name)
+  if (!canonical) return name // unknown property — pass through (state names, etc.)
+  if (name !== canonical) return name // caller already chose an alias
+  return PREFERRED_ALIAS[canonical] ?? canonical
+}
+
+/**
  * Check if two property names refer to the same property
  */
 export function isSameProperty(name1: string, name2: string): boolean {
@@ -400,12 +446,18 @@ export function addPropertyToLine(parsedLine: ParsedLine, propName: string, valu
 
   const line = parsedLine.original.trimEnd()
 
+  // Use the conventional Mirror short alias when the caller passed a
+  // verbose canonical name from the Property Panel (`radius` → `rad`,
+  // `width` → `w`, etc.). Existing properties in source preserve their
+  // name via updatePropertyInLine — this only kicks in for fresh adds.
+  const writeName = getPreferredWriteName(propName)
+
   // Format the new property
   let propStr: string
   if (value === '' || value === 'true') {
-    propStr = propName
+    propStr = writeName
   } else {
-    propStr = `${propName} ${value}`
+    propStr = `${writeName} ${value}`
   }
 
   // Add with comma separator if there are existing properties

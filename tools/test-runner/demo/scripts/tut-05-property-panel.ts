@@ -142,7 +142,7 @@ export const demoScript: DemoScript = {
       code:
         'canvas mobile, bg #0f0f0f, col white, font sans\n' +
         '\n' +
-        'Frame w 320, h 100, bg #1a1a1a, hor, pad 12, gap 20, radius 12\n' +
+        'Frame w 320, h 100, bg #1a1a1a, hor, pad 12, gap 20, rad 12\n' +
         '  Frame w 60, h 60, bg #2271C1\n' +
         '  Frame w 60, h 60, bg #2271C1',
     },
