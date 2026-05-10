@@ -115,6 +115,19 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
+- **Wo:** `compiler/ir/ops/instance-ops.ts:336` (`hasWidthFullInDescendants`)
+  **Was:** `children: any[]` Parameter — letzter Production-Code-`any` in
+  `compiler/`. Findings-Aggregat-Eintrag (Z. ~818) listet ihn explizit
+  („1× `any[]` Parameter in `compiler/ir/ops/` Layout"). Die Funktion
+  navigiert `child.properties`, `child.component`, `child.children` —
+  alles Instance-spezifisch, aber mit Optional-Chaining defensive. Fix:
+  proper Union `(Instance | Slot | Text | ZagNode | Each | ConditionalNode)[]`
+  matching `Instance.children` aus `compiler/parser/ast.ts:217`. Sehr
+  klein, kein Pin nötig (Type-Only-Change, tsc fängt Regressionen).
+  **Status:** aktiv (Claude-Session, 2026-05-10 ~18:25)
+  **Plan:** Type aus `Instance.children` importieren, Parameter retypen,
+  inneren Code auf Type-Narrowing prüfen, full Suite + tsc grün, commit.
+
 - **Wo:** `compiler/ir/ops/instance-ops.ts`, `compiler/ir/ops/properties-ops.ts`,
   `compiler/backends/react.ts`
   **Was:** Lane 2, Inkrement 2 — Folge-Refactor zu Inkrement 1.
