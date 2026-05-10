@@ -191,23 +191,21 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Was:** 3931 LOC über vier nahezu identische Manager-Klassen (Handles,
   Drag-State, Observer, RAF-Throttling, Snap-Logik) — massive Duplikation
   im größten Subsystem.
-  **Status:** Step 1 erledigt — RAF-Mouse-Throttle (verbatim in allen 4)
-  in `studio/visual/raf-mouse-throttle.ts` als `RafMouseThrottle`-Klasse
-  extrahiert. Alle 4 Manager rufen jetzt
-  `new RafMouseThrottle(e => this.processMouseMove(e))` im Constructor,
-  `throttle.schedule(e)` in `onMouseMove`, `throttle.cancel()` in
-  `dispose`/`onMouseUp`. 3931 → 3886 LOC (–45 LOC). 565/565 visual
-  tests pass.
-  **Notiz:** Verbleibende inkrementelle Schritte: (2) `observer-pack.ts`
-  für Resize+MutationObserver+scroll+window-resize (in
-  Padding/Margin/Gap verbatim), (3) `SpacingHandleManagerBase` für
+  **Status:** Steps 1 + 2 erledigt — (1) RAF-Mouse-Throttle in
+  `studio/visual/raf-mouse-throttle.ts` als `RafMouseThrottle`-Klasse
+  extrahiert (in allen 4 Managern verwendet); (2) Resize-/Mutation-
+  Observer + Scroll- + Window-Resize-Listener in
+  `studio/visual/observer-pack.ts` als `ObserverPack`-Klasse extrahiert
+  (Padding/Margin/Gap; ResizeManager hat keine Observer). 3931 → 3766
+  LOC (–165 LOC, –4.2 %). 565/565 visual tests pass.
+  **Notiz:** Verbleibender Schritt (3) `SpacingHandleManagerBase` für
   Padding/Margin/Gap mit gleicher Modifier-Logik / Snap / Overlay-
   Pattern. ResizeManager bleibt eigenständig (8 Handles, Multi-
   Selection, Grid, Sizing-Mode, double-click).
   Tests: nur ResizeManager hat Unit-Tests
   (`tests/studio/visual-resize-manager.test.ts`,
   `visual/resize-manager-multi.test.ts`); Padding/Margin/Gap nur durch
-  Browser-Tests gedeckt — Steps 2+3 brauchen sorgfältige headed-
+  Browser-Tests gedeckt — Step 3 braucht sorgfältige headed-
   Verification.
 
 - **Wo:** `studio/panels/property/view.ts` (1037 LOC → 776 LOC)

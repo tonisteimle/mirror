@@ -18,6 +18,7 @@ import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
 import { getSpacingSnapService, shouldBypassSnapping, type SpacingSnapResult } from './snap'
 import { SnapIndicator, createSnapIndicator } from './snap-indicator'
 import { RafMouseThrottle } from './raf-mouse-throttle'
+import { ObserverPack } from './observer-pack'
 
 // Visual constants
 const HANDLE_VISUAL_SIZE = 2 // Visible line: 2px
@@ -73,11 +74,8 @@ export class GapManager {
   private boundMouseUp: (e: MouseEvent) => void
   private boundRefresh: () => void
 
-  // Observers for robustness
-  private resizeObserver: ResizeObserver | null = null
-  private mutationObserver: MutationObserver | null = null
-  private scrollUnsubscribe: (() => void) | null = null
-  private windowResizeUnsubscribe: (() => void) | null = null
+  // Observers for robustness — bundled in ObserverPack
+  private observerPack: ObserverPack
 
   // Debounce timer for refresh
   private refreshDebounceId: number | null = null
@@ -94,6 +92,10 @@ export class GapManager {
     this.getSourceMap = config.getSourceMap
 
     this.mouseThrottle = new RafMouseThrottle(e => this.processMouseMove(e))
+    this.observerPack = new ObserverPack({
+      container: this.container,
+      onChange: () => this.debouncedRefresh(),
+    })
 
     this.boundMouseDown = this.onMouseDown.bind(this)
     this.boundMouseMove = this.onMouseMove.bind(this)
@@ -101,7 +103,6 @@ export class GapManager {
     this.boundRefresh = this.debouncedRefresh.bind(this)
 
     this.setupEventListeners()
-    this.setupObservers()
 
     // Initialize snap indicator
     this.snapIndicator = createSnapIndicator({
@@ -457,7 +458,7 @@ export class GapManager {
     this.handles.forEach(h => h.remove())
     this.handles = []
     this.currentNodeId = null
-    this.unobserveAll()
+    this.observerPack.unobserveAll()
   }
 
   refresh(): void {
@@ -592,7 +593,7 @@ export class GapManager {
     }
     this.hideHandles()
     this.removeEventListeners()
-    this.removeObservers()
+    this.observerPack.dispose()
     this.snapIndicator?.dispose()
   }
 
@@ -623,56 +624,27 @@ export class GapManager {
     }
   }
 
-  private setupObservers(): void {
-    this.resizeObserver = new ResizeObserver(() => {
-      this.boundRefresh()
-    })
-
-    this.mutationObserver = new MutationObserver(mutations => {
-      const hasLayoutMutation = mutations.some(
-        m =>
-          m.type === 'childList' ||
-          (m.type === 'attributes' && (m.attributeName === 'style' || m.attributeName === 'class'))
-      )
-      if (hasLayoutMutation) {
-        this.boundRefresh()
-      }
-    })
-
-    const scrollHandler = () => this.boundRefresh()
-    this.container.addEventListener('scroll', scrollHandler, { passive: true })
-    this.scrollUnsubscribe = () => {
-      this.container.removeEventListener('scroll', scrollHandler)
-    }
-
-    const resizeHandler = () => this.boundRefresh()
-    window.addEventListener('resize', resizeHandler, { passive: true })
-    this.windowResizeUnsubscribe = () => {
-      window.removeEventListener('resize', resizeHandler)
-    }
-  }
-
+  /**
+   * Wire ObserverPack onto a container — gap handles depend on the
+   * container resizing AND any of its children changing size (which
+   * shifts the gap positions). Padding/margin watch parent + siblings;
+   * gap watches children, hence the manager-specific wiring here.
+   */
   private observeElement(element: HTMLElement): void {
-    this.resizeObserver?.observe(element)
+    this.observerPack.resize?.observe(element)
 
-    this.mutationObserver?.observe(element, {
+    this.observerPack.mutation?.observe(element, {
       childList: true,
       attributes: true,
       attributeFilter: ['style', 'class'],
       subtree: true,
     })
 
-    // Observe all children for size changes
     for (const child of element.children) {
       if (child instanceof HTMLElement) {
-        this.resizeObserver?.observe(child)
+        this.observerPack.resize?.observe(child)
       }
     }
-  }
-
-  private unobserveAll(): void {
-    this.resizeObserver?.disconnect()
-    this.mutationObserver?.disconnect()
   }
 
   private removeEventListeners(): void {
@@ -682,14 +654,6 @@ export class GapManager {
     }
     document.removeEventListener('mousemove', this.boundMouseMove)
     document.removeEventListener('mouseup', this.boundMouseUp)
-  }
-
-  private removeObservers(): void {
-    this.unobserveAll()
-    this.scrollUnsubscribe?.()
-    this.scrollUnsubscribe = null
-    this.windowResizeUnsubscribe?.()
-    this.windowResizeUnsubscribe = null
   }
 
   private onMouseDown(e: MouseEvent): void {

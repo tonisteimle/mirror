@@ -17,6 +17,7 @@ import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
 import { getSpacingSnapService, shouldBypassSnapping, type SpacingSnapResult } from './snap'
 import { SnapIndicator, createSnapIndicator } from './snap-indicator'
 import { RafMouseThrottle } from './raf-mouse-throttle'
+import { ObserverPack } from './observer-pack'
 
 // Visual constants
 const HANDLE_VISUAL_SIZE = 2 // Visible line: 2px (1px is too thin to see)
@@ -71,11 +72,8 @@ export class MarginManager {
   private boundMouseUp: (e: MouseEvent) => void
   private boundRefresh: () => void
 
-  // Observers for robustness
-  private resizeObserver: ResizeObserver | null = null
-  private mutationObserver: MutationObserver | null = null
-  private scrollUnsubscribe: (() => void) | null = null
-  private windowResizeUnsubscribe: (() => void) | null = null
+  // Observers for robustness — bundled in ObserverPack
+  private observerPack: ObserverPack
 
   // Debounce timer for refresh
   private refreshDebounceId: number | null = null
@@ -92,6 +90,10 @@ export class MarginManager {
     this.getSourceMap = config.getSourceMap
 
     this.mouseThrottle = new RafMouseThrottle(e => this.processMouseMove(e))
+    this.observerPack = new ObserverPack({
+      container: this.container,
+      onChange: () => this.debouncedRefresh(),
+    })
 
     this.boundMouseDown = this.onMouseDown.bind(this)
     this.boundMouseMove = this.onMouseMove.bind(this)
@@ -99,7 +101,6 @@ export class MarginManager {
     this.boundRefresh = this.debouncedRefresh.bind(this)
 
     this.setupEventListeners()
-    this.setupObservers()
 
     // Initialize snap indicator
     this.snapIndicator = createSnapIndicator({
@@ -471,7 +472,7 @@ export class MarginManager {
     this.handles.forEach(h => h.remove())
     this.handles = []
     this.currentNodeId = null
-    this.unobserveAll()
+    this.observerPack.unobserveAll()
   }
 
   refresh(): void {
@@ -610,7 +611,7 @@ export class MarginManager {
     }
     this.hideHandles()
     this.removeEventListeners()
-    this.removeObservers()
+    this.observerPack.dispose()
     this.snapIndicator?.dispose()
   }
 
@@ -641,64 +642,33 @@ export class MarginManager {
     }
   }
 
-  private setupObservers(): void {
-    this.resizeObserver = new ResizeObserver(() => {
-      this.boundRefresh()
-    })
-
-    this.mutationObserver = new MutationObserver(mutations => {
-      const hasLayoutMutation = mutations.some(
-        m =>
-          m.type === 'childList' ||
-          (m.type === 'attributes' && (m.attributeName === 'style' || m.attributeName === 'class'))
-      )
-      if (hasLayoutMutation) {
-        this.boundRefresh()
-      }
-    })
-
-    const scrollHandler = () => this.boundRefresh()
-    this.container.addEventListener('scroll', scrollHandler, { passive: true })
-    this.scrollUnsubscribe = () => {
-      this.container.removeEventListener('scroll', scrollHandler)
-    }
-
-    const resizeHandler = () => this.boundRefresh()
-    window.addEventListener('resize', resizeHandler, { passive: true })
-    this.windowResizeUnsubscribe = () => {
-      window.removeEventListener('resize', resizeHandler)
-    }
-  }
-
+  /**
+   * Wire ObserverPack onto element + parent + siblings. Same geometry as
+   * padding handles — margin handles sit at the element's outer box.
+   */
   private observeElement(element: HTMLElement): void {
-    this.resizeObserver?.observe(element)
+    this.observerPack.resize?.observe(element)
 
-    this.mutationObserver?.observe(element, {
+    this.observerPack.mutation?.observe(element, {
       attributes: true,
       attributeFilter: ['style', 'class'],
     })
 
     const parent = element.parentElement
     if (parent) {
-      this.resizeObserver?.observe(parent)
-      this.mutationObserver?.observe(parent, {
+      this.observerPack.resize?.observe(parent)
+      this.observerPack.mutation?.observe(parent, {
         childList: true,
         attributes: true,
         attributeFilter: ['style', 'class'],
         subtree: true,
       })
-
       for (const sibling of parent.children) {
         if (sibling !== element && sibling instanceof HTMLElement) {
-          this.resizeObserver?.observe(sibling)
+          this.observerPack.resize?.observe(sibling)
         }
       }
     }
-  }
-
-  private unobserveAll(): void {
-    this.resizeObserver?.disconnect()
-    this.mutationObserver?.disconnect()
   }
 
   private removeEventListeners(): void {
@@ -708,14 +678,6 @@ export class MarginManager {
     }
     document.removeEventListener('mousemove', this.boundMouseMove)
     document.removeEventListener('mouseup', this.boundMouseUp)
-  }
-
-  private removeObservers(): void {
-    this.unobserveAll()
-    this.scrollUnsubscribe?.()
-    this.scrollUnsubscribe = null
-    this.windowResizeUnsubscribe?.()
-    this.windowResizeUnsubscribe = null
   }
 
   private onMouseDown(e: MouseEvent): void {

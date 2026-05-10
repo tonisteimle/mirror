@@ -17,6 +17,7 @@ import { Z_INDEX_RESIZE_HANDLES } from './constants/z-index'
 import { getSpacingSnapService, shouldBypassSnapping, type SpacingSnapResult } from './snap'
 import { SnapIndicator, createSnapIndicator } from './snap-indicator'
 import { RafMouseThrottle } from './raf-mouse-throttle'
+import { ObserverPack } from './observer-pack'
 
 // Visual constants
 const HANDLE_VISUAL_SIZE = 1 // Visible line: 1px
@@ -71,11 +72,8 @@ export class PaddingManager {
   private boundMouseUp: (e: MouseEvent) => void
   private boundRefresh: () => void
 
-  // Observers for robustness
-  private resizeObserver: ResizeObserver | null = null
-  private mutationObserver: MutationObserver | null = null
-  private scrollUnsubscribe: (() => void) | null = null
-  private windowResizeUnsubscribe: (() => void) | null = null
+  // Observers for robustness — bundled in ObserverPack
+  private observerPack: ObserverPack
 
   // Debounce timer for refresh
   private refreshDebounceId: number | null = null
@@ -92,6 +90,10 @@ export class PaddingManager {
     this.getSourceMap = config.getSourceMap
 
     this.mouseThrottle = new RafMouseThrottle(e => this.processMouseMove(e))
+    this.observerPack = new ObserverPack({
+      container: this.container,
+      onChange: () => this.debouncedRefresh(),
+    })
 
     this.boundMouseDown = this.onMouseDown.bind(this)
     this.boundMouseMove = this.onMouseMove.bind(this)
@@ -99,7 +101,6 @@ export class PaddingManager {
     this.boundRefresh = this.debouncedRefresh.bind(this)
 
     this.setupEventListeners()
-    this.setupObservers()
 
     // Initialize snap indicator
     this.snapIndicator = createSnapIndicator({
@@ -487,7 +488,7 @@ export class PaddingManager {
     this.handles = []
     this.currentNodeId = null
     // Stop observing when handles are hidden
-    this.unobserveAll()
+    this.observerPack.unobserveAll()
   }
 
   refresh(): void {
@@ -634,7 +635,7 @@ export class PaddingManager {
     }
     this.hideHandles()
     this.removeEventListeners()
-    this.removeObservers()
+    this.observerPack.dispose()
     this.snapIndicator?.dispose()
   }
 
@@ -665,74 +666,35 @@ export class PaddingManager {
     }
   }
 
-  private setupObservers(): void {
-    // ResizeObserver for element size changes
-    this.resizeObserver = new ResizeObserver(() => {
-      this.boundRefresh()
-    })
-
-    // MutationObserver for DOM changes that might affect layout
-    this.mutationObserver = new MutationObserver(mutations => {
-      // Only refresh if mutations affect layout (not just text content)
-      const hasLayoutMutation = mutations.some(
-        m =>
-          m.type === 'childList' ||
-          (m.type === 'attributes' && (m.attributeName === 'style' || m.attributeName === 'class'))
-      )
-      if (hasLayoutMutation) {
-        this.boundRefresh()
-      }
-    })
-
-    // Scroll listener on container
-    const scrollHandler = () => this.boundRefresh()
-    this.container.addEventListener('scroll', scrollHandler, { passive: true })
-    this.scrollUnsubscribe = () => {
-      this.container.removeEventListener('scroll', scrollHandler)
-    }
-
-    // Window resize listener
-    const resizeHandler = () => this.boundRefresh()
-    window.addEventListener('resize', resizeHandler, { passive: true })
-    this.windowResizeUnsubscribe = () => {
-      window.removeEventListener('resize', resizeHandler)
-    }
-  }
-
+  /**
+   * Wire ObserverPack onto element + parent + siblings. Padding handles
+   * sit at the element's content-box boundary, so anything that shifts
+   * the box (parent layout, sibling sizing) needs to retrigger refresh.
+   */
   private observeElement(element: HTMLElement): void {
-    // Observe the element itself for size changes
-    this.resizeObserver?.observe(element)
+    this.observerPack.resize?.observe(element)
 
-    // Also observe the element itself for style/class changes (e.g., external padding changes)
-    this.mutationObserver?.observe(element, {
+    // Element's own style/class changes (external padding edits etc.)
+    this.observerPack.mutation?.observe(element, {
       attributes: true,
       attributeFilter: ['style', 'class'],
     })
 
-    // Observe parent for layout changes that might shift the element
     const parent = element.parentElement
     if (parent) {
-      this.resizeObserver?.observe(parent)
-      // Use subtree: true to catch sibling style changes that might affect our element
-      this.mutationObserver?.observe(parent, {
+      this.observerPack.resize?.observe(parent)
+      this.observerPack.mutation?.observe(parent, {
         childList: true,
         attributes: true,
         attributeFilter: ['style', 'class'],
-        subtree: true, // Observe siblings too
+        subtree: true,
       })
-
-      // Observe all siblings for size changes
       for (const sibling of parent.children) {
         if (sibling !== element && sibling instanceof HTMLElement) {
-          this.resizeObserver?.observe(sibling)
+          this.observerPack.resize?.observe(sibling)
         }
       }
     }
-  }
-
-  private unobserveAll(): void {
-    this.resizeObserver?.disconnect()
-    this.mutationObserver?.disconnect()
   }
 
   private removeEventListeners(): void {
@@ -742,14 +704,6 @@ export class PaddingManager {
     }
     document.removeEventListener('mousemove', this.boundMouseMove)
     document.removeEventListener('mouseup', this.boundMouseUp)
-  }
-
-  private removeObservers(): void {
-    this.unobserveAll()
-    this.scrollUnsubscribe?.()
-    this.scrollUnsubscribe = null
-    this.windowResizeUnsubscribe?.()
-    this.windowResizeUnsubscribe = null
   }
 
   private onMouseDown(e: MouseEvent): void {
