@@ -35,6 +35,13 @@ import { tokRename } from './tok-rename.demo'
 import { compExtract } from './comp-extract.demo'
 import { compSlots } from './comp-slots.demo'
 import { compLibrary } from './comp-library.demo'
+import { pickColorCustom } from './pick-color-custom.demo'
+import { pickColorTabs } from './pick-color-tabs.demo'
+import { pickColorTokens } from './pick-color-tokens.demo'
+import { pickToken } from './pick-token.demo'
+import { pickIcon } from './pick-icon.demo'
+import { pickAnim } from './pick-anim.demo'
+import { pickAction } from './pick-action.demo'
 
 export const demoTests: TestCase[] = [
   ...demoTextIntoFrame,
@@ -63,4 +70,11 @@ export const demoTests: TestCase[] = [
   ...compExtract,
   ...compSlots,
   ...compLibrary,
+  ...pickColorCustom,
+  ...pickColorTabs,
+  ...pickColorTokens,
+  ...pickToken,
+  ...pickIcon,
+  ...pickAnim,
+  ...pickAction,
 ]
