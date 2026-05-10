@@ -52,6 +52,10 @@ import {
 import { debounce } from './core/debounce'
 import { renderEmptyPreview, resetSelectionForEmptyCode } from './compile/empty-state'
 import { wrapLayoutForCompile } from './compile/wrap-layout'
+import {
+  findUninstancedComponents,
+  appendImplicitInstances,
+} from './compile/augment-local-components'
 
 // New architecture imports
 import {
@@ -1351,37 +1355,22 @@ function compile(code: string) {
     // through to the same DOM-render path (they will render as empty UI
     // rather than a swatch / component-states grid).
     {
-      // Layout or other: render UI
-      // Also render local component definitions (not from prelude)
+      // Layout or other: render UI. Auto-preview any locally-defined
+      // components the user hasn't instanced yet, so editing a definition
+      // shows a live render without typing the instance line manually.
       let codeToCompile = resolvedCode
       let finalJsCode = jsCode
 
-      // Find components defined in the current file (not prelude)
       const localAst = MirrorLang.parse(compileCode)
-      const localComponentNames = (localAst.components || []).map(c => c.name)
+      const uninstancedComponents = findUninstancedComponents(ast, localAst)
 
-      // Check which local components are NOT already instanced. The
-      // Program.instances union now includes Slot/Each/ConditionalNode/etc.
-      // — narrow to the literal `Instance` type (which is the only branch
-      // with `component: string`).
-      const instancedNames = new Set(
-        (ast.instances || [])
-          .filter((i): i is import('../compiler/parser/ast').Instance => i.type === 'Instance')
-          .map(i => i.component)
-      )
-      const uninstancedComponents = localComponentNames.filter(name => !instancedNames.has(name))
-
-      // Add implicit instances for uninstanced local components
       if (uninstancedComponents.length > 0) {
-        const implicitInstances = uninstancedComponents.join('\n')
-        codeToCompile = resolvedCode + '\n\n// Auto-preview local components\n' + implicitInstances
+        codeToCompile = appendImplicitInstances(resolvedCode, uninstancedComponents)
 
-        // Re-parse and re-generate with implicit instances
+        // Re-parse + re-generate IR/JS so slot node IDs match between
+        // the preview render and the sourceMap.
         const augmentedAst = MirrorLang.parse(codeToCompile)
         finalJsCode = MirrorLang.generateDOM(augmentedAst)
-
-        // IMPORTANT: Regenerate IR and sourceMap from augmented AST
-        // This ensures slot node IDs match between preview and sourceMap
         const augmentedIrResult = MirrorLang.toIR(augmentedAst, true)
         irResult.ir = augmentedIrResult.ir
         irResult.sourceMap = augmentedIrResult.sourceMap
