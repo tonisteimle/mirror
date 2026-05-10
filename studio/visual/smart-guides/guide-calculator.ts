@@ -5,7 +5,7 @@
  * Detects when edges or centers align with siblings or container.
  */
 
-import type { AlignmentEdge, Guide, SnapResult, ElementRect } from './types'
+import type { AlignmentEdge, Guide, SnapResult } from './types'
 import { smartGuidesSettings } from '../../core/settings'
 
 const DEFAULT_THRESHOLD = 4 // px

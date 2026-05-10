@@ -14,14 +14,7 @@ import {
   setCanvasDragData,
   type ComponentDragData,
 } from '../drag-preview'
-import type {
-  DragSource,
-  DropTarget,
-  FlexDropTarget,
-  AbsoluteDropTarget,
-  AlignedDropTarget,
-  Point,
-} from './types'
+import type { DragSource, DropTarget, AbsoluteDropTarget, AlignedDropTarget, Point } from './types'
 import type { AlignPosition } from './indicator'
 import { lookupComponentByName } from './test-api-helpers'
 import { cellCenterOffset } from '../../visual/snap/grid-cell-snap'

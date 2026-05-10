@@ -18,7 +18,7 @@
  *   })
  */
 
-import type { PreviewAPI, ElementInfo, ComputedStyles } from './types'
+import type { PreviewAPI, ComputedStyles } from './types'
 
 // =============================================================================
 // Types

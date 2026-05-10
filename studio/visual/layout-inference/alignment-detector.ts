@@ -10,7 +10,6 @@ import type {
   AlignmentDetectorConfig,
   AlignmentDetectionResult,
   AlignmentGroup,
-  AlignmentType,
   ElementBounds,
 } from './types'
 

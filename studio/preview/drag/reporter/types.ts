@@ -5,7 +5,7 @@
  * Components implement Reportable<T> to provide their state.
  */
 
-import type { Point, FlexLayout, LayoutType, DragSource, DropTarget } from '../types'
+import type { Point, LayoutType, DragSource, DropTarget } from '../types'
 
 // Re-export Point for convenience
 export type { Point }

@@ -2,7 +2,7 @@
  * Token utilities for Property Panel
  */
 
-import type { PanelSpacingToken, ColorToken, GetAllSourceCallback } from '../types'
+import type { PanelSpacingToken, ColorToken } from '../types'
 import {
   PROPERTY_TO_TOKEN_SUFFIX,
   getTokenSuffix as getCanonicalTokenSuffix,

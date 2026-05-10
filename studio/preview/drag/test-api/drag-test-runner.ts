@@ -32,7 +32,6 @@ import type {
   DragTestResult,
   PaletteDragParams,
   CanvasMoveParams,
-  ComponentFixture,
 } from './types'
 import { getFixture, ALL_COMPONENTS } from './fixtures'
 import { ALL_CONTAINERS } from './fixtures/container-setups'

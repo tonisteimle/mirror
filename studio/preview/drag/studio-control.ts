@@ -6,12 +6,7 @@
  * stable while those globals are migrated out of app.js.
  */
 
-import type {
-  ExtractedElementInfo,
-  ExtractedPropertyInfo,
-  PropertyModificationResult,
-  TokenInfo,
-} from './test-api-types'
+import type { ExtractedElementInfo, PropertyModificationResult, TokenInfo } from './test-api-types'
 import type { BrowserTestRunner } from './test-runner'
 import type { Point } from './types'
 
