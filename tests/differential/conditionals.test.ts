@@ -194,6 +194,38 @@ describe('Conditionals — Bug #23-#26 fixed: regression pins', () => {
     expect(r2).not.toContain('tokens["t"]')
   })
 
+  it('React: paren-aware computed expressions weave operators correctly', () => {
+    // PIN: `Text "+" + ($count - 2)` produces a parts array
+    // `["+", "(", $count, 2, ")"]` with operators `["+", "-"]`. The
+    // React backend used to weave operators between every adjacent
+    // pair of parts, so it produced `"+" + "(" - count 2 ")"` —
+    // invalid JSX (the `count 2` adjacency throws). Now mirrors the IR's
+    // paren-aware weave: skip the operator after `(` and before `)`.
+    const src = `count: 5\n\nText "+" + ($count - 2)`
+    const react = generateReact(parse(src))
+    expect(react).toMatch(/"\+"\s*\+\s*\(\s*tokens\["count"\]\s*-\s*2\s*\)/)
+    // No standalone `"("` or `")"` literals.
+    expect(react).not.toMatch(/{[^}]*"\("/)
+  })
+
+  it('React: invalid-JS conditional condition falls back to literal text', () => {
+    // PIN: prose-mode bullet text containing `?` and `:` (e.g.
+    // `**Key**: FH vs. Uni — wie wird das gesehen?`) ends up as a
+    // Conditional with an invalid-JS condition like `vs.Uni wie wird
+    // das gesehen`. Pre-2026-05-10 the React backend emitted
+    // `{vs.Uni wie wird das gesehen ? : }` — unparseable JSX that
+    // breaks downstream tooling (esbuild/Vite/oxc all reject).
+    // Now we eval-test the rewritten condition through `Function` and
+    // fall back to literal text on syntax error.
+    const src = `Article as Frame: prose
+
+Article
+  - **Key**: FH vs. Uni wie wird das gesehen?`
+    const react = generateReact(parse(src))
+    // No invalid JSX expressions
+    expect(react).not.toMatch(/\{[a-z][a-z.]+ [a-z]+ [a-z]+/)
+  })
+
   it('React: computed expressions in HTML attributes resolve too', () => {
     // PIN: pre-2026-05-10 `Input placeholder "Hi " + $name` and
     // `Link "View", href "/items/" + $id` dropped the attribute

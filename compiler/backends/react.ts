@@ -1823,6 +1823,21 @@ function renderTextSlot(
   }
   if ('kind' in content && content.kind === 'conditional') {
     const cond = rewriteIdentifiersToTokens(content.condition, tokens)
+    // Defensive: the parser sometimes builds a Conditional out of prose
+    // text that just happens to contain `?` and `:` (e.g.
+    // `**Key**: FH vs. Uni — wie wird das gesehen?` ends up as a
+    // Conditional with an invalid-JS condition like `vs.Uni wie wird
+    // das gesehen`). Emitting `{cond ? then : else}` with that string
+    // produces unparseable JSX. Try the condition through Function and
+    // if it throws, fall back to literal text content.
+    try {
+      new Function('tokens', `return (${cond})`)
+    } catch {
+      // Reconstruct the original-ish string so the user sees their
+      // text instead of the broken ternary.
+      const fallback = `${content.condition}${content.then ? ' ? ' + content.then : ''}${content.else ? ' : ' + content.else : ''}`
+      return `${indent}${JSON.stringify(fallback).replace(/^/, '{').replace(/$/, '}')}`
+    }
     // Branches may themselves be ternaries (`level == 1 ? "A" : level == 2 ? "B" : "C"`
     // arrives flattened into the else string). Run the same identifier
     // rewrite so nested conditions resolve through `tokens["…"]`.
@@ -1863,8 +1878,15 @@ function expressionPartsToJS(
     const n = t.name.startsWith('$') ? t.name.slice(1) : t.name
     tokenNames.add(n)
   }
+  const isOpenParen = (p: unknown): boolean => p === '('
+  const isCloseParen = (p: unknown): boolean => p === ')'
   const partToJS = (part: unknown): string => {
-    if (typeof part === 'string') return JSON.stringify(part)
+    if (typeof part === 'string') {
+      // Parens are structural — emit verbatim. Other strings are
+      // literals, JSON-stringified.
+      if (part === '(' || part === ')') return part
+      return JSON.stringify(part)
+    }
     if (typeof part === 'number') return String(part)
     if (part && typeof part === 'object' && 'kind' in part) {
       const head = (part as { name?: string }).name ?? ''
@@ -1888,11 +1910,21 @@ function expressionPartsToJS(
     }
     return JSON.stringify(String(part))
   }
-  // Weave parts and operators: parts[0] op[0] parts[1] op[1] parts[2] ...
+  // Weave parts and operators, paren-aware. Mirrors
+  // `compiler/ir/transformers/expression-transformer.ts:buildExpressionString`:
+  //   - skip the operator if the previous part was `(`
+  //   - skip the operator if this part is `)`
+  // Without this, `"+" + ($project.members - 2)` rendered as
+  // `"+" + "(" - project.members 2 ")"` (invalid JSX).
   const out: string[] = []
+  let opIndex = 0
   for (let i = 0; i < expr.parts.length; i++) {
-    out.push(partToJS(expr.parts[i]))
-    if (i < expr.operators.length) out.push(expr.operators[i])
+    const part = expr.parts[i]
+    const prev = i > 0 ? expr.parts[i - 1] : null
+    if (i > 0 && !isOpenParen(prev) && !isCloseParen(part) && opIndex < expr.operators.length) {
+      out.push(expr.operators[opIndex++])
+    }
+    out.push(partToJS(part))
   }
   return out.join(' ')
 }
