@@ -11,20 +11,36 @@ Vertikale, end2end prüfbare User-Fähigkeiten („Capability-Slices"). Jeder Sl
 **Pro Slice:**
 
 1. Audit gemäß den 6 Prüf-Dimensionen
-2. Probes / Mini-Mirror-Beispiele dokumentieren
+2. Probes / Mini-Mirror-Beispiele dokumentieren — **Probe-Skripte committen** unter `tools/probes/slice-NN.ts` (nicht `/tmp`). Begründung aus Slice-4-Erfahrung: Cross-Slice-Re-Probes brauchen die Original-Skripte; ephemere `/tmp`-Files brechen die Reproducibility und zwingen den Nachfolger, die Probe-Geometrie selbst zu rekonstruieren.
 3. Bewertung pro Dimension (stark / mittel / schwach)
 4. Follow-up-Tickets (Bugs, Architektur, Cleanup)
 5. Ergebnis als `XX-<name>.md` ablegen (XX = Slice-Nummer 2-stellig), Audit-Status-Tabelle aktualisieren
-6. Implementierung in Runden — pro Phase ein Commit
+6. Implementierung in Runden — pro Phase ein Commit (in Praxis bündelt lint-staged / paralleles Slice-Work mehrfach; Plan-Realität: ein Commit pro Phase ist Ziel, nicht hartes Gesetz)
 7. **Review-Pass nach Implementierung** (verbindlich, kein Skip):
-   - Probe-Tabelle im Audit-Doc gegen den Post-Fix-Stand spiegeln (alle 🔴/🟡/🟠 die jetzt grün sind, müssen grün gemacht werden — sonst lügt das Doc)
+   - Probe-Tabelle im Audit-Doc gegen den Post-Fix-Stand spiegeln (alle 🔴/🟡/🟠 die jetzt grün sind, müssen grün gemacht werden — sonst lügt das Doc). Re-Run gegen das committete Probe-Skript aus Step 2; Diff zwischen Skript-Output und Tabelle = sofortige Iter-N-Trigger.
    - Jede RT aus dem Audit-Plan effektiv schreiben oder begründet streichen — ein Plan-RT ohne Test ist eine offene Lücke, kein erledigter Punkt
    - **Schema-Drift-Grep** (verbindlich): wenn der Slice eine Schema-Liste erweitert hat (z. B. system-states von 4 → 13), repo-weit nach den alten enum-Werten greppen (`grep -rEn "['\"]hover['\"].*['\"]focus['\"]" --include="*.ts" compiler/ studio/ tests/`). Jede gefundene Stelle muss entweder schema-derived gemacht oder explizit als „bewusster Scope" dokumentiert werden. Das ist die Heuristik aus dem Slice-26/27/29-Cluster: ohne diesen Grep findet der Audit den Compiler, aber nicht den Sync-Layer / Syntax-Highlighter / etc.
    - **Cross-Slice-Probe**: wenn ein Helper neu eingeführt wurde (z. B. `isToggleableStateName` für `toggle()`), den Helper aktiv gegen die _Nachbar-Slices_ derselben Bug-Familie testen (`exclusive()`, `cycle()`, …). Eine RT pro Nachbar-Slice mit demselben Edge-Case (System-State im Body) ist die Versicherung, dass die Reform nicht nur den auditierten Slice, sondern die Familie deckt.
-   - Alle 6 Prüf-Dimensionen gegen den neuen Stand re-verifizieren, **inklusive Cross-Backend-Konsistenz** (DOM ≡ React ≡ Framework-Export — wenn ein Backend ausgelassen wurde, ist der Slice nicht fertig) und **Studio-Roundtrip** (Click im Preview → Property-Panel → Code-Edit → DOM-Update bleibt konsistent)
+   - **Cross-Slice-Scope-Entscheidung** (wenn ein Fix Nachbar-Slices berührt — Slice-2-V-1 vs. Slice-4-V-2 Erfahrung):
+     - **In-scope-fix**, wenn: (a) ein bereits existierender Helper trivial auf den Nachbar-Pfad angewendet werden kann (Slice 2: `pxify()` einmal geschrieben → 11 properties) UND (b) der Nachbar-Slice noch kein abgeschlossenes Audit hat (kein Risiko, dort eine andere Entscheidung zu unterlaufen).
+     - **Deferred-Lock-RT**, wenn: (a) das Fixen in den Nachbar-Slice-Scope reichen würde (eigene Helper-Entscheidungen, eigene Probe-Tabelle nötig — Slice 4: `ver-center`/`hor-center` braucht `singleAxisCenterToFlex`, nicht `nineZoneToFlex`) ODER (b) der Nachbar-Slice schon „erledigt" ist (Behavior-Locks dort sind kanonisch — eine Verhaltens-Verschiebung ohne deren Audit ist Drift).
+     - Egal welcher Pfad: das Verhalten muss per RT (in-scope-Test oder deferred-state-lock-RT) festgenagelt werden, damit der Nachbar-Slice die Erwartung kennt.
+   - Alle 6 Prüf-Dimensionen gegen den neuen Stand re-verifizieren, **inklusive Cross-Backend-Konsistenz** (DOM ≡ React ≡ Framework-Export — wenn ein Backend ausgelassen wurde, ist der Slice nicht fertig) und **Studio-Roundtrip**:
+     - Idealer Modus: Click im Preview → Property-Panel → Code-Edit → DOM-Update bleibt konsistent (Browser-CDP).
+     - Pragmatischer Lower-Bar-Modus (für Slices, die nur Backend/Compiler ändern und kein neues Studio-UI bringen): **DOM-Backend cross-backend gelocked + Property-Panel-Test existiert + ggf. jsdom-Smoke-Check via studio/test-api**. Diese Variante muss im Audit-Doc explizit benannt sein („Studio-Roundtrip: Lower-Bar — DOM-Pfad gelocked via RT-X, kein CDP-Run") — anders als Hand-wave, das Slice 1/3/4 unbewusst gemacht haben.
    - Audit-Doc-Status auf `erledigt` erst nach diesem Pass; offene Sub-Tasks bleiben nicht als „done" verkleidet stehen — entweder umsetzen oder explizit als Follow-up dokumentieren mit Begründung warum verschoben
    - **Iterieren bis sauber:** der Review-Pass ist nicht ein einziger Durchlauf, sondern eine Schleife. Jede gefundene Issue (neue Drift, unehrliche Probe-Tabelle, fehlende RT, übersehene Cross-Slice-Wirkung) wird gefixt, danach wird der gesamte Review-Pass _erneut_ durchlaufen — denn der Fix kann selbst neue Issues erzeugen. Erst wenn ein vollständiger Durchlauf 0 neue Findings produziert, ist der Slice review-fertig. „Wir machen's beim nächsten Slice" ist Drift-Hülle, nicht Abschluss.
-8. **Quality-Gate vor Slice-Abschluss:** Wer fragt „ist das jetzt richtig gut?" muss eine ehrliche Antwort bekommen können. Solange die Antwort „substantiell besser, aber …" lautet, ist der Slice nicht fertig — entweder die Lücken schliessen oder den Status präzise zurücksetzen.
+   - **Re-Open-Protokoll** (wenn ein als „erledigt" markierter Slice nachträglich neue Findings bekommt — Slice-4-Erfahrung): die Iter-1-Tabelle wird **nicht überschrieben**. Stattdessen: neue „Iter N" Sektion anhängen, alte Status-Zeilen mit „(Iter 1: …)" markieren, Status-Header oben mit der höchsten Iter-Nummer aktualisieren. Damit bleibt nachvollziehbar, _was_ in Iter-1 übersehen wurde — der nächste Slice profitiert von dem Lerneffekt, statt ihn neu zu entdecken.
+8. **Quality-Gate vor Slice-Abschluss — mechanische Checkliste** (alle Punkte müssen ✅ sein, sonst Status-Reset auf „erledigt" zurücksetzen):
+   1. Audit-Doc-Probe-Tabelle enthält **keinen 🔴-Marker außer in einer expliziten „deferred"/„out-of-scope"-Spalte** (kein 🔴 das einfach nur „noch nicht gefixt" bedeutet).
+   2. Alle Phase-Tabellen-Stati ∈ {`erledigt`, `verschoben`, `verworfen`}; kein `pending`/`offen`/`in-arbeit`.
+   3. Jeder RT-Plan-Eintrag hat einen geschriebenen Test (RT-Tabelle Spalte `Status` = `erledigt`, kein `pending`).
+   4. Schema-Drift-Grep wurde explizit ausgeführt; gefundene Stellen sind entweder gefixt oder mit Begründung dokumentiert.
+   5. Cross-Slice-Wirkung wurde geprüft; betroffene Nachbar-Slices haben entweder einen In-scope-Fix oder einen Deferred-Lock-RT (siehe Cross-Slice-Scope-Entscheidung in Step 7).
+   6. Cross-Backend-Differential-RT existiert für jedes Property/Verhalten, das ≥ 2 Backends emittieren (DOM, React, Framework).
+   7. Studio-Roundtrip ist explizit benannt: entweder „CDP-Run grün" oder „Lower-Bar: DOM gelocked via RT-X". Hand-wave („Studio nutzt DOM-Backend, also ok") **zählt nicht**.
+   8. Vitest gesamt grün; vor-Slice-Vergleich bestätigt: keine Test-Subtraction, nur Addition.
+   9. Wer auf „ist das nun richtig gut?" mit „substantiell besser, aber …" antwortet, hat Punkt 1–8 nicht durchlaufen — Slice ist nicht abgeschlossen.
 
 **Reihenfolge:**
 
