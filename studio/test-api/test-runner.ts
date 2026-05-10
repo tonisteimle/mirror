@@ -14,9 +14,6 @@ import type {
   StateAPI,
   UtilsAPI,
   DOMAPI,
-  PanelAPI,
-  ZagAPI,
-  StudioAPI,
 } from './types'
 
 // Re-export types for convenience

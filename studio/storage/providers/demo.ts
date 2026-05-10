@@ -5,13 +5,7 @@
  * Fallback wenn kein Tauri und kein Server verfügbar.
  */
 
-import type {
-  StorageProvider,
-  StorageProject,
-  StorageItem,
-  StorageFile,
-  StorageFolder,
-} from '../types'
+import type { StorageProvider, StorageProject, StorageItem, StorageFolder } from '../types'
 import { isMirrorFile } from '../types'
 
 // =============================================================================

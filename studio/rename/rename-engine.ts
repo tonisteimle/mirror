@@ -5,7 +5,6 @@
  * Finds symbols at cursor position and all their references across files.
  */
 
-import { tokenize, type Token } from '../../compiler/parser/lexer'
 import { isPrimitive } from '../../compiler/schema/dsl'
 
 export type SymbolType = 'component' | 'token'

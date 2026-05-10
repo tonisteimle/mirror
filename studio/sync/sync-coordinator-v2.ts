@@ -16,17 +16,7 @@
  * ```
  */
 
-import type {
-  SyncPorts,
-  EventBusPort,
-  StateStorePort,
-  DOMQueryPort,
-  ClockPort,
-  SourceMapPort,
-  SelectionOrigin,
-  BreadcrumbItem,
-  CleanupFn,
-} from './ports'
+import type { SyncPorts, SourceMapPort, SelectionOrigin, BreadcrumbItem, CleanupFn } from './ports'
 import { LineOffsetService } from './line-offset-service'
 import { logSync } from '../../compiler/utils/logger'
 import type { SourceMap } from '../../compiler/ir/source-map'

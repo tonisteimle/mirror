@@ -11,7 +11,6 @@ import type {
   DOMQueryPort,
   ClockPort,
   SourceMapPort,
-  SyncPorts,
   SelectionChangedEvent,
   SelectionOrigin,
   BreadcrumbItem,

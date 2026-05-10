@@ -6,13 +6,7 @@
  * Bei leerem Storage wird ein Demo-Projekt erstellt.
  */
 
-import type {
-  StorageProvider,
-  StorageProject,
-  StorageItem,
-  StorageFile,
-  StorageFolder,
-} from '../types'
+import type { StorageProvider, StorageProject, StorageItem, StorageFolder } from '../types'
 import { createLogger } from '../../../compiler/utils/logger'
 import { DEFAULT_PROJECT } from '../project-actions'
 
