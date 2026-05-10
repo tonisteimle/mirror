@@ -1,9 +1,16 @@
 /**
  * Tutorial-Recording: Property-Panel
  *
- * Selektiere ein Element im Preview, dann setze drei Properties über
- * das rechts liegende Property-Panel: padding, background-color, radius.
- * Jede Änderung erscheint sofort in der Code-Zeile.
+ * Selektiere ein Element im Preview, dann ändere drei Properties über
+ * sichtbare Eingabefelder im Property-Panel rechts. Wir nutzen
+ * width/gap/radius — diese haben echte data-prop-Inputs, der Cursor
+ * landet im jeweiligen Feld und der Tippvorgang ist im Video sichtbar.
+ *
+ * Wichtig: NICHT `padding` oder `margin` über setProperty fahren —
+ * die Padding-Section nutzt `data-pad-dir` statt `data-prop="padding"`,
+ * der Runner fällt dann auf `panel.changeProperty()` zurück und der
+ * Viewer sieht nur einen vagen Cursor-Hover über dem Panel + magisch
+ * geänderten Code. Padding/Margin werden im tut-04 per Handle gezeigt.
  *
  * Aufnahme:
  *   npx tsx tools/test.ts \
@@ -18,11 +25,15 @@ import type { DemoScript } from '../types'
 import { resetCanvas } from '../fragments/setup'
 
 const INITIAL_CODE =
-  'canvas mobile, bg #0f0f0f, col white, font sans\n' + '\n' + 'Frame w 240, h 160, bg #27272a'
+  'canvas mobile, bg #0f0f0f, col white, font sans\n' +
+  '\n' +
+  'Frame w 220, h 100, bg #27272a, hor, pad 12\n' +
+  '  Frame w 60, h 60, bg #2271C1\n' +
+  '  Frame w 60, h 60, bg #2271C1'
 
 export const demoScript: DemoScript = {
   name: 'Tutorial · Property-Panel',
-  description: 'Padding, Background und Radius über das Property-Panel ändern',
+  description: 'Width, Gap, Background und Radius über Property-Panel-Inputs',
   config: {
     speed: 'normal',
     showKeystrokeOverlay: false,
@@ -33,17 +44,11 @@ export const demoScript: DemoScript = {
       action: 'execute',
       code: `
         (async () => {
-          const deadline = Date.now() + 3000;
-          while (Date.now() < deadline) {
-            if (window.__dragTest && typeof window.__dragTest.hidePanel === 'function') break;
-            await new Promise(r => setTimeout(r, 50));
-          }
           const dt = window.__dragTest;
           if (!dt || typeof dt.hidePanel !== 'function') return;
           for (const name of ['prompt', 'files', 'components', 'design-system']) {
             try { dt.hidePanel(name); } catch (e) { /* ignore */ }
           }
-          // explizit Property-Panel zeigen
           if (typeof dt.showPanel === 'function') {
             try { dt.showPanel('property'); } catch (e) { /* ignore */ }
           }
@@ -52,42 +57,64 @@ export const demoScript: DemoScript = {
       `,
       comment: 'Nur Property-Panel + Code + Preview sichtbar',
     },
-    ...resetCanvas({ baseCode: INITIAL_CODE, comment: 'Frame 240×160' }),
+    ...resetCanvas({ baseCode: INITIAL_CODE, comment: 'Frame mit zwei Children' }),
     { action: 'wait', duration: 800 },
 
-    // Frame selektieren → Property-Panel zeigt Properties
+    // Outer Frame selektieren → Property-Panel zeigt seine Properties
     {
       action: 'selectInPreview',
-      selector: { byPath: 'Frame' },
-      comment: 'Frame anklicken',
+      selector: { byPath: 'Frame', nth: 0 },
+      comment: 'Äußeren Frame anklicken',
     },
     { action: 'wait', duration: 1000 },
 
-    // Property 1: Padding
+    // Property 1: width per data-prop="width"-Input
     {
       action: 'setProperty',
-      selector: { byPath: 'Frame' },
-      prop: 'padding',
-      value: '24',
-      comment: 'padding 24',
+      selector: { byPath: 'Frame', nth: 0 },
+      prop: 'width',
+      value: '320',
+      comment: 'width 320',
     },
     {
       action: 'expectCode',
-      comment: 'after padding',
+      comment: 'after width',
       code:
         'canvas mobile, bg #0f0f0f, col white, font sans\n' +
         '\n' +
-        'Frame w 240, h 160, bg #27272a, padding 24',
+        'Frame w 320, h 100, bg #27272a, hor, pad 12\n' +
+        '  Frame w 60, h 60, bg #2271C1\n' +
+        '  Frame w 60, h 60, bg #2271C1',
     },
     { action: 'wait', duration: 800 },
 
-    // Property 2: Background per Color-Picker
+    // Property 2: gap per data-prop="gap"-Input
+    {
+      action: 'setProperty',
+      selector: { byPath: 'Frame', nth: 0 },
+      prop: 'gap',
+      value: '20',
+      comment: 'gap 20',
+    },
+    {
+      action: 'expectCode',
+      comment: 'after gap',
+      code:
+        'canvas mobile, bg #0f0f0f, col white, font sans\n' +
+        '\n' +
+        'Frame w 320, h 100, bg #27272a, hor, pad 12, gap 20\n' +
+        '  Frame w 60, h 60, bg #2271C1\n' +
+        '  Frame w 60, h 60, bg #2271C1',
+    },
+    { action: 'wait', duration: 800 },
+
+    // Property 3: bg per Color-Picker
     {
       action: 'pickColor',
-      selector: { byPath: 'Frame' },
+      selector: { byPath: 'Frame', nth: 0 },
       prop: 'bg',
-      color: '#2271C1',
-      comment: 'bg → Mirror-Blau',
+      color: '#1a1a1a',
+      comment: 'bg → dunkler',
     },
     {
       action: 'expectCode',
@@ -95,14 +122,16 @@ export const demoScript: DemoScript = {
       code:
         'canvas mobile, bg #0f0f0f, col white, font sans\n' +
         '\n' +
-        'Frame w 240, h 160, bg #2271C1, padding 24',
+        'Frame w 320, h 100, bg #1a1a1a, hor, pad 12, gap 20\n' +
+        '  Frame w 60, h 60, bg #2271C1\n' +
+        '  Frame w 60, h 60, bg #2271C1',
     },
     { action: 'wait', duration: 800 },
 
-    // Property 3: Radius
+    // Property 4: radius per data-prop="radius"-Input
     {
       action: 'setProperty',
-      selector: { byPath: 'Frame' },
+      selector: { byPath: 'Frame', nth: 0 },
       prop: 'radius',
       value: '12',
       comment: 'radius 12',
@@ -113,7 +142,9 @@ export const demoScript: DemoScript = {
       code:
         'canvas mobile, bg #0f0f0f, col white, font sans\n' +
         '\n' +
-        'Frame w 240, h 160, bg #2271C1, padding 24, radius 12',
+        'Frame w 320, h 100, bg #1a1a1a, hor, pad 12, gap 20, radius 12\n' +
+        '  Frame w 60, h 60, bg #2271C1\n' +
+        '  Frame w 60, h 60, bg #2271C1',
     },
     { action: 'wait', duration: 1500 },
 
