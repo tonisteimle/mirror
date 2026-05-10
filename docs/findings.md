@@ -848,7 +848,8 @@ step-runner-selectors}.test.ts`
   `8e81387f` (Demo-Runner + Step-Runner-Subsystem). Tests sind ohne
   Module nutzlos. Komplett entfernt; Suite-Status grün
   (15420/15420 Tests, 585/585 Files).
-  **Status:** erledigt
+  **Status:** erledigt (5 in `05cce232` parallel-bundle, 1 in `e4f378ad`
+  parallel-bundle; Bookkeeping in `b099a445`)
 
 ### 2026-05-10 — `studio/agent/types.ts` dead-code gelöscht
 
