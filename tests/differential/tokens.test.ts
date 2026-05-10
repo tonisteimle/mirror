@@ -134,6 +134,34 @@ describe('Tokens — Unresolved $tokens drop in React style props', () => {
     expect(react).not.toContain("'$primary'")
     expect(react).not.toContain('color:')
   })
+
+  it('Framework: unresolved $tokens drop in style-shaped props (bg/col/boc/ic/...)', () => {
+    // Same shape as React: when `accent.boc` doesn't exist and `accent`
+    // alone has no value either, `boc $accent` had been emitting
+    // `M(..., { boc: '$accent' })` — round-trip-lossy garbage. Now
+    // dropped at the prop-bag boundary.
+    const src = `accent.bg: #c9a961\n\nFrame boc $accent, bor 1, w 100`
+    const fw = generateFramework(parse(src))
+    expect(fw).not.toContain("boc: '$accent'")
+  })
+
+  it('Framework: nested state-bag tokens also drop on miss', () => {
+    // Pre-2026-05-10 the state-styles bag carried `selected: { boc:
+    // '$accent', ... }` straight through. Now stripped to match DOM.
+    const src = `accent.bg: #c9a961\n\nBtn as Button: bg #333, exclusive()\n  selected:\n    boc $accent\n\nBtn "X", selected`
+    const fw = generateFramework(parse(src))
+    expect(fw).not.toContain("boc: '$accent'")
+  })
+
+  it('Framework: data bindings ($collection, $foo.bar) NOT dropped', () => {
+    // PIN: chart `data: '$data'`, M.each collection refs, and dotted
+    // text-content data references are runtime bindings the
+    // mirror-runtime resolves. The leak guard must NOT touch these.
+    const src = `data:\n  A: 1\n  B: 2\n\nLine $data, w 350, h 180`
+    const fw = generateFramework(parse(src))
+    // The chart's data binding must survive.
+    expect(fw).toMatch(/data:\s*['"]\$data['"]/)
+  })
 })
 
 // =============================================================================

@@ -416,6 +416,63 @@ class FrameworkGenerator {
       }
     }
 
+    // Token-leak guard. Some IR-paths (icon-color `ic $accent`, state-
+    // block `selected: { boc: $accent }`, `col $primary` when
+    // `primary.col` is undefined) pass an unresolved `$...` literal
+    // through to this Framework prop bag. The DOM backend silently
+    // drops the corresponding CSS rule; mirror that here by stripping
+    // *style-shaped* props whose value is a raw `$<id>` literal.
+    //
+    // Style-shaped means CSS color/size/border/etc. — the props that
+    // round-trip through `cssPropToMirrorProp`. Runtime-data bindings
+    // (chart `data: '$data'`, route, `visible-when`, named-instance,
+    // event handlers, M.each collection refs) intentionally carry
+    // `$ref` strings the mirror-runtime resolves at render time and
+    // must NOT be stripped.
+    const STYLE_PROPS_TO_GUARD = new Set([
+      'bg',
+      'col',
+      'boc',
+      'ic',
+      'iw',
+      'fs',
+      'gap',
+      'rad',
+      'pad',
+      'mar',
+      'w',
+      'h',
+      'minw',
+      'minh',
+      'maxw',
+      'maxh',
+      'opacity',
+      'shadow',
+    ])
+    const isUnresolvedToken = (v: unknown): v is string =>
+      typeof v === 'string' && /^\$[A-Za-z_][\w.-]*$/.test(v)
+    for (const k of Object.keys(props)) {
+      if (STYLE_PROPS_TO_GUARD.has(k) && isUnresolvedToken(props[k])) {
+        delete props[k]
+      }
+    }
+    if (props.states && typeof props.states === 'object') {
+      for (const stateName of Object.keys(props.states)) {
+        const stateProps = props.states[stateName] as Record<string, unknown>
+        if (stateProps && typeof stateProps === 'object') {
+          for (const k of Object.keys(stateProps)) {
+            if (STYLE_PROPS_TO_GUARD.has(k) && isUnresolvedToken(stateProps[k])) {
+              delete stateProps[k]
+            }
+          }
+          if (Object.keys(stateProps).length === 0) {
+            delete (props.states as Record<string, unknown>)[stateName]
+          }
+        }
+      }
+      if (Object.keys(props.states).length === 0) delete props.states
+    }
+
     return props
   }
 
