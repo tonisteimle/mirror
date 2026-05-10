@@ -16,6 +16,9 @@
 import { Transaction, type ChangeSet } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
 import { createFullColorPicker, type FullColorPickerConfig } from './full-picker'
+import { createLogger } from '../../../compiler/utils/logger'
+
+const log = createLogger('ColorPicker')
 
 /** Property → token suffix mapping for filtering. */
 const COLOR_PROPERTY_SUFFIXES: Record<string, string> = {
@@ -415,7 +418,7 @@ export function initColorPicker(deps: ColorPickerSetupDeps): ColorPickerHandle {
       const oldPos = insertPos
       insertPos = changes.mapPos(insertPos)
       if (oldPos !== insertPos) {
-        console.debug(`[ColorPicker] Insert pos tracked: ${oldPos} → ${insertPos}`)
+        log.debug(`Insert pos tracked: ${oldPos} → ${insertPos}`)
       }
     }
     if (replaceRange) {
@@ -426,8 +429,8 @@ export function initColorPicker(deps: ColorPickerSetupDeps): ColorPickerHandle {
         to: changes.mapPos(replaceRange.to),
       }
       if (oldFrom !== replaceRange.from || oldTo !== replaceRange.to) {
-        console.debug(
-          `[ColorPicker] Replace range tracked: [${oldFrom}, ${oldTo}] → [${replaceRange.from}, ${replaceRange.to}]`
+        log.debug(
+          `Replace range tracked: [${oldFrom}, ${oldTo}] → [${replaceRange.from}, ${replaceRange.to}]`
         )
       }
     }
@@ -435,7 +438,7 @@ export function initColorPicker(deps: ColorPickerSetupDeps): ColorPickerHandle {
       const oldPos = hashTriggerStartPos
       hashTriggerStartPos = changes.mapPos(hashTriggerStartPos)
       if (oldPos !== hashTriggerStartPos) {
-        console.debug(`[ColorPicker] Hash pos tracked: ${oldPos} → ${hashTriggerStartPos}`)
+        log.debug(`Hash pos tracked: ${oldPos} → ${hashTriggerStartPos}`)
       }
     }
   }
