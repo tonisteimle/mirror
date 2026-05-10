@@ -115,29 +115,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
-- **Wo:** `compiler/ir/ops/properties-ops.ts:transformProperties`
-  **Was:** Echter Runtime-Bug aus dem TODO-Bucket. `x-offset` und
-  `y-offset` werden vom Schema-Numeric-Handler je als
-  `{property: 'transform', value: 'translateX/Y(Npx)'}` emittiert.
-  `rotate`/`scale` gehen durch transformContext.transforms[] in
-  properties-ops.ts und werden zu `scale(...) rotate(...)` kombiniert.
-  Folge: `Frame x-offset 20, y-offset 15` produziert nur
-  `translateY(15px)` (last-wins overwrite); `Frame x-offset 20, scale 1.2,
-rotate 45` droppt translateX komplett (combined transform überschreibt
-  die Schema-Emit-Variante). Probe `tools/probes/transform-combine.ts`
-  reproduziert deterministisch.
-  **Status:** erledigt (`6c3ab636`) — x-offset/y-offset gehen jetzt
-  durch denselben transformContext wie rotate/scale: Pass 1 sammelt
-  translateX/Y-Strings, Pass 2 skippt damit der Schema-Numeric-Handler
-  nicht doppelt feuert. Combined transform am Ende joint alle vier zu
-  einem `transform: translateX(20px) translateY(15px) scale(1.2)
-  rotate(45deg)`. Pre-Refactor-Pin in
-  `tests/differential/properties.test.ts` (5 Tests „Properties —
-  Combined Transforms") parsed das DOM-Output und checkt dass nur EINE
-  `transform:`-Assignment per Element entsteht. Browser-Test mit
-  echtem combined Source + assert-x-and-y, TODO weg. 8191/8197
-  vitest grün.
-
 - **Wo:** `studio/test-api/mirror-actions/index.ts:dropChildIndexPoint`
   - Studios Drop-Target-Detection (`studio/preview/drag/...`)
     **Was:** Drop into a container tight-packed with children (3 children
@@ -939,6 +916,28 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — Multi-Transform-Composition: x-offset + y-offset komponieren mit rotate/scale
+
+- **Wo:** `compiler/ir/ops/properties-ops.ts:transformProperties`,
+  `tests/differential/properties.test.ts` (5 „Combined Transforms"-Pins),
+  `studio/test-api/suites/transforms/translate.test.ts`
+  **Was:** Echter Runtime-Bug aus dem TODO-Bucket. `x-offset` und
+  `y-offset` wurden vom Schema-Numeric-Handler je als
+  `{property: 'transform', value: 'translateX/Y(Npx)'}` emittiert.
+  `rotate`/`scale` gingen durch transformContext.transforms[] und
+  wurden zu `scale(...) rotate(...)` kombiniert. Folge: `Frame
+x-offset 20, y-offset 15` produzierte nur `translateY(15px)` (last-
+  wins overwrite); `Frame x-offset 20, scale 1.2, rotate 45` droppte
+  translateX komplett. Fix: x-offset/y-offset gehen jetzt durch
+  denselben transformContext — Pass 1 sammelt translateX/Y-Strings,
+  Pass 2 skippt damit der Schema-Numeric-Handler nicht doppelt feuert.
+  Combined transform am Ende joint alle vier zu einem `transform:
+translateX(20px) translateY(15px) scale(1.2) rotate(45deg)`.
+  Pre-Refactor-Pin (5 Tests) parsed DOM-Output und checkt EINE
+  `transform:`-Assignment pro Element. Browser-Test mit combined
+  Source + assert-x-and-y. 8191/8197 vitest grün.
+  **Status:** erledigt (`6c3ab636`)
 
 ### 2026-05-10 — `navigate() + show/hide` „Runtime bug" entlarvt als Skip-Marker
 
