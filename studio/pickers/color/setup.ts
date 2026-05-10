@@ -275,9 +275,7 @@ export function initColorPicker(deps: ColorPickerSetupDeps): ColorPickerHandle {
   // ===========================================================================
   function validatePosition(pos: number, docLength: number, ctx: string): number {
     if (pos < 0 || pos > docLength) {
-      console.warn(
-        `[ColorPicker] ${ctx}: Position ${pos} out of bounds [0, ${docLength}], clamping`
-      )
+      log.warn(`${ctx}: Position ${pos} out of bounds [0, ${docLength}], clamping`)
       return Math.max(0, Math.min(pos, docLength))
     }
     return pos
@@ -313,8 +311,8 @@ export function initColorPicker(deps: ColorPickerSetupDeps): ColorPickerHandle {
         // Verify `#` still exists at the expected position.
         const charAtFrom = editor.state.doc.sliceString(safeFrom, safeFrom + 1)
         if (charAtFrom !== '#') {
-          console.warn(
-            `[ColorPicker] Hash trigger: Expected # at position ${safeFrom}, found '${charAtFrom}'. Inserting at cursor instead.`
+          log.warn(
+            `Hash trigger: Expected # at position ${safeFrom}, found '${charAtFrom}'. Inserting at cursor instead.`
           )
           insertColorAt(editor, cursorPos, cursorPos, hex)
         } else {
@@ -327,8 +325,8 @@ export function initColorPicker(deps: ColorPickerSetupDeps): ColorPickerHandle {
         // Sanity check: a color value shouldn't span more than ~20 chars.
         const rangeSize = safeTo - safeFrom
         if (rangeSize > 20 || rangeSize < 0) {
-          console.warn(
-            `[ColorPicker] Replace mode: Invalid range size ${rangeSize} (${safeFrom}-${safeTo}). Using cursor position.`
+          log.warn(
+            `Replace mode: Invalid range size ${rangeSize} (${safeFrom}-${safeTo}). Using cursor position.`
           )
           safeFrom = cursorPos
           safeTo = cursorPos
@@ -339,8 +337,8 @@ export function initColorPicker(deps: ColorPickerSetupDeps): ColorPickerHandle {
         // Drift detection: position-tracking should keep insertPos near the cursor.
         const drift = Math.abs(safePos - cursorPos)
         if (drift > 100) {
-          console.warn(
-            `[ColorPicker] Insert mode: Position drifted ${drift} chars from cursor (${safePos} vs ${cursorPos}). Using cursor.`
+          log.warn(
+            `Insert mode: Position drifted ${drift} chars from cursor (${safePos} vs ${cursorPos}). Using cursor.`
           )
           safePos = cursorPos
         }
