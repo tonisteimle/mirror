@@ -115,6 +115,25 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
+- **Wo:** `compiler/backends/dom/event-emitter.ts:187-195` (`toggle`/`cycle`)
+  **Was:** `toggle(Menu)` (mit Element-Name-Argument) wird falsch
+  emittiert: aktuell `_runtime.stateMachineToggle(currentVar, ['Menu'])`
+  — also wird die State-Machine des Click-Targets (Button) zwischen
+  `default` und `'Menu'` toggled. User-Intent ist aber: Visibility des
+  Menu-Frames togglen. Test
+  `studio/test-api/suites/actions/visibility.test.ts:60` ist deshalb
+  `testWithSetupSkip`.
+  **Status:** aktiv (Claude-Session, 2026-05-10 ~19:25)
+  **Plan:**
+  1. Im `toggle`/`cycle`-Case: wenn `args.length === 1` und
+     `args[0]` PascalCase startet → emit
+     `_runtime.toggle(_elements['<Name>'])` (visibility-toggle).
+     Sonst alter Pfad (`stateMachineToggle(currentVar, [...])`).
+  2. Pre-Refactor-Pin: behavior-Test mit `toggle(Menu)` und expected
+     hidden→visible→hidden Verhalten.
+  3. `testWithSetupSkip` → `testWithSetup` in visibility.test.ts.
+  4. Compiler+behavior-Suite grün, commit.
+
 - **Wo:** `studio/test-api/mirror-actions/index.ts:dropChildIndexPoint`
   - Studios Drop-Target-Detection (`studio/preview/drag/...`)
     **Was:** Drop into a container tight-packed with children (3 children
