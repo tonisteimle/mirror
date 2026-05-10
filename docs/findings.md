@@ -517,6 +517,21 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-10 — Inline-Ternary in React-Text-Content
+
+- **Wo:** `compiler/backends/react.ts`, `tests/differential/conditionals.test.ts`
+  **Was:** `Text done ? "Ja" : "Nein"` droppte beide Branches im React-
+  Backend (Pin gepinnt). Jetzt: `getTextContent` gibt Conditional auch
+  zurück, `renderTextSlot` emittiert `{cond ? "Ja" : "Nein"}` mit
+  Token-Identifier-Rewrite (`done` → `tokens["done"]`). Rewriter
+  überspringt Identifier in String-Literals (state-machine, kein
+  Regex), sodass `"Items: $count"` heil bleibt. Nested-Ternaries
+  (`a ? "X" : b ? "Y" : "Z"`) bekommen Rewriter auf der Branch-
+  String-Ebene → Inner-Identifier werden ebenfalls rewritten.
+  **Status:** erledigt
+  **Notiz:** Pin von "React drops it" auf "alle 3 Backends keep both
+  branches" + nested-ternary-Regression-Pin umgestellt.
+
 ### 2026-05-10 — Top-Level `each` in React-Backend
 
 - **Wo:** `compiler/backends/react.ts`, `tests/differential/each.test.ts`

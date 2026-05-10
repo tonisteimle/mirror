@@ -17,6 +17,7 @@ import type {
   Each,
   LoopVarReference,
   DataAttribute,
+  Conditional,
 } from '../parser/ast'
 import { expandPropertySets } from '../ir/transformers/property-set-expander'
 import { isLayoutPrimitive } from '../schema/dsl'
@@ -472,7 +473,7 @@ function generateJSX(
 
   // Add text content
   if (textContent) {
-    lines.push(renderTextSlot(textContent, indent + '  '))
+    lines.push(renderTextSlot(textContent, indent + '  ', tokens))
   }
 
   // Add children. Slice 6 V-2: pass own layout-context so grid-children
@@ -802,7 +803,7 @@ function generateHtmlAttributes(properties: Property[]): string {
 function getTextContent(
   instance: Instance,
   properties: Property[]
-): string | LoopVarReference | null {
+): string | LoopVarReference | Conditional | null {
   // Check for content property
   for (const prop of properties) {
     if (prop.name === 'content' && prop.values.length > 0) {
@@ -814,6 +815,12 @@ function getTextContent(
       // expression form.
       if (typeof v === 'object' && v !== null && 'kind' in v && v.kind === 'loopVar') {
         return v as LoopVarReference
+      }
+      // Inline ternary in Text content (`Text done ? "Ja" : "Nein"`).
+      // Returned as-is so the renderer can emit a JSX `{cond ? a : b}`
+      // expression with token names rewritten to `tokens["…"]`.
+      if (typeof v === 'object' && v !== null && 'kind' in v && v.kind === 'conditional') {
+        return v as Conditional
       }
     }
   }
@@ -842,14 +849,97 @@ function dataAttributesToJSObject(attrs: DataAttribute[]): string {
 }
 
 /**
- * Render the textContent slot, handling both literal strings and
- * loop-variable references that surface inside `each` blocks.
+ * Render the textContent slot, handling literal strings, loop-variable
+ * references that surface inside `each` blocks, and inline ternaries.
  */
-function renderTextSlot(content: string | LoopVarReference, indent: string): string {
+function renderTextSlot(
+  content: string | LoopVarReference | Conditional,
+  indent: string,
+  tokens: TokenDefinition[] = []
+): string {
   if (typeof content === 'string') {
     return `${indent}{${JSON.stringify(content)}}`
   }
+  if ('kind' in content && content.kind === 'conditional') {
+    const cond = rewriteIdentifiersToTokens(content.condition, tokens)
+    // Branches may themselves be ternaries (`level == 1 ? "A" : level == 2 ? "B" : "C"`
+    // arrives flattened into the else string). Run the same identifier
+    // rewrite so nested conditions resolve through `tokens["…"]`.
+    const thenBranch = rewriteIdentifiersToTokens(ternaryBranchToJS(content.then), tokens)
+    const elseBranch = rewriteIdentifiersToTokens(ternaryBranchToJS(content.else), tokens)
+    return `${indent}{${cond} ? ${thenBranch} : ${elseBranch}}`
+  }
   return `${indent}{${content.name}}`
+}
+
+/**
+ * Rewrite a Mirror condition expression for use in React-emitted JS.
+ * In Mirror, bare identifiers (`done`, `count`) reference top-level data
+ * that lives on the `tokens` object in the React backend's emit. Replace
+ * any such identifier with `tokens["name"]` so the expression evaluates
+ * against the actual data at runtime. Operators, literals, comparisons
+ * stay untouched — Mirror condition syntax is JS-compatible.
+ */
+function rewriteIdentifiersToTokens(expr: string, tokens: TokenDefinition[]): string {
+  if (tokens.length === 0) return expr
+  const tokenNames = new Set<string>()
+  for (const t of tokens) {
+    const n = t.name.startsWith('$') ? t.name.slice(1) : t.name
+    tokenNames.add(n)
+  }
+  // Walk the string tracking whether we're inside a `"..."` / `'...'` /
+  // `` `...` `` literal — identifiers there are content, not references.
+  let out = ''
+  let i = 0
+  let inString: '"' | "'" | '`' | null = null
+  while (i < expr.length) {
+    const ch = expr[i]
+    if (inString) {
+      out += ch
+      if (ch === '\\' && i + 1 < expr.length) {
+        out += expr[i + 1]
+        i += 2
+        continue
+      }
+      if (ch === inString) inString = null
+      i++
+      continue
+    }
+    if (ch === '"' || ch === "'" || ch === '`') {
+      inString = ch as '"' | "'" | '`'
+      out += ch
+      i++
+      continue
+    }
+    // Identifier?
+    if (/[A-Za-z_$]/.test(ch)) {
+      let j = i
+      while (j < expr.length && /[A-Za-z0-9_$]/.test(expr[j])) j++
+      const ident = expr.slice(i, j)
+      const isMember = i > 0 && expr[i - 1] === '.'
+      const isKeyword =
+        ident === 'true' || ident === 'false' || ident === 'null' || ident === 'undefined'
+      if (!isMember && !isKeyword && tokenNames.has(ident)) {
+        out += `tokens[${JSON.stringify(ident)}]`
+      } else {
+        out += ident
+      }
+      i = j
+      continue
+    }
+    out += ch
+    i++
+  }
+  return out
+}
+
+/**
+ * Ternary branches arrive as already-quoted source strings (`"Ja"`) or
+ * numbers. JS-emit them straight through — quoted literals are valid JS,
+ * numbers stringify cleanly.
+ */
+function ternaryBranchToJS(value: string | number): string {
+  return typeof value === 'number' ? String(value) : value
 }
 
 function generateStyles(

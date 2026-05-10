@@ -39,14 +39,30 @@ describe('Conditionals — All 3 backends compile static corpus', () => {
 })
 
 describe('Conditionals — Inline ternary: per-backend behavior', () => {
-  // PIN current behavior: DOM resolves and emits the truthy branch text;
-  // Framework keeps both branch values somewhere in its output (passes them
-  // through as data); React drops both branches from its emit.
-  it('DOM resolves "Ja" (truthy); Framework keeps it; React drops it', () => {
+  // PIN current behavior: all three backends now expose both branches in
+  // their output. DOM resolves the truthy branch via runtime `$get`,
+  // Framework passes through the `__conditional:` IR-marker, React emits a
+  // JSX `{cond ? "Ja" : "Nein"}` expression with token references rewritten
+  // to `tokens["…"]`. CI fails if any backend regresses to dropping a branch.
+  it('all three backends keep both branches in their emit', () => {
     const src = `done: true\n\nText done ? "Ja" : "Nein"`
-    expect(generateDOM(parse(src))).toContain('Ja')
-    expect(generateFramework(parse(src))).toContain('Ja')
-    expect(generateReact(parse(src))).not.toContain('Ja')
+    const dom = generateDOM(parse(src))
+    const fw = generateFramework(parse(src))
+    const react = generateReact(parse(src))
+    expect(dom).toContain('Ja')
+    expect(fw).toContain('Ja')
+    expect(react).toContain('Ja')
+    expect(react).toContain('Nein')
+    expect(react).toMatch(/tokens\[['"]done['"]\]\s*\?\s*"Ja"\s*:\s*"Nein"/)
+  })
+
+  it('React rewrites nested ternary identifiers to tokens["…"] lookups', () => {
+    const src = `level: 2\n\nText level == 1 ? "A" : level == 2 ? "B" : "C"`
+    const react = generateReact(parse(src))
+    // Outer + inner condition both rewritten — inner branch `level == 2` is
+    // emitted as a flattened source string but still gets the rewriter.
+    expect(react).toMatch(/tokens\[['"]level['"]\]\s*==\s*1/)
+    expect(react).toMatch(/tokens\[['"]level['"]\]\s*==\s*2/)
   })
 })
 
