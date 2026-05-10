@@ -1,33 +1,20 @@
 /**
  * Preview CDP — Palette drop: Frame into empty canvas.
  *
- * SKIPPED — Suite-Test-Setup-Bug (nicht Test-Bug).
- *
- * Wenn das Suite-Test-Setup `__compileTestCode('')` ruft (was den
- * editor leert UND `testModeActive = true` setzt), blockt Studios
- * Drag-Pipeline alle Drops in einen leeren Canvas. Das `drag:dropped`
- * Event in `studio/init/init-notifications.ts` checked `if (!target)
- * return` BEVOR es zum Empty-Canvas-Fallback kommt — und im Suite-Test
- * mit empty editor ist `target` null.
- *
- * Atomic test 6 (`tools/atomic-input-tests.ts` test 6) führt EXAKT
- * dieselbe CDP-Maus-Sequenz aus und produziert einen `Frame` im
- * Editor — weil dort der Code via `editor.dispatch({changes: ...})`
- * gesetzt wird, OHNE `__compileTestCode` und damit OHNE testMode.
- *
- * Fix benötigt: entweder `__compileTestCode` so anpassen dass die
- * Empty-Canvas-Drop-Pipeline arbeitet, oder einen Test-Mode-Override
- * im `drag:dropped`-Handler. Bis dahin: dieser Spezialfall via
- * atomic-input-tests #6 abgedeckt, hier skipped.
- *
- * Maus-Sequenz (sobald entskipped):
+ * Maus-Sequenz:
  *   1. CDP mouse-drag von Palette-Item "Frame" zur Mitte des leeren
  *      Previews (Trusted-Events lösen Studios HTML5-Drag aus).
  *
- * Verifiziert (sobald entskipped):
+ * Verifiziert:
  *   - Editor-Code beginnt mit "Frame".
  *   - Preview rendert genau ein `[data-mirror-id]`-Element.
  *   - Selektion landet automatisch auf dem neuen Knoten.
+ *
+ * Vorgeschichte: Test war vorübergehend skipped wegen testMode-aware
+ * `if (!target) return`-Gate vor dem Empty-Canvas-Fallback in
+ * `init-notifications.ts`. Fix in `d3115504` hat den Null-Gate unter
+ * den Fallback verschoben — Test ist seither aktive Regression-
+ * Abdeckung.
  */
 
 import { testWithSetup, describe } from '../../../test-runner'
