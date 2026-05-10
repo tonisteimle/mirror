@@ -2,16 +2,14 @@
 
 **Status:** aktiv. Verlinkt aus `docs/findings.md`.
 
-**Stand 2026-05-10:** Slice 1 (Layout & Component, `a9f52c64`),
-Slice 2 (Events, `fe11e256`), Slice 5 (Chart, `eb046dfa`),
-Slice 6 (Text, `8dd62a42`), Slice 4 (Icon, `262c1e48`),
-Slice 3 (Attributes, `d7a3f4c2`) und Slice 8 (Style) abgehakt.
-react.ts: 3273 → 932 LOC (71% Reduktion), sieben Module unter
+**Stand 2026-05-10:** Lane abgeschlossen — alle 8 Slices done.
+react.ts: 3273 → 343 LOC (89% Reduktion). Acht Module unter
 `compiler/backends/react/ops/` (layout.ts 239, events.ts 149,
 chart.ts 175, text.ts 490, icon.ts 251, attributes.ts 181,
-style.ts 1068). Differential-Tests 384/384 grün, full vitest
-15441/15441. Nur Slice 7 (JSX, ~470 LOC) bleibt — generateJSX +
-generateEachJSX + generateConditionalJSX + wrapWithVisibility.
+style.ts 1064, jsx.ts 624). react.ts ist jetzt ein dünner
+Orchestrator (Type-Definitionen, Token-Emit, Component-Map-Aufbau,
+Pre-Scan-Flags für hasIcon/hasChart/hasAnimation, Root-Item-Loop).
+Differential-Tests 384/384 grün, full vitest 15441/15441.
 
 ## Ausgangslage
 

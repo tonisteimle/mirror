@@ -115,26 +115,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
-- **Wo:** `compiler/backends/react.ts` (Stand: 932 LOC, ↓ von 3273 = 71%)
-  — Decomposition in `compiler/backends/react/ops/*.ts`
-  **Was:** Lane-Doc in `docs/refactoring/react-backend-decomp.md`
-  mit 8-Slice-Plan (Layout/Events/Attributes/Icon/Chart/Text/JSX/
-  Style). DOM-Backend ist Vorbild mit 767 LOC + `dom/ops/`-Subdir.
-  - ✅ Slice 1 — Layout & Component (`a9f52c64`, –189 LOC)
-  - ✅ Slice 2 — Events (`fe11e256`, –137 LOC)
-  - ✅ Slice 5 — Chart (`eb046dfa`, –155 LOC)
-  - ✅ Slice 6 — Text (`8dd62a42`, –449 LOC)
-  - ✅ Slice 4 — Icon (`262c1e48`, –237 LOC)
-  - ✅ Slice 3 — Attributes (`d7a3f4c2`, –146 LOC)
-  - ✅ Slice 8 — Style (–1028 LOC, größter Brocken)
-  - ⏳ Slice 7 — JSX (~470 LOC) — generateJSX/generateEachJSX/
-    generateConditionalJSX/wrapWithVisibility, optional letzte Slice
-    **Status:** aktiv (Claude, Slices 1+2+3+4+5+6+8 done = 7/8).
-    Differential-Tests fangen Drift; jeder Slice ein Commit,
-    byte-identische React-Output-Garantie.
-    **Notiz:** Framework-Backend-Decomp (1057 LOC, gleiche Klasse
-    von Monolithik) ist deferred bis nach React-Validierung.
-
 - **Wo:** `studio/demo/` (735 LOC) — DOM-Overlay-Demo-API (DemoCursor +
   KeystrokeOverlay)
   **Was:** Browser-Side-Implementation für Demo-Modus mit visuellem
@@ -908,6 +888,29 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-10 — React-Backend-Decomp Lane abgeschlossen (3273 → 343 LOC, 89% Reduktion)
+
+- **Wo:** `compiler/backends/react.ts` → 8 Module unter `compiler/backends/react/ops/`
+  **Was:** 8-Slice-Decomp per `docs/refactoring/react-backend-decomp.md`
+  fertig. react.ts ist jetzt ein dünner Orchestrator (Type-Definitionen,
+  Token-Emit, Component-Map-Aufbau, Pre-Scan-Flags für hasIcon/hasChart/
+  hasAnimation, Root-Item-Loop). Acht Module unter react/ops/
+  (layout.ts 239, events.ts 149, chart.ts 175, text.ts 490, icon.ts 251,
+  attributes.ts 181, style.ts 1064, jsx.ts 624). Differential-Tests
+  384/384 grün, full vitest 15441/15441. Slice-Commits:
+  - Slice 1 — Layout & Component (`a9f52c64`, –189 LOC)
+  - Slice 2 — Events (`fe11e256`, –137 LOC)
+  - Slice 5 — Chart (`eb046dfa`, –155 LOC)
+  - Slice 6 — Text (`8dd62a42`, –449 LOC)
+  - Slice 4 — Icon (`262c1e48`, –237 LOC)
+  - Slice 3 — Attributes (`d7a3f4c2`, –146 LOC)
+  - Slice 8 — Style (`7f7c22d0`, –1028 LOC, größter Brocken)
+  - Slice 7 — JSX (letzter Slice, –589 LOC)
+    **Status:** erledigt
+    **Notiz:** Framework-Backend-Decomp (1057 LOC, gleiche Klasse von
+    Monolithik) ist deferred — Pattern ist jetzt erprobt, kann angewandt
+    werden wenn Bedarf entsteht.
 
 ### 2026-05-10 — 29 orphan tests/fixtures/\*.html manual-test Pages gelöscht (8096 LOC)
 
