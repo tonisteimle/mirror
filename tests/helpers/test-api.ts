@@ -7,7 +7,7 @@
  */
 
 import { compile } from '../../compiler'
-import type { MirrorTestAPI, StateMachineInfo } from '../../compiler/runtime/test-api'
+import type { MirrorTestAPI, StateMachineInfo } from '../../compiler/runtime/test-api/index'
 
 // Re-export types for convenience
 export type { MirrorTestAPI, StateMachineInfo }
@@ -145,7 +145,9 @@ export function expectVisible(
   }
   const isVisible = api.isVisible(element as any)
   if (isVisible !== visible) {
-    throw new Error(`Expected element to be ${visible ? 'visible' : 'hidden'} but it was ${isVisible ? 'visible' : 'hidden'}`)
+    throw new Error(
+      `Expected element to be ${visible ? 'visible' : 'hidden'} but it was ${isVisible ? 'visible' : 'hidden'}`
+    )
   }
 }
 
@@ -232,7 +234,7 @@ export function waitFor(
   timeout: number = 1000,
   interval: number = 16
 ): Promise<boolean> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     if (condition()) {
       resolve(true)
       return

@@ -10,7 +10,7 @@ import {
   createTestAPI,
   type MirrorTestAPI,
   type StateMachineInfo,
-} from '../../compiler/runtime/test-api'
+} from '../../compiler/runtime/test-api/index'
 
 // Mock runtime functions for unit testing
 const mockRuntime = {
