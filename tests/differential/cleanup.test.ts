@@ -44,32 +44,28 @@ describe('Cleanup — Animations across backends', () => {
     expect(out).toMatch(new RegExp(name.replace('-', '[-_]?'), 'i'))
   })
 
-  // PIN: DOM and React both wire animations through the shared
-  // `compiler/backends/animations.ts` constants — DOM emits the keyframes
-  // into its stylesheet plus an `animation:` rule on the matching element;
-  // React emits a `<style>` block carrying the same keyframes plus
-  // `style={{ animation: 'mirror-…' }}` inline. Framework still drops
-  // the trigger silently (M(...) descriptor has no animation hook yet).
-  it.each(ANIMATIONS)(
-    'anim %s: DOM and React wire keyframes; Framework drops the trigger',
-    (_name, src) => {
-      const dom = generateDOM(parse(src))
-      const react = generateReact(parse(src))
-      const fw = generateFramework(parse(src))
+  // PIN: animations land in all three backends now.
+  //   DOM:       emits keyframes into stylesheet + `animation:` on element.
+  //   React:     emits a `<style>` block + inline `style={{ animation: … }}`.
+  //   Framework: emits the `anim` keyword as an M-prop; mirror-runtime
+  //              resolves to the same keyframe set at render time.
+  // CI fails if any backend regresses to dropping the trigger.
+  it.each(ANIMATIONS)('anim %s wires through all 3 backends', (name, src) => {
+    const dom = generateDOM(parse(src))
+    const react = generateReact(parse(src))
+    const fw = generateFramework(parse(src))
 
-      expect(dom).toMatch(/@keyframes mirror-/)
-      expect(dom).toMatch(/animation['":\s]+['"]mirror-/)
+    expect(dom).toMatch(/@keyframes mirror-/)
+    expect(dom).toMatch(/animation['":\s]+['"]mirror-/)
 
-      expect(react).toMatch(/@keyframes mirror-/)
-      // Quote style depends on emit path: inline style uses single
-      // quotes (`style={{ animation: 'mirror-…' }}`), Icon path uses
-      // JSON.stringify-derived double quotes. Match either.
-      expect(react).toMatch(/animation:\s*['"]mirror-/)
+    expect(react).toMatch(/@keyframes mirror-/)
+    // Quote style depends on emit path: inline style uses single
+    // quotes (`style={{ animation: 'mirror-…' }}`), Icon path uses
+    // JSON.stringify-derived double quotes. Match either.
+    expect(react).toMatch(/animation:\s*['"]mirror-/)
 
-      expect(fw).not.toMatch(/@keyframes/)
-      expect(fw).not.toMatch(/animation:/)
-    }
-  )
+    expect(fw).toMatch(new RegExp(`anim:\\s*['"]${name}['"]`))
+  })
 
   it('React skips the keyframes `<style>` block when no anim is used', () => {
     // Bunde-size guard: simple programs without `anim` must NOT carry

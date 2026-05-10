@@ -15,6 +15,16 @@ import { toIR } from '../ir'
 import { isLayoutPrimitive } from '../schema/dsl'
 import { flexToNineZone, flexToSingleAxisCenter } from '../schema/layout-defaults'
 import type { IR, IRNode, IRStyle, IREvent, IRAction, IREach, IRConditional } from '../ir/types'
+import { ANIMATION_SHORTHAND } from './animations'
+
+/**
+ * Reverse `mirror-X 0.3s ease forwards` strings back to the `anim X`
+ * keyword. Pre-built from the shared shorthand map so any future
+ * keyword stays in sync automatically.
+ */
+const ANIMATION_REVERSE: Record<string, string> = Object.fromEntries(
+  Object.entries(ANIMATION_SHORTHAND).map(([keyword, css]) => [css, keyword])
+)
 
 const TAG_TO_TYPE: Record<string, string> = {
   div: 'Box',
@@ -664,6 +674,19 @@ class FrameworkGenerator {
 
     // Flex grow (often combined with width: 100%)
     if (prop === 'flex-grow') return null // Implicit with w full
+
+    // Animations: reverse `mirror-spin 1s linear infinite` → `anim spin`.
+    // The IR property-transformer expanded `anim X` to a full CSS shorthand
+    // via the shared `ANIMATION_SHORTHAND` map; we reverse-look-up so the
+    // M(...) descriptor carries the original keyword (the runtime applies
+    // its own `@keyframes mirror-X` rule). Unknown strings pass through —
+    // authors can supply a custom `animation: …` value and have it
+    // round-trip verbatim.
+    if (prop === 'animation') {
+      const keyword = ANIMATION_REVERSE[value]
+      if (keyword) return { name: 'anim', value: keyword }
+      return { name: 'anim', value }
+    }
 
     return null
   }
