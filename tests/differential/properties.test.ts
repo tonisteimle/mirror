@@ -290,6 +290,32 @@ describe('Properties — DOM emits expected style values', () => {
     expect(fw).toContain("'ver-baseline': true")
   })
 
+  it('React: inline markdown in Text content converts to <strong>/<em>', () => {
+    // PIN: pre-2026-05-10 `Text "Hello **bold** world"` rendered as
+    // raw `Hello **bold** world` text in React. DOM ran every text
+    // through `formatInlineMarkdown` at runtime; React has no runtime
+    // so we statically transform `**...**` and `*...*` and ``...``
+    // into real JSX elements.
+    const r1 = generateReact(parse(`Text "Hello **bold** world"`))
+    expect(r1).toContain('<strong>{"bold"}</strong>')
+    expect(r1).not.toContain('"Hello **bold** world"')
+
+    const r2 = generateReact(parse(`Text "*emphasis* matters"`))
+    expect(r2).toContain('<em>{"emphasis"}</em>')
+
+    const r3 = generateReact(parse(`Text "use \`code\` inline"`))
+    expect(r3).toContain('<code>{"code"}</code>')
+  })
+
+  it('React: text without markdown markers stays as plain string', () => {
+    // No regression — markdown short-circuit only fires when markers
+    // are present and there are no `$`-interpolations.
+    const r = generateReact(parse(`Text "Plain text here"`))
+    expect(r).toContain('{"Plain text here"}')
+    expect(r).not.toContain('<strong>')
+    expect(r).not.toContain('<em>')
+  })
+
   it('Framework round-trips `align bottom` (single-axis flex-end in row)', () => {
     // PIN: pre-2026-05-10 `align bottom`/`align right` collapsed to
     // single-axis flex-end with no Mirror-keyword reverse. Now mapped

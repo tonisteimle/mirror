@@ -1920,6 +1920,17 @@ function interpolateStringForJSX(
   tokens: TokenDefinition[],
   loopVars: ReadonlySet<string> | undefined = undefined
 ): string {
+  // Inline-markdown short-circuit. The DOM backend runs every text
+  // through `formatInlineMarkdown` at render time which converts
+  // `**bold**` → `<strong>` and `*italic*` → `<em>`. React doesn't
+  // have that runtime, so we statically transform here when the
+  // content has markdown markers AND no `$`-interpolations (mixed
+  // markdown+token-interpolation is rare and falls through to the
+  // template-literal path with raw markup; can be re-tackled if it
+  // shows up in real examples).
+  if (!content.includes('$') && /\*\*[^*\n]+\*\*|\*[^*\n]+\*|`[^`\n]+`/.test(content)) {
+    return inlineMarkdownToJSX(content)
+  }
   if ((tokens.length === 0 && !loopVars) || !content.includes('$')) {
     return `{${JSON.stringify(content)}}`
   }
@@ -2015,6 +2026,78 @@ function interpolateStringForJSX(
     }
   }
   return '{`' + parts.join('') + '`}'
+}
+
+/**
+ * Convert Mirror's inline-markdown subset (`**bold**`, `*italic*`,
+ * `` `code` ``) into a JSX fragment with `<strong>` / `<em>` / `<code>`
+ * elements. Mirrors the DOM runtime's `formatInlineMarkdown` semantics
+ * — DOM uses innerHTML; React needs real elements so user content is
+ * never injected as raw HTML.
+ *
+ * Returns a single-line JSX expression suitable for placement inside a
+ * `<span>` (or any text-content slot). Multiple segments are wrapped
+ * in a Fragment.
+ */
+function inlineMarkdownToJSX(content: string): string {
+  type Seg = { kind: 'text' | 'strong' | 'em' | 'code'; value: string }
+  const segs: Seg[] = []
+  let i = 0
+  let buf = ''
+  const flushText = () => {
+    if (buf.length > 0) {
+      segs.push({ kind: 'text', value: buf })
+      buf = ''
+    }
+  }
+  while (i < content.length) {
+    // `**bold**` — must check before single `*` so the longer match wins.
+    if (content[i] === '*' && content[i + 1] === '*') {
+      const close = content.indexOf('**', i + 2)
+      if (close > i + 2) {
+        flushText()
+        segs.push({ kind: 'strong', value: content.slice(i + 2, close) })
+        i = close + 2
+        continue
+      }
+    }
+    // `*italic*` — single-asterisk run.
+    if (content[i] === '*') {
+      const close = content.indexOf('*', i + 1)
+      // Reject empty runs and anything that looks like a `**...**` start.
+      if (close > i + 1 && content[close + 1] !== '*' && content[i + 1] !== '*') {
+        flushText()
+        segs.push({ kind: 'em', value: content.slice(i + 1, close) })
+        i = close + 1
+        continue
+      }
+    }
+    // Inline `code` with backticks.
+    if (content[i] === '`') {
+      const close = content.indexOf('`', i + 1)
+      if (close > i + 1) {
+        flushText()
+        segs.push({ kind: 'code', value: content.slice(i + 1, close) })
+        i = close + 1
+        continue
+      }
+    }
+    buf += content[i]
+    i++
+  }
+  flushText()
+  if (segs.length === 0) return `{${JSON.stringify(content)}}`
+  if (segs.length === 1 && segs[0].kind === 'text') {
+    return `{${JSON.stringify(segs[0].value)}}`
+  }
+  const parts = segs.map(s => {
+    if (s.kind === 'text') return `{${JSON.stringify(s.value)}}`
+    const tag = s.kind === 'strong' ? 'strong' : s.kind === 'em' ? 'em' : 'code'
+    return `<${tag}>{${JSON.stringify(s.value)}}</${tag}>`
+  })
+  // Wrap in `<>...</>` so the caller's `{...}` slot gets a single
+  // expression that React can render as multiple children.
+  return `<>${parts.join('')}</>`
 }
 
 /**
