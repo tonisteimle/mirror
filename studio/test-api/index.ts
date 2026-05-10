@@ -57,6 +57,7 @@ import {
   type VerifyResult,
 } from './dom-bridge'
 import { createFixturesAPI, type Fixture, type FixturesAPI } from './fixtures'
+import { installCdpInputClient, isCdpInputAvailable, cdpInput } from './cdp-input-client'
 import { createStudioAPI } from './studio-api'
 import { createSnappingAPI, setupSnappingAPI, type SnappingAPI } from './snapping-api'
 import {
@@ -281,9 +282,26 @@ export function getStudioTestAPI(): StudioTestAPI {
 export function initStudioTestAPI(_studio?: unknown, _editor?: unknown): void {
   const api = getStudioTestAPI()
 
+  // Install the CDP-input client unconditionally — it just sets up
+  // window.__cdpInputResponse so the Node-side bridge can resolve
+  // promises. The binding `__cdpInputCall` is added by the bridge only
+  // when running under the CDP test runner; isCdpInputAvailable() gates
+  // actual usage.
+  try {
+    installCdpInputClient()
+    log.info(
+      `CDP input client installed (bridge ${
+        isCdpInputAvailable() ? 'available' : 'not available — synthetic fallback'
+      })`
+    )
+  } catch (e) {
+    log.warn('Failed to install CDP input client:', e)
+  }
+
   // Register on window for Playwright access
   if (typeof window !== 'undefined') {
     ;(window as Window & { __STUDIO_TEST__?: StudioTestAPI }).__STUDIO_TEST__ = api
+    ;(window as unknown as { __cdpInput?: typeof cdpInput }).__cdpInput = cdpInput
   }
 
   // Initialize drag test API (available at window.__testDragDrop)

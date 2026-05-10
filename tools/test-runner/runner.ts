@@ -18,6 +18,7 @@ import { connectCDP, getPageTarget } from './cdp'
 import { ConsoleCollector } from './console-collector'
 import { ScreenshotCapture } from './screenshot'
 import { FileExplorer } from './file-explorer'
+import { installCdpInputBridge } from './cdp-input-bridge'
 import { parseProgressMessage, type ProgressUpdate } from './reporters/progress'
 
 // =============================================================================
@@ -432,6 +433,10 @@ export class TestRunner {
     await this.cdp.send('Runtime.enable')
     await this.cdp.send('Page.enable')
     await this.cdp.send('Console.enable')
+    // Install the CDP Input bridge so trusted-event tests can call
+    // window.__cdpInputCall(...) once the page loads. Must run after
+    // Runtime.enable (binding events flow through the Runtime domain).
+    await installCdpInputBridge(this.cdp)
   }
 
   private async waitForPageLoad(): Promise<void> {
