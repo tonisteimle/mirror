@@ -200,6 +200,16 @@ export function getCanonicalPropertyName(nameOrAlias: string): string {
   return _canonicalNameByAlias.get(nameOrAlias) ?? nameOrAlias
 }
 
+/**
+ * Match `name` (alias or canonical) against a canonical property name.
+ * Replaces hardcoded `name === 'X' || name === 'Y' || name === 'Z'` chains
+ * in IR-Ops and Backends so adding a new alias to the schema is the only
+ * required change — consumers stay schema-driven.
+ */
+export function matchesCanonical(name: string, canonical: string): boolean {
+  return getCanonicalPropertyName(name) === canonical
+}
+
 // ============================================================================
 // KEYBOARD KEYS - from DSL.keys
 // ============================================================================

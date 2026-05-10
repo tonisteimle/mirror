@@ -19,6 +19,7 @@ import {
 import { formatCSSValue } from '../transformers/style-utils-transformer'
 import * as PropertyTransformer from '../transformers/property-transformer'
 import { resolveValue } from '../transformers/value-resolver'
+import { matchesCanonical } from '../../schema/parser-helpers'
 import * as Validation from '../transformers/validation'
 import * as PropertySetExpander from '../transformers/property-set-expander'
 import type { IRTransformer } from '../index'
@@ -126,20 +127,16 @@ export function transformProperties(
 
   // Check for explicit min/max width/height properties
   // These should NOT be overwritten by automatic min-width: 0 from w full
-  const hasExplicitMinWidth = expandedProperties.some(
-    p => p.name === 'minw' || p.name === 'min-width'
-  )
-  const hasExplicitMinHeight = expandedProperties.some(
-    p => p.name === 'minh' || p.name === 'min-height'
-  )
+  const hasExplicitMinWidth = expandedProperties.some(p => matchesCanonical(p.name, 'min-width'))
+  const hasExplicitMinHeight = expandedProperties.some(p => matchesCanonical(p.name, 'min-height'))
 
   // Check for explicit width/height properties (for hug-by-default behavior)
   // When no width is set, containers should hug their content (fit-content)
   const hasExplicitWidth = expandedProperties.some(
-    p => p.name === 'w' || p.name === 'width' || p.name === 'size'
+    p => matchesCanonical(p.name, 'width') || matchesCanonical(p.name, 'size')
   )
   const hasExplicitHeight = expandedProperties.some(
-    p => p.name === 'h' || p.name === 'height' || p.name === 'size'
+    p => matchesCanonical(p.name, 'height') || matchesCanonical(p.name, 'size')
   )
   layoutContext.hasExplicitWidth = hasExplicitWidth
   layoutContext.hasExplicitHeight = hasExplicitHeight
@@ -161,11 +158,11 @@ export function transformProperties(
       (prop.values.length === 1 && prop.values[0] === true) || prop.values.length === 0
 
     // Direction properties - collect for order-aware processing
-    if ((name === 'horizontal' || name === 'hor') && isBoolean) {
+    if (matchesCanonical(name, 'horizontal') && isBoolean) {
       layoutValues.push(name)
       continue
     }
-    if ((name === 'vertical' || name === 'ver') && isBoolean) {
+    if (matchesCanonical(name, 'vertical') && isBoolean) {
       layoutValues.push(name)
       continue
     }
@@ -194,7 +191,7 @@ export function transformProperties(
     }
 
     // Gap
-    if ((name === 'gap' || name === 'g') && !isBoolean) {
+    if (matchesCanonical(name, 'gap') && !isBoolean) {
       layoutContext.gap = formatCSSValue(name, resolveValue(prop.values, this.tokenSet, name))
       continue
     }
@@ -225,31 +222,31 @@ export function transformProperties(
     }
 
     // Gap-x (column-gap)
-    if ((name === 'gap-x' || name === 'gx') && !isBoolean) {
+    if (matchesCanonical(name, 'gap-x') && !isBoolean) {
       layoutContext.columnGap = formatCSSValue(name, resolveValue(prop.values, this.tokenSet, name))
       continue
     }
 
     // Gap-y (row-gap)
-    if ((name === 'gap-y' || name === 'gy') && !isBoolean) {
+    if (matchesCanonical(name, 'gap-y') && !isBoolean) {
       layoutContext.rowGap = formatCSSValue(name, resolveValue(prop.values, this.tokenSet, name))
       continue
     }
 
     // Row-height (grid-auto-rows) - only handle in grid context
     // Otherwise let it fall through to schema-based handling
-    if ((name === 'row-height' || name === 'rh') && !isBoolean && layoutContext.isGrid) {
+    if (matchesCanonical(name, 'row-height') && !isBoolean && layoutContext.isGrid) {
       layoutContext.rowHeight = formatCSSValue(name, resolveValue(prop.values, this.tokenSet, name))
       continue
     }
 
     // Collect transform properties (rotate, scale, translate)
-    if (name === 'rotate' || name === 'rot') {
+    if (matchesCanonical(name, 'rotate')) {
       const deg = String(prop.values[0])
       transformContext.transforms.push(`rotate(${deg}deg)`)
       continue
     }
-    if (name === 'scale') {
+    if (matchesCanonical(name, 'scale')) {
       const val = String(prop.values[0])
       transformContext.transforms.push(`scale(${val})`)
       continue
@@ -275,11 +272,11 @@ export function transformProperties(
     if (ALIGNMENT_PROPERTIES.has(name) && isBoolean) continue
     if (name === 'align' && !isBoolean) continue // align top left → flex alignment
     if (name === 'wrap' && isBoolean) continue
-    if ((name === 'gap' || name === 'g') && !isBoolean) continue
+    if (matchesCanonical(name, 'gap') && !isBoolean) continue
     if (name === 'grid') continue
     if (name === 'dense' && isBoolean) continue
-    if ((name === 'gap-x' || name === 'gx') && !isBoolean) continue
-    if ((name === 'gap-y' || name === 'gy') && !isBoolean) continue
+    if (matchesCanonical(name, 'gap-x') && !isBoolean) continue
+    if (matchesCanonical(name, 'gap-y') && !isBoolean) continue
     // Row tracks: in a grid context, the first pass captured `row-height`
     // / `rh` / `rows` and `generateLayoutStyles` already emitted the
     // appropriate `grid-auto-rows` or `grid-template-rows`. Letting the
@@ -287,13 +284,13 @@ export function transformProperties(
     // contradict it by re-adding `grid-auto-rows`). Outside grid context
     // the schema still handles `row-height` for the rare hand-rolled
     // case, hence the gated check on `isGrid`.
-    if ((name === 'row-height' || name === 'rh') && !isBoolean && layoutContext.isGrid) {
+    if (matchesCanonical(name, 'row-height') && !isBoolean && layoutContext.isGrid) {
       continue
     }
 
     // Skip transform properties (already handled in first pass)
-    if (name === 'rotate' || name === 'rot') continue
-    if (name === 'scale') continue
+    if (matchesCanonical(name, 'rotate')) continue
+    if (matchesCanonical(name, 'scale')) continue
 
     const cssStyles = this.propertyToCSS(prop, primitive, transformContext, parentLayoutContext)
     styles.push(...cssStyles)
