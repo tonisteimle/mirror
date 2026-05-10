@@ -49,9 +49,7 @@ class UserSettingsService {
         log.info('No settings found, using defaults')
       }
       this.loaded = true
-      events.emit('userSettings:loaded', {
-        settings: this.settings as unknown as Record<string, unknown>,
-      })
+      events.emit('userSettings:loaded', { settings: this.settings })
     } catch (error) {
       log.warn('Failed to load:', error)
       this.settings = { ...DEFAULT_SETTINGS }

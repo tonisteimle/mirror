@@ -8,6 +8,7 @@ import type { AST } from '../../compiler/parser/ast'
 import type { IR } from '../../compiler/ir/types'
 import type { SourceMap } from '../../compiler/ir/source-map'
 import type { ComponentDragData, ComponentChild } from '../panels/components/types'
+import type { UserSettings } from '../storage/user-settings'
 import { createLogger } from '../../compiler/utils/logger'
 
 const log = createLogger('EventBus')
@@ -275,7 +276,7 @@ export interface StudioEvents {
     position: { line: number; column: number; offset: number }
   }
   /** User settings loaded */
-  'userSettings:loaded': { settings: Record<string, unknown> }
+  'userSettings:loaded': { settings: UserSettings }
   /** Preview rendered */
   'preview:rendered': { success: boolean }
   /** Layout info extracted (Phase 1 of Preview Architecture) */
