@@ -224,25 +224,17 @@ function createTutorialSidebar() {
   `
   sidebar.appendChild(header)
 
-  // Group entries by section. Each entry that carries `section` opens a
-  // new group; subsequent entries without one attach to the most recently
-  // opened group.
-  let currentSection = null
-  let sectionEl = null
+  // Flat list of links. Items that carry `section` mark a group boundary —
+  // we don't render the section name (the size disparity between groups
+  // makes labeled headers look uneven). Instead the first link of each
+  // group gets a `group-start` class for spacing/separator.
+  let isFirstItem = true
   for (const item of tutorialNavigation) {
-    if (item.section) {
-      currentSection = item.section
-      sectionEl = document.createElement('div')
-      sectionEl.className = 'tutorial-sidebar-section'
-      const title = document.createElement('div')
-      title.className = 'tutorial-sidebar-section-title'
-      title.textContent = currentSection
-      sectionEl.appendChild(title)
-      sidebar.appendChild(sectionEl)
-    }
-    if (!sectionEl) continue
     const link = document.createElement('a')
     link.className = 'tutorial-sidebar-link'
+    if (item.section && !isFirstItem) {
+      link.classList.add('group-start')
+    }
     link.href = item.file
     if (currentFile === item.file) {
       link.classList.add('active')
@@ -251,7 +243,8 @@ function createTutorialSidebar() {
       <span class="tutorial-sidebar-link-num">${item.num}</span>
       <span>${item.title}</span>
     `
-    sectionEl.appendChild(link)
+    sidebar.appendChild(link)
+    isFirstItem = false
   }
 
   document.body.insertBefore(sidebar, document.body.firstChild)

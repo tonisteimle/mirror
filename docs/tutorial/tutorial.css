@@ -565,18 +565,12 @@ details pre {
   letter-spacing: -0.3px;
 }
 
-.tutorial-sidebar-section {
-  margin-bottom: 10px;
-}
-
-.tutorial-sidebar-section-title {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-bright);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 0 20px;
-  margin-bottom: 2px;
+/* Sections are unlabeled — first link of each group gets `.group-start`
+ * which adds top-margin + a thin border-top as visual separator. */
+.tutorial-sidebar-link.group-start {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
 }
 
 .tutorial-sidebar-link {
