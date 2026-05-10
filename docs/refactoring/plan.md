@@ -49,24 +49,24 @@ Vertikale, end2end prüfbare User-Fähigkeiten („Capability-Slices"). Jeder Sl
 
 ## Audit-Status
 
-| #   | Slice                                     | Status                                                                                                           | Dokument                                                     |
-| --- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| 24  | Single-Value-Token                        | erledigt                                                                                                         | [24-tokens.md](24-tokens.md)                                 |
-| 1   | Frame-Container                           | erledigt                                                                                                         | [01-frame.md](01-frame.md)                                   |
-| 25  | Property-Set-Token                        | erledigt                                                                                                         | [25-property-set-tokens.md](25-property-set-tokens.md)       |
-| 21  | Komponenten-Definition & -Verwendung      | Phase A erledigt · B/C verschoben                                                                                | [21-komponenten.md](21-komponenten.md)                       |
-| 26  | System-States                             | DOM+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                                                           | [26-system-states.md](26-system-states.md)                   |
-| 27  | Custom-State `toggle()`                   | DOM+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                                                           | [27-toggle.md](27-toggle.md)                                 |
-| 78  | Token-Picker (Studio)                     | erledigt                                                                                                         | [78-token-picker.md](78-token-picker.md)                     |
-| 29  | `exclusive()`                             | DOM+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                                                           | [29-exclusive.md](29-exclusive.md)                           |
-| 28  | Multi-State-Cycle                         | Compile+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                                                       | [28-multi-state-cycle.md](28-multi-state-cycle.md)           |
-| 2   | Vertical Stack (`gap N`)                  | erledigt (Phase 1 + Phase 2: gap-x/gap-y, Chain in React, Shorthand)                                             | [02-vertical-stack.md](02-vertical-stack.md)                 |
-| 3   | Horizontal Stack (`hor`/wrap/spread)      | erledigt — V-1 React-Defaults gelocked (B-1); V-2/V-3a deferred mit Code-Kommentar + Test-Lock; 31 RTs grün      | [03-horizontal-stack.md](03-horizontal-stack.md)             |
-| 30  | Cross-Element-State                       | Compile+Validator+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                                             | [30-cross-element-state.md](30-cross-element-state.md)       |
-| 6   | Grid 12-col                               | Audit erledigt · Phase A offen (React Grid-Support, Framework Grid-Children, Token-Resolution)                   | [06-grid.md](06-grid.md)                                     |
-| 4   | 9-Positions                               | erledigt — V-1 React-9-zone-Lookup, V-2 Framework reverse-map, V-3 E115 grid+flex-alignment, 63 RT-Subtests grün | [04-9-positions.md](04-9-positions.md)                       |
-| 5   | center / spread / ver-center / hor-center | erledigt — V-1 `singleAxisCenterToFlex` Helper, V-2 React-Backend wired, V-3 Cross-Backend-Tabelle (22 RTs grün) | [05-center-spread.md](05-center-spread.md)                   |
-| 7   | Grid mit expliziter Position              | Audit erledigt · Phase A (Token x/y) + B (IR-Cleanup) + C (Studio-Roundtrip) offen                               | [07-grid-explicit-position.md](07-grid-explicit-position.md) |
+| #   | Slice                                     | Status                                                                                                                 | Dokument                                                     |
+| --- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| 24  | Single-Value-Token                        | erledigt                                                                                                               | [24-tokens.md](24-tokens.md)                                 |
+| 1   | Frame-Container                           | erledigt                                                                                                               | [01-frame.md](01-frame.md)                                   |
+| 25  | Property-Set-Token                        | erledigt                                                                                                               | [25-property-set-tokens.md](25-property-set-tokens.md)       |
+| 21  | Komponenten-Definition & -Verwendung      | Phase A erledigt · B/C verschoben                                                                                      | [21-komponenten.md](21-komponenten.md)                       |
+| 26  | System-States                             | DOM+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                                                                 | [26-system-states.md](26-system-states.md)                   |
+| 27  | Custom-State `toggle()`                   | DOM+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                                                                 | [27-toggle.md](27-toggle.md)                                 |
+| 78  | Token-Picker (Studio)                     | erledigt                                                                                                               | [78-token-picker.md](78-token-picker.md)                     |
+| 29  | `exclusive()`                             | DOM+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                                                                 | [29-exclusive.md](29-exclusive.md)                           |
+| 28  | Multi-State-Cycle                         | Compile+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                                                             | [28-multi-state-cycle.md](28-multi-state-cycle.md)           |
+| 2   | Vertical Stack (`gap N`)                  | erledigt (Phase 1 + Phase 2: gap-x/gap-y, Chain in React, Shorthand)                                                   | [02-vertical-stack.md](02-vertical-stack.md)                 |
+| 3   | Horizontal Stack (`hor`/wrap/spread)      | erledigt — V-1 React-Defaults gelocked (B-1); V-2/V-3a deferred mit Code-Kommentar + Test-Lock; 31 RTs grün            | [03-horizontal-stack.md](03-horizontal-stack.md)             |
+| 30  | Cross-Element-State                       | Compile+Validator+Sync erledigt · Browser-CDP+Studio-Roundtrip offen                                                   | [30-cross-element-state.md](30-cross-element-state.md)       |
+| 6   | Grid 12-col                               | Phase A+B+C erledigt (React Grid + FW Reverse + Token-Resolution) · Phase D (Validator + RTs) + E (Quality-Gate) offen | [06-grid.md](06-grid.md)                                     |
+| 4   | 9-Positions                               | erledigt — V-1 React-9-zone-Lookup, V-2 Framework reverse-map, V-3 E115 grid+flex-alignment, 63 RT-Subtests grün       | [04-9-positions.md](04-9-positions.md)                       |
+| 5   | center / spread / ver-center / hor-center | erledigt — V-1 `singleAxisCenterToFlex` Helper, V-2 React-Backend wired, V-3 Cross-Backend-Tabelle (22 RTs grün)       | [05-center-spread.md](05-center-spread.md)                   |
+| 7   | Grid mit expliziter Position              | Audit erledigt · Phase A (Token x/y) + B (IR-Cleanup) + C (Studio-Roundtrip) offen                                     | [07-grid-explicit-position.md](07-grid-explicit-position.md) |
 
 ---
 

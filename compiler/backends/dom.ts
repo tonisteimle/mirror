@@ -14,6 +14,7 @@ import type { ZagEmitterContext } from './dom/base-emitter-context'
 
 // Extracted utilities
 import { cssPropertyToJS } from './dom/utils'
+import { PROPERTY_TO_TOKEN_SUFFIX } from '../schema/token-suffixes'
 import { ZAG_SLOT_NAMES, type GenerateDOMOptions } from './dom/types'
 import type { EmitterContext, DeferredWhenWatcher } from './dom/base-emitter-context'
 import type { StateMachineEmitterContext } from './dom/state-machine-emitter'
@@ -316,8 +317,10 @@ export class DOMGenerator {
       }
     }
 
-    // Try common suffixes as fallback
-    for (const suffix of ['.bg', '.col', '.rad', '.pad', '.gap']) {
+    // Try all known suffixes as fallback. Slice 6: derived from the canonical
+    // PROPERTY_TO_TOKEN_SUFFIX map so adding a new suffix (`.grid`, `.rh`,
+    // `.x`, `.y`, …) automatically propagates here without manual sync.
+    for (const suffix of new Set(Object.values(PROPERTY_TO_TOKEN_SUFFIX))) {
       const withSuffix = value + suffix
       if (this.tokenMap.has(withSuffix)) {
         const resolved = this.tokenMap.get(withSuffix)!

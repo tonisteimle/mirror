@@ -115,6 +115,27 @@ export function resolveGrid(prop: Property): { columns: string | null; rowCount:
     return { columns: `repeat(${values[0]}, 1fr)`, rowCount: null }
   }
 
+  // Slice 6 V-4: token reference (`Frame grid $cols` with `cols.grid: 12`).
+  // Without this branch the token form fell through to `null`, so the
+  // grid container emitted `display: grid` without `grid-template-columns`
+  // — invisible bug that broke any token-driven grid count. The token
+  // is resolved at value-resolver time to a CSS-var; we wrap it in
+  // `repeat(<var>, 1fr)` so the count survives through to CSS. Modern
+  // browsers accept `var()` as the `repeat()` count.
+  if (
+    values.length === 1 &&
+    typeof values[0] === 'object' &&
+    values[0] !== null &&
+    'kind' in values[0] &&
+    (values[0] as { kind: string }).kind === 'token'
+  ) {
+    const tokenName = (values[0] as { name: string }).name
+    // Token-name → CSS-var. The schema's grid token-suffix is `.grid`;
+    // both `cols.grid` and bare `cols` resolve identically here.
+    const cssVar = `var(--${tokenName.replace(/\./g, '-')}-grid)`
+    return { columns: `repeat(${cssVar}, 1fr)`, rowCount: null }
+  }
+
   // grid 30% 70% → explicit columns (legacy form, kept for backwards-compat)
   if (values.length >= 2) {
     return {

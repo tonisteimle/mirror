@@ -162,6 +162,14 @@ export const PROPERTY_TO_CSS: Record<string, string> = {
   gy: 'row-gap',
   'row-height': 'grid-auto-rows',
   rh: 'grid-auto-rows',
+  // Slice 6 V-4: `grid` needs an entry so the property-transformer doesn't
+  // bail before reaching the grid handler when the value isn't a bare
+  // number (e.g. `Frame grid $cols` resolves the token to a `var(--…)`
+  // string before simplePropertyToCSS sees it). The CSS target here is
+  // a placeholder — the grid handler emits `display: grid` plus
+  // `grid-template-columns` itself; PROPERTY_TO_CSS just acts as the
+  // registration check.
+  grid: 'grid-template-columns',
 
   // Colors
   background: 'background',

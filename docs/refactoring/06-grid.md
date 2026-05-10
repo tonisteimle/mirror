@@ -1,7 +1,7 @@
 # Slice 6: Grid 12-col
 
 **Datum:** 2026-05-10
-**Status:** Audit erledigt · Phase A (React+Framework Grid-Support) offen
+**Status:** Phase A+B+C (React Grid + Framework Reverse + Token-Resolution) erledigt · Phase D (Validator + RTs) + Phase E (Quality-Gate) offen
 
 ## Inhalt
 
@@ -192,7 +192,7 @@ emittiert `w: 'full'` anstelle des grid-property. DOM verliert die
 
 # 3. Entscheidungen
 
-## V-1 — React-Backend Grid-Container-Cases — **Status: offen**
+## V-1 — React-Backend Grid-Container-Cases — **Status: erledigt**
 
 **Frage:** B-1 + B-2: React kennt grid nicht.
 
@@ -228,7 +228,7 @@ minmax(${N}px, 1fr))`.
 
 **Begründung:** Cross-Backend-Konsistenz mit DOM-Output.
 
-## V-2 — React-Backend Child-Grid-Position via parent-context — **Status: offen**
+## V-2 — React-Backend Child-Grid-Position via parent-context — **Status: erledigt**
 
 **Frage:** B-3 + B-4: `w N`/`x N` brauchen parent-context.
 
@@ -267,7 +267,7 @@ case 'x':
 
 **Begründung:** Spiegelt die DOM-IR-Logic 1:1.
 
-## V-3 — Framework-Backend Grid-Child-Properties — **Status: offen**
+## V-3 — Framework-Backend Grid-Child-Properties — **Status: erledigt**
 
 **Frage:** B-5: Framework-Backend hat kein `x`/`y`/`w-in-grid` mapping.
 
@@ -283,19 +283,47 @@ if (prop === 'grid-row-start') return { name: 'y', value: parseInt(value) }
 **Begründung:** Framework-Output für Designer's Inspect-View; ohne diese
 fehlt die DSL-Spiegelung der Grid-Position.
 
-## V-4 — Token-Resolution `grid $cols` — **Status: offen**
+## V-4 — Token-Resolution `grid $cols` — **Status: erledigt**
 
-**Frage:** B-8: Token-Resolution für `grid` ist broken.
+**Frage:** B-8: Token-Resolution für `grid` war broken.
 
-**Vorschlag:** Untersuchung in Sub-Phase. Möglich:
+**Befund (Untersuchung):** Drei zusammenwirkende Lücken:
 
-1. `cols.grid` Token-Suffix wird falsch gemappt (positional-resolver).
-2. CSS-Var-Form `var(--cols-grid)` ist im grid-template-columns nicht
-   verwendbar (Browser-Limitation? eigentlich ist es OK, `repeat()`
-   akzeptiert var()).
-3. Schema-derived CSS-emit für `grid` accept nur Number, nicht String.
+1. `PROPERTY_TO_TOKEN_SUFFIX` hatte keinen `grid: '.grid'`-Eintrag → React's
+   suffix-aware Lookup `lookupWithSuffix('cols', 'grid')` fiel durch und
+   konnte `cols.grid` nicht finden.
+2. `inferTokenTypeFromSuffix('.grid')` lieferte `undefined` → Parser-Fallback
+   klassifizierte `cols.grid: 12` als `tokenType: 'color'` (semantisch falsch
+   für eine Spalten-Anzahl).
+3. `resolveGrid` in `layout-transformer.ts` hatte keine TokenReference-Branch
+   → DOM emittierte `display: grid` ohne `grid-template-columns`.
+4. DOM-Backend chain-resolver hatte hardcoded `['.bg', '.col', '.rad', '.pad',
+'.gap']`-Liste → Drift-Risiko, neue Suffixes (`.grid`/`.rh`/`.x`/`.y`)
+   propagierten nicht.
 
-**Status:** Untersuchung nötig vor Fix.
+**Fix:**
+
+- `compiler/schema/token-suffixes.ts`: `grid: '.grid'`, `'row-height': '.rh'`
+  - neue `COUNT_SUFFIXES`-Set für unitless numerische Tokens (column counts,
+    grid-line indices). `inferTokenTypeFromSuffix` klassifiziert beide als
+    'size' für Picker/Validator, aber `needsPxUnit` lässt sie aus (kein
+    unbeabsichtigtes `px`-Suffix für Spalten-Counts).
+- `compiler/ir/transformers/layout-transformer.ts:resolveGrid`:
+  TokenReference-Branch wickelt `cols` in `repeat(var(--cols-grid), 1fr)`.
+  Modern browsers akzeptieren `var()` als `repeat()`-Argument.
+- `compiler/backends/dom.ts`: Chain-Resolver-Fallback-Liste aus
+  `PROPERTY_TO_TOKEN_SUFFIX` derived → Single Source of Truth.
+- `compiler/schema/ir-helpers.ts`: `grid: 'grid-template-columns'` in
+  `PROPERTY_TO_CSS` damit `simplePropertyToCSS` nicht vor dem Grid-Handler
+  aussteigt.
+
+**Cross-Backend-Status nach Fix:**
+
+| Backend | J1 Output                                               | Verdikt                                                |
+| ------- | ------------------------------------------------------- | ------------------------------------------------------ |
+| DOM     | `repeat(var(--cols-grid), 1fr)` (CSS-var via :root)     | ✅                                                     |
+| React   | `repeat(12, 1fr)` (Token resolved zu Wert)              | ✅ semantisch äquivalent                               |
+| FW      | `grid: 'repeat(var(--cols-grid), 1fr)'` (resolved-form) | 🟡 round-trip-lossy: keine Reverse-Map zu `grid $cols` |
 
 ## V-5 — Validator E105 für `grid 0`/negative — **Status: offen**
 
@@ -323,27 +351,27 @@ auch Slice 7 (`x N, y N` Position).
 
 ## Phase A — React-Backend Grid-Support
 
-| ID  | Sub-Task                                                                                         | Aus | Aufwand | Status |
-| --- | ------------------------------------------------------------------------------------------------ | --- | ------- | ------ |
-| A.1 | React `generateStyles`: `grid N` / `grid auto` / `grid auto N` Cases                             | V-1 | S       | offen  |
-| A.2 | React `generateStyles`: `row-height`/`rh` und `dense` Cases                                      | V-1 | S       | offen  |
-| A.3 | React `generateJSX`: parent-context detection (`detectLayoutContext`) und Weitergabe an children | V-2 | M       | offen  |
-| A.4 | React `generateStyles`: parent-grid-aware `w`/`h`/`x`/`y` Cases                                  | V-2 | M       | offen  |
-| A.5 | React `generateStyles`: `x`/`y` außerhalb grid → `position: absolute, left/top`                  | V-2 | S       | offen  |
+| ID  | Sub-Task                                                                                         | Aus | Aufwand | Status   |
+| --- | ------------------------------------------------------------------------------------------------ | --- | ------- | -------- |
+| A.1 | React `generateStyles`: `grid N` / `grid auto` / `grid auto N` Cases                             | V-1 | S       | erledigt |
+| A.2 | React `generateStyles`: `row-height`/`rh` und `dense` Cases                                      | V-1 | S       | erledigt |
+| A.3 | React `generateJSX`: parent-context detection (`detectLayoutContext`) und Weitergabe an children | V-2 | M       | erledigt |
+| A.4 | React `generateStyles`: parent-grid-aware `w`/`h`/`x`/`y` Cases                                  | V-2 | M       | erledigt |
+| A.5 | React `generateStyles`: `x`/`y` außerhalb grid → `position: absolute, left/top`                  | V-2 | S       | erledigt |
 
 ## Phase B — Framework-Backend
 
-| ID  | Sub-Task                                                                    | Aus | Aufwand | Status |
-| --- | --------------------------------------------------------------------------- | --- | ------- | ------ |
-| B.1 | Framework `cssPropToMirrorProp`: grid-column-start, grid-row-start branches | V-3 | S       | offen  |
-| B.2 | Framework: grid-column-end / grid-row-end (span N → w/h)                    | V-3 | S       | offen  |
+| ID  | Sub-Task                                                                    | Aus | Aufwand | Status   |
+| --- | --------------------------------------------------------------------------- | --- | ------- | -------- |
+| B.1 | Framework `cssPropToMirrorProp`: grid-column-start, grid-row-start branches | V-3 | S       | erledigt |
+| B.2 | Framework: grid-column-end / grid-row-end (span N → w/h)                    | V-3 | S       | erledigt |
 
 ## Phase C — Token-Resolution Investigation (J1)
 
-| ID  | Sub-Task                                                    | Aus | Aufwand | Status |
-| --- | ----------------------------------------------------------- | --- | ------- | ------ |
-| C.1 | Untersuchung: warum `grid $cols` mit `cols.grid: 12` bricht | V-4 | M       | offen  |
-| C.2 | Fix abhängig von C.1                                        | V-4 | -       | offen  |
+| ID  | Sub-Task                                                                          | Aus | Aufwand | Status                      |
+| --- | --------------------------------------------------------------------------------- | --- | ------- | --------------------------- |
+| C.1 | Untersuchung: warum `grid $cols` mit `cols.grid: 12` bricht                       | V-4 | M       | erledigt — siehe V-4-Befund |
+| C.2 | Fix: token-suffix `.grid` + COUNT_SUFFIXES + resolveGrid + chain-resolver derived | V-4 | -       | erledigt                    |
 
 ## Phase D — Validator + Tests
 
