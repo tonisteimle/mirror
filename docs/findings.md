@@ -207,35 +207,34 @@ rotate 45` droppt translateX komplett (combined transform überschreibt
   **Status:** erledigt — auf `calculateSourcePosition(instance.line,
 instance.column)` umgestellt. 7849/7849 vitest grün.
 
-- **Wo:** `studio/test-api/suites/` — 10 `// TODO: Runtime bug …`-Marker
-  in den Browser-Test-Suiten
+- **Wo:** `studio/test-api/suites/` — Runtime-Bug-TODO-Bucket
   **Was:** Latente Production-Bugs, die als Test-Workaround dokumentiert
-  sind aber nicht im Findings-Doc geführt wurden. Aufstellung:
-  - `actions/counter.test.ts:92` — `reset()` clears DOM text statt
-    auf initial value zu setzen
-  - `actions/combined.test.ts:9` — `toggle() + increment()` kombiniert
-    führen nicht beide aus
-  - `actions/navigation.test.ts:9` — `navigate() + show/hide`
-    Kombinationen brechen
-  - `actions/scroll.test.ts:9,36` — `scrollToTop()`/`scrollToBottom()`
-    scrollen den Container nicht (in headless-Tests)
-  - `actions/visibility.test.ts:60` — `toggle(ElementName)` arbeitet nicht
-    korrekt
-  - `actions/crud.test.ts:36` — `remove()` aktualisiert das DOM nach
-    Entfernen nicht
-  - `transforms/translate.test.ts:323` — Multi-Transform-Composition
-    (mehrere `rotate`/`scale`/`translate` zusammen)
-  - `responsive/basic.test.ts:73` + `responsive/layout.test.ts:88` —
-    Container-Queries / responsive width changes greifen nicht
-    zuverlässig in headless-Tests (wahrscheinlich jsdom-Limitation,
-    aber nicht verifiziert)
-  - `tutorial/functions-deep.test.ts:70` — `reset()` mit Workaround
-    `set(count, 0)` umgangen (gleicher Bug wie counter.test.ts:92)
+  waren. Stand 2026-05-10: 7 von 10 Original-Markern abgearbeitet.
+  - ✅ `actions/scroll.test.ts:9,36` — Container-Scroll in
+    `scrollContainerToTop/Bottom` (siehe Erledigt 2026-05-10).
+  - ✅ `actions/visibility.test.ts:60` — `toggle(ElementName)` (Erledigt).
+  - ✅ `actions/crud.test.ts:36` — Test-Selector-Bug, nicht Runtime
+    (Erledigt).
+  - ✅ `actions/counter.test.ts:92` + `tutorial/functions-deep.test.ts:70`
+    — `reset()` Token-Key-Mismatch (Erledigt).
+  - ✅ `actions/combined.test.ts:9` — Doppel-Click-Handler bei `toggle()
+    - increment()` (Erledigt).
+  - ✅ `actions/navigation.test.ts:9` — Skip-Marker ohne realen Bug
+    (Erledigt).
+  - 🔄 `transforms/translate.test.ts:323` — Multi-Transform-Composition,
+    parallel-Session-aktiv (Eintrag oben).
+  - ⏳ `responsive/basic.test.ts:73` + `responsive/layout.test.ts:88` —
+    Container-Queries auf eigenem Element. Architektur-Befund:
+    `@container` queries inspizieren das _Parent_-Element, nicht das
+    deklarierende. Frame mit `container-type: inline-size` und
+    eigenen `compact:`/`regular:`-States kann nicht auf seine eigene
+    Breite reagieren — braucht Wrapper-Container. Kein einfacher
+    Runtime-Fix, eigener Architektur-Befund.
     Plus 6 weitere TODOs in `autocomplete/` und `responsive/` ohne
     „Runtime bug"-Wording (Context-aware Completions / State Completions
-    / Stress-Tests-Hang).
-    **Status:** offen — als Finding-Bucket. Pro Bug ein eigenes Inkrement
-    wenn aktiv angefasst.
+    / Stress-Tests-Hang) — separate Buckets, nicht Teil dieses Eintrags.
+    **Status:** offen — Container-Query-Architektur als eigener Befund
+    aufschreiben wenn jemand drangeht; sonst Bucket nahezu erledigt.
     **Notiz:** Vor jedem Pick: TODO im Test-File suchen, `// TODO`
     entfernen wenn Fix landet, Test in Suite-Run pinnen.
 
