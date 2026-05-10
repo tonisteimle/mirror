@@ -216,11 +216,19 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
 
 - **Wo:** Studio-weit, `panels/`-Subsystem
   **Was:** ~113 `.on()`/`addEventListener` Subscriptions vs. ~25
-  detektierbare Cleanups — Verdacht auf Memory-Leaks bei
-  Panel-Re-Initialisierung.
-  **Status:** offen
-  **Notiz:** Audit von `PropertyPanelController` + Section-Klassen,
-  systematisches `AbortController`-Wiring einziehen.
+  detektierbare Cleanups — Verdacht auf Memory-Leaks.
+  **Status:** abgewiesen — Audit zeigt: Metrik ist irreführend.
+  Tatsächliche Patterns sind solide: PropertyPanel trackt per
+  `eventCleanups[]` Array (re-bind pro render mit `cleanupEventListeners()`);
+  Controller pushed Event-Subs in `cleanups[]` mit dispose-chain;
+  ActivityBar nutzt `AbortController` mit abort in dispose; Settings
+  via `eventUnsubscribes[]`; Section-Dropdowns haben self-cleaning
+  click-outside Listeners (entfernen sich beim nächsten Click). Die
+  113-Zahl zählt DOM-Listener auf frisch erstellten Elementen, die
+  beim nächsten render via `innerHTML = ''` mit den Elementen
+  weggehen — kein Leak. Kleine Optimierung übrig: Section-Dropdown-
+  Listener via AbortController statt self-heal (akkumuliert max 5
+  stale Listener pro User-Session bis Click-Outside).
 
 - **Wo:** `studio/inline-edit/` und `studio/rename/`
   **Was:** Zwei nahezu identische Setup-Flows für simple Name/Value-Edits
