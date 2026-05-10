@@ -206,6 +206,22 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
+- **Wo:** Drei stale Comments referenzieren gelöschten/nie-existenten Code:
+  - `compiler/index.ts:14` — `// Note: generateStatic is not exported -
+it's an incomplete stub` referenziert das Static-Backend, das im
+    April 2026 gelöscht wurde (commit `4e1bdac9`). `generateStatic`
+    existiert nirgends mehr.
+  - `studio/core/events.ts:15` — `// DropZone type - inline definition
+(module not yet implemented)` — das geplante Modul wurde nie gebaut,
+    das Interface lebt seit Jahren inline ohne Probleme. Comment
+    suggeriert tote TODO.
+  - `studio/code-modifier/index.ts:43-47` — Zwei inline-historische
+    Notizen ("PropertyPanel moved to studio/panels", „DropZoneCalculator
+    removed in v2.2 — use studio/drag-drop instead"). Beide referenzieren
+    längst migrierte/gelöschte Symbole.
+    **Status:** aktiv (Claude-Session, 2026-05-10 ~21:10)
+    **Plan:** Alle drei Comment-Stellen aufräumen.
+
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
