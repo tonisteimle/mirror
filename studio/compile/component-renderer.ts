@@ -129,7 +129,7 @@ export class ComponentRenderer {
   ): boolean {
     if (headers.some(h => h.name === comp.name)) return true // Skip section-named components
 
-    const line = (comp as any).line || 0
+    const line = comp.line || 0
     for (const section of sections) {
       if (line >= section.lineStart && line <= section.lineEnd) {
         section.components.push(comp)
@@ -198,12 +198,12 @@ export class ComponentRenderer {
   private getComponentStates(comp: Component): string[] {
     const states = new Set<string>()
     this.collectStates(comp, states)
-    this.collectChildStates((comp as any).children || [], states)
+    this.collectChildStates(comp.children || [], states)
     return ['default', ...Array.from(states)]
   }
 
   private collectStates(comp: Component, states: Set<string>): void {
-    const compStates = (comp as any).states || []
+    const compStates = comp.states || []
     for (const state of compStates) {
       if (STATE_NAMES.has(state.name)) {
         states.add(state.name)
@@ -211,7 +211,7 @@ export class ComponentRenderer {
     }
   }
 
-  private collectChildStates(children: any[], states: Set<string>): void {
+  private collectChildStates(children: Component[], states: Set<string>): void {
     for (const child of children) {
       this.collectStates(child, states)
       if (child.children) {

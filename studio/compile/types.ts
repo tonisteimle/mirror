@@ -18,6 +18,19 @@ export interface AST {
 export interface Component {
   name: string
   primitive?: string
+  // Source line of the component definition; used by the renderer to
+  // group components into sections by line range.
+  line?: number
+  // Optional state declarations (inline states like `hover: bg #eee`).
+  // Mirrors `State[]` on compiler `ComponentDefinition`/`Instance`.
+  states?: ComponentState[]
+  // Children when the component is a container (Component or Instance).
+  // The studio renderer only walks them recursively to collect states.
+  children?: Component[]
+}
+
+export interface ComponentState {
+  name: string
 }
 
 export interface Instance {
@@ -27,6 +40,9 @@ export interface Instance {
 export interface Token {
   name: string
   value: string
+  // Section header this token belongs to (`--- Title ---`).
+  // Mirrors the `section?: string` field on compiler `TokenDefinition`.
+  section?: string
 }
 
 export interface ParseError {

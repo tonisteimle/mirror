@@ -534,8 +534,8 @@ function makeLine(x1: number, y1: number, x2: number, y2: number, opacity: numbe
  * to keep the selector valid if that scheme ever changes.
  */
 function cssEscape(s: string): string {
-  if (typeof (window as any).CSS?.escape === 'function') {
-    return (window as any).CSS.escape(s)
+  if (typeof window.CSS?.escape === 'function') {
+    return window.CSS.escape(s)
   }
   return s.replace(/[^a-zA-Z0-9_-]/g, ch => `\\${ch}`)
 }

@@ -71,7 +71,7 @@ export class TokenRenderer {
   // ============================================
 
   private buildHTML(tokens: Token[], tokenMap: TokenMap): string {
-    const hasSections = tokens.some(t => (t as any).section)
+    const hasSections = tokens.some(t => t.section)
     return hasSections
       ? this.buildSectionedHTML(tokens, tokenMap)
       : this.buildCategorizedHTML(tokens, tokenMap)
@@ -96,9 +96,8 @@ export class TokenRenderer {
     const noSection: Token[] = []
 
     for (const t of tokens) {
-      const section = (t as any).section
-      if (section) {
-        this.addToSection(sections, section, t)
+      if (t.section) {
+        this.addToSection(sections, t.section, t)
       } else {
         noSection.push(t)
       }
