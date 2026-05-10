@@ -181,8 +181,6 @@ export const actions = {
   setCompileResult(result: { ast: AST; ir: IR; sourceMap: SourceMap; errors: ParseError[] }): void {
     const currentState = state.get()
     const newVersion = currentState.compileVersion + 1
-    const hasPendingSelection = currentState.pendingSelection !== null
-    const hasDeferredSelection = currentState.deferredSelection !== null
 
     // Validate multi-selection against new SourceMap
     const validMultiSelection = currentState.multiSelection.filter(
@@ -214,6 +212,13 @@ export const actions = {
       version: newVersion,
       hasErrors: result.errors.length > 0,
     })
+
+    // Re-read selection flags AFTER emit: compile:completed handlers may
+    // queue or clear pending/deferred selections, and we need the current
+    // truth, not a pre-emit snapshot.
+    const postEmitState = state.get()
+    const hasPendingSelection = postEmitState.pendingSelection !== null
+    const hasDeferredSelection = postEmitState.deferredSelection !== null
 
     // Resolve pending selection FIRST (line-based, from drop operations)
     // This takes priority over deferredSelection because it's more specific

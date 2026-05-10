@@ -75,14 +75,22 @@ Keine Phasen, keine Status-Tabellen, keine Quality-Gates. Append-only.
   **Was:** Race-Window: `state.get()` wird **nach** `compile:completed`
   emittiert gelesen — Handler können Selection mutieren, `latestState` ist
   dann veraltet.
-  **Status:** offen
-  **Notiz:** State vor dem Emit lesen oder Validierung in Microtask deferen.
+  **Status:** abgewiesen mit Teilfix — die `latestState`-Re-Read am Ende
+  war schon richtig (Kommentar erklärt es). Verwandte echte Lücke war
+  oben: `hasPending`/`hasDeferred` wurden vor dem Emit gesnapshotet —
+  Handler die während des Emits pending/deferred setzen, würden verpasst.
+  Beide Booleans werden jetzt **nach** dem `compile:completed` Emit
+  gelesen (`postEmitState`). 48/48 robustness tests pass.
 
 - **Wo:** `studio/core/state.ts:243-278`
   **Was:** Early-Returns bei pending/deferred Selection überspringen die
   Final-Selection-Validierung — invalide Selections aus Handlern können
   ungeprüft durchrutschen.
-  **Status:** offen
+  **Status:** abgewiesen — `resolvePendingSelection` /
+  `resolveDeferredSelection` validieren den aufgelösten Knoten selbst gegen
+  den neuen SourceMap und fallback'en bei Fehlschlag (`findFirstRootNode`).
+  Wenn ein pending/deferred Pick existiert ist _das_ die autoritative
+  Auswahl — die alte `selection.nodeId` braucht keine zweite Validierung.
 
 - **Wo:** `studio/core/state.ts:189-205`
   **Was:** Multi-Selection-Validierung filtert Knoten still ohne
