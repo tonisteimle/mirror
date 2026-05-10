@@ -954,7 +954,22 @@ async function main(): Promise<void> {
     watch: args.watch,
     verbose: args.verbose,
     silent: args.silent,
+    osMouse: args.osMouse,
   }
+  // Phase 7/8 — snapshot bridge + headed-realism throttles. Same wiring
+  // as runDemoMode / runDemoSuiteMode above so all entry points share
+  // the headed-realism plumbing.
+  if (args.demoSnapshots) {
+    config.snapshots = {
+      dir: args.demoSnapshots,
+      ...(args.demoSnapshotBaseline ? { baselineDir: args.demoSnapshotBaseline } : {}),
+      ...(typeof args.demoSnapshotThreshold === 'number'
+        ? { threshold: args.demoSnapshotThreshold }
+        : {}),
+    }
+  }
+  if (typeof args.cpuThrottle === 'number') config.cpuThrottle = args.cpuThrottle
+  if (args.networkThrottle) config.networkThrottle = args.networkThrottle
 
   const runner = new TestRunner(config)
 

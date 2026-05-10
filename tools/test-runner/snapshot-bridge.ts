@@ -2,6 +2,13 @@
  * Snapshot Bridge — Node ↔ browser RPC for capturing & diffing viewport
  * snapshots from in-browser Step-Runner scenarios.
  *
+ * Defaults from the runner CLI propagate into the bridge state at install
+ * time. Scenarios then call `setConfig` through the binding to override
+ * whichever fields they care about — typically `dir` (per-scenario PNG
+ * dump location). Fields not set by the scenario fall back to the
+ * runner's defaults, so a CLI-only `--snapshot-baseline=DIR` reaches
+ * scenarios that didn't think to declare one.
+ *
  * Phase 7 closes the headed-mode realism gap: the Step-Runner already
  * validates source code, computed-style, and panel state per step, but
  * cursor smoothness, drop indicators, and animations are only visible
@@ -69,6 +76,8 @@ const BINDING_NAME = '__snapshotCall'
 interface BridgeState {
   config: SnapshotConfig | null
   counter: number
+  /** Runner-CLI defaults seeded at install time. */
+  defaults?: Partial<SnapshotConfig>
 }
 
 function sanitize(label: string): string {
@@ -139,15 +148,20 @@ async function handleRequest(
   req: SnapshotRequest
 ): Promise<unknown> {
   switch (req.op) {
-    case 'setConfig':
+    case 'setConfig': {
+      // Merge: scenario fields take priority; runner-level defaults fill
+      // gaps. So `--snapshot-baseline=DIR` on the CLI reaches scenarios
+      // that didn't set `baselineDir` themselves.
+      const baselineDir = req.args.baselineDir ?? state.defaults?.baselineDir
       state.config = {
-        dir: req.args.dir,
-        ...(req.args.baselineDir !== undefined ? { baselineDir: req.args.baselineDir } : {}),
-        threshold: req.args.threshold ?? 0.1,
+        dir: req.args.dir ?? state.defaults?.dir ?? '',
+        ...(baselineDir !== undefined ? { baselineDir } : {}),
+        threshold: req.args.threshold ?? state.defaults?.threshold ?? 0.1,
       }
       state.counter = 0
-      fs.mkdirSync(state.config.dir, { recursive: true })
+      if (state.config.dir) fs.mkdirSync(state.config.dir, { recursive: true })
       return { ok: true }
+    }
     case 'capture':
       return handleCapture(cdp, state, req.args)
     default: {
@@ -161,8 +175,11 @@ async function handleRequest(
 // Bridge installation
 // =============================================================================
 
-export async function installSnapshotBridge(cdp: CDPSession): Promise<void> {
-  const state: BridgeState = { config: null, counter: 0 }
+export async function installSnapshotBridge(
+  cdp: CDPSession,
+  defaults?: Partial<SnapshotConfig>
+): Promise<void> {
+  const state: BridgeState = { config: null, counter: 0, ...(defaults ? { defaults } : {}) }
 
   try {
     await cdp.send('Runtime.addBinding', { name: BINDING_NAME })

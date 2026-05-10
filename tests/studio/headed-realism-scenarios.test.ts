@@ -75,9 +75,9 @@ describe('headed-realism starter scenarios', () => {
   it('combined scenario layers compile-mode + structural selector', () => {
     const s = findScenario(/real-compile \+ structural/)
     expect(s.compileMode).toBe('real')
-    const setProp = s.steps.find(st => st.do === 'setProperty')
-    if (!setProp || setProp.do !== 'setProperty') throw new Error('expected setProperty step')
-    expect(setProp.target).toEqual({ byText: 'Submit' })
+    const click = s.steps.find(st => st.do === 'click')
+    if (!click || click.do !== 'click') throw new Error('expected click step')
+    expect(click.nodeId).toEqual({ byText: 'Save' })
   })
 
   it('every gated scenario records a reason explaining the requirement', () => {

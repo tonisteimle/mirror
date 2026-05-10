@@ -449,7 +449,7 @@ export class TestRunner {
     // Snapshot bridge — capture-and-compare viewport PNGs from in-browser
     // Step-Runner scenarios. Off unless --snapshots=DIR was passed.
     if (this.config.snapshots) {
-      await installSnapshotBridge(this.cdp)
+      await installSnapshotBridge(this.cdp, this.config.snapshots)
       this.log(
         `Snapshot bridge installed (dir=${this.config.snapshots.dir}` +
           (this.config.snapshots.baselineDir

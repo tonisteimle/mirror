@@ -165,16 +165,23 @@ const combined: Scenario = {
   name: 'real-compile + structural selector (snapshots optional)',
   category: 'step-runner-headed',
   compileMode: 'real',
-  setup: 'Frame gap 8\n  Button "Submit", bg #2271c1, col white\n  Button "Cancel", bg #888',
+  // byText resolution matches any element whose textContent.trim() equals
+  // the needle — siblings with disjoint text are unambiguous (Frame's
+  // own textContent is the concatenation, not "Save"). The frame's bare
+  // "Save" matches only one Button.
+  setup: 'Frame gap 8\n  Button "Save"\n  Button "Cancel"',
   steps: [
     {
       do: 'click',
-      nodeId: { byText: 'Submit' },
+      nodeId: { byText: 'Save' },
     },
     {
       do: 'setProperty',
       via: 'panel',
-      target: { byText: 'Submit' },
+      // Use byId here — the panel writer needs a stable handle that
+      // matches the selection set in step 1; structural targets work
+      // when one match is unambiguous.
+      target: 'node-2',
       property: 'bg',
       value: '#10b981',
       expect: { props: { 'node-2': { bg: '#10b981' } } },
