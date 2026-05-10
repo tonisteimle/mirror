@@ -48,6 +48,12 @@ export interface ShowingState {
   element: ExtractedElement
   expandedSections: Set<string>
   isInPositionedContainer: boolean
+  // Slice 7 V-4 (B-5): grid container = parent has `display: grid`. The
+  // Position-Section renders for both stacked and grid parents (different
+  // semantics: absolute offset vs. grid-line index — see position-section.ts
+  // labels). Without this, x/y of grid children was only editable via
+  // the code editor.
+  isInGridContainer: boolean
 }
 
 /**
@@ -72,7 +78,12 @@ export type PanelState =
 
 export type PanelEvent =
   | { type: 'SELECT'; nodeId: string | null }
-  | { type: 'ELEMENT_LOADED'; element: ExtractedElement; isInPositionedContainer: boolean }
+  | {
+      type: 'ELEMENT_LOADED'
+      element: ExtractedElement
+      isInPositionedContainer: boolean
+      isInGridContainer: boolean
+    }
   | { type: 'ELEMENT_NOT_FOUND'; nodeId: string }
   | { type: 'PROPERTY_CHANGE'; name: string; value: string }
   | { type: 'PROPERTY_REMOVE'; name: string }
@@ -129,7 +140,12 @@ export function transition(state: PanelState, event: PanelEvent): TransitionResu
       return handleSelect(state, event.nodeId)
 
     case 'ELEMENT_LOADED':
-      return handleElementLoaded(state, event.element, event.isInPositionedContainer)
+      return handleElementLoaded(
+        state,
+        event.element,
+        event.isInPositionedContainer,
+        event.isInGridContainer
+      )
 
     case 'ELEMENT_NOT_FOUND':
       return handleElementNotFound(state, event.nodeId)
@@ -192,7 +208,8 @@ function handleSelect(state: PanelState, nodeId: string | null): TransitionResul
 function handleElementLoaded(
   state: PanelState,
   element: ExtractedElement,
-  isInPositionedContainer: boolean
+  isInPositionedContainer: boolean,
+  isInGridContainer: boolean
 ): TransitionResult {
   // Only handle ELEMENT_LOADED when in loading state
   if (state.type !== 'loading') {
@@ -204,6 +221,7 @@ function handleElementLoaded(
     element,
     expandedSections: getDefaultExpandedSections(),
     isInPositionedContainer,
+    isInGridContainer,
   }
 
   return {

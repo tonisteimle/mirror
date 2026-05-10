@@ -52,7 +52,6 @@
     'align-items': 'flex-start',
     'position': 'absolute',
     'left': '70px',
-    'position': 'absolute',
     'top': '70px',
     'width': '30px',
     'flex-shrink': '0',

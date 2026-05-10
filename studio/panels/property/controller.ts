@@ -324,6 +324,7 @@ export class PropertyPanelController {
       type: 'ELEMENT_LOADED',
       element,
       isInPositionedContainer: this.ports.layout.isInPositionedContainer(nodeId),
+      isInGridContainer: this.ports.layout.getParentLayoutType(nodeId) === 'grid',
     })
   }
 
@@ -342,6 +343,7 @@ export class PropertyPanelController {
       type: 'ELEMENT_LOADED',
       element,
       isInPositionedContainer: false,
+      isInGridContainer: false,
     })
   }
 

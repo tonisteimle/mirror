@@ -1,8 +1,11 @@
 /**
- * Position Section - X, Y, Z for Stacked Containers
+ * Position Section - X, Y, Z
  *
- * Only renders when element is inside a stacked (absolute) container.
- * Provides controls for positioning elements within the stacked layout.
+ * Renders for stacked (absolute) parents and for grid parents (Slice 7 V-4).
+ * Labels and placeholder differ:
+ *   - stacked → "X" / "Y" (pixel offsets, default 0)
+ *   - grid    → "Cell-X" / "Cell-Y" (grid-line index, default 1)
+ * Z-Index ("Layer") only shown for stacked — grid containers don't use z.
  */
 
 import {
@@ -17,16 +20,8 @@ import {
  */
 interface PositionSectionData extends SectionData {
   isInPositionedContainer?: boolean
+  isInGridContainer?: boolean
 }
-
-/**
- * Position fields configuration
- */
-const POSITION_FIELDS = [
-  { name: 'x', label: 'X', placeholder: '0' },
-  { name: 'y', label: 'Y', placeholder: '0' },
-  { name: 'z', label: 'Z', placeholder: '0' },
-] as const
 
 /**
  * Position Section class
@@ -39,8 +34,8 @@ export class PositionSection extends BaseSection {
   render(data: PositionSectionData): string {
     this.data = data
 
-    // Only show when element is in a stacked container
-    if (!data.isInPositionedContainer) {
+    // Show for stacked OR grid parents (Slice 7 V-4 / B-5)
+    if (!data.isInPositionedContainer && !data.isInGridContainer) {
       return ''
     }
 
@@ -55,29 +50,39 @@ export class PositionSection extends BaseSection {
     const yValue = yProp?.value || ''
     const zValue = zProp?.value || ''
 
-    return `
-      <div class="section">
-        <div class="section-label">Position</div>
-        <div class="section-content">
-          <div class="prop-row">
-            <span class="prop-label">X / Y</span>
-            <div class="prop-content pp-position-inputs">
-              <div class="pp-position-field">
-                <span class="pp-position-label">X</span>
-                <input type="text" class="prop-input pp-position-input" value="${this.deps.escapeHtml(xValue)}" data-position-field="x" placeholder="0" autocomplete="off">
-              </div>
-              <div class="pp-position-field">
-                <span class="pp-position-label">Y</span>
-                <input type="text" class="prop-input pp-position-input" value="${this.deps.escapeHtml(yValue)}" data-position-field="y" placeholder="0" autocomplete="off">
-              </div>
-            </div>
-          </div>
+    const inGrid = !!data.isInGridContainer
+    const xLabel = inGrid ? 'Cell-X' : 'X'
+    const yLabel = inGrid ? 'Cell-Y' : 'Y'
+    const placeholder = inGrid ? '1' : '0'
+    const sectionLabel = inGrid ? 'Grid Position' : 'Position'
+
+    const layerRow = inGrid
+      ? '' // grid children don't use z-index
+      : `
           <div class="prop-row">
             <span class="prop-label">Layer</span>
             <div class="prop-content">
               <input type="text" class="prop-input" value="${this.deps.escapeHtml(zValue)}" data-position-field="z" placeholder="0" autocomplete="off" style="width: 60px;">
             </div>
-          </div>
+          </div>`
+
+    return `
+      <div class="section">
+        <div class="section-label">${sectionLabel}</div>
+        <div class="section-content">
+          <div class="prop-row">
+            <span class="prop-label">${xLabel} / ${yLabel}</span>
+            <div class="prop-content pp-position-inputs">
+              <div class="pp-position-field">
+                <span class="pp-position-label">${xLabel}</span>
+                <input type="text" class="prop-input pp-position-input" value="${this.deps.escapeHtml(xValue)}" data-position-field="x" placeholder="${placeholder}" autocomplete="off">
+              </div>
+              <div class="pp-position-field">
+                <span class="pp-position-label">${yLabel}</span>
+                <input type="text" class="prop-input pp-position-input" value="${this.deps.escapeHtml(yValue)}" data-position-field="y" placeholder="${placeholder}" autocomplete="off">
+              </div>
+            </div>
+          </div>${layerRow}
         </div>
       </div>
     `

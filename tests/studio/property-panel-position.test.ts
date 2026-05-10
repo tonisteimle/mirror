@@ -211,3 +211,76 @@ describe('P3 — mutation-driven', () => {
     expect(onPropertyChange).not.toHaveBeenCalled()
   })
 })
+
+// ===========================================================================
+// Slice 7 V-4 (B-5): Position-Section in grid containers
+// ===========================================================================
+describe('Slice 7 V-4 — grid container support', () => {
+  function renderInGrid(props: Prop[] = []): HTMLElement {
+    const data = {
+      isInPositionedContainer: false,
+      isInGridContainer: true,
+      allProperties: props,
+    } as unknown as SectionData
+    const html = createPositionSection(deps).render(data as never)
+    const root = document.createElement('div')
+    root.innerHTML = html
+    document.body.appendChild(root)
+    return root
+  }
+
+  it('renders for grid container (isInGridContainer=true)', () => {
+    const root = renderInGrid([{ name: 'x', value: '1' }])
+    expect(root.querySelector('input[data-position-field="x"]')).toBeTruthy()
+  })
+
+  it('section label is "Grid Position" in grid context', () => {
+    const root = renderInGrid()
+    expect(root.querySelector('.section-label')?.textContent).toBe('Grid Position')
+  })
+
+  it('field labels are "Cell-X" / "Cell-Y" in grid context', () => {
+    const root = renderInGrid()
+    const labels = Array.from(root.querySelectorAll('.pp-position-label')).map(l => l.textContent)
+    expect(labels).toEqual(['Cell-X', 'Cell-Y'])
+  })
+
+  it('x/y placeholders are "1" in grid context (not "0" like absolute)', () => {
+    const root = renderInGrid()
+    const x = root.querySelector('input[data-position-field="x"]') as HTMLInputElement
+    expect(x.placeholder).toBe('1')
+  })
+
+  it('z (Layer) input is NOT rendered in grid context', () => {
+    const root = renderInGrid()
+    expect(root.querySelector('input[data-position-field="z"]')).toBeNull()
+  })
+
+  it('reads x/y values from props in grid context', () => {
+    const root = renderInGrid([
+      { name: 'x', value: '4' },
+      { name: 'y', value: '3' },
+    ])
+    expect((root.querySelector('input[data-position-field="x"]') as HTMLInputElement).value).toBe(
+      '4'
+    )
+    expect((root.querySelector('input[data-position-field="y"]') as HTMLInputElement).value).toBe(
+      '3'
+    )
+  })
+
+  it('returns "" when neither stacked nor grid', () => {
+    const html = createPositionSection(deps).render({
+      isInPositionedContainer: false,
+      isInGridContainer: false,
+    } as never)
+    expect(html).toBe('')
+  })
+
+  it('stacked context still uses "X" / "Y" labels (not Cell-X / Cell-Y)', () => {
+    const root = renderSection() // isInPosContainer=true, isInGrid undefined
+    const labels = Array.from(root.querySelectorAll('.pp-position-label')).map(l => l.textContent)
+    expect(labels).toEqual(['X', 'Y'])
+    expect(root.querySelector('.section-label')?.textContent).toBe('Position')
+  })
+})

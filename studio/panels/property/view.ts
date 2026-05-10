@@ -443,12 +443,17 @@ export class PropertyPanelView {
         this.renderNotFound(state.nodeId)
         break
       case 'showing':
-        this.renderElement(state.element, state.isInPositionedContainer, state.expandedSections)
+        this.renderElement(
+          state.element,
+          state.isInPositionedContainer,
+          state.isInGridContainer,
+          state.expandedSections
+        )
         break
       case 'pending-update':
         // Show previous element while waiting for compile
         if (state.previousElement) {
-          this.renderElement(state.previousElement, false, undefined)
+          this.renderElement(state.previousElement, false, false, undefined)
         } else {
           this.renderLoading()
         }
@@ -504,12 +509,14 @@ export class PropertyPanelView {
   private renderElement(
     element: ExtractedElement,
     isInPositionedContainer: boolean,
+    isInGridContainer: boolean,
     expandedSections?: Set<string>
   ): void {
     const categoriesHtml = this.renderCategories(
       element.categories,
       element,
       isInPositionedContainer,
+      isInGridContainer,
       expandedSections
     )
 
@@ -548,6 +555,7 @@ export class PropertyPanelView {
     categories: PropertyCategory[],
     element: ExtractedElement,
     isInPositionedContainer: boolean,
+    isInGridContainer: boolean,
     expandedSections?: Set<string>
   ): string {
     if (categories.length === 0) {
@@ -602,11 +610,17 @@ export class PropertyPanelView {
       }
     }
 
-    // Position section (x, y, z - only for stacked containers)
-    if (isInPositionedContainer) {
+    // Position section: stacked → absolute X/Y; grid → grid-cell-X/Y
+    // (Slice 7 V-4 / B-5). Without the grid branch, x/y for grid children
+    // was only editable via the code editor.
+    if (isInPositionedContainer || isInGridContainer) {
       const positionSection = this.sections.get('position')
       if (positionSection) {
-        result += positionSection.render({ ...sectionData, isInPositionedContainer })
+        result += positionSection.render({
+          ...sectionData,
+          isInPositionedContainer,
+          isInGridContainer,
+        })
       }
     }
 
@@ -624,8 +638,13 @@ export class PropertyPanelView {
     if (allowedSections.has('sizing') && sizingCat) {
       const section = this.sections.get('sizing')
       if (section) {
-        const wTokens = isInPositionedContainer ? [] : this.ports.tokens.getSpacingTokens('w')
-        const hTokens = isInPositionedContainer ? [] : this.ports.tokens.getSpacingTokens('h')
+        // Slice 7 V-5 (B-6): in grid containers `w N`/`h N` are span counts,
+        // not pixel sizes. Drop pixel/spacing tokens (`pad.w`, etc.) — they
+        // produce semantic nonsense as cell-spans. Position-tokens
+        // (`header.w: 12`) are picked up via the property-set token path.
+        const inSpanContext = isInPositionedContainer || isInGridContainer
+        const wTokens = inSpanContext ? [] : this.ports.tokens.getSpacingTokens('w')
+        const hTokens = inSpanContext ? [] : this.ports.tokens.getSpacingTokens('h')
         result += section.render({
           ...sectionData,
           category: sizingCat,
