@@ -184,6 +184,17 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
   als pure-dead löschen — falsche Prämisse, vom User korrigiert.
   Hier dokumentiert als Owner-Item.
 
+- **Wo:** `compiler/runtime/test-api.ts` (9 Zeilen)
+  **Was:** „Backward Compatibility Re-export"-Wrapper aus einer
+  früheren Modularisierung. Re-exportiert alles aus
+  `./test-api/index`. Aktuell 2 Consumer, beide in `tests/`:
+  `tests/runtime/test-api.test.ts:13` und `tests/helpers/test-api.ts:10`.
+  Keine externen Consumer (kein NPM-bin, keine Studio-Bridge).
+  Wrapper ohne Mehrwert.
+  **Status:** aktiv (Claude-Session, 2026-05-10 ~20:10)
+  **Plan:** 2 Test-Imports auf `compiler/runtime/test-api/index`
+  umziehen, Wrapper-Datei löschen, Tests grün.
+
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
   - `studio/code-modifier/property-extractor.ts:302` — `componentMap`
