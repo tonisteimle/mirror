@@ -11,6 +11,11 @@ Ziel ist **rigorose Qualität**, nicht Tempo.
 
 - **Klein inkrementieren.** Ein Befund → eine Probe → ein Fix → ein
   Commit. Keine Multi-Befund-Bündel. Jeder Schritt isoliert.
+- **Regelmäßig committen.** Jeder grüne Inkrement-Schritt geht sofort
+  ins Git, nicht batchen. Parallele Sessions und externe Reverts haben
+  in der Vergangenheit uncommitteten Stand vernichtet — Disk ist kein
+  sicherer Speicher, Git ist es. Auch WIP-Snapshots (`wip:`-Commit)
+  sind besser als drei Stunden uncommitteter Arbeit.
 - **Findings-Doc führt.** Jeder Befund landet zuerst unter „Offen",
   dann fixen, dann nach „Erledigt" mit Commit-Hash verschieben. Auch
   nicht sofort fixbare Befunde bleiben als offener Eintrag stehen —

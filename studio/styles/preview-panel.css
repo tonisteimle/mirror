@@ -9,7 +9,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 6px 0 12px;
+      padding: 0 12px;
       background: var(--bg-panel);
       border-bottom: 1px solid var(--border-default);
       font-size: var(--font-base);
@@ -40,27 +40,42 @@
       margin-left: auto;
     }
 
-    .play-btn {
+    /* Preview-Toolbar Buttons — same chrome as .editor-action-btn so the
+       Play / Export / (in-play-mode) Reset icons match the editor side. */
+    .play-btn,
+    .export-toolbar-btn,
+    .play-toolbar-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 22px;
-      height: 22px;
+      width: var(--size-icon-xl);
+      height: var(--size-icon-xl);
       border: none;
       background: transparent;
-      color: var(--text-muted);
+      color: var(--text-secondary);
       border-radius: var(--radius-sm);
       cursor: pointer;
       transition: all 0.15s ease;
     }
 
-    .play-btn svg {
-      width: 10px;
-      height: 10px;
+    .play-btn svg,
+    .play-toolbar-btn svg {
+      width: var(--size-icon-sm);
+      height: var(--size-icon-sm);
     }
 
-    .play-btn:hover {
+    /* Package outline icon reads visually smaller than the filled play
+       triangle at the same SVG size — bump it one notch so they match. */
+    .export-toolbar-btn svg {
+      width: var(--size-icon-md);
+      height: var(--size-icon-md);
+    }
+
+    .play-btn:hover,
+    .export-toolbar-btn:hover,
+    .play-toolbar-btn:hover {
       color: var(--text-secondary);
+      background: var(--bg-hover);
     }
 
     /* Play Mode Button - Active state with accent background */
@@ -73,54 +88,18 @@
       background: var(--accent-hover);
     }
 
-    /* Export Button — same chrome as .play-btn (always visible) */
-    .export-toolbar-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 22px;
-      height: 22px;
-      border: none;
-      background: transparent;
-      color: var(--text-muted);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .export-toolbar-btn svg {
-      width: 12px;
-      height: 12px;
-    }
-
-    .export-toolbar-btn:hover {
-      color: var(--text-secondary);
-      background: var(--bg-hover);
-    }
-
-    /* Play Mode Toolbar Button (Reset etc.) */
+    /* Reset is only visible in play mode. */
     .play-toolbar-btn {
-      display: none; /* Hidden by default, shown in play mode */
-      align-items: center;
-      justify-content: center;
-      width: 22px;
-      height: 22px;
-      border: none;
-      background: transparent;
-      color: var(--text-muted);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.15s ease;
+      display: none;
     }
 
-    .play-toolbar-btn svg {
-      width: 12px;
-      height: 12px;
-    }
-
-    .play-toolbar-btn:hover {
-      color: var(--text-secondary);
-      background: var(--bg-hover);
+    /* Vertical separator between Play and Export — same look as
+       .editor-action-divider in the editor toolbar. */
+    .preview-toolbar-divider {
+      width: 1px;
+      height: var(--size-icon-md);
+      background: var(--bg-active);
+      margin: 0 4px;
     }
 
     /* Device Selector */

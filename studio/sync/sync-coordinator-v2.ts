@@ -449,6 +449,12 @@ export class SyncCoordinator {
           }
 
           if (isInFile) {
+            // Suppress the self-echo: scrollEditorToLine moves the editor
+            // cursor, which triggers handleCursorMove. Setting lastCursorLine
+            // first makes the dedup in handleCursorMove (sourceMapLine ===
+            // lastCursorLine) reject the echo, so getNodeAtLine doesn't run
+            // and overwrite the just-made selection with a sibling/child.
+            this.lastCursorLine = sourceMapLine
             logSync.debug('scrollEditorToLine called', { origin, editorLine, nodeId })
             this.targets.scrollEditorToLine?.(editorLine)
           }

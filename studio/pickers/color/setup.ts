@@ -161,6 +161,7 @@ export function initColorPicker(deps: ColorPickerSetupDeps): ColorPickerHandle {
     const suffix = prop ? COLOR_PROPERTY_SUFFIXES[prop] : null
     const allTokens = extractColorTokens()
 
+    // Sort: matching-suffix tokens first, then alphabetical.
     const sortedTokens = [...allTokens]
     if (suffix) {
       sortedTokens.sort((a, b) => {
@@ -172,68 +173,29 @@ export function initColorPicker(deps: ColorPickerSetupDeps): ColorPickerHandle {
     }
 
     const label = colorPicker?.querySelector<HTMLElement>('.color-picker-label')
-    if (label) {
-      const matchCount = suffix ? allTokens.filter(t => t.name.endsWith(suffix)).length : 0
-      if (suffix && matchCount > 0) {
-        label.textContent = `Tokens (${matchCount} ${suffix})`
-      } else {
-        label.textContent = `Tokens (${allTokens.length})`
-      }
-    }
+    if (label) label.textContent = 'Tokens'
 
-    // Group tokens by prefix (part before the dot)
-    const groups = new Map<string, ColorToken[]>()
     for (const token of sortedTokens) {
-      const name = token.name.startsWith('$') ? token.name.slice(1) : token.name
-      const dotIndex = name.lastIndexOf('.')
-      const prefix = dotIndex > 0 ? name.slice(0, dotIndex) : '_ungrouped'
-      const list = groups.get(prefix) ?? []
-      list.push(token)
-      groups.set(prefix, list)
-    }
-
-    for (const [prefix, tokens] of groups) {
-      const groupEl = document.createElement('div')
-      groupEl.className = 'token-group'
-
-      // Group label is clickable and inserts the base token (e.g. "$primary")
-      if (prefix !== '_ungrouped' && tokens.length > 1) {
-        const groupLabel = document.createElement('span')
-        groupLabel.className = 'token-group-label'
-        groupLabel.textContent = prefix
-        groupLabel.title = `$${prefix}`
-        groupLabel.addEventListener('click', () => selectColor('$' + prefix))
-        groupEl.appendChild(groupLabel)
+      const btn = document.createElement('button')
+      btn.className = 'token-swatch'
+      if (suffix && token.name.endsWith(suffix)) {
+        btn.classList.add('token-swatch-match')
       }
+      btn.style.backgroundColor = token.value
+      btn.dataset.token = token.name
+      btn.dataset.color = token.value
+      btn.title = token.name
 
-      const swatchContainer = document.createElement('div')
-      swatchContainer.className = 'token-group-swatches'
+      btn.addEventListener('mouseenter', () => {
+        if (colorPreview) colorPreview.style.backgroundColor = token.value
+        if (colorHex) colorHex.textContent = token.name
+      })
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        selectColor(token.name)
+      })
 
-      for (const token of tokens) {
-        const btn = document.createElement('button')
-        btn.className = 'token-swatch'
-        if (suffix && token.name.endsWith(suffix)) {
-          btn.classList.add('token-swatch-match')
-        }
-        btn.style.backgroundColor = token.value
-        btn.dataset.token = token.name
-        btn.dataset.color = token.value
-        btn.title = token.name
-
-        btn.addEventListener('mouseenter', () => {
-          if (colorPreview) colorPreview.style.backgroundColor = token.value
-          if (colorHex) colorHex.textContent = token.name
-        })
-        btn.addEventListener('click', e => {
-          e.preventDefault()
-          selectColor(token.name)
-        })
-
-        swatchContainer.appendChild(btn)
-      }
-
-      groupEl.appendChild(swatchContainer)
-      colorPickerTokenGrid.appendChild(groupEl)
+      colorPickerTokenGrid.appendChild(btn)
     }
 
     const section = document.getElementById('color-picker-tokens')

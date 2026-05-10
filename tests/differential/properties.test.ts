@@ -385,3 +385,85 @@ describe('Properties — DOM emits expected style values', () => {
     expect(dom).toContain('"$accent.blue"')
   })
 })
+
+// =============================================================================
+// Lane 2 / Inkrement 1 — Property-Alias-Drift Pre-Refactor-Pin
+//
+// Schema (`compiler/schema/properties.ts`) deklariert aliases pro Property
+// (z.B. `padding` → `pad`, `p`). Konsumenten in IR/Backends matchen heute
+// teilweise mit hardcoded Listen (`name === 'pad' || name === 'padding' ||
+// name === 'p'`) statt über `getCanonicalPropertyName(...)`. Ein neuer
+// Alias im Schema würde von diesen Hardcodes ignoriert → Property silent
+// gedroppt im Output. Diese Pins fixieren die Drei-Alias-Equivalenz für
+// die häufigsten Properties, damit der bevorstehende Refactor (Hardcodes
+// → Schema-Lookup) keine Regression einführt.
+// =============================================================================
+
+describe('Properties — Alias-Equivalenz (Schema-driven match)', () => {
+  it('padding: `pad N`, `padding N`, `p N` produce identical DOM output', () => {
+    const dPad = generateDOM(parse(`Frame pad 16`))
+    const dPadding = generateDOM(parse(`Frame padding 16`))
+    const dP = generateDOM(parse(`Frame p 16`))
+    expect(dPad).toContain('padding')
+    expect(dPad).toBe(dPadding)
+    expect(dPad).toBe(dP)
+  })
+
+  it('margin: `mar N`, `margin N`, `m N` produce identical DOM output', () => {
+    const dMar = generateDOM(parse(`Frame mar 16`))
+    const dMargin = generateDOM(parse(`Frame margin 16`))
+    const dM = generateDOM(parse(`Frame m 16`))
+    expect(dMar).toContain('margin')
+    expect(dMar).toBe(dMargin)
+    expect(dMar).toBe(dM)
+  })
+
+  it('width: `w N` and `width N` produce identical DOM output', () => {
+    const dW = generateDOM(parse(`Frame w 100`))
+    const dWidth = generateDOM(parse(`Frame width 100`))
+    expect(dW).toContain('width')
+    expect(dW).toBe(dWidth)
+  })
+
+  it('height: `h N` and `height N` produce identical DOM output', () => {
+    const dH = generateDOM(parse(`Frame h 100`))
+    const dHeight = generateDOM(parse(`Frame height 100`))
+    expect(dH).toContain('height')
+    expect(dH).toBe(dHeight)
+  })
+
+  it('directional padding: `pad t 16` and `padding t 16` produce identical DOM', () => {
+    const dPad = generateDOM(parse(`Frame pad t 16`))
+    const dPadding = generateDOM(parse(`Frame padding t 16`))
+    expect(dPad).toContain('padding-top')
+    expect(dPad).toBe(dPadding)
+  })
+
+  it('width full: `w full` and `width full` produce identical DOM', () => {
+    const dW = generateDOM(parse(`Frame w full`))
+    const dWidth = generateDOM(parse(`Frame width full`))
+    expect(dW).toBe(dWidth)
+  })
+
+  it('width hug: `w hug` and `width hug` produce identical DOM', () => {
+    const dW = generateDOM(parse(`Frame w hug`))
+    const dWidth = generateDOM(parse(`Frame width hug`))
+    expect(dW).toBe(dWidth)
+  })
+
+  it('cross-backend: padding aliases produce identical React output', () => {
+    const rPad = generateReact(parse(`Frame pad 16`))
+    const rPadding = generateReact(parse(`Frame padding 16`))
+    const rP = generateReact(parse(`Frame p 16`))
+    expect(rPad).toBe(rPadding)
+    expect(rPad).toBe(rP)
+  })
+
+  it('cross-backend: margin aliases produce identical Framework output', () => {
+    const fwMar = generateFramework(parse(`Frame mar 16`))
+    const fwMargin = generateFramework(parse(`Frame margin 16`))
+    const fwM = generateFramework(parse(`Frame m 16`))
+    expect(fwMar).toBe(fwMargin)
+    expect(fwMar).toBe(fwM)
+  })
+})

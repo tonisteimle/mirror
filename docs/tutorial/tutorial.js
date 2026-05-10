@@ -455,11 +455,11 @@ function initializePlaygrounds() {
 }
 
 /**
- * Tutorial Top-Bar + Mega-Menu Navigation
+ * Tutorial Sidebar Navigation
  *
- * Top-bar (always visible): hamburger button + Mirror logo.
- * Hamburger opens a full-screen overlay with all chapters arranged
- * in 4 labeled columns.
+ * Always-visible sidebar on viewports ≥1100px, with the same 4-section
+ * structure as the previous megamenu. Sub-group labels (e.g. „Einstieg",
+ * „Editing-Werkzeuge") render as small caps inside each section.
  */
 
 // 4 columns, visually balanced (6/8/8/6). Studio is split into
@@ -557,123 +557,54 @@ const tutorialSections = [
   },
 ]
 
-// Build a flat lookup so the topbar can show the current chapter title.
-function findChapter(file) {
-  for (const section of tutorialSections) {
-    for (const group of section.groups) {
-      for (const item of group.items) {
-        if (item.file === file) return item
-      }
-    }
-  }
-  return null
-}
-
 function createTutorialNav() {
   let currentFile = window.location.pathname.split('/').pop() || 'index.html'
   if (currentFile === '' || currentFile === 'tutorial') currentFile = 'index.html'
   if (!currentFile.includes('.')) currentFile = currentFile + '.html'
 
-  // Top bar (always visible): hamburger left, logo center-left next to it.
-  // If we're inside a chapter, show its number + title on the right.
-  const chapter = findChapter(currentFile)
-  const topbar = document.createElement('header')
-  topbar.className = 'tutorial-topbar'
-  topbar.innerHTML = `
-    <button type="button" class="tutorial-topbar-hamburger" aria-label="Menü öffnen" aria-expanded="false">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
-    <a class="tutorial-topbar-brand" href="index.html">
+  const sidebar = document.createElement('aside')
+  sidebar.className = 'tutorial-sidebar'
+
+  // Header with logo + brand name
+  const header = document.createElement('div')
+  header.className = 'tutorial-sidebar-header'
+  header.innerHTML = `
+    <a href="index.html">
       <img src="logo-mirror.png" alt="Mirror">
       <span>Mirror</span>
     </a>
-    ${chapter ? `<div class="tutorial-topbar-chapter"><span class="tutorial-topbar-chapter-num">${chapter.num}</span><span class="tutorial-topbar-chapter-title">${chapter.title}</span></div>` : ''}
   `
-
-  // Mega-menu overlay
-  const overlay = document.createElement('div')
-  overlay.className = 'tutorial-megamenu'
-  overlay.setAttribute('aria-hidden', 'true')
-
-  const inner = document.createElement('div')
-  inner.className = 'tutorial-megamenu-inner'
-
-  const closeBtn = document.createElement('button')
-  closeBtn.type = 'button'
-  closeBtn.className = 'tutorial-megamenu-close'
-  closeBtn.setAttribute('aria-label', 'Menü schließen')
-  closeBtn.innerHTML = `
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-  `
-  inner.appendChild(closeBtn)
-
-  const grid = document.createElement('div')
-  grid.className = 'tutorial-megamenu-grid'
+  sidebar.appendChild(header)
 
   for (const section of tutorialSections) {
-    const col = document.createElement('div')
-    col.className = 'tutorial-megamenu-col'
+    const sectionEl = document.createElement('div')
+    sectionEl.className = 'tutorial-sidebar-section'
 
-    const heading = document.createElement('h3')
-    heading.className = 'tutorial-megamenu-heading'
-    heading.textContent = section.title
-    col.appendChild(heading)
+    const sectionHeading = document.createElement('div')
+    sectionHeading.className = 'tutorial-sidebar-section-title'
+    sectionHeading.textContent = section.title
+    sectionEl.appendChild(sectionHeading)
 
     for (const group of section.groups) {
       const subhead = document.createElement('div')
-      subhead.className = 'tutorial-megamenu-subhead'
+      subhead.className = 'tutorial-sidebar-subhead'
       subhead.textContent = group.title
-      col.appendChild(subhead)
+      sectionEl.appendChild(subhead)
 
-      const list = document.createElement('ul')
-      list.className = 'tutorial-megamenu-list'
       for (const item of group.items) {
-        const li = document.createElement('li')
-        const a = document.createElement('a')
-        a.className = 'tutorial-megamenu-link'
-        a.href = item.file
-        if (currentFile === item.file) a.classList.add('active')
-        a.innerHTML = `<span class="tutorial-megamenu-num">${item.num}</span><span>${item.title}</span>`
-        li.appendChild(a)
-        list.appendChild(li)
+        const link = document.createElement('a')
+        link.className = 'tutorial-sidebar-link'
+        link.href = item.file
+        if (currentFile === item.file) link.classList.add('active')
+        link.innerHTML = `<span class="tutorial-sidebar-link-num">${item.num}</span><span>${item.title}</span>`
+        sectionEl.appendChild(link)
       }
-      col.appendChild(list)
     }
-    grid.appendChild(col)
+    sidebar.appendChild(sectionEl)
   }
-  inner.appendChild(grid)
-  overlay.appendChild(inner)
 
-  // Wire open/close
-  const hamburger = topbar.querySelector('.tutorial-topbar-hamburger')
-  function open() {
-    overlay.classList.add('is-open')
-    overlay.setAttribute('aria-hidden', 'false')
-    hamburger.setAttribute('aria-expanded', 'true')
-    document.body.classList.add('megamenu-open')
-  }
-  function close() {
-    overlay.classList.remove('is-open')
-    overlay.setAttribute('aria-hidden', 'true')
-    hamburger.setAttribute('aria-expanded', 'false')
-    document.body.classList.remove('megamenu-open')
-  }
-  hamburger.addEventListener('click', () => {
-    if (overlay.classList.contains('is-open')) close()
-    else open()
-  })
-  closeBtn.addEventListener('click', close)
-  overlay.addEventListener('click', e => {
-    // Click on backdrop (outside .tutorial-megamenu-inner content) closes.
-    if (e.target === overlay) close()
-  })
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && overlay.classList.contains('is-open')) close()
-  })
-
-  document.body.insertBefore(overlay, document.body.firstChild)
-  document.body.insertBefore(topbar, document.body.firstChild)
-  document.body.classList.add('has-topbar')
+  document.body.insertBefore(sidebar, document.body.firstChild)
+  document.body.classList.add('has-sidebar')
 }
 
 // Auto-initialize when DOM is ready

@@ -20,7 +20,7 @@ import {
   BORDER_DIRECTION_MAP,
   hoverPropertyToCSS,
 } from '../../schema/ir-helpers'
-import { SYSTEM_STATES } from '../../schema/parser-helpers'
+import { SYSTEM_STATES, getCanonicalPropertyName } from '../../schema/parser-helpers'
 import { EDGE_DIRECTIONS } from './property-utils-transformer'
 
 // Schema-derived state-prefix list for inline shorthand
@@ -83,6 +83,14 @@ export function propertyToCSS(
   parentLayoutContext?: ParentLayoutContext
 ): IRStyle[] {
   const name = prop.name
+  // Resolve through schema so alias-bundles like `pad`/`padding`/`p`
+  // collapse to a single canonical name. Lane 2 / Inkrement 1 — replaces
+  // hardcoded `name === 'pad' || name === 'padding' || name === 'p'`
+  // disjunctions that drift when a new alias is added in the schema.
+  // For properties not declared in the schema (animation/anim, blur,
+  // backdrop-blur, scale, aspect, scroll-ver/scroll-hor), the helper
+  // returns the input unchanged — those branches keep using `name`.
+  const canonical = getCanonicalPropertyName(name)
   const value = ctx.resolveValue(prop.values, name)
   const values = prop.values
 
@@ -119,16 +127,12 @@ export function propertyToCSS(
   // Handle gradient syntax: bg grad #color1 #color2, col grad #color1 #color2
   // Supports: grad, grad-ver, grad N (angle), and multiple colors
   if (
-    (name === 'background' ||
-      name === 'bg' ||
-      name === 'color' ||
-      name === 'col' ||
-      name === 'c') &&
+    (canonical === 'background' || canonical === 'color') &&
     values.length >= 2 &&
     (String(values[0]) === 'grad' || String(values[0]).startsWith('grad-'))
   ) {
     const gradType = String(values[0])
-    const isTextGradient = name === 'color' || name === 'col' || name === 'c'
+    const isTextGradient = canonical === 'color'
 
     // Determine angle based on gradient type
     let angle = '90deg' // default: horizontal (left to right)
@@ -181,7 +185,7 @@ export function propertyToCSS(
   // The data-attribute branch lives in value-resolver.ts; this branch
   // overrides w/h so both the span and the SVG follow `is`. We use the
   // already-resolved `value` so `is $hero` → `var(--hero-is)` survives.
-  if (primitive === 'icon' && (name === 'is' || name === 'icon-size')) {
+  if (primitive === 'icon' && canonical === 'icon-size') {
     const resolved = String(value)
     const px = /^\d+(\.\d+)?$/.test(resolved) ? `${resolved}px` : resolved
     return [
@@ -250,7 +254,7 @@ export function propertyToCSS(
   }
 
   // Handle directional padding: pad left 20, pad top 8 bottom 24, pad x 16, pad left right 8
-  if ((name === 'pad' || name === 'padding' || name === 'p') && values.length >= 2) {
+  if (canonical === 'padding' && values.length >= 2) {
     if ((EDGE_DIRECTIONS as readonly string[]).includes(String(values[0]))) {
       return parseDirectionalSpacing('padding', values)
     }
@@ -275,7 +279,7 @@ export function propertyToCSS(
   }
 
   // Handle directional margin: margin left 8, margin top 16 bottom 24, margin x 16
-  if ((name === 'margin' || name === 'm' || name === 'mar') && values.length >= 2) {
+  if (canonical === 'margin' && values.length >= 2) {
     if ((EDGE_DIRECTIONS as readonly string[]).includes(String(values[0]))) {
       return parseDirectionalSpacing('margin', values)
     }
@@ -301,7 +305,7 @@ export function propertyToCSS(
 
   // Handle directional border: bor t 1 #333, bor left right 1 #333, bor x 2 #666
   // Uses BORDER_DIRECTION_MAP from schema/ir-helpers.ts
-  if ((name === 'bor' || name === 'border') && values.length >= 2) {
+  if (canonical === 'border' && values.length >= 2) {
     const firstVal = String(values[0])
     if (BORDER_DIRECTION_MAP[firstVal]) {
       // Collect all direction tokens
@@ -341,7 +345,7 @@ export function propertyToCSS(
 
   // Handle corner-specific radius: rad tl 8, rad t 8, rad 8 8 0 0
   // Uses CORNER_MAP from schema/ir-helpers.ts
-  if ((name === 'rad' || name === 'radius') && values.length >= 1) {
+  if (canonical === 'radius' && values.length >= 1) {
     const cornerMap: Record<string, string[]> = {
       tl: ['border-top-left-radius'],
       tr: ['border-top-right-radius'],
@@ -420,7 +424,7 @@ export function propertyToCSS(
   // Must use the longhand `grid-column-end` (not the `grid-column` shorthand),
   // because `grid-column: span N` resets `grid-column-start` to `auto` and
   // would clobber the start emitted from `x N`. Same goes for `h` ↔ `y`.
-  if ((name === 'w' || name === 'width') && parentLayoutContext?.type === 'grid') {
+  if (canonical === 'width' && parentLayoutContext?.type === 'grid') {
     const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
     const isVar = typeof value === 'string' && value.startsWith('var(')
     if (!isNaN(numVal) && numVal > 0) {
@@ -441,7 +445,7 @@ export function propertyToCSS(
   }
 
   // Grid span: h (numeric) → grid-row-end: span N (when parent is grid)
-  if ((name === 'h' || name === 'height') && parentLayoutContext?.type === 'grid') {
+  if (canonical === 'height' && parentLayoutContext?.type === 'grid') {
     const numVal = typeof values[0] === 'number' ? values[0] : parseInt(String(values[0]), 10)
     const isVar = typeof value === 'string' && value.startsWith('var(')
     if (!isNaN(numVal) && numVal > 0) {
@@ -462,7 +466,7 @@ export function propertyToCSS(
   }
 
   // Handle rotate: rotate 45 (fallback for states)
-  if (name === 'rotate' || name === 'rot') {
+  if (canonical === 'rotate') {
     const deg = String(values[0])
     return [{ property: 'transform', value: `rotate(${deg}deg)` }]
   }
@@ -528,14 +532,14 @@ export function propertyToCSS(
 
   // Handle special cases FIRST (before the early return check)
   // These are layout/positioning properties that need special CSS mapping
-  if (name === 'horizontal' || name === 'hor') {
+  if (canonical === 'horizontal') {
     return [
       { property: 'display', value: 'flex' },
       { property: 'flex-direction', value: 'row' },
     ]
   }
 
-  if (name === 'vertical' || name === 'ver') {
+  if (canonical === 'vertical') {
     return [
       { property: 'display', value: 'flex' },
       { property: 'flex-direction', value: 'column' },
@@ -543,7 +547,7 @@ export function propertyToCSS(
     ]
   }
 
-  if (name === 'center' || name === 'cen') {
+  if (canonical === 'center') {
     return [
       { property: 'display', value: 'flex' },
       { property: 'justify-content', value: 'center' },
@@ -581,8 +585,8 @@ export function propertyToCSS(
   // Handle width/height 'full' - use flex: 1 1 0% only when dimension matches flex direction
   // This ensures w full works in hor containers, h full works in ver containers
   // For cross-axis (h full in hor, w full in ver), use align-self: stretch instead
-  if ((name === 'width' || name === 'w' || name === 'height' || name === 'h') && value === 'full') {
-    const isWidth = name === 'width' || name === 'w'
+  if ((canonical === 'width' || canonical === 'height') && value === 'full') {
+    const isWidth = canonical === 'width'
     const isHorizontalFlex =
       parentLayoutContext?.type === 'flex' && parentLayoutContext?.flexDirection === 'row'
     const isVerticalFlex =
@@ -609,10 +613,8 @@ export function propertyToCSS(
   }
 
   // Handle width/height 'hug' before schema
-  if ((name === 'width' || name === 'w' || name === 'height' || name === 'h') && value === 'hug') {
-    return [
-      { property: name === 'width' || name === 'w' ? 'width' : 'height', value: 'fit-content' },
-    ]
+  if ((canonical === 'width' || canonical === 'height') && value === 'hug') {
+    return [{ property: canonical === 'width' ? 'width' : 'height', value: 'fit-content' }]
   }
 
   // Handle numeric width/height - prevent shrinking in flex containers

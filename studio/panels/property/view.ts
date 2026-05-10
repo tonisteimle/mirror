@@ -561,8 +561,9 @@ export class PropertyPanelView {
       const showColorPicker = window.showColorPickerForProperty
       if (showColorPicker) {
         showColorPicker(x, y, property, currentValue, (color: string) => {
-          // When a color is selected, update the property
-          this.controller.changeProperty(property === 'bg' ? 'bg' : 'col', color)
+          // When a color is selected, update the property the user actually
+          // clicked on (bg / col / ic / boc — not always 'col').
+          this.controller.changeProperty(property, color)
         })
       } else {
         log.warn('Color picker API not available')
