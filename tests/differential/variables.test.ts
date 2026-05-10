@@ -70,12 +70,13 @@ describe('Variables — Variable values appear in all 3 backend outputs', () => 
 })
 
 describe('Variables — Nested-object access', () => {
-  // PIN: nested-object data is reachable in DOM + React (DOM via
-  // `__mirrorData`, React via the `tokens` object literal). Framework
-  // still emits `'user': undefined` — closing that needs data emission
-  // in the framework backend.
+  // PIN: nested-object data lands in all three backends.
+  //   DOM:       `__mirrorData` runtime store
+  //   React:     `tokens` object literal
+  //   Framework: `tokens` object literal (post-2026-05-10 — was previously
+  //               `'user': undefined`).
   it.each(NESTED_CORPUS)(
-    '$name: nested-object data lands in DOM + React; Framework drops it',
+    '$name: nested-object data lands in DOM, React, and Framework',
     ({ src, expectIn }) => {
       const dom = generateDOM(parse(src))
       const react = generateReact(parse(src))
@@ -83,7 +84,7 @@ describe('Variables — Nested-object access', () => {
       for (const value of expectIn) {
         expect(dom).toContain(value)
         expect(react).toContain(value)
-        expect(fw).not.toContain(value)
+        expect(fw).toContain(value)
       }
     }
   )

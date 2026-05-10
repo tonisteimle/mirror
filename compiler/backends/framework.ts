@@ -48,6 +48,32 @@ export function generateFramework(ast: AST): string {
   return generator.generate()
 }
 
+/**
+ * Convert an IR data-value (nested object, list, or scalar) to a JS literal
+ * the M(...) runtime can iterate at render time. Mirrors the React backend's
+ * `dataAttributesToJSObject` semantics — nested objects round-trip as object
+ * literals, bare-list forms as arrays, scalars as quoted/raw values.
+ */
+function dataValueToJS(value: unknown): string {
+  if (value === null) return 'null'
+  if (Array.isArray(value)) {
+    return '[' + value.map(v => dataValueToJS(v)).join(', ') + ']'
+  }
+  if (typeof value === 'object' && value !== null) {
+    // Skip data-references (`__ref: true` markers) — their resolution
+    // happens at runtime; emit as a plain placeholder string for now.
+    if ('__ref' in value && (value as { __ref: boolean }).__ref) {
+      const ref = value as { collection: string; entry: string }
+      return JSON.stringify(`$${ref.collection}.${ref.entry}`)
+    }
+    const entries = Object.entries(value as Record<string, unknown>).map(
+      ([k, v]) => `${JSON.stringify(k)}: ${dataValueToJS(v)}`
+    )
+    return '{ ' + entries.join(', ') + ' }'
+  }
+  return JSON.stringify(value)
+}
+
 class FrameworkGenerator {
   private ir: IR
   private indent = 0
@@ -104,10 +130,22 @@ class FrameworkGenerator {
   private emitTokens(): void {
     if (this.ir.tokens.length === 0) return
 
+    // Drop property-sets (no `value`, no `data`) — they're expanded inline
+    // at the IR layer, so emitting `'cardstyle': undefined` is just noise.
+    const valueTokens = this.ir.tokens.filter(t => t.value !== undefined || t.data !== undefined)
+    if (valueTokens.length === 0) return
+
     this.emit('// Design Tokens')
     this.emit('export const tokens = {')
     this.indent++
-    for (const token of this.ir.tokens) {
+    for (const token of valueTokens) {
+      // Nested data objects (`tasks: { t1: {...}, t2: {...} }`) and bare-list
+      // forms (`colors: [red, blue]`) need a real JS literal — without it the
+      // runtime can't iterate them via `each task in $tasks` / `$colors.count`.
+      if (token.data !== undefined) {
+        this.emit(`'${token.name}': ${dataValueToJS(token.data)},`)
+        continue
+      }
       const value = typeof token.value === 'string' ? `'${token.value}'` : token.value
       this.emit(`'${token.name}': ${value},`)
     }
