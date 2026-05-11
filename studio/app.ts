@@ -161,8 +161,8 @@ import {
   CodeModifier,
   PropertyExtractor,
   createRobustModifier,
-  // First-visit demo content
-  DEFAULT_PROJECT,
+  // First-visit content (demo temporarily disabled — empty project instead)
+  EMPTY_PROJECT,
   // Project lifecycle actions (new / demo / import / export)
   projectActions,
 } from '.'
@@ -401,7 +401,7 @@ if (!isPlaygroundMode) {
   }
 
   if (Object.keys(files).length === 0) {
-    Object.assign(files, DEFAULT_PROJECT)
+    Object.assign(files, EMPTY_PROJECT)
   }
 }
 
@@ -1019,17 +1019,17 @@ aiEditBtn?.addEventListener('click', () => {
   editHandler.handleEditFlow(editor)
 })
 
-// Reset to demo project (with confirmation — destructive, wipes editor + storage)
+// Reset to empty project (with confirmation — destructive, wipes editor + storage)
 const resetDemoBtn = document.getElementById('reset-demo-btn') as HTMLButtonElement | null
 resetDemoBtn?.addEventListener('click', async () => {
   try {
     const ok = await MirrorDialog.confirm('Alle aktuellen Änderungen gehen verloren.', {
-      title: 'Demo-Projekt laden?',
+      title: 'Projekt zurücksetzen?',
     })
     if (!ok) return
-    await projectActions.demo()
+    await projectActions.new('empty')
   } catch (e) {
-    log.error('Failed to load demo project:', e)
+    log.error('Failed to reset project:', e)
   }
 })
 

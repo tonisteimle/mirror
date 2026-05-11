@@ -64,6 +64,7 @@ export {
   importProject,
   exportProject,
   DEFAULT_PROJECT,
+  EMPTY_PROJECT,
 } from './project-actions'
 
 export type {
