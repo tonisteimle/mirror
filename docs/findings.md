@@ -690,7 +690,7 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
   riskiert man dass parallel jemand an genau dieser Wiring-Arbeit
   sitzt.
 
-- **Wo:** `studio/app.ts` (heute 2467 LOC, vor Refactor 2557)
+- **Wo:** `studio/app.ts` (heute 2456 LOC, vor Refactor 2557)
   **Was:** Bootstrap-Sprawl: 30+ globale Konstanten, 5 Extensions, 8
   Manager-Inits inline. Sieben Phasen nach `studio/init/` extrahiert:
   `init-notifications`, `init-sync`, `init-grid-overlay`,
@@ -698,27 +698,17 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
   `init-editor-dispatch` (`8b92ae7a`). `compile()`-Decomposition
   läuft als pure-helper-Slices: `wrap-layout` (`e79184f5`),
   `augment-local-components` (`514807d6`), `execute-mirror-js`
-  (`87237522`) — jede mit eigenen Unit-Tests. Verbleibend in
-  `compile()`: Prelude-Resolution + State-Update-Block + Render-Pipe;
-  daneben `updateStudio()`, `handleStudioCodeChange()`, plus File-IO
-  und Ext-Wiring.
-  **Status:** aktiv (Claude, 2026-05-11) — nächste pure-helper-Slice
-  **Plan:** `extractPreludeDefinitions(preludeCode)` extrahieren
-  — die 17-Zeilen-Logik bei `app.ts:1419-1433`, die für den
-  Validator-Aufruf die Token- und Component-Namen aus dem Prelude
-  in zwei `Set<string>` aufbereitet. Reines AST-Parsing,
-  Side-effect-frei, deshalb pure-helper-Kandidat. Neue Datei:
-  `studio/compile/prelude-definitions.ts`. Unit-Test:
-  `tests/studio/compile-prelude-definitions.test.ts` mit Pins für
-  (a) null/empty prelude → leere Sets, (b) `primary.bg: #2271C1` →
-  `preludeTokens` enthält `primary` und `primary.bg`, (c)
-  Component-Definition → `preludeComponents` enthält den Namen,
-  (d) `$primary.bg` → führendes `$` gestrippt. Cut-over in
-  `app.ts:compile()`, dann full `npm test` + commit.
-  **Notiz:** Strategie: pure-helper-Slices mit Unit-Tests, Sub-Slice
-  pro Commit, kein Big-Bang. Reduziert Closure-Pressure inkrementell.
-  Side-Discovery beim Survey: dead compile-service-Cluster (s. o.) —
-  blockiert nicht, ist eigene Lane.
+  (`87237522`), `prelude-definitions` (`544234e3`) — jede mit
+  eigenen Unit-Tests. Verbleibend in `compile()`: testMode-/
+  preview-Redirect-Branch (resolvedCode-Build), State-Update-Block,
+  componentPrimitives-Map-Aufbau, Render-Pipe (uninstanced-augment
+  - ui-execute + rootEl-extract); daneben `updateStudio()`,
+    `handleStudioCodeChange()`, plus File-IO und Ext-Wiring.
+    **Status:** offen — ongoing decomposition
+    **Notiz:** Strategie: pure-helper-Slices mit Unit-Tests, Sub-Slice
+    pro Commit, kein Big-Bang. Reduziert Closure-Pressure inkrementell.
+    Side-Discovery beim Survey 2026-05-11: dead compile-service-Cluster
+    (s. o.) — blockiert nicht, ist eigene Lane.
 
 - **Wo:** Fünf `mock-adapters.ts` (`studio/editor/triggers/adapters/`,
   `studio/editor/adapters/`, `studio/panels/property/adapters/`,
@@ -894,6 +884,33 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-11 — `compile()`-Slice: `collectPreludeDefinitions` extrahiert (–11 LOC in app.ts)
+
+- **Wo:** `studio/compile/prelude-definitions.ts` (neu, 47 LOC),
+  `tests/studio/compile-prelude-definitions.test.ts` (neu, 7 Pins),
+  `studio/app.ts:compile()` (Cut-over: 17 → 3 Zeilen am Validator-
+  Vorbereitungs-Block)
+  **Was:** Nächste pure-helper-Slice der `app.ts:compile()`-
+  Decomposition (Finding #8). Die 17-zeilige Logik, die für den
+  Validator-Aufruf die Token-/Component-Namen aus dem Prelude in
+  zwei `Set<string>` aufbereitet (`primary.bg` → Set enthält
+  `primary` UND `primary.bg`, `$primary` wird gestrippt, Components
+  nach Name), durch `collectPreludeDefinitions(preludeAst)`
+  ersetzt. Pure-Function-Kontrakt, keine Compiler-Bundle-
+  Abhängigkeiten (Caller macht `MirrorLang.parse`), Pattern matched
+  Geschwister-Slices (`wrap-layout`, `augment-local-components`).
+  Sieben Unit-Pins decken null/empty/suffix/no-suffix/`$`-strip/
+  Component-Name/multi-Symbol-Mix. app.ts schrumpft 2467 → 2456
+  LOC. 5947/5947 studio tests pass.
+  **Status:** erledigt (`544234e3`, gebündelt mit der parallelen
+  studio/demo/-Deletion)
+  **Notiz:** Side-Discovery beim Survey: das gesamte
+  `studio/compile/compile-service.ts`-Cluster (CompileService +
+  PreludeBuilder + CodeGenerator + PreviewRenderer + StudioUpdater
+  - PerfLogger) ist exportiert und voll-getestet, wird aber
+    nirgendwo in Production instanziiert — als neuer offener Befund
+    „dead compile-service cluster" dokumentiert.
 
 ### 2026-05-11 — Orphan `studio/demo/` gelöscht (735 LOC)
 
