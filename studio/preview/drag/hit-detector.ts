@@ -17,8 +17,15 @@ import { createLogger } from '../../../compiler/utils/logger'
 
 const log = createLogger('HitDetector')
 
-/** Pixels from container edge to trigger parent selection */
-const ESCAPE_ZONE_SIZE = 24
+/**
+ * Pixels from container edge to trigger parent selection.
+ *
+ * Exported so test-API drop-point helpers can stay outside this band —
+ * landing within it makes Studio escape to the parent container, which
+ * silently breaks "drop after last child" drops in tight-packed
+ * containers (`studio/test-api/mirror-actions/index.ts:dropChildIndexPoint`).
+ */
+export const ESCAPE_ZONE_SIZE = 24
 
 export class HitDetector implements Reportable<HitReport> {
   // Last detection state for reporting

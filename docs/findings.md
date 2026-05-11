@@ -115,21 +115,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
-- **Wo:** `studio/test-api/mirror-actions/index.ts:dropChildIndexPoint`
-  - Studios Drop-Target-Detection (`studio/preview/drag/...`)
-    **Was:** Drop into a container tight-packed with children (3 children
-    `w 100 h 60` inside `w 320 h 240, pad 12, gap 8` — 220px of 240px
-    vertical space occupied) gets rejected. My `dropChildIndexPoint`
-    clamps the y to `containerRect.bottom - 4`, but Studio's drop-target
-    detection seems to treat the last ~4-12px before the container edge
-    as "outside" and ignores the drop. Test
-    `studio/test-api/suites/preview-cdp/01-palette-drop/append-at-end-vs-index.test.ts`
-    is `testWithSetupSkip` until Studio's drop-zone hot-zone math is
-    documented and the helper offsets adjusted.
-    **Status:** offen — needs (1) inspect Studio's hot-zone calculation
-    for "after last child" insertion line, (2) align helper to land
-    inside both the container AND the hot-zone.
-
 - **Wo:** `compiler/ir/ops/instance-ops.ts:transformInstance`
   (3 `addWarning`-Aufrufe)
   **Was:** Bystander-Bug: Drei Warnungen (`invalid-instance`,
@@ -917,6 +902,30 @@ Chronologisch absteigend (neueste zuerst).
   - PerfLogger) ist exportiert und voll-getestet, wird aber
     nirgendwo in Production instanziiert — als neuer offener Befund
     „dead compile-service cluster" dokumentiert.
+
+### 2026-05-11 — Drop-Helper aligned mit Studio's HitDetector escape zone
+
+- **Wo:** `studio/test-api/mirror-actions/index.ts:dropChildIndexPoint`
+  - extrahiert nach `studio/test-api/mirror-actions/drop-points.ts`
+    (Pure-Function), `studio/preview/drag/hit-detector.ts` (`ESCAPE_ZONE_SIZE`
+    Konstante exportiert), neue Pin-Suite `tests/studio/drop-points.test.ts`
+    (7 Pins), Browser-Suite
+    `studio/test-api/suites/preview-cdp/01-palette-drop/append-at-end-vs-index.test.ts`
+    un-skipped.
+    **Was:** Drop in tight-packed Container (3×60px Kinder in 240px-Container
+    mit pad 12 + gap 8 — 220 von 240px belegt) wurde von Studios HitDetector
+    abgewiesen. Helper landete bei `containerRect.bottom - 4`, was exakt
+    auf der Grenze der `ESCAPE_ZONE_SIZE = 24px` Band war — winzige Rundung
+    triggert escape-to-parent. Fix: y-Clamp auf
+    `containerRect.bottom - ESCAPE_ZONE_SIZE - 4` (4px Sicherheitsmarge
+    parallel zu „before child[index]"-Branch). Helper-Math als Pure-Function
+    extrahiert, dadurch direkt jsdom-testbar ohne `installMirrorActions`-
+    Mount. 7 Pins: empty container, before-child mit Top-Clamp, append-at-
+    end roomy/tight/over-packed, x-Midpoint. 196/196 drag-drop tests pass.
+    **Status:** erledigt
+    **Notiz:** Browser-Suite un-skipped, aber nicht local verifiziert
+    (braucht `npm run studio` Server). Helper-Math ist jsdom-gepinnt;
+    Browser-Suite läuft beim nächsten CDP-Run.
 
 ### 2026-05-11 — Orphan `studio/demo/` gelöscht (735 LOC)
 

@@ -16,6 +16,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { cdpInput, isCdpInputAvailable } from '../cdp-input-client'
+import { computeDropChildIndexPoint } from './drop-points'
 
 /**
  * Selector — structured ways to identify a Mirror preview node. Defined
@@ -246,28 +247,11 @@ export function installMirrorActions(): MirrorActionsAPI {
     const children = Array.from(targetEl.children).filter(
       el => el.hasAttribute && el.hasAttribute('data-mirror-id')
     ) as HTMLElement[]
-    const containerRect = targetEl.getBoundingClientRect()
-    if (children.length === 0) {
-      return {
-        x: containerRect.left + containerRect.width / 2,
-        y: containerRect.top + containerRect.height / 2,
-      }
-    }
-    if (index >= children.length) {
-      // After the last child, but stay inside the container so Studio's
-      // drop-target detection picks the container (not its parent).
-      const last = children[children.length - 1].getBoundingClientRect()
-      const cx = last.left + last.width / 2
-      // Halfway between last child's bottom and the container's bottom.
-      // Clamp into the container's interior with at least 4px headroom.
-      const cy = Math.min(last.bottom + 8, containerRect.bottom - 4)
-      return { x: cx, y: cy }
-    }
-    // Insertion BEFORE child[index] — drop just above its top edge but
-    // never above the container.
-    const r = children[index].getBoundingClientRect()
-    const cy = Math.max(r.top - 4, containerRect.top + 4)
-    return { x: r.left + r.width / 2, y: cy }
+    return computeDropChildIndexPoint(
+      targetEl.getBoundingClientRect(),
+      children.map(c => c.getBoundingClientRect()),
+      index
+    )
   }
 
   const center = (el: HTMLElement): Point => {
