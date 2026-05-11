@@ -115,6 +115,30 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
+- **Wo:** `studio/visual/layout-inference/` (6 Files, 872 LOC)
+  **Was:** Hunt-Audit 2026-05-11: `LayoutInferenceManager` und
+  `AlignmentDetector` werden **nirgendwo in Production oder Tests
+  außerhalb des Verzeichnisses instanziiert**; die 3 emittierten
+  Events (`layout-inference:detected/converted/error`) werden von
+  **niemandem** abonniert (manager.ts emittiert sie, kein
+  `events.on('layout-inference:*'`-Listener existiert). `events.ts`
+  importiert `AlignmentGroup` nur als Type für die 3 Event-Type-
+  Deklarationen. Tests: `visual-alignment-detector.test.ts` (testet
+  isolierte AlignmentDetector-Internas) und `visual-layout-converter.test.ts`
+  (testet LayoutConverter-Guards) — beide testen die Klassen, keine
+  Pipeline. Letzte Code-Aktivität 2026-04 (~55 Tage). Owner-exklusiver
+  Demo-File `studio/test-api/suites/demos/visual-inference.demo.ts`
+  referenziert das System; Demo-Lane ist owner-territory.
+  **Status:** offen — Owner-Entscheidung. Deletion-Versuch in dieser
+  Hunt-Session wurde durch externe Restoration (parallel-session
+  oder lint-staged) automatisch zurückgesetzt; system-reminder
+  markierte den Zustand als „intentional". Daher hier dokumentiert
+  statt gelöscht.
+  **Notiz:** Wenn Deletion gewünscht: 872 LOC src + 2 Test-Files +
+  4 Zeilen events.ts. Bei Beibehaltung: an Demo-Workflow
+  wiring nachholen, damit die Subsystem-Events real konsumiert
+  werden (sonst bleibt die Dormanz das Problem).
+
 - **Wo:** `compiler/ir/ops/instance-ops.ts:transformInstance`
   (3 `addWarning`-Aufrufe)
   **Was:** Bystander-Bug: Drei Warnungen (`invalid-instance`,
@@ -875,6 +899,47 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-11 — Dead `studio/modules/` Wrapper gelöscht (468 LOC + 1 Test-File + 5 Tests)
+
+- **Wo:** `studio/modules/{index,compiler/{index,prelude-builder,types}}.ts`,
+  `tests/studio/compiler-prelude-builder.test.ts`,
+  `tests/compiler/stress-performance.test.ts` (Multi-File Scenarios
+  describe block), `studio/index.ts` (`export * from './modules'` raus)
+  **Was:** Hunt-Discovery 2026-05-11. `studio/modules/` war ein
+  Compiler-Façade-Wrapper (`createCompiler`/`getCompiler`/`resetCompiler`)
+  plus ein **dritter** prelude-builder (`buildPrelude`/
+  `countPreludeLines`/`adjustLineNumber`) — zero Production-
+  Konsumenten (`grep` repo-weit ergab nur Self-References + 2 Test-
+  Files). Letzte Code-Aktivität 2026-04-15 (56 Tage). Production's
+  multi-file prelude lebt schon längst in
+  `studio/compile/collect-prelude.ts`, das via `getPreludeCode()`
+  von `app.ts` gerufen wird. Wrapper war abandoned April-Refactor.
+  468 LOC source + ~185 LOC dedicated test + ~125 LOC test-block
+  weg. 5974/5974 tests pass.
+  **Status:** erledigt (`9ca1cb6c`)
+  **Notiz:** Restoration via `git show <pre-delete>:studio/modules/`.
+  Die anderen Stress-describes in stress-performance.test.ts (Large
+  Files / Deep Nesting / Name Conflicts) bleiben — nur der
+  Multi-File-Block, der gegen den dead buildPrelude lief, ist weg.
+
+### 2026-05-11 — Dead `studio/visual/constraints/` UI-Panel gelöscht (299 LOC)
+
+- **Wo:** `studio/visual/constraints/{constraint-panel,types,index}.ts`,
+  `studio/visual/index.ts` (Re-Export-Block raus)
+  **Was:** Hunt-Discovery 2026-05-11. `ConstraintPanel` +
+  `createConstraintPanel` + 6 Types via `studio/visual/index.ts`
+  exportiert, aber **nie irgendwo instanziiert** — kein
+  `new ConstraintPanel(...)`, kein `<ConstraintPanel>`, kein
+  `createConstraintPanel(...)` außerhalb des eigenen Verzeichnisses;
+  auch kein Test-Consumer. Letzte Code-Aktivität 2026-04 (55 Tage).
+  Wichtig: das breitere "constraints"-Feature ist davon entkoppelt
+  und LEBT — `SetConstraintIntent` in `studio/core/change-types.ts`,
+  Handler in `studio/core/change-pipeline.ts:599`,
+  `tests/studio/core/constraints.test.ts` pinnt den Intent. Nur die
+  Panel-UI war tot. 5954/5954 studio tests pass.
+  **Status:** erledigt (`3b02a8b5`)
+  **Notiz:** Restoration via `git show <pre-delete>:studio/visual/constraints/`.
 
 ### 2026-05-11 — `compile()`-Slice: `collectPreludeDefinitions` extrahiert (–11 LOC in app.ts)
 
