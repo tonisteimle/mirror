@@ -385,15 +385,6 @@ export function isDirectionForProperty(propertyName: string, value: string): boo
  */
 export const ACTION_NAMES = new Set<string>(Object.keys(DSL.actions))
 
-/**
- * Actions that accept targets (highlight next, highlight prev, etc.)
- */
-export const ACTIONS_WITH_TARGETS = new Map<string, string[]>(
-  Object.entries(DSL.actions)
-    .filter(([_, def]) => def.targets)
-    .map(([name, def]) => [name, def.targets!])
-)
-
 // ============================================================================
 // EVENTS - from DSL.events
 // ============================================================================
@@ -403,15 +394,6 @@ export const ACTIONS_WITH_TARGETS = new Map<string, string[]>(
  * Source: DSL.events in dsl.ts
  */
 export const EVENT_NAMES = new Set<string>(Object.keys(DSL.events))
-
-/**
- * Events that accept key modifiers (onkeydown enter:, onkeyup escape:)
- */
-export const EVENTS_WITH_KEY = new Set<string>(
-  Object.entries(DSL.events)
-    .filter(([_, def]) => def.acceptsKey)
-    .map(([name]) => name)
-)
 
 // ============================================================================
 // ANIMATIONS - from DSL.animationPresets and DSL.easingFunctions

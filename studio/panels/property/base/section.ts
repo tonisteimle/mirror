@@ -210,36 +210,3 @@ export type EventHandlerMap = Record<
     [eventName: string]: (e: Event, target: HTMLElement) => void
   }
 >
-
-/**
- * Section registry for dynamic section management
- */
-export class SectionRegistry {
-  private sections: Map<string, BaseSection> = new Map()
-
-  register(name: string, section: BaseSection): void {
-    this.sections.set(name, section)
-  }
-
-  get(name: string): BaseSection | undefined {
-    return this.sections.get(name)
-  }
-
-  getAll(): BaseSection[] {
-    return Array.from(this.sections.values())
-  }
-
-  getAllHandlers(): EventHandlerMap {
-    const combined: EventHandlerMap = {}
-    for (const section of this.sections.values()) {
-      const handlers = section.getHandlers()
-      for (const [selector, events] of Object.entries(handlers)) {
-        if (!combined[selector]) {
-          combined[selector] = {}
-        }
-        Object.assign(combined[selector], events)
-      }
-    }
-    return combined
-  }
-}

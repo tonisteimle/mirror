@@ -58,18 +58,6 @@ export {
   type SmartGuidesConfig,
 } from './smart-guides'
 
-// Constraints
-export {
-  ConstraintPanel,
-  createConstraintPanel,
-  type PinEdge,
-  type PinCenter,
-  type ConstraintValue,
-  type ConstraintState,
-  type ConstraintPanelConfig,
-  type ConstraintChangeEvent,
-} from './constraints'
-
 // Draw Manager
 export {
   DrawManager,

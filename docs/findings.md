@@ -903,6 +903,23 @@ Chronologisch absteigend (neueste zuerst).
     nirgendwo in Production instanziiert — als neuer offener Befund
     „dead compile-service cluster" dokumentiert.
 
+### 2026-05-11 — Dead-Export-Sweep: 3 ungenutzte Exports gelöscht
+
+- **Wo:** `compiler/schema/parser-helpers.ts` (`ACTIONS_WITH_TARGETS`,
+  `EVENTS_WITH_KEY`), `studio/panels/property/base/section.ts`
+  (`SectionRegistry`)
+  **Was:** Repo-weiter Audit (export-declarations × occurrences-grep
+  über `*.ts`, `*.tsx`, `*.json`, `*.md`) ergab drei Top-Level-Exports
+  mit 0 Konsumenten außerhalb der Definitionsstelle. `ACTIONS_WITH_TARGETS`
+  (Map der Actions mit Targets aus `DSL.actions`) und `EVENTS_WITH_KEY`
+  (Set der Events mit Key-Modifier aus `DSL.events`) waren parser-
+  helper-Vorrats-APIs, die nie konsumiert wurden. `SectionRegistry`
+  war für „dynamic section management" gedacht — aber Property-Panel
+  nutzt seit `ba615bad` (Section-Factory-Registry, Iter-N+2) das
+  Section-Factory-Pattern, nicht eine Runtime-Registry-Klasse. Alle
+  drei gelöscht. 71/71 Schema + Panel-Tests grün.
+  **Status:** erledigt
+
 ### 2026-05-11 — Drop-Helper aligned mit Studio's HitDetector escape zone
 
 - **Wo:** `studio/test-api/mirror-actions/index.ts:dropChildIndexPoint`
