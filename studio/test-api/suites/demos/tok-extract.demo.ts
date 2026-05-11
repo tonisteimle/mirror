@@ -8,8 +8,7 @@ import type { TestCase, TestAPI } from '../../types'
 import { centerOf, querySafe, requireOsMouse, sleep } from './_shared/actions'
 
 const BEFORE = 'Btn: bg #2271C1, col white, pad 10 20'
-const AFTER =
-  'primary.bg: #2271C1\n\nBtn: bg $primary, col white, pad 10 20\n\nBtn "Speichern"'
+const AFTER = 'primary.bg: #2271C1\n\nBtn: bg $primary, col white, pad 10 20\n\nBtn "Speichern"'
 
 export const tokExtract: TestCase[] = describe('demos.tutorial', [
   testWithSetup('tok: extract hex with :: trigger', BEFORE, async (api: TestAPI) => {

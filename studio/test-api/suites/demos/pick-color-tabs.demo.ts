@@ -18,30 +18,34 @@ const STEPS = [
 ]
 
 export const pickColorTabs: TestCase[] = describe('demos.tutorial', [
-  testWithSetup('pick: color palette tabs (Tailwind/Open/Material)', BEFORE, async (api: TestAPI) => {
-    const osMouse = requireOsMouse()
-    await sleep(700)
+  testWithSetup(
+    'pick: color palette tabs (Tailwind/Open/Material)',
+    BEFORE,
+    async (api: TestAPI) => {
+      const osMouse = requireOsMouse()
+      await sleep(700)
 
-    const btn = querySafe('#preview [data-mirror-id]')
-    await osMouse.moveTo(centerOf(btn))
-    await sleep(400)
-    await osMouse.click(centerOf(btn))
-    await sleep(800)
+      const btn = querySafe('#preview [data-mirror-id]')
+      await osMouse.moveTo(centerOf(btn))
+      await sleep(400)
+      await osMouse.click(centerOf(btn))
+      await sleep(800)
 
-    for (const code of STEPS) {
-      await api.editor.setCode(code)
-      await sleep(1200)
+      for (const code of STEPS) {
+        await api.editor.setCode(code)
+        await sleep(1200)
+      }
+
+      api.assert.matches(api.editor.getCode(), /#e91e63/, 'final material pink applied')
+      const btnAfter = querySafe('#preview [data-mirror-id]')
+      api.assert.equals(
+        getComputedStyle(btnAfter).backgroundColor,
+        'rgb(233, 30, 99)',
+        'preview shows last palette pick'
+      )
+
+      await sleep(500)
+      await osMouse.park()
     }
-
-    api.assert.matches(api.editor.getCode(), /#e91e63/, 'final material pink applied')
-    const btnAfter = querySafe('#preview [data-mirror-id]')
-    api.assert.equals(
-      getComputedStyle(btnAfter).backgroundColor,
-      'rgb(233, 30, 99)',
-      'preview shows last palette pick'
-    )
-
-    await sleep(500)
-    await osMouse.park()
-  }),
+  ),
 ])

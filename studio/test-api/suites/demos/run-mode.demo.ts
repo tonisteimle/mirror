@@ -32,9 +32,9 @@ export const runMode: TestCase[] = describe('demos.tutorial', [
     }
 
     // Click + button three times.
-    const buttons = Array.from(document.querySelectorAll('#preview button[data-mirror-id], #preview [data-mirror-id]')).filter(
-      el => (el as HTMLElement).tagName === 'BUTTON'
-    ) as HTMLElement[]
+    const buttons = Array.from(
+      document.querySelectorAll('#preview button[data-mirror-id], #preview [data-mirror-id]')
+    ).filter(el => (el as HTMLElement).tagName === 'BUTTON') as HTMLElement[]
     const plus = buttons.find(b => (b.textContent ?? '').includes('+'))
     if (plus) {
       for (let i = 0; i < 3; i++) {
@@ -47,8 +47,8 @@ export const runMode: TestCase[] = describe('demos.tutorial', [
 
     // Verify count text reflects the increments (best-effort — increment
     // works in run-mode; in edit-mode it may not propagate to DOM text).
-    const countText = Array.from(document.querySelectorAll('#preview [data-mirror-id]')).find(
-      el => /^\d+$/.test((el.textContent ?? '').trim())
+    const countText = Array.from(document.querySelectorAll('#preview [data-mirror-id]')).find(el =>
+      /^\d+$/.test((el.textContent ?? '').trim())
     ) as HTMLElement | undefined
     if (countText) {
       const val = parseInt((countText.textContent ?? '').trim(), 10)
