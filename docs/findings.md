@@ -115,21 +115,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
-- **Wo:** `studio/demo/` (735 LOC) — DOM-Overlay-Demo-API (DemoCursor +
-  KeystrokeOverlay)
-  **Was:** Browser-Side-Implementation für Demo-Modus mit visuellem
-  Cursor und Keystroke-Overlay. 735 LOC, letzte Code-Aktivität
-  2026-04-22 (3 Wochen). 0 Konsumenten irgendwo im Repo
-  (`setupDemoAPI`/`DemoAPI`/`DemoCursor`/`KeystrokeOverlay` keine
-  Refs). Vermutlich ersetzt durch die neue Owner-Pipeline (real OS
-  cursor via nut-js + CDP-Screencast in `tools/test-runner/`). Da
-  konzeptuell zur Demo-Pipeline gehörig, ist Deletion **owner-
-  Entscheidung** — Claude-Sessions tasten `studio/demo/` nicht an,
-  bis der Owner bestätigt dass die Browser-Overlay-Variante
-  obsoleted ist.
-  **Status:** offen — Owner-Entscheidung
-  **Notiz:** Wenn Deletion gewünscht: Trivial, 0 Imports zu ziehen.
-
 - **Wo:** `studio/test-api/mirror-actions/index.ts:dropChildIndexPoint`
   - Studios Drop-Target-Detection (`studio/preview/drag/...`)
     **Was:** Drop into a container tight-packed with children (3 children
@@ -679,7 +664,33 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
   in `view.ts` — könnte über Section-Registry weiter geschrumpft werden,
   aber Code ist bereits lesbar.
 
-- **Wo:** `studio/app.ts` (heute 2456 LOC, vor Refactor 2557)
+- **Wo:** `studio/compile/{compile-service,prelude-builder,code-generator,preview-renderer,studio-updater,perf-logger}.ts`
+  **Was:** Parallele Compile-Pipeline (CompileService + 5 Helper-
+  Klassen, ~700 LOC) ist exportiert via `studio/compile/index.ts`
+  und `studio/index.ts`, hat umfassende Tests
+  (`tests/studio/compile-orchestrators.test.ts`,
+  `compile-helpers.test.ts`), wird aber **nirgendwo in Production
+  instanziiert** — kein `new CompileService(...)`-Aufruf außerhalb
+  von Tests; einziger Treffer ist der Bundle-Output in `studio/dist/`,
+  der durch den Barrel-Re-Export zustande kommt. Production läuft
+  weiterhin über die Legacy-`app.ts:compile()`. CompileService hat
+  zudem **keine Feature-Parität**: fehlende test-mode-Pfade,
+  Preview-Redirection (Editor auf .tok/.com → compile Layout),
+  Validator-/Linter-Integration, draggables-Refresh,
+  isWrappedWithApp-Tracking, LLM-Spec-Studio-Skip. Drei Pfade
+  denkbar: (a) Feature-Parität herstellen und wirklich umstellen,
+  (b) Cluster + parallele Tests als dead code löschen, (c) Lane-Doc
+  unter `docs/refactoring/` schreiben weil die Entscheidung größer
+  als ein Findings-Eintrag ist.
+  **Status:** offen — Architektur-Entscheid + Lane-Doc nötig
+  **Notiz:** Entdeckt 2026-05-11 beim Versuch, `app.ts:compile()`
+  weiter zu zerlegen (Finding #8). Tests pinnen die abandoned
+  Pipeline gegen sich selbst, also CI-grün bedeutet hier nicht
+  Production-grün. Ohne Owner-Entscheidung kein Code-Move — sonst
+  riskiert man dass parallel jemand an genau dieser Wiring-Arbeit
+  sitzt.
+
+- **Wo:** `studio/app.ts` (heute 2467 LOC, vor Refactor 2557)
   **Was:** Bootstrap-Sprawl: 30+ globale Konstanten, 5 Extensions, 8
   Manager-Inits inline. Sieben Phasen nach `studio/init/` extrahiert:
   `init-notifications`, `init-sync`, `init-grid-overlay`,
@@ -691,9 +702,23 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
   `compile()`: Prelude-Resolution + State-Update-Block + Render-Pipe;
   daneben `updateStudio()`, `handleStudioCodeChange()`, plus File-IO
   und Ext-Wiring.
-  **Status:** offen — ongoing decomposition.
+  **Status:** aktiv (Claude, 2026-05-11) — nächste pure-helper-Slice
+  **Plan:** `extractPreludeDefinitions(preludeCode)` extrahieren
+  — die 17-Zeilen-Logik bei `app.ts:1419-1433`, die für den
+  Validator-Aufruf die Token- und Component-Namen aus dem Prelude
+  in zwei `Set<string>` aufbereitet. Reines AST-Parsing,
+  Side-effect-frei, deshalb pure-helper-Kandidat. Neue Datei:
+  `studio/compile/prelude-definitions.ts`. Unit-Test:
+  `tests/studio/compile-prelude-definitions.test.ts` mit Pins für
+  (a) null/empty prelude → leere Sets, (b) `primary.bg: #2271C1` →
+  `preludeTokens` enthält `primary` und `primary.bg`, (c)
+  Component-Definition → `preludeComponents` enthält den Namen,
+  (d) `$primary.bg` → führendes `$` gestrippt. Cut-over in
+  `app.ts:compile()`, dann full `npm test` + commit.
   **Notiz:** Strategie: pure-helper-Slices mit Unit-Tests, Sub-Slice
   pro Commit, kein Big-Bang. Reduziert Closure-Pressure inkrementell.
+  Side-Discovery beim Survey: dead compile-service-Cluster (s. o.) —
+  blockiert nicht, ist eigene Lane.
 
 - **Wo:** Fünf `mock-adapters.ts` (`studio/editor/triggers/adapters/`,
   `studio/editor/adapters/`, `studio/panels/property/adapters/`,
@@ -869,6 +894,21 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-11 — Orphan `studio/demo/` gelöscht (735 LOC)
+
+- **Wo:** `studio/demo/{demo-api,index}.ts`
+  **Was:** DOM-Overlay-Demo-API (DemoCursor + KeystrokeOverlay), letzte
+  Code-Aktivität 2026-04-22 (3 Wochen). 0 Konsumenten repo-weit
+  (`setupDemoAPI`/`DemoAPI`/`DemoCursor`/`KeystrokeOverlay` keine
+  externen Refs, nur Selbst-Referenzen + 1 Findings-Erwähnung). Die
+  aktive Demo-Pipeline lebt in `tools/test-runner/` (real OS cursor via
+  nut-js + CDP-Screencast), die alte Browser-Overlay-Variante in
+  `studio/demo/` war ersetzt aber nie gelöscht. Owner-Entscheidung:
+  löschen. Keine Build-/HTML-Refs. CLAUDE.md `studio/`-Tree-Eintrag
+  mit-aktualisiert. 15476/15499 vitest passes (23 pre-existing skipped).
+  **Status:** erledigt
+  **Notiz:** Restoration via `git show <pre-delete>:studio/demo/`.
 
 ### 2026-05-11 — `route` `@deprecated`-Comment entfernt (faktisch falsch)
 

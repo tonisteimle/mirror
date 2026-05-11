@@ -57,6 +57,7 @@ import {
   appendImplicitInstances,
 } from './compile/augment-local-components'
 import { executeMirrorJS } from './compile/execute-mirror-js'
+import { collectPreludeDefinitions } from './compile/prelude-definitions'
 
 // New architecture imports
 import {
@@ -1417,20 +1418,8 @@ function compile(code: string) {
     // We validate the user's code (not resolved with prelude) so errors show at correct positions
     // BUT we pass prelude tokens/components so the validator knows what's defined in other files
     const preludeForValidation = getPreludeCode(currentFile)
-    const preludeTokens = new Set<string>()
-    const preludeComponents = new Set<string>()
-    if (preludeForValidation) {
-      const preludeAST = MirrorLang.parse(preludeForValidation)
-      for (const token of preludeAST.tokens || []) {
-        const baseName = token.name.startsWith('$') ? token.name.slice(1) : token.name
-        const rootName = baseName.split('.')[0]
-        preludeTokens.add(rootName)
-        preludeTokens.add(baseName)
-      }
-      for (const comp of preludeAST.components || []) {
-        preludeComponents.add(comp.name)
-      }
-    }
+    const preludeAst = preludeForValidation ? MirrorLang.parse(preludeForValidation) : null
+    const { preludeTokens, preludeComponents } = collectPreludeDefinitions(preludeAst)
     const validationResult = validateCode(code, { preludeTokens, preludeComponents })
     currentDiagnostics = toCodeMirrorDiagnostics(validationResult, code)
     if (editor) {
