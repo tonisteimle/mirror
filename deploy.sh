@@ -54,6 +54,11 @@ prepare_tutorial() {
     cp "$TUTORIAL_DIR"/*.js "$TEMP_DIR/tutorial/"
     cp "$TUTORIAL_DIR"/*.png "$TEMP_DIR/tutorial/" 2>/dev/null || true
 
+    # Copy videos directory (referenced by tutorial pages via videos/*.webm)
+    if [ -d "$TUTORIAL_DIR/videos" ]; then
+        cp -R "$TUTORIAL_DIR/videos" "$TEMP_DIR/tutorial/videos"
+    fi
+
     # Transform paths in HTML files:
     # ../../assets/ -> ../assets/
     # ../../dist/ -> ../dist/
@@ -197,6 +202,9 @@ mput *.html
 mput *.css
 mput *.js
 mput *.png
+
+# Upload videos/ subdir (mirror local → remote, so renames/removals propagate)
+mirror -R --delete --verbose "$TEMP_DIR/tutorial/videos" videos
 
 quit
 EOF
