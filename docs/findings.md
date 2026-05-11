@@ -226,25 +226,6 @@ instance.column)` umgestellt. 7849/7849 vitest grün.
   ist nicht zu konsolidieren — sind 4 verschiedene Properties für 4
   verschiedene CSS-Targets, keine Aliase.
 
-- **Wo:** `compiler/schema/dsl.ts:213` (`'route' // @deprecated`)
-  **Was:** Schema-Annotation widerspricht der Realität. Das
-  `@deprecated`-Comment sagt „use navigate() or Tab/NavItem without
-  children instead", aber `route` ist aktiv genutzt — nicht in
-  `examples/` direkt, sondern in der Studio-Multi-Page-App-
-  Infrastruktur: `autoCreateReferencedFiles` scannt Source nach
-  `route <name>` und erzeugt Page-Files (4 Tests pinnen das in
-  `tests/studio/compile-orchestrators.test.ts:226-249, 746-754`).
-  Volle Parser-Plumbing (Lexer-Token `ROUTE`, `parseRouteClause`,
-  IR-Field `Instance.route`, DOM-Backend `data-route`-Emit, Runtime-
-  Navigation in `compiler/runtime/component-navigation.ts`) ist
-  legitimes Production-Feature. Owner-Entscheidung nötig: entweder
-  `@deprecated` entfernen (Feature ist nicht deprecated) oder Wording
-  refinen (z. B. „nur für top-level page declarations, nicht inline").
-  **Status:** offen — Owner-Entscheidung
-  **Notiz:** Mein erster Versuch (Hunt 2026-05-10 ~19:00) wollte das
-  als pure-dead löschen — falsche Prämisse, vom User korrigiert.
-  Hier dokumentiert als Owner-Item.
-
 - **Wo:** Tutorial-Demos + Test-Runner — **OWNER-EXKLUSIV (toni)**
   **Was:** Bereiche `studio/test-api/suites/demos/`,
   `docs/tutorial/videos/*.webm`, `tools/test-runner/recording.ts`,
@@ -888,6 +869,21 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-11 — `route` `@deprecated`-Comment entfernt (faktisch falsch)
+
+- **Wo:** `compiler/schema/dsl.ts:213`
+  **Was:** Schema-Annotation widerspricht der Realität. `route` ist
+  voll-supportetes Production-Feature mit eigenem Parser-Plumbing
+  (Lexer-Token `ROUTE`, `parseRouteClause`, IR-Field `Instance.route`,
+  DOM-Backend `data-route`-Emit, Runtime-Navigation) und aktiver
+  Studio-Multi-Page-App-Nutzung (`autoCreateReferencedFiles` scannt
+  Source nach `route <name>`, 4 Tests pinnen `route home`,
+  `route admin/users` etc. in `tests/studio/compile-orchestrators.test.ts`).
+  Owner-Entscheidung: Comment ersetzt durch faktischen Kommentar
+  „Top-level page declaration: `route home` (Multi-Page apps)".
+  99/99 schema + compile-orchestrators tests pass.
+  **Status:** erledigt
 
 ### 2026-05-10 — Framework-Backend-Decomp Lane abgeschlossen (1057 → 165 LOC, 84 % Reduktion)
 

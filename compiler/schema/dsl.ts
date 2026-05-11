@@ -210,7 +210,7 @@ export const DSL = {
       'keys',
       'selection',
       'bind', // Bind active exclusive() child content to variable
-      'route', // @deprecated - use navigate() or Tab/NavItem without children instead
+      'route', // Top-level page declaration: `route home` (Multi-Page apps)
       'from', // Source-file hint: `Screen from screens/dashboard` (multifile docs)
       'with',
       'by',
