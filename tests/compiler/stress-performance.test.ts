@@ -11,7 +11,6 @@
 import { describe, it, expect } from 'vitest'
 import { parse } from '../../compiler/parser'
 import { toIR } from '../../compiler/ir'
-import { buildPrelude } from '../../studio/modules/compiler/prelude-builder'
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -210,128 +209,6 @@ describe('Stress: Deep Nesting', () => {
     const ast = parse(code)
     const ir = toIR(ast)
     expect(ir.nodes.length).toBe(1)
-  })
-})
-
-// ============================================================================
-// 5. MULTI-FILE SCENARIOS (Prelude Builder)
-// ============================================================================
-
-describe('Stress: Multi-File Scenarios', () => {
-  const getFileType = (filename: string): 'tokens' | 'component' | 'layout' => {
-    if (filename.includes('token')) return 'tokens'
-    if (filename.includes('component')) return 'component'
-    return 'layout'
-  }
-
-  it('merges 5 token files', () => {
-    const files: Record<string, string> = {
-      'main.mirror': 'Frame bg $color1',
-    }
-    for (let i = 1; i <= 5; i++) {
-      files[`tokens${i}.mirror`] = `color${i}: #${String(i).padStart(6, '0')}`
-    }
-
-    const result = buildPrelude({
-      files,
-      currentFile: 'main.mirror',
-      getFileType,
-    })
-
-    expect(result.tokenCount).toBe(5)
-    for (let i = 1; i <= 5; i++) {
-      expect(result.prelude).toContain(`color${i}`)
-    }
-  })
-
-  it('merges 10 component files', () => {
-    const files: Record<string, string> = {
-      'main.mirror': 'Component1',
-    }
-    for (let i = 1; i <= 10; i++) {
-      files[`component${i}.mirror`] = `Component${i}: = Frame pad ${i}`
-    }
-
-    const result = buildPrelude({
-      files,
-      currentFile: 'main.mirror',
-      getFileType: f => (f.includes('component') ? 'component' : 'layout'),
-    })
-
-    expect(result.componentCount).toBe(10)
-  })
-
-  it('merges tokens + components + layout', () => {
-    const files: Record<string, string> = {
-      'tokens.mirror': generateTokens(20),
-      'buttons.component.mirror': `
-Button as button:
-  pad 16
-  bg $token5
-
-DangerButton extends Button:
-  bg $token10
-`,
-      'cards.component.mirror': `
-Card as frame:
-  pad 24
-  bg $token15
-  rad 8
-`,
-      'main.mirror': `
-Card
-  Button "Click"
-  DangerButton "Delete"
-`,
-    }
-
-    const result = buildPrelude({
-      files,
-      currentFile: 'main.mirror',
-      getFileType,
-    })
-
-    // tokenCount counts FILES not individual tokens
-    expect(result.tokenCount).toBe(1) // 1 token file
-    expect(result.componentCount).toBe(2) // buttons + cards files
-    // But prelude should contain all 20 tokens
-    expect(result.prelude).toContain('token0')
-    expect(result.prelude).toContain('token19')
-  })
-
-  it('handles large multi-file project', () => {
-    const files: Record<string, string> = {
-      'main.mirror': 'App',
-    }
-
-    // 10 token files with 10 tokens each
-    for (let i = 0; i < 10; i++) {
-      files[`tokens-${i}.mirror`] = Array.from(
-        { length: 10 },
-        (_, j) => `t${i}_${j}: #${String(i * 10 + j).padStart(6, '0')}`
-      ).join('\n')
-    }
-
-    // 10 component files with 5 components each
-    for (let i = 0; i < 10; i++) {
-      files[`components-${i}.component.mirror`] = Array.from(
-        { length: 5 },
-        (_, j) => `Comp${i}_${j}: = Frame pad ${i * 5 + j}`
-      ).join('\n\n')
-    }
-
-    const result = buildPrelude({
-      files,
-      currentFile: 'main.mirror',
-      getFileType,
-    })
-
-    // tokenCount counts FILES not individual tokens
-    expect(result.tokenCount).toBe(10) // 10 token files
-    expect(result.componentCount).toBe(10) // 10 component files
-    // But prelude should contain tokens from all files
-    expect(result.prelude).toContain('t0_0')
-    expect(result.prelude).toContain('t9_9')
   })
 })
 

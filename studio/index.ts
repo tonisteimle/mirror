@@ -8,9 +8,6 @@
 // Core (state, events, commands)
 export * from './core'
 
-// Modules (file-manager, compiler)
-export * from './modules'
-
 // Pickers (color, token, icon, animation)
 export * from './pickers'
 
@@ -118,9 +115,9 @@ export * from './compile/yaml-parser'
 // boot with "does not provide an export named 'collectPrelude'"). We
 // enumerate explicitly to avoid `export *` collisions: `./compile`
 // duplicates names that other barrels (`./code-modifier` SourceMap,
-// `./core` ParseError/StudioState, `./modules` PreludeResult,
-// `./preview` PreviewRenderer) already surface. Re-exporting only
-// compile-unique members keeps both sides.
+// `./core` ParseError/StudioState, `./preview` PreviewRenderer)
+// already surface. Re-exporting only compile-unique members keeps
+// both sides.
 export {
   CompileService,
   PreludeBuilder,
