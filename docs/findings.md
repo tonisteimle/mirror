@@ -165,7 +165,13 @@ instance.column)` umgestellt. 7849/7849 vitest grün.
   einen synthetischen Inner-Wrapper-Child emittieren. Beides ist
   DOM-strukturell invasiv (Frame-Identität ändert sich, andere CSS
   inkl. flex/grid-Layout muss sich nicht miterklären).
-  **Status:** offen — Architektur-Entscheid + Lane-Doc nötig
+  **Status:** offen — Lane-Doc steht (`docs/refactoring/container-queries.md`,
+  2026-05-11), wartet auf Owner-Sign-off zum Code-Fix. Empfehlung:
+  Pfad A (Outer-Wrapper, on-demand via `needsContainer`-Flag) — Frame
+  behält Identität, Style-Aufteilung trivial, Roll-out inkrementell
+  möglich. Sekundär-Befund in der Lane-Doc dokumentiert: React- und
+  Framework-Backend droppen `sizeState`-Styles und `needsContainer`
+  komplett silent — Differential-Test-Lücke, parallel zu fixen.
   **Notiz:** Browser-Tests in `responsive/{basic,layout}.test.ts:73,88`
   bleiben `testWithSetupSkip` mit aktualisierten Kommentaren bis Fix
   da ist. `Frame > Inner` mit Size-States auf `Inner` funktioniert
