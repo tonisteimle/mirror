@@ -1017,15 +1017,20 @@ Mirror → React Konverter`) beschreibt zudem die **falsche
     „ist das eine Mirror-Datei") besteht weiter. Ein Caller, der die
     „falsche" `isMirrorFile` importiert, bekommt schweigend eine
     abweichende Antwort — Drift-Falle.
-    **Status:** offen — Vorschlag wie bei `getFileType`-Audit
-    (`e9666352`): umbenennen in `isMirrorSourceFile` (DSL only),
-    `isMirrorProjectFile` (Storage-Scope incl. data), `isProjectImportFile`
-    (project-actions Hardcoded). Ambiguitäts-Workaround in
-    `studio/index.ts:92-99` kann dann raus.
-    **Notiz:** Audit ergab: project-actions die `.data`-Erweiterung als
-    einziger Caller akzeptiert — bewusst oder Copy-Paste-Drift? Vor dem
-    Rename klären, ob `.data`-Files real existieren (Mirror-Konvention
-    ist `.yaml`/`.yml`).
+    **Status:** aktiv (claude, 2026-05-12 06:55)
+    **Plan:** Drei Funktionen umbenennen:
+    - `studio/file-types/extensions.ts:21` → `isMirrorSourceFile`
+    - `studio/storage/types.ts:85` → `isMirrorProjectFile`
+    - `studio/storage/project-actions.ts:784` → `isProjectImportFile`
+
+    Caller-Inventur: app.ts (2), zag/index.ts (interface + 2 calls),
+    storage/providers/{demo,tauri}.ts (Imports + tauri-call), Barrels
+    (file-types/index, storage/index), Tests (file-types.test.ts,
+    tauri-provider-personas.test.ts Comment). `.data`-Sonderbehandlung
+    in project-actions ist intendiert (`studio/app.ts:475` mappt `.data`
+    auf `'data'`-Filetype). demo.ts hat unused-import → mit raus.
+    Anschließend Ambiguitäts-Workaround in `studio/index.ts:92-99`
+    entfernen. Single Code-Commit, dann findings-Update auf `erledigt`.
 
 - **Wo:** `studio/zag/index.ts:59`,
   `studio/autocomplete/schema-completions.ts:881`,
