@@ -108,7 +108,7 @@ import {
   detectFileType,
   getFileIcon as getFileIconModule,
   // Mirror file-extension predicates
-  isMirrorFile,
+  isMirrorSourceFile,
   isComponentsFile,
   isLayoutFile,
   // YAML Parser (Clean Code module)
@@ -1094,7 +1094,7 @@ function getZagDeps() {
     getCurrentFile: () => currentFile,
     getFiles: () => window.desktopFiles?.getFiles?.() || files,
     parseCode: (code: string) => MirrorLang.parse(code),
-    isMirrorFile,
+    isMirrorSourceFile,
     isComponentsFile,
     getEditor: () => editor,
     emitNotification: (type: string, message: string) => {

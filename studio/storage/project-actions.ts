@@ -589,7 +589,7 @@ async function browserImportProject(): Promise<boolean> {
 
       for (const file of Array.from(files)) {
         // Nur Mirror-Dateien importieren
-        if (!isMirrorFile(file.name)) continue
+        if (!isProjectImportFile(file.name)) continue
 
         // Pfad relativ zum Projekt-Ordner
         const relativePath = file.webkitRelativePath.replace(rootFolder + '/', '')
@@ -781,7 +781,12 @@ async function tauriExportProject(): Promise<void> {
 // Helpers
 // =============================================================================
 
-function isMirrorFile(filename: string): boolean {
+/**
+ * Project-import scope: every extension the folder-import dialog will pull
+ * into a fresh project. Wider than `isMirrorProjectFile` because it also
+ * accepts `.data` (legacy data-file convention, see `studio/app.ts:475`).
+ */
+function isProjectImportFile(filename: string): boolean {
   const extensions = [
     '.mir',
     '.mirror',

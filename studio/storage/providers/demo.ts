@@ -6,7 +6,6 @@
  */
 
 import type { StorageProvider, StorageProject, StorageItem, StorageFolder } from '../types'
-import { isMirrorFile } from '../types'
 
 // =============================================================================
 // Default Project Template

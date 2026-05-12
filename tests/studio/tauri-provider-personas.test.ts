@@ -8,7 +8,7 @@
  *      → setzt JS basePath
  *   2. TauriProvider.getTree()
  *      → bridge.fs.listDirectory rekursiv
- *      → Filter via isMirrorFile
+ *      → Filter via isMirrorProjectFile
  *      → 4 Mirror-Files (app.mir, components.com, data.data, tokens.tok)
  *   3. TauriProvider.readFile('app.mir')
  *      → bridge.fs.readFile (mit relativem Pfad zu basePath)

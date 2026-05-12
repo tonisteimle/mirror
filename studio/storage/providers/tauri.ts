@@ -5,7 +5,7 @@
  */
 
 import type { StorageProvider, StorageProject, StorageItem } from '../types'
-import { isMirrorFile } from '../types'
+import { isMirrorProjectFile } from '../types'
 import { createLogger } from '../../../compiler/utils/logger'
 
 const log = createLogger('TauriProvider')
@@ -183,7 +183,7 @@ App bg #18181b, pad 24
             path: relativePath,
             children,
           })
-        } else if (isMirrorFile(entry.name)) {
+        } else if (isMirrorProjectFile(entry.name)) {
           items.push({
             type: 'file',
             name: entry.name,

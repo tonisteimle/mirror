@@ -336,4 +336,4 @@ export function getFileExtension(type: FileTypeName): string {
 }
 
 // File-extension predicates (Mirror DSL source classification)
-export { MIRROR_EXTENSIONS, isMirrorFile, isComponentsFile, isLayoutFile } from './extensions'
+export { MIRROR_EXTENSIONS, isMirrorSourceFile, isComponentsFile, isLayoutFile } from './extensions'

@@ -45,7 +45,7 @@ export interface ZagDependencies {
   getCurrentFile: () => string
   getFiles: () => Record<string, string>
   parseCode: (code: string) => AST
-  isMirrorFile: (filename: string) => boolean
+  isMirrorSourceFile: (filename: string) => boolean
   isComponentsFile: (filename: string) => boolean
   getEditor: () => ZagEditorView | null | undefined
   emitNotification: (type: 'success' | 'error' | 'info', message: string) => void
@@ -108,7 +108,7 @@ function searchAllFiles(name: string, deps: ZagDependencies): ZagDefinitionResul
 
   for (const [filename, content] of Object.entries(allFiles)) {
     if (filename === currentFile) continue
-    if (!deps.isMirrorFile(filename)) continue
+    if (!deps.isMirrorSourceFile(filename)) continue
     if (!content?.trim()) continue
 
     const result = searchFileForDefinition(name, filename, content, deps)
@@ -167,7 +167,7 @@ function collectFromOtherFiles(deps: ZagDependencies, names: Set<string>): void 
 
   for (const [filename, content] of Object.entries(allFiles)) {
     if (filename === currentFile) continue
-    if (!deps.isMirrorFile(filename)) continue
+    if (!deps.isMirrorSourceFile(filename)) continue
     if (!content?.trim()) continue
     collectFromFileContent(content, deps, names)
   }

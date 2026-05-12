@@ -80,9 +80,11 @@ export function getMirrorFileType(filename: string): MirrorFileType {
 }
 
 /**
- * Prüft ob eine Datei eine Mirror-Datei ist
+ * Storage-scope predicate: any file the project storage layer recognises
+ * (Mirror DSL source PLUS data files). Distinct from `isMirrorSourceFile`
+ * (DSL-only) and `isProjectImportFile` (incl. `.data`).
  */
-export function isMirrorFile(filename: string): boolean {
+export function isMirrorProjectFile(filename: string): boolean {
   const allExtensions = Object.values(FILE_EXTENSIONS).flat()
   return allExtensions.some(ext => filename.endsWith(ext))
 }

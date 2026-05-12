@@ -3,12 +3,12 @@
  *
  * Lightweight classifiers for filenames based on their extension. These
  * cover the three Mirror-source flavors (layout, components, tokens)
- * but intentionally exclude data files (.yaml/.yml) — `isMirrorFile`
- * here means "Mirror DSL source", not "any file in a Mirror project".
+ * but intentionally exclude data files (.yaml/.yml) — `isMirrorSourceFile`
+ * means "Mirror DSL source", not "any file in a Mirror project".
  *
- * For the broader storage-layer classification (which includes data
- * files and an 'unknown' fallback), see studio/storage/types.ts —
- * the two share the same extension lists but differ in scope.
+ * Sibling predicates with different scopes:
+ *   - `isMirrorProjectFile` (studio/storage/types.ts) — DSL source PLUS data files
+ *   - `isProjectImportFile` (studio/storage/project-actions.ts) — also accepts `.data`
  */
 
 export const MIRROR_EXTENSIONS = {
@@ -18,7 +18,7 @@ export const MIRROR_EXTENSIONS = {
 } as const
 
 /** Any Mirror DSL source file (layout / components / tokens). Excludes data. */
-export function isMirrorFile(filename: string | null | undefined): boolean {
+export function isMirrorSourceFile(filename: string | null | undefined): boolean {
   if (!filename) return false
   const allExtensions = [
     ...MIRROR_EXTENSIONS.layout,

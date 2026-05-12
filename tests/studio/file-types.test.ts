@@ -1,7 +1,7 @@
 /**
  * Tests for studio/file-types/extensions.ts and studio/file-types/index.ts
  *
- * extensions.ts has 12.5% coverage (only one isMirrorFile path covered),
+ * extensions.ts has 12.5% coverage (only one isMirrorSourceFile path covered),
  * index.ts has 39% coverage (templates + detect logic largely untested).
  *
  * Phase A: pin the extension predicates (extensions.ts).
@@ -12,7 +12,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   MIRROR_EXTENSIONS,
-  isMirrorFile,
+  isMirrorSourceFile,
   isComponentsFile,
   isLayoutFile,
 } from '../../studio/file-types/extensions'
@@ -33,7 +33,7 @@ describe('extensions.ts — MIRROR_EXTENSIONS constant', () => {
   })
 })
 
-describe('extensions.ts — isMirrorFile', () => {
+describe('extensions.ts — isMirrorSourceFile', () => {
   it.each([
     ['app.mir', true],
     ['page.mirror', true],
@@ -45,19 +45,19 @@ describe('extensions.ts — isMirrorFile', () => {
     ['style.css', false],
     ['data.yaml', false], // discovery: yaml is NOT a Mirror DSL source per this predicate
     ['data.yml', false],
-  ])('isMirrorFile(%s) → %s', (file, expected) => {
-    expect(isMirrorFile(file)).toBe(expected)
+  ])('isMirrorSourceFile(%s) → %s', (file, expected) => {
+    expect(isMirrorSourceFile(file)).toBe(expected)
   })
 
   it('handles null and undefined inputs as false', () => {
-    expect(isMirrorFile(null)).toBe(false)
-    expect(isMirrorFile(undefined)).toBe(false)
-    expect(isMirrorFile('')).toBe(false)
+    expect(isMirrorSourceFile(null)).toBe(false)
+    expect(isMirrorSourceFile(undefined)).toBe(false)
+    expect(isMirrorSourceFile('')).toBe(false)
   })
 
   it('uses suffix matching, not substring', () => {
-    expect(isMirrorFile('mirror.html')).toBe(false)
-    expect(isMirrorFile('component-test.txt')).toBe(false)
+    expect(isMirrorSourceFile('mirror.html')).toBe(false)
+    expect(isMirrorSourceFile('component-test.txt')).toBe(false)
   })
 })
 
