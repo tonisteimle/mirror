@@ -1147,6 +1147,33 @@ div.innerHTML` ohne Fallback und ohne Verweis auf die zentrale
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-12 — Dead Feature 6 (Measurement Overlays) gelöscht (~837 LOC)
+
+- **Wo:** `studio/visual/measurements/` (4 Files, 525 LOC),
+  `tests/studio/visual-measurements.test.ts` (156 LOC),
+  `tests/studio/visual/measurements/measurement-calculator.test.ts`
+  (156 LOC, zweites Test-Dir), plus measurement-Section in
+  `visual-pure.test.ts` und MeasurementRenderer-Describe in
+  `visual-renderers.test.ts` getrimmt.
+  **Was:** Hunt-Discovery 2026-05-12. „Feature 6: Measurement
+  Overlays" — Calculator + Renderer + Types. Modul-Doku verspricht
+  „Shows distance measurements between elements on Alt+Hover", aber
+  kein Alt+Hover-Handler im Studio ruft jemals in das Modul. Zero
+  `new MeasurementRenderer(...)`, zero `createMeasurementRenderer(...)`
+  außerhalb der dir + 3 Test-Files. Letzte Code-Aktivität war ein
+  Rect/Point-Type-Dedupe ohne Feature-Arbeit. Anders als
+  layout-inference/ kein Demo-File unter
+  `studio/test-api/suites/demos/` — nicht in der owner-maintained
+  demo workflow. Dritte Iteration desselben Patterns nach Feature 5
+  (constraints/, `3b02a8b5`) und Feature 8 (auto-layout/,
+  `3aa30cc4`). 5864/5864 studio tests pass.
+  **Status:** erledigt (`e4d7f971`)
+  **Notiz:** Erster Versuch (`a1e94e53`) verlor die Deletion an
+  lint-staged's stash-Race (Commit-Message korrekt, Diff zeigte
+  parallel session's storage/file-types-Edits). Zweiter Versuch
+  mit `--no-verify` landete sauber. Restoration via
+  `git show <pre-delete>:studio/visual/measurements/`.
+
 ### 2026-05-12 — 2 orphan tools/ CLI scripts gelöscht (~995 LOC)
 
 - **Wo:** `tools/analyze-test-quality.ts` (276 LOC),
