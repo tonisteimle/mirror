@@ -212,15 +212,6 @@ export function createMockEditorTriggerPort(
     return { line: lines.length, column: lines[lines.length - 1]?.length ?? 0, offset }
   }
 
-  function positionToOffset(line: number, column: number): number {
-    const lines = getLines()
-    let offset = 0
-    for (let i = 0; i < line - 1 && i < lines.length; i++) {
-      offset += lines[i].length + 1
-    }
-    return offset + column
-  }
-
   return {
     setSource(newSource: string): void {
       source = newSource

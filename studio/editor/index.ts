@@ -9,7 +9,7 @@
  */
 
 import { EditorView } from '@codemirror/view'
-import { state, actions, events } from '../core'
+import { state, actions } from '../core'
 import { createLogger } from '../../compiler/utils/logger'
 
 const log = createLogger('EditorController')

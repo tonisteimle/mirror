@@ -230,26 +230,6 @@ export class UserComponentsPanel {
   }
 
   /**
-   * Collapse all sections
-   */
-  private collapseAllSections(): void {
-    for (const section of this.sections) {
-      section.isExpanded = false
-    }
-    this.render()
-  }
-
-  /**
-   * Expand all sections
-   */
-  private expandAllSections(): void {
-    for (const section of this.sections) {
-      section.isExpanded = true
-    }
-    this.render()
-  }
-
-  /**
    * Render the search bar
    */
   private renderSearchBar(): HTMLElement {

@@ -5,10 +5,9 @@
  * Replaces individual trigger extensions with a single, configurable manager.
  */
 
-import { EditorView, ViewUpdate, keymap } from '@codemirror/view'
+import { EditorView, ViewUpdate } from '@codemirror/view'
 import { Prec, Transaction } from '@codemirror/state'
 import type { Extension } from '@codemirror/state'
-import type { BasePicker } from '../pickers'
 import { events } from '../core/events'
 import { createLogger } from '../../compiler/utils/logger'
 
@@ -415,7 +414,6 @@ export class EditorTriggerManager {
 
       update.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
         const insertedText = inserted.toString()
-        const view = update.view
 
         // Handle live filtering when a trigger is active
         if (this.state.isOpen && this.state.startPos !== null) {

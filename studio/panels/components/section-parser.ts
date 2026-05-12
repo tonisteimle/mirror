@@ -62,7 +62,6 @@ export function parseComponentSections(ast: AST, source?: string): ComponentSect
   // If source is provided, try to group components by sections
   if (source && componentItems.length > 0) {
     const lines = source.split('\n')
-    const currentSection: ComponentSection | null = null
     const sectionBoundaries: Array<{ name: string; startLine: number }> = []
 
     // First pass: find all section headers and their line numbers

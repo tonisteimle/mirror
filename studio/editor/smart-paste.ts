@@ -12,12 +12,6 @@
 import { EditorView } from '@codemirror/view'
 
 // ===========================================
-// Configuration
-// ===========================================
-
-const INDENT_SIZE = 2 // 2 spaces per indent level in Mirror DSL
-
-// ===========================================
 // Indentation Helpers
 // ===========================================
 

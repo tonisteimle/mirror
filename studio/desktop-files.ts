@@ -10,16 +10,12 @@ import { storage, projectActions } from './storage'
 import type { StorageItem } from './storage'
 import { createLogger } from '../compiler/utils/logger'
 import {
-  FILE_TYPES,
   escapeHtml,
   escapeAttr,
   validateFilename,
   getFileTypeInfo,
   findFirstFile,
-  getExtensionPriority,
   sortTreeItems,
-  type FileTypeConfig,
-  type FileTypeInfo,
 } from './desktop-files-utils'
 
 const log = createLogger('DesktopFiles')
@@ -62,7 +58,6 @@ interface MenuItemSpec {
 // =============================================================================
 
 let toolbarInitialized = false
-let menuOpen = false
 
 const ICON_HAMBURGER = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
   <line x1="4" y1="6" x2="20" y2="6"/>
@@ -152,7 +147,6 @@ function toggleProjectMenu(anchorBtn: HTMLElement): void {
   const existingMenu = document.getElementById('project-menu')
   if (existingMenu) {
     existingMenu.remove()
-    menuOpen = false
     return
   }
 
@@ -196,14 +190,12 @@ function toggleProjectMenu(anchorBtn: HTMLElement): void {
   menu.style.zIndex = '9999'
 
   document.body.appendChild(menu)
-  menuOpen = true
 
   // Close on click outside
   const closeMenu = (e: MouseEvent): void => {
     const target = e.target as Node | null
     if (target && !menu.contains(target) && target !== anchorBtn) {
       menu.remove()
-      menuOpen = false
       document.removeEventListener('click', closeMenu)
     }
   }
@@ -215,7 +207,6 @@ async function handleMenuAction(action: string): Promise<void> {
   const menu = document.getElementById('project-menu')
   if (menu) {
     menu.remove()
-    menuOpen = false
   }
 
   switch (action) {
@@ -284,7 +275,6 @@ function resetUIState(): void {
 
 // Icons
 const ICON_FOLDER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`
-const ICON_FOLDER_OPEN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v1"></path><path d="M5 12h16l-2 7H3l2-7z"></path></svg>`
 const ICON_CHEVRON = `<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>`
 
 // Utilities are now imported from ./desktop-files-utils.

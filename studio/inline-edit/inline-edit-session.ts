@@ -148,7 +148,6 @@ export class InlineEditSession {
       // Check if element is using flexbox centering
       const display = computed.display
       const justifyContent = computed.justifyContent
-      const alignItems = computed.alignItems
 
       if (display === 'flex' || display === 'inline-flex') {
         if (

@@ -7,15 +7,11 @@
 
 import type { EditorView, ViewUpdate } from '@codemirror/view'
 import { Transaction } from '@codemirror/state'
-import { AnimationPicker, createAnimationPicker, type AnimationPreset } from '../../pickers'
+import { AnimationPicker, createAnimationPicker } from '../../pickers'
 import type { TriggerConfig, TriggerContext } from './types'
 import { getTriggerManager } from '../trigger-manager'
 
 export const ANIMATION_TRIGGER_ID = 'animation'
-
-// Context pattern for animation trigger
-// Matches: "as animation" at end of line
-const ANIMATION_CONTEXT_PATTERN = /\s+as\s+animation\s*$/i
 
 // State for animation picker
 interface AnimationTriggerState {

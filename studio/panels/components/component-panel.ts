@@ -7,7 +7,6 @@
  * - User-defined components from the current file
  */
 
-import type { AST } from '../../../compiler'
 import type {
   ComponentItem,
   ComponentSection,
@@ -18,13 +17,9 @@ import type {
 } from './types'
 import { getComponentIcon } from '../../icons'
 import { LAYOUT_SECTION, COMPONENTS_SECTION } from './layout-presets'
-import { parseComponentSections } from './section-parser'
 import { setCurrentDragData, clearCurrentDragData } from '../../preview/drag-preview'
-import { createLogger } from '../../../compiler/utils/logger'
 import { isPrimitive } from '../../../compiler/schema'
 import { createSectionHeader } from '../../components/section-header'
-
-const log = createLogger('ComponentPanel')
 
 // =============================================================================
 // User Component Parser
@@ -273,26 +268,6 @@ export class ComponentPanel {
   }
 
   /**
-   * Collapse all sections
-   */
-  private collapseAllSections(): void {
-    for (const section of this.sections) {
-      section.isExpanded = false
-    }
-    this.render()
-  }
-
-  /**
-   * Expand all sections
-   */
-  private expandAllSections(): void {
-    for (const section of this.sections) {
-      section.isExpanded = true
-    }
-    this.render()
-  }
-
-  /**
    * Render the search bar
    */
   private renderSearchBar(): HTMLElement {
@@ -468,24 +443,6 @@ export class ComponentPanel {
 
     // Notify callback
     this.callbacks.onDragStart?.(item, event)
-  }
-
-  /**
-   * Setup drag image showing icon + text (like in the panel)
-   */
-  private setupDragImage(
-    event: DragEvent,
-    _element: HTMLElement,
-    _size: { width: number; height: number }
-  ): void {
-    // Use visible drag image - handled in handleDragStart
-  }
-
-  /**
-   * Setup drag image showing icon + text (fallback path)
-   */
-  private setupFallbackDragImage(event: DragEvent, _item: ComponentItem): void {
-    // Use visible drag image - handled in handleDragStart
   }
 
   /**

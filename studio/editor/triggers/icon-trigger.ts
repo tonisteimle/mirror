@@ -7,7 +7,7 @@
 
 import type { EditorView } from '@codemirror/view'
 import { Transaction } from '@codemirror/state'
-import { getGlobalIconPicker, setGlobalIconPickerCallback } from '../../pickers'
+import { getGlobalIconPicker } from '../../pickers'
 import type { TriggerConfig, TriggerContext, ComponentPrimitivesMap } from './types'
 import { getTriggerManager } from '../trigger-manager'
 

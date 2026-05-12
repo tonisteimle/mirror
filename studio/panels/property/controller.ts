@@ -17,11 +17,9 @@ import {
   type PanelState,
   type PanelEvent,
   type PanelEffect,
-  type TransitionResult,
   createInitialState,
   transition,
   isShowing,
-  isPendingUpdate,
   getCurrentElement,
   getCurrentNodeId,
 } from './state-machine'
@@ -349,27 +347,26 @@ export class PropertyPanelController {
 
   /**
    * Applies a property change via the modification port.
+   *
+   * We deliberately don't handle the modification result — the compile
+   * process will trigger a refresh via the events port.
    */
   private applyChange(nodeId: string, change: PropertyChange): void {
-    let result
-
     switch (change.action) {
       case 'set':
-        result = this.ports.modification.setProperty(nodeId, change.name, change.value)
+        this.ports.modification.setProperty(nodeId, change.name, change.value)
         break
 
       case 'remove':
-        result = this.ports.modification.removeProperty(nodeId, change.name)
+        this.ports.modification.removeProperty(nodeId, change.name)
         break
 
-      case 'toggle':
+      case 'toggle': {
         const enabled = change.value === 'true'
-        result = this.ports.modification.toggleProperty(nodeId, change.name, enabled)
+        this.ports.modification.toggleProperty(nodeId, change.name, enabled)
         break
+      }
     }
-
-    // Note: We don't handle the result here because the compile process
-    // will trigger a refresh via the events port
   }
 }
 
