@@ -36,7 +36,7 @@ export interface TokenEmitterContext {
 /**
  * Data needed for token emission.
  */
-export interface TokenEmitterData {
+interface TokenEmitterData {
   tokens: IRToken[]
   dataFiles?: DataFile[]
 }
@@ -376,7 +376,7 @@ function emitSetHelper(ctx: TokenEmitterContext): void {
 /**
  * Emit collection methods from .data files.
  */
-export function emitMethods(ctx: TokenEmitterContext, dataFiles?: DataFile[]): void {
+function emitMethods(ctx: TokenEmitterContext, dataFiles?: DataFile[]): void {
   if (!dataFiles || dataFiles.length === 0) return
 
   // Collect all methods from all data files
@@ -437,7 +437,7 @@ function compileMethodBodyLine(line: string): string {
 /**
  * Generate computed queries (feature removed - no-op).
  */
-export function emitQueries(_ctx: TokenEmitterContext): void {
+function emitQueries(_ctx: TokenEmitterContext): void {
   // Query files feature has been removed - this is now a no-op
 }
 
@@ -449,7 +449,7 @@ export function emitQueries(_ctx: TokenEmitterContext): void {
  * Serialize an inline data object to JavaScript code.
  * Handles nested structures and references.
  */
-export function serializeDataObject(data: Record<string, unknown>): string {
+function serializeDataObject(data: Record<string, unknown>): string {
   const entries: string[] = []
 
   for (const [key, value] of Object.entries(data)) {
@@ -463,7 +463,7 @@ export function serializeDataObject(data: Record<string, unknown>): string {
 /**
  * Serialize a single data value to JavaScript code.
  */
-export function serializeDataValue(value: unknown): string {
+function serializeDataValue(value: unknown): string {
   if (value === null || value === undefined) {
     return 'null'
   }

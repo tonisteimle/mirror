@@ -13,19 +13,13 @@
 // TYPES
 // ============================================
 
-export interface ToastOptions {
+interface ToastOptions {
   duration?: number
   type?: 'info' | 'success' | 'error' | 'warning'
   position?: ToastPosition
 }
 
-export type ToastPosition =
-  | 'top'
-  | 'bottom'
-  | 'top-left'
-  | 'top-right'
-  | 'bottom-left'
-  | 'bottom-right'
+type ToastPosition = 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
 
 interface ToastModule {
   toast(message: string, options?: ToastOptions): number

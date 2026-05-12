@@ -35,7 +35,7 @@ export function mapKeyName(key: string): string {
 /**
  * Emit enter/exit viewport observer.
  */
-export function emitEnterExitObserver(
+function emitEnterExitObserver(
   ctx: EventEmitterContext,
   varName: string,
   event: IREvent,

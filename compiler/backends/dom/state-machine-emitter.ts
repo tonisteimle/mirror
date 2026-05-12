@@ -407,7 +407,7 @@ export function emitStateMachine(
  * Emit a state watcher for 'when' dependencies
  * Example: visible when Menu open or Sidebar open:
  */
-export function emitWhenWatcher(
+function emitWhenWatcher(
   ctx: StateMachineEmitterContext,
   varName: string,
   transition: IRStateTransition,

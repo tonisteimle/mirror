@@ -60,7 +60,7 @@ export function sanitizePageName(name: string): string | null {
  * blocks path traversal so the readFile callback can't be tricked
  * into loading arbitrary files.
  */
-export function hasMirrorStructure(code: string): boolean {
+function hasMirrorStructure(code: string): boolean {
   return code.includes('function createUI') || code.includes('export function createUI')
 }
 
