@@ -139,13 +139,6 @@ export function triggerRename(config: RenameConfig): void {
 }
 
 /**
- * Check if rename UI is currently open
- */
-export function isRenameActive(): boolean {
-  return getRenameUI().isVisible()
-}
-
-/**
  * Close rename UI if open
  */
 export function closeRename(): void {

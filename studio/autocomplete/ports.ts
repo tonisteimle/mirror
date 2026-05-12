@@ -176,18 +176,6 @@ export interface CompletionRequest {
   explicit: boolean
 }
 
-/**
- * Configuration for completion behavior
- */
-export interface CompletionConfig {
-  /** Minimum characters before auto-showing completions */
-  minChars?: number
-  /** Debounce delay in ms */
-  debounceMs?: number
-  /** Show completions on typing (vs only explicit) */
-  autoShow?: boolean
-}
-
 // ============================================
 // Provider Interface
 // ============================================

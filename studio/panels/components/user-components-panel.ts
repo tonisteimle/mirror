@@ -32,20 +32,6 @@ const SYSTEM_COMPONENTS = new Set([
   // Add more system components here as needed
 ])
 
-/**
- * Check if a component name is a system component (built-in)
- */
-export function isSystemComponent(name: string): boolean {
-  return SYSTEM_COMPONENTS.has(name)
-}
-
-/**
- * Get all system component names
- */
-export function getSystemComponentNames(): string[] {
-  return Array.from(SYSTEM_COMPONENTS)
-}
-
 // =============================================================================
 // Types
 // =============================================================================

@@ -860,18 +860,6 @@ export const SCHEMA_COMPLETIONS = {
 }
 
 /**
- * Get all component completions (primitives + Zag + Charts + Compound + Item Keywords)
- */
-export function getAllComponentCompletions(): Completion[] {
-  return [
-    ...SCHEMA_COMPLETIONS.primitives,
-    ...SCHEMA_COMPLETIONS.zagComponents,
-    ...SCHEMA_COMPLETIONS.zagItemKeywords,
-    ...SCHEMA_COMPLETIONS.chartComponents,
-  ]
-}
-
-/**
  * Get all completions for general autocomplete
  */
 export function getAllCompletions(): Completion[] {
@@ -908,14 +896,6 @@ export function getZagSlotsForComponent(componentName: string): string[] {
 export function getZagPropsForComponent(componentName: string): string[] {
   const primitive = ZAG_PRIMITIVES[componentName]
   return primitive?.props ?? []
-}
-
-/**
- * Get Zag component events for context-sensitive completion
- */
-export function getZagEventsForComponent(componentName: string): string[] {
-  const primitive = ZAG_PRIMITIVES[componentName]
-  return primitive?.events ?? []
 }
 
 /**

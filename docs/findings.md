@@ -987,6 +987,17 @@ Chronologisch absteigend (neueste zuerst).
     nirgendwo in Production instanziiert — als neuer offener Befund
     „dead compile-service cluster" dokumentiert.
 
+### 2026-05-12 — Dead-Export-Sweep Slice B: studio/ (5 Exports)
+
+- **Wo:** `studio/autocomplete/ports.ts` (CompletionConfig interface),
+  `studio/autocomplete/schema-completions.ts` (getAllComponentCompletions
+  - getZagEventsForComponent), `studio/panels/components/user-components-panel.ts`
+    (isSystemComponent + getSystemComponentNames — SYSTEM_COMPONENTS-Set
+    bleibt für internen Filter), `studio/rename/index.ts` (isRenameActive)
+    **Was:** Restliche 5 dead exports aus dem Audit (Slice A war compiler/-
+    Lane). Alles Vorrats-API ohne Konsumenten. 288/288 studio tests pass.
+    **Status:** erledigt
+
 ### 2026-05-12 — Dead-Export-Sweep Slice A: compiler/ (28 Exports, –500+ LOC)
 
 - **Wo:** `compiler/runtime/security.ts` (gelöscht, 304 LOC),
