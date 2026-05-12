@@ -490,6 +490,36 @@ overlay.ts`, 134 LOC, ersetzt vor langem durch
   (beide `@deprecated`), `resolveGridColumns`.
   **Status:** erledigt (`4fa88b11`) — −265 LOC.
 
+- **Wo:** `compiler/{parser,ir,schema}/` — Slice D (Follow-up zu A/B/C)
+  **Was:** Bisher nicht von den Slices A/B/C abgedeckte Unterordner
+  (parser/, ir/, schema/ ohne dsl/ir-helpers/layout-defaults) geprüft.
+  24 export-Demotionen (Symbol intern verwendet, `export` ohne externen
+  Consumer) + 1 echte Deletion (`DIRECTION_KEYWORDS`, 5 LOC, weder
+  intern noch extern referenziert). Files:
+  - `compiler/schema/parser-helpers.ts`: `DIRECTION_KEYWORDS` [del],
+    `BOOLEAN_PROPERTIES`, `POSITION_BOOLEANS`, `getAllSchemaPropertyNames`,
+    `getDirectionsForProperty`
+  - `compiler/parser/token-parser.ts`: `inferTokenType`
+  - `compiler/parser/lexer.ts`: `LexerResult`
+  - `compiler/parser/prose-body-parser.ts`: `ProseStyleMap`,
+    `DEFAULT_PROSE_STYLE`, `ProseBodyCallbacks`, `hasProseProperty`,
+    `resolveProseStyle`
+  - `compiler/ir/types.ts`: `IRIcon`, `IRTokenReference`,
+    `IRLoopVarReference`, `IRComputedExpression`, `IRConditionalValue`,
+    `IRPropertyValue`, `IREventModifier`, `IRWarningType`
+  - `compiler/ir/transformers/event-transformer.ts`:
+    `BUILTIN_STATE_FUNCTIONS`, `transformAction`
+  - `compiler/schema/chart-primitives.ts`: `ChartSlotDef`,
+    `ChartSlotPropertyDef`
+  - `compiler/schema/component-templates.ts`: `ComponentTemplate`
+
+  **Status:** aktiv (claude, 2026-05-12 06:45)
+  **Plan:** `export`-Keyword aus den 24 Demote-Kandidaten entfernen,
+  `DIRECTION_KEYWORDS` komplett löschen. Symbole bleiben intern
+  erhalten und werden weiter konsumiert. Anschließend `tsc --noEmit`
+  - vitest auf `tests/compiler/` laufen lassen. Single Code-Commit,
+    dann findings.md-Update auf `erledigt` mit Hash.
+
 ### Naming-Collision-Smells (2026-05-10 Iter-N+2)
 
 Drei Stellen, wo derselbe Symbolname unterschiedliche Semantik hat —
