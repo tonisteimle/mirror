@@ -8,7 +8,7 @@ import {
   SCHEMA_COMPLETIONS,
   generatePropertyValueCompletions,
   getAllCompletions,
-  isZagComponent,
+  isZagComponentName,
   getZagSlotsForComponent,
   getZagPropsForComponent,
   getZagItemKeywords,
@@ -243,7 +243,7 @@ export function findParentZagComponent(source: string, lineNumber: number): stri
     if (indent < currentIndent) {
       // Check if this line starts with a Zag component
       const compMatch = line.match(/^\s*([A-Z][a-zA-Z0-9]*)/)
-      if (compMatch && isZagComponent(compMatch[1])) {
+      if (compMatch && isZagComponentName(compMatch[1])) {
         return compMatch[1]
       }
     }

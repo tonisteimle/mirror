@@ -876,9 +876,15 @@ export function getAllCompletions(): Completion[] {
 // ============================================================================
 
 /**
- * Check if a component name is a Zag component
+ * Check if a component name refers to a Zag component (DatePicker etc.).
+ *
+ * Sibling helpers (avoid mixing them up):
+ *   - studio/zag/index.ts:hasZagChildren — structural inspection of
+ *     `ZagChild[]` children for an instance.
+ *   - compiler/parser/ast.ts:isZagComponent — TypeScript type-guard on
+ *     parsed AST nodes (`node is ZagNode`).
  */
-export function isZagComponent(name: string): boolean {
+export function isZagComponentName(name: string): boolean {
   return name in ZAG_PRIMITIVES
 }
 
