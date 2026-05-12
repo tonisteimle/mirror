@@ -1107,6 +1107,25 @@ div.innerHTML` ohne Fallback und ohne Verweis auf die zentrale
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-12 — 2 orphan tools/ CLI scripts gelöscht (~995 LOC)
+
+- **Wo:** `tools/analyze-test-quality.ts` (276 LOC),
+  `tools/tutorial-validator.ts` (719 LOC)
+  **Was:** Hunt-Discovery 2026-05-12. Zwei standalone tsx-Scripts
+  mit **0 Konsumenten** im ganzen Repo — keine `package.json`-
+  Scripts, keine Doku-Referenzen, keine Source-Imports, keine CI.
+  Letzte Aktivität jeweils 21 Tage. `analyze-test-quality` war ein
+  Test-Pattern-Linter, `tutorial-validator` ein
+  Mirror-Source-Deep-Analyzer (anderes Tool als der live
+  `compiler/validator/` — gleicher Name, andere Verantwortung).
+  Geschwister-Tools die ähnlich aussahen, aber LIVE sind:
+  `atomic-input-tests.ts` (in TEST-FRAMEWORK.md dokumentiert) und
+  `migrate-browser-tests-to-vitest.ts` (in CLAUDE.md dokumentiert)
+  — beide bleiben.
+  **Status:** erledigt (`49fbf07e`, gebündelt mit dem testMode/
+  layout-source-resolution-Slice der parallel-session)
+  **Notiz:** Restoration via `git show <pre-delete>:tools/<name>.ts`.
+
 ### 2026-05-12 — Studio-Build-Bruch nach modules-Deletion gefixt
 
 - **Wo:** `studio/index.ts` (–0 / +12 LOC), `studio/app.ts:127-128`
