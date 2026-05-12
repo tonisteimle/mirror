@@ -127,12 +127,13 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 > 7. `compiler/backends/dom/ops/resolve-templates.ts:resolveConditionalExpression`
 >    — Smell ohne Bug
 > 8. `studio/react-converter/` — dormant Modul (Hunt 2026-05-12 Iter-N+3)
+> 9. `compiler/{runtime,backends/dom}/` — Slice E dead-export follow-up
 >
 > Alle anderen Einträge unter „Offen" tragen bereits Status:
 > **erledigt** oder **abgewiesen** und gehören eigentlich nach
 > „Erledigt"; sie verbleiben hier als historischer Kontext (Audit-
 > Notiz + Commit-Hash). Vor dem nächsten Hunt-Rollup migrieren —
-> bis dahin: erst auf die obigen 8 Einträge scannen.
+> bis dahin: erst auf die obigen 9 Einträge scannen.
 
 - **Wo:** `studio/editor/triggers/trigger-controller.ts` (659 LOC),
   `studio/editor/triggers/ports.ts` (450 LOC),
