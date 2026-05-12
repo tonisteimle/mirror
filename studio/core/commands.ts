@@ -1022,7 +1022,6 @@ export class SetTextContentCommand implements Command {
   readonly description: string
   private nodeId: string
   private newText: string
-  private oldText: string | null = null
   private originalSource: string | null = null
 
   constructor(params: { nodeId: string; text: string; description?: string }) {
@@ -1043,8 +1042,6 @@ export class SetTextContentCommand implements Command {
     const modifier = new CodeModifier(data.source, data.sourceMap)
     const result = modifier.updateTextContent(this.nodeId, this.newText)
     if (!result.success) return { success: false, error: result.error }
-
-    this.oldText = result.oldText || null
 
     // Apply the change (adjusted for prelude offset)
     const editorChange = adjustChangeForEditor(result.change, ctx)
