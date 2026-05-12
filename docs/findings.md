@@ -1077,10 +1077,28 @@ Mirror → React Konverter`) beschreibt zudem die **falsche
   Name-Check vs. Type-Guard), gleicher Symbol-Name. Auto-Import
   verwirrt zuverlässig. Test-Fixture-Variante ist auch schlicht
   Duplikation der autocomplete-Variante.
-  **Status:** offen — Refactor-Vorschlag: `hasZagChildren` (children-
-  inspection), `isZagComponentName` (name-lookup, im Schema/Parser
-  zentralisieren), `isZagNode` (type-guard, schon im Parser). Test-
-  Fixture-Duplikation parallel weglöschen.
+  **Status:** teilweise erledigt — Slice 1 (Test-Fixture-Duplikat
+  raus) ist drin: `isZagComponent` aus
+  `studio/preview/drag/test-api/fixtures/zag-components.ts:173`
+  - Re-Export aus `fixtures/index.ts:22` gelöscht (0 Konsumenten).
+    Code-Diff landete in `f4215bf0` (Bündel-Commit der parallelen
+    Session — Race-Condition zwischen zwei Claude-Sessions; Inhalt
+    korrekt, Commit-Message irreführend, dokumentiert hier statt
+    Force-Push). Damit 4 → 3 Implementations.
+    **Notiz:** Verbleibende Slices sind echte Renames mit Cross-File-
+    Cascading: (a) `studio/zag/index.ts:59` → `hasZagChildren` plus
+    `ZagDeps.isZagComponent` Field-Rename + alle drop-Konsumenten +
+    drop-handlers.test.ts mocks; (b) `studio/autocomplete/schema-
+completions.ts:881` → `isZagComponentName` plus autocomplete-
+    Konsument. Compiler-Type-Guard in `compiler/parser/ast.ts:756`
+    bleibt kanonisch unverändert.
+
+  **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
+  paralleler Claude-Sessions kann bei überlappenden Working-Trees
+  Inhalte in den falschen Commit ziehen. Mitigation für künftige
+  Multi-Session-Slices: vor `git commit` ein `git diff --cached
+--stat` checken; wenn unerwartete Files drin sind, `git reset HEAD`
+  - selektiv re-staging.
 
 - **Wo:** `studio/panels/property/utils/html.ts:8`
   **Was:** Dritte `escapeHtml`-Implementierung, die den
