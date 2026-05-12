@@ -59,13 +59,6 @@ import {
 import { parseDataFiles } from './parser/data-parser'
 import type { DataFile } from './parser/data-types'
 
-export interface CompileOptions {
-  /** For simple single-file compilation (no project structure) */
-  code?: string
-  /** Optional parsed data files to include in output */
-  dataFiles?: DataFile[]
-}
-
 export interface CompileProjectOptions {
   /** Function to list .mirror files in a directory */
   listFiles: ListFilesFn

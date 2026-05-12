@@ -127,11 +127,3 @@ export function emitDatePickerComponent(
   // Initialize DatePicker via runtime
   emitRuntimeInit(ctx, varName, 'initDatePickerComponent')
 }
-
-/**
- * Registry entries for overlay components (DatePicker only).
- */
-export const overlayemittersRegistry: [string, ZagEmitterFn][] = [
-  ['datepicker', emitDatePickerComponent],
-  ['date-picker', emitDatePickerComponent],
-]

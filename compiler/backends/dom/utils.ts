@@ -83,11 +83,3 @@ export function sanitizeVarName(id: string): string {
 export function cssPropertyToJS(prop: string): string {
   return prop.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())
 }
-
-/**
- * Generate a unique variable name for a node
- */
-export function generateVarName(nodeId: string, prefix: string = ''): string {
-  const sanitized = sanitizeVarName(nodeId)
-  return prefix ? `${prefix}_${sanitized}` : sanitized
-}

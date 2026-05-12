@@ -237,20 +237,3 @@ function emitMountToBody(ctx: APIEmitterContext): void {
   ctx.emit('// Mount to document')
   ctx.emit('document.body.appendChild(_ui.root)')
 }
-
-// ============================================
-// AUTO-MOUNT EMISSION
-// ============================================
-
-/**
- * Emit auto-mount code when no JavaScript block is present
- */
-export function emitAutoMount(ctx: APIEmitterContext): void {
-  ctx.emit('')
-  ctx.emit('// ============================================')
-  ctx.emit('// Auto-mount (no JavaScript block)')
-  ctx.emit('// ============================================')
-  ctx.emit('')
-  ctx.emit('const _ui = createUI()')
-  ctx.emit('document.body.appendChild(_ui.root)')
-}

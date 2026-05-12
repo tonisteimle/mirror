@@ -2103,10 +2103,3 @@ ${CHARTS_RUNTIME}
 }
 ${TEST_API_RUNTIME}
 `
-
-/**
- * Gibt die Anzahl der Zeilen im Runtime-Code zurück
- */
-export function getRuntimeLineCount(): number {
-  return DOM_RUNTIME_CODE.split('\n').length
-}

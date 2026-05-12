@@ -5,7 +5,6 @@
  * Extracted from dom-runtime.ts for Clean Code.
  */
 
-import { animate as motionAnimateFn } from 'motion'
 import type { MirrorElement, StateAnimation } from './types'
 
 // ============================================
@@ -13,12 +12,6 @@ import type { MirrorElement, StateAnimation } from './types'
 // ============================================
 
 export type { StateAnimation }
-
-export interface MotionConfig {
-  duration?: number
-  delay?: number
-  easing?: string | number[]
-}
 
 interface AnimationDefinition {
   name: string
@@ -108,66 +101,6 @@ const ANIMATION_PRESETS: Record<string, { keyframes: Keyframe[]; easing?: string
   },
 }
 
-const MOTION_PRESETS: Record<
-  string,
-  {
-    keyframes: Record<string, unknown[]>
-    options: { duration?: number; easing?: string | number[] }
-  }
-> = {
-  'fade-in': { keyframes: { opacity: [0, 1] }, options: { duration: 0.3, easing: 'ease-out' } },
-  'fade-out': { keyframes: { opacity: [1, 0] }, options: { duration: 0.3, easing: 'ease-out' } },
-  'slide-up': {
-    keyframes: { transform: ['translateY(20px)', 'translateY(0)'], opacity: [0, 1] },
-    options: { duration: 0.4, easing: [0.22, 1, 0.36, 1] },
-  },
-  'slide-down': {
-    keyframes: { transform: ['translateY(-20px)', 'translateY(0)'], opacity: [0, 1] },
-    options: { duration: 0.4, easing: [0.22, 1, 0.36, 1] },
-  },
-  'slide-left': {
-    keyframes: { transform: ['translateX(20px)', 'translateX(0)'], opacity: [0, 1] },
-    options: { duration: 0.4, easing: [0.22, 1, 0.36, 1] },
-  },
-  'slide-right': {
-    keyframes: { transform: ['translateX(-20px)', 'translateX(0)'], opacity: [0, 1] },
-    options: { duration: 0.4, easing: [0.22, 1, 0.36, 1] },
-  },
-  'scale-in': {
-    keyframes: { transform: ['scale(0.9)', 'scale(1)'], opacity: [0, 1] },
-    options: { duration: 0.3, easing: [0.34, 1.56, 0.64, 1] },
-  },
-  'scale-out': {
-    keyframes: { transform: ['scale(1)', 'scale(0.9)'], opacity: [1, 0] },
-    options: { duration: 0.2, easing: 'ease-in' },
-  },
-  bounce: {
-    keyframes: { transform: ['scale(1)', 'scale(1.15)', 'scale(0.95)', 'scale(1.02)', 'scale(1)'] },
-    options: { duration: 0.5, easing: 'ease-out' },
-  },
-  pulse: {
-    keyframes: { transform: ['scale(1)', 'scale(1.05)', 'scale(1)'], opacity: [1, 0.85, 1] },
-    options: { duration: 0.6, easing: 'ease-in-out' },
-  },
-  shake: {
-    keyframes: {
-      transform: [
-        'translateX(0)',
-        'translateX(-8px)',
-        'translateX(8px)',
-        'translateX(-4px)',
-        'translateX(4px)',
-        'translateX(0)',
-      ],
-    },
-    options: { duration: 0.4, easing: 'ease-in-out' },
-  },
-  spin: {
-    keyframes: { transform: ['rotate(0deg)', 'rotate(360deg)'] },
-    options: { duration: 1, easing: 'linear' },
-  },
-}
-
 // ============================================
 // STATE
 // ============================================
@@ -244,29 +177,6 @@ export function setupEnterExitObserver(
   )
   observer.observe(el)
   return observer
-}
-
-export function motionAnimate(
-  el: HTMLElement,
-  preset: string | Record<string, unknown[]>,
-  config?: MotionConfig
-): Promise<void> {
-  return new Promise(resolve => {
-    const { keyframes, options } = resolveMotionPreset(preset)
-    if (!keyframes) {
-      resolve()
-      return
-    }
-    const animOptions = buildMotionOptions(options, config)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    motionAnimateFn(el, keyframes as any, animOptions as any)
-      .finished.then(() => resolve())
-      .catch(() => resolve())
-  })
-}
-
-export function getMotionPreset(name: string): (typeof MOTION_PRESETS)[string] | undefined {
-  return MOTION_PRESETS[name]
 }
 
 // ============================================
@@ -407,30 +317,5 @@ function handleIntersection(
     } else {
       onExit?.()
     }
-  }
-}
-
-function resolveMotionPreset(preset: string | Record<string, unknown[]>): {
-  keyframes: Record<string, unknown[]> | null
-  options: { duration?: number; easing?: string | number[] }
-} {
-  if (typeof preset === 'string' && MOTION_PRESETS[preset]) {
-    return { keyframes: MOTION_PRESETS[preset].keyframes, options: MOTION_PRESETS[preset].options }
-  }
-  if (typeof preset === 'object') {
-    return { keyframes: preset, options: {} }
-  }
-  console.warn(`Motion preset "${preset}" not found`)
-  return { keyframes: null, options: {} }
-}
-
-function buildMotionOptions(
-  baseOptions: { duration?: number; easing?: string | number[] },
-  config?: MotionConfig
-): Record<string, unknown> {
-  return {
-    duration: config?.duration || baseOptions.duration || 0.3,
-    delay: config?.delay || 0,
-    easing: config?.easing || baseOptions.easing || 'ease-out',
   }
 }

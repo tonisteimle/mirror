@@ -242,12 +242,3 @@ export function formatErrors(result: ValidationResult, source?: string): string 
 
   return output.join('\n')
 }
-
-/**
- * Create a streaming validator for IDE integration.
- * Returns a function that validates ASTs efficiently.
- */
-export function createValidator(): (ast: AST) => ValidationResult {
-  const validator = new Validator()
-  return (ast: AST) => validator.validate(ast)
-}

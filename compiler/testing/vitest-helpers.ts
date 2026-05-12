@@ -5,7 +5,7 @@
  */
 
 import { expect } from 'vitest'
-import type { RenderContext, ValidationOptions, ValidationResult, ElementValidation } from './types'
+import type { RenderContext, ValidationOptions, ValidationResult } from './types'
 import { renderMirror } from './render'
 import { validateAll, validateById, formatReport } from './style-validator'
 
@@ -63,30 +63,6 @@ export function expectValid(ctx: RenderContext, options?: ValidationOptions): Va
   if (!result.passed) {
     const report = formatReport(result)
     expect.fail(`Style validation failed:\n\n${report}`)
-  }
-
-  return result
-}
-
-/**
- * Expect a specific element to pass validation
- */
-export function expectElementValid(
-  ctx: RenderContext,
-  nodeId: string,
-  options?: ValidationOptions
-): ElementValidation {
-  const result = validateById(ctx, nodeId, options)
-
-  if (!result) {
-    expect.fail(`Element not found: ${nodeId}`)
-  }
-
-  if (!result.passed) {
-    const mismatches = result.mismatches
-      .map(m => `  ${m.property}: expected "${m.expected}", got "${m.actual}"`)
-      .join('\n')
-    expect.fail(`Element ${nodeId} failed validation:\n${mismatches}`)
   }
 
   return result
@@ -211,34 +187,4 @@ export function quickExpectStyles(code: string, expectedStyles: Record<string, s
   } finally {
     ctx.cleanup()
   }
-}
-
-// =============================================================================
-// DEBUG HELPERS
-// =============================================================================
-
-/**
- * Log validation result to console (for debugging)
- */
-export function logValidation(ctx: RenderContext, options?: ValidationOptions): void {
-  const result = validateAll(ctx, options)
-  console.log(formatReport(result))
-}
-
-/**
- * Log element styles to console (for debugging)
- */
-export function logElementStyles(ctx: RenderContext, nodeId: string): void {
-  const result = validateById(ctx, nodeId)
-  if (!result) {
-    console.log(`Element not found: ${nodeId}`)
-    return
-  }
-  console.log(`\nElement: ${nodeId}${result.componentName ? ` (${result.componentName})` : ''}`)
-  console.log('Expected styles (from IR):')
-  Object.entries(result.expectedStyles).forEach(([prop, value]) =>
-    console.log(`  ${prop}: ${value}`)
-  )
-  console.log('Actual styles (from DOM):')
-  Object.entries(result.actualStyles).forEach(([prop, value]) => console.log(`  ${prop}: ${value}`))
 }

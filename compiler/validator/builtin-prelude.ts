@@ -162,11 +162,3 @@ export function getBuiltinComponents(): Set<string> {
 export function getBuiltinTokens(): Set<string> {
   return new Set()
 }
-
-/**
- * Test-only: clear the memoisation cache so callers that mutate the
- * underlying registries between tests see fresh results.
- */
-export function _resetBuiltinPreludeCache(): void {
-  cached = null
-}

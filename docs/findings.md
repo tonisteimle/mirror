@@ -896,9 +896,10 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
   **Was:** Aggregat: 105× `as any` (53 in `studio/`, 44 in `tools/`, 8 in
   `compiler/`), 7× `@ts-expect-error` (5 davon in `tauri-bridge.ts`), 1×
   `any[]` Parameter in `compiler/ir/ops/` Layout.
-  **Status:** weitgehend erledigt — Stand 2026-05-10:
-  - `compiler/`: 1 von 8 verbleibt (`animations.ts:262`,
-    motion-Lib-API-Shape-Mismatch).
+  **Status:** weitgehend erledigt — Stand 2026-05-12:
+  - `compiler/`: **0 verbleibend** — letzter Cast (`animations.ts:262`,
+    motion-Lib-API-Shape-Mismatch) weg, weil `motionAnimate` selbst
+    dead-Code war und mit dem Slice-A-Dead-Export-Sweep gelöscht wurde.
   - `studio/` Production-Code (ohne `test-api/`/`test-runner`):
     **0 echte Casts**. Verbleibende 5 grep-Treffer sind Kommentare /
     Doku-Strings, die das Wort "as any" erwähnen — keine echten
@@ -985,6 +986,37 @@ Chronologisch absteigend (neueste zuerst).
   - PerfLogger) ist exportiert und voll-getestet, wird aber
     nirgendwo in Production instanziiert — als neuer offener Befund
     „dead compile-service cluster" dokumentiert.
+
+### 2026-05-12 — Dead-Export-Sweep Slice A: compiler/ (28 Exports, –500+ LOC)
+
+- **Wo:** `compiler/runtime/security.ts` (gelöscht, 304 LOC),
+  `compiler/runtime/animations.ts` (motionAnimate + getMotionPreset +
+  MOTION_PRESETS + helpers, ~100 LOC, `motion`-Dependency entfernt),
+  `compiler/runtime/alignment.ts` (alignToCSS + getAlign + 6 internal
+  helpers, ~85 LOC; ALIGN_MAP bleibt),
+  `compiler/runtime/component-navigation.ts` (setReadFileCallback +
+  ungenutzte Override-Mechanik), `compiler/utils/logger.ts` (10 dead
+  pre-configured Logger), `compiler/backends/dom/api-emitter.ts`
+  (emitAutoMount), `compiler/backends/dom/runtime-template/index.ts`
+  (getRuntimeLineCount), `compiler/backends/dom/utils.ts`
+  (generateVarName), `compiler/backends/dom/zag/overlay-emitters.ts`
+  (overlayemittersRegistry), `compiler/backends/dom/base-emitter-context.ts`
+  (EmitterFn type), `compiler/validator/index.ts` (createValidator),
+  `compiler/validator/builtin-prelude.ts` (\_resetBuiltinPreludeCache),
+  `compiler/cli/defaults-css.ts` (\_resetDefaultsCssCache),
+  `compiler/testing/vitest-helpers.ts` (expectElementValid +
+  logValidation + logElementStyles + ElementValidation-Import),
+  `compiler/index.ts` (CompileOptions type), `package.json` (motion-Dep weg).
+  **Was:** Audit per export-declarations × occurrences-grep (ts/tsx/json/md/html)
+  ergab 28 Top-Level-Exports mit 0 Konsumenten außerhalb der Definitions-
+  stelle. `compiler/runtime/security.ts` war komplett dead-File (304 LOC,
+  beide Exports tot, kein Importer, kein Test, kein Doku-Verweis).
+  `motionAnimate` mit Drumherum war ungebaute Alternative zum
+  bestehenden Animation-System — als Bonus fiel der `motion` NPM-Dep
+  raus. Findings-Aggregat-Eintrag aktualisiert: `compiler/`-`as any`-
+  Count auf **0** (letzter war in motionAnimate).
+  15475/15498 vitest grün (23 pre-existing skipped).
+  **Status:** erledigt
 
 ### 2026-05-11 — Dead-Export-Sweep: 3 ungenutzte Exports gelöscht
 

@@ -177,11 +177,6 @@ export type LoopEmitterContext = Pick<
 // =============================================================================
 
 /**
- * Type for an emitter function that operates on a specific node type
- */
-export type EmitterFn<T> = (node: T, parentVar: string, ctx: EmitterContext) => void
-
-/**
  * Type for a Zag component emitter function
  */
 export type ZagEmitterFn = (

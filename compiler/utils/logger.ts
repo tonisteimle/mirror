@@ -75,18 +75,8 @@ export function createLogger(prefix: string) {
 // Pre-configured loggers for common modules
 export const logPropertyExtractor = createLogger('PropertyExtractor')
 export const logCodeModifier = createLogger('CodeModifier')
-export const logIR = createLogger('IR')
-export const logParser = createLogger('Parser')
-export const logZagTransformer = createLogger('ZagTransformer')
-export const logValidator = createLogger('Validator')
 
 // Studio module loggers
 export const logBootstrap = createLogger('Bootstrap')
 export const logSync = createLogger('Sync')
 export const logState = createLogger('State')
-export const logAgent = createLogger('Agent')
-export const logPreview = createLogger('Preview')
-export const logEditor = createLogger('Editor')
-export const logPanel = createLogger('Panel')
-export const logPicker = createLogger('Picker')
-export const logRuntime = createLogger('Runtime')

@@ -33,8 +33,3 @@ export function loadDefaultsCss(): string {
   }
   throw new Error(`mirror-defaults.css not found. Tried:\n  ${CANDIDATE_PATHS.join('\n  ')}`)
 }
-
-/** Test hook — clear cache so a different file can be loaded. */
-export function _resetDefaultsCssCache(): void {
-  cached = null
-}

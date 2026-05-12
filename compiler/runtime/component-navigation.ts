@@ -11,15 +11,6 @@ import { applyState, removeState } from './state-machine'
 // FILE CALLBACK STORAGE
 // ============================================
 
-let _readFileCallback: ((filename: string) => string | null) | null = null
-
-/**
- * Set the readFile callback for page navigation
- */
-export function setReadFileCallback(callback: (filename: string) => string | null): void {
-  _readFileCallback = callback
-}
-
 // ============================================
 // PAGE NAME SECURITY
 // ============================================
@@ -184,13 +175,11 @@ export function navigate(targetName: string, clickedElement: MirrorElement | nul
 // ============================================
 
 /**
- * Get read file function
+ * Get read file function from the host (Studio bundle sets this via
+ * `window._mirrorReadFile`).
  */
 function getReadFileFunction(): ((f: string) => string | null) | undefined {
-  return (
-    _readFileCallback ||
-    (window as { _mirrorReadFile?: (f: string) => string | null })._mirrorReadFile
-  )
+  return (window as { _mirrorReadFile?: (f: string) => string | null })._mirrorReadFile
 }
 
 /**
