@@ -1,15 +1,14 @@
 /**
  * HTML utilities for Property Panel
+ *
+ * `escapeHtml` is re-exported from `studio/desktop-files-utils.ts` so
+ * the centralized DOM-with-fallback variant (which itself defers to
+ * `compiler/utils/escape-html` in non-DOM contexts) is the single
+ * source of truth. Don't re-introduce a local DOM-only implementation —
+ * a future XSS-hardening change should land in one place.
  */
 
-/**
- * Escape HTML special characters
- */
-export function escapeHtml(str: string): string {
-  const div = document.createElement('div')
-  div.textContent = str
-  return div.innerHTML
-}
+export { escapeHtml } from '../../../desktop-files-utils'
 
 /**
  * Display labels for properties
