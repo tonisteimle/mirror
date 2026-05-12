@@ -174,31 +174,6 @@ service.ts`-Cluster, Eintrag #5). Letzte feature-relevante
   `tests/studio/editor-trigger-integration.test.ts` als Sanity-
   Pin auf das _echte_ Trigger-System nachher.
 
-- **Wo:** `compiler/runtime/markdown.ts` (180 LOC) +
-  `tests/compiler/markdown.test.ts` (1105 LOC)
-  **Was:** Hunt-Audit 2026-05-12. `compiler/runtime/markdown.ts`
-  exportiert `markdownToHTML`/`markdownToPlainText`/
-  `hasMarkdownFormatting` — 0 Production-Konsumenten repo-weit. Der
-  einzige Importer war die eigene Test-Suite. Die DOM-Runtime-Template
-  hat **keinen** inline-equivalent für „full markdown to HTML" (nur
-  `formatInlineMarkdown` aus `inline-markdown.ts`, das ist ein anderes
-  Modul für **inline**-Markdown — bold/italic/code/link — und _wird_
-  aktiv ins Bundle gestamped). `markdown.ts` (block-level Markdown:
-  `# Heading`, Lists, Paragraphs) hatte _keinen_ Aufrufer in
-  Backend/Studio/CLI/Tools/Examples. Pattern matcht die früheren
-  Deletion-Wins `element-wrapper.ts` (Erledigt 2026-05-10, -287 LOC),
-  `studio/visual/constraints/` (Erledigt 2026-05-11, -299 LOC),
-  `studio/modules/` (Erledigt 2026-05-11, -468 LOC + tests).
-  **Status:** erledigt (`f4215bf0`) — −1285 LOC. Beide Files raus,
-  kein Caller verbleibt. Compiler-Tests 7113/7113 grün.
-  **Notiz:** Die Deletion landete bundled in einem Commit der
-  Parallel-Session (`f4215bf0`, der eigentlich den isMirrorFile-
-  Rename in Tests abschließt) — die Parallel-Session hat per
-  `git add -A` meine staged Deletion mit reingenommen. Ergebnis ist
-  korrekt; nur der Commit-Titel adressiert die Storage-Tests, nicht
-  die markdown.ts-Deletion. Restoration via
-  `git show f4215bf0~1:compiler/runtime/markdown.ts`.
-
 - **Wo:** `studio/visual/layout-inference/` (6 Files, 872 LOC)
   **Was:** Hunt-Audit 2026-05-11: `LayoutInferenceManager` und
   `AlignmentDetector` werden **nirgendwo in Production oder Tests
@@ -222,16 +197,6 @@ service.ts`-Cluster, Eintrag #5). Letzte feature-relevante
   4 Zeilen events.ts. Bei Beibehaltung: an Demo-Workflow
   wiring nachholen, damit die Subsystem-Events real konsumiert
   werden (sonst bleibt die Dormanz das Problem).
-
-- **Wo:** `compiler/ir/ops/instance-ops.ts:transformInstance`
-  (3 `addWarning`-Aufrufe)
-  **Was:** Bystander-Bug: Drei Warnungen (`invalid-instance`,
-  `recursive-component`, `undefined-component`) lasen `instance.position`,
-  was auf Instance/Each/ConditionalNode nicht existiert (BaseNode hat
-  flat `line`/`column`). `position`-Field war silent `undefined` →
-  Warnungen ohne Source-Position für IDE-Hervorhebung.
-  **Status:** erledigt — auf `calculateSourcePosition(instance.line,
-instance.column)` umgestellt. 7849/7849 vitest grün.
 
 - **Wo:** `compiler/backends/dom/style-emitter.ts:emitNodeSizeStateCSS`,
   `compiler/backends/dom/node-emitter.ts:emitContainerType`,
@@ -1128,11 +1093,17 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-            **Status-Update:** aktiv (claude, 2026-05-12 07:25). Plan: Drei
-            Renames in einem Commit-Slice. Per-Slice TypeScript-Inferenz reicht
-            den Children-Konsumenten zur Verifikation; vitest auf
-            tests/compiler/parser-ast-guards + tests/studio/drop-handlers nach
-            Slice. Single Code-Commit + findings-Update auf erledigt.
+                **Status-Update:** erledigt — Slice 2 (autocomplete:isZagComponent
+                → isZagComponentName, `97b81868`) + Slice 3 (zag:isZagComponent
+                (children) → hasZagChildren mit Cross-File-Cascading, `427c10f8`)
+                landen. Damit 3 distinkt benannte Funktionen: `hasZagChildren`
+                (children-Shape), `isZagComponentName` (Name-Lookup),
+                `isZagComponent` (compiler AST type-guard, kanonisch unverändert).
+                Slice (c) — Compiler-Rename auf `isZagNode` — wird **nicht** mehr
+                verfolgt: der Type-Guard ist eindeutig kontextualisiert
+                (compiler/parser/ast.ts), kein Studio-Konsument importiert ihn
+                mehr unter dem alten Namen aus einem Multi-Symbol-Barrel.
+                116 autocomplete + 81 drop-handlers Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
@@ -1140,53 +1111,6 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
   Multi-Session-Slices: vor `git commit` ein `git diff --cached
 --stat` checken; wenn unerwartete Files drin sind, `git reset HEAD`
   - selektiv re-staging.
-
-- **Wo:** `studio/panels/property/utils/html.ts:8`
-  **Was:** Dritte `escapeHtml`-Implementierung, die den
-  Centralization-Sweep (Comment in `compiler/utils/escape-html.ts:12`
-  „Pre-2026-05-10 the same map was inline-duplicated in 4 different
-  places... Centralising them here means a future XSS hardening lands
-  in one place") **übersehen hat**. Die zwei dokumentierten Pfade —
-  `compiler/utils/escape-html.ts:36` (Pure-String-Fallback) und
-  `studio/desktop-files-utils.ts:62` (DOM-basiert mit explizitem
-  Fallback auf den Compiler-Pfad) — sind sauber gewired. Aber
-  `studio/panels/property/utils/html.ts:8` benutzt
-  `document.createElement('div'); div.textContent = str; return
-div.innerHTML` ohne Fallback und ohne Verweis auf die zentrale
-  Variante. In jsdom-Tests funktioniert es; in Non-DOM-Kontexten würde
-  es crashen. Nicht akut, aber eine künftige Sicherheits-Hardening
-  würde jetzt in der falschen Anzahl Stellen landen.
-  **Status:** erledigt (`abe9d4b4`) — `escapeHtml` in
-  `studio/panels/property/utils/html.ts` ist jetzt ein Re-Export aus
-  `studio/desktop-files-utils.ts` (DOM-mit-Fallback). Dep-Wiring in
-  `view.ts:131` unverändert; alle Sektionen rufen weiter
-  `this.deps.escapeHtml(...)`. 44/44 property-panel-utils + 5912/5912
-  studio Tests grün. Header-Comment in der Utils-Datei warnt explizit
-  vor Re-Introduktion einer lokalen DOM-only-Variante. Damit liegen
-  noch zwei `escapeHtml`-Implementierungen vor: pure-string in
-  `compiler/utils/escape-html.ts` und DOM-mit-Fallback in
-  `studio/desktop-files-utils.ts` (Property-Panel und ggf. künftige
-  Studio-Subsysteme delegieren auf zweitere).
-
-- **Wo:** `compiler/backends/dom/ops/resolve-utils.ts:11`
-  **Was:** `sanitizeVarName(this: DOMGenerator, id: string)` ist eine
-  reine Class-Binding-Indirektion auf `sanitizeVarName` aus
-  `compiler/backends/dom/utils.ts:72`:
-  ```ts
-  export function sanitizeVarName(this: DOMGenerator, id: string): string {
-    return sanitizeVarNameUtil(id)
-  }
-  ```
-  Die Methode nutzt `this` nicht und delegiert nur. Wenn Caller direkt
-  die freie Funktion importieren würden, könnte der Wrapper raus —
-  aber der Caller-Pfad geht durch die DOMGenerator-Klassen-Methode (per
-  class-field-Bindung), und manche dieser Caller wollen `this` für
-  andere Methoden.
-  **Status:** abgewiesen — Wrapper ist Teil des dokumentierten
-  ops-Bind-Patterns („Functions take `this: DOMGenerator` and are bound
-  on the class via class-field assignment"), nicht semantische
-  Duplikation. Hier nur als Audit-Notiz aufgeführt, damit künftige
-  Hunts den False-Positive nicht wieder aufmachen.
 
 ---
 
