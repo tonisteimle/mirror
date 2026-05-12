@@ -1084,8 +1084,16 @@ Mirror → React Konverter`) beschreibt zudem die **falsche
     `ZagDeps.isZagComponent` Field-Rename + alle drop-Konsumenten +
     drop-handlers.test.ts mocks; (b) `studio/autocomplete/schema-
 completions.ts:881` → `isZagComponentName` plus autocomplete-
-    Konsument. Compiler-Type-Guard in `compiler/parser/ast.ts:756`
-    bleibt kanonisch unverändert.
+    Konsument; (c) `compiler/parser/ast.ts:756` → `isZagNode` plus
+    IR-Konsumenten (4 Caller-Sites + Re-Export-Barrel + Test). Der
+    IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
+    anderes Konzept und bleibt unverändert.
+
+        **Status-Update:** aktiv (claude, 2026-05-12 07:25). Plan: Drei
+        Renames in einem Commit-Slice. Per-Slice TypeScript-Inferenz reicht
+        den Children-Konsumenten zur Verifikation; vitest auf
+        tests/compiler/parser-ast-guards + tests/studio/drop-handlers nach
+        Slice. Single Code-Commit + findings-Update auf erledigt.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
