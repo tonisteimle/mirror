@@ -126,12 +126,17 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 > 6. `studio/app.ts` Bootstrap-Decomp (#8) — ongoing decomposition
 > 7. `compiler/backends/dom/ops/resolve-templates.ts:resolveConditionalExpression`
 >    — Smell ohne Bug
+> 8. `studio/react-converter/` — dormant Modul (Hunt 2026-05-12 Iter-N+3)
+> 9. `isMirrorFile` 3× mit verschiedenen Scopes (Hunt 2026-05-12 Iter-N+3)
+> 10. `isZagComponent` 4× mit verschiedenen Signaturen (Hunt 2026-05-12 Iter-N+3)
+> 11. `escapeHtml` in `panels/property/utils/html.ts` — dritte
+>     undokumentierte Variante (Hunt 2026-05-12 Iter-N+3, kleinster Fix)
 >
 > Alle anderen Einträge unter „Offen" tragen bereits Status:
 > **erledigt** oder **abgewiesen** und gehören eigentlich nach
 > „Erledigt"; sie verbleiben hier als historischer Kontext (Audit-
 > Notiz + Commit-Hash). Vor dem nächsten Hunt-Rollup migrieren —
-> bis dahin: erst auf die obigen 7 Einträge scannen.
+> bis dahin: erst auf die obigen 11 Einträge scannen.
 
 - **Wo:** `studio/visual/layout-inference/` (6 Files, 872 LOC)
   **Was:** Hunt-Audit 2026-05-11: `LayoutInferenceManager` und
@@ -953,6 +958,133 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
     (`4606e8c6`); 1× `@ts-ignore` für EyeDropper weg (`3e206764`).
     **Notiz:** Production-Code-Ziel ist erreicht; weitere Reduktion
     betrifft Test-Infra (geringerer Wert).
+
+### Hunt 2026-05-12 (Iter-N+3) — fünf neue Befunde
+
+- **Wo:** `studio/react-converter/` (599 LOC src + 55-Test-Suite)
+  **Was:** Dormant Modul, gleicher Befund-Typ wie der dokumentierte
+  `studio/compile/compile-service.ts`-Cluster: exportiert via
+  `studio/index.ts:107` (`export * from './react-converter'`),
+  voll-getestet (`tests/studio/react-converter.test.ts`, 55 Tests),
+  aber **nirgendwo in Production konsumiert**. Repo-weiter Grep nach
+  den 7 Exports (`convertReactToMirror`, `buildReactSystemPrompt`,
+  `STYLE_TO_MIRROR`, `TAG_TO_COMPONENT`, `TAG_TO_NAME`,
+  `ConvertResult`, `PromptContext`) ergab 0 Treffer außer in der
+  Test-Suite und der eigenen Source. Letzte Aktivität 2026-05-08
+  (`505be995` JSX-Parser-Bugfix), aber nur Tests reagieren auf den
+  Code; kein Tool, kein Script, kein Studio-Pfad ruft die
+  Konverter-API. Header-Kommentar sagt „Used by LLM integration for
+  React-first workflows" — die aktuelle LLM-Pipeline lebt jedoch in
+  `studio/agent/generation-pipeline.ts` und nutzt einen ganz anderen
+  Pfad (HTML als Pivot, nicht React; siehe `tools/experiments/
+svelte-spike/`-Spikes und Memory `project_llm_pipeline.md`).
+  **Status:** offen — Owner-Entscheidung (Pattern wie compile-service):
+  (a) wirklich an LLM-Edit-Flow anschließen, (b) löschen
+  (~599 LOC src + ~340 LOC Test, plus Barrel-Re-Export aus
+  `studio/index.ts:107` + CLAUDE.md-Eintrag), (c) als experimenteller
+  Fork in `tools/experiments/` archivieren.
+  **Notiz:** CLAUDE.md `studio/`-Tree-Eintrag (`react-converter/   #
+Mirror → React Konverter`) beschreibt zudem die **falsche
+  Richtung** — der Code konvertiert React → Mirror, nicht umgekehrt.
+  Bei Beibehaltung: Comment fixen. Bei Deletion: CLAUDE.md-Zeile mit
+  raus.
+
+- **Wo:** `studio/file-types/extensions.ts:21`,
+  `studio/storage/types.ts:85`, `studio/storage/project-actions.ts:784`
+  **Was:** Drei `isMirrorFile`-Funktionen mit **drei unterschiedlichen
+  Scopes** (Naming-Collision-Smell, gleiches Muster wie
+  `getFileType`/`snapPointToGrid`/`SpacingToken`):
+  - `file-types/extensions.ts:21` — Mirror DSL source only
+    (`.mir`/`.mirror`/`.com`/`.components`/`.tok`/`.tokens`).
+    EXKLUDIERT data-files (`.yaml`/`.yml`).
+  - `storage/types.ts:85` — liest `FILE_EXTENSIONS`-Map, INKLUDIERT
+    data-files. Verwendet von Storage-Providern (demo/tauri).
+  - `storage/project-actions.ts:784` — module-private Hardcoded-Liste
+    mit `.mir`/`.mirror`/`.tok`/`.tokens`/`.com`/`.components`/`.data`/
+    `.yaml`/`.yml`. INKLUDIERT data-files plus zusätzlich `.data`.
+
+  Die ESM-Bundle-Ambiguität ist in `studio/index.ts:92-99` mit Comment
+  - explizitem Pick auf `file-types/extensions` schon umschifft, aber
+    die strukturelle Drift (3 Funktionen, 3 verschiedene Antworten auf
+    „ist das eine Mirror-Datei") besteht weiter. Ein Caller, der die
+    „falsche" `isMirrorFile` importiert, bekommt schweigend eine
+    abweichende Antwort — Drift-Falle.
+    **Status:** offen — Vorschlag wie bei `getFileType`-Audit
+    (`e9666352`): umbenennen in `isMirrorSourceFile` (DSL only),
+    `isMirrorProjectFile` (Storage-Scope incl. data), `isProjectImportFile`
+    (project-actions Hardcoded). Ambiguitäts-Workaround in
+    `studio/index.ts:92-99` kann dann raus.
+    **Notiz:** Audit ergab: project-actions die `.data`-Erweiterung als
+    einziger Caller akzeptiert — bewusst oder Copy-Paste-Drift? Vor dem
+    Rename klären, ob `.data`-Files real existieren (Mirror-Konvention
+    ist `.yaml`/`.yml`).
+
+- **Wo:** `studio/zag/index.ts:59`,
+  `studio/autocomplete/schema-completions.ts:881`,
+  `studio/preview/drag/test-api/fixtures/zag-components.ts:173`,
+  `compiler/parser/ast.ts:756`
+  **Was:** Vier `isZagComponent`-Funktionen mit **vier verschiedenen
+  Signaturen und Konzepten**:
+  - `studio/zag/index.ts:59` — `(children: ZagChild[] | undefined): boolean`
+    — strukturelle Children-Inspektion.
+  - `studio/autocomplete/schema-completions.ts:881` —
+    `(name: string): boolean` — Name-Lookup gegen Zag-Component-Liste.
+  - `studio/preview/drag/test-api/fixtures/zag-components.ts:173` —
+    `(name: string): boolean` — Duplikat zur autocomplete-Variante,
+    aber im Test-Fixture-Bereich.
+  - `compiler/parser/ast.ts:756` — `(node: unknown): node is ZagNode` —
+    TypeScript-Type-Guard auf AST-Knoten.
+
+  Vier Funktionen, drei verschiedene Konzepte (Children-Check vs.
+  Name-Check vs. Type-Guard), gleicher Symbol-Name. Auto-Import
+  verwirrt zuverlässig. Test-Fixture-Variante ist auch schlicht
+  Duplikation der autocomplete-Variante.
+  **Status:** offen — Refactor-Vorschlag: `hasZagChildren` (children-
+  inspection), `isZagComponentName` (name-lookup, im Schema/Parser
+  zentralisieren), `isZagNode` (type-guard, schon im Parser). Test-
+  Fixture-Duplikation parallel weglöschen.
+
+- **Wo:** `studio/panels/property/utils/html.ts:8`
+  **Was:** Dritte `escapeHtml`-Implementierung, die den
+  Centralization-Sweep (Comment in `compiler/utils/escape-html.ts:12`
+  „Pre-2026-05-10 the same map was inline-duplicated in 4 different
+  places... Centralising them here means a future XSS hardening lands
+  in one place") **übersehen hat**. Die zwei dokumentierten Pfade —
+  `compiler/utils/escape-html.ts:36` (Pure-String-Fallback) und
+  `studio/desktop-files-utils.ts:62` (DOM-basiert mit explizitem
+  Fallback auf den Compiler-Pfad) — sind sauber gewired. Aber
+  `studio/panels/property/utils/html.ts:8` benutzt
+  `document.createElement('div'); div.textContent = str; return
+  div.innerHTML` ohne Fallback und ohne Verweis auf die zentrale
+  Variante. In jsdom-Tests funktioniert es; in Non-DOM-Kontexten würde
+  es crashen. Nicht akut, aber eine künftige Sicherheits-Hardening
+  würde jetzt in der falschen Anzahl Stellen landen.
+  **Status:** offen — kleinster Fix in dieser Iter: Property-Panel-
+  Variante auf `escapeHtml` aus `studio/desktop-files-utils.ts`
+  umstellen (DOM-mit-Fallback, gleiche Semantik). Falls Property-Panel
+  den Compiler-Helper nicht direkt importieren soll: re-export-Layer
+  in `studio/panels/property/utils/html.ts` (`export { escapeHtml }
+from '../../../desktop-files-utils'`).
+
+- **Wo:** `compiler/backends/dom/ops/resolve-utils.ts:11`
+  **Was:** `sanitizeVarName(this: DOMGenerator, id: string)` ist eine
+  reine Class-Binding-Indirektion auf `sanitizeVarName` aus
+  `compiler/backends/dom/utils.ts:72`:
+  ```ts
+  export function sanitizeVarName(this: DOMGenerator, id: string): string {
+    return sanitizeVarNameUtil(id)
+  }
+  ```
+  Die Methode nutzt `this` nicht und delegiert nur. Wenn Caller direkt
+  die freie Funktion importieren würden, könnte der Wrapper raus —
+  aber der Caller-Pfad geht durch die DOMGenerator-Klassen-Methode (per
+  class-field-Bindung), und manche dieser Caller wollen `this` für
+  andere Methoden.
+  **Status:** abgewiesen — Wrapper ist Teil des dokumentierten
+  ops-Bind-Patterns („Functions take `this: DOMGenerator` and are bound
+  on the class via class-field assignment"), nicht semantische
+  Duplikation. Hier nur als Audit-Notiz aufgeführt, damit künftige
+  Hunts den False-Positive nicht wieder aufmachen.
 
 ---
 
