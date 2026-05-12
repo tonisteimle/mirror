@@ -127,13 +127,12 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 > 7. `compiler/backends/dom/ops/resolve-templates.ts:resolveConditionalExpression`
 >    — Smell ohne Bug
 > 8. `studio/react-converter/` — dormant Modul (Hunt 2026-05-12 Iter-N+3)
-> 9. `isZagComponent` 4× mit verschiedenen Signaturen (Hunt 2026-05-12 Iter-N+3)
 >
 > Alle anderen Einträge unter „Offen" tragen bereits Status:
 > **erledigt** oder **abgewiesen** und gehören eigentlich nach
 > „Erledigt"; sie verbleiben hier als historischer Kontext (Audit-
 > Notiz + Commit-Hash). Vor dem nächsten Hunt-Rollup migrieren —
-> bis dahin: erst auf die obigen 9 Einträge scannen.
+> bis dahin: erst auf die obigen 8 Einträge scannen.
 
 - **Wo:** `studio/editor/triggers/trigger-controller.ts` (659 LOC),
   `studio/editor/triggers/ports.ts` (450 LOC),
@@ -1122,21 +1121,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                            **Status-Update:** erledigt — alle drei Slices landen:
-                            Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                            inkl. drop-Subsystem-Cascading (`427c10f8`),
-                            Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                            (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                            `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                            (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                            — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                            hat per `git add .` die uncommittete compiler-Side mit
-                            aufgenommen). Damit 3 distinkt benannte Funktionen:
-                            `hasZagChildren` (children-Shape), `isZagComponentName`
-                            (Name-Lookup), `isZagNode` (AST type-guard). Der
-                            IRZagNode-Discriminator-Property `isZagComponent: true`
-                            bleibt unverändert (anderes Konzept). 116 autocomplete +
-                            81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                **Status-Update:** erledigt — alle drei Slices landen:
+                                Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                hat per `git add .` die uncommittete compiler-Side mit
+                                aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                `hasZagChildren` (children-Shape), `isZagComponentName`
+                                (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                IRZagNode-Discriminator-Property `isZagComponent: true`
+                                bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
