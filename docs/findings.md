@@ -558,6 +558,30 @@ overlay.ts`, 134 LOC, ersetzt vor langem durch
   immer git-status checken — der Working-Tree kann fremde uncommittete
   Arbeit enthalten, die dann ungewollt in den eigenen Commit gerät.
 
+- **Wo:** `compiler/{runtime,backends/dom}/` — Slice E (Follow-up zu Slice D)
+  **Was:** Slice D adressierte parser/ir/schema; compiler/runtime/ und
+  compiler/backends/dom/ blieben offen. Verifizierter Audit ergab 10
+  weitere `export`-Demotionen — Symbol intern verwendet, kein externer
+  Consumer (per grep + verify auf `import * as X` Namespace-Calls):
+  - `compiler/runtime/component-navigation.ts`: `hasMirrorStructure`
+  - `compiler/runtime/toast.ts`: `ToastOptions`, `ToastPosition`
+  - `compiler/backends/dom/token-emitter.ts`: `TokenEmitterData`,
+    `emitMethods`, `emitQueries`, `serializeDataObject`,
+    `serializeDataValue`
+  - `compiler/backends/dom/event-emitter.ts`: `emitEnterExitObserver`
+  - `compiler/backends/dom/state-machine-emitter.ts`: `emitWhenWatcher`
+
+  Bewusst NICHT demoted: `MirrorProps`/`MirrorNode` in
+  `compiler/runtime/mirror-runtime.ts` (foundational Runtime-API-Typen,
+  defensive für externe Konsumenten); `BaseEmitterContext` in
+  `compiler/backends/dom/base-emitter-context.ts` (Schicht-Mechanik,
+  Inline-Refactor wäre eigene Lane).
+  **Status:** aktiv (claude, 2026-05-12 ~07:50)
+  **Plan:** `export`-Keyword aus den 10 Demote-Kandidaten entfernen.
+  Symbole bleiben intern erhalten und werden weiter konsumiert.
+  `tsc --noEmit` + `vitest run tests/compiler tests/runtime` als
+  Sanity-Checks. Single Code-Commit, dann findings-Update auf `erledigt`.
+
 ### Naming-Collision-Smells (2026-05-10 Iter-N+2)
 
 Drei Stellen, wo derselbe Symbolname unterschiedliche Semantik hat —
@@ -1098,21 +1122,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                        **Status-Update:** erledigt — alle drei Slices landen:
-                        Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                        inkl. drop-Subsystem-Cascading (`427c10f8`),
-                        Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                        (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                        `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                        (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                        — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                        hat per `git add .` die uncommittete compiler-Side mit
-                        aufgenommen). Damit 3 distinkt benannte Funktionen:
-                        `hasZagChildren` (children-Shape), `isZagComponentName`
-                        (Name-Lookup), `isZagNode` (AST type-guard). Der
-                        IRZagNode-Discriminator-Property `isZagComponent: true`
-                        bleibt unverändert (anderes Konzept). 116 autocomplete +
-                        81 drop-handlers + 113 parser-ast-guards Tests grün.
+                            **Status-Update:** erledigt — alle drei Slices landen:
+                            Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                            inkl. drop-Subsystem-Cascading (`427c10f8`),
+                            Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                            (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                            `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                            (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                            — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                            hat per `git add .` die uncommittete compiler-Side mit
+                            aufgenommen). Damit 3 distinkt benannte Funktionen:
+                            `hasZagChildren` (children-Shape), `isZagComponentName`
+                            (Name-Lookup), `isZagNode` (AST type-guard). Der
+                            IRZagNode-Discriminator-Property `isZagComponent: true`
+                            bleibt unverändert (anderes Konzept). 116 autocomplete +
+                            81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
