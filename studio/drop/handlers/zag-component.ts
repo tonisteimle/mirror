@@ -18,7 +18,7 @@ export class ZagComponentHandler extends BaseDropHandler {
 
   async handle(result: DropResult, context: DropContext): Promise<ModificationResult | null> {
     // Verify this is actually a Zag component (not just any component with children)
-    if (!context.isZagComponent(result.source.children!)) {
+    if (!context.hasZagChildren(result.source.children!)) {
       return null // Let PaletteDropHandler handle regular components
     }
 

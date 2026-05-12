@@ -28,7 +28,7 @@ export function createDropContext(globals: AppGlobals): DropContext {
     addZagDefinitionToCode: globals.addZagDefinitionToCode,
     findOrCreateComponentsFile: globals.findOrCreateComponentsFile,
     addZagDefinitionToComponentsFile: globals.addZagDefinitionToComponentsFile,
-    isZagComponent: globals.isZagComponent,
+    hasZagChildren: globals.hasZagChildren,
     emitNotification: (type, message) => {
       ;(globals.studio.events as { emit: (e: string, d: unknown) => void }).emit(
         `notification:${type}`,
@@ -136,5 +136,5 @@ export interface AppGlobals {
   addZagDefinitionToCode: (code: string) => void
   findOrCreateComponentsFile: () => Promise<string | null>
   addZagDefinitionToComponentsFile: (code: string, file: string) => Promise<boolean>
-  isZagComponent: (children: unknown[]) => boolean
+  hasZagChildren: (children: unknown[]) => boolean
 }

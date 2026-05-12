@@ -9,7 +9,7 @@ import type { DropResult, DropContext, ModificationResult } from '../types'
 
 export class PaletteDropHandler extends BaseDropHandler {
   canHandle(result: DropResult): boolean {
-    return this.isPaletteDrop(result) && !this.isZagComponent(result)
+    return this.isPaletteDrop(result) && !this.hasZagChildren(result)
   }
 
   async handle(result: DropResult, context: DropContext): Promise<ModificationResult> {
@@ -19,7 +19,7 @@ export class PaletteDropHandler extends BaseDropHandler {
     return this.addComponent(result, properties, context, parentProperty)
   }
 
-  private isZagComponent(result: DropResult): boolean {
+  private hasZagChildren(result: DropResult): boolean {
     return !!(result.source.children && result.source.children.length > 0)
   }
 

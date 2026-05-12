@@ -68,7 +68,7 @@ function makeContext(overrides: Partial<DropContext> = {}): DropContext {
     addZagDefinitionToCode: vi.fn(),
     findOrCreateComponentsFile: vi.fn().mockResolvedValue('comp.com'),
     addZagDefinitionToComponentsFile: vi.fn().mockResolvedValue(true),
-    isZagComponent: vi.fn().mockReturnValue(true),
+    hasZagChildren: vi.fn().mockReturnValue(true),
     emitNotification: vi.fn(),
     ...overrides,
   } as DropContext
@@ -435,9 +435,9 @@ describe('ZagComponentHandler', () => {
     expect(new ZagComponentHandler().canHandle(paletteDrop())).toBe(false)
   })
 
-  it('handle: returns null when context.isZagComponent says no (defer to PaletteDrop)', async () => {
+  it('handle: returns null when context.hasZagChildren says no (defer to PaletteDrop)', async () => {
     const h = new ZagComponentHandler()
-    const ctx = makeContext({ isZagComponent: vi.fn().mockReturnValue(false) })
+    const ctx = makeContext({ hasZagChildren: vi.fn().mockReturnValue(false) })
     const result = await h.handle(
       paletteDrop({ source: { type: 'palette', componentName: 'X', children: [{}] } as any }),
       ctx
@@ -965,9 +965,9 @@ describe('DropService — routing', () => {
 
   it('returns null + warns when no handler succeeds', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const ctx = makeContext({ isZagComponent: vi.fn().mockReturnValue(false) })
+    const ctx = makeContext({ hasZagChildren: vi.fn().mockReturnValue(false) })
     // Send a palette drop with children — only ZagComponentHandler.canHandle
-    // matches that shape, but its .handle returns null because isZagComponent
+    // matches that shape, but its .handle returns null because hasZagChildren
     // says no. Subsequent handlers can't handle it. Result: null + warn.
     const result = await new DropService().handleDrop(
       paletteDrop({

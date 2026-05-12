@@ -88,7 +88,7 @@ export interface DropContext {
   addZagDefinitionToCode: (code: string) => void
   findOrCreateComponentsFile: () => Promise<string | null>
   addZagDefinitionToComponentsFile: (code: string, file: string) => Promise<boolean>
-  isZagComponent: (children: unknown[]) => boolean
+  hasZagChildren: (children: unknown[]) => boolean
   emitNotification: (type: 'info' | 'success' | 'error', message: string) => void
   /**
    * True if `nodeId` is rendered inside an `each` loop (i.e. its source is a

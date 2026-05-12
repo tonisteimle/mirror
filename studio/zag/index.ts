@@ -56,7 +56,16 @@ export interface ZagDependencies {
 // SLOT/ITEM DETECTION
 // ============================================
 
-export function isZagComponent(children: ZagChild[] | undefined): boolean {
+/**
+ * Structural check: do any of these children look like Zag slots?
+ *
+ * Sibling helpers (avoid mixing them up):
+ *   - studio/autocomplete/schema-completions.ts:isZagComponentName —
+ *     name-based lookup against the ZAG_PRIMITIVES table.
+ *   - compiler/parser/ast.ts:isZagNode — TypeScript type-guard on
+ *     parsed AST nodes (`node is ZagNode`).
+ */
+export function hasZagChildren(children: ZagChild[] | undefined): boolean {
   if (!children || children.length === 0) return false
   return children.some(child => child.isSlot === true)
 }

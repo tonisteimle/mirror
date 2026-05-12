@@ -324,7 +324,7 @@ export class StudioTestHarness {
       addZagDefinitionToCode: () => {},
       findOrCreateComponentsFile: async () => null,
       addZagDefinitionToComponentsFile: async () => false,
-      isZagComponent: () => false,
+      hasZagChildren: () => false,
       emitNotification: (type, message) => {
         this.events.emit(`notification:${type}`, { message })
       },

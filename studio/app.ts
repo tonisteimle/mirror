@@ -96,7 +96,7 @@ import {
   // Drop Service: handleStudioDropNew now consumed only by
   // studio/init/init-notifications.ts (Phase D extraction).
   // Zag Helpers (Clean Code module)
-  isZagComponent,
+  hasZagChildren,
   findExistingZagDefinition,
   generateZagComponentName,
   generateZagDefinitionCode,
@@ -1133,7 +1133,7 @@ function getDropGlobals(): import('./drop').AppGlobals {
     compile,
     debouncedSave,
     isComponentsFile,
-    isZagComponent,
+    hasZagChildren,
     findExistingZagDefinition: (name: string) => findExistingZagDefinition(name, zagDeps),
     generateZagComponentName: (name: string) => generateZagComponentName(name, zagDeps),
     generateZagDefinitionCode,
