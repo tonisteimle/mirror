@@ -96,9 +96,9 @@
 
     /* File Explorer Panel (Multi-File-Roadmap 8). Sized like
        components-panel; its file tree is mounted into #file-tree-container
-       by studio/file-tree/init.ts (web) or desktop-files.ts (Tauri).
-       Visibility is handled by the global .panel-hidden class wired through
-       bootstrap's panel-visibility-changed listener. */
+       by studio/desktop-files.ts. Visibility is handled by the global
+       .panel-hidden class wired through bootstrap's panel-visibility-changed
+       listener. */
     .explorer-panel {
       flex: 0 0 200px;
       min-width: 160px;
