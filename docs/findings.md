@@ -129,14 +129,12 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 > 8. `studio/react-converter/` — dormant Modul (Hunt 2026-05-12 Iter-N+3)
 > 9. `isMirrorFile` 3× mit verschiedenen Scopes (Hunt 2026-05-12 Iter-N+3)
 > 10. `isZagComponent` 4× mit verschiedenen Signaturen (Hunt 2026-05-12 Iter-N+3)
-> 11. `escapeHtml` in `panels/property/utils/html.ts` — dritte
->     undokumentierte Variante (Hunt 2026-05-12 Iter-N+3, kleinster Fix)
 >
 > Alle anderen Einträge unter „Offen" tragen bereits Status:
 > **erledigt** oder **abgewiesen** und gehören eigentlich nach
 > „Erledigt"; sie verbleiben hier als historischer Kontext (Audit-
 > Notiz + Commit-Hash). Vor dem nächsten Hunt-Rollup migrieren —
-> bis dahin: erst auf die obigen 11 Einträge scannen.
+> bis dahin: erst auf die obigen 10 Einträge scannen.
 
 - **Wo:** `studio/visual/layout-inference/` (6 Files, 872 LOC)
   **Was:** Hunt-Audit 2026-05-11: `LayoutInferenceManager` und
@@ -1069,17 +1067,17 @@ div.innerHTML` ohne Fallback und ohne Verweis auf die zentrale
   Variante. In jsdom-Tests funktioniert es; in Non-DOM-Kontexten würde
   es crashen. Nicht akut, aber eine künftige Sicherheits-Hardening
   würde jetzt in der falschen Anzahl Stellen landen.
-  **Status:** aktiv (claude, 2026-05-12 ~10:30)
-  **Plan:** `studio/panels/property/utils/html.ts:escapeHtml` als
-  re-export aus `studio/desktop-files-utils.ts` ersetzen
-  (`export { escapeHtml } from '../../../desktop-files-utils'`).
-  desktop-files-utils ist DOM-mit-Fallback und passt exakt zur
-  Property-Panel-Verwendungsweise (browser-only, kein SSR). Anschließend
-  `tests/studio/property-panel-utils.test.ts` (escapeHtml-3-Tests) +
-  `npm test -- panels/property` laufen lassen. Dep-Wiring in
-  `view.ts:131` (`escapeHtml` als SectionDependencies-Field) bleibt
-  unverändert — Sektionen rufen weiter `this.deps.escapeHtml(...)`.
-  Single Code-Commit, dann findings.md-Update auf `erledigt` mit Hash.
+  **Status:** erledigt (`abe9d4b4`) — `escapeHtml` in
+  `studio/panels/property/utils/html.ts` ist jetzt ein Re-Export aus
+  `studio/desktop-files-utils.ts` (DOM-mit-Fallback). Dep-Wiring in
+  `view.ts:131` unverändert; alle Sektionen rufen weiter
+  `this.deps.escapeHtml(...)`. 44/44 property-panel-utils + 5912/5912
+  studio Tests grün. Header-Comment in der Utils-Datei warnt explizit
+  vor Re-Introduktion einer lokalen DOM-only-Variante. Damit liegen
+  noch zwei `escapeHtml`-Implementierungen vor: pure-string in
+  `compiler/utils/escape-html.ts` und DOM-mit-Fallback in
+  `studio/desktop-files-utils.ts` (Property-Panel und ggf. künftige
+  Studio-Subsysteme delegieren auf zweitere).
 
 - **Wo:** `compiler/backends/dom/ops/resolve-utils.ts:11`
   **Was:** `sanitizeVarName(this: DOMGenerator, id: string)` ist eine
