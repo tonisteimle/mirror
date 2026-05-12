@@ -128,13 +128,12 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 >    — Smell ohne Bug
 > 8. `studio/react-converter/` — dormant Modul (Hunt 2026-05-12 Iter-N+3)
 > 9. `isZagComponent` 4× mit verschiedenen Signaturen (Hunt 2026-05-12 Iter-N+3)
-> 10. `studio/editor/triggers/` Hexagonal-Architektur-Dead-Code (Hunt 2026-05-12)
 >
 > Alle anderen Einträge unter „Offen" tragen bereits Status:
 > **erledigt** oder **abgewiesen** und gehören eigentlich nach
 > „Erledigt"; sie verbleiben hier als historischer Kontext (Audit-
 > Notiz + Commit-Hash). Vor dem nächsten Hunt-Rollup migrieren —
-> bis dahin: erst auf die obigen 10 Einträge scannen.
+> bis dahin: erst auf die obigen 9 Einträge scannen.
 
 - **Wo:** `studio/editor/triggers/trigger-controller.ts` (659 LOC),
   `studio/editor/triggers/ports.ts` (450 LOC),
@@ -164,15 +163,21 @@ service.ts`-Cluster, Eintrag #5). Letzte feature-relevante
   und der Rest des `triggers/`-Verzeichnisses
   (`icon-trigger.ts`/`token-trigger.ts`/… plus `index.ts`-Barrel)
   bleiben — nur das Hex-Cluster geht raus.
-  **Status:** aktiv (claude, 2026-05-12) — Deletion-Lane
-  **Plan:** Sechs Files löschen (4069 LOC). Vorher: Final-Grep auf
-  `TriggerController`/`createTriggerController`/`TriggerStatePort`/
-  `EditorTriggerPort`/`PickerPort`/`TriggerDetectionPort`/
-  `TriggerRegistry`/`MockTriggerPorts`/`createMockTriggerPorts`/
-  `createMockTriggerRegistry`/`TriggerTestFixture`. Vitest in
-  `tests/studio/editor-trigger-manager.test.ts` +
-  `tests/studio/editor-trigger-integration.test.ts` als Sanity-
-  Pin auf das _echte_ Trigger-System nachher.
+  **Status:** erledigt (`427c10f8`) — −4069 LOC. Alle sechs Files
+  raus, kein Caller verbleibt. Studio-Tests 5762/5762 +
+  Compiler-Tests 7113/7113 grün; das echte
+  `editor-trigger-manager.test.ts` / `editor-trigger-integration.test.ts`-
+  Paar weiterhin 30/30. Final-Grep auf alle 11 Symbole post-Deletion:
+  0 Treffer.
+  **Notiz:** Wie schon bei `markdown.ts` (`f4215bf0`) landete die
+  Deletion gebundled in einem Commit der Parallel-Session (`427c10f8`
+  ist nominell der dritte Slice der `isZagComponent`-Rename-Lane; ihr
+  `git add -A` zog meine staged Deletion mit rein). Ergebnis korrekt;
+  Commit-Titel adressiert den Rename, nicht die Trigger-Deletion. Die
+  parallel-Race-Falle ist jetzt zweimal in Folge eingetreten —
+  Memory `feedback_parallel_session_git.md` festgehalten. Restoration:
+  `git show 427c10f8~1:studio/editor/triggers/trigger-controller.ts`
+  etc.
 
 - **Wo:** `studio/visual/layout-inference/` (6 Files, 872 LOC)
   **Was:** Hunt-Audit 2026-05-11: `LayoutInferenceManager` und
@@ -1093,17 +1098,17 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                **Status-Update:** erledigt — Slice 2 (autocomplete:isZagComponent
-                → isZagComponentName, `97b81868`) + Slice 3 (zag:isZagComponent
-                (children) → hasZagChildren mit Cross-File-Cascading, `427c10f8`)
-                landen. Damit 3 distinkt benannte Funktionen: `hasZagChildren`
-                (children-Shape), `isZagComponentName` (Name-Lookup),
-                `isZagComponent` (compiler AST type-guard, kanonisch unverändert).
-                Slice (c) — Compiler-Rename auf `isZagNode` — wird **nicht** mehr
-                verfolgt: der Type-Guard ist eindeutig kontextualisiert
-                (compiler/parser/ast.ts), kein Studio-Konsument importiert ihn
-                mehr unter dem alten Namen aus einem Multi-Symbol-Barrel.
-                116 autocomplete + 81 drop-handlers Tests grün.
+                    **Status-Update:** erledigt — Slice 2 (autocomplete:isZagComponent
+                    → isZagComponentName, `97b81868`) + Slice 3 (zag:isZagComponent
+                    (children) → hasZagChildren mit Cross-File-Cascading, `427c10f8`)
+                    landen. Damit 3 distinkt benannte Funktionen: `hasZagChildren`
+                    (children-Shape), `isZagComponentName` (Name-Lookup),
+                    `isZagComponent` (compiler AST type-guard, kanonisch unverändert).
+                    Slice (c) — Compiler-Rename auf `isZagNode` — wird **nicht** mehr
+                    verfolgt: der Type-Guard ist eindeutig kontextualisiert
+                    (compiler/parser/ast.ts), kein Studio-Konsument importiert ihn
+                    mehr unter dem alten Namen aus einem Multi-Symbol-Barrel.
+                    116 autocomplete + 81 drop-handlers Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
