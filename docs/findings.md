@@ -518,12 +518,14 @@ overlay.ts`, 134 LOC, ersetzt vor langem durch
     `ChartSlotPropertyDef`
   - `compiler/schema/component-templates.ts`: `ComponentTemplate`
 
-  **Status:** aktiv (claude, 2026-05-12 06:45)
-  **Plan:** `export`-Keyword aus den 24 Demote-Kandidaten entfernen,
-  `DIRECTION_KEYWORDS` komplett löschen. Symbole bleiben intern
-  erhalten und werden weiter konsumiert. Anschließend `tsc --noEmit`
-  - vitest auf `tests/compiler/` laufen lassen. Single Code-Commit,
-    dann findings.md-Update auf `erledigt` mit Hash.
+  **Status:** erledigt (`7db368a7`) — die compiler-Änderungen wurden
+  versehentlich vom parallelen preview-redirect-Slice mit-committed
+  (Commit-Message erwähnt sie nicht, aber Diff enthält alle 25
+  Symbol-Änderungen). tsc --noEmit clean, 7390/7391 compiler tests pass,
+  1209/1214 behavior/runtime/integration/differential/contract green.
+  **Notiz:** Lessons learned für Parallel-Sessions: vor `git add .`
+  immer git-status checken — der Working-Tree kann fremde uncommittete
+  Arbeit enthalten, die dann ungewollt in den eigenen Commit gerät.
 
 ### Naming-Collision-Smells (2026-05-10 Iter-N+2)
 
