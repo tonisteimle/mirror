@@ -32,8 +32,6 @@ compiler/               # Core Compiler (TypeScript)
 studio/                # Studio Runtime (TypeScript) - Modulare Architektur
 ├── code-modifier/     # Bidirectional editing (Code ops + Property extraction)
 ├── core/              # State, Events, Commands, Executor
-├── modules/           # Feature-Module
-│   └── compiler/      # Compiler Wrapper, Prelude Builder
 ├── pickers/           # UI Pickers
 │   ├── base/          # BasePicker, KeyboardNav
 │   ├── color/         # ColorPicker mit Paletten
@@ -57,7 +55,6 @@ studio/                # Studio Runtime (TypeScript) - Modulare Architektur
 ├── sync/              # Editor ↔ Preview Synchronisation
 ├── editor/            # CodeMirror Controller
 ├── autocomplete/      # Completions
-├── file-tree/         # File-Tree-Controller (UI)
 ├── file-types/        # File-Extension Registry (.mir/.com/.tok-Mapping)
 ├── inline-edit/       # Inline-Editing (Text-Slots)
 ├── components/        # Generische UI-Primitives (Input, Select, Toggle, Slider, …)
@@ -98,10 +95,8 @@ dist/                  # Build Output
 | `studio/app.ts`               | Legacy IIFE-Wrapper um bootstrap.ts      |
 | `studio/core/state.ts`        | Single Source of Truth                   |
 | `studio/storage/`             | File Operations & User-Settings          |
-| `studio/modules/compiler/`    | Compiler Wrapper                         |
 | `studio/pickers/`             | Color, Token, Icon, Animation Picker     |
 | `studio/panels/`              | Property, Tree, Components, Explorer     |
-| `studio/file-tree/`           | File-Tree-Controller (UI)                |
 | `studio/desktop-files.ts`     | Tauri Desktop File-Bridge                |
 | `studio/visual/`              | Drag/Resize/Snap, Smart-Guides           |
 | `studio/agent/`               | LLM-Edit-Flow                            |
