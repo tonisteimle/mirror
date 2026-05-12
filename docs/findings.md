@@ -737,7 +737,13 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
   componentPrimitives-Map-Aufbau, Render-Pipe (uninstanced-augment
   - ui-execute + rootEl-extract); daneben `updateStudio()`,
     `handleStudioCodeChange()`, plus File-IO und Ext-Wiring.
-    **Status:** offen — ongoing decomposition
+    **Status:** aktiv (claude, 2026-05-12) — ongoing decomposition
+    **Plan:** Slice `componentPrimitives-Map-Aufbau` (app.ts:1326-1334,
+    9 LOC) als pure helper nach `studio/compile/component-primitives.ts`
+    extrahieren. Input: `ast.components` + bestehende Map; Output:
+    mutiert Map. Unit-Tests pattern-match aus
+    `tests/studio/compile-prelude-definitions.test.ts`. Call-Site in
+    `compile()` ersetzen, vitest grün, commit.
     **Notiz:** Strategie: pure-helper-Slices mit Unit-Tests, Sub-Slice
     pro Commit, kein Big-Bang. Reduziert Closure-Pressure inkrementell.
     Side-Discovery beim Survey 2026-05-11: dead compile-service-Cluster
