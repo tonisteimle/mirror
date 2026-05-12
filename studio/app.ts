@@ -51,7 +51,7 @@ import {
 } from './init'
 import { debounce } from './core/debounce'
 import { renderEmptyPreview, resetSelectionForEmptyCode } from './compile/empty-state'
-import { wrapLayoutForCompile, prependPrelude, preludeLineOffset } from './compile/wrap-layout'
+import { preludeLineOffset } from './compile/wrap-layout'
 import {
   findUninstancedComponents,
   appendImplicitInstances,
@@ -60,6 +60,7 @@ import { executeMirrorJS } from './compile/execute-mirror-js'
 import { collectPreludeDefinitions } from './compile/prelude-definitions'
 import { buildComponentPrimitives } from './compile/component-primitives'
 import { resolvePreviewRedirect } from './compile/preview-redirect'
+import { resolveCompileSource } from './compile/resolve-compile-source'
 
 // New architecture imports
 import {
@@ -1257,31 +1258,18 @@ function compile(code: string) {
     // (tests expect deterministic IDs from the source they wrote, not
     // from a synthetic root). Note: App's indent does NOT contribute to
     // preludeOffset because CodeModifier returns line-start positions.
-    let resolvedCode = compileCode
-    if (testModeActive && fileType === 'layout') {
-      const prepended = prependPrelude(
-        compileCode,
-        compileFile,
-        getPreludeCode(compileFile) || null
-      )
-      resolvedCode = prepended.resolvedCode
-      currentPreludeOffset = prepended.preludeOffset
-      currentPreludeLineOffset = preludeLineOffset(resolvedCode, currentPreludeOffset)
-    } else if (testModeActive) {
-      // Non-layout in test mode (tokens.tok, components.com): compile alone.
-      resolvedCode = compileCode
-      currentPreludeOffset = 0
-      currentPreludeLineOffset = 0
-    } else if (fileType === 'layout') {
-      const wrap = wrapLayoutForCompile(
-        compileCode,
-        compileFile,
-        getPreludeCode(compileFile) || null
-      )
-      resolvedCode = wrap.resolvedCode
-      currentPreludeOffset = wrap.preludeOffset
-      isWrappedWithApp = wrap.isWrappedWithApp
-    }
+    const resolved = resolveCompileSource({
+      compileCode,
+      compileFile,
+      fileType,
+      prelude: getPreludeCode(compileFile) || null,
+      testMode: testModeActive,
+    })
+    const resolvedCode = resolved.resolvedCode
+    if (resolved.preludeOffset !== undefined) currentPreludeOffset = resolved.preludeOffset
+    if (resolved.preludeLineOffset !== undefined)
+      currentPreludeLineOffset = resolved.preludeLineOffset
+    if (resolved.isWrappedWithApp !== undefined) isWrappedWithApp = resolved.isWrappedWithApp
 
     // Update global variables for DropResultApplier
     resolvedSource = resolvedCode
