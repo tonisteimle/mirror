@@ -930,6 +930,36 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-12 — Dead Feature 8 (Auto-Layout) komplett gelöscht (~1100 LOC)
+
+- **Wo:** `studio/visual/auto-layout/` (3 Files: index/pattern-detector/
+  suggestion-tooltip, 666 LOC), `tests/studio/visual-auto-layout.test.ts`
+  (133 LOC), `tests/studio/visual/auto-layout/pattern-detector.test.ts`
+  (zweites Test-File übersehen beim ersten Pass), `tests/studio/visual-
+subsystems.test.ts` (–210 LOC: pattern-detector describes raus),
+  `studio/core/change-types.ts` (ApplyLayoutIntent + Union-Member raus),
+  `studio/core/change-pipeline.ts` (–42 LOC: `case 'applyLayout'` raus),
+  `studio/core/change-service.ts` (ApplyLayoutIntent-Import raus).
+  **Was:** Hunt-Discovery 2026-05-12. „Feature 8: Auto-Layout
+  Suggestions" — Pattern-Detector + SuggestionTooltip + ApplyLayoutIntent
+  - Handler — komplett ohne UI-Trigger. Zero `new SuggestionTooltip(...)`
+    oder `createSuggestionTooltip(...)`, zero `type: 'applyLayout'`-
+    Literale repo-weit. `detectLayoutPattern` nur von der eigenen Barrel
+  - zwei Test-Files konsumiert. Letzte Code-Aktivität 2026-04-12
+    (30 Tage). Anders als layout-inference/ KEIN Demo-File in
+    `studio/test-api/suites/demos/` — Owner-Workflow betrifft das nicht.
+    Pattern matched die Feature-5/constraints/-Lane: Intent +
+    Handler vorgesehen, UI-Verknüpfung nie nachgezogen.
+    Unrelated `applyLayoutToContainer` in `studio/code-modifier/
+layout-ops.ts` ist lebende Funktion (gleicher Name, andere
+    Verantwortung — bleibt). 5897/5897 studio tests pass.
+    **Status:** erledigt (`3aa30cc4`, lint-staged-stash-Race bündelte
+    mit „componentPrimitives slice" der parallel-session — der Commit-
+    Titel verschweigt die Deletion, der Diff zeigt sie vollständig)
+    **Notiz:** Restoration via `git show <pre-delete>:studio/visual/auto-layout/`.
+    Verlinkter Open-Befund „layout-inference/" bleibt — dort
+    unterscheidet sich nur das Demo-Wiring.
+
 ### 2026-05-11 — Dead `studio/modules/` Wrapper gelöscht (468 LOC + 1 Test-File + 5 Tests)
 
 - **Wo:** `studio/modules/{index,compiler/{index,prelude-builder,types}}.ts`,
