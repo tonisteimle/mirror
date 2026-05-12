@@ -128,12 +128,51 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 >    — Smell ohne Bug
 > 8. `studio/react-converter/` — dormant Modul (Hunt 2026-05-12 Iter-N+3)
 > 9. `isZagComponent` 4× mit verschiedenen Signaturen (Hunt 2026-05-12 Iter-N+3)
+> 10. `studio/editor/triggers/` Hexagonal-Architektur-Dead-Code (Hunt 2026-05-12)
 >
 > Alle anderen Einträge unter „Offen" tragen bereits Status:
 > **erledigt** oder **abgewiesen** und gehören eigentlich nach
 > „Erledigt"; sie verbleiben hier als historischer Kontext (Audit-
 > Notiz + Commit-Hash). Vor dem nächsten Hunt-Rollup migrieren —
-> bis dahin: erst auf die obigen 9 Einträge scannen.
+> bis dahin: erst auf die obigen 10 Einträge scannen.
+
+- **Wo:** `studio/editor/triggers/trigger-controller.ts` (659 LOC),
+  `studio/editor/triggers/ports.ts` (450 LOC),
+  `studio/editor/triggers/adapters/mock-adapters.ts` (939 LOC),
+  `studio/editor/triggers/adapters/index.ts` (36 LOC),
+  `tests/studio/triggers/trigger-controller.test.ts` (1055 LOC),
+  `tests/studio/editor/use-cases.test.ts` (930 LOC).
+  **Was:** Hunt-Audit 2026-05-12. Eine komplette **Port-basierte
+  Hexagonal-Architektur** für das Trigger-System (Class
+  `TriggerController` + Factory `createTriggerController` + 4 Port-
+  Interfaces + Mock-Adapter-Suite) wurde gebaut, aber **nie in
+  Production gewired**. Die produktive Trigger-Verwaltung läuft
+  durch `studio/editor/trigger-manager.ts` (`EditorTriggerManager`-
+  Singleton, von `studio/test-api.ts`, `studio/pickers/icon/
+picker.ts` etc. konsumiert). `TriggerController` und alle Re-Exports
+  aus `ports.ts`/`adapters/` haben **0 Production-Importer** —
+  einzige Konsumenten sind die zwei Test-Files, die das tote Hex-
+  System gegen sich selbst pinnen (102 grüne Tests, aber CI-grün
+  ≠ Production-grün — gleiche Falle wie `studio/compile/compile-
+service.ts`-Cluster, Eintrag #5). Letzte feature-relevante
+  Aktivität 2026-04 (3f81b53e, d588f869); seither nur Dead-Locals-
+  Sweeps (a6b8669c, 9cf8a857). Pattern matcht `element-wrapper.ts`
+  (Erledigt 2026-05-10), `studio/visual/constraints/` (Erledigt
+  2026-05-11), `studio/modules/` (Erledigt 2026-05-11),
+  `compiler/runtime/markdown.ts` (Erledigt 2026-05-12).
+  `triggers/types.ts` (155 LOC, von `trigger-manager.ts` konsumiert)
+  und der Rest des `triggers/`-Verzeichnisses
+  (`icon-trigger.ts`/`token-trigger.ts`/… plus `index.ts`-Barrel)
+  bleiben — nur das Hex-Cluster geht raus.
+  **Status:** aktiv (claude, 2026-05-12) — Deletion-Lane
+  **Plan:** Sechs Files löschen (4069 LOC). Vorher: Final-Grep auf
+  `TriggerController`/`createTriggerController`/`TriggerStatePort`/
+  `EditorTriggerPort`/`PickerPort`/`TriggerDetectionPort`/
+  `TriggerRegistry`/`MockTriggerPorts`/`createMockTriggerPorts`/
+  `createMockTriggerRegistry`/`TriggerTestFixture`. Vitest in
+  `tests/studio/editor-trigger-manager.test.ts` +
+  `tests/studio/editor-trigger-integration.test.ts` als Sanity-
+  Pin auf das _echte_ Trigger-System nachher.
 
 - **Wo:** `compiler/runtime/markdown.ts` (180 LOC) +
   `tests/compiler/markdown.test.ts` (1105 LOC)
@@ -1089,11 +1128,11 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-        **Status-Update:** aktiv (claude, 2026-05-12 07:25). Plan: Drei
-        Renames in einem Commit-Slice. Per-Slice TypeScript-Inferenz reicht
-        den Children-Konsumenten zur Verifikation; vitest auf
-        tests/compiler/parser-ast-guards + tests/studio/drop-handlers nach
-        Slice. Single Code-Commit + findings-Update auf erledigt.
+            **Status-Update:** aktiv (claude, 2026-05-12 07:25). Plan: Drei
+            Renames in einem Commit-Slice. Per-Slice TypeScript-Inferenz reicht
+            den Children-Konsumenten zur Verifikation; vitest auf
+            tests/compiler/parser-ast-guards + tests/studio/drop-handlers nach
+            Slice. Single Code-Commit + findings-Update auf erledigt.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
