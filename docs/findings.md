@@ -1092,6 +1092,27 @@ from '../../../desktop-files-utils'`).
 
 Chronologisch absteigend (neueste zuerst).
 
+### 2026-05-12 — Studio-Build-Bruch nach modules-Deletion gefixt
+
+- **Wo:** `studio/index.ts` (–0 / +12 LOC), `studio/app.ts:127-128`
+  **Was:** Dead-Code-Sweep `9ca1cb6c` löschte `studio/modules/` und
+  entfernte `export * from './modules'` aus `studio/index.ts`. Das
+  gelöschte Modules-Barrel re-exportierte aber `validate` und
+  `toCodeMirrorDiagnostics` aus `compiler/validator` — `app.ts:127-128`
+  importiert beide aus `'.'` (studio bundle) und brach beim Build mit
+  `No matching export ... for import "validate"`. Hunt-Discovery
+  während Slice 5 (componentPrimitives-Map): das Studio liess sich
+  nicht mehr bauen, Deploy blockiert.
+  **Status:** erledigt — explicit re-export `validate`, `validateAST`,
+  `toCodeMirrorDiagnostics` plus zugehörige Types aus
+  `../compiler/validator` in `studio/index.ts` ergänzt (gleiche
+  Section-Struktur wie der `./compile/yaml-parser`-Block direkt darüber).
+  `npm run build:studio` + `npx tsc --noEmit` grün.
+  **Notiz:** Lesson für künftige Dead-Code-Sweeps: vor dem Löschen
+  eines Barrels die `from '.'`-Importer auf re-exportierte Symbole
+  durchgreppen. Wiring war intransparent — modules/ re-exportierte
+  Validator-Symbole ohne dass das aus dem Modul-Namen hervorging.
+
 ### 2026-05-12 — Dead Feature 8 (Auto-Layout) komplett gelöscht (~1100 LOC)
 
 - **Wo:** `studio/visual/auto-layout/` (3 Files: index/pattern-detector/

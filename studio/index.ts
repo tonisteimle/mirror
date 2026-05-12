@@ -109,6 +109,19 @@ export * from './react-converter'
 // YAML Parser (data file parsing) — lives under compile/
 export * from './compile/yaml-parser'
 
+// Validator (code linting) — re-exported from compiler/. Used by
+// app.ts's compile path for diagnostics. Previously surfaced via
+// the deleted studio/modules/ barrel (`9ca1cb6c`); explicit
+// re-export here keeps app.ts compiling.
+export {
+  validate,
+  validateAST,
+  toCodeMirrorDiagnostics,
+  type ValidationResult,
+  type ValidationError,
+  type CodeMirrorDiagnostic,
+} from '../compiler/validator'
+
 // Compile module — prelude / generator / renderer helpers consumed by
 // studio/app.js. Re-exported here so the studio bundle surfaces them
 // (collectPrelude is the load-bearing one — without it app.js fails to
