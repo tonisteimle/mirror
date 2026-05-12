@@ -11,8 +11,7 @@
  * - Version tracking for staleness detection
  */
 
-import { state, actions, events } from './index'
-import type { LayoutRect } from './state'
+import { state, actions } from './index'
 
 export interface LayoutReadOptions {
   /** If true, skip cache and always read from DOM */

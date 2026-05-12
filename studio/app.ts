@@ -58,6 +58,7 @@ import {
 } from './compile/augment-local-components'
 import { executeMirrorJS } from './compile/execute-mirror-js'
 import { collectPreludeDefinitions } from './compile/prelude-definitions'
+import { buildComponentPrimitives } from './compile/component-primitives'
 
 // New architecture imports
 import {
@@ -1324,12 +1325,7 @@ function compile(code: string) {
     }
 
     // Update component primitives map for icon picker trigger
-    const componentPrimitives = getIconTriggerPrimitives()
-    componentPrimitives.clear()
-    for (const comp of ast.components) {
-      const primitive = comp.primitive || comp.name.toLowerCase()
-      componentPrimitives.set(comp.name, primitive)
-    }
+    const componentPrimitives = buildComponentPrimitives(ast.components, getIconTriggerPrimitives())
     // Also update TriggerManager's primitives
     setIconTriggerPrimitives(componentPrimitives)
 
