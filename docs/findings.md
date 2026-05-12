@@ -1057,16 +1057,21 @@ Mirror → React Konverter`) beschreibt zudem die **falsche
   Fallback auf den Compiler-Pfad) — sind sauber gewired. Aber
   `studio/panels/property/utils/html.ts:8` benutzt
   `document.createElement('div'); div.textContent = str; return
-  div.innerHTML` ohne Fallback und ohne Verweis auf die zentrale
+div.innerHTML` ohne Fallback und ohne Verweis auf die zentrale
   Variante. In jsdom-Tests funktioniert es; in Non-DOM-Kontexten würde
   es crashen. Nicht akut, aber eine künftige Sicherheits-Hardening
   würde jetzt in der falschen Anzahl Stellen landen.
-  **Status:** offen — kleinster Fix in dieser Iter: Property-Panel-
-  Variante auf `escapeHtml` aus `studio/desktop-files-utils.ts`
-  umstellen (DOM-mit-Fallback, gleiche Semantik). Falls Property-Panel
-  den Compiler-Helper nicht direkt importieren soll: re-export-Layer
-  in `studio/panels/property/utils/html.ts` (`export { escapeHtml }
-from '../../../desktop-files-utils'`).
+  **Status:** aktiv (claude, 2026-05-12 ~10:30)
+  **Plan:** `studio/panels/property/utils/html.ts:escapeHtml` als
+  re-export aus `studio/desktop-files-utils.ts` ersetzen
+  (`export { escapeHtml } from '../../../desktop-files-utils'`).
+  desktop-files-utils ist DOM-mit-Fallback und passt exakt zur
+  Property-Panel-Verwendungsweise (browser-only, kein SSR). Anschließend
+  `tests/studio/property-panel-utils.test.ts` (escapeHtml-3-Tests) +
+  `npm test -- panels/property` laufen lassen. Dep-Wiring in
+  `view.ts:131` (`escapeHtml` als SectionDependencies-Field) bleibt
+  unverändert — Sektionen rufen weiter `this.deps.escapeHtml(...)`.
+  Single Code-Commit, dann findings.md-Update auf `erledigt` mit Hash.
 
 - **Wo:** `compiler/backends/dom/ops/resolve-utils.ts:11`
   **Was:** `sanitizeVarName(this: DOMGenerator, id: string)` ist eine
