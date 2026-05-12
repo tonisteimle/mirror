@@ -115,6 +115,24 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 ## Offen
 
+> **Wirklich offene Befunde (Status: offen / aktiv):**
+>
+> 1. `studio/visual/layout-inference/` (6 Files, 872 LOC) — Owner-Entscheidung
+> 2. `compiler/backends/dom/style-emitter.ts:emitNodeSizeStateCSS` —
+>    Container-Queries, Lane-Doc steht
+> 3. Tutorial-Demos + Test-Runner — OWNER-EXKLUSIV (toni)
+> 4. Tutorial-Loop-Infrastruktur insgesamt — Owner-Entscheidung
+> 5. `studio/compile/compile-service.ts` Cluster — Architektur-Entscheid
+> 6. `studio/app.ts` Bootstrap-Decomp (#8) — ongoing decomposition
+> 7. `compiler/backends/dom/ops/resolve-templates.ts:resolveConditionalExpression`
+>    — Smell ohne Bug
+>
+> Alle anderen Einträge unter „Offen" tragen bereits Status:
+> **erledigt** oder **abgewiesen** und gehören eigentlich nach
+> „Erledigt"; sie verbleiben hier als historischer Kontext (Audit-
+> Notiz + Commit-Hash). Vor dem nächsten Hunt-Rollup migrieren —
+> bis dahin: erst auf die obigen 7 Einträge scannen.
+
 - **Wo:** `studio/visual/layout-inference/` (6 Files, 872 LOC)
   **Was:** Hunt-Audit 2026-05-11: `LayoutInferenceManager` und
   `AlignmentDetector` werden **nirgendwo in Production oder Tests
