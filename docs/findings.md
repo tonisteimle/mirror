@@ -136,6 +136,28 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 > Notiz + Commit-Hash). Vor dem nächsten Hunt-Rollup migrieren —
 > bis dahin: erst auf die obigen 10 Einträge scannen.
 
+- **Wo:** `compiler/runtime/markdown.ts` (180 LOC) +
+  `tests/compiler/markdown.test.ts` (1105 LOC)
+  **Was:** Hunt-Audit 2026-05-12. `compiler/runtime/markdown.ts`
+  exportiert `markdownToHTML`/`markdownToPlainText`/
+  `hasMarkdownFormatting` — 0 Production-Konsumenten repo-weit. Der
+  einzige Importer ist die eigene Test-Suite. Die DOM-Runtime-Template
+  hat **keinen** inline-equivalent für „full markdown to HTML" (nur
+  `formatInlineMarkdown` aus `inline-markdown.ts`, das ist ein anderes
+  Modul für **inline**-Markdown — bold/italic/code/link — und _wird_
+  aktiv ins Bundle gestamped). `markdown.ts` (block-level Markdown:
+  `# Heading`, Lists, Paragraphs) hat _keinen_ Aufrufer in
+  Backend/Studio/CLI/Tools/Examples. Pattern matcht die früheren
+  Deletion-Wins `element-wrapper.ts` (Erledigt 2026-05-10, -287 LOC),
+  `studio/visual/constraints/` (Erledigt 2026-05-11, -299 LOC),
+  `studio/modules/` (Erledigt 2026-05-11, -468 LOC + tests).
+  **Status:** aktiv (claude, 2026-05-12) — Deletion-Lane
+  **Plan:** `compiler/runtime/markdown.ts` und
+  `tests/compiler/markdown.test.ts` löschen (-1285 LOC). Vorher
+  Final-Grep auf `markdownToHTML`/`markdownToPlainText`/
+  `hasMarkdownFormatting` mit weiter Suche (`.md`, `.html`,
+  `.json`, `.tsx`) zur Sicherheit. Vitest grün, commit.
+
 - **Wo:** `studio/visual/layout-inference/` (6 Files, 872 LOC)
   **Was:** Hunt-Audit 2026-05-11: `LayoutInferenceManager` und
   `AlignmentDetector` werden **nirgendwo in Production oder Tests
