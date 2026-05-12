@@ -774,22 +774,30 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
   componentPrimitives-Map-Aufbau, Render-Pipe (uninstanced-augment
   - ui-execute + rootEl-extract); daneben `updateStudio()`,
     `handleStudioCodeChange()`, plus File-IO und Ext-Wiring.
-    **Status:** offen — ongoing decomposition. Slice 5
-    `componentPrimitives-Map-Aufbau` 2026-05-12 erledigt (in `22b340a1`
-    eingegangen — Commit-Race mit Parallel-Session, Message zeigt
-    layout-service-Refactor, Diff enthält aber zusätzlich
-    `studio/compile/component-primitives.ts` + Unit-Tests + die
-    Call-Site-Ersetzung in `app.ts`). Pin: 7 Tests in
-    `tests/studio/compile-component-primitives.test.ts`. Parser-Default
-    `primitive='Frame'` für Definitions ohne `as`-Klausel ist dort
-    festgenagelt, Fallback `name.toLowerCase()` greift nur für manuell
-    konstruierte ComponentDefinitions mit `primitive: null`.
-    **Notiz:** Strategie: pure-helper-Slices mit Unit-Tests, Sub-Slice
-    pro Commit, kein Big-Bang. Reduziert Closure-Pressure inkrementell.
-    Side-Discovery beim Survey 2026-05-11: dead compile-service-Cluster
-    (s. o.) — blockiert nicht, ist eigene Lane.
-    Verbleibend in `compile()`: testMode-/preview-Redirect-Branch,
-    State-Update-Block, Render-Pipe.
+    **Status:** offen — ongoing decomposition. Drei Slices 2026-05-12
+    erledigt:
+    - **Slice 5** `componentPrimitives-Map-Aufbau` (`22b340a1` —
+      Commit-Race, Message irreführend) →
+      `studio/compile/component-primitives.ts`, 7 Tests. Pin: Parser-
+      Default `primitive='Frame'` für Definitions ohne `as`; Fallback
+      `name.toLowerCase()` greift nur für manuell konstruierte
+      ComponentDefinitions mit `primitive: null`.
+    - **Slice 6** `preview-redirect` (`7db368a7`) →
+      `studio/compile/preview-redirect.ts`, 7 Tests. Pin: 5-Wege-
+      Entscheidung (Layout-Editor / no-previewFile / self-pin /
+      non-layout-previewFile / Layout-previewFile).
+    - **Slice 7** `testMode/Layout source-resolution` (`49fbf07e`) →
+      `studio/compile/resolve-compile-source.ts`, 8 Tests. Pin: 4-Wege-
+      Branch (testMode×fileType) mit Partial-Result für Branch 4
+      Passthrough (currentPreludeOffset/isWrappedWithApp bleiben stale).
+      Drops `prependPrelude`/`wrapLayoutForCompile` aus app.ts-Imports.
+      **Notiz:** Strategie: pure-helper-Slices mit Unit-Tests, Sub-Slice
+      pro Commit, kein Big-Bang. Reduziert Closure-Pressure inkrementell.
+      Side-Discovery beim Survey 2026-05-11: dead compile-service-Cluster
+      (s. o.) — blockiert nicht, ist eigene Lane.
+      Verbleibend in `compile()`: State-Update-Block (side-effects auf
+      `studio.state.set`, schwer als pure helper extrahierbar),
+      Render-Pipe (uninstanced-augment + ui-execute + rootEl-extract).
 
 - **Wo:** Fünf `mock-adapters.ts` (`studio/editor/triggers/adapters/`,
   `studio/editor/adapters/`, `studio/panels/property/adapters/`,
