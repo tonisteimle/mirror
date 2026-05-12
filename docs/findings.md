@@ -127,14 +127,13 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 > 7. `compiler/backends/dom/ops/resolve-templates.ts:resolveConditionalExpression`
 >    — Smell ohne Bug
 > 8. `studio/react-converter/` — dormant Modul (Hunt 2026-05-12 Iter-N+3)
-> 9. `isMirrorFile` 3× mit verschiedenen Scopes (Hunt 2026-05-12 Iter-N+3)
-> 10. `isZagComponent` 4× mit verschiedenen Signaturen (Hunt 2026-05-12 Iter-N+3)
+> 9. `isZagComponent` 4× mit verschiedenen Signaturen (Hunt 2026-05-12 Iter-N+3)
 >
 > Alle anderen Einträge unter „Offen" tragen bereits Status:
 > **erledigt** oder **abgewiesen** und gehören eigentlich nach
 > „Erledigt"; sie verbleiben hier als historischer Kontext (Audit-
 > Notiz + Commit-Hash). Vor dem nächsten Hunt-Rollup migrieren —
-> bis dahin: erst auf die obigen 10 Einträge scannen.
+> bis dahin: erst auf die obigen 9 Einträge scannen.
 
 - **Wo:** `compiler/runtime/markdown.ts` (180 LOC) +
   `tests/compiler/markdown.test.ts` (1105 LOC)
