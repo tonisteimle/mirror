@@ -33,8 +33,6 @@ type ProgramOrChildNode = Instance | Slot | TableNode | Each | ConditionalNode |
 import type { SourceMap, NodeMapping } from '../../compiler/ir/source-map'
 import {
   properties as allPropertyDefinitions,
-  type PropertyDefinition,
-  type PropertyCategory as SchemaCategory,
   categoryOrder,
   categoryLabels,
 } from '../../compiler/schema/properties'

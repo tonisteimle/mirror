@@ -84,7 +84,6 @@ export function extractToComponentFile(
   componentFileContent += definitionLine + '\n'
 
   // Check if import is needed in current file
-  const currentFile = filesAccess.getCurrentFile()
   let importAdded = false
   let currentSource = this.source
 

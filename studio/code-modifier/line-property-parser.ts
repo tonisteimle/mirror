@@ -155,28 +155,6 @@ export function isMultiValueProperty(name: string): boolean {
 }
 
 /**
- * Direction keywords that can follow a property name
- */
-const DIRECTION_KEYWORDS = new Set([
-  'top',
-  'right',
-  'bottom',
-  'left',
-  't',
-  'r',
-  'b',
-  'l',
-  'tl',
-  'tr',
-  'bl',
-  'br',
-  'x',
-  'y',
-  'hor',
-  'ver',
-])
-
-/**
  * Parse a Mirror property line into structured components
  */
 export function parseLine(line: string): ParsedLine {

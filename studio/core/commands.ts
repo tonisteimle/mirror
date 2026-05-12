@@ -422,7 +422,6 @@ export class MoveNodeCommand implements Command {
   private targetId: string
   private placement: 'before' | 'after' | 'inside'
   private originalSource: string | null = null
-  private change: CodeChange | null = null
 
   constructor(params: {
     nodeId: string
@@ -445,7 +444,6 @@ export class MoveNodeCommand implements Command {
       this.placement
     )
     if (!result.success) return { success: false, error: result.error }
-    this.change = result.change
     const editorChange = adjustChangeForEditor(result.change, ctx)
     ctx.applyChange(editorChange)
     actions.setDeferredSelection({ type: 'nodeId', nodeId: this.nodeId, origin: 'keyboard' })
@@ -702,7 +700,6 @@ export class WrapNodesCommand implements Command {
   private wrapperName: string
   private wrapperProps?: string
   private originalSource: string | null = null
-  private change: CodeChange | null = null
 
   constructor(params: { nodeIds: string[]; wrapperName?: string; wrapperProps?: string }) {
     this.nodeIds = params.nodeIds
@@ -721,7 +718,6 @@ export class WrapNodesCommand implements Command {
     const result = modifier.wrapNodes(this.nodeIds, this.wrapperName, this.wrapperProps)
     if (!result.success) return { success: false, error: result.error }
 
-    this.change = result.change
     const editorChange = adjustChangeForEditor(result.change, ctx)
     ctx.applyChange(editorChange)
     return { success: true, change: editorChange }
@@ -745,7 +741,6 @@ export class UnwrapNodeCommand implements Command {
   readonly description: string
   private nodeId: string
   private originalSource: string | null = null
-  private change: CodeChange | null = null
 
   constructor(params: { nodeId: string }) {
     this.nodeId = params.nodeId
@@ -762,7 +757,6 @@ export class UnwrapNodeCommand implements Command {
     const result = modifier.unwrapNode(this.nodeId)
     if (!result.success) return { success: false, error: result.error }
 
-    this.change = result.change
     const editorChange = adjustChangeForEditor(result.change, ctx)
     ctx.applyChange(editorChange)
 

@@ -204,7 +204,6 @@ export function addAnimationKeyframe(
   // insertLine is 1-based (for getCharacterOffset)
   // Default to right after the animation definition line
   let insertLine = startLine + 1
-  let lastKeyframeLine = startLine
 
   for (let i = startIndex; i < lines.length; i++) {
     const line = lines[i]
@@ -214,9 +213,6 @@ export function addAnimationKeyframe(
     if (currentIndent <= baseIndent && i > startIndex) {
       break // Reached end of animation block
     }
-
-    // Track last line of animation block for fallback insert position
-    lastKeyframeLine = i + 1 // 1-based
 
     // Check if this line is a keyframe (starts with a time value)
     const keyframeMatch = line.match(/^\s*([\d.]+)\s+/)

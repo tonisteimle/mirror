@@ -15,7 +15,6 @@
  */
 
 import type { SourceMap } from '../../compiler/ir/source-map'
-import type { SourcePosition } from '../../compiler/ir/types'
 import { logCodeModifier as log } from '../../compiler/utils/logger'
 import * as eventOps from './event-ops'
 import * as childrenOps from './children-ops'

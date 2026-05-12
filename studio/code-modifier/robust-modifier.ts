@@ -53,11 +53,9 @@ export interface RobustOptions {
  */
 export class RobustModifier {
   private codeModifier: CodeModifier
-  private debug: boolean
 
-  constructor(codeModifier: CodeModifier, debug = false) {
+  constructor(codeModifier: CodeModifier) {
     this.codeModifier = codeModifier
-    this.debug = debug
   }
 
   /**
@@ -376,8 +374,8 @@ export class RobustModifier {
 /**
  * Create a RobustModifier wrapping a CodeModifier
  */
-export function createRobustModifier(codeModifier: CodeModifier, debug = false): RobustModifier {
-  return new RobustModifier(codeModifier, debug)
+export function createRobustModifier(codeModifier: CodeModifier): RobustModifier {
+  return new RobustModifier(codeModifier)
 }
 
 /**

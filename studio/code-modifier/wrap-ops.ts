@@ -43,7 +43,6 @@ export function insertWithWrapper(
   const children = this.sourceMap.getChildren(parentId)
 
   let layoutChange: { from: number; to: number; insert: string } | null = null
-  let layoutLengthDelta = 0
 
   if (children.length === 0) {
     // Empty container: apply layout properties based on zone
@@ -60,9 +59,6 @@ export function insertWithWrapper(
       layoutResult.change.from !== layoutResult.change.to || layoutResult.change.insert
     if (hasLayoutChange) {
       layoutChange = layoutResult.change
-      // Calculate how much the layout change shifted positions
-      layoutLengthDelta =
-        layoutResult.change.insert.length - (layoutResult.change.to - layoutResult.change.from)
       this.source = layoutResult.newSource
       this.lines = this.source.split('\n')
     }
@@ -84,13 +80,9 @@ export function insertWithWrapper(
   // The child change offsets are relative to the source AFTER layout was applied
   // We need to return a combined change relative to the ORIGINAL source
   if (layoutChange) {
-    // The child insert position needs to be adjusted back to original source coordinates
-    // by subtracting the length delta from the layout change
-    const adjustedChildFrom = childResult.change.from - layoutLengthDelta
-    const adjustedChildTo = childResult.change.to - layoutLengthDelta
-
-    // Combine into a single change that replaces from layoutChange.from to adjustedChildTo
-    // with the layout insert + child insert
+    // Combine into a single change spanning from layoutChange.from to the
+    // child insert position (in original-source coordinates), with the
+    // layout insert + child insert as the combined replacement text.
     const combinedInsert = layoutChange.insert + childResult.change.insert
 
     return {

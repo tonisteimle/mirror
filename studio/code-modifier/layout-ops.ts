@@ -37,9 +37,6 @@ export function setLayoutDirection(
     return this.errorResult(`Line not found: ${nodeLine}`)
   }
 
-  // Parse the line
-  const parsedLine = parseLine(line)
-
   // Layout properties to remove
   const layoutProps = ['hor', 'horizontal', 'ver', 'vertical', 'grid', 'stacked']
 
@@ -150,9 +147,6 @@ export function applyLayoutToContainer(
       change: { from: 0, to: 0, insert: '' },
     }
   }
-
-  // Parse the line and add layout properties
-  const parsedLine = parseLine(containerLine)
 
   // Add each layout property
   let newLine = containerLine
