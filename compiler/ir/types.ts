@@ -20,7 +20,7 @@ export interface PropertySourceMap {
 }
 
 /** Custom icon definition for the registry */
-export interface IRIcon {
+interface IRIcon {
   name: string
   path: string // SVG path data
   viewBox?: string // default "0 0 24 24"
@@ -114,7 +114,7 @@ export interface IRProperty {
 /**
  * Token reference value in properties
  */
-export interface IRTokenReference {
+interface IRTokenReference {
   kind: 'token'
   name: string
 }
@@ -122,7 +122,7 @@ export interface IRTokenReference {
 /**
  * Loop variable reference value in properties
  */
-export interface IRLoopVarReference {
+interface IRLoopVarReference {
   kind: 'loopVar'
   name: string
   property?: string
@@ -131,7 +131,7 @@ export interface IRLoopVarReference {
 /**
  * Computed expression value in properties
  */
-export interface IRComputedExpression {
+interface IRComputedExpression {
   kind: 'expression'
   parts: (string | number | IRTokenReference | IRLoopVarReference)[]
   operators: string[]
@@ -140,7 +140,7 @@ export interface IRComputedExpression {
 /**
  * Conditional value in properties
  */
-export interface IRConditionalValue {
+interface IRConditionalValue {
   kind: 'conditional'
   condition: string
   then: string | number
@@ -150,7 +150,7 @@ export interface IRConditionalValue {
 /**
  * Property value type - all possible values in properties
  */
-export type IRPropertyValue =
+type IRPropertyValue =
   | string
   | number
   | boolean
@@ -190,7 +190,7 @@ export interface IRAction {
   isBuiltinStateFunction?: boolean // true for built-in: toggle, cycle, exclusive
 }
 
-export interface IREventModifier {
+interface IREventModifier {
   type: 'debounce' | 'delay'
   value: number
 }
@@ -359,7 +359,7 @@ export function isIRDataReferenceArray(value: unknown): value is IRDataReference
 /**
  * Warning types for validation
  */
-export type IRWarningType =
+type IRWarningType =
   | 'unknown-property'
   | 'unknown-primitive'
   | 'unknown-event'

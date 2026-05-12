@@ -59,6 +59,7 @@ import {
 import { executeMirrorJS } from './compile/execute-mirror-js'
 import { collectPreludeDefinitions } from './compile/prelude-definitions'
 import { buildComponentPrimitives } from './compile/component-primitives'
+import { resolvePreviewRedirect } from './compile/preview-redirect'
 
 // New architecture imports
 import {
@@ -1208,16 +1209,15 @@ function compile(code: string) {
   // / components / data via the prelude. The editor's own content was
   // already saved into `files[currentFile]` above, so the prelude built
   // for the layout picks it up.
-  let compileFile = currentFile
-  let compileCode = code
-  const editingFileType = getFileType(currentFile)
-  if (editingFileType !== 'layout' && studio?.state) {
-    const previewFile = studio.state.get().previewFile
-    if (previewFile && previewFile !== currentFile && getFileType(previewFile) === 'layout') {
-      compileFile = previewFile
-      compileCode = files[previewFile] ?? ''
-    }
-  }
+  const redirect = resolvePreviewRedirect({
+    currentFile,
+    currentCode: code,
+    previewFile: studio?.state?.get?.()?.previewFile,
+    files,
+    getFileType,
+  })
+  const compileFile = redirect.compileFile
+  const compileCode = redirect.compileCode
   // Tell the sync layer whether editor lines correspond to the compile
   // source. When redirected (editor on tokens.tok, compile target app.mir)
   // any editorLine + offset math points into app.mir, NOT the editor's

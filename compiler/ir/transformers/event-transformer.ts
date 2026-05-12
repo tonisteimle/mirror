@@ -19,7 +19,7 @@ import { mapEventToDom } from '../../schema/ir-helpers'
  * Built-in state functions that are handled by the runtime.
  * These functions operate on the element's state machine.
  */
-export const BUILTIN_STATE_FUNCTIONS = new Set(['toggle', 'cycle', 'exclusive'])
+const BUILTIN_STATE_FUNCTIONS = new Set(['toggle', 'cycle', 'exclusive'])
 
 // =============================================================================
 // Event Transformation
@@ -48,7 +48,7 @@ export function transformEvents(events: Event[]): IREvent[] {
  * it to `_runtime.toggle(_elements['…'])` instead of synthesizing a
  * state-machine on the click source. See findings.md "toggle(ElementName)".
  */
-export function transformAction(action: Action): IRAction {
+function transformAction(action: Action): IRAction {
   const isBuiltin = BUILTIN_STATE_FUNCTIONS.has(action.name)
   const isElementNameToggle =
     (action.name === 'toggle' || action.name === 'cycle') &&

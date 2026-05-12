@@ -42,7 +42,7 @@ export interface ChartPrimitiveDef {
 // Chart Slot Types
 // ============================================================================
 
-export interface ChartSlotDef {
+interface ChartSlotDef {
   /** Slot name (e.g., 'XAxis', 'Legend') */
   name: string
   /** Description for docs */
@@ -53,7 +53,7 @@ export interface ChartSlotDef {
   supportedCharts?: string[]
 }
 
-export interface ChartSlotPropertyDef {
+interface ChartSlotPropertyDef {
   /** Property name in Mirror DSL */
   name: string
   /** Aliases (e.g., 'col' for 'color') */

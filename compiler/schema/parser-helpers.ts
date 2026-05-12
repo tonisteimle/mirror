@@ -38,7 +38,7 @@ export const PROPERTY_STARTERS = new Set<string>([
  * Boolean properties - standalone properties that need no value.
  * These have a _standalone keyword in the schema.
  */
-export const BOOLEAN_PROPERTIES = new Set<string>([
+const BOOLEAN_PROPERTIES = new Set<string>([
   // ALL from schema - properties with _standalone keyword
   ...Object.values(SCHEMA)
     .filter(prop => prop.keywords?._standalone)
@@ -127,7 +127,7 @@ export const LAYOUT_BOOLEANS = new Set<string>([
  * Position booleans that are commonly used as align values.
  * These are NOT in LAYOUT_BOOLEANS to avoid breaking "align top left"
  */
-export const POSITION_BOOLEANS = new Set<string>([
+const POSITION_BOOLEANS = new Set<string>([
   'left',
   'right',
   'top',
@@ -167,7 +167,7 @@ function buildCanonicalIndex(): Map<string, string> {
 /**
  * Get all property names and aliases from the schema.
  */
-export function getAllSchemaPropertyNames(): Set<string> {
+function getAllSchemaPropertyNames(): Set<string> {
   if (!_allPropertyNames) {
     _allPropertyNames = new Set<string>()
     for (const prop of Object.values(SCHEMA)) {
@@ -338,22 +338,13 @@ export const DIRECTIONAL_PROPERTIES = new Set<string>(
     .flatMap(prop => [prop.name, ...prop.aliases])
 )
 
-/**
- * All valid direction keywords across all directional properties.
- */
-export const DIRECTION_KEYWORDS = new Set<string>(
-  Object.values(SCHEMA)
-    .filter(prop => prop.directional)
-    .flatMap(prop => prop.directional!.directions)
-)
-
 // Memoized directions index. Built lazily on first call.
 let _directionsByProperty: Map<string, string[]> | null = null
 
 /**
  * Get valid directions for a specific property.
  */
-export function getDirectionsForProperty(nameOrAlias: string): string[] {
+function getDirectionsForProperty(nameOrAlias: string): string[] {
   if (!_directionsByProperty) {
     _directionsByProperty = new Map<string, string[]>()
     for (const prop of Object.values(SCHEMA)) {

@@ -17,7 +17,7 @@
 /** Valid template categories */
 type TemplateCategory = 'navigation' | 'form' | 'overlay' | 'media' | 'feedback' | 'layout'
 
-export interface ComponentTemplate {
+interface ComponentTemplate {
   /** Human-readable description */
   description: string
   /** Multi-line code template (relative indentation) */

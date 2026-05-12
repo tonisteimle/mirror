@@ -70,9 +70,7 @@ function readTrailingValues(
 }
 
 /** Infer token type from raw value (color #hex, size 12, font "Inter"). */
-export function inferTokenType(
-  value: string | number
-): 'color' | 'size' | 'font' | 'icon' | undefined {
+function inferTokenType(value: string | number): 'color' | 'size' | 'font' | 'icon' | undefined {
   const str = String(value)
   if (str.startsWith('#')) return 'color'
   if (/^\d+(%|px|rem|em)?$/.test(str)) return 'size'

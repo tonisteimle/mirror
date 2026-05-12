@@ -47,7 +47,7 @@ const U = ParserUtils
  * Maps prose constructs to Mirror component names. v1 hardcodes sensible
  * defaults; later the user-declared `prose-style:` block overrides them.
  */
-export interface ProseStyleMap {
+interface ProseStyleMap {
   paragraph: string
   bullet: string
   bulletText: string
@@ -60,7 +60,7 @@ export interface ProseStyleMap {
   heading3: string
 }
 
-export const DEFAULT_PROSE_STYLE: ProseStyleMap = {
+const DEFAULT_PROSE_STYLE: ProseStyleMap = {
   paragraph: 'BodyTxt',
   bullet: 'DashItem',
   bulletText: 'BodyTxtCompact',
@@ -78,7 +78,7 @@ export interface ProseRange {
   endLine: number
 }
 
-export interface ProseBodyCallbacks {
+interface ProseBodyCallbacks {
   /** Allocate a fresh AST node id (parser-class-scoped). */
   generateNodeId(): string
   /** Look up a component definition by name (for prose-style propagation). */
@@ -106,7 +106,7 @@ export interface ProseBodyCallbacks {
  * an empty `values` array. The body-parser path stores them as
  * `[true]`. Both shapes count as "prose is set".
  */
-export function hasProseProperty(properties: Property[]): boolean {
+function hasProseProperty(properties: Property[]): boolean {
   return properties.some(p => p.name === 'prose' && (p.values.length === 0 || p.values[0] === true))
 }
 
@@ -115,7 +115,7 @@ export function hasProseProperty(properties: Property[]): boolean {
  * stages will look up a user-declared `prose-style:` token, optionally
  * keyed by the prose mode variant (e.g. `prose dense`).
  */
-export function resolveProseStyle(_variant?: string): ProseStyleMap {
+function resolveProseStyle(_variant?: string): ProseStyleMap {
   return DEFAULT_PROSE_STYLE
 }
 

@@ -101,7 +101,7 @@ export interface LexerError {
   code?: LexerErrorCode
 }
 
-export interface LexerResult {
+interface LexerResult {
   tokens: Token[]
   errors: LexerError[]
 }
