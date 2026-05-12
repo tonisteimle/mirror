@@ -663,37 +663,37 @@ function makeFakeFile(webkitRelativePath: string, content: string): File {
 // MIRROR FILE DETECTION
 // =============================================================================
 
-describe('isMirrorFile (internal)', () => {
-  // Test the isMirrorFile function directly
+describe('isMirrorProjectFile (internal)', () => {
+  // Test the isMirrorProjectFile function directly
 
   it('should accept .mir files', async () => {
-    const { isMirrorFile } = await import('../../studio/storage/types')
-    expect(isMirrorFile('index.mir')).toBe(true)
-    expect(isMirrorFile('app.mirror')).toBe(true)
+    const { isMirrorProjectFile } = await import('../../studio/storage/types')
+    expect(isMirrorProjectFile('index.mir')).toBe(true)
+    expect(isMirrorProjectFile('app.mirror')).toBe(true)
   })
 
   it('should accept .tok files', async () => {
-    const { isMirrorFile } = await import('../../studio/storage/types')
-    expect(isMirrorFile('tokens.tok')).toBe(true)
-    expect(isMirrorFile('theme.tokens')).toBe(true)
+    const { isMirrorProjectFile } = await import('../../studio/storage/types')
+    expect(isMirrorProjectFile('tokens.tok')).toBe(true)
+    expect(isMirrorProjectFile('theme.tokens')).toBe(true)
   })
 
   it('should accept .com files', async () => {
-    const { isMirrorFile } = await import('../../studio/storage/types')
-    expect(isMirrorFile('components.com')).toBe(true)
-    expect(isMirrorFile('ui.components')).toBe(true)
+    const { isMirrorProjectFile } = await import('../../studio/storage/types')
+    expect(isMirrorProjectFile('components.com')).toBe(true)
+    expect(isMirrorProjectFile('ui.components')).toBe(true)
   })
 
   it('should accept .yaml and .yml files', async () => {
-    const { isMirrorFile } = await import('../../studio/storage/types')
-    expect(isMirrorFile('data.yaml')).toBe(true)
-    expect(isMirrorFile('content.yml')).toBe(true)
+    const { isMirrorProjectFile } = await import('../../studio/storage/types')
+    expect(isMirrorProjectFile('data.yaml')).toBe(true)
+    expect(isMirrorProjectFile('content.yml')).toBe(true)
   })
 
   it('should reject non-mirror files', async () => {
-    const { isMirrorFile } = await import('../../studio/storage/types')
-    expect(isMirrorFile('readme.md')).toBe(false)
-    expect(isMirrorFile('script.js')).toBe(false)
-    expect(isMirrorFile('style.css')).toBe(false)
+    const { isMirrorProjectFile } = await import('../../studio/storage/types')
+    expect(isMirrorProjectFile('readme.md')).toBe(false)
+    expect(isMirrorProjectFile('script.js')).toBe(false)
+    expect(isMirrorProjectFile('style.css')).toBe(false)
   })
 })

@@ -5,7 +5,6 @@
  *     drop zones, semantic dots, sibling line, zone indicator, size badge)
  *   - draw-rect-renderer.ts (104 LOC) — click-to-draw live rectangle preview
  *   - smart-guides/guide-renderer.ts (98 LOC) — smart-guide line rendering
- *   - measurements/measurement-renderer.ts (199 LOC) — distance line + label
  *
  * Skipped (deeply state-coupled, covered indirectly by browser tests):
  *   padding-manager, margin-manager, gap-manager, resize-manager,
@@ -16,12 +15,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { OverlayManager, createOverlayManager } from '../../studio/visual/overlay-manager'
 import { DrawRectRenderer } from '../../studio/visual/draw-rect-renderer'
 import { GuideRenderer, createGuideRenderer } from '../../studio/visual/smart-guides/guide-renderer'
-import {
-  MeasurementRenderer,
-  createMeasurementRenderer,
-} from '../../studio/visual/measurements/measurement-renderer'
 import type { Guide } from '../../studio/visual/smart-guides/types'
-import type { Measurement } from '../../studio/visual/measurements/types'
 
 let container: HTMLElement
 
@@ -431,135 +425,6 @@ describe('GuideRenderer', () => {
 })
 
 // =============================================================================
-// MeasurementRenderer
-// =============================================================================
-
-describe('MeasurementRenderer', () => {
-  function makeMeasurement(direction: 'horizontal' | 'vertical', distance: number): Measurement {
-    if (direction === 'horizontal') {
-      return {
-        from: 'n1',
-        to: 'n2',
-        edge: 'right',
-        distance,
-        labelPosition: { x: 50, y: 100 },
-        lineStart: { x: 0, y: 100 },
-        lineEnd: { x: 100, y: 100 },
-        direction: 'horizontal',
-      }
-    }
-    return {
-      from: 'n1',
-      to: 'n2',
-      edge: 'bottom',
-      distance,
-      labelPosition: { x: 100, y: 50 },
-      lineStart: { x: 100, y: 0 },
-      lineEnd: { x: 100, y: 100 },
-      direction: 'vertical',
-    }
-  }
-
-  it('createMeasurementRenderer returns a MeasurementRenderer', () => {
-    expect(createMeasurementRenderer({ container })).toBeInstanceOf(MeasurementRenderer)
-  })
-
-  it('show: appends a .measurement-overlay to container', () => {
-    const r = new MeasurementRenderer({ container })
-    r.show([makeMeasurement('horizontal', 50)])
-    expect(container.querySelector('.measurement-overlay')).not.toBeNull()
-  })
-
-  it('show: each measurement creates a line + 2 caps + 1 label = 4 elements', () => {
-    const r = new MeasurementRenderer({ container })
-    r.show([makeMeasurement('horizontal', 50)])
-    expect(container.querySelectorAll('.measurement-line').length).toBe(1)
-    expect(container.querySelectorAll('.measurement-cap').length).toBe(2)
-    expect(container.querySelectorAll('.measurement-label').length).toBe(1)
-  })
-
-  it('show: label text is "{distance}px"', () => {
-    const r = new MeasurementRenderer({ container })
-    r.show([makeMeasurement('horizontal', 42)])
-    expect(container.querySelector('.measurement-label')?.textContent).toBe('42px')
-  })
-
-  it('show: line position uses Math.min for left/top', () => {
-    const r = new MeasurementRenderer({ container })
-    r.show([
-      {
-        ...makeMeasurement('horizontal', 50),
-        lineStart: { x: 100, y: 50 },
-        lineEnd: { x: 0, y: 50 }, // reversed
-      },
-    ])
-    const line = container.querySelector('.measurement-line') as HTMLElement
-    expect(line.style.left).toBe('0px') // min(100, 0)
-    expect(line.style.width).toBe('100px') // abs diff
-  })
-
-  it('show: vertical line uses width=1px / height=delta', () => {
-    const r = new MeasurementRenderer({ container })
-    r.show([makeMeasurement('vertical', 50)])
-    const line = container.querySelector('.measurement-line') as HTMLElement
-    expect(line.style.width).toBe('1px')
-    expect(line.style.height).toBe('100px')
-  })
-
-  it('show: clears previous measurements', () => {
-    const r = new MeasurementRenderer({ container })
-    r.show([makeMeasurement('horizontal', 10), makeMeasurement('vertical', 20)])
-    expect(container.querySelectorAll('.measurement-line').length).toBe(2)
-    r.show([makeMeasurement('horizontal', 30)])
-    expect(container.querySelectorAll('.measurement-line').length).toBe(1)
-  })
-
-  it('hide: removes all measurement elements', () => {
-    const r = new MeasurementRenderer({ container })
-    r.show([makeMeasurement('horizontal', 10)])
-    r.hide()
-    expect(container.querySelectorAll('.measurement-line').length).toBe(0)
-    expect(container.querySelectorAll('.measurement-cap').length).toBe(0)
-    expect(container.querySelectorAll('.measurement-label').length).toBe(0)
-  })
-
-  it('show: container gets position:relative if it was static', () => {
-    expect(container.style.position).toBe('')
-    new MeasurementRenderer({ container }).show([makeMeasurement('horizontal', 10)])
-    expect(container.style.position).toBe('relative')
-  })
-
-  it('show: does NOT touch container.style.position when already non-static', () => {
-    container.style.position = 'absolute'
-    new MeasurementRenderer({ container }).show([makeMeasurement('horizontal', 10)])
-    expect(container.style.position).toBe('absolute')
-  })
-
-  it('dispose removes the overlay from container', () => {
-    const r = new MeasurementRenderer({ container })
-    r.show([makeMeasurement('horizontal', 10)])
-    r.dispose()
-    expect(container.querySelector('.measurement-overlay')).toBeNull()
-  })
-
-  it('cap position centers on point with size 6 / lineWidth 1', () => {
-    const r = new MeasurementRenderer({ container })
-    r.show([
-      {
-        ...makeMeasurement('horizontal', 50),
-        lineStart: { x: 100, y: 50 },
-        lineEnd: { x: 200, y: 50 },
-      },
-    ])
-    const caps = container.querySelectorAll('.measurement-cap')
-    const cap1 = caps[0] as HTMLElement
-    // Horizontal direction → vertical cap → centered around (100, 50) w/ height 6
-    expect(cap1.style.left).toBe('99.5px') // 100 - 0.5 (lineWidth/2)
-    expect(cap1.style.top).toBe('47px') // 50 - 3 (cap/2)
-  })
-})
-
-// =============================================================================
 // P3 — mutation-driven
 // =============================================================================
 
@@ -607,22 +472,5 @@ describe('P3 — mutation-driven', () => {
     ])
     const line = container.querySelector('.smart-guide') as HTMLElement
     expect(line.style.height).toBe('30px') // 80 - 50
-  })
-
-  it('M6: MeasurementRenderer label format "{N}px" (catches drop of "px" suffix)', () => {
-    const r = new MeasurementRenderer({ container })
-    r.show([
-      {
-        from: 'n1',
-        to: 'n2',
-        edge: 'right',
-        distance: 25,
-        labelPosition: { x: 0, y: 0 },
-        lineStart: { x: 0, y: 0 },
-        lineEnd: { x: 25, y: 0 },
-        direction: 'horizontal',
-      },
-    ])
-    expect(container.querySelector('.measurement-label')?.textContent).toBe('25px')
   })
 })

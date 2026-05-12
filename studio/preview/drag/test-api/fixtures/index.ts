@@ -14,13 +14,7 @@ export {
 } from './simple-components'
 
 // Zag components
-export {
-  ZAG_SIMPLE,
-  ZAG_WITH_SLOTS,
-  getZagComponentNames,
-  getZagFixture,
-  isZagComponent,
-} from './zag-components'
+export { ZAG_SIMPLE, ZAG_WITH_SLOTS, getZagComponentNames, getZagFixture } from './zag-components'
 
 // Chart components
 export {

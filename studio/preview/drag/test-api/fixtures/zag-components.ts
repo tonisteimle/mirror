@@ -166,10 +166,3 @@ export function getZagComponentNames(): string[] {
 export function getZagFixture(name: string): ComponentFixture | undefined {
   return ZAG_SIMPLE[name] || ZAG_WITH_SLOTS[name]
 }
-
-/**
- * Check if a component is a Zag component
- */
-export function isZagComponent(name: string): boolean {
-  return name in ZAG_SIMPLE || name in ZAG_WITH_SLOTS
-}

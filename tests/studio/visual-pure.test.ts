@@ -5,7 +5,6 @@
  * Pure (no DOM, no global state):
  *   - models/coordinate.ts (320 LOC)
  *   - models/snap.ts (380 LOC)
- *   - measurements/measurement-calculator.ts (280 LOC)
  *
  * Mock-the-singleton (depends on core/settings):
  *   - smart-guides/guide-calculator.ts (311 LOC)
@@ -531,177 +530,6 @@ describe('snap — public helpers', () => {
     expect(ctx.siblingRects).toEqual([])
     expect(ctx.containerRect).toBeUndefined()
     expect(ctx.config.enabled).toBe(true)
-  })
-})
-
-// =============================================================================
-// measurements/measurement-calculator
-// =============================================================================
-
-import { calculateMeasurements } from '../../studio/visual/measurements/measurement-calculator'
-
-describe('measurement-calculator — container distances', () => {
-  it('top distance only when element below container.y', () => {
-    const m = calculateMeasurements('n1', { x: 50, y: 50, width: 100, height: 100 }, new Map(), {
-      x: 0,
-      y: 0,
-      width: 500,
-      height: 500,
-    })
-    const top = m.find(x => x.edge === 'top' && x.to === 'container')
-    expect(top?.distance).toBe(50)
-  })
-
-  it('omits top when element flush with container.y', () => {
-    const m = calculateMeasurements('n1', { x: 50, y: 0, width: 100, height: 100 }, new Map(), {
-      x: 0,
-      y: 0,
-      width: 500,
-      height: 500,
-    })
-    expect(m.find(x => x.edge === 'top' && x.to === 'container')).toBeUndefined()
-  })
-
-  it('all 4 edges measured when element centered', () => {
-    const m = calculateMeasurements('n1', { x: 100, y: 100, width: 100, height: 100 }, new Map(), {
-      x: 0,
-      y: 0,
-      width: 400,
-      height: 400,
-    })
-    const edges = m
-      .filter(x => x.to === 'container')
-      .map(x => x.edge)
-      .sort()
-    expect(edges).toEqual(['bottom', 'left', 'right', 'top'])
-  })
-
-  it('rounds distances', () => {
-    const m = calculateMeasurements('n1', { x: 0.7, y: 0.7, width: 100, height: 100 }, new Map(), {
-      x: 0,
-      y: 0,
-      width: 200,
-      height: 200,
-    })
-    const left = m.find(x => x.edge === 'left' && x.to === 'container')
-    expect(left?.distance).toBe(1)
-  })
-})
-
-describe('measurement-calculator — sibling gaps', () => {
-  it('horizontal gap when siblings overlap vertically', () => {
-    const siblings = new Map([['s1', { x: 200, y: 50, width: 50, height: 100 }]])
-    const m = calculateMeasurements('n1', { x: 50, y: 50, width: 100, height: 100 }, siblings, {
-      x: 0,
-      y: 0,
-      width: 500,
-      height: 500,
-    })
-    const gap = m.find(x => x.from === 'n1' && x.to === 's1' && x.direction === 'horizontal')
-    expect(gap?.distance).toBe(50) // 200 - 150 = 50
-    expect(gap?.edge).toBe('right') // sibling is to the right
-  })
-
-  it('vertical gap when siblings overlap horizontally', () => {
-    const siblings = new Map([['s1', { x: 50, y: 200, width: 100, height: 50 }]])
-    const m = calculateMeasurements('n1', { x: 50, y: 50, width: 100, height: 100 }, siblings, {
-      x: 0,
-      y: 0,
-      width: 500,
-      height: 500,
-    })
-    const gap = m.find(x => x.from === 'n1' && x.to === 's1' && x.direction === 'vertical')
-    expect(gap?.distance).toBe(50)
-    expect(gap?.edge).toBe('bottom')
-  })
-
-  it('no horizontal gap when siblings do NOT overlap vertically', () => {
-    const siblings = new Map([
-      ['s1', { x: 200, y: 500, width: 50, height: 50 }], // far below
-    ])
-    const m = calculateMeasurements('n1', { x: 50, y: 50, width: 100, height: 100 }, siblings, {
-      x: 0,
-      y: 0,
-      width: 1000,
-      height: 1000,
-    })
-    expect(
-      m.find(x => x.from === 'n1' && x.to === 's1' && x.direction === 'horizontal')
-    ).toBeUndefined()
-  })
-
-  it('skips self (siblingId === nodeId)', () => {
-    const siblings = new Map([['n1', { x: 200, y: 50, width: 50, height: 100 }]])
-    const m = calculateMeasurements('n1', { x: 50, y: 50, width: 100, height: 100 }, siblings, {
-      x: 0,
-      y: 0,
-      width: 500,
-      height: 500,
-    })
-    expect(m.find(x => x.from === 'n1' && x.to === 'n1')).toBeUndefined()
-  })
-
-  it('left edge: sibling is to the left', () => {
-    const siblings = new Map([['s1', { x: 0, y: 50, width: 30, height: 100 }]])
-    const m = calculateMeasurements('n1', { x: 100, y: 50, width: 100, height: 100 }, siblings, {
-      x: 0,
-      y: 0,
-      width: 500,
-      height: 500,
-    })
-    const gap = m.find(x => x.to === 's1' && x.direction === 'horizontal')
-    expect(gap?.edge).toBe('left')
-    expect(gap?.distance).toBe(70)
-  })
-})
-
-describe('measurement-calculator — config', () => {
-  it('respects minDistance filter', () => {
-    const m = calculateMeasurements(
-      'n1',
-      { x: 1, y: 1, width: 100, height: 100 },
-      new Map(),
-      { x: 0, y: 0, width: 500, height: 500 },
-      { minDistance: 5 }
-    )
-    // Top + left edges are 1px each → filtered out.
-    expect(m.find(x => x.edge === 'top' && x.to === 'container')).toBeUndefined()
-    expect(m.find(x => x.edge === 'left' && x.to === 'container')).toBeUndefined()
-    // Bottom + right are larger than 5 → present.
-    expect(m.find(x => x.edge === 'bottom' && x.to === 'container')).toBeDefined()
-  })
-
-  it('respects maxMeasurements limit (sorts by distance, keeps closest N)', () => {
-    // Place selected element flush with container so container measurements
-    // are zero (filtered) — only siblings contribute.
-    const siblings = new Map([
-      ['near', { x: 110, y: 0, width: 30, height: 100 }], // 10px away
-      ['far', { x: 200, y: 0, width: 30, height: 100 }], // 100px away
-    ])
-    const m = calculateMeasurements(
-      'n1',
-      { x: 0, y: 0, width: 100, height: 100 },
-      siblings,
-      { x: 0, y: 0, width: 100, height: 100 },
-      { maxMeasurements: 1 }
-    )
-    expect(m.length).toBe(1)
-    expect(m[0].to).toBe('near')
-  })
-
-  it('default maxMeasurements limits to 8', () => {
-    // Create 12 siblings around a central element to overflow.
-    const siblings = new Map<string, any>()
-    for (let i = 0; i < 12; i++) {
-      siblings.set(`s${i}`, { x: 200 + i, y: 50, width: 5, height: 100 })
-    }
-    const m = calculateMeasurements('n1', { x: 50, y: 50, width: 100, height: 100 }, siblings, {
-      x: 0,
-      y: 0,
-      width: 1000,
-      height: 1000,
-    })
-    expect(m.length).toBeLessThanOrEqual(8)
   })
 })
 
@@ -1245,17 +1073,6 @@ describe('P3 — mutation-driven', () => {
     expect(result.position.x).toBe(5) // distance 1 < distance 4
   })
 
-  it('M5: measurement omits zero-distance edges (catches > 0 vs >= 0 flip)', () => {
-    const m = calculateMeasurements('n1', { x: 0, y: 0, width: 100, height: 100 }, new Map(), {
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 100,
-    })
-    // No edge has > 0 distance — every container measurement should be filtered.
-    expect(m.filter(x => x.to === 'container').length).toBe(0)
-  })
-
   it('M6: SpacingSnapService closest-token wins over farther one within threshold', async () => {
     const { handleSnapSettings } = await import('../../studio/core/settings')
     const original = handleSnapSettings.get()
@@ -1265,18 +1082,6 @@ describe('P3 — mutation-driven', () => {
     expect(r.snapped).toBe(true)
     expect(r.value).toBe(8) // strictly the closest, not the first
     handleSnapSettings.set(original)
-  })
-
-  it('M5b: measurement-calculator > 0 guard SKIPS zero-distance edges', () => {
-    // Element flush with all 4 container edges → no container measurements emitted.
-    const m = calculateMeasurements(
-      'n1',
-      { x: 0, y: 0, width: 100, height: 100 },
-      new Map(),
-      { x: 0, y: 0, width: 100, height: 100 },
-      { minDistance: 0 } // disable minDistance filter so the guard is the only protection
-    )
-    expect(m.filter(x => x.to === 'container').length).toBe(0)
   })
 
   it('M7: snapToGrid: gridSize <= 0 guard (catches drop of guard)', () => {

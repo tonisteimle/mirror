@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { getMirrorFileType, isMirrorFile, FILE_EXTENSIONS } from '../../studio/storage/types'
+import { getMirrorFileType, isMirrorProjectFile, FILE_EXTENSIONS } from '../../studio/storage/types'
 
 // =============================================================================
 // FILE TYPE DETECTION
@@ -93,73 +93,73 @@ describe('getMirrorFileType', () => {
 // IS MIRROR FILE
 // =============================================================================
 
-describe('isMirrorFile', () => {
+describe('isMirrorProjectFile', () => {
   describe('Mirror files', () => {
     it('should return true for layout files', () => {
-      expect(isMirrorFile('index.mir')).toBe(true)
-      expect(isMirrorFile('page.mirror')).toBe(true)
+      expect(isMirrorProjectFile('index.mir')).toBe(true)
+      expect(isMirrorProjectFile('page.mirror')).toBe(true)
     })
 
     it('should return true for token files', () => {
-      expect(isMirrorFile('theme.tok')).toBe(true)
-      expect(isMirrorFile('colors.tokens')).toBe(true)
+      expect(isMirrorProjectFile('theme.tok')).toBe(true)
+      expect(isMirrorProjectFile('colors.tokens')).toBe(true)
     })
 
     it('should return true for component files', () => {
-      expect(isMirrorFile('button.com')).toBe(true)
-      expect(isMirrorFile('ui.components')).toBe(true)
+      expect(isMirrorProjectFile('button.com')).toBe(true)
+      expect(isMirrorProjectFile('ui.components')).toBe(true)
     })
   })
 
   describe('non-Mirror files', () => {
     it('should return false for common files', () => {
-      expect(isMirrorFile('readme.md')).toBe(false)
-      expect(isMirrorFile('style.css')).toBe(false)
-      expect(isMirrorFile('app.js')).toBe(false)
-      expect(isMirrorFile('index.html')).toBe(false)
+      expect(isMirrorProjectFile('readme.md')).toBe(false)
+      expect(isMirrorProjectFile('style.css')).toBe(false)
+      expect(isMirrorProjectFile('app.js')).toBe(false)
+      expect(isMirrorProjectFile('index.html')).toBe(false)
     })
 
     it('returns true for data files (yaml/yml ARE in the Mirror extension set)', () => {
-      // isMirrorFile flattens FILE_EXTENSIONS — since .yaml/.yml are
+      // isMirrorProjectFile flattens FILE_EXTENSIONS — since .yaml/.yml are
       // registered there, they count as Mirror files for this predicate.
       // Pinning the contract: yaml/yml ARE Mirror.
-      expect(isMirrorFile('config.yaml')).toBe(true)
-      expect(isMirrorFile('settings.yml')).toBe(true)
+      expect(isMirrorProjectFile('config.yaml')).toBe(true)
+      expect(isMirrorProjectFile('settings.yml')).toBe(true)
     })
   })
 
   describe('edge cases', () => {
     it('should handle empty string', () => {
-      expect(isMirrorFile('')).toBe(false)
+      expect(isMirrorProjectFile('')).toBe(false)
     })
 
     it('should handle just extension', () => {
-      expect(isMirrorFile('.mir')).toBe(true)
-      expect(isMirrorFile('.tok')).toBe(true)
+      expect(isMirrorProjectFile('.mir')).toBe(true)
+      expect(isMirrorProjectFile('.tok')).toBe(true)
     })
 
     it('uses suffix matching, not substring (filename containing ext but not ending with it)', () => {
       // 'mirror.html' contains 'mirror' but doesn't END with .mir/.mirror.
       // Locks in that endsWith() — not includes() — drives the match.
-      expect(isMirrorFile('mirror.html')).toBe(false)
-      expect(isMirrorFile('something.mir.txt')).toBe(false)
-      expect(isMirrorFile('button.commands')).toBe(false) // .commands ≠ .com
+      expect(isMirrorProjectFile('mirror.html')).toBe(false)
+      expect(isMirrorProjectFile('something.mir.txt')).toBe(false)
+      expect(isMirrorProjectFile('button.commands')).toBe(false) // .commands ≠ .com
     })
 
     it('returns true even for paths with leading slash or whitespace-tolerant inputs', () => {
       // The code uses endsWith on the raw string — leading paths don't matter.
-      expect(isMirrorFile('/abs/path/to/app.mir')).toBe(true)
-      expect(isMirrorFile('./relative/comp.com')).toBe(true)
+      expect(isMirrorProjectFile('/abs/path/to/app.mir')).toBe(true)
+      expect(isMirrorProjectFile('./relative/comp.com')).toBe(true)
     })
   })
 })
 
 // =============================================================================
-// P2 coverage: locked invariants between getFileType and isMirrorFile
+// P2 coverage: locked invariants between getFileType and isMirrorProjectFile
 // =============================================================================
 
-describe('getMirrorFileType / isMirrorFile coherence', () => {
-  it('every file isMirrorFile returns true for, getFileType returns non-unknown', () => {
+describe('getMirrorFileType / isMirrorProjectFile coherence', () => {
+  it('every file isMirrorProjectFile returns true for, getFileType returns non-unknown', () => {
     // Discriminating invariant: a file the predicate accepts must yield
     // a meaningful type. If they ever drift apart, both tests fail and
     // the regression is obvious.
@@ -174,15 +174,15 @@ describe('getMirrorFileType / isMirrorFile coherence', () => {
       'settings.yml',
     ]
     for (const file of samples) {
-      expect(isMirrorFile(file)).toBe(true)
+      expect(isMirrorProjectFile(file)).toBe(true)
       expect(getMirrorFileType(file)).not.toBe('unknown')
     }
   })
 
-  it('every file isMirrorFile returns false for, getFileType returns unknown', () => {
+  it('every file isMirrorProjectFile returns false for, getFileType returns unknown', () => {
     const samples = ['readme.md', 'app.js', 'style.css', 'index.html', '']
     for (const file of samples) {
-      expect(isMirrorFile(file)).toBe(false)
+      expect(isMirrorProjectFile(file)).toBe(false)
       expect(getMirrorFileType(file)).toBe('unknown')
     }
   })
