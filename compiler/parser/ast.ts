@@ -752,8 +752,8 @@ export function isInstance(node: unknown): node is Instance {
   return typeof node === 'object' && node !== null && (node as BaseNode).type === 'Instance'
 }
 
-/** Check if node is a ZagComponent */
-export function isZagComponent(node: unknown): node is ZagNode {
+/** Check if node is a ZagComponent (Zag-machine-backed AST node). */
+export function isZagNode(node: unknown): node is ZagNode {
   return typeof node === 'object' && node !== null && (node as BaseNode).type === 'ZagComponent'
 }
 

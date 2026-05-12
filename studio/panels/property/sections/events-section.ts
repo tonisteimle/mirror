@@ -72,8 +72,6 @@ interface EventsSectionData extends SectionData {
 /**
  * Icons for the section
  */
-const ADD_ICON =
-  '<path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
 const DELETE_ICON =
   '<path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
 

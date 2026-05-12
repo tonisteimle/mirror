@@ -39,7 +39,6 @@ export {
 // Convenience function for triggering rename
 // ============================================
 
-import { state } from '../core/state'
 import { executor } from '../core/command-executor'
 import { events } from '../core/events'
 import { getRenameEngine } from './rename-engine'

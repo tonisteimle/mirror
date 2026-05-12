@@ -26,14 +26,12 @@ export class RecordingAdapter implements ReportAdapter {
   private config: RecordingAdapterConfig
   private recordings: Recording[] = []
   private currentFrames: DragFrame[] = []
-  private currentSession: DragSession | null = null
 
   constructor(config: Partial<RecordingAdapterConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config }
   }
 
-  onSessionStart(session: DragSession): void {
-    this.currentSession = session
+  onSessionStart(_session: DragSession): void {
     this.currentFrames = []
   }
 
@@ -59,7 +57,6 @@ export class RecordingAdapter implements ReportAdapter {
       this.downloadRecording(recording)
     }
 
-    this.currentSession = null
     this.currentFrames = []
   }
 
@@ -135,6 +132,5 @@ export class RecordingAdapter implements ReportAdapter {
   destroy(): void {
     this.recordings = []
     this.currentFrames = []
-    this.currentSession = null
   }
 }

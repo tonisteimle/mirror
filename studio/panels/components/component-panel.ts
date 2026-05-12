@@ -521,7 +521,12 @@ export class ComponentPanel {
   }
 
   /**
-   * Build Mirror code for a component
+   * Build Mirror code for a component.
+   *
+   * Production drag flow uses `mirTemplate`. Currently only invoked from
+   * `tests/studio/panel-behavior-presets.test.ts` via `(panel as any).buildComponentCode`
+   * — tsc's `--noUnusedLocals` flags it as unused because the test access
+   * goes through `as any` and is therefore invisible to the type system.
    */
   private buildComponentCode(item: ComponentItem, indent: string = ''): string {
     let code = indent + item.template

@@ -11,7 +11,7 @@ import {
   type EventHandlerMap,
 } from '../base/section'
 import type { PanelSpacingToken } from '../types'
-import { extractSides, parseSidesValue, spacingPropertyNames } from '../utils/spacing-parse'
+import { extractSides, spacingPropertyNames } from '../utils/spacing-parse'
 import { renderTokenButtonGroup } from '../utils/render-token-buttons'
 
 /**

@@ -4,14 +4,13 @@
  * Eliminates code duplication between KeyboardHandler and ContextMenu.
  */
 
-import { state, actions, executor, events } from '../core'
+import { state, actions, executor } from '../core'
 import {
   WrapNodesCommand,
   UnwrapNodeCommand,
   DeleteNodeCommand,
   SetPropertyCommand,
   RemovePropertyCommand,
-  BatchCommand,
   SetLayoutDirectionCommand,
   UpdateSourceCommand,
 } from '../core/commands'

@@ -195,9 +195,8 @@ export class SizingSection extends BaseSection {
    */
   private renderIconSize(
     data: SectionData,
-    category: { properties: Array<{ name: string; value: string }> }
+    _category: { properties: Array<{ name: string; value: string }> }
   ): string {
-    const props = category.properties
     const allProps = data.allProperties || []
 
     // Find icon-size (is) from allProperties since it might not be in sizing category

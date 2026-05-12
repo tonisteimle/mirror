@@ -15,7 +15,7 @@ import type {
   Text,
   ZagNode,
 } from '../../parser/ast'
-import { isZagComponent, isSlot, isText, hasContent } from '../../parser/ast'
+import { isZagNode, isSlot, isText, hasContent } from '../../parser/ast'
 import type {
   IRNode,
   IRStyle,
@@ -774,7 +774,7 @@ export function transformChild(
     }
   }
   // Handle ZagComponent children (e.g., Select: inside a Box)
-  if (isZagComponent(child)) {
+  if (isZagNode(child)) {
     return this.transformZagComponent(child, parentLayoutContext, parentId)
   }
   // Each / Conditional / Instance: transformInstance dispatches via type tag.

@@ -12,11 +12,7 @@ import type {
   ModificationResult,
 } from '../../code-modifier'
 import type { PropertyPanelPorts } from './ports'
-import {
-  createProductionPorts,
-  type SelectionProvider,
-  type ProductionPortsConfig,
-} from './adapters/production-adapters'
+import { createProductionPorts, type SelectionProvider } from './adapters/production-adapters'
 import { PropertyPanelView, createPropertyPanelView } from './view'
 import { state, events } from '../../core'
 
@@ -72,8 +68,6 @@ export class PropertyPanel {
   private view: PropertyPanelView
   private ports: PropertyPanelPorts
   private selectionManager: SelectionProvider
-  private propertyExtractor: PropertyExtractor
-  private codeModifier: CodeModifier
   private onCodeChange: OnCodeChangeCallback
   private options: PropertyPanelOptions
 
@@ -85,11 +79,8 @@ export class PropertyPanel {
     onCodeChange: OnCodeChangeCallback,
     options: PropertyPanelOptions = {}
   ) {
-    // Store dependencies for updateDependencies()
     this.container = container
     this.selectionManager = selectionManager
-    this.propertyExtractor = propertyExtractor
-    this.codeModifier = codeModifier
     this.onCodeChange = onCodeChange
     this.options = options
 
@@ -206,9 +197,6 @@ export class PropertyPanel {
    * Called by bootstrap when AST/SourceMap change.
    */
   updateDependencies(propertyExtractor: PropertyExtractor, codeModifier: CodeModifier): void {
-    this.propertyExtractor = propertyExtractor
-    this.codeModifier = codeModifier
-
     // Dispose old view
     this.view.dispose()
 

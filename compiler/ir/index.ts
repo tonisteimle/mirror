@@ -14,7 +14,7 @@ import type {
   IconDefinition,
 } from '../parser/ast'
 
-import { isComponent, isZagComponent, isSlot, isTokenReference } from '../parser/ast'
+import { isComponent, isZagNode, isSlot, isTokenReference } from '../parser/ast'
 import type { IR, IRCanvas, IRStyle, IRWarning, IRToken } from './types'
 import { SourceMap, SourceMapBuilder, calculateSourcePosition } from './source-map'
 import { simplePropertyToCSS } from '../schema/ir-helpers'
@@ -302,7 +302,7 @@ export class IRTransformer {
       if (isSlot(inst)) {
         return this.transformSlotPrimitive(inst)
       }
-      if (isZagComponent(inst)) {
+      if (isZagNode(inst)) {
         return this.transformZagComponent(inst)
       }
       return this.transformInstance(inst as Instance)

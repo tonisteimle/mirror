@@ -65,7 +65,7 @@ export class RenameSymbolCommand implements Command {
 
       // If current file is in the changes, apply to editor
       const currentSource = ctx.getSource()
-      for (const [filename, change] of this.fileChanges) {
+      for (const [, change] of this.fileChanges) {
         if (change.oldContent === currentSource) {
           // This is the current file - apply change to editor
           ctx.applyChange({
@@ -109,7 +109,7 @@ export class RenameSymbolCommand implements Command {
 
       // If current file is in the changes, restore in editor
       const currentSource = ctx.getSource()
-      for (const [filename, change] of this.fileChanges) {
+      for (const [, change] of this.fileChanges) {
         if (change.newContent === currentSource) {
           // This is the current file - restore original content
           ctx.applyChange({
@@ -158,7 +158,7 @@ export interface CreateRenameCommandParams {
 }
 
 export function createRenameCommand(params: CreateRenameCommandParams): RenameSymbolCommand | null {
-  const { oldName, newName, symbolType, files, currentFile } = params
+  const { oldName, newName, symbolType, files } = params
 
   // Validate new name
   const engine = getRenameEngine()

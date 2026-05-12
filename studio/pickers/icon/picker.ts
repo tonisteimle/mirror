@@ -526,34 +526,6 @@ export class IconPicker extends BasePicker {
     return fragment
   }
 
-  private renderIcon(icon: IconDefinition): HTMLElement {
-    const btn = document.createElement('button')
-    btn.className = 'icon-picker-item'
-    btn.setAttribute('data-icon', icon.name)
-    btn.setAttribute('title', icon.name)
-    btn.setAttribute('role', 'option')
-
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-    svg.setAttribute('viewBox', icon.viewBox || '0 0 24 24')
-    svg.setAttribute('width', String(this.iconSize))
-    svg.setAttribute('height', String(this.iconSize))
-
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-    path.setAttribute('d', icon.path)
-    path.setAttribute('fill', 'currentColor')
-
-    svg.appendChild(path)
-    btn.appendChild(svg)
-
-    btn.onclick = () => {
-      this.addToRecent(icon.name)
-      this.selectValue(icon.name)
-    }
-
-    this.iconElements.push(btn)
-    return btn
-  }
-
   private refreshGrid(): void {
     if (!this.isOpen || !this.element) return
 

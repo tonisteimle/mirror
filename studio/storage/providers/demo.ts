@@ -26,7 +26,6 @@ export class DemoProvider implements StorageProvider {
   readonly supportsNativeDialogs = false
 
   private files: Record<string, string>
-  private projectOpen = false
   private hasBeenModified = false
 
   constructor() {
@@ -60,11 +59,11 @@ export class DemoProvider implements StorageProvider {
   }
 
   async openProject(_id: string): Promise<void> {
-    this.projectOpen = true
+    // No-op in demo mode (project state isn't tracked).
   }
 
   async closeProject(): Promise<void> {
-    this.projectOpen = false
+    // No-op in demo mode (project state isn't tracked).
   }
 
   // ===========================================================================

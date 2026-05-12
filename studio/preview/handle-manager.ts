@@ -13,7 +13,7 @@
  * - Live value indicator during drag
  */
 
-import { state, events, handleSnapSettings, getLayoutService, type LayoutService } from '../core'
+import { state, events, handleSnapSettings, getLayoutService } from '../core'
 import { HANDLE_SIZE, HANDLE_SIZE_SMALL, SMALL_ELEMENT_THRESHOLD } from '../visual/constants/sizing'
 
 export type HandleType = 'padding' | 'gap' | 'radius'

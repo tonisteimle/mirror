@@ -48,7 +48,7 @@ export type {
 export {
   isComponent,
   isInstance,
-  isZagComponent,
+  isZagNode,
   isSlot,
   isText,
   isEach,

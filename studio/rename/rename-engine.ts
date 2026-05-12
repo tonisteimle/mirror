@@ -302,18 +302,8 @@ export class RenameEngine {
     componentName: string,
     locations: SymbolLocation[]
   ): void {
-    // Pattern for component definition: `Name:` or `Name as Base:`
-    const defPattern = new RegExp(
-      `^(\\s*)${this.escapeRegex(componentName)}\\s*(?:as\\s+[A-Z][a-zA-Z0-9_]*\\s*)?:`,
-      'm'
-    )
-
-    // Pattern for inheritance base: `SomeName as Name:`
-    const inheritPattern = new RegExp(`as\\s+${this.escapeRegex(componentName)}\\s*:`)
-
-    // Pattern for instance: `Name` at start of expression (after indent or comma)
-    // Must be followed by space, comma, newline, or end of line
-    const instancePattern = new RegExp(`(?:^|\\s|,)${this.escapeRegex(componentName)}(?:\\s|,|$|")`)
+    // Patterns built inline at each match site below — keeps the
+    // pattern next to the consumer for easier reading.
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]

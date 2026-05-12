@@ -14,7 +14,7 @@ import { describe, it, expect } from 'vitest'
 import {
   isComponent,
   isInstance,
-  isZagComponent,
+  isZagNode,
   isSlot,
   isText,
   isEach,
@@ -30,7 +30,7 @@ describe('AST Type Guards — positive cases', () => {
   it.each([
     [isComponent, { type: 'Component' }],
     [isInstance, { type: 'Instance' }],
-    [isZagComponent, { type: 'ZagComponent' }],
+    [isZagNode, { type: 'ZagComponent' }],
     [isSlot, { type: 'Slot' }],
     [isText, { type: 'Text' }],
     [isEach, { type: 'Each' }],
@@ -53,7 +53,7 @@ describe('AST Type Guards — negative cases', () => {
   it.each([
     isComponent,
     isInstance,
-    isZagComponent,
+    isZagNode,
     isSlot,
     isText,
     isEach,

@@ -119,7 +119,6 @@ export function createMockStateStorePort(): MockStateStorePort {
     nodeId: null,
     origin: 'editor',
   }
-  let multiSelection: string[] = []
   let breadcrumb: BreadcrumbItem[] = []
   const selectionHistory: Array<{ nodeId: string | null; origin: SelectionOrigin }> = []
   const breadcrumbHistory: BreadcrumbItem[][] = []
@@ -138,12 +137,12 @@ export function createMockStateStorePort(): MockStateStorePort {
       selectionHistory.push({ nodeId, origin })
     },
 
-    setMultiSelection(nodeIds: string[]): void {
-      multiSelection = [...nodeIds]
+    setMultiSelection(_nodeIds: string[]): void {
+      // no-op in mock (no consumer reads multi-selection state)
     },
 
     clearMultiSelection(): void {
-      multiSelection = []
+      // no-op in mock (no consumer reads multi-selection state)
     },
 
     setBreadcrumb(newBreadcrumb: BreadcrumbItem[]): void {

@@ -5,7 +5,7 @@
  * hue slider, and alpha slider for custom color selection.
  */
 
-import { hsvToRgb, rgbToHex, hexToHsv, hsvToHex, type HSV } from './palette'
+import { hsvToRgb, hexToHsv, hsvToHex } from './palette'
 
 export interface CanvasPickerState {
   h: number // Hue: 0-360

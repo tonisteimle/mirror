@@ -10,7 +10,7 @@
  * - Eye dropper (if browser supports)
  */
 
-import { hsvToRgb, rgbToHsv, hexToRgb, rgbToHex, hexToHsv, hsvToHex, type HSV } from './palette'
+import { hsvToRgb, hexToHsv, hsvToHex } from './palette'
 
 // =============================================================================
 // Types
@@ -820,7 +820,6 @@ export class FullColorPicker {
   private container: HTMLElement | null = null
   private config: FullColorPickerConfig
   private state: PickerState = { h: 210, s: 100, v: 100, a: 1 }
-  private currentTab = 'custom'
   private isVisible = false
 
   // DOM references
@@ -1133,8 +1132,6 @@ export class FullColorPicker {
 
   private switchTab(tabName: string): void {
     if (!this.container) return
-
-    this.currentTab = tabName
 
     // Update tab buttons
     this.container.querySelectorAll('.color-picker-tab').forEach(tab => {

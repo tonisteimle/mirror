@@ -13,7 +13,7 @@ import type { ControllerReport, Reportable } from './reporter/types'
 import { LayoutCache } from './layout-cache'
 import { HitDetector } from './hit-detector'
 import { InsertionCalculator } from './insertion-calculator'
-import { Indicator, type AlignPosition, ALIGN_TO_PROPERTY } from './indicator'
+import { Indicator, ALIGN_TO_PROPERTY } from './indicator'
 import { DragReporter } from './reporter/drag-reporter'
 import { createLogger } from '../../../compiler/utils/logger'
 import { DEFAULT_COMPONENT_SIZES, FALLBACK_COMPONENT_SIZE } from './component-sizes'
@@ -21,9 +21,6 @@ import { DEFAULT_COMPONENT_SIZES, FALLBACK_COMPONENT_SIZE } from './component-si
 const log = createLogger('DragController')
 
 type DragState = 'idle' | 'dragging'
-
-// Performance tracking (debug only)
-const PERF_LOGGING = false
 
 export interface DragControllerCallbacks {
   /**

@@ -125,48 +125,6 @@ export class SettingsPanel {
     `
   }
 
-  private renderSelect(
-    setting: string,
-    label: string,
-    value: string,
-    options: { value: string; label: string }[]
-  ): string {
-    const optionsHtml = options
-      .map(
-        opt =>
-          `<option value="${opt.value}" ${value === opt.value ? 'selected' : ''}>${opt.label}</option>`
-      )
-      .join('')
-
-    return `
-      <div class="prop-row">
-        <span class="prop-label">${label}</span>
-        <div class="prop-content">
-          <select class="prop-select" data-setting="${setting}">
-            ${optionsHtml}
-          </select>
-        </div>
-      </div>
-    `
-  }
-
-  private renderTextInput(
-    setting: string,
-    label: string,
-    value: string,
-    placeholder: string = '',
-    type: string = 'text'
-  ): string {
-    return `
-      <div class="prop-row">
-        <span class="prop-label">${label}</span>
-        <div class="prop-content">
-          <input type="${type}" class="prop-input full-width" data-setting="${setting}" value="${value}" placeholder="${placeholder}">
-        </div>
-      </div>
-    `
-  }
-
   private renderSnappingSection(): string {
     const settings = handleSnapSettings.get()
     return `

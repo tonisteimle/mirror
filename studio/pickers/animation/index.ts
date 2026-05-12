@@ -3,9 +3,21 @@
  */
 
 import { BasePicker, KeyboardNav, type PickerConfig, type PickerCallbacks } from '../base'
-import { ANIMATION_PRESETS, getPresetsByCategory, getAnimationCategories, getPreset, type AnimationPreset } from './presets'
+import {
+  ANIMATION_PRESETS,
+  getPresetsByCategory,
+  getAnimationCategories,
+  getPreset,
+  type AnimationPreset,
+} from './presets'
 
-export { ANIMATION_PRESETS, getPresetsByCategory, getAnimationCategories, getPreset, type AnimationPreset }
+export {
+  ANIMATION_PRESETS,
+  getPresetsByCategory,
+  getAnimationCategories,
+  getPreset,
+  type AnimationPreset,
+}
 
 export interface AnimationPickerConfig extends Partial<PickerConfig> {
   presets?: AnimationPreset[]
@@ -17,7 +29,6 @@ export class AnimationPicker extends BasePicker {
   private presets: AnimationPreset[]
   private filteredPresets: AnimationPreset[]
   private showPreview: boolean
-  private previewElement: HTMLElement | null
   private activeCategory: string | null = null
   private presetElements: HTMLElement[] = []
   private previewTarget: HTMLElement | null = null
@@ -28,7 +39,6 @@ export class AnimationPicker extends BasePicker {
     this.presets = config.presets || ANIMATION_PRESETS
     this.filteredPresets = this.presets
     this.showPreview = config.showPreview ?? true
-    this.previewElement = config.previewElement || null
   }
 
   render(): HTMLElement {
@@ -85,9 +95,13 @@ export class AnimationPicker extends BasePicker {
     this.previewTarget.style.animation = `${animationName} ${preset.duration} ${preset.easing}`
 
     // Reset after animation
-    this.previewTarget.addEventListener('animationend', () => {
-      this.previewTarget!.style.animation = ''
-    }, { once: true })
+    this.previewTarget.addEventListener(
+      'animationend',
+      () => {
+        this.previewTarget!.style.animation = ''
+      },
+      { once: true }
+    )
   }
 
   stopPreview(): void {
@@ -177,10 +191,11 @@ export class AnimationPicker extends BasePicker {
    */
   filter(text: string): void {
     const lowerText = text.toLowerCase()
-    this.filteredPresets = this.presets.filter(p =>
-      p.name.toLowerCase().includes(lowerText) ||
-      p.label.toLowerCase().includes(lowerText) ||
-      p.category.toLowerCase().includes(lowerText)
+    this.filteredPresets = this.presets.filter(
+      p =>
+        p.name.toLowerCase().includes(lowerText) ||
+        p.label.toLowerCase().includes(lowerText) ||
+        p.category.toLowerCase().includes(lowerText)
     )
     this.refreshList()
   }
@@ -194,9 +209,7 @@ export class AnimationPicker extends BasePicker {
 
   setCategory(category: string | null): void {
     this.activeCategory = category
-    this.filteredPresets = category
-      ? getPresetsByCategory(category)
-      : this.presets
+    this.filteredPresets = category ? getPresetsByCategory(category) : this.presets
     this.refreshList()
     this.updateCategoryButtons()
   }
@@ -307,7 +320,7 @@ export class AnimationPicker extends BasePicker {
       this.keyboardNav = new KeyboardNav({
         orientation: 'vertical',
         wrap: true,
-        onSelect: (item) => {
+        onSelect: item => {
           const name = item.getAttribute('data-animation')
           if (name) {
             this.selectValue(name)

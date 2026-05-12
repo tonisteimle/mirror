@@ -9,7 +9,6 @@ import {
   executor,
   ResizeCommand,
   SetPropertyCommand,
-  MoveNodeWithLayoutCommand,
   createLayoutService,
   setLayoutService,
   type LayoutService,

@@ -881,7 +881,7 @@ export function getAllCompletions(): Completion[] {
  * Sibling helpers (avoid mixing them up):
  *   - studio/zag/index.ts:hasZagChildren — structural inspection of
  *     `ZagChild[]` children for an instance.
- *   - compiler/parser/ast.ts:isZagComponent — TypeScript type-guard on
+ *   - compiler/parser/ast.ts:isZagNode — TypeScript type-guard on
  *     parsed AST nodes (`node is ZagNode`).
  */
 export function isZagComponentName(name: string): boolean {

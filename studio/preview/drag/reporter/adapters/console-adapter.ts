@@ -86,7 +86,7 @@ export class ConsoleAdapter implements ReportAdapter {
   }
 
   private logNormal(frame: DragFrame): void {
-    const { hit, insertion, summary } = frame
+    const { hit, summary } = frame
 
     console.log(`${this.config.prefix} Frame #${frame.frameId}`, {
       cursor: `(${frame.cursor.x.toFixed(0)}, ${frame.cursor.y.toFixed(0)})`,

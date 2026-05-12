@@ -766,7 +766,7 @@ export const ALL_PALETTES: ColorPalette[] = [
  */
 export function generateShades(baseColor: string, count: number = 10): string[] {
   const shades: string[] = []
-  const { h, s, l } = hexToHSL(baseColor)
+  const { h, s } = hexToHSL(baseColor)
 
   for (let i = 0; i < count; i++) {
     const lightness = 95 - (i * 90) / (count - 1)
