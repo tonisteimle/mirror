@@ -737,17 +737,22 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
   componentPrimitives-Map-Aufbau, Render-Pipe (uninstanced-augment
   - ui-execute + rootEl-extract); daneben `updateStudio()`,
     `handleStudioCodeChange()`, plus File-IO und Ext-Wiring.
-    **Status:** aktiv (claude, 2026-05-12) — ongoing decomposition
-    **Plan:** Slice `componentPrimitives-Map-Aufbau` (app.ts:1326-1334,
-    9 LOC) als pure helper nach `studio/compile/component-primitives.ts`
-    extrahieren. Input: `ast.components` + bestehende Map; Output:
-    mutiert Map. Unit-Tests pattern-match aus
-    `tests/studio/compile-prelude-definitions.test.ts`. Call-Site in
-    `compile()` ersetzen, vitest grün, commit.
+    **Status:** offen — ongoing decomposition. Slice 5
+    `componentPrimitives-Map-Aufbau` 2026-05-12 erledigt (in `22b340a1`
+    eingegangen — Commit-Race mit Parallel-Session, Message zeigt
+    layout-service-Refactor, Diff enthält aber zusätzlich
+    `studio/compile/component-primitives.ts` + Unit-Tests + die
+    Call-Site-Ersetzung in `app.ts`). Pin: 7 Tests in
+    `tests/studio/compile-component-primitives.test.ts`. Parser-Default
+    `primitive='Frame'` für Definitions ohne `as`-Klausel ist dort
+    festgenagelt, Fallback `name.toLowerCase()` greift nur für manuell
+    konstruierte ComponentDefinitions mit `primitive: null`.
     **Notiz:** Strategie: pure-helper-Slices mit Unit-Tests, Sub-Slice
     pro Commit, kein Big-Bang. Reduziert Closure-Pressure inkrementell.
     Side-Discovery beim Survey 2026-05-11: dead compile-service-Cluster
     (s. o.) — blockiert nicht, ist eigene Lane.
+    Verbleibend in `compile()`: testMode-/preview-Redirect-Branch,
+    State-Update-Block, Render-Pipe.
 
 - **Wo:** Fünf `mock-adapters.ts` (`studio/editor/triggers/adapters/`,
   `studio/editor/adapters/`, `studio/panels/property/adapters/`,

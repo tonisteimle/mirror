@@ -642,50 +642,6 @@ function executeIntent(
       }
     }
 
-    case 'applyLayout': {
-      // Apply auto-layout to a parent node
-      // Feature 8: Auto-Layout Suggestions
-      const { nodeId, layout, gap, gridColumns } = intent
-
-      let source = modifier.getSource()
-
-      // Remove any existing layout properties first
-      const layoutProps = ['hor', 'ver', 'wrap', 'grid']
-      for (const prop of layoutProps) {
-        const removeResult = modifier.removeProperty(nodeId, prop)
-        if (removeResult.success) {
-          source = removeResult.newSource
-        }
-      }
-
-      // Add the new layout property
-      let layoutValue = ''
-      if (layout === 'grid' && gridColumns) {
-        layoutValue = String(gridColumns)
-      }
-
-      const layoutResult = modifier.updateProperty(nodeId, layout, layoutValue)
-      if (layoutResult.success) {
-        source = layoutResult.newSource
-      } else {
-        return {
-          success: false,
-          newSource: source,
-          error: `Failed to set layout property: ${layout}`,
-        }
-      }
-
-      // Set gap if provided
-      if (gap !== undefined && gap > 0) {
-        const gapResult = modifier.updateProperty(nodeId, 'gap', String(gap))
-        if (gapResult.success) {
-          source = gapResult.newSource
-        }
-      }
-
-      return { success: true, newSource: source }
-    }
-
     default: {
       // Exhaustiveness check — TS errors here if a new ChangeIntent variant
       // is added without a matching case above. The runtime read keeps the

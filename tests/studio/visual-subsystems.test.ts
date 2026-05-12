@@ -2,12 +2,11 @@
 /**
  * Tests for studio/visual/ sub-systems:
  *   - grid-overlay/grid-detector.ts (249 LOC) — pure DOM-reading
- *   - auto-layout/pattern-detector.ts (372 LOC) — pure logic
  *   - position-controls/numeric-input.ts (239 LOC) — DOM widget
  *
- * The other sub-system files (grid-overlay.ts, constraint-panel.ts,
- * inference-indicator.ts, suggestion-tooltip.ts) are big DOM views
- * with heavy dependencies on draw-manager / state — covered separately.
+ * The other sub-system files (grid-overlay.ts, inference-indicator.ts)
+ * are big DOM views with heavy dependencies on draw-manager / state —
+ * covered separately.
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
@@ -19,11 +18,6 @@ import {
   findGridContainersIn,
   readGridGeometry,
 } from '../../studio/visual/grid-overlay/grid-detector'
-import {
-  detectLayoutPattern,
-  getLayoutRectsFromDOM,
-  type LayoutRect,
-} from '../../studio/visual/auto-layout/pattern-detector'
 import { NumericInput } from '../../studio/visual/position-controls/numeric-input'
 
 beforeEach(() => {
@@ -278,207 +272,6 @@ describe('readGridGeometry', () => {
     // style resolution is incomplete. The function's px/null branching is
     // the key behavior — covered by mutation tests on the parser helpers.
     expect(true).toBe(true)
-  })
-})
-
-// =============================================================================
-// pattern-detector
-// =============================================================================
-
-function rect(x: number, y: number, w: number, h: number): LayoutRect {
-  return { x, y, width: w, height: h }
-}
-
-describe('detectLayoutPattern — input gates', () => {
-  it('returns null for fewer than 2 nodes', () => {
-    expect(detectLayoutPattern([], new Map())).toBeNull()
-    expect(detectLayoutPattern(['a'], new Map([['a', rect(0, 0, 10, 10)]]))).toBeNull()
-  })
-
-  it('returns null when fewer than 2 rects found in layoutInfo', () => {
-    expect(detectLayoutPattern(['a', 'b'], new Map([['a', rect(0, 0, 10, 10)]]))).toBeNull()
-  })
-})
-
-describe('detectLayoutPattern — horizontal-stack', () => {
-  it('detects 3 elements in a horizontal row, equal gaps', () => {
-    const info = new Map<string, LayoutRect>([
-      ['a', rect(0, 100, 80, 80)],
-      ['b', rect(100, 100, 80, 80)],
-      ['c', rect(200, 100, 80, 80)],
-    ])
-    const result = detectLayoutPattern(['a', 'b', 'c'], info)
-    expect(result?.pattern).toBe('horizontal-stack')
-    expect(result?.preview).toBe('hor, gap 20')
-    expect(result?.inferredGap).toBe(20)
-    expect(result?.confidence).toBeGreaterThan(0.6)
-  })
-
-  it('returns null when elements overlap horizontally', () => {
-    const info = new Map<string, LayoutRect>([
-      ['a', rect(0, 100, 80, 80)],
-      ['b', rect(50, 100, 80, 80)], // overlaps
-    ])
-    expect(detectLayoutPattern(['a', 'b'], info)).toBeNull()
-  })
-
-  it('touching elements (no gap, no overlap) are valid (catches > vs >= mutation)', () => {
-    // current.x + width = 80 = next.x → strictly equal, NOT overlapping.
-    const info = new Map<string, LayoutRect>([
-      ['a', rect(0, 100, 80, 80)],
-      ['b', rect(80, 100, 80, 80)],
-    ])
-    const result = detectLayoutPattern(['a', 'b'], info)
-    expect(result?.pattern).toBe('horizontal-stack')
-    expect(result?.inferredGap).toBe(0) // touching → 0 gap
-  })
-
-  it('returns null when Y centers misalign beyond tolerance', () => {
-    const info = new Map<string, LayoutRect>([
-      ['a', rect(0, 100, 80, 80)],
-      ['b', rect(100, 200, 80, 80)], // far below
-    ])
-    expect(detectLayoutPattern(['a', 'b'], info)).toBeNull()
-  })
-
-  it('rounds gap to 4px grid', () => {
-    const info = new Map<string, LayoutRect>([
-      ['a', rect(0, 100, 80, 80)],
-      ['b', rect(83, 100, 80, 80)], // gap = 3
-    ])
-    const result = detectLayoutPattern(['a', 'b'], info)
-    expect(result?.inferredGap).toBe(4) // rounded to 4
-  })
-})
-
-describe('detectLayoutPattern — vertical-stack', () => {
-  it('detects 3 elements vertically stacked', () => {
-    const info = new Map<string, LayoutRect>([
-      ['a', rect(100, 0, 80, 80)],
-      ['b', rect(100, 100, 80, 80)],
-      ['c', rect(100, 200, 80, 80)],
-    ])
-    const result = detectLayoutPattern(['a', 'b', 'c'], info)
-    expect(result?.pattern).toBe('vertical-stack')
-    expect(result?.preview).toBe('ver, gap 20')
-  })
-
-  it('returns null when elements overlap vertically', () => {
-    const info = new Map<string, LayoutRect>([
-      ['a', rect(100, 0, 80, 80)],
-      ['b', rect(100, 50, 80, 80)],
-    ])
-    expect(detectLayoutPattern(['a', 'b'], info)).toBeNull()
-  })
-
-  it('returns null when X centers misalign', () => {
-    const info = new Map<string, LayoutRect>([
-      ['a', rect(0, 0, 80, 80)],
-      ['b', rect(200, 100, 80, 80)],
-    ])
-    expect(detectLayoutPattern(['a', 'b'], info)).toBeNull()
-  })
-})
-
-describe('detectLayoutPattern — grid', () => {
-  it('detects 2x2 grid with consistent gaps', () => {
-    const info = new Map<string, LayoutRect>([
-      ['a', rect(0, 0, 80, 80)],
-      ['b', rect(100, 0, 80, 80)],
-      ['c', rect(0, 100, 80, 80)],
-      ['d', rect(100, 100, 80, 80)],
-    ])
-    const result = detectLayoutPattern(['a', 'b', 'c', 'd'], info)
-    expect(result?.pattern).toBe('grid')
-    expect(result?.gridColumns).toBe(2)
-    expect(result?.preview).toBe('grid 2, gap 20')
-  })
-
-  it('grid takes precedence over linear when 4+ nodes in 2D layout', () => {
-    const info = new Map<string, LayoutRect>([
-      ['a', rect(0, 0, 80, 80)],
-      ['b', rect(100, 0, 80, 80)],
-      ['c', rect(0, 100, 80, 80)],
-      ['d', rect(100, 100, 80, 80)],
-    ])
-    const result = detectLayoutPattern(['a', 'b', 'c', 'd'], info)
-    expect(result?.pattern).toBe('grid')
-  })
-
-  it('grid needs at least 4 elements (3 → falls through to linear)', () => {
-    const info = new Map<string, LayoutRect>([
-      ['a', rect(0, 0, 80, 80)],
-      ['b', rect(100, 0, 80, 80)],
-      ['c', rect(200, 0, 80, 80)],
-    ])
-    const result = detectLayoutPattern(['a', 'b', 'c'], info)
-    expect(result?.pattern).toBe('horizontal-stack')
-  })
-
-  it('returns null when fewer than 50% of grid cells are filled', () => {
-    // 4-col, 4-row grid ≅ 16 cells; only 2 filled → 12.5% ≪ 50%.
-    const info = new Map<string, LayoutRect>([
-      ['a', rect(0, 0, 80, 80)],
-      ['b', rect(300, 300, 80, 80)],
-    ])
-    expect(detectLayoutPattern(['a', 'b'], info)).toBeNull()
-  })
-})
-
-describe('detectLayoutPattern — config', () => {
-  it('respects minConfidence threshold', () => {
-    // Slightly misaligned to drop confidence below threshold.
-    const info = new Map<string, LayoutRect>([
-      ['a', rect(0, 100, 80, 80)],
-      ['b', rect(100, 110, 80, 80)], // 5px Y offset
-    ])
-    expect(detectLayoutPattern(['a', 'b'], info, { minConfidence: 0.99 })).toBeNull()
-  })
-
-  it('honors alignmentTolerance config', () => {
-    const info = new Map<string, LayoutRect>([
-      ['a', rect(0, 100, 80, 80)],
-      ['b', rect(100, 105, 80, 80)],
-    ])
-    // With strict tolerance 1, misalignment too big → null.
-    expect(detectLayoutPattern(['a', 'b'], info, { alignmentTolerance: 1 })).toBeNull()
-    // With loose tolerance 100 → detected.
-    expect(detectLayoutPattern(['a', 'b'], info, { alignmentTolerance: 100 })?.pattern).toBe(
-      'horizontal-stack'
-    )
-  })
-})
-
-describe('getLayoutRectsFromDOM', () => {
-  it('returns rects relative to container', () => {
-    const container = document.createElement('div')
-    container.style.position = 'absolute'
-    container.style.left = '100px'
-    container.style.top = '100px'
-    document.body.appendChild(container)
-
-    const a = document.createElement('div')
-    a.dataset.mirrorId = 'a'
-    container.appendChild(a)
-
-    // jsdom doesn't compute layout, so positions will be 0/0. Just verify the
-    // map is populated.
-    const result = getLayoutRectsFromDOM(['a'], container)
-    expect(result.has('a')).toBe(true)
-  })
-
-  it('skips IDs without matching DOM elements', () => {
-    const container = document.createElement('div')
-    document.body.appendChild(container)
-    const result = getLayoutRectsFromDOM(['ghost'], container)
-    expect(result.size).toBe(0)
-  })
-
-  it('defaults to document.body when no container given', () => {
-    const a = document.createElement('div')
-    a.dataset.mirrorId = 'global'
-    document.body.appendChild(a)
-    expect(getLayoutRectsFromDOM(['global']).has('global')).toBe(true)
   })
 })
 
@@ -775,18 +568,6 @@ describe('P3 — mutation-driven', () => {
     expect(cells.has('1,1') && cells.has('2,1') && cells.has('3,1')).toBe(true)
   })
 
-  it('M3: detectLayoutPattern grid needs >=2 unique rows AND cols', () => {
-    // 4 elements in a single row → not a grid.
-    const info = new Map<string, LayoutRect>([
-      ['a', rect(0, 0, 80, 80)],
-      ['b', rect(100, 0, 80, 80)],
-      ['c', rect(200, 0, 80, 80)],
-      ['d', rect(300, 0, 80, 80)],
-    ])
-    const result = detectLayoutPattern(['a', 'b', 'c', 'd'], info)
-    expect(result?.pattern).toBe('horizontal-stack') // not grid
-  })
-
   it('M4: NumericInput Shift modifier multiplies step by 10 (catches drop of *10)', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
@@ -806,14 +587,5 @@ describe('P3 — mutation-driven', () => {
     label.dispatchEvent(new MouseEvent('mousedown', { clientX: 0 }))
     document.dispatchEvent(new MouseEvent('mousemove', { clientX: 4 })) // 4px → 2 steps
     expect(onChange).toHaveBeenCalledWith(2)
-  })
-
-  it('M6: gap rounded to 4px grid (catches /4 → /5 mutation)', () => {
-    const info = new Map<string, LayoutRect>([
-      ['a', rect(0, 100, 80, 80)],
-      ['b', rect(85, 100, 80, 80)], // gap 5 → rounds to 4
-    ])
-    const result = detectLayoutPattern(['a', 'b'], info)
-    expect(result?.inferredGap).toBe(4)
   })
 })

@@ -31,8 +31,8 @@ export interface SetPropertyIntent extends BaseIntent {
 export interface IncrementPropertyIntent extends BaseIntent {
   type: 'incrementProperty'
   property: string
-  direction: 1 | -1  // +1 = increase, -1 = decrease
-  side?: 'top' | 'right' | 'bottom' | 'left'  // For padding/margin
+  direction: 1 | -1 // +1 = increase, -1 = decrease
+  side?: 'top' | 'right' | 'bottom' | 'left' // For padding/margin
 }
 
 /**
@@ -72,7 +72,7 @@ export interface SetAlignmentIntent extends BaseIntent {
 export interface SetSizeIntent extends BaseIntent {
   type: 'setSize'
   size: 'full' | 'hug'
-  axis?: 'width' | 'height'  // Default: width
+  axis?: 'width' | 'height' // Default: width
 }
 
 /**
@@ -111,7 +111,7 @@ export interface MoveNodeIntent {
 export interface GroupNodesIntent {
   type: 'groupNodes'
   nodeIds: string[]
-  wrapperName?: string  // Default: 'Box'
+  wrapperName?: string // Default: 'Box'
 }
 
 /**
@@ -185,20 +185,6 @@ export interface SetConstraintIntent extends BaseIntent {
 }
 
 /**
- * Apply auto-layout to a parent node
- * Feature 8: Auto-Layout Suggestions
- */
-export interface ApplyLayoutIntent extends BaseIntent {
-  type: 'applyLayout'
-  /** Layout direction */
-  layout: 'hor' | 'ver' | 'wrap' | 'grid'
-  /** Gap between children in pixels */
-  gap?: number
-  /** Number of columns for grid layout */
-  gridColumns?: number
-}
-
-/**
  * All possible intents
  */
 export type ChangeIntent =
@@ -220,7 +206,6 @@ export type ChangeIntent =
   | MultiMoveIntent
   | MultiResizeIntent
   | SetConstraintIntent
-  | ApplyLayoutIntent
 
 // ============================================================================
 // RESULT TYPE
