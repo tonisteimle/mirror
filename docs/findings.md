@@ -987,6 +987,17 @@ Chronologisch absteigend (neueste zuerst).
     nirgendwo in Production instanziiert — als neuer offener Befund
     „dead compile-service cluster" dokumentiert.
 
+### 2026-05-12 — Dead-Export-Sweep Slice C: 3 ungenutzte Types
+
+- **Wo:** `studio/editor/triggers/types.ts` (TriggerHandlers interface,
+  PropertyTypeMap type, PropertyTriggerMap type)
+  **Was:** Zweiter Audit-Durchgang (`export interface/type [A-Z]`, statt
+  function/class/const) ergab drei zusätzliche tote Types. TriggerHandlers
+  war 14-LOC-Interface, beide PropertyTypeMap/PropertyTriggerMap je 1-LOC-
+  Aliase ohne Konsumenten. ComponentPrimitivesMap bleibt (aktiv genutzt).
+  506/506 editor tests pass.
+  **Status:** erledigt
+
 ### 2026-05-12 — Dead-Export-Sweep Slice B: studio/ (5 Exports)
 
 - **Wo:** `studio/autocomplete/ports.ts` (CompletionConfig interface),

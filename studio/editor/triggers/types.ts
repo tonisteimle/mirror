@@ -148,33 +148,8 @@ export interface TriggerConfig {
 }
 
 // ============================================
-// Trigger Handler Callbacks
-// ============================================
-
-export interface TriggerHandlers {
-  /** Called when picker should show */
-  onShow: (x: number, y: number, context: TriggerContext, view: EditorView) => void
-  /** Called when picker should hide */
-  onHide: () => void
-  /** Called when picker value should be filtered */
-  onFilter?: (text: string) => void
-  /** Called for keyboard navigation */
-  onNavigate?: (direction: 'up' | 'down' | 'left' | 'right') => void
-  /** Called when current selection should be confirmed */
-  onConfirm?: (view: EditorView) => void
-  /** Called when trigger is cancelled */
-  onCancel?: (view: EditorView) => void
-}
-
-// ============================================
 // Utility Types
 // ============================================
-
-/** Map of property names to allowed token types */
-export type PropertyTypeMap = Record<string, string[]>
-
-/** Map of property names to trigger types */
-export type PropertyTriggerMap = Record<string, 'color' | 'spacing' | 'icon' | 'animation'>
 
 /** Component primitives map (component name -> primitive type) */
 export type ComponentPrimitivesMap = Map<string, string>
