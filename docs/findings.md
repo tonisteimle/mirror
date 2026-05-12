@@ -1042,20 +1042,15 @@ Mirror → React Konverter`) beschreibt zudem die **falsche
     „ist das eine Mirror-Datei") besteht weiter. Ein Caller, der die
     „falsche" `isMirrorFile` importiert, bekommt schweigend eine
     abweichende Antwort — Drift-Falle.
-    **Status:** aktiv (claude, 2026-05-12 06:55)
-    **Plan:** Drei Funktionen umbenennen:
-    - `studio/file-types/extensions.ts:21` → `isMirrorSourceFile`
-    - `studio/storage/types.ts:85` → `isMirrorProjectFile`
-    - `studio/storage/project-actions.ts:784` → `isProjectImportFile`
-
-    Caller-Inventur: app.ts (2), zag/index.ts (interface + 2 calls),
-    storage/providers/{demo,tauri}.ts (Imports + tauri-call), Barrels
-    (file-types/index, storage/index), Tests (file-types.test.ts,
-    tauri-provider-personas.test.ts Comment). `.data`-Sonderbehandlung
-    in project-actions ist intendiert (`studio/app.ts:475` mappt `.data`
-    auf `'data'`-Filetype). demo.ts hat unused-import → mit raus.
-    Anschließend Ambiguitäts-Workaround in `studio/index.ts:92-99`
-    entfernen. Single Code-Commit, dann findings-Update auf `erledigt`.
+    **Status:** erledigt — Production-Renames in `a1e94e53` (Commit-
+    Race mit dead-measurements-deletion; Diff enthält den Rename),
+    Test-Renames in `f4215bf0` (storage-types.test.ts +
+    storage-project-actions.test.ts, 75 storage Tests grün).
+    file-types/extensions.ts → `isMirrorSourceFile`,
+    storage/types.ts → `isMirrorProjectFile`, project-actions.ts
+    (private) → `isProjectImportFile`. studio/index.ts:92-99
+    Ambiguitäts-Workaround ersatzlos raus (kein Symbol-Name-Konflikt
+    mehr). zag/index.ts deps-Parameter mit umbenannt.
 
 - **Wo:** `studio/zag/index.ts:59`,
   `studio/autocomplete/schema-completions.ts:881`,
