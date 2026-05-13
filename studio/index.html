@@ -101,6 +101,15 @@
             </svg>
           </button>
           <div class="editor-action-divider"></div>
+          <select id="linter-target" class="editor-target-select" title="Linter-Target — Properties die das gewählte Backend silent droppt, werden im Editor als Warning markiert (W130). Standard: DOM (alle Properties unterstützt).">
+            <option value="">DOM</option>
+            <option value="react">React</option>
+            <option value="framework">Framework</option>
+            <option value="vue">Vue</option>
+            <option value="svelte">Svelte</option>
+            <option value="vanilla">Vanilla</option>
+          </select>
+          <div class="editor-action-divider"></div>
           <button id="reset-demo-btn" class="editor-action-btn" title="Projekt zurücksetzen – verwirft aktuelle Änderungen">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
