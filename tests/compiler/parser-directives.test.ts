@@ -34,6 +34,22 @@ describe('Parser: Component Directives (@icon / @group / @hidden)', () => {
     })
   })
 
+  it('combines multiple directives on a single comma-separated line', () => {
+    const ast = parse('@icon mouse-pointer, @group Forms\nBtn as button:')
+    expect(ast.components[0].metadata).toEqual({
+      icon: 'mouse-pointer',
+      group: 'Forms',
+    })
+  })
+
+  it('combines comma-form + @hidden flag', () => {
+    const ast = parse('@hidden, @group Internal\nHelper as frame:')
+    expect(ast.components[0].metadata).toEqual({
+      hidden: true,
+      group: 'Internal',
+    })
+  })
+
   it('works with default-primitive component (no `as`)', () => {
     const ast = parse('@icon star\nFav:')
     expect(ast.components[0].name).toBe('Fav')

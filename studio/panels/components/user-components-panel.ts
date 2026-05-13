@@ -67,13 +67,22 @@ interface ParsedComponent {
   hidden?: boolean
 }
 
-const DIRECTIVE_LINE = /^@(icon|group|hidden)(?:\s+([^\s].*))?$/
+/**
+ * Match a single directive token: `@<name> [<value>]`. Value is greedy
+ * up to (but not including) the next `,` or end-of-string, so the inline
+ * comma form `@icon home, @group Forms` splits cleanly into two tokens.
+ */
+const DIRECTIVE_SCAN = /@(icon|group|hidden)(?:\s+([^,\n]+?))?(?=\s*,|\s*$)/g
 
 /**
  * Parse component definitions from .com file content
  * Filters out system components (built-in components from Component Panel).
  * Recognises `@icon` / `@group` / `@hidden` directives on lines preceding
- * a component definition (whitelist must match the parser's directive set).
+ * a component definition. Both forms supported:
+ *   @icon home
+ *   @group Forms
+ *
+ *   @icon home, @group Forms
  */
 function parseComFile(content: string, filename: string): ParsedComponent[] {
   const components: ParsedComponent[] = []
@@ -88,13 +97,16 @@ function parseComFile(content: string, filename: string): ParsedComponent[] {
     // Skip empty lines and comments — pending directives survive.
     if (!trimmed || trimmed.startsWith('//')) continue
 
-    // Directive line — buffer for the next component.
-    const dirMatch = trimmed.match(DIRECTIVE_LINE)
-    if (dirMatch) {
-      const [, name, value] = dirMatch
-      if (name === 'hidden') pending.hidden = true
-      else if (name === 'icon' && value) pending.icon = value.trim()
-      else if (name === 'group' && value) pending.group = value.trim()
+    // Directive line (starts with `@`) — buffer for the next component.
+    if (trimmed.startsWith('@')) {
+      DIRECTIVE_SCAN.lastIndex = 0
+      let m: RegExpExecArray | null
+      while ((m = DIRECTIVE_SCAN.exec(trimmed)) !== null) {
+        const [, name, value] = m
+        if (name === 'hidden') pending.hidden = true
+        else if (name === 'icon' && value) pending.icon = value.trim()
+        else if (name === 'group' && value) pending.group = value.trim()
+      }
       continue
     }
 
