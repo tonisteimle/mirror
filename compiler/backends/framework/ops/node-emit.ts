@@ -28,6 +28,7 @@
 
 import { isLayoutPrimitive } from '../../../schema/dsl'
 import type { IRConditional, IREach, IRNode } from '../../../ir/types'
+import { getSizeStateThresholds } from '../../../schema/parser-helpers'
 import { TAG_TO_TYPE, escapeString } from './helpers'
 import { propsToString } from './props'
 import { eventsToProps, stylesToProps } from './style-event'
@@ -42,6 +43,57 @@ function indentLines(text: string, indent: number): string {
     .split('\n')
     .map(line => pad + line)
     .join('\n')
+}
+
+/**
+ * Build CSS `@container` rules for a node's size-state styles. The
+ * generated CSS targets the synthetic outer-wrapper's direct child
+ * (`[data-mirror-wrapper="<id>"] > *`) — the wrapper itself carries
+ * `container-type: inline-size`, so `@container` queries match against
+ * the wrapper's inline size and the inner element receives the state
+ * styles. Returns one rule per (resolvable) size state.
+ */
+function buildContainerRules(node: IRNode): string[] {
+  const sizeStateStyles = node.styles.filter(s => s.sizeState)
+  if (sizeStateStyles.length === 0) return []
+
+  const bySizeState = new Map<string, typeof sizeStateStyles>()
+  for (const s of sizeStateStyles) {
+    const list = bySizeState.get(s.sizeState!) ?? []
+    list.push(s)
+    bySizeState.set(s.sizeState!, list)
+  }
+
+  const rules: string[] = []
+  for (const [state, styles] of bySizeState) {
+    const thresholds = getSizeStateThresholds(state)
+    if (!thresholds) continue
+    const parts: string[] = []
+    if (thresholds.min !== undefined) parts.push(`(min-width: ${thresholds.min}px)`)
+    if (thresholds.max !== undefined) parts.push(`(max-width: ${thresholds.max}px)`)
+    if (parts.length === 0) continue
+    const css = styles.map(s => `${s.property}: ${s.value} !important;`).join(' ')
+    rules.push(
+      `@container ${parts.join(' and ')} { [data-mirror-wrapper="${node.id}"] > * { ${css} } }`
+    )
+  }
+  return rules
+}
+
+/**
+ * Wrap an inner M() call in a synthetic outer container so CSS
+ * `@container` size-state queries match against the wrapper's
+ * inline-size (per CSS spec — the element declaring `container-type`
+ * is not its own query subject). Mirrors the DOM backend's
+ * `emitContainerWrapper` pattern.
+ */
+function wrapWithContainer(innerM: string, node: IRNode, indent: number): string {
+  const rules = buildContainerRules(node)
+  if (rules.length === 0) return innerM
+  const pad = currentIndent(indent)
+  const styleStr = JSON.stringify(rules.join('\n'))
+  const propsStr = `{ 'data-mirror-wrapper': '${node.id}', style: 'container-type: inline-size', _cssRules: ${styleStr} }`
+  return `M('Box', ${propsStr}, [\n${indentLines(innerM, indent)}\n${pad}])`
 }
 
 /**
@@ -78,31 +130,38 @@ export function nodeToM(node: IRNode, indent: number): string {
   const pad = currentIndent(indent)
 
   // Build M() call
+  let result: string
   if (content && propsStr && hasChildren) {
     // M('Text', 'content', { props }, [children])
-    return `M(${parts[0]}, '${escapeString(content)}', ${propsStr}, [\n${indentLines(children.join(',\n'), indent)}\n${pad}])`
+    result = `M(${parts[0]}, '${escapeString(content)}', ${propsStr}, [\n${indentLines(children.join(',\n'), indent)}\n${pad}])`
   } else if (content && propsStr) {
     // M('Text', 'content', { props })
-    return `M(${parts[0]}, '${escapeString(content)}', ${propsStr})`
+    result = `M(${parts[0]}, '${escapeString(content)}', ${propsStr})`
   } else if (content && hasChildren) {
     // M('Text', 'content', [children])
-    return `M(${parts[0]}, '${escapeString(content)}', [\n${indentLines(children.join(',\n'), indent)}\n${pad}])`
+    result = `M(${parts[0]}, '${escapeString(content)}', [\n${indentLines(children.join(',\n'), indent)}\n${pad}])`
   } else if (content) {
     // M('Text', 'content')
-    return `M(${parts[0]}, '${escapeString(content)}')`
+    result = `M(${parts[0]}, '${escapeString(content)}')`
   } else if (propsStr && hasChildren) {
     // M('Box', { props }, [children])
-    return `M(${parts[0]}, ${propsStr}, [\n${indentLines(children.join(',\n'), indent)}\n${pad}])`
+    result = `M(${parts[0]}, ${propsStr}, [\n${indentLines(children.join(',\n'), indent)}\n${pad}])`
   } else if (propsStr) {
     // M('Box', { props })
-    return `M(${parts[0]}, ${propsStr})`
+    result = `M(${parts[0]}, ${propsStr})`
   } else if (hasChildren) {
     // M('Box', [children])
-    return `M(${parts[0]}, [\n${indentLines(children.join(',\n'), indent)}\n${pad}])`
+    result = `M(${parts[0]}, [\n${indentLines(children.join(',\n'), indent)}\n${pad}])`
   } else {
     // M('Box')
-    return `M(${parts[0]})`
+    result = `M(${parts[0]})`
   }
+
+  // Synthetic outer-wrapper for size-state containers
+  // (docs/refactoring/container-queries.md Lane A). Per CSS spec
+  // `@container` matches the container-ancestor, not self — so a frame
+  // that wants to respond to its own width needs a wrapper above it.
+  return wrapWithContainer(result, node, indent)
 }
 
 export function eachToM(each: IREach, indent: number): string {

@@ -25,8 +25,11 @@ import type { IRAction, IREvent, IRStyle } from '../../../ir/types'
 import { cssPropToMirrorProp } from './css-to-mirror'
 
 export function stylesToProps(styles: IRStyle[], props: Record<string, unknown>): void {
-  // Group styles by state
-  const baseStyles = styles.filter(s => !s.state)
+  // Group styles by state.
+  // Size-state styles (`compact:`, `regular:`, `wide:`) are excluded from
+  // baseStyles — they belong on the synthetic container-wrapper's CSS
+  // `@container` rules emitted by nodeToM, not on the inline element style.
+  const baseStyles = styles.filter(s => !s.state && !s.sizeState)
   const stateStyles = styles.filter(s => s.state)
 
   // Check for flex: 1 1 0% pattern (used for w full / h full)

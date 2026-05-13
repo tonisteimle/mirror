@@ -215,7 +215,7 @@ describe('Size-states — Container-Queries Lane A contract', () => {
     expect(react).toContain('#10b981')
   })
 
-  it.skip('Framework: emits container-wrapper m()-call + @container CSS rules', () => {
+  it('Framework: emits container-wrapper m()-call + @container CSS rules', () => {
     const fw = generateFramework(parse(SIZE_STATE_SRC))
     expect(fw).toMatch(/data-mirror-wrapper/)
     expect(fw).toMatch(/@container .*\(max-width:/)
