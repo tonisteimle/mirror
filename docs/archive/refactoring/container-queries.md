@@ -1,11 +1,18 @@
 # Container-Queries auf eigenem Element — Lane Doc
 
-**Status:** offen. Verlinkt aus `docs/findings.md`.
+**Status:** abgeschlossen 2026-05-13.
 
-**Stand 2026-05-11:** Architektur-Entscheid steht aus. Diese Doc
-analysiert das Problem, zeigt zwei Fix-Pfade mit Trade-offs und
-empfiehlt einen — der eigentliche Code-Refactor folgt in einem
-separaten Inkrement nach Owner-Sign-off.
+**Stand 2026-05-13:** Lane A vollständig wired in allen 3 Backends
+(DOM, React, Framework) plus Position-Forwarding. Alle 6 Differential-
+Pins grün. Commits: `9ebafdf2` (DOM), `d5937788` (React), `b93f4ff3`
+(Framework), `eb062940` (un-skip), `f81b590d` (Position-Forwarding).
+Findings-Eintrag in `docs/findings.md` 2026-05-13.
+
+Diese Doc dokumentiert die ursprüngliche Architektur-Analyse und die
+Empfehlung Pfad A. Sie bleibt als Reference erhalten — die Trade-offs
+und das Inkrement-Mapping können für künftige Container-Query-
+Erweiterungen (z.B. `@container style()` für non-size queries) als
+Grundlage dienen.
 
 ## Ausgangslage
 

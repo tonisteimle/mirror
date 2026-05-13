@@ -374,21 +374,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                                                                            **Status-Update:** erledigt — alle drei Slices landen:
-                                                                                            Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                                                                            inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                                                                            Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                                                                            (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                                                                            `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                                                                            (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                                                                            — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                                                                            hat per `git add .` die uncommittete compiler-Side mit
-                                                                                            aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                                                                            `hasZagChildren` (children-Shape), `isZagComponentName`
-                                                                                            (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                                                                            IRZagNode-Discriminator-Property `isZagComponent: true`
-                                                                                            bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                                                                            81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                                                                                **Status-Update:** erledigt — alle drei Slices landen:
+                                                                                                Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                                                                                inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                                                                                Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                                                                                (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                                                                                `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                                                                                (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                                                                                — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                                                                                hat per `git add .` die uncommittete compiler-Side mit
+                                                                                                aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                                                                                `hasZagChildren` (children-Shape), `isZagComponentName`
+                                                                                                (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                                                                                IRZagNode-Discriminator-Property `isZagComponent: true`
+                                                                                                bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                                                                                81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
@@ -405,7 +405,7 @@ Chronologisch absteigend (neueste zuerst).
 
 ### Migrated from Offen on 2026-05-13 (Hebel 5 — Audit-Follow-up)
 
-Per `docs/audit/2026-05-13-comprehensive.md` Hebel 5: the Offen section
+Per `docs/archive/audit/2026-05-13-comprehensive.md` Hebel 5: the Offen section
 had accumulated entries carrying `Status: erledigt` / `abgewiesen` that
 were never moved here. Audit estimated ~150; real count was 41 (audit
 over by 3.5×). They are consolidated here so future Hunt-Rollups can
@@ -602,8 +602,8 @@ token-trigger.ts:85` zur AST-Variante. Einziger direkter
   Damit greift die Diagnose in beiden Pfaden — Studio (Validator E002)
   und CLI (IR-Warnings). Neuer `IRWarningType` `undefined-component`
   in `compiler/ir/types.ts`. 7349/7349 compiler tests pass.
-  **Notiz:** Audit in
-  `docs/refactoring/21-komponenten.md` Section 3 (V-1).
+  **Notiz:** Audit-Dokument war `docs/refactoring/21-komponenten.md`
+  (Slice-21-Methodik, archiviert) — heute git history.
 
 #### Studio Sync/State (Hunt 2026-05-10)
 
@@ -1097,7 +1097,7 @@ svelte-spike/`-Spikes und Memory `project_llm_pipeline.md`).
 
 - **Wo:** `compiler/validator/{validator,index,types}.ts`,
   `tests/compiler/validator-backend-warning.test.ts`
-  **Was:** Hebel 3 aus `docs/audit/2026-05-13-comprehensive.md` legte
+  **Was:** Hebel 3 aus `docs/archive/audit/2026-05-13-comprehensive.md` legte
   in `5a42143d` die Foundation (`PropertyDef.backends?: BackendTarget[]`
   - DOM-only-Annotationen für `mask` / `keyboard-nav` / `loop-focus` /
     `typeahead` / `trigger-text`). Was fehlte: der Validator las das
@@ -1148,7 +1148,7 @@ svelte-spike/`-Spikes und Memory `project_llm_pipeline.md`).
 
 - **Wo:** DOM, React, Framework Backends + Differential-Pin + Browser-
   Suites + Findings-Doc.
-  **Was:** Slices 1-5 nach `docs/refactoring/container-queries.md`
+  **Was:** Slices 1-5 nach `docs/archive/refactoring/container-queries.md`
   Lane A („synthetic outer-wrapper carries container-type") komplett
   abgeschlossen.
   - **Slice 1 (Pre-Refactor-Pin):** Differential-Pin
@@ -1498,7 +1498,7 @@ layout-ops.ts` ist lebende Funktion (gleicher Name, andere
 ### 2026-05-10 — Framework-Backend-Decomp Lane abgeschlossen (1057 → 165 LOC, 84 % Reduktion)
 
 - **Wo:** `compiler/backends/framework.ts` → 5 Module unter `compiler/backends/framework/ops/`
-  **Was:** 5-Slice-Decomp per `docs/refactoring/framework-backend-decomp.md`
+  **Was:** 5-Slice-Decomp per `docs/archive/refactoring/framework-backend-decomp.md`
   fertig. framework.ts ist jetzt ein dünner Side-Effect-Orchestrator —
   die Klasse `FrameworkGenerator` behält die mutables (`indent`/`lines`)
   und die `emit*`-Methoden für Header/Tokens/CustomIcons/Components/UI/
@@ -1536,7 +1536,7 @@ index.ts:437` als JS-String — die wird in das Bundle eingebettet.
 ### 2026-05-10 — React-Backend-Decomp Lane abgeschlossen (3273 → 343 LOC, 89% Reduktion)
 
 - **Wo:** `compiler/backends/react.ts` → 8 Module unter `compiler/backends/react/ops/`
-  **Was:** 8-Slice-Decomp per `docs/refactoring/react-backend-decomp.md`
+  **Was:** 8-Slice-Decomp per `docs/archive/refactoring/react-backend-decomp.md`
   fertig. react.ts ist jetzt ein dünner Orchestrator (Type-Definitionen,
   Token-Emit, Component-Map-Aufbau, Pre-Scan-Flags für hasIcon/hasChart/
   hasAnimation, Root-Item-Loop). Acht Module unter react/ops/

@@ -68,7 +68,7 @@ const jsCode = compile(`
 | **[docs/MIRROR-TUTORIAL-FULL.md](./docs/MIRROR-TUTORIAL-FULL.md)**   | Vollständige DSL-Referenz mit Beispielen (auto-generiert via `npm run generate:claude`)                            |
 | [docs/generated/dsl-reference.md](./docs/generated/dsl-reference.md) | Compact Schema-Reference (Primitives, Properties, Events, Actions, States) (auto-generiert via `npm run generate`) |
 | [docs/TEST-FRAMEWORK.md](./docs/TEST-FRAMEWORK.md)                   | Test-Framework (CDP-basiert, kein Playwright)                                                                      |
-| [docs/audit/](./docs/audit/)                                         | Datierte umfassende Repo-Audits                                                                                    |
+| [docs/findings.md](./docs/findings.md)                               | Hunt-Tracker: Architektur-Defizite, Status, Erledigt-History (append-only)                                         |
 | [CLAUDE.md](./CLAUDE.md)                                             | Kompakte Kurzreferenz (für AI-Tools optimiert)                                                                     |
 | [CONTRIBUTING.md](./CONTRIBUTING.md)                                 | Beitragen, Code-Style, Testing                                                                                     |
 | [CHANGELOG.md](./CHANGELOG.md)                                       | Versions-Historie                                                                                                  |
