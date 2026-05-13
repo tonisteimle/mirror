@@ -109,6 +109,36 @@ export interface TrustedInteractionAPI {
   /** Focus an element by clicking on it (CDP click runs the full focus pipeline). */
   focus(target: ViewportPoint | string): Promise<void>
 
+  /**
+   * Move the cursor to a target (point or node center) without any
+   * mouse-button transition. Triggers real `mouseenter` / `mouseover`
+   * via CDP so hover-revealed UI (resize handles, padding/margin
+   * zones, drop-zone highlights, tooltips) actually appears.
+   *
+   * Use before `dragHandle()` / `click()` against a hover-conditional
+   * element — synthetic `data-hover="true"` overrides don't trigger
+   * the same visibility pipeline.
+   */
+  hover(target: ViewportPoint | string): Promise<void>
+
+  /**
+   * Drag a single handle (resize/padding/margin/gap) by a pixel delta
+   * from an anchor point on a node. Emits mousedown → N interpolated
+   * mousemoves → mouseup so the handle's drag-pipeline (with snap,
+   * indicator, raf-throttle) sees real DragEvents.
+   *
+   * `from` is typically the handle element's center; resolve via
+   * `coordsOfElement()` after locating the handle by selector
+   * (`data-handle-side="top"` etc.). Modifiers map to CDP modifier
+   * bitmask (Shift = 8 = "all sides", Alt = 1 = "axis", etc.).
+   */
+  dragHandle(
+    from: ViewportPoint,
+    deltaX: number,
+    deltaY: number,
+    opts?: { steps?: number; modifiers?: CdpModifiers }
+  ): Promise<void>
+
   keyDown(key: string, opts?: { modifiers?: CdpModifiers; code?: string }): Promise<void>
   keyUp(key: string, opts?: { modifiers?: CdpModifiers; code?: string }): Promise<void>
   /** keyDown + keyUp (single keystroke). */
@@ -187,6 +217,27 @@ export const trustedInteractions: TrustedInteractionAPI = {
   async focus(target) {
     ensureBridge()
     await cdpInput.focus(resolvePoint(target))
+  },
+  async hover(target) {
+    ensureBridge()
+    await cdpInput.mouseMove(resolvePoint(target))
+  },
+  async dragHandle(from, deltaX, deltaY, opts) {
+    ensureBridge()
+    const steps = Math.max(1, opts?.steps ?? 8)
+    const modifiers = opts?.modifiers
+    // Hover at the handle before mousedown so hover-revealed feedback
+    // (cursor shape, indicator) reflects the drag-start state.
+    await cdpInput.mouseMove(from)
+    await cdpInput.mouseDown({ ...from, modifiers })
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps
+      await cdpInput.mouseMove({
+        x: from.x + deltaX * t,
+        y: from.y + deltaY * t,
+      })
+    }
+    await cdpInput.mouseUp({ x: from.x + deltaX, y: from.y + deltaY, modifiers })
   },
   async keyDown(key, opts) {
     ensureBridge()

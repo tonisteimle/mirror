@@ -1,8 +1,38 @@
 /**
- * Mirror Test Framework - Interactions
+ * Mirror Test Framework - Interactions (SYNTHETIC events).
  *
- * Simulates user interactions like clicks, hovers,
- * keyboard input, and drag operations.
+ * Simulates user interactions via `dispatchEvent(new MouseEvent(...))`.
+ * The dispatched events carry `isTrusted=false` and bypass:
+ *   - Native focus management
+ *   - HTML5 dragstart's real `dataTransfer` (`effectAllowed`/`setData`)
+ *   - IME composition + input-method paths
+ *   - Native keymaps (some shortcuts only run on trusted events)
+ *
+ * Production behavior diverges quietly from what tests verify. Prefer
+ * `api.trusted.*` (see `studio/test-api/trusted-interactions.ts`) for
+ * any new test. The forcing function `tests/policy/no-synthetic-
+ * mouse-events.test.ts` keeps the synthetic surface from growing.
+ *
+ * Migration map (single-action methods that have a 1:1 Trusted
+ * replacement — switch as you touch each test):
+ *
+ *   api.interact.click(id)        → api.trusted.click(id)
+ *   api.interact.doubleClick(id)  → api.trusted.doubleClick(id)
+ *   api.interact.hover(id)        → api.trusted.hover(id)
+ *   api.interact.focus(id)        → api.trusted.focus(id)
+ *   api.interact.pressKey(k)      → api.trusted.press(k)
+ *   api.interact.typeText(s)      → api.trusted.type(s)
+ *
+ * High-level helpers (dragFromPalette, dragResizeHandle, dragPadding/
+ * MarginHandle, dragToPosition, dragToAlignmentZone, moveElementToCell)
+ * compose multiple atomic events; their Trusted equivalent today is
+ * a hand-rolled sequence using `api.trusted.dragHandle(...)` and
+ * `api.trusted.drag(...)`. Compose at the call-site or add a new
+ * helper to `trustedInteractions` if it's reused often.
+ *
+ * @deprecated Use `api.trusted.*` for new tests. ~225 existing tests
+ * depend on the synthetic semantics; migration is the Phase-2 lane
+ * of the 2026-05-13 test-coverage audit follow-up.
  */
 
 import type { InteractionAPI, KeyModifiers } from './types'
