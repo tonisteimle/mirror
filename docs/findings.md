@@ -130,17 +130,19 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 >    (a/b/f erledigt 2026-05-13.)
 > 5. **Direct-Manipulation Test-Migration** (2026-05-13 Audit) —
 >    Phase-1 (forcing function + gap-math) ✅ `7714e42d`. Phase-2
->    Setup (Trusted-API + migration-guide) ✅ `da257a5c`. Phase-3
->    Wave-3 Slice-1 ✅ `2cc22454`, Slices 2–3 (un-nest + deep-3-level)
->    ✅ `73c9c1a2`. Phase-2 pilot (4 single-occurrence files) ✅
->    `7627fade`. Phase-2 spacing-handlers (margin/padding/gap/states,
->    27 synthetic events removed) ✅ in `28a5fb2d` (Race-Commit mit
->    Tauri-Icon; Diff zeigt die Test-Migrationen). Allowlist 10 → 2
->    (snapping 45×, overlays-deep OWNER-EXKLUSIV).
->    Verbleibend: snapping migrieren (multi-Session, sehr groß), Wave
->    3 Slices 4–6 + Wave 4–13 (Phase-3), optional Phase-4 (cursor-
->    shape via nut-js-Extension). Plan:
->    `docs/refactoring/synthetic-events-migration.md`.
+>    Setup (Trusted-API + migration-guide) ✅ `da257a5c`. Phase-2
+>    Pilot (4 single-occurrence files) ✅ `7627fade`. Phase-2
+>    spacing-handlers (margin/padding/gap/states) ✅ `28a5fb2d`.
+>    Phase-2 snapping (45 synthetic events removed) ✅ `18cb151e`.
+>    **Phase-2 effektiv komplett**: Allowlist 10 → 1 (nur
+>    overlays-deep, OWNER-EXKLUSIV). Phase-3 Wave-3 plan-komplett:
+>    Slice-1 nest-into-sibling ✅ `2cc22454`, Slices 2–3
+>    (un-nest + deep-3-level) ✅ `73c9c1a2`, Slice-4 text-into-
+>    nested-frame ✅ `faea047a`, Slice-5 two-levels-deep ✅
+>    `64a6a48b`. Verbleibend: Wave 4–13 (Phase-3, padding/margin/
+>    gap/resize über preview-cdp), optional Phase-4 (cursor-shape
+>    via nut-js-Extension). Plan: `docs/refactoring/synthetic-events-
+migration.md` + `docs/test-plan-preview-cdp.md`.
 >
 > Alle anderen Einträge unter „Offen" tragen bereits Status:
 > **erledigt** oder **abgewiesen** und gehören eigentlich nach
@@ -387,21 +389,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                                                                                                    **Status-Update:** erledigt — alle drei Slices landen:
-                                                                                                                    Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                                                                                                    inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                                                                                                    Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                                                                                                    (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                                                                                                    `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                                                                                                    (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                                                                                                    — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                                                                                                    hat per `git add .` die uncommittete compiler-Side mit
-                                                                                                                    aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                                                                                                    `hasZagChildren` (children-Shape), `isZagComponentName`
-                                                                                                                    (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                                                                                                    IRZagNode-Discriminator-Property `isZagComponent: true`
-                                                                                                                    bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                                                                                                    81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                                                                                                        **Status-Update:** erledigt — alle drei Slices landen:
+                                                                                                                        Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                                                                                                        inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                                                                                                        Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                                                                                                        (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                                                                                                        `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                                                                                                        (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                                                                                                        — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                                                                                                        hat per `git add .` die uncommittete compiler-Side mit
+                                                                                                                        aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                                                                                                        `hasZagChildren` (children-Shape), `isZagComponentName`
+                                                                                                                        (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                                                                                                        IRZagNode-Discriminator-Property `isZagComponent: true`
+                                                                                                                        bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                                                                                                        81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
