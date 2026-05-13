@@ -15,6 +15,7 @@
 import { projectActions } from '../storage'
 import { actions as studioActions, state, type PanelVisibility } from '../core/state'
 import { createLogger } from '../../compiler'
+import { openExportDialog } from '../preview/export-button'
 
 const log = createLogger('Menubar')
 
@@ -40,6 +41,8 @@ interface MenuItem {
   separator?: false
   /** For View items only — the panel-visibility key to toggle. */
   panel?: PanelKey
+  /** Renders the item grayed out and ignores clicks (placeholders). */
+  disabled?: boolean
 }
 
 interface MenuSeparator {
@@ -75,6 +78,15 @@ const MENU: MenuSection[] = [
       { id: 'toggle_components', label: 'Components', panel: 'components' },
       { id: 'toggle_preview', label: 'Preview', panel: 'preview' },
       { id: 'toggle_property', label: 'Properties', panel: 'property' },
+    ],
+  },
+  {
+    title: 'Tools',
+    items: [
+      { id: 'tutorial', label: 'Tutorial (demnächst)', disabled: true },
+      { id: 'codegen', label: 'Code generieren…' },
+      { separator: true },
+      { id: 'settings', label: 'Einstellungen…', shortcut: `${SHORTCUT_MOD},` },
     ],
   },
 ]
@@ -144,6 +156,10 @@ function openMenu(section: MenuSection, trigger: HTMLButtonElement): void {
     btn.type = 'button'
     btn.dataset.id = item.id
     btn.setAttribute('role', 'menuitem')
+    if (item.disabled) {
+      btn.disabled = true
+      btn.setAttribute('aria-disabled', 'true')
+    }
 
     const check = document.createElement('span')
     check.className = 'app-menubar-check'
@@ -220,6 +236,7 @@ function closeMenu(): void {
 // =============================================================================
 
 async function handleAction(item: MenuItem): Promise<void> {
+  if (item.disabled) return
   if (item.panel) {
     studioActions.togglePanelVisibility(item.panel)
     return
@@ -228,16 +245,7 @@ async function handleAction(item: MenuItem): Promise<void> {
   switch (item.id) {
     case 'new': {
       try {
-        const choice = await MirrorDialog.choose<'empty' | 'demo'>(
-          'Alle aktuellen Änderungen gehen verloren.',
-          [
-            { label: 'Leeres Projekt', value: 'empty' },
-            { label: 'Demo-Projekt', value: 'demo', primary: true },
-          ],
-          { title: 'Neues Projekt erstellen' }
-        )
-        if (choice === null) return
-        await projectActions.new(choice)
+        await projectActions.new('empty')
       } catch (err) {
         log.error('new project failed:', err)
       }
@@ -269,6 +277,22 @@ async function handleAction(item: MenuItem): Promise<void> {
         log.error('export failed:', err)
       }
       break
+    case 'codegen':
+      try {
+        openExportDialog()
+      } catch (err) {
+        log.error('codegen open failed:', err)
+      }
+      break
+    case 'settings': {
+      // `window.studio` is the global studio shell registered in app.ts.
+      // It owns the settings panel — call toggle directly.
+      const studioShell = (
+        window as unknown as { studio?: { settingsPanel?: { toggle: () => void } } }
+      ).studio
+      studioShell?.settingsPanel?.toggle()
+      break
+    }
     default:
       log.warn('Unhandled menu action:', item.id)
   }

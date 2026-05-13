@@ -71,7 +71,7 @@ export function initExportButton(): void {
   btn.addEventListener('click', openExportDialog)
 }
 
-function openExportDialog(): void {
+export function openExportDialog(): void {
   const overlay = buildOverlay()
   document.body.appendChild(overlay)
   setTimeout(() => overlay.querySelector<HTMLElement>('select')?.focus(), 0)

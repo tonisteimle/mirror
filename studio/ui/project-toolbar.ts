@@ -2,10 +2,13 @@
  * Project Toolbar
  *
  * Toolbar im File Explorer Header mit Projekt-Aktionen:
- * - New: Neues leeres Projekt
  * - Demo: Demo-Projekt laden
  * - Load: Projekt-Ordner importieren
  * - Save: Projekt exportieren (ZIP)
+ *
+ * "Neues Projekt" liegt im Menü (Datei → Neues Projekt) statt in der
+ * Toolbar — die Demo/Load/Save-Aktionen werden durch das Menü gedoppelt,
+ * Toolbar bleibt der schnelle Zugriff.
  */
 
 import { projectActions } from '../storage'
@@ -28,13 +31,6 @@ declare const MirrorDialog: {
 // =============================================================================
 
 const ICONS = {
-  new: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-    <path d="M14 2v6h6"/>
-    <line x1="12" y1="18" x2="12" y2="12"/>
-    <line x1="9" y1="15" x2="15" y2="15"/>
-  </svg>`,
-
   demo: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <polygon points="5 3 19 12 5 21 5 3"/>
   </svg>`,
@@ -83,7 +79,6 @@ export class ProjectToolbar {
     this.container.appendChild(spacer)
 
     // Buttons
-    this.addButton('new', 'Neues Projekt', ICONS.new, this.handleNew)
     this.addButton('demo', 'Demo-Projekt', ICONS.demo, this.handleDemo)
     this.addButton('load', 'Projekt laden', ICONS.load, this.handleLoad)
     this.addButton('save', 'Projekt speichern', ICONS.save, this.handleSave)
@@ -102,27 +97,6 @@ export class ProjectToolbar {
   // ===========================================================================
   // Handlers
   // ===========================================================================
-
-  private async handleNew(): Promise<void> {
-    try {
-      const projectType = await MirrorDialog.choose<'empty' | 'demo'>(
-        'Alle aktuellen Änderungen gehen verloren.',
-        [
-          { label: 'Leeres Projekt', value: 'empty' },
-          { label: 'Demo-Projekt', value: 'demo', primary: true },
-        ],
-        { title: 'Neues Projekt erstellen' }
-      )
-
-      if (projectType === null) {
-        return
-      }
-
-      await projectActions.new(projectType)
-    } catch (error) {
-      log.error('Failed to create new project:', error)
-    }
-  }
 
   private async handleDemo(): Promise<void> {
     try {
