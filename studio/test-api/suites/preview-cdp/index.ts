@@ -24,6 +24,8 @@ import { moveIntoDifferentContainerTests } from './02-move/move-into-different-c
 import { reorderSiblingsTests } from './02-move/reorder-siblings.test'
 
 import { nestIntoSiblingChildTests } from './03-nesting/nest-into-sibling-child.test'
+import { unnestOutOfContainerTests } from './03-nesting/unnest-out-of-container.test'
+import { deepNest3LevelsTests } from './03-nesting/deep-nest-3-levels.test'
 
 // Wave 1 — Smoke (verifies the helper layer is reachable).
 export const previewCdpSmokeTests: TestCase[] = [...smokeTests]
@@ -45,7 +47,11 @@ export const previewCdpMoveTests: TestCase[] = [
 ]
 
 // Wave 3 — drag-based nesting (reparent via Trusted dragstart/drop).
-export const previewCdpNestingTests: TestCase[] = [...nestIntoSiblingChildTests]
+export const previewCdpNestingTests: TestCase[] = [
+  ...nestIntoSiblingChildTests,
+  ...unnestOutOfContainerTests,
+  ...deepNest3LevelsTests,
+]
 
 // Aggregate — every wave above flows into this list.
 export const previewCdpAllTests: TestCase[] = [

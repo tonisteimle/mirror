@@ -70,6 +70,37 @@ Frame w 200, h 200, bg #27272a, pad 16`,
   twoSiblingsWithInnerTarget: `Frame w 320, h 200, bg #1a1a1a, pad 16, gap 12
   Frame w 120, h 80, bg #27272a
   Frame w 60, h 60, bg #f59e0b`,
+
+  /**
+   * Outer container with an inner container, inner contains the
+   * orange. Outer also has an empty drop area (its own padding) so
+   * the un-nest target is the outer itself. Tests dragging the
+   * orange OUT of the inner up to the outer.
+   *
+   *   outerDark (#1a1a1a)
+   *     innerLight (#27272a)
+   *       orange (#f59e0b)  ← drag source; will become child of
+   *                            outer at the outer's level
+   */
+  orangeInsideInnerContainer: `Frame w 320, h 240, bg #1a1a1a, pad 16, gap 12
+  Frame w 200, h 160, bg #27272a, pad 12
+    Frame w 60, h 60, bg #f59e0b`,
+
+  /**
+   * Three-level deep starting position with three potential drop
+   * targets at different depths. Drag the orange INTO the deepest
+   * empty container to verify multi-level reparenting works.
+   *
+   *   outerDark (#1a1a1a)
+   *     midLight (#27272a)
+   *       deepGray (#3f3f46)  ← drop target (deepest, empty)
+   *     orange (#f59e0b)  ← drag source (sibling of midLight, will
+   *                          end up nested 2 levels deeper)
+   */
+  threeLevelWithDeepEmptyTarget: `Frame w 360, h 280, bg #1a1a1a, pad 16, gap 12
+  Frame w 240, h 200, bg #27272a, pad 12
+    Frame w 180, h 140, bg #3f3f46
+  Frame w 60, h 60, bg #f59e0b`,
 } as const
 
 export type FixtureName = keyof typeof FIXTURES
