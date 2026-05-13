@@ -61,6 +61,7 @@ import { buildComponentPrimitives } from './compile/component-primitives'
 import { resolvePreviewRedirect } from './compile/preview-redirect'
 import { resolveCompileSource } from './compile/resolve-compile-source'
 import { computeCompileStateUpdate } from './compile/compile-state-update'
+import { extractRootElement } from './compile/extract-root-element'
 
 // New architecture imports
 import {
@@ -1333,24 +1334,20 @@ function compile(code: string) {
       // Layout or other: render UI. Auto-preview any locally-defined
       // components the user hasn't instanced yet, so editing a definition
       // shows a live render without typing the instance line manually.
-      let codeToCompile = resolvedCode
-      let finalJsCode = jsCode
-
-      const localAst = MirrorLang.parse(compileCode)
-      const uninstancedComponents = findUninstancedComponents(ast, localAst)
-
-      if (uninstancedComponents.length > 0) {
-        codeToCompile = appendImplicitInstances(resolvedCode, uninstancedComponents)
-
-        // Re-parse + re-generate IR/JS so slot node IDs match between
-        // the preview render and the sourceMap.
-        const augmentedAst = MirrorLang.parse(codeToCompile)
-        finalJsCode = MirrorLang.generateDOM(augmentedAst)
-        const augmentedIrResult = MirrorLang.toIR(augmentedAst, true)
-        irResult.ir = augmentedIrResult.ir
-        irResult.sourceMap = augmentedIrResult.sourceMap
-        sourceMap = augmentedIrResult.sourceMap
-      }
+      const aug = augmentForPreview({
+        fullAst: ast,
+        localAst: MirrorLang.parse(compileCode),
+        resolvedCode,
+        jsCode,
+        irResult,
+        parse: code => MirrorLang.parse(code),
+        generateDOM: a => MirrorLang.generateDOM(a),
+        toIR: (a, sm) => MirrorLang.toIR(a, sm),
+      })
+      const finalJsCode = aug.finalJsCode
+      irResult.ir = aug.ir
+      irResult.sourceMap = aug.sourceMap
+      sourceMap = aug.sourceMap
 
       // Inject YAML data into __mirrorData before UI creation
       const yamlInjection = generateYAMLDataInjection({
@@ -1365,13 +1362,7 @@ function compile(code: string) {
       updateStudio(ast, irResult.ir, sourceMap, resolvedCode)
       timings.updateStudioEnd = performance.now()
 
-      // DOM backend returns element directly, not { root: element }
-      const rootEl: Element | null = (() => {
-        if (!ui) return null
-        if (ui instanceof Element) return ui
-        const root = (ui as { root?: unknown }).root
-        return root instanceof Element ? root : null
-      })()
+      const rootEl = extractRootElement(ui)
       if (rootEl) {
         preview.appendChild(rootEl)
         timings.domAppendEnd = performance.now()
@@ -1743,8 +1734,7 @@ if (typeof window !== 'undefined') {
           ui = fn()
         }
 
-        // DOM backend may return element directly, not { root: element }
-        const rootEl = ui?.root || (ui instanceof Element ? ui : null)
+        const rootEl = extractRootElement(ui)
         if (rootEl) {
           previewContainer.appendChild(rootEl)
         }
