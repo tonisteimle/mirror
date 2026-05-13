@@ -152,63 +152,63 @@ remindHour: 7
 showAddDialog: false
 newRoutineName: ""`,
 
-  'tokens.mir': `// Warm Dark Palette — dunkel, aber wärmer als pure Tech-Blue.
+  'tokens.mir': `// iOS Light Palette — Apple's stock-app look (Reminders, Health, Fitness).
 
-// Backgrounds (warm tones)
-surface.bg: #1a1410
-card.bg: #2a201a
-elev.bg: #322820
-nav.bg: #1a1410
-glow.bg: #f59e0b22
+// Backgrounds
+surface.bg: #F2F2F7        // systemGroupedBackground
+card.bg: #FFFFFF           // secondarySystemGroupedBackground
+elev.bg: #FFFFFF           // sheets / dialogs
+nav.bg: #F9F9F9            // tabBar (mit subtilem Top-Hairline)
+glow.bg: #007AFF1A         // 10% Blue für today-Highlight
 
-// Accent — sun amber (col + ic = amber; bg also amber for buttons)
-accent.bg: #f59e0b
-accent.col: #f59e0b
-accent.ic: #f59e0b
+// Tint — systemBlue
+accent.bg: #007AFF
+accent.col: #007AFF
+accent.ic: #007AFF
 
-// "Auf-Accent" = Text/Inhalt auf accent-bg (z. B. Button-Label).
-onAccent.col: #1a1410
+// Auf-Accent = Text auf accent-bg (Button-Label).
+onAccent.col: #FFFFFF
 
 // Status
-success.bg: #10b981
-success.ic: #10b981
-danger.ic: #ef4444
+success.bg: #34C759         // systemGreen
+success.ic: #34C759
+danger.ic: #FF3B30          // systemRed
 
 // Text
-text.col: #fef3c7
-muted.col: #a8a29e
-dim.col: #57534e
+text.col: #000000           // labelColor (light mode)
+muted.col: #8E8E93          // secondaryLabel
+dim.col: #C7C7CC            // tertiaryLabel / separator-like
 
-// Typography sizes
-hero.fs: 28
-title.fs: 22
-heading.fs: 16
-body.fs: 14
-small.fs: 12
-counter.fs: 32
+// Typography (iOS-Skala in pt ≈ px im Web)
+hero.fs: 34                 // Large Title
+title.fs: 22                // Title 2
+heading.fs: 17              // Headline
+body.fs: 17                 // Body
+small.fs: 13                // Footnote
+counter.fs: 28              // Numerische Kennzahlen
 
 // Weights
 medium.weight: 500
-bold.weight: 700
+bold.weight: 600            // semibold (iOS-Headlines)
 
-// Spacing
-view.pad: 20
+// Spacing (iOS lehnt 16pt-Raster)
+view.pad: 16
 card.pad: 16
 gap.gap: 12
-small.gap: 6
-nav.pad: 10
+small.gap: 8
+nav.pad: 6
 
-// Radius
-radius.rad: 12
+// Radius — iOS-Cards ≈ 10
+radius.rad: 10
 ctrl.rad: 8
 pill.rad: 99
 
 // Sizes
 icon.is: 22
 big.is: 28
-hero.is: 48
-daycell.h: 88
-kpi.h: 84
+hero.is: 28
+daycell.h: 72
+kpi.h: 88
 
 // Effects
 dim.opacity: 0.85
@@ -216,28 +216,30 @@ press.scale: 0.97`,
 
   'components.mir': `// ── App-Shell (Screens + Bottom-Nav) ──────────────────────────────────
 
-App as Frame: ver, h full
+App as Frame: ver, h full, bg $surface
 Screen as Frame: grow, scroll, pad $view, gap $gap
 
 // ── Container (Frame mit sprechendem Namen) ──────────────────────────
 
-View as Frame: pad $view, gap $gap, h full
-Hero as Frame: gap $small, ver-center
-TopBar as Frame: hor, ver-center, spread, gap $gap, w full
+TopBar as Frame: hor, ver-center, spread, gap $gap, w full, pad-t 8, pad-b 4
+TitleBlock as Frame: gap 2
 
 // ── Cards & Rows ──────────────────────────────────────────────────────
 
 Card as Frame: bg $card, pad $card, rad $radius, gap $gap, w full
 RoutineRow as Frame: hor, gap $gap, ver-center
-RoutineMeta as Frame: gap $small, grow
+RoutineMeta as Frame: gap 2, grow
 
-// ── Typography (Text mit Rolle) ───────────────────────────────────────
+// ── Typography (iOS-Skala) ────────────────────────────────────────────
 
 H1 as Text: fs $hero, weight $bold, col $text
 H2 as Text: fs $title, weight $bold, col $text
-H3 as Text: fs $heading, weight $medium, col $text
+H3 as Text: fs $heading, weight $bold, col $text
 Body as Text: fs $body, col $text
 Hint as Text: fs $small, col $muted
+
+// SectionLabel — uppercase muted Header über Card-Gruppen (iOS-Pattern)
+SectionLabel as Text: fs $small, col $muted, weight $medium, uppercase, letter 0.4, pad-l 4
 
 // ── Icons ─────────────────────────────────────────────────────────────
 
@@ -248,98 +250,90 @@ NavIcon as Icon: is $icon
 
 // ── Buttons ───────────────────────────────────────────────────────────
 
-Btn as Button: bg $accent, col $onAccent, pad $nav, rad $ctrl, weight $medium, cursor pointer
+Btn as Button: bg $accent, col $onAccent, pad 10 16, rad $ctrl, weight $bold, cursor pointer, fs $body
   hover:
     opacity $dim
 
-GhostBtn as Button: bg transparent, col $muted, pad $nav, rad $ctrl, cursor pointer
+GhostBtn as Button: bg transparent, col $accent, pad 10 16, rad $ctrl, cursor pointer, fs $body, weight $medium
   hover:
-    col $text
+    opacity $dim
 
-// ── Bottom-Nav (exclusive, nur ein Tab gleichzeitig aktiv) ────────────
+// ── Bottom-Nav (iOS Tab Bar) ─────────────────────────────────────────
 
-BottomNav as Frame: hor, gap $small, bg $nav, pad $nav, bor 1 0 0 0, boc $card
+BottomNav as Frame: hor, gap 0, bg $nav, pad 6 0, bor 1 0 0 0, boc $dim
 
-NavBtn as Frame: ver, gap $small, hor-center, ver-center, pad $small, rad $ctrl, col $muted, cursor pointer, exclusive(), grow
+NavBtn as Frame: ver, gap 2, hor-center, ver-center, pad 6 0, col $muted, cursor pointer, exclusive(), grow
   hover:
     col $text
   selected:
     col $accent
 
-NavLabel as Text: fs $small, weight $medium
+NavLabel as Text: fs 10, weight $medium
 
 // ── Check-Circle (toggleable) ─────────────────────────────────────────
 
-RoutineCheck as Frame: w 28, h 28, rad $pill, bor 2, boc $muted, cursor pointer, center, toggle()
-  on 0.2s ease-out:
+RoutineCheck as Frame: w 28, h 28, rad $pill, bor 1, boc $dim, cursor pointer, center, toggle()
+  on 0.15s ease-out:
     bg $success
     boc $success
-    Icon "check", ic $text, is 16
-    anim bounce
+    Icon "check", ic white, is 16
 
-// ── Streak-Pill (Flame-Icon + Tage) ───────────────────────────────────
+// ── Streak / Done Indicator (dezent, iOS-Stil) ───────────────────────
 
-StreakPill as Frame: hor, gap $small, ver-center, bg $glow, pad 4 8, rad $pill, w hug
-StreakIcon as Icon: ic $accent, is 14, anim pulse
-StreakText as Text: fs $small, col $accent, weight $medium
-
-// DonePill — Pendant zur StreakPill für erledigte Routinen.
-DonePill as Frame: hor, gap $small, ver-center, bg $success, pad 4 8, rad $pill, w hug
-DoneIcon as Icon: ic $text, is 14
-DoneText as Text: fs $small, col $text, weight $medium
+StreakText as Text: fs $small, col $muted
+DoneText as Text: fs $small, col $success, weight $medium
 
 // ── Verlauf-Grid (7 Tages-Zellen) ────────────────────────────────────
 
 WeekGrid as Frame: grid 7, gap $small, w full
-DayCell as Frame: ver, ver-center, hor-center, gap $small, h $daycell, rad $ctrl, pad $small 0
+DayCell as Frame: ver, ver-center, hor-center, gap $small, h $daycell, rad $ctrl, bg $card, pad $small 0
 DayLabel as Text: fs $small, col $muted, weight $medium
 DayCount as Text: fs $heading, weight $bold, col $accent
 
 // ── Stats KPI-Grid (2 Spalten) ───────────────────────────────────────
 
 KpiGrid as Frame: grid 2, gap $gap, w full
-KpiTile as Frame: ver, gap $small, bg $card, pad $card, rad $radius
+KpiTile as Frame: ver, gap 4, bg $card, pad $card, rad $radius
 KpiLabel as Text: fs $small, col $muted, weight $medium
-KpiValue as Frame: hor, gap $small, ver-center
-KpiNumber as Text: fs $counter, weight $bold, col $accent
+KpiValue as Frame: hor, gap 4, ver-baseline
+KpiNumber as Text: fs $counter, weight $bold, col $text
 KpiUnit as Text: fs $small, col $muted
 
 // ── Top-Routinen-Zeile (sortiert nach Streak) ───────────────────────
 
-TopRow as Frame: hor, spread, ver-center, pad $small 0
+TopRow as Frame: hor, spread, ver-center, pad 6 0
 TopName as Text: fs $body, col $text, grow
-TopStreak as Text: fs $body, col $accent, weight $medium
+TopStreak as Text: fs $body, col $muted
 
 // ── Settings-Zeile (Label + Control) ─────────────────────────────────
 
-SettingRow as Frame: hor, spread, ver-center, pad $small 0
+SettingRow as Frame: hor, spread, ver-center, pad 6 0
 SettingLabel as Text: fs $body, col $text, grow
 
-// ── Toggle-Pille (eigener Switch — toggle() Frame) ─────────────────
+// ── iOS-Switch (gerundete Pille mit Thumb) ──────────────────────────
 
-TogglePill as Frame: w 44, h 24, rad $pill, bg $card, bor 1, boc $muted, cursor pointer, toggle()
+TogglePill as Frame: w 51, h 31, rad $pill, bg $dim, cursor pointer, toggle()
   on:
-    bg $accent
-    boc $accent
+    bg $success
 
-// ── Stepper (− / Wert / +) ───────────────────────────────────────────
+// ── Stepper (− / Wert / +) — iOS-typisch grau, nicht akzentuiert ────
 
 Stepper as Frame: hor, gap $gap, ver-center
-StepperBtn as Button: w 36, h 36, rad $pill, bg $elev, col $text, cursor pointer, center, fs $heading, weight $bold
+StepperBtn as Button: w 32, h 32, rad $pill, bg $surface, col $accent, cursor pointer, center, fs $heading, weight $bold, bor 1, boc $dim
   hover:
     opacity $dim
-StepperValue as Text: fs $title, weight $bold, col $accent, w 48, center
+StepperValue as Text: fs $title, weight $bold, col $text, w 40, center
 
-// ── Icon-Button (rund, für + / − etc.) ──────────────────────────────
+// ── Icon-Button (rund, für + im TopBar) ──────────────────────────────
 
-IconBtn as Button: w 40, h 40, rad $pill, bg $accent, col $onAccent, cursor pointer, center, fs $title, weight $bold
+IconBtn as Button: w 30, h 30, rad $pill, bg transparent, col $accent, cursor pointer, center, fs $title, weight $medium
   hover:
     opacity $dim
 
 // ── Dialog (Overlay + Panel + Actions) ───────────────────────────────
 
-DialogOverlay as Frame: abs, x 0, y 0, w full, h full, hor-center, ver-center, bg rgba(0,0,0,0.7)
-DialogPanel as Frame: bg $elev, pad $card, rad $radius, gap $gap, w 280, shadow lg
+DialogOverlay as Frame: abs, x 0, y 0, w full, h full, hor-center, ver-center, bg rgba(0,0,0,0.4)
+DialogPanel as Frame: bg $elev, pad $card, rad 14, gap $gap, w 280, shadow lg
 DialogActions as Frame: hor, gap $small`,
 
   'app.mir': `canvas mobile, bg $surface, col $text, font sans
@@ -347,7 +341,7 @@ DialogActions as Frame: hor, gap $small`,
 App
   Screen name HeuteScreen
     TopBar
-      RoutineMeta
+      TitleBlock
         H1 "Heute"
         Hint "Mittwoch, 7. Mai"
       IconBtn "+", show(NewRoutineDialog)
@@ -362,18 +356,15 @@ App
           RoutineMeta
             H3 routine.title, col routine.done ? $muted : $text
             if routine.done
-              DonePill
-                DoneIcon "check"
-                DoneText "Erledigt"
+              DoneText "Erledigt"
             else
-              StreakPill
-                StreakIcon "flame"
-                StreakText "$routine.streak Tage"
+              StreakText "$routine.streak Tage Streak"
           RoutineCheck
 
   Screen name VerlaufScreen, hidden
-    H1 "Verlauf"
-    Hint "Letzte 7 Tage"
+    TitleBlock
+      H1 "Verlauf"
+      Hint "Letzte 7 Tage"
 
     WeekGrid
       each day in $history
@@ -381,20 +372,22 @@ App
           DayLabel day.day
           DayCount day.count
 
+    SectionLabel "Zusammenfassung"
     Card
       H3 "Diese Woche"
       Hint "31 von 42 Routinen erledigt — 74% Quote"
 
   Screen name StatsScreen, hidden
-    H1 "Stats"
-    Hint "Deine Routinen-Übersicht"
+    TitleBlock
+      H1 "Stats"
+      Hint "Deine Routinen-Übersicht"
 
     KpiGrid
       KpiTile
-        KpiLabel "Routinen aktiv"
+        KpiLabel "Aktiv"
         KpiValue
           KpiNumber "$routines.count"
-          KpiUnit "Stück"
+          KpiUnit "Routinen"
       KpiTile
         KpiLabel "Längste Serie"
         KpiValue
@@ -404,27 +397,27 @@ App
         KpiLabel "Diese Woche"
         KpiValue
           KpiNumber "31"
-          KpiUnit "von 42"
+          KpiUnit "/ 42"
       KpiTile
         KpiLabel "Quote"
         KpiValue
           KpiNumber "74"
           KpiUnit "%"
 
+    SectionLabel "Top Routinen"
     Card
-      H3 "Top Routinen"
-      Hint "Sortiert nach Streak"
       each routine in $routines by streak desc
         TopRow
           TopName routine.title
           TopStreak "$routine.streak Tage"
 
   Screen name MehrScreen, hidden
-    H1 "Mehr"
-    Hint "Einstellungen & Profil"
+    TitleBlock
+      H1 "Mehr"
+      Hint "Einstellungen & Profil"
 
+    SectionLabel "Benachrichtigungen"
     Card
-      H3 "Benachrichtigungen"
       SettingRow
         SettingLabel "Tägliche Erinnerung"
         TogglePill on
@@ -435,35 +428,35 @@ App
         SettingLabel "Wochenrückblick"
         TogglePill
 
+    SectionLabel "Tagesziel"
     Card
-      H3 "Tagesziel"
       Hint "Wieviele Routinen pro Tag?"
       Stepper
         StepperBtn "−", decrement(goalPerDay)
         StepperValue "$goalPerDay"
         StepperBtn "+", increment(goalPerDay)
 
+    SectionLabel "Profil"
     Card
-      H3 "Profil"
       SettingLabel "Name"
       Input bind newRoutineName, placeholder "Dein Name…", w full
 
+    SectionLabel "Über"
     Card
-      H3 "Über"
       Hint "Tagesroutine v1.0 · gebaut mit Mirror DSL"
 
   BottomNav
     NavBtn show(HeuteScreen), hide(VerlaufScreen), hide(StatsScreen), hide(MehrScreen), selected
-      NavIcon "home"
+      NavIcon "house"
       NavLabel "Heute"
     NavBtn show(VerlaufScreen), hide(HeuteScreen), hide(StatsScreen), hide(MehrScreen)
       NavIcon "calendar"
       NavLabel "Verlauf"
     NavBtn show(StatsScreen), hide(HeuteScreen), hide(VerlaufScreen), hide(MehrScreen)
-      NavIcon "bar-chart-3"
+      NavIcon "chart-bar"
       NavLabel "Stats"
     NavBtn show(MehrScreen), hide(HeuteScreen), hide(VerlaufScreen), hide(StatsScreen)
-      NavIcon "settings"
+      NavIcon "ellipsis"
       NavLabel "Mehr"
 
 // "Neue Routine" Dialog — Overlay deckt Bildschirm, Panel zentriert.
