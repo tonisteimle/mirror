@@ -25,11 +25,7 @@ export type {
   CompileTimings,
 } from './types'
 
-// Service
-export { CompileService } from './compile-service'
-
-// Sub-modules (for testing/extension)
-export { PreludeBuilder, type PreludeResult, type PreludeDeps } from './prelude-builder'
+// Sub-modules consumed by studio/app.ts compile() path
 export { collectPrelude, type CollectPreludeDeps, type PreludeFileType } from './collect-prelude'
 export { collectAllProjectSource, type CollectAllProjectSourceDeps } from './all-project-source'
 export { collectTokensSource, type CollectTokensSourceDeps } from './tokens-source'
@@ -39,10 +35,6 @@ export {
   type AutoCreateFilesAPI,
 } from './auto-create-files'
 export { getPreludeLineOffset, type PreludeLineOffsetDeps } from './prelude-line-offset'
-export { CodeGenerator, type GeneratorDeps } from './code-generator'
-export { PreviewRenderer, type RendererDeps, type RenderResult } from './preview-renderer'
-export { StudioUpdater, type UpdaterDeps } from './studio-updater'
-export { PerfLogger } from './perf-logger'
 
 // Renderers
 export { TokenRenderer, type TokenRenderDeps } from './token-renderer'

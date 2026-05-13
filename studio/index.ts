@@ -112,27 +112,19 @@ export {
   type CodeMirrorDiagnostic,
 } from '../compiler/validator'
 
-// Compile module — prelude / generator / renderer helpers consumed by
-// studio/app.js. Re-exported here so the studio bundle surfaces them
-// (collectPrelude is the load-bearing one — without it app.js fails to
-// boot with "does not provide an export named 'collectPrelude'"). We
-// enumerate explicitly to avoid `export *` collisions: `./compile`
-// duplicates names that other barrels (`./code-modifier` SourceMap,
-// `./core` ParseError/StudioState, `./preview` PreviewRenderer)
-// already surface. Re-exporting only compile-unique members keeps
-// both sides.
+// Compile module — prelude / collector helpers consumed by studio/app.ts.
+// `collectPrelude` is load-bearing (without it app.js fails to boot with
+// "does not provide an export named 'collectPrelude'"). We enumerate
+// explicitly to avoid `export *` collisions: `./compile` shares names
+// with other barrels (`./code-modifier` SourceMap, `./core` ParseError/
+// StudioState). Re-exporting only compile-unique members keeps both
+// sides.
 export {
-  CompileService,
-  PreludeBuilder,
   collectPrelude,
   collectAllProjectSource,
   collectTokensSource,
   createAutoCreateFiles,
   getPreludeLineOffset,
-  CodeGenerator,
-  StudioUpdater,
-  PerfLogger,
-  type PreludeDeps,
   type CollectPreludeDeps,
   type PreludeFileType,
   type CollectAllProjectSourceDeps,
@@ -140,10 +132,6 @@ export {
   type AutoCreateFilesDeps,
   type AutoCreateFilesAPI,
   type PreludeLineOffsetDeps,
-  type GeneratorDeps,
-  type RendererDeps,
-  type RenderResult,
-  type UpdaterDeps,
 } from './compile'
 export type {
   AST as CompileAST,
