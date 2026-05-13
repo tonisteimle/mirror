@@ -330,56 +330,70 @@ export function parseCanvas(this: Parser): CanvasDefinition {
  */
 const DIRECTIVE_NAMES = new Set(['icon', 'group', 'hidden'])
 
-export function parseComponentDirective(this: Parser): void {
+/**
+ * Consume a single `@directive [value]` token sequence and merge into
+ * `this.pendingMetadata`. Does NOT consume past the directive — callers
+ * handle their own surrounding loop / recovery.
+ *
+ * Returns `true` if a directive was consumed cleanly, `false` on a
+ * parse error (caller decides recovery — above-the-line form slurps to
+ * newline, inline-on-def form stops processing the current prop list).
+ */
+export function consumeSingleDirective(this: Parser): boolean {
   const metadata = this.pendingMetadata ?? {}
+  this.advance() // consume '@'
 
+  if (!this.check('IDENTIFIER')) {
+    this.addError(
+      `Expected directive name after '@'`,
+      `Use @icon, @group, or @hidden`,
+      'invalid-directive'
+    )
+    this.pendingMetadata = metadata
+    return false
+  }
+
+  const nameToken = this.advance()
+  const directive = nameToken.value
+
+  if (!DIRECTIVE_NAMES.has(directive)) {
+    this.addError(
+      `Unknown directive '@${directive}'`,
+      `Supported directives: @icon <name>, @group <name>, @hidden`,
+      'unknown-directive'
+    )
+    this.pendingMetadata = metadata
+    return false
+  }
+
+  if (directive === 'hidden') {
+    metadata.hidden = true
+  } else if (this.check('IDENTIFIER') || this.check('STRING')) {
+    const value = this.advance().value
+    if (directive === 'icon') metadata.icon = value
+    else if (directive === 'group') metadata.group = value
+  } else {
+    this.addError(
+      `Directive '@${directive}' expects a value`,
+      `Example: @${directive} ${directive === 'icon' ? 'home' : 'Forms'}`,
+      'directive-missing-value'
+    )
+  }
+
+  this.pendingMetadata = metadata
+  return true
+}
+
+export function parseComponentDirective(this: Parser): void {
   // Loop to support inline-comma form: `@icon home, @group Forms`.
   // Multi-line is handled by the outer parser loop calling us again.
   while (this.check('AT')) {
-    this.advance() // consume '@'
-
-    if (!this.check('IDENTIFIER')) {
-      this.addError(
-        `Expected directive name after '@'`,
-        `Use @icon, @group, or @hidden`,
-        'invalid-directive'
-      )
+    const ok = this.consumeSingleDirective()
+    if (!ok) {
+      // Recover to next newline so we don't cascade errors.
       while (!this.check('NEWLINE') && !this.isAtEnd()) this.advance()
-      this.pendingMetadata = metadata
       return
     }
-
-    const nameToken = this.advance()
-    const directive = nameToken.value
-
-    if (!DIRECTIVE_NAMES.has(directive)) {
-      this.addError(
-        `Unknown directive '@${directive}'`,
-        `Supported directives: @icon <name>, @group <name>, @hidden`,
-        'unknown-directive'
-      )
-      while (!this.check('NEWLINE') && !this.isAtEnd()) this.advance()
-      this.pendingMetadata = metadata
-      return
-    }
-
-    if (directive === 'hidden') {
-      metadata.hidden = true
-    } else {
-      if (this.check('IDENTIFIER') || this.check('STRING')) {
-        const value = this.advance().value
-        if (directive === 'icon') metadata.icon = value
-        else if (directive === 'group') metadata.group = value
-      } else {
-        this.addError(
-          `Directive '@${directive}' expects a value`,
-          `Example: @${directive} ${directive === 'icon' ? 'home' : 'Forms'}`,
-          'directive-missing-value'
-        )
-      }
-    }
-
-    // Inline comma form: `@icon X, @group Y` — consume comma and loop.
     if (this.check('COMMA')) {
       this.advance()
       continue
@@ -387,6 +401,7 @@ export function parseComponentDirective(this: Parser): void {
     break
   }
 
-  this.pendingMetadata = metadata
+  // Slurp trailing whitespace/comments to NEWLINE — above-the-line
+  // form occupies its own source line.
   while (!this.check('NEWLINE') && !this.isAtEnd()) this.advance()
 }

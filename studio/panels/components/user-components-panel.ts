@@ -77,18 +77,39 @@ const DIRECTIVE_SCAN = /@(icon|group|hidden)(?:\s+([^,\n]+?))?(?=\s*,|\s*$)/g
 /**
  * Parse component definitions from .com file content
  * Filters out system components (built-in components from Component Panel).
- * Recognises `@icon` / `@group` / `@hidden` directives on lines preceding
- * a component definition. Both forms supported:
- *   @icon home
- *   @group Forms
+ * Recognises `@icon` / `@group` / `@hidden` directives in two forms:
  *
- *   @icon home, @group Forms
+ *   1. Above-the-line (legacy):
+ *        @icon home
+ *        @group Forms
+ *        Field as Frame: bg #1a1a1a, pad 8
+ *
+ *   2. Inline-on-def-line (preferred):
+ *        Field as Frame: bg #1a1a1a, pad 8, @icon home, @group Forms
+ *
+ * Both forms work simultaneously — above-line directives buffer, then
+ * any inline directives on the def-line merge on top.
  */
 function parseComFile(content: string, filename: string): ParsedComponent[] {
   const components: ParsedComponent[] = []
   const lines = content.split('\n')
 
   let pending: { icon?: string; group?: string; hidden?: boolean } = {}
+
+  /** Scan a string for inline @-directives and merge into the target buffer. */
+  const mergeDirectives = (
+    src: string,
+    into: { icon?: string; group?: string; hidden?: boolean }
+  ): void => {
+    DIRECTIVE_SCAN.lastIndex = 0
+    let m: RegExpExecArray | null
+    while ((m = DIRECTIVE_SCAN.exec(src)) !== null) {
+      const [, name, value] = m
+      if (name === 'hidden') into.hidden = true
+      else if (name === 'icon' && value) into.icon = value.trim()
+      else if (name === 'group' && value) into.group = value.trim()
+    }
+  }
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
@@ -97,20 +118,13 @@ function parseComFile(content: string, filename: string): ParsedComponent[] {
     // Skip empty lines and comments — pending directives survive.
     if (!trimmed || trimmed.startsWith('//')) continue
 
-    // Directive line (starts with `@`) — buffer for the next component.
+    // Directive-only line (starts with `@`) — buffer for the next component.
     if (trimmed.startsWith('@')) {
-      DIRECTIVE_SCAN.lastIndex = 0
-      let m: RegExpExecArray | null
-      while ((m = DIRECTIVE_SCAN.exec(trimmed)) !== null) {
-        const [, name, value] = m
-        if (name === 'hidden') pending.hidden = true
-        else if (name === 'icon' && value) pending.icon = value.trim()
-        else if (name === 'group' && value) pending.group = value.trim()
-      }
+      mergeDirectives(trimmed, pending)
       continue
     }
 
-    // Component definition: Name: or Name as Base: (with optional inline properties)
+    // Component definition: Name: or Name as Base: (optional inline props).
     const match = trimmed.match(/^([A-Z][a-zA-Z0-9_-]*)(?:\s+as\s+([a-zA-Z][a-zA-Z0-9_-]*))?:/)
     if (match) {
       const componentName = match[1]
@@ -119,6 +133,10 @@ function parseComFile(content: string, filename: string): ParsedComponent[] {
         pending = {}
         continue
       }
+
+      // Inline directives on the def-line merge ON TOP of the above-line
+      // buffer (def-line wins for any key it sets — last write wins).
+      mergeDirectives(trimmed, pending)
 
       components.push({
         name: componentName,
@@ -168,11 +186,16 @@ export class UserComponentsPanel {
   /**
    * Build sections from .com files.
    *
-   * Section assignment per component:
-   *   1. `@group <name>` directive (per-component override)
-   *   2. Filename without extension (default behaviour)
+   * Visibility rule (default-hidden, opt-in via @group):
+   *   - `@group <name>` → component appears in palette under section <name>.
+   *   - No `@group` and no `@hidden` → component is INTERNAL (not in palette).
+   *     This is the implicit default — most user-defined components are
+   *     internal slots (RoutineRow, KpiLabel, etc.). Designer-facing
+   *     components opt in by adding `@group Layout` (or whichever section).
+   *   - `@hidden` → explicit hide, equivalent to no-group but self-documenting.
    *
-   * Components marked with `@hidden` are dropped entirely.
+   * The legacy "default section = filename" behaviour is gone — too noisy
+   * for projects with many internal helper components.
    */
   private buildSections(): void {
     this.sections = []
@@ -191,13 +214,13 @@ export class UserComponentsPanel {
 
     for (const file of comFiles) {
       const components = parseComFile(file.content, file.name)
-      const defaultSection = file.name.replace(/\.(com|components)$/, '')
 
       for (const comp of components) {
         if (comp.hidden) continue
-        const sectionName = comp.group ?? defaultSection
+        // Default-hidden: components without @group don't appear in palette.
+        if (!comp.group) continue
         const item = this.createComponentItem(comp, file.name)
-        ensureSection(sectionName).items.push(item)
+        ensureSection(comp.group).items.push(item)
       }
     }
   }

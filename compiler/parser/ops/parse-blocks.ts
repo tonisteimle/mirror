@@ -99,15 +99,18 @@ export function parseComponentDefinition(this: Parser, name: Token): ComponentDe
     nodeId: this.generateNodeId(),
   }
 
-  // Attach buffered @directives (if any) and clear the buffer so the
-  // next component starts clean.
+  // Parse inline properties (including implicit onclick events).
+  // `allowDirectives` enables inline `@icon foo, @group Bar, @hidden`
+  // on the def line — they merge into `pendingMetadata` via the same
+  // buffer the above-the-line form uses.
+  this.parseInlineProperties(component.properties, component.events, { allowDirectives: true })
+
+  // Attach buffered @directives (above-line + inline-on-def) to the
+  // component, then clear so the next component starts clean.
   if (this.pendingMetadata) {
     component.metadata = this.pendingMetadata
     this.pendingMetadata = null
   }
-
-  // Parse inline properties (including implicit onclick events)
-  this.parseInlineProperties(component.properties, component.events)
 
   // Extract bind from properties if present (bind varName on same line as definition)
   const bindIndex = component.properties.findIndex(p => p.name === 'bind')
@@ -161,12 +164,12 @@ export function parseComponentInheritance(this: Parser, name: Token): ComponentD
     nodeId: this.generateNodeId(),
   }
 
+  this.parseInlineProperties(component.properties, component.events, { allowDirectives: true })
+
   if (this.pendingMetadata) {
     component.metadata = this.pendingMetadata
     this.pendingMetadata = null
   }
-
-  this.parseInlineProperties(component.properties, component.events)
 
   // Extract bind from properties if present (bind varName on same line as definition)
   const bindIndex = component.properties.findIndex(p => p.name === 'bind')
@@ -218,15 +221,18 @@ export function parseComponentDefinitionWithDefaultPrimitive(
     nodeId: this.generateNodeId(),
   }
 
-  // Attach buffered @directives (if any) and clear the buffer so the
-  // next component starts clean.
+  // Parse inline properties (including implicit onclick events).
+  // `allowDirectives` enables inline `@icon foo, @group Bar, @hidden`
+  // on the def line — they merge into `pendingMetadata` via the same
+  // buffer the above-the-line form uses.
+  this.parseInlineProperties(component.properties, component.events, { allowDirectives: true })
+
+  // Attach buffered @directives (above-line + inline-on-def) to the
+  // component, then clear so the next component starts clean.
   if (this.pendingMetadata) {
     component.metadata = this.pendingMetadata
     this.pendingMetadata = null
   }
-
-  // Parse inline properties (including implicit onclick events)
-  this.parseInlineProperties(component.properties, component.events)
 
   // Extract bind from properties if present (bind varName on same line as definition)
   const bindIndex = component.properties.findIndex(p => p.name === 'bind')
@@ -963,7 +969,7 @@ export function parseInlineProperties(
   this: Parser,
   properties: Property[],
   events?: Event[],
-  options?: { stopAtSemicolon?: boolean }
+  options?: { stopAtSemicolon?: boolean; allowDirectives?: boolean }
 ): void {
   this.withSubParserContext(ctx => {
     const callbacks: InlinePropertiesCallbacks = {
@@ -1007,6 +1013,17 @@ export function parseInlineProperties(
         ctx.pos = this.pos
         return result
       },
+    }
+    // Only component-definition callers opt in to inline @directives.
+    // Instance / state property lists leave this off so a stray `@`
+    // becomes an error (no silent metadata leak onto an instance).
+    if (options?.allowDirectives) {
+      callbacks.consumeDirective = () => {
+        this.pos = ctx.pos
+        const ok = this.consumeSingleDirective()
+        ctx.pos = this.pos
+        return ok
+      }
     }
     InlinePropertyParser.parseInlineProperties(ctx, properties, callbacks, events, options)
   })

@@ -97,6 +97,21 @@ function parseComFile(content: string): ParsedComponent[] {
 
   let pending: { icon?: string; group?: string; hidden?: boolean } = {}
 
+  /** Scan a string for @-directives and merge into the target buffer. */
+  const mergeDirectives = (
+    src: string,
+    into: { icon?: string; group?: string; hidden?: boolean }
+  ): void => {
+    DIRECTIVE_SCAN.lastIndex = 0
+    let m: RegExpExecArray | null
+    while ((m = DIRECTIVE_SCAN.exec(src)) !== null) {
+      const [, name, value] = m
+      if (name === 'hidden') into.hidden = true
+      else if (name === 'icon' && value) into.icon = value.trim()
+      else if (name === 'group' && value) into.group = value.trim()
+    }
+  }
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     const trimmed = line.trim()
@@ -104,21 +119,13 @@ function parseComFile(content: string): ParsedComponent[] {
     // Skip empty lines and comments — pending directives survive.
     if (!trimmed || trimmed.startsWith('//')) continue
 
-    // Directive line — buffer `@icon` / `@group` / `@hidden` for the
-    // next component. Both multi-line and inline-comma forms supported.
+    // Directive-only line — buffer for the next component.
     if (trimmed.startsWith('@')) {
-      DIRECTIVE_SCAN.lastIndex = 0
-      let m: RegExpExecArray | null
-      while ((m = DIRECTIVE_SCAN.exec(trimmed)) !== null) {
-        const [, name, value] = m
-        if (name === 'hidden') pending.hidden = true
-        else if (name === 'icon' && value) pending.icon = value.trim()
-        else if (name === 'group' && value) pending.group = value.trim()
-      }
+      mergeDirectives(trimmed, pending)
       continue
     }
 
-    // Component definition: Name: or Name as Base:
+    // Component definition: Name: or Name as Base: (optional inline props).
     const match = trimmed.match(/^([A-Z][a-zA-Z0-9_-]*)(?:\s+as\s+([a-zA-Z][a-zA-Z0-9_-]*))?:/)
     if (match) {
       const name = match[1]
@@ -136,6 +143,10 @@ function parseComFile(content: string): ParsedComponent[] {
         pending = {}
         continue
       }
+
+      // Inline @directives on the def-line merge ON TOP of the above-line
+      // buffer. Preferred form — keeps the file dense and readable.
+      mergeDirectives(trimmed, pending)
 
       const hasChildren = hasChildContent(lines, i)
 
@@ -218,12 +229,16 @@ export class ComponentPanel {
 
     // 3. User-defined components from `.com` / `.mir` files
     //
-    // Grouping:
-    //   - `@group <name>` directive (per-component override) → group name
-    //   - no @group → bundled under default "My Components" section
+    // Visibility (default-hidden, opt-in via @group):
+    //   - `@group <name>` → component appears in palette under <name>.
+    //   - No `@group` and no `@hidden` → INTERNAL (not in palette).
+    //     Most user components are internal slots; designer-facing ones
+    //     opt in by adding `@group Layout` (or whichever section).
+    //   - `@hidden` → explicit hide, self-documenting equivalent of no-group.
     //
-    // Hiding:
-    //   - `@hidden` directive drops the component entirely
+    // Both directive forms supported in source:
+    //   1. Above-the-line (legacy):  `@icon foo\n@group Bar\nName as ...`
+    //   2. Inline on def-line:        `Name as Frame: bg #333, @icon foo, @group Bar`
     //
     // Icons:
     //   - `@icon <lucide-name>` overrides the generic `custom` cube
@@ -242,6 +257,8 @@ export class ComponentPanel {
         const components = parseComFile(file.content)
         for (const comp of components) {
           if (comp.hidden) continue
+          // Default-hidden: a component without @group is internal.
+          if (!comp.group) continue
 
           let description: string
           if (comp.basePrimitive) {
@@ -255,7 +272,7 @@ export class ComponentPanel {
           const item: ComponentItem = {
             id: `user-${comp.name.toLowerCase()}`,
             name: comp.name,
-            category: comp.group ?? 'User',
+            category: comp.group,
             template: comp.name,
             icon: 'custom',
             customIconName: comp.icon,
@@ -263,7 +280,7 @@ export class ComponentPanel {
             description,
           }
 
-          addItem(comp.group ?? 'My Components', item)
+          addItem(comp.group, item)
         }
       }
 

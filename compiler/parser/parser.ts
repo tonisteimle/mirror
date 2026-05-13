@@ -165,6 +165,7 @@ export class Parser {
   parseAnimationDefinitionWithContext = parse_misc.parseAnimationDefinitionWithContext
   parseCanvas = parse_misc.parseCanvas
   parseComponentDirective = parse_misc.parseComponentDirective
+  consumeSingleDirective = parse_misc.consumeSingleDirective
 
   parse(): AST {
     const program: Program = {

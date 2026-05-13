@@ -71,6 +71,14 @@ export interface InlinePropertiesCallbacks {
   parseEvent(): Event | null
   checkNextIsPropertyName(): boolean
   advancePropertyName(): string
+  /**
+   * Optional: consume a single `@directive [value]` token sequence and
+   * merge into the parser's pendingMetadata buffer. Wired only for
+   * component-definition contexts (parseComponentDefinition + variants),
+   * which post-process pendingMetadata into `component.metadata`. Returns
+   * true on success; `false` signals the inline loop to bail out.
+   */
+  consumeDirective?(): boolean
 }
 
 /* -------------------------------------------------------------- entry */
@@ -104,6 +112,23 @@ export function parseInlineProperties(
     if (U.check(ctx, 'STRING')) {
       properties.push(consumeStringContent(ctx, callbacks))
       continue
+    }
+
+    // Inline component-metadata directive: `@icon foo, @group Bar, @hidden`
+    // on the same line as a component definition. The callback writes
+    // the value into the parser's pendingMetadata buffer, which the
+    // caller (parseComponentDefinition) then attaches to the component.
+    // The outer COMMA-skip handles separators between directives.
+    if (U.check(ctx, 'AT')) {
+      if (callbacks.consumeDirective) {
+        const ok = callbacks.consumeDirective()
+        if (!ok) break
+        continue
+      }
+      // No directive callback wired (instance properties context): error
+      // and bail out — @directives are component-def-only.
+      U.advance(ctx)
+      break
     }
 
     if (U.check(ctx, 'DATA')) {
