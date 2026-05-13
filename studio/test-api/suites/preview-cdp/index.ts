@@ -27,6 +27,7 @@ import { nestIntoSiblingChildTests } from './03-nesting/nest-into-sibling-child.
 import { unnestOutOfContainerTests } from './03-nesting/unnest-out-of-container.test'
 import { deepNest3LevelsTests } from './03-nesting/deep-nest-3-levels.test'
 import { textIntoNestedFrameTests } from './03-nesting/text-into-nested-frame.test'
+import { twoLevelsDeepTests } from './03-nesting/two-levels-deep.test'
 
 // Wave 1 — Smoke (verifies the helper layer is reachable).
 export const previewCdpSmokeTests: TestCase[] = [...smokeTests]
@@ -53,6 +54,7 @@ export const previewCdpNestingTests: TestCase[] = [
   ...unnestOutOfContainerTests,
   ...deepNest3LevelsTests,
   ...textIntoNestedFrameTests,
+  ...twoLevelsDeepTests,
 ]
 
 // Aggregate — every wave above flows into this list.

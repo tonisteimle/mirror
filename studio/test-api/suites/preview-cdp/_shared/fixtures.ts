@@ -116,6 +116,26 @@ Frame w 200, h 200, bg #27272a, pad 16`,
    */
   topLevelTextPlusEmptyFrame: `Text "Drag me", col #f59e0b
 Frame w 240, h 120, bg #27272a`,
+
+  /**
+   * Two-level container target — outer with an inner empty container,
+   * orange sibling at outer level. Tests the intermediate-depth nest
+   * (drop into the inner, ending at 2-level depth — distinct from the
+   * 3-level test by NOT having a third container layer).
+   *
+   *   outerDark (#1a1a1a)
+   *     innerLight (#27272a)  ← drop target (empty, level 1)
+   *   orange (#f59e0b)  ← drag source (top-level sibling of outer)
+   *
+   * After drag:
+   *
+   *   outerDark
+   *     innerLight
+   *       orange  ← level 2
+   */
+  twoLevelContainerTarget: `Frame w 280, h 200, bg #1a1a1a, pad 16
+  Frame w 200, h 140, bg #27272a
+Frame w 60, h 60, bg #f59e0b`,
 } as const
 
 export type FixtureName = keyof typeof FIXTURES
