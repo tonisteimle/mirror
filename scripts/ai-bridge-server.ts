@@ -23,10 +23,12 @@
  */
 
 import { spawn } from 'child_process'
-import { createServer, type ServerResponse } from 'http'
+import { createServer, type ServerResponse, type IncomingMessage } from 'http'
 import { existsSync } from 'fs'
 import { join } from 'path'
 import { runExportPipeline, type PhaseEvent } from './ai-bridge/run-export'
+import * as fsBridge from './ai-bridge/fs-bridge'
+import { BridgeProtocolError } from './ai-bridge/fs-bridge'
 
 const PORT = parseInt(process.env.AI_BRIDGE_PORT || '3456', 10)
 
@@ -220,11 +222,105 @@ const server = createServer(async (req, res) => {
     return
   }
 
+  // ── Filesystem-Bridge ────────────────────────────────────────────
+  if (req.url && req.url.startsWith('/fs/')) {
+    await handleFsRequest(req, res)
+    return
+  }
+
   res.writeHead(404).end('Not Found')
 })
 
 function writeNdjson(res: ServerResponse, event: PhaseEvent): void {
   res.write(JSON.stringify(event) + '\n')
+}
+
+// =============================================================================
+// Filesystem-Bridge — /fs/* endpoints
+// =============================================================================
+
+async function handleFsRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const url = new URL(req.url ?? '', `http://localhost:${PORT}`)
+  const method = req.method ?? 'GET'
+
+  try {
+    // GET /fs/state
+    if (method === 'GET' && url.pathname === '/fs/state') {
+      writeJson(res, 200, fsBridge.getState())
+      return
+    }
+
+    // GET /fs/recents
+    if (method === 'GET' && url.pathname === '/fs/recents') {
+      const recents = await fsBridge.getRecents()
+      writeJson(res, 200, { recents })
+      return
+    }
+
+    // GET /fs/tree
+    if (method === 'GET' && url.pathname === '/fs/tree') {
+      const tree = await fsBridge.getTree()
+      writeJson(res, 200, { tree })
+      return
+    }
+
+    // GET /fs/read?path=relative/path
+    if (method === 'GET' && url.pathname === '/fs/read') {
+      const path = url.searchParams.get('path') ?? ''
+      const content = await fsBridge.readFile(path)
+      writeJson(res, 200, { content })
+      return
+    }
+
+    // POST /fs/open { path }
+    if (method === 'POST' && url.pathname === '/fs/open') {
+      const body = await readJsonBody<{ path?: string }>(req)
+      const state = await fsBridge.openDirectory(body.path ?? '')
+      writeJson(res, 200, state)
+      return
+    }
+
+    // POST /fs/close
+    if (method === 'POST' && url.pathname === '/fs/close') {
+      writeJson(res, 200, fsBridge.closeDirectory())
+      return
+    }
+
+    res.writeHead(404).end('Not Found')
+  } catch (err) {
+    if (err instanceof BridgeProtocolError) {
+      writeJson(res, 400, { error: err.message, code: err.code })
+      return
+    }
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[AI Bridge] /fs/* error:', msg)
+    writeJson(res, 500, { error: msg })
+  }
+}
+
+function writeJson(res: ServerResponse, status: number, body: unknown): void {
+  res.writeHead(status, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify(body))
+}
+
+async function readJsonBody<T>(req: IncomingMessage): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    let buf = ''
+    req.on('data', chunk => (buf += chunk))
+    req.on('end', () => {
+      if (!buf.trim()) {
+        // Empty body — return empty object so callers handle missing fields uniformly.
+        resolve({} as T)
+        return
+      }
+      try {
+        resolve(JSON.parse(buf) as T)
+      } catch {
+        reject(new BridgeProtocolError('invalid JSON body', 'BAD_REQUEST'))
+      }
+    })
+    req.on('error', reject)
+  })
 }
 
 server.listen(PORT, () => {
@@ -235,6 +331,13 @@ server.listen(PORT, () => {
   console.log('       body: { prompt, sessionId? }')
   console.log('  POST /export              → application/x-ndjson stream')
   console.log('       body: { files, target, snapshot, projectName? }')
+  console.log('  GET  /fs/state            → { open, path, name }')
+  console.log('  GET  /fs/recents          → { recents: string[] }')
+  console.log('  GET  /fs/tree             → { tree: BridgeTreeItem[] }')
+  console.log('  GET  /fs/read?path=…      → { content }')
+  console.log('  POST /fs/open             → { open, path, name }')
+  console.log('       body: { path }')
+  console.log('  POST /fs/close            → { open: false, … }')
 })
 
 // Clean shutdown
