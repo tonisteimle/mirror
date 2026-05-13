@@ -119,10 +119,9 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 >
 > 1. Tutorial-Demos + Test-Runner — OWNER-EXKLUSIV (toni)
 > 2. Tutorial-Loop-Infrastruktur insgesamt — Owner-Entscheidung
-> 3. `studio/app.ts` Bootstrap-Decomp — ongoing decomposition
-> 4. `compiler/backends/dom/ops/resolve-templates.ts:resolveConditionalExpression`
+> 3. `compiler/backends/dom/ops/resolve-templates.ts:resolveConditionalExpression`
 >    — Smell ohne Bug
-> 5. Skipped-Tests Inventory (Slice F, 2026-05-13) — Reste:
+> 4. Skipped-Tests Inventory (Slice F, 2026-05-13) — Reste:
 >    (c) Padding/Margin Zero-State Zones,
 >    (d) Context-aware Autocomplete (3 Feature-Lücken),
 >    (e) Dynamic-Token-File Prelude-Rebuild,
@@ -134,7 +133,7 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 > **erledigt** oder **abgewiesen** und gehören eigentlich nach
 > „Erledigt"; sie verbleiben hier als historischer Kontext (Audit-
 > Notiz + Commit-Hash). Vor dem nächsten Hunt-Rollup migrieren —
-> bis dahin: erst auf die obigen 5 Einträge scannen.
+> bis dahin: erst auf die obigen 4 Einträge scannen.
 
 - **Wo:** `compiler/backends/dom/style-emitter.ts:emitNodeSizeStateCSS`,
   `compiler/backends/dom/node-emitter.ts:emitContainerType`,
@@ -278,8 +277,8 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
   componentPrimitives-Map-Aufbau, Render-Pipe (uninstanced-augment
   - ui-execute + rootEl-extract); daneben `updateStudio()`,
     `handleStudioCodeChange()`, plus File-IO und Ext-Wiring.
-    **Status:** offen — ongoing decomposition. Drei Slices 2026-05-12
-    erledigt:
+    **Status:** erledigt (Stand 2026-05-13, app.ts 2557 → 2385 LOC,
+    11 pure-helper-Module extrahiert, Decomposition-Ziel erreicht):
     - **Slice 5** `componentPrimitives-Map-Aufbau` (`22b340a1` —
       Commit-Race, Message irreführend) →
       `studio/compile/component-primitives.ts`, 7 Tests. Pin: Parser-
@@ -304,14 +303,23 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
       `appendImplicitInstances` aus app.ts-Imports (jetzt nur intern).
     - **State-Update-Block** (`5489a805`, Parallel-Session) →
       `studio/compile/compile-state-update.ts`. Auch erledigt.
-    - **rootEl-extract** (Parallel-Session) →
+    - **rootEl-extract** (`c89e0cf9`) →
       `studio/compile/extract-root-element.ts`. Auch erledigt.
-      **Notiz:** Strategie: pure-helper-Slices mit Unit-Tests, Sub-Slice
-      pro Commit, kein Big-Bang. Reduziert Closure-Pressure inkrementell.
-      Verbleibend in `compile()`: YAML-Injection, executeMirrorJS-Wiring,
-      DOM-Append + Refresh-Cascade, Validator-Diagnostics, perf-Logger.
-      Alle haben Side-Effects gegen DOM/Editor/State und sind keine
-      pure-helper-Kandidaten — Decomposition-Ziel hier ist erreicht.
+    - **logSlowCompile** (`c179a60a` — Commit-Race) →
+      `studio/compile/log-slow-compile.ts`, 6 Tests. Pin: Threshold-Gate
+      - Exec-Block-Optional bei fehlendem `execEnd`.
+        **Notiz:** Strategie pure-helper-Slices mit Unit-Tests, Sub-Slice
+        pro Commit, kein Big-Bang. Verbleibend in `compile()` (269 LOC):
+        Render-Pipe-Cascade (augment → executeMirrorJS → updateStudio →
+        `preview.appendChild` → draggables.refresh → studio.preview.refresh
+        → studio.sync.triggerInitialSync — 46 LOC), Validator-Diagnostics-
+        Update (7 LOC), Error-Catch-Block mit HTML-Error-Box (17 LOC),
+        Test-Hook `window.__compileGeneration` (4 LOC), YAML-Injection-
+        Setup (3 LOC). Alle DOM/Editor/State-Side-Effects, keine pure-
+        helper-Kandidaten. Test-Aufwand für Render-Pipe-Helper
+        (5-Parameter-Mock von preview/draggables/studio.preview/
+        studio.sync) übersteigt Lesbarkeitsgewinn — Decomposition-Ziel
+        erreicht. Geschlossen 2026-05-13.
 
 ### Compiler Backends (Hunt 2026-05-10)
 
@@ -413,21 +421,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                                                                **Status-Update:** erledigt — alle drei Slices landen:
-                                                                                Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                                                                inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                                                                Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                                                                (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                                                                `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                                                                (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                                                                — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                                                                hat per `git add .` die uncommittete compiler-Side mit
-                                                                                aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                                                                `hasZagChildren` (children-Shape), `isZagComponentName`
-                                                                                (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                                                                IRZagNode-Discriminator-Property `isZagComponent: true`
-                                                                                bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                                                                81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                                                                    **Status-Update:** erledigt — alle drei Slices landen:
+                                                                                    Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                                                                    inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                                                                    Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                                                                    (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                                                                    `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                                                                    (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                                                                    — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                                                                    hat per `git add .` die uncommittete compiler-Side mit
+                                                                                    aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                                                                    `hasZagChildren` (children-Shape), `isZagComponentName`
+                                                                                    (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                                                                    IRZagNode-Discriminator-Property `isZagComponent: true`
+                                                                                    bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                                                                    81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
