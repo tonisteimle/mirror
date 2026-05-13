@@ -52,7 +52,9 @@ import {
 import { getTextContent, renderTextSlot, rewriteIdentifiersToTokens } from './text'
 import {
   type ReactStateContext,
+  collectSizeStateGroups,
   collectStateGroups,
+  formatContainerQuery,
   formatStyleAsCSS,
   formatStyleObject,
   generateStyles,
@@ -218,6 +220,35 @@ export function generateJSX(
   // this the React render shows an instant pop on hover (no smoothing)
   // even when the user wrote `hover 0.2s:`.
   if (transitionSpec) style.transition = transitionSpec
+
+  // Size-state CSS rules — `compact:`, `regular:`, `wide:`, plus any
+  // custom state with `<name>.min` / `<name>.max` token thresholds. Per
+  // CSS spec, `@container` matches against the container-*ancestor*, not
+  // self, so we wrap the instance in a synthetic outer-div carrying
+  // `container-type: inline-size`; the inner instance then matches.
+  // Mirrors the DOM backend's wrapper pattern
+  // (`docs/refactoring/container-queries.md` Lane A).
+  let containerWrapperId: string | null = null
+  let sizeStateAttr = ''
+  if (stateContext) {
+    const sizeGroups = collectSizeStateGroups(compDef, instance.states, tokens)
+    if (sizeGroups.length > 0) {
+      stateContext.counter.value += 1
+      containerWrapperId = String(stateContext.counter.value)
+      sizeStateAttr = ` data-c=${JSON.stringify(containerWrapperId)}`
+      for (const group of sizeGroups) {
+        const query = formatContainerQuery(group.thresholds)
+        if (!query) continue
+        const sizeStyle = generateStyles(group.properties, tokens, parentContext)
+        const css = formatStyleAsCSS(sizeStyle)
+        if (css.length === 0) continue
+        stateContext.rules.push(
+          `@container ${query} { [data-c="${containerWrapperId}"] { ${css} } }`
+        )
+      }
+    }
+  }
+
   const styleStr = Object.keys(style).length > 0 ? ` style={${formatStyleObject(style)}}` : ''
 
   // Element-Registry callback ref. Only attached when the instance has
@@ -287,12 +318,19 @@ export function generateJSX(
     (instance as Instance & { visibleWhen?: string }).visibleWhen ?? explicitVisible
 
   if (!hasChildren) {
-    const selfClosing = `${indent}<${tag}${attrStr}${mirrorAttrStr}${stateAttr}${refStr}${styleStr} />`
-    return wrapWithVisibility(selfClosing, visibleWhen, tokens, indent)
+    const selfClosing = `${indent}<${tag}${attrStr}${mirrorAttrStr}${stateAttr}${sizeStateAttr}${refStr}${styleStr} />`
+    return wrapWithVisibility(
+      wrapWithContainer(selfClosing, containerWrapperId, indent),
+      visibleWhen,
+      tokens,
+      indent
+    )
   }
 
   const lines: string[] = []
-  lines.push(`${indent}<${tag}${attrStr}${mirrorAttrStr}${stateAttr}${refStr}${styleStr}>`)
+  lines.push(
+    `${indent}<${tag}${attrStr}${mirrorAttrStr}${stateAttr}${sizeStateAttr}${refStr}${styleStr}>`
+  )
 
   // Add text content. Pass the in-scope loop-vars (if any) so a Text
   // inside `each t in $tasks` resolves `"$t.title"` to a JS expression
@@ -371,7 +409,30 @@ export function generateJSX(
 
   lines.push(`${indent}</${tag}>`)
 
-  return wrapWithVisibility(lines.join('\n'), visibleWhen, tokens, indent)
+  return wrapWithVisibility(
+    wrapWithContainer(lines.join('\n'), containerWrapperId, indent),
+    visibleWhen,
+    tokens,
+    indent
+  )
+}
+
+/**
+ * Wrap a JSX block with a synthetic outer container-div so its `@container`
+ * size-state queries match against the wrapper's inline-size instead of
+ * the inner element's (which CSS-spec forbids — `@container` queries the
+ * container ancestor). Mirrors the DOM backend's
+ * `emitContainerWrapper` pattern.
+ *
+ * Returns the JSX unchanged when there's no wrapper id.
+ */
+export function wrapWithContainer(jsx: string, wrapperId: string | null, indent: string): string {
+  if (!wrapperId) return jsx
+  return [
+    `${indent}<div data-mirror-wrapper=${JSON.stringify(wrapperId)} style={{ containerType: 'inline-size' }}>`,
+    jsx,
+    `${indent}</div>`,
+  ].join('\n')
 }
 
 /**

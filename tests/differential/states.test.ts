@@ -207,10 +207,8 @@ describe('Size-states — Container-Queries Lane A contract', () => {
     expect(dom).toMatch(/\[data-mirror-id\^="node-\d+"\]\s*\{/)
   })
 
-  it.skip('React: emits container-wrapper div + @container CSS rules', () => {
+  it('React: emits container-wrapper div + @container CSS rules', () => {
     const react = generateReact(parse(SIZE_STATE_SRC))
-    // React-Backend dropped sizeState styles silently (differential-lücke
-    // documented in lane doc). After Lane A: wrapper + style-block.
     expect(react).toMatch(/data-mirror-wrapper/)
     expect(react).toMatch(/@container .*\(max-width:/)
     expect(react).toContain('#ef4444')

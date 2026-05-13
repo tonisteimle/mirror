@@ -28,7 +28,7 @@ import type { Property, TokenDefinition, ComponentDefinition } from '../../../pa
 import { isComputedExpression, isTokenReference } from '../../../parser/ast'
 import { getDevicePreset } from '../../../schema/dsl'
 import { nineZoneToFlex, singleAxisCenterToFlex } from '../../../schema/layout-defaults'
-import { matchesCanonical } from '../../../schema/parser-helpers'
+import { getSizeStateThresholds, matchesCanonical } from '../../../schema/parser-helpers'
 import { getTokenSuffix } from '../../../schema/token-suffixes'
 import { animationShorthand } from '../../animations'
 import type { ParentLayoutContext } from './layout'
@@ -1061,4 +1061,77 @@ export function collectStateGroups(
   return Object.entries(groups)
     .filter(([, props]) => props.length > 0)
     .map(([state, properties]) => ({ state, properties, animation: animations[state] }))
+}
+
+/**
+ * Detect size-state blocks (`compact:`, `regular:`, `wide:`, plus custom
+ * states whose thresholds come from `<name>.min` / `<name>.max` tokens)
+ * on the resolved component. Size states drive CSS `@container` rules —
+ * the React backend emits them on a synthetic outer-wrapper around the
+ * instance, mirroring the DOM backend's container-wrapper pattern
+ * (`docs/refactoring/container-queries.md` Lane A).
+ *
+ * Returns one entry per size-state with its threshold (built-in or
+ * token-resolved) and its property list. Empty if there are no
+ * size-states or none have resolvable thresholds.
+ */
+export function collectSizeStateGroups(
+  compDef: ComponentDefinition | undefined,
+  instanceStates: ComponentDefinition['states'] | undefined,
+  tokens: TokenDefinition[]
+): Array<{
+  state: string
+  properties: Property[]
+  thresholds: { min?: number; max?: number }
+}> {
+  const SYSTEM_STATES = new Set(['hover', 'focus', 'active', 'disabled', 'on', 'off'])
+  const groups: Array<{
+    state: string
+    properties: Property[]
+    thresholds: { min?: number; max?: number }
+  }> = []
+
+  // Token lookup for custom size-state thresholds.
+  const customThreshold = (state: string, side: 'min' | 'max'): number | undefined => {
+    const tok = tokens.find(t => {
+      const n = t.name.startsWith('$') ? t.name.slice(1) : t.name
+      return n === `${state}.${side}`
+    })
+    if (!tok || typeof tok.value !== 'number') return undefined
+    return tok.value
+  }
+
+  const resolveThresholds = (state: string): { min?: number; max?: number } | null => {
+    const custom = {
+      min: customThreshold(state, 'min'),
+      max: customThreshold(state, 'max'),
+    }
+    if (custom.min !== undefined || custom.max !== undefined) return custom
+    const builtin = getSizeStateThresholds(state)
+    if (!builtin) return null
+    if (builtin.min === undefined && builtin.max === undefined) return null
+    return builtin
+  }
+
+  const allStates = [...(compDef?.states ?? []), ...(instanceStates ?? [])]
+  for (const s of allStates) {
+    if (SYSTEM_STATES.has(s.name)) continue
+    if (!s.properties || s.properties.length === 0) continue
+    const thresholds = resolveThresholds(s.name)
+    if (!thresholds) continue
+    groups.push({ state: s.name, properties: s.properties, thresholds })
+  }
+  return groups
+}
+
+/**
+ * Build a CSS `@container` query condition string from min/max thresholds.
+ * Mirrors `compiler/backends/dom/style-emitter.ts:buildContainerQuery`.
+ */
+export function formatContainerQuery(thresholds: { min?: number; max?: number }): string | null {
+  const parts: string[] = []
+  if (thresholds.min !== undefined) parts.push(`(min-width: ${thresholds.min}px)`)
+  if (thresholds.max !== undefined) parts.push(`(max-width: ${thresholds.max}px)`)
+  if (parts.length === 0) return null
+  return parts.join(' and ')
 }
