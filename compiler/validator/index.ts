@@ -125,6 +125,14 @@ export interface ValidateOptions {
    * prose even when the prose component lives in `components.com`.
    */
   proseComponentPrelude?: ReadonlySet<string>
+  /**
+   * Compile target for backend-support diagnostics (Hebel 3 follow-up).
+   * When set, properties carrying a `backends: [...]` declaration that
+   * does not include this target produce W130 (BACKEND_UNSUPPORTED).
+   * Use this from the export pipeline so users see at validate-time
+   * which properties will be silently dropped at the chosen target.
+   */
+  target?: import('../schema/dsl').BackendTarget
 }
 
 /**
@@ -155,6 +163,7 @@ export function validate(source: string, options?: ValidateOptions): ValidationR
   if (options?.preludeTokens) for (const t of options.preludeTokens) tokens.add(t)
   if (options?.preludeComponents) for (const c of options.preludeComponents) components.add(c)
   validator.setPrelude(tokens, components)
+  validator.setTarget(options?.target)
 
   const validatorResult = validator.validate(ast)
 

@@ -29,6 +29,7 @@ import {
 } from './validation-config'
 import { CHART_PRIMITIVES } from '../schema/chart-primitives'
 import { getPrimitiveDef } from '../schema/dsl'
+import type { BackendTarget } from '../schema/dsl'
 
 const CHART_PRIMITIVE_NAMES = new Set(Object.keys(CHART_PRIMITIVES))
 
@@ -52,6 +53,10 @@ export class Validator {
   // Prelude definitions (from other files, e.g., tokens.tok)
   private preludeTokens: Set<string> = new Set()
   private preludeComponents: Set<string> = new Set()
+  // Configured compile target for backend-support diagnostics. When set,
+  // properties declaring `backends: [...]` without this target produce
+  // W130 (BACKEND_UNSUPPORTED) — surfaces silent-drop bugs at export.
+  private target: BackendTarget | undefined = undefined
 
   constructor() {
     this.rules = generateValidationRules()
@@ -64,6 +69,15 @@ export class Validator {
   setPrelude(tokens: Set<string>, components: Set<string>): void {
     this.preludeTokens = tokens
     this.preludeComponents = components
+  }
+
+  /**
+   * Set the compile target for backend-support diagnostics. Absent / undefined
+   * disables the check (preserves pre-Hebel-3 behavior for callers that
+   * don't care about target-specific warnings).
+   */
+  setTarget(target: BackendTarget | undefined): void {
+    this.target = target
   }
 
   /**
@@ -723,6 +737,20 @@ export class Validator {
         this.trackUsedComponent(prop.name, prop.line, prop.column)
       }
       return
+    }
+
+    // Backend-support check (Hebel 3 follow-up): when a compile target is
+    // configured and the property declares `backends: [...]` without that
+    // target, surface a W130 warning. Absent backends field = supported
+    // everywhere (default). Without a configured target, skip entirely so
+    // callers that don't care keep their existing zero-warning surface.
+    if (this.target && propDef.backends && !propDef.backends.includes(this.target)) {
+      this.addWarning(
+        ERROR_CODES.BACKEND_UNSUPPORTED,
+        `Property "${prop.name}" is not supported by the ${this.target} backend (supported: ${propDef.backends.join(', ')}). The value will be silently dropped in the rendered output.`,
+        prop.line,
+        prop.column
+      )
     }
 
     // Extract actual values (handle TokenReference objects). If the
