@@ -20,6 +20,7 @@ import { SnapIndicator, createSnapIndicator } from './snap-indicator'
 import { RafMouseThrottle } from './raf-mouse-throttle'
 import { ObserverPack } from './observer-pack'
 import { MIRROR_ID_ATTR } from '../../compiler/utils/mirror-attrs'
+import { calculateGapDelta, applyGapDelta } from './gap-handle-math'
 
 // Visual constants
 const HANDLE_VISUAL_SIZE = 2 // Visible line: 2px
@@ -703,18 +704,10 @@ export class GapManager {
 
     const { direction, startX, startY, startGap, element } = this.activeDrag
 
-    // Calculate delta based on direction
-    let delta: number
-    if (direction === 'horizontal') {
-      // Dragging right increases gap
-      delta = e.clientX - startX
-    } else {
-      // Dragging down increases gap
-      delta = e.clientY - startY
-    }
-
-    // Calculate new gap (minimum 0)
-    let newGap = Math.max(0, startGap + delta)
+    // Pure math — see studio/visual/gap-handle-math.ts for the polarity
+    // and clamping rules (vitest-pinned independent of jsdom + overlay).
+    const delta = calculateGapDelta(direction, startX, startY, e.clientX, e.clientY)
+    let newGap = applyGapDelta(startGap, delta)
 
     // Token snapping (unless Cmd/Ctrl held to bypass)
     let snapResult: SpacingSnapResult | undefined
