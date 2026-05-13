@@ -49,6 +49,86 @@
       color: var(--text-disabled);
     }
 
+    /* Bridge variant — open-folder button + recents */
+    .file-tree-empty--bridge {
+      justify-content: flex-start;
+      padding-top: 32px;
+      gap: 12px;
+    }
+
+    .file-tree-empty--bridge .file-tree-empty-hint {
+      margin-bottom: 8px;
+    }
+
+    .bridge-open-btn {
+      padding: 6px 14px;
+      font-size: var(--font-sm);
+      background: var(--surface-hover);
+      color: var(--text-default);
+      border: 1px solid var(--border-default);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .bridge-open-btn:hover {
+      background: var(--surface-active);
+    }
+
+    .bridge-recents {
+      margin-top: 8px;
+      width: 100%;
+      text-align: left;
+    }
+
+    .bridge-recents-label {
+      font-size: var(--font-xs);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-wide);
+      margin: 0 0 6px 4px;
+    }
+
+    .bridge-recents-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .bridge-recents-item {
+      display: flex;
+      flex-direction: column;
+      padding: 6px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .bridge-recents-item:hover {
+      background: var(--surface-hover);
+    }
+
+    .bridge-recents-name {
+      font-size: var(--font-sm);
+      color: var(--text-default);
+    }
+
+    .bridge-recents-path {
+      font-size: var(--font-xs);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bridge-recents-empty {
+      font-size: var(--font-xs);
+      color: var(--text-disabled);
+      padding: 8px 4px;
+    }
+
     /* Desktop File Tree - Root */
     .file-tree-root {
       user-select: none;

@@ -48,8 +48,10 @@ export {
   detectProvider,
   createProvider,
   TauriProvider,
+  BridgeProvider,
   LocalStorageProvider,
   isTauri,
+  isBridgeAvailable,
   isLocalStorageAvailable,
 } from './providers'
 

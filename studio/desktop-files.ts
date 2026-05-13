@@ -5,7 +5,7 @@
  * Uses the abstracted storage service for all file operations.
  */
 
-import { alert, confirmDelete } from './dialog'
+import { alert, confirmDelete, prompt } from './dialog'
 import { storage } from './storage'
 import type { StorageItem } from './storage'
 import { createLogger } from '../compiler/utils/logger'
@@ -363,7 +363,13 @@ export async function initDesktopFiles(options: InternalFileCallbacks = {}): Pro
 // =============================================================================
 
 /**
- * Open a folder via dialog
+ * Open a folder via dialog. Three paths:
+ *   1. Tauri          → native folder picker via `storage.openFolderDialog()`
+ *   2. Bridge         → text prompt for an absolute path (no native picker
+ *                       in the plain browser; bridge resolves the path
+ *                       server-side and rejects traversal)
+ *   3. LocalStorage   → silently no-op (browser-only mode has no concept
+ *                       of "open folder" — projects live in localStorage)
  */
 export async function openFolder(): Promise<string | null> {
   try {
@@ -373,15 +379,83 @@ export async function openFolder(): Promise<string | null> {
         await storage.openProject(path)
         return path
       }
-    } else {
-      // No native dialogs available - browser mode doesn't support this
-      log.debug('[DesktopFiles] Native folder dialog not available in browser mode')
       return null
     }
+    if (storage.providerType === 'bridge') {
+      const path = await prompt('Absoluter Pfad zum Projekt-Ordner', {
+        title: 'Ordner öffnen',
+        placeholder: '/Users/…/mein-projekt',
+        confirmLabel: 'Öffnen',
+      })
+      if (!path) return null
+      await storage.openProject(path.trim())
+      return path.trim()
+    }
+    log.debug('[DesktopFiles] No folder-open path available for current provider')
+    return null
   } catch (e) {
     log.error('[DesktopFiles] Open folder failed:', e)
+    await alert(`Ordner öffnen fehlgeschlagen: ${(e as Error).message}`, {
+      title: 'Bridge-Fehler',
+    })
   }
   return null
+}
+
+/**
+ * Open a folder by absolute path — used by the bridge empty-state recents list.
+ */
+export async function openFolderByPath(absPath: string): Promise<void> {
+  try {
+    await storage.openProject(absPath)
+  } catch (e) {
+    log.error('[DesktopFiles] openFolderByPath failed:', e)
+    await alert(`Ordner konnte nicht geöffnet werden: ${(e as Error).message}`, {
+      title: 'Bridge-Fehler',
+    })
+  }
+}
+
+/**
+ * Fetch recents from the bridge and inject them into the empty-state.
+ * Fire-and-forget: if the empty-state was replaced before the fetch
+ * resolved (user opened a folder), the placeholder is gone — `?.` chain
+ * makes that a silent no-op.
+ */
+async function populateBridgeRecents(container: HTMLElement): Promise<void> {
+  let recents: { id: string; name: string }[] = []
+  try {
+    recents = await storage.listProjects()
+  } catch (e) {
+    log.warn('Failed to load bridge recents:', e)
+  }
+  const slot = container.querySelector<HTMLElement>('#bridge-recents-list')
+  if (!slot) return // empty-state replaced in the meantime
+  if (recents.length === 0) {
+    slot.innerHTML = `<div class="bridge-recents-empty">Noch keine kürzlich geöffneten Ordner.</div>`
+    return
+  }
+  slot.innerHTML = `
+    <div class="bridge-recents-label">Kürzlich geöffnet</div>
+    <ul class="bridge-recents-list">
+      ${recents
+        .map(
+          r => `
+        <li class="bridge-recents-item" data-path="${escapeAttr(r.id)}">
+          <span class="bridge-recents-name">${escapeHtml(r.name)}</span>
+          <span class="bridge-recents-path">${escapeHtml(r.id)}</span>
+        </li>
+      `
+        )
+        .join('')}
+    </ul>
+  `
+  for (const item of slot.querySelectorAll<HTMLElement>('.bridge-recents-item')) {
+    item.addEventListener('click', () => {
+      const path = item.getAttribute('data-path')
+      if (path) void openFolderByPath(path)
+    })
+  }
 }
 
 /**
@@ -916,6 +990,23 @@ function renderFileTree(): void {
   const projectName = storage.currentProjectName || 'Project'
 
   if (!storage.hasProject || tree.length === 0) {
+    if (storage.providerType === 'bridge') {
+      container.innerHTML = `
+        <div class="file-tree-empty file-tree-empty--bridge">
+          <div class="file-tree-empty-icon">${ICON_FOLDER}</div>
+          <div class="file-tree-empty-text">Kein Ordner geöffnet</div>
+          <div class="file-tree-empty-hint">AI-Bridge verbunden — wähle einen Projekt-Ordner</div>
+          <button class="bridge-open-btn" id="bridge-open-folder-btn">Ordner öffnen…</button>
+          <div class="bridge-recents" id="bridge-recents-list"></div>
+        </div>
+      `
+      const btn = container.querySelector<HTMLButtonElement>('#bridge-open-folder-btn')
+      btn?.addEventListener('click', () => {
+        void openFolder()
+      })
+      void populateBridgeRecents(container)
+      return
+    }
     container.innerHTML = `
       <div class="file-tree-empty">
         <div class="file-tree-empty-icon">${ICON_FOLDER}</div>
