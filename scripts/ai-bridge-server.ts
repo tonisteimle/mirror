@@ -286,6 +286,65 @@ async function handleFsRequest(req: IncomingMessage, res: ServerResponse): Promi
       return
     }
 
+    // POST /fs/write { path, content }
+    if (method === 'POST' && url.pathname === '/fs/write') {
+      const body = await readJsonBody<{ path?: string; content?: string }>(req)
+      if (typeof body.path !== 'string' || typeof body.content !== 'string') {
+        throw new BridgeProtocolError('path and content (string) required', 'BAD_REQUEST')
+      }
+      await fsBridge.writeFile(body.path, body.content)
+      writeJson(res, 200, { ok: true })
+      return
+    }
+
+    // POST /fs/delete { path, type: 'file' | 'folder' }
+    if (method === 'POST' && url.pathname === '/fs/delete') {
+      const body = await readJsonBody<{ path?: string; type?: 'file' | 'folder' }>(req)
+      if (typeof body.path !== 'string') {
+        throw new BridgeProtocolError('path required', 'BAD_REQUEST')
+      }
+      if (body.type === 'folder') {
+        await fsBridge.deleteFolder(body.path)
+      } else {
+        await fsBridge.deleteFile(body.path)
+      }
+      writeJson(res, 200, { ok: true })
+      return
+    }
+
+    // POST /fs/rename { oldPath, newPath }
+    if (method === 'POST' && url.pathname === '/fs/rename') {
+      const body = await readJsonBody<{ oldPath?: string; newPath?: string }>(req)
+      if (typeof body.oldPath !== 'string' || typeof body.newPath !== 'string') {
+        throw new BridgeProtocolError('oldPath and newPath required', 'BAD_REQUEST')
+      }
+      await fsBridge.rename(body.oldPath, body.newPath)
+      writeJson(res, 200, { ok: true })
+      return
+    }
+
+    // POST /fs/move { sourcePath, targetFolder }
+    if (method === 'POST' && url.pathname === '/fs/move') {
+      const body = await readJsonBody<{ sourcePath?: string; targetFolder?: string }>(req)
+      if (typeof body.sourcePath !== 'string' || typeof body.targetFolder !== 'string') {
+        throw new BridgeProtocolError('sourcePath and targetFolder required', 'BAD_REQUEST')
+      }
+      await fsBridge.moveItem(body.sourcePath, body.targetFolder)
+      writeJson(res, 200, { ok: true })
+      return
+    }
+
+    // POST /fs/mkdir { path }
+    if (method === 'POST' && url.pathname === '/fs/mkdir') {
+      const body = await readJsonBody<{ path?: string }>(req)
+      if (typeof body.path !== 'string') {
+        throw new BridgeProtocolError('path required', 'BAD_REQUEST')
+      }
+      await fsBridge.createFolder(body.path)
+      writeJson(res, 200, { ok: true })
+      return
+    }
+
     res.writeHead(404).end('Not Found')
   } catch (err) {
     if (err instanceof BridgeProtocolError) {
@@ -338,6 +397,16 @@ server.listen(PORT, () => {
   console.log('  POST /fs/open             → { open, path, name }')
   console.log('       body: { path }')
   console.log('  POST /fs/close            → { open: false, … }')
+  console.log('  POST /fs/write            → { ok }')
+  console.log('       body: { path, content }')
+  console.log('  POST /fs/delete           → { ok }')
+  console.log('       body: { path, type? "file"|"folder" }')
+  console.log('  POST /fs/rename           → { ok }')
+  console.log('       body: { oldPath, newPath }')
+  console.log('  POST /fs/move             → { ok }')
+  console.log('       body: { sourcePath, targetFolder }')
+  console.log('  POST /fs/mkdir            → { ok }')
+  console.log('       body: { path }')
 })
 
 // Clean shutdown
