@@ -81,7 +81,6 @@ tools/                 # CLI Tools
 
 docs/                  # Dokumentation
 ├── concepts/          # Feature-Konzepte (in Entwicklung)
-├── refactoring/       # Lane-Docs für laufende Refactors
 ├── audit/             # Datierte umfassende Audits
 └── generated/         # Auto-generierte DSL-Referenz (`npm run generate`)
 dist/                  # Build Output
