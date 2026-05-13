@@ -374,21 +374,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                                                                                    **Status-Update:** erledigt — alle drei Slices landen:
-                                                                                                    Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                                                                                    inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                                                                                    Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                                                                                    (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                                                                                    `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                                                                                    (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                                                                                    — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                                                                                    hat per `git add .` die uncommittete compiler-Side mit
-                                                                                                    aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                                                                                    `hasZagChildren` (children-Shape), `isZagComponentName`
-                                                                                                    (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                                                                                    IRZagNode-Discriminator-Property `isZagComponent: true`
-                                                                                                    bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                                                                                    81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                                                                                        **Status-Update:** erledigt — alle drei Slices landen:
+                                                                                                        Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                                                                                        inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                                                                                        Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                                                                                        (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                                                                                        `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                                                                                        (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                                                                                        — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                                                                                        hat per `git add .` die uncommittete compiler-Side mit
+                                                                                                        aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                                                                                        `hasZagChildren` (children-Shape), `isZagComponentName`
+                                                                                                        (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                                                                                        IRZagNode-Discriminator-Property `isZagComponent: true`
+                                                                                                        bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                                                                                        81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
@@ -1118,9 +1118,17 @@ svelte-spike/`-Spikes und Memory `project_llm_pipeline.md`).
     Diff enthält die 49 LOC `reportBackendWarnings()`-Helper).
     Verifiziert auf `examples/swiss-form.mirror --target svelte`:
     6 W130-Warnings für `mask`-Properties, wie erwartet.
-    Verbleibend (separate UX-Lane): Studio-Linter könnte aus
-    `state.target` lesen — braucht aber erst einen Target-Picker
-    im Studio.
+    Studio-Linter-Wiring auch erledigt: Toolbar-Picker
+    `#linter-target` in der editor-actions-Leiste
+    (`ab6f1b67` HTML, `b5ea58d5` CSS, `928b62df` app.ts-wiring,
+    `1c5b8b98` cache-bust). Persistenz via localStorage
+    (`mirror.linter-target`); Default `''` = DOM = keine W130s.
+    Bei Auswahl `react`/`framework`/`vue`/`svelte`/`vanilla`
+    triggert ein change-Event Re-Compile; W130-Diagnostics
+    landen über `validateCode({ target })` im CodeMirror-Gutter
+    via die existierende `toCodeMirrorDiagnostics`-Pipeline.
+    Active-Indikator: `[data-active='true']` färbt das Select
+    accent-coloured, sobald target ≠ DOM.
 
 ### 2026-05-13 — Pure-Mirror x/y-Propagation in Stacked Containers — Skip-Notiz stale
 
