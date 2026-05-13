@@ -126,13 +126,12 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 > 6. `studio/app.ts` Bootstrap-Decomp (#8) — ongoing decomposition
 > 7. `compiler/backends/dom/ops/resolve-templates.ts:resolveConditionalExpression`
 >    — Smell ohne Bug
-> 8. `studio/react-converter/` — dormant Modul (Hunt 2026-05-12 Iter-N+3)
 >
 > Alle anderen Einträge unter „Offen" tragen bereits Status:
 > **erledigt** oder **abgewiesen** und gehören eigentlich nach
 > „Erledigt"; sie verbleiben hier als historischer Kontext (Audit-
 > Notiz + Commit-Hash). Vor dem nächsten Hunt-Rollup migrieren —
-> bis dahin: erst auf die obigen 8 Einträge scannen.
+> bis dahin: erst auf die obigen 7 Einträge scannen.
 
 - **Wo:** `studio/editor/triggers/trigger-controller.ts` (659 LOC),
   `studio/editor/triggers/ports.ts` (450 LOC),
@@ -1042,16 +1041,16 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
   `studio/agent/generation-pipeline.ts` und nutzt einen ganz anderen
   Pfad (HTML als Pivot, nicht React; siehe `tools/experiments/
 svelte-spike/`-Spikes und Memory `project_llm_pipeline.md`).
-  **Status:** offen — Owner-Entscheidung (Pattern wie compile-service):
-  (a) wirklich an LLM-Edit-Flow anschließen, (b) löschen
-  (~599 LOC src + ~340 LOC Test, plus Barrel-Re-Export aus
-  `studio/index.ts:107` + CLAUDE.md-Eintrag), (c) als experimenteller
-  Fork in `tools/experiments/` archivieren.
-  **Notiz:** CLAUDE.md `studio/`-Tree-Eintrag (`react-converter/   #
-Mirror → React Konverter`) beschreibt zudem die **falsche
-  Richtung** — der Code konvertiert React → Mirror, nicht umgekehrt.
-  Bei Beibehaltung: Comment fixen. Bei Deletion: CLAUDE.md-Zeile mit
-  raus.
+  **Status:** erledigt (`f2337d7b`) — Option (b) gewählt: gelöscht.
+  Begründung: Die validierte LLM-Pipeline (siehe Memory
+  `project_llm_pipeline.md` + Spike `tools/experiments/svelte-spike/`)
+  nutzt **HTML als Pivot**, nicht React; der Code-Pfad wurde von der
+  Pipeline-Validierung explizit verworfen. 599 LOC src + 685 LOC Test
+  - Barrel-Zeile in `studio/index.ts` + CLAUDE.md-Tree-Zeile
+    entfernt. tsc clean, 5703/5703 studio Tests grün. Falsche
+    Richtungsangabe im CLAUDE.md-Tree (sagte „Mirror → React" obwohl
+    Code „React → Mirror" war) ist mit der Zeile mit-entfernt.
+    Restoration via `git show f2337d7b^:studio/react-converter/index.ts`.
 
 - **Wo:** `studio/file-types/extensions.ts:21`,
   `studio/storage/types.ts:85`, `studio/storage/project-actions.ts:784`
@@ -1121,21 +1120,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                    **Status-Update:** erledigt — alle drei Slices landen:
-                                    Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                    inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                    Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                    (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                    `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                    (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                    — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                    hat per `git add .` die uncommittete compiler-Side mit
-                                    aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                    `hasZagChildren` (children-Shape), `isZagComponentName`
-                                    (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                    IRZagNode-Discriminator-Property `isZagComponent: true`
-                                    bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                    81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                        **Status-Update:** erledigt — alle drei Slices landen:
+                                        Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                        inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                        Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                        (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                        `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                        (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                        — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                        hat per `git add .` die uncommittete compiler-Side mit
+                                        aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                        `hasZagChildren` (children-Shape), `isZagComponentName`
+                                        (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                        IRZagNode-Discriminator-Property `isZagComponent: true`
+                                        bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                        81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
