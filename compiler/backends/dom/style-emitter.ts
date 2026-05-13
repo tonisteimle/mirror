@@ -227,7 +227,15 @@ function buildContainerQuery(ctx: StyleEmitterContext, sizeState: string): strin
 }
 
 /**
- * Emit CSS for a single node's size states
+ * Emit CSS for a single node's size states.
+ *
+ * KNOWN BUG: the `[data-mirror-id^="${node.id}"]` selector targets the
+ * same element that owns `container-type: inline-size` (emitted by
+ * `node-emitter.ts:emitContainerType`). Per CSS spec, `@container`
+ * matches container-ancestors, not self — so the rule never fires.
+ * Fix-Pfad steht in `docs/refactoring/container-queries.md` (Lane A:
+ * synthetic outer-wrapper). React- and Framework-Backend drop
+ * `sizeState` styles silently (differential-test lücke).
  */
 function emitNodeSizeStateCSS(ctx: StyleEmitterContext, node: IRNode): void {
   const sizeStateStyles = node.styles.filter(s => s.sizeState)

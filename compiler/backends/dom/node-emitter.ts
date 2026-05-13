@@ -322,7 +322,16 @@ export function emitBaseStyles(ctx: NodeEmitterContext, node: IRNode, varName: s
 }
 
 /**
- * Emit container type for size-states
+ * Emit container type for size-states.
+ *
+ * KNOWN BUG: `container-type` is set on the SAME element that owns the
+ * size-state styles, but CSS `@container` matches against the
+ * container-ancestor — not the element's own width. The frame therefore
+ * doesn't react to its own width. See `docs/refactoring/container-queries.md`
+ * (Lane A: synthetic outer-wrapper as container, on-demand via
+ * `needsContainer`). Browser tests pinning the bug are skipped at
+ * `studio/test-api/suites/responsive/{basic,layout}.test.ts:73,88`.
+ * Workaround today: put size-states on an Inner child of the frame.
  */
 export function emitContainerType(ctx: NodeEmitterContext, node: IRNode, varName: string): void {
   if (node.needsContainer) {
