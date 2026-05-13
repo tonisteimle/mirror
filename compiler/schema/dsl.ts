@@ -92,6 +92,14 @@ export interface NumericValue {
   example?: string
 }
 
+/**
+ * Backend targets Mirror compiles to. `vue` / `svelte` / `vanilla` are
+ * export-pipeline-only — they go through a second LLM-translation step
+ * from React (`tools/export.ts`); the in-tree backends are `dom`,
+ * `react`, and `framework`.
+ */
+export type BackendTarget = 'dom' | 'react' | 'framework' | 'vue' | 'svelte' | 'vanilla'
+
 export interface PropertyDef {
   /** Vollständiger Name */
   name: string
@@ -131,6 +139,21 @@ export interface PropertyDef {
     directions: string[]
     css: (dir: string, val: string) => CSSOutput[]
   }
+  /**
+   * Which backends actually emit this property. Absent = all in-tree
+   * backends support it (the default).
+   *
+   * When a property carries `backends: ['dom']` the property is
+   * declaratively DOM-only — export to React/Framework will silently
+   * drop it today (the validator + export pipeline can read this field
+   * and surface a warning, planned for a follow-up lane).
+   *
+   * Use this for properties with runtime behavior that other backends
+   * have no equivalent for (e.g. `mask` needs the runtime mask helper;
+   * `loop-focus` / `typeahead` / `trigger-text` / `keyboard-nav` rely on
+   * DOM-runtime event hooks).
+   */
+  backends?: BackendTarget[]
 }
 
 export interface PrimitiveDef {

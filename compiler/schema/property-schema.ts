@@ -1829,7 +1829,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     aliases: [],
     category: 'input',
     description: 'Input mask pattern. # = digit, A = letter, * = alphanumeric, others = literal',
-
+    backends: ['dom'],
     keywords: {},
   },
 
@@ -1872,7 +1872,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     aliases: ['keynav'],
     category: 'input',
     description: 'Enable keyboard navigation for form container',
-
+    backends: ['dom'],
     keywords: {
       _standalone: {
         description: 'Enter moves to next field, Escape blurs, Tab cycles through fields',
@@ -1887,7 +1887,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     aliases: ['loopfocus'],
     category: 'input',
     description: 'Enable focus looping for highlight navigation',
-
+    backends: ['dom'],
     keywords: {
       _standalone: {
         description: 'Arrow keys wrap around at start/end of list',
@@ -1902,7 +1902,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     aliases: [],
     category: 'input',
     description: 'Enable typeahead for list navigation',
-
+    backends: ['dom'],
     keywords: {
       _standalone: {
         description: 'Typing characters jumps to matching item',
@@ -1917,7 +1917,7 @@ export const SCHEMA: Record<string, PropertyDef> = {
     aliases: ['triggertext'],
     category: 'input',
     description: 'Update trigger text when selection changes',
-
+    backends: ['dom'],
     keywords: {
       _standalone: {
         description: 'Trigger element shows the selected option text',
