@@ -101,6 +101,21 @@ Frame w 200, h 200, bg #27272a, pad 16`,
   Frame w 240, h 200, bg #27272a, pad 12
     Frame w 180, h 140, bg #3f3f46
   Frame w 60, h 60, bg #f59e0b`,
+
+  /**
+   * Top-level Text + an empty Frame as drop target.
+   * Drag the Text INTO the Frame so it becomes a child Text.
+   *
+   *   text  ← drag source (top-level)
+   *   targetFrame (#27272a)  ← drop target (empty)
+   *
+   * After drag:
+   *
+   *   targetFrame
+   *     text
+   */
+  topLevelTextPlusEmptyFrame: `Text "Drag me", col #f59e0b
+Frame w 240, h 120, bg #27272a`,
 } as const
 
 export type FixtureName = keyof typeof FIXTURES
