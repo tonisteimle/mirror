@@ -374,21 +374,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                                                                        **Status-Update:** erledigt — alle drei Slices landen:
-                                                                                        Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                                                                        inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                                                                        Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                                                                        (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                                                                        `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                                                                        (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                                                                        — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                                                                        hat per `git add .` die uncommittete compiler-Side mit
-                                                                                        aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                                                                        `hasZagChildren` (children-Shape), `isZagComponentName`
-                                                                                        (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                                                                        IRZagNode-Discriminator-Property `isZagComponent: true`
-                                                                                        bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                                                                        81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                                                                            **Status-Update:** erledigt — alle drei Slices landen:
+                                                                                            Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                                                                            inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                                                                            Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                                                                            (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                                                                            `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                                                                            (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                                                                            — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                                                                            hat per `git add .` die uncommittete compiler-Side mit
+                                                                                            aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                                                                            `hasZagChildren` (children-Shape), `isZagComponentName`
+                                                                                            (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                                                                            IRZagNode-Discriminator-Property `isZagComponent: true`
+                                                                                            bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                                                                            81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
@@ -1092,6 +1092,30 @@ svelte-spike/`-Spikes und Memory `project_llm_pipeline.md`).
     (private) → `isProjectImportFile`. studio/index.ts:92-99
     Ambiguitäts-Workaround ersatzlos raus (kein Symbol-Name-Konflikt
     mehr). zag/index.ts deps-Parameter mit umbenannt.
+
+### 2026-05-13 — Hebel 3 follow-up: Validator W130 BACKEND_UNSUPPORTED
+
+- **Wo:** `compiler/validator/{validator,index,types}.ts`,
+  `tests/compiler/validator-backend-warning.test.ts`
+  **Was:** Hebel 3 aus `docs/audit/2026-05-13-comprehensive.md` legte
+  in `5a42143d` die Foundation (`PropertyDef.backends?: BackendTarget[]`
+  - DOM-only-Annotationen für `mask` / `keyboard-nav` / `loop-focus` /
+    `typeahead` / `trigger-text`). Was fehlte: der Validator las das
+    Feld nicht — Export nach React/Vue/Svelte/Vanilla droppte diese
+    Properties weiterhin silent.
+    **Status:** erledigt (`2afa88cc`) — Validator-Wiring komplett:
+    ValidateOptions kriegt `target?: BackendTarget`; Validator-Klasse
+    hat `setTarget()`; validateProperty emittiert W130
+    BACKEND_UNSUPPORTED wenn `target` gesetzt UND `propDef.backends`
+    nicht das Target enthält. Default (kein Target) bleibt no-op —
+    CLI / Studio-Linter behalten ihre bisherige Zero-Warning-Surface.
+    14 unit tests pinnen disabled / DOM-OK / React-warns / Vue+Svelte+
+    Vanilla-warns / Cross-backend-no-warn / Line+Column / Multi-Warning-
+    Aggregation. 15032/15032 Tests grün.
+    **Notiz:** Nächster Slice — `tools/export.ts` muss `target` an
+    `validate()` durchreichen, damit der Export-Run die Warnings
+    tatsächlich anzeigt. Studio-Linter könnte ebenfalls aus `state.target`
+    lesen (heute aber kein Target-Picker im Studio — separate UX-Lane).
 
 ### 2026-05-13 — Pure-Mirror x/y-Propagation in Stacked Containers — Skip-Notiz stale
 
