@@ -9,9 +9,9 @@
  * optional visual reference. The bundle is the contract handed to an
  * LLM agent (Claude Code) which converts it to real framework code.
  *
- * The spike that validated this format lives in
- * tools/experiments/personas-react-spike/ — same bundle structure,
- * built by hand. This CLI generalizes it.
+ * (The hand-built validation spike that proved out this bundle format
+ * lived in tools/experiments/personas-react-spike/ — archived in git
+ * history after the CLI generalized it.)
  */
 import {
   readFileSync,

@@ -6,9 +6,10 @@
  *   - `buildTranslationPrompt`    — Stufe 2: HTML → idiomatisches Mirror
  *
  * Die Prompt-Texte sind die in den Spike-Experimenten validierten Versionen
- * (siehe `docs/ai-generation-pipeline.md` Anhang und `tools/experiments/
- * svelte-spike/`). Hard Constraints + Translation-Hints + Design-Quality-Bar
- * sind Mirror-spezifisch — Anpassungen hier wirken auf jede Generierung.
+ * (Mai 2026 — html-detour, html-spec, svelte-spike, smoke-runs; alle nach
+ * Pipeline-Integration archiviert, siehe git history). Hard Constraints +
+ * Translation-Hints + Design-Quality-Bar sind Mirror-spezifisch —
+ * Anpassungen hier wirken auf jede Generierung.
  *
  * Keine Side-Effects. Keine Bridge-Calls. Keine Editor-Abhängigkeit.
  */

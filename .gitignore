@@ -59,6 +59,4 @@ Testproject.zip
 # Claude Code local config + runtime
 .claude/
 
-# Generation-pipeline smoke-test outputs (per-run timestamped dirs)
-tools/experiments/smoke-runs/
 demos/*.webm

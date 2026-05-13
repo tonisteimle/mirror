@@ -193,9 +193,8 @@ Mit `--incremental` vergleicht das CLI gegen die alten Hashes, schreibt
 unbeteiligten Files in Ruhe.
 
 **Architektur:** `tools/export.ts` (CLI), `tools/export/templates/` (Brief +
-Pro-Target-Pipeline-Instructions). Validierter Spike:
-`tools/experiments/personas-react-spike/`. Der Bundle-Inhalt ist der
-Vertrag — Iteration passiert an den Templates, nicht am Output.
+Pro-Target-Pipeline-Instructions). Der Bundle-Inhalt ist der Vertrag —
+Iteration passiert an den Templates, nicht am Output.
 
 ## CLI
 
