@@ -96,9 +96,6 @@ export * from './file-types'
 // these via the studio bundle (see app.js studioCodeModifier creation).
 export * from './code-modifier'
 
-// React Converter (React/JSX to Mirror DSL)
-export * from './react-converter'
-
 // YAML Parser (data file parsing) — lives under compile/
 export * from './compile/yaml-parser'
 

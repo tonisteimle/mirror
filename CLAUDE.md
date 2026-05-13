@@ -64,7 +64,6 @@ studio/                # Studio Runtime (TypeScript) - Modulare Architektur
 ├── zag/               # Zag-Component-Adapter (DatePicker)
 ├── styles/            # Modulare CSS-Bundles (per @import in styles.css)
 ├── types/             # Ambient Type Declarations (window-globals.d.ts)
-├── react-converter/   # Mirror → React Konverter
 ├── test-api/          # Browser-Test-Framework (separater Stack, nicht Runtime)
 ├── bootstrap.ts       # Architektur Entry Point (Kernel)
 ├── app.ts             # Legacy IIFE-Wrapper, ruft initializeStudio()
