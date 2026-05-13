@@ -1,0 +1,79 @@
+// Swiss Form — exercises Input `mask` pattern across realistic
+// Switzerland-specific input shapes (AHV, IBAN, postal code, phone,
+// licence plate, amount). Single-file example, no prelude.
+//
+// Why this exists: `mask` is a schema-defined property
+// (compiler/schema/property-schema.ts) implemented in the DOM backend
+// (compiler/backends/dom/node-emitter.ts + runtime-template support)
+// but had ZERO `.mirror` usage until 2026-05-13. Per the dead-feature
+// policy (tests/policy/dsl-features-have-examples.test.ts) a feature
+// without examples is a deletion candidate after 90 days.
+
+// === Tokens ===
+primary.bg: #2271C1
+primary.col: white
+surface.bg: #ffffff
+surface-alt.bg: #f8fafc
+text.col: #0f172a
+muted.col: #64748b
+border.boc: #e2e8f0
+border-focus.boc: #2271C1
+
+card.pad: 24
+card.rad: 12
+card.gap: 16
+
+field.gap: 6
+input.pad: 10 12
+input.rad: 6
+
+// === Components ===
+Card as Frame: bg $surface, pad $card, rad $card, gap $card, w 480, shadow md
+
+FormField as Frame: gap $field
+  Label: col $text, fs 13, weight 500
+  Hint: col $muted, fs 12
+
+MaskedInput as Input: bg $surface-alt, col $text, pad $input, rad $input, w full, bor 1, boc $border
+  focus:
+    boc $border-focus
+
+PrimaryBtn as Button: bg $primary, col $primary, pad 12 24, rad 6, weight 500, cursor pointer
+  hover 0.15s:
+    opacity 0.92
+
+// === Form ===
+Card
+  Text "Stammdaten erfassen", fs 18, weight 600, col $text
+
+  FormField
+    Label "AHV-Nummer"
+    MaskedInput mask "###.####.####.##", placeholder "756.1234.5678.90"
+    Hint "13-stellig, Format: 756.XXXX.XXXX.XX"
+
+  FormField
+    Label "IBAN"
+    MaskedInput mask "AA## #### #### #### #### #", placeholder "CH93 0076 2011 6238 5295 7"
+    Hint "Schweizer IBAN, 21 Zeichen"
+
+  FormField
+    Label "Postleitzahl"
+    MaskedInput mask "####", placeholder "8001"
+
+  FormField
+    Label "Telefon"
+    MaskedInput mask "+## ## ### ## ##", placeholder "+41 79 123 45 67"
+
+  FormField
+    Label "Kontrollschild"
+    MaskedInput mask "AA-######", placeholder "ZH-123456"
+    Hint "Kanton-Kürzel, Bindestrich, max 6 Ziffern"
+
+  FormField
+    Label "Betrag (CHF)"
+    MaskedInput mask "##'###'###.##", placeholder "12'345.67"
+    Hint "Schweizer Tausender-Apostroph"
+
+  Frame hor, spread, ver-center
+    Hint "Pattern-Zeichen: # = Ziffer, A = Buchstabe, * = alphanumerisch"
+    PrimaryBtn "Speichern"

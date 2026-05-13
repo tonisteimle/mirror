@@ -101,6 +101,19 @@ const KEEP: Feature[] = [
     // from WATCHLIST.
     pattern: /^---\s+\S.*?---\s*$/m,
   },
+  {
+    name: 'Input mask (pattern-formatted input)',
+    // `mask "###-##-##"` — the property name `mask` followed by a
+    // double-quoted pattern string. Implemented in DOM backend
+    // (compiler/backends/dom/node-emitter.ts + runtime-template).
+    // Example `examples/swiss-form.mirror` exercises AHV, IBAN,
+    // postal code, phone, licence plate, and amount masks. Added
+    // 2026-05-13 per audit Hebel 2 (was a triple-violation: 0
+    // examples, missing from CLAUDE.md reference, silent drop in
+    // React/Framework — backend-asymmetry covered separately in
+    // Hebel 3).
+    pattern: /\bmask\s+"[^"]+"/,
+  },
 ]
 
 // =============================================================================
