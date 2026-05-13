@@ -168,3 +168,72 @@ describe('States — React folds initial-state props into inline style', () => {
     expect(idle).toContain("color: '#888'")
   })
 })
+
+// ============================================================================
+// Container-Queries — Pre-Refactor-Pin (Lane A)
+// ============================================================================
+//
+// Captures the contract for `docs/refactoring/container-queries.md` Lane A.
+// The lane fixes the structural CSS-spec violation: today `container-type:
+// inline-size` is set on the SAME frame that owns the size-state styles, but
+// `@container` matches against container-ancestors — not self. Lane A
+// emits a synthetic outer-wrapper around any frame with `needsContainer`,
+// the wrapper carries the container-type, the frame's selector then
+// resolves as a descendant of the wrapper.
+//
+// Tests below are `.skip`-marked until the lane lands. When unskipped they
+// become the contract for "Lane A is wired in this backend".
+describe('Size-states — Container-Queries Lane A contract (skipped until fix)', () => {
+  const SIZE_STATE_SRC = `Frame bg #333\n  compact:\n    bg #ef4444\n  wide:\n    bg #10b981`
+
+  it.skip('DOM: synthetic outer-wrapper carries container-type, frame does not', () => {
+    const dom = generateDOM(parse(SIZE_STATE_SRC))
+    // Wrapper: data-mirror-wrapper="<frame-id>", container-type on wrapper
+    expect(dom).toMatch(/data-mirror-wrapper/)
+    expect(dom).toContain("containerType = 'inline-size'")
+    // Frame itself should NOT carry container-type after the fix (the
+    // wrapper takes that role). Counts how many distinct elements set
+    // containerType — should be 1 (the wrapper), not multiple.
+    const containerTypeMatches = dom.match(/containerType\s*=\s*'inline-size'/g) || []
+    expect(containerTypeMatches.length).toBe(1)
+  })
+
+  it.skip('DOM: @container selector resolves against frame as descendant of wrapper', () => {
+    const dom = generateDOM(parse(SIZE_STATE_SRC))
+    // Selector still targets the frame's mirror-id (the wrapper exists
+    // purely to provide an ancestor container).
+    expect(dom).toMatch(/@container .*\(max-width:/)
+    expect(dom).toMatch(/\[data-mirror-id\^="node-\d+"\]\s*\{/)
+  })
+
+  it.skip('React: emits container-wrapper div + @container CSS rules', () => {
+    const react = generateReact(parse(SIZE_STATE_SRC))
+    // React-Backend dropped sizeState styles silently (differential-lücke
+    // documented in lane doc). After Lane A: wrapper + style-block.
+    expect(react).toMatch(/data-mirror-wrapper/)
+    expect(react).toMatch(/@container .*\(max-width:/)
+    expect(react).toContain('#ef4444')
+    expect(react).toContain('#10b981')
+  })
+
+  it.skip('Framework: emits container-wrapper m()-call + @container CSS rules', () => {
+    const fw = generateFramework(parse(SIZE_STATE_SRC))
+    expect(fw).toMatch(/data-mirror-wrapper/)
+    expect(fw).toMatch(/@container .*\(max-width:/)
+  })
+
+  it.skip('Frame without size-states emits no wrapper (on-demand)', () => {
+    const dom = generateDOM(parse(`Frame bg #333\n  Text "no size-states"`))
+    expect(dom).not.toMatch(/data-mirror-wrapper/)
+    expect(dom).not.toContain("containerType = 'inline-size'")
+  })
+
+  it.skip('Frame with position:absolute forwards positioning to wrapper', () => {
+    const dom = generateDOM(parse(`Frame abs, x 10, y 20\n  compact:\n    bg red`))
+    // Lane A step 2: wrapper inherits position-properties so the frame
+    // doesn't lose its offset-parent semantics.
+    expect(dom).toMatch(/data-mirror-wrapper/)
+    // The wrapper, not the frame, should carry the absolute positioning.
+    expect(dom).toMatch(/data-mirror-wrapper[^>]*position[^>]*absolute/i)
+  })
+})
