@@ -214,54 +214,56 @@ kpi.h: 88
 dim.opacity: 0.85
 press.scale: 0.97`,
 
-  'components.mir': `// ── App-Shell (Screens + Bottom-Nav) ──────────────────────────────────
+  'components.mir': `// ── App-Shell (Root + Screens + TopBar) ──────────────────────────────
+// Strukturelle Komponenten — nicht in die Palette, weil sie nur als
+// Wurzel/Container Sinn machen.
 
-@icon app-window, @group Shell
+@hidden
 App as Frame: ver, h full, bg $surface
 
-@icon layout, @group Shell
+@hidden
 Screen as Frame: grow, scroll, pad $view, gap $gap
 
-// ── Container (Frame mit sprechendem Namen) ──────────────────────────
-
-@icon panel-top, @group Shell
+@hidden
 TopBar as Frame: hor, ver-center, spread, gap $gap, w full, pad-t 8, pad-b 4
 
 @hidden
 TitleBlock as Frame: gap 2
 
-// ── Cards & Rows ──────────────────────────────────────────────────────
+// ── Container ────────────────────────────────────────────────────────
 
-@icon square, @group Layout
+@icon panel-top, @group Container
 Card as Frame: bg $card, pad $card, rad $radius, gap $gap, w full
 
+// Interne Slots der Card-Reihe — gehören nicht in die Palette, weil
+// sie nur als Children einer Card existieren.
 @hidden
 RoutineRow as Frame: hor, gap $gap, ver-center
 
 @hidden
 RoutineMeta as Frame: gap 2, grow
 
-// ── Typography (iOS-Skala) ────────────────────────────────────────────
+// ── Text ─────────────────────────────────────────────────────────────
 
-@icon heading-1, @group Typography
+@icon heading-1, @group Text
 H1 as Text: fs $hero, weight $bold, col $text
 
-@icon heading-2, @group Typography
+@icon heading-2, @group Text
 H2 as Text: fs $title, weight $bold, col $text
 
-@icon heading-3, @group Typography
+@icon heading-3, @group Text
 H3 as Text: fs $heading, weight $bold, col $text
 
-@icon type, @group Typography
+@icon type, @group Text
 Body as Text: fs $body, col $text
 
-@icon text-quote, @group Typography
+@icon text-quote, @group Text
 Hint as Text: fs $small, col $muted
 
-@icon list, @group Typography
+@icon tag, @group Text
 SectionLabel as Text: fs $small, col $muted, weight $medium, uppercase, letter 0.4, pad-l 4
 
-// ── Icons ─────────────────────────────────────────────────────────────
+// ── Icons (alle versteckt — werden inline via "Icon" Primitive verwendet) ──
 
 @hidden
 RoutineIcon as Icon: ic $accent, is $icon
@@ -275,29 +277,63 @@ HeroIcon as Icon: ic $accent, is $hero
 @hidden
 NavIcon as Icon: is $icon
 
-// ── Buttons ───────────────────────────────────────────────────────────
+// ── Buttons ──────────────────────────────────────────────────────────
 
 @icon square-mouse-pointer, @group Buttons
 Btn as Button: bg $accent, col $onAccent, pad 10 16, rad $ctrl, weight $bold, cursor pointer, fs $body
   hover:
     opacity $dim
 
-@icon mouse-pointer, @group Buttons
+@icon mouse-pointer-2, @group Buttons
 GhostBtn as Button: bg transparent, col $accent, pad 10 16, rad $ctrl, cursor pointer, fs $body, weight $medium
   hover:
     opacity $dim
 
-@icon plus-circle, @group Buttons
+@icon circle-plus, @group Buttons
 IconBtn as Button: w 30, h 30, rad $pill, bg transparent, col $accent, cursor pointer, center, fs $title, weight $medium
   hover:
     opacity $dim
 
-// ── Bottom-Nav (iOS Tab Bar) ─────────────────────────────────────────
+// ── Controls (iOS Switch + Stepper) ──────────────────────────────────
 
-@icon panel-bottom, @group Navigation
+@icon toggle-right, @group Controls
+TogglePill as Frame: w 51, h 31, rad $pill, bg $dim, cursor pointer, toggle()
+  on:
+    bg $success
+
+@icon plus, @group Controls
+Stepper as Frame: hor, gap $gap, ver-center
+
+// Stepper-Innereien — Slots innerhalb von Stepper.
+@hidden
+StepperBtn as Button: w 32, h 32, rad $pill, bg $surface, col $accent, cursor pointer, center, fs $heading, weight $bold, bor 1, boc $dim
+  hover:
+    opacity $dim
+
+@hidden
+StepperValue as Text: fs $title, weight $bold, col $text, w 40, center
+
+// Check-Circle ist routine-spezifisch — versteckt.
+@hidden
+RoutineCheck as Frame: w 28, h 28, rad $pill, bor 1, boc $dim, cursor pointer, center, toggle()
+  on 0.15s ease-out:
+    bg $success
+    boc $success
+    Icon "check", ic white, is 16
+
+@hidden
+StreakText as Text: fs $small, col $muted
+
+@hidden
+DoneText as Text: fs $small, col $success, weight $medium
+
+// ── Layout (wiederverwendbare iOS-Patterns) ──────────────────────────
+
+@icon panel-bottom, @group Layout
 BottomNav as Frame: hor, gap 0, bg $nav, pad 6 0, bor 1 0 0 0, boc $dim
 
-@icon square, @group Navigation
+// NavBtn nur als Kind von BottomNav sinnvoll — versteckt.
+@hidden
 NavBtn as Frame: ver, gap 2, hor-center, ver-center, pad 6 0, col $muted, cursor pointer, exclusive(), grow
   hover:
     col $text
@@ -307,29 +343,10 @@ NavBtn as Frame: ver, gap 2, hor-center, ver-center, pad 6 0, col $muted, cursor
 @hidden
 NavLabel as Text: fs 10, weight $medium
 
-// ── Check-Circle (toggleable) ─────────────────────────────────────────
-
-@icon check-circle, @group Forms
-RoutineCheck as Frame: w 28, h 28, rad $pill, bor 1, boc $dim, cursor pointer, center, toggle()
-  on 0.15s ease-out:
-    bg $success
-    boc $success
-    Icon "check", ic white, is 16
-
-// ── Streak / Done Indicator (dezent, iOS-Stil) ───────────────────────
-
-@hidden
-StreakText as Text: fs $small, col $muted
-
-@hidden
-DoneText as Text: fs $small, col $success, weight $medium
-
-// ── Verlauf-Grid (7 Tages-Zellen) ────────────────────────────────────
-
 @icon calendar-days, @group Layout
 WeekGrid as Frame: grid 7, gap $small, w full
 
-@icon calendar, @group Layout
+@hidden
 DayCell as Frame: ver, ver-center, hor-center, gap $small, h $daycell, rad $ctrl, bg $card, pad $small 0
 
 @hidden
@@ -338,12 +355,11 @@ DayLabel as Text: fs $small, col $muted, weight $medium
 @hidden
 DayCount as Text: fs $heading, weight $bold, col $accent
 
-// ── Stats KPI-Grid (2 Spalten) ───────────────────────────────────────
-
-@icon layout-grid, @group Layout
+// KpiGrid versteckt — KpiTile als Solo-Drop-Target ist nützlicher.
+@hidden
 KpiGrid as Frame: grid 2, gap $gap, w full
 
-@icon square-stack, @group Layout
+@icon gauge, @group Layout
 KpiTile as Frame: ver, gap 4, bg $card, pad $card, rad $radius
 
 @hidden
@@ -358,7 +374,13 @@ KpiNumber as Text: fs $counter, weight $bold, col $text
 @hidden
 KpiUnit as Text: fs $small, col $muted
 
-// ── Top-Routinen-Zeile (sortiert nach Streak) ───────────────────────
+@icon list, @group Layout
+SettingRow as Frame: hor, spread, ver-center, pad 6 0
+
+@hidden
+SettingLabel as Text: fs $body, col $text, grow
+
+// ── Top-Routinen-Zeile (sortiert nach Streak) — intern ──────────────
 
 @hidden
 TopRow as Frame: hor, spread, ver-center, pad 6 0
@@ -369,37 +391,10 @@ TopName as Text: fs $body, col $text, grow
 @hidden
 TopStreak as Text: fs $body, col $muted
 
-// ── Settings-Zeile (Label + Control) ─────────────────────────────────
+// ── Overlay ──────────────────────────────────────────────────────────
 
-@icon settings, @group Forms
-SettingRow as Frame: hor, spread, ver-center, pad 6 0
-
+// DialogOverlay versteckt — wird automatisch von DialogPanel umrahmt.
 @hidden
-SettingLabel as Text: fs $body, col $text, grow
-
-// ── iOS-Switch (gerundete Pille mit Thumb) ──────────────────────────
-
-@icon toggle-right, @group Forms
-TogglePill as Frame: w 51, h 31, rad $pill, bg $dim, cursor pointer, toggle()
-  on:
-    bg $success
-
-// ── Stepper (− / Wert / +) — iOS-typisch grau, nicht akzentuiert ────
-
-@icon minus-plus, @group Forms
-Stepper as Frame: hor, gap $gap, ver-center
-
-@hidden
-StepperBtn as Button: w 32, h 32, rad $pill, bg $surface, col $accent, cursor pointer, center, fs $heading, weight $bold, bor 1, boc $dim
-  hover:
-    opacity $dim
-
-@hidden
-StepperValue as Text: fs $title, weight $bold, col $text, w 40, center
-
-// ── Dialog (Overlay + Panel + Actions) ───────────────────────────────
-
-@icon square-stack, @group Overlay
 DialogOverlay as Frame: abs, x 0, y 0, w full, h full, hor-center, ver-center, bg rgba(0,0,0,0.4)
 
 @icon message-square, @group Overlay
