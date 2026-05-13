@@ -124,6 +124,38 @@ function buildOverlay(): HTMLDivElement {
     </div>
   `
 
+  // Restore last-selected target from localStorage so the dialog opens
+  // showing the user's persistent choice. This is the same key that
+  // app.ts:compile() reads each compile to surface W130 BACKEND_UNSUPPORTED
+  // warnings — single source of truth for "what backend am I targeting?".
+  const targetSelEl = overlay.querySelector<HTMLSelectElement>('select[name="target"]')
+  const LINTER_TARGET_KEY = 'mirror.linter-target'
+  if (targetSelEl) {
+    try {
+      const saved = localStorage.getItem(LINTER_TARGET_KEY)
+      if (saved && Array.from(targetSelEl.options).some(o => o.value === saved)) {
+        targetSelEl.value = saved
+      }
+    } catch {
+      // localStorage unavailable — keep dialog default.
+    }
+    // On change: persist + trigger a fresh compile so the editor's W130
+    // markers update immediately. User can preview "what would break in
+    // target X" before actually starting the export.
+    targetSelEl.addEventListener('change', () => {
+      const v = targetSelEl.value
+      try {
+        if (v) localStorage.setItem(LINTER_TARGET_KEY, v)
+        else localStorage.removeItem(LINTER_TARGET_KEY)
+      } catch {
+        // localStorage unavailable — value lives only for this dialog session.
+      }
+      // Re-compile so validator runs against the new target.
+      const compile = (window as { __compileRealNow?: (code?: string) => void }).__compileRealNow
+      compile?.()
+    })
+  }
+
   const close = () => overlay.remove()
   overlay.querySelector('.export-dialog-close')?.addEventListener('click', close)
   overlay.querySelector('.export-dialog-cancel')?.addEventListener('click', close)
