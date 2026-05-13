@@ -1055,19 +1055,9 @@ aiEditBtn?.addEventListener('click', () => {
   editHandler.handleEditFlow(editor)
 })
 
-// Reset to empty project (with confirmation — destructive, wipes editor + storage)
-const resetDemoBtn = document.getElementById('reset-demo-btn') as HTMLButtonElement | null
-resetDemoBtn?.addEventListener('click', async () => {
-  try {
-    const ok = await MirrorDialog.confirm('Alle aktuellen Änderungen gehen verloren.', {
-      title: 'Projekt zurücksetzen?',
-    })
-    if (!ok) return
-    await projectActions.new('empty')
-  } catch (e) {
-    log.error('Failed to reset project:', e)
-  }
-})
+// Reset is in the app menubar (Datei → Neues Projekt). No editor-toolbar
+// button — keep the toolbar focused on per-document actions (undo/redo/
+// AI-edit/tutorial-link).
 
 // Editor file tabs — Multi-File-Roadmap Komponente 7: dynamic tabs
 // rendered from the actual file set. Tabs are sorted by phase
