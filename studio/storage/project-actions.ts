@@ -153,58 +153,50 @@ showAddDialog: false
 newRoutineName: ""`,
 
   'tokens.mir': `// iOS Light Palette — Apple's stock-app look (Reminders, Health, Fitness).
-// Skalar-Tokens auf S/M/L geflacht (Workaround bis Token-Layering-Konzept
-// steht). Farben bleiben semantische Rollen, keine Skala.
+// Skala S/M/L: Prefix ist die Identität, Suffix der Property-Typ.
+// Ein "$s" gleichzeitig als gap, pad, fs, rad, is — Mirror disambiguiert
+// per Use-Site. Werte 28/34 (KpiNumber, H1) sind 1× verwendet → inline.
 
 // ─── Farben (semantische Rollen) ────────────────────────────────────
-surface.bg: #F2F2F7        // systemGroupedBackground
-card.bg: #FFFFFF           // secondarySystemGroupedBackground
-elev.bg: #FFFFFF           // sheets / dialogs
-nav.bg: #F9F9F9            // tabBar (mit subtilem Top-Hairline)
-glow.bg: #007AFF1A         // 10% Blue für today-Highlight
+surface.bg: #F2F2F7
+card.bg: #FFFFFF
+elev.bg: #FFFFFF
+nav.bg: #F9F9F9
+glow.bg: #007AFF1A
 
-accent.bg: #007AFF         // systemBlue
+accent.bg: #007AFF
 accent.col: #007AFF
 accent.ic: #007AFF
-onAccent.col: #FFFFFF      // Text auf accent-bg (Button-Label)
+onAccent.col: #FFFFFF
 
-success.bg: #34C759         // systemGreen
+success.bg: #34C759
 success.ic: #34C759
-danger.ic: #FF3B30          // systemRed
+danger.ic: #FF3B30
 
-text.col: #000000           // labelColor (light mode)
-muted.col: #8E8E93          // secondaryLabel
-dim.col: #C7C7CC            // tertiaryLabel / separator-like
+text.col: #000000
+muted.col: #8E8E93
+dim.col: #C7C7CC
 
-// ─── Schriftgrössen — Body-Skala ────────────────────────────────────
-text-s.fs: 13              // Footnote
-text-m.fs: 17              // Body / Headline
-text-l.fs: 22              // Title 2
+// ─── S/M/L ──────────────────────────────────────────────────────────
+s.fs: 13                   // footnote
+m.fs: 17                   // body / heading
+l.fs: 22                   // title-2
 
-// ─── Schriftgrössen — Display-Skala ─────────────────────────────────
-display-s.fs: 28           // Numerische Kennzahlen
-display-m.fs: 34           // Large Title
+s.gap: 8
+m.gap: 12
 
-// ─── Schriftgewichte ────────────────────────────────────────────────
-weight-m.weight: 500       // medium
-weight-l.weight: 600       // semibold (iOS-Headlines)
+s.pad: 6
+m.pad: 16
 
-// ─── Padding ────────────────────────────────────────────────────────
-pad-s.pad: 6
-pad-m.pad: 16              // iOS lehnt am 16pt-Raster
+s.rad: 8                   // control
+m.rad: 10                  // card
+l.rad: 99                  // pill
 
-// ─── Gaps ───────────────────────────────────────────────────────────
-gap-s.gap: 8
-gap-m.gap: 12
+s.is: 22
+m.is: 28
 
-// ─── Radius ─────────────────────────────────────────────────────────
-rad-s.rad: 8               // Control / Button
-rad-m.rad: 10              // Card
-rad-l.rad: 99              // Pill / Circle
-
-// ─── Icon-Grössen ───────────────────────────────────────────────────
-is-s.is: 22
-is-m.is: 28
+m.weight: 500
+l.weight: 600
 
 // ─── Effekte ────────────────────────────────────────────────────────
 dim.opacity: 0.85
@@ -214,105 +206,108 @@ press.scale: 0.97`,
 // Strukturelle Komponenten — kein @group, also default-hidden in der Palette.
 
 App as Frame: ver, h full, bg $surface
-Screen as Frame: grow, scroll, pad $pad-m, gap $gap-m
-TopBar as Frame: hor, ver-center, spread, gap $gap-m, w full, pad-t 8, pad-b 4
+Screen as Frame: grow, scroll, pad $m, gap $m
+TopBar as Frame: hor, ver-center, spread, gap $m, w full, pad-t 8, pad-b 4
 TitleBlock as Frame: gap 2
-
-// ── Container ────────────────────────────────────────────────────────
-
-Card as Frame: bg $card, pad $pad-m, rad $rad-m, gap $gap-m, w full, @icon panel-top, @group Container
-
-// Interne Slots der Card-Reihe — nur als Children einer Card sinnvoll.
-RoutineRow as Frame: hor, gap $gap-m, ver-center
-RoutineMeta as Frame: gap 2, grow
 
 // ── Text ─────────────────────────────────────────────────────────────
 
-H1 as Text: fs $display-m, weight $weight-l, col $text, @icon heading-1, @group Text
-H2 as Text: fs $text-l, weight $weight-l, col $text, @icon heading-2, @group Text
-H3 as Text: fs $text-m, weight $weight-l, col $text, @icon heading-3, @group Text
-Body as Text: fs $text-m, col $text, @icon type, @group Text
-Hint as Text: fs $text-s, col $muted, @icon text-quote, @group Text
-SectionLabel as Text: fs $text-s, col $muted, weight $weight-m, uppercase, letter 0.4, pad-l 4, @icon tag, @group Text
+H1 as Text: fs 34, weight $l, col $text, @icon heading-1, @group Text
+H2 as Text: fs $l, weight $l, col $text, @icon heading-2, @group Text
+H3 as Text: fs $m, weight $l, col $text, @icon heading-3, @group Text
+Body as Text: fs $m, col $text, @icon type, @group Text
+Hint as Text: fs $s, col $muted, @icon text-quote, @group Text
+SectionLabel as Text: fs $s, col $muted, weight $m, uppercase, letter 0.4, pad-l 4, @icon tag, @group Text
 
-// ── Icons (intern — inline via Icon-Primitive verwendet) ────────────
+// ── Controls (Buttons + iOS Switch + Stepper) ────────────────────────
 
-RoutineIcon as Icon: ic $accent, is $is-s
-RoutineIconDone as Icon: ic $success, is $is-s
-HeroIcon as Icon: ic $accent, is $is-m
-NavIcon as Icon: is $is-s
-
-// ── Buttons ──────────────────────────────────────────────────────────
-
-Btn as Button: bg $accent, col $onAccent, pad 10 16, rad $rad-s, weight $weight-l, cursor pointer, fs $text-m, @icon square-mouse-pointer, @group Buttons
+Btn as Button: bg $accent, col $onAccent, pad 10 16, rad $s, weight $l, cursor pointer, fs $m, @icon square-mouse-pointer, @group Controls
   hover:
     opacity $dim
 
-GhostBtn as Button: bg transparent, col $accent, pad 10 16, rad $rad-s, cursor pointer, fs $text-m, weight $weight-m, @icon mouse-pointer-2, @group Buttons
+GhostBtn as Button: bg transparent, col $accent, pad 10 16, rad $s, cursor pointer, fs $m, weight $m, @icon mouse-pointer-2, @group Controls
   hover:
     opacity $dim
 
-IconBtn as Button: w 30, h 30, rad $rad-l, bg transparent, col $accent, cursor pointer, center, fs $text-l, weight $weight-m, @icon circle-plus, @group Buttons
+IconBtn as Button: w 30, h 30, rad $l, bg transparent, col $accent, cursor pointer, center, fs $l, weight $m, @icon circle-plus, @group Controls
   hover:
     opacity $dim
 
-// ── Controls (iOS Switch + Stepper) ──────────────────────────────────
-
-TogglePill as Frame: w 51, h 31, rad $rad-l, bg $dim, cursor pointer, toggle(), @icon toggle-right, @group Controls
+TogglePill as Frame: w 51, h 31, rad $l, bg $dim, cursor pointer, toggle(), @icon toggle-right, @group Controls
   on:
     bg $success
 
-Stepper as Frame: hor, gap $gap-m, ver-center, @icon plus, @group Controls
+Stepper as Frame: hor, gap $m, ver-center, @icon plus, @group Controls
 
-// Stepper-Innereien + Routine-Check + Streak/Done — Slots.
-StepperBtn as Button: w 32, h 32, rad $rad-l, bg $surface, col $accent, cursor pointer, center, fs $text-m, weight $weight-l, bor 1, boc $dim
+// ── Layout (Container + Patterns) ────────────────────────────────────
+
+Card as Frame: bg $card, pad $m, rad $m, gap $m, w full, @icon panel-top, @group Layout
+BottomNav as Frame: hor, gap 0, bg $nav, pad 6 0, bor 1 0 0 0, boc $dim, @icon panel-bottom, @group Layout
+WeekGrid as Frame: grid 7, gap $s, w full, @icon calendar-days, @group Layout
+KpiTile as Frame: ver, gap 4, bg $card, pad $m, rad $m, @icon gauge, @group Layout
+SettingRow as Frame: hor, spread, ver-center, pad 6 0, @icon list, @group Layout
+DialogPanel as Frame: bg $elev, pad $m, rad 14, gap $m, w 280, shadow lg, @icon message-square, @group Layout
+
+// ── Interne Slots / Helpers (kein @group → hidden in palette) ───────
+
+// Card-Reihe
+RoutineRow as Frame: hor, gap $m, ver-center
+RoutineMeta as Frame: gap 2, grow
+
+// Icons (via Icon-Primitive inline)
+RoutineIcon as Icon: ic $accent, is $s
+RoutineIconDone as Icon: ic $success, is $s
+HeroIcon as Icon: ic $accent, is $m
+NavIcon as Icon: is $s
+
+// Stepper-Innereien
+StepperBtn as Button: w 32, h 32, rad $l, bg $surface, col $accent, cursor pointer, center, fs $m, weight $l, bor 1, boc $dim
   hover:
     opacity $dim
-StepperValue as Text: fs $text-l, weight $weight-l, col $text, w 40, center
-RoutineCheck as Frame: w 28, h 28, rad $rad-l, bor 1, boc $dim, cursor pointer, center, toggle()
+StepperValue as Text: fs $l, weight $l, col $text, w 40, center
+
+// Routine-Check
+RoutineCheck as Frame: w 28, h 28, rad $l, bor 1, boc $dim, cursor pointer, center, toggle()
   on 0.15s ease-out:
     bg $success
     boc $success
     Icon "check", ic white, is 16
-StreakText as Text: fs $text-s, col $muted
-DoneText as Text: fs $text-s, col $success, weight $weight-m
 
-// ── Layout (wiederverwendbare iOS-Patterns) ──────────────────────────
+// Streak/Done-Indikatoren
+StreakText as Text: fs $s, col $muted
+DoneText as Text: fs $s, col $success, weight $m
 
-BottomNav as Frame: hor, gap 0, bg $nav, pad 6 0, bor 1 0 0 0, boc $dim, @icon panel-bottom, @group Layout
-
+// Bottom-Nav-Slots
 NavBtn as Frame: ver, gap 2, hor-center, ver-center, pad 6 0, col $muted, cursor pointer, exclusive(), grow
   hover:
     col $text
   selected:
     col $accent
-NavLabel as Text: fs 10, weight $weight-m
+NavLabel as Text: fs 10, weight $m
 
-WeekGrid as Frame: grid 7, gap $gap-s, w full, @icon calendar-days, @group Layout
-DayCell as Frame: ver, ver-center, hor-center, gap $gap-s, h 72, rad $rad-s, bg $card, pad $gap-s 0
-DayLabel as Text: fs $text-s, col $muted, weight $weight-m
-DayCount as Text: fs $text-m, weight $weight-l, col $accent
+// Verlauf-Grid-Slots
+DayCell as Frame: ver, ver-center, hor-center, gap $s, h 72, rad $s, bg $card, pad $s 0
+DayLabel as Text: fs $s, col $muted, weight $m
+DayCount as Text: fs $m, weight $l, col $accent
 
-KpiGrid as Frame: grid 2, gap $gap-m, w full
-KpiTile as Frame: ver, gap 4, bg $card, pad $pad-m, rad $rad-m, @icon gauge, @group Layout
-KpiLabel as Text: fs $text-s, col $muted, weight $weight-m
+// KPI-Grid-Slots
+KpiGrid as Frame: grid 2, gap $m, w full
+KpiLabel as Text: fs $s, col $muted, weight $m
 KpiValue as Frame: hor, gap 4, ver-baseline
-KpiNumber as Text: fs $display-s, weight $weight-l, col $text
-KpiUnit as Text: fs $text-s, col $muted
+KpiNumber as Text: fs 28, weight $l, col $text
+KpiUnit as Text: fs $s, col $muted
 
-SettingRow as Frame: hor, spread, ver-center, pad 6 0, @icon list, @group Layout
-SettingLabel as Text: fs $text-m, col $text, grow
+// Settings-Slots
+SettingLabel as Text: fs $m, col $text, grow
 
-// Top-Routinen-Zeile (sortiert nach Streak) — intern.
+// Top-Routinen-Zeile (sortiert nach Streak)
 TopRow as Frame: hor, spread, ver-center, pad 6 0
-TopName as Text: fs $text-m, col $text, grow
-TopStreak as Text: fs $text-m, col $muted
+TopName as Text: fs $m, col $text, grow
+TopStreak as Text: fs $m, col $muted
 
-// ── Overlay ──────────────────────────────────────────────────────────
-
+// Dialog
 DialogOverlay as Frame: abs, x 0, y 0, w full, h full, hor-center, ver-center, bg rgba(0,0,0,0.4)
-DialogPanel as Frame: bg $elev, pad $pad-m, rad 14, gap $gap-m, w 280, shadow lg, @icon message-square, @group Overlay
-DialogActions as Frame: hor, gap $gap-s`,
+DialogActions as Frame: hor, gap $s`,
 
   'app.mir': `canvas mobile, bg $surface, col $text, font sans
 
