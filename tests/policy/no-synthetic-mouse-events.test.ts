@@ -53,10 +53,7 @@ const SUITES_DIR = path.join(repoRoot, 'studio/test-api/suites')
  * follow-up. Each entry is a target; removing it from the list is
  * the migration completion signal.
  */
-const ALLOWED_LEGACY = new Set<string>([
-  'interactions/snapping.test.ts',
-  'tutorial/overlays-deep.test.ts',
-])
+const ALLOWED_LEGACY = new Set<string>(['tutorial/overlays-deep.test.ts'])
 
 /** Regex matches both `new MouseEvent('click', ...)` constructor
  *  usage and the `el.dispatchEvent(new MouseEvent(...))` pattern.

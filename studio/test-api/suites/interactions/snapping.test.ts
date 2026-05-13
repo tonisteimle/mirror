@@ -10,6 +10,21 @@
 
 import type { TestCase, TestAPI } from '../../types'
 import { describe, testWithSetup } from '../../index'
+import { trustedInteractions, coordsOfElement } from '../../trusted-interactions'
+
+/**
+ * Local helper: drag a handle (padding/margin/gap/resize) by a pixel
+ * delta via Trusted CDP events. Wraps `coordsOfElement + dragHandle`
+ * so the per-test bodies in this 1100+ LOC file stay readable.
+ *
+ * Synchronous getBoundingClientRect of the handle happens INSIDE the
+ * helper so callers don't need to capture handleRect/startX/startY.
+ * The interpolated mousemoves are critical for snap testing — snap
+ * service observes the path, not just the final point.
+ */
+async function dragHandleBy(handle: HTMLElement, deltaX: number, deltaY: number): Promise<void> {
+  await trustedInteractions.dragHandle(coordsOfElement(handle), deltaX, deltaY)
+}
 
 // =============================================================================
 // Helper Functions
@@ -270,42 +285,13 @@ Frame pad 10, bg #1a1a1a, w 200, h 150
         throw new Error('Top padding handle not found')
       }
 
-      const handleRect = topHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      console.log(`\n5. Handle position: (${startX}, ${startY})`)
-
-      // Simulate drag
-      console.log('\n6. Starting drag...')
-      topHandle.dispatchEvent(
-        new MouseEvent('mousedown', {
-          bubbles: true,
-          clientX: startX,
-          clientY: startY,
-        })
-      )
-
-      // Move to create delta that should snap to 8
-      // Moving up by 2 should change padding from 10 to 8 (within threshold)
-      console.log('\n7. Moving mouse up by 2px...')
-      document.dispatchEvent(
-        new MouseEvent('mousemove', {
-          bubbles: true,
-          clientX: startX,
-          clientY: startY - 2,
-        })
-      )
-
-      await api.utils.delay(200)
-
-      // Check live padding during drag
-      const duringDragPadding = getComputedPadding('node-1')
-      console.log(`\n8. Padding during drag: ${JSON.stringify(duringDragPadding)}`)
-
-      // End drag
-      console.log('\n9. Ending drag...')
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      // Drag up by 2px via Trusted CDP — interpolated mousemoves let
+      // the snap-service observe the path. Padding should snap from
+      // 10 to 8 (within the snap threshold).
+      const handleCenter = coordsOfElement(topHandle)
+      console.log(`\n5. Handle center: (${handleCenter.x}, ${handleCenter.y})`)
+      console.log('\n6-8. Dragging via Trusted CDP (up by 2px, snap target 8)...')
+      await dragHandleBy(topHandle, 0, -2)
 
       await api.utils.waitForCompile()
       await api.utils.delay(200)
@@ -325,8 +311,7 @@ Frame pad 10, bg #1a1a1a, w 200, h 150
       // The key assertion - did it snap to 8?
       api.assert.ok(
         finalPadding.top === 8,
-        `Padding should have snapped to token value 8, but got ${finalPadding.top}. ` +
-          `During drag was: ${duringDragPadding.top}`
+        `Padding should have snapped to token value 8, but got ${finalPadding.top}.`
       )
     }
   ),
@@ -361,20 +346,8 @@ export const paddingTokenSnappingTests: TestCase[] = describe('Padding Token Sna
       const topHandle = document.querySelector('.padding-handle-top') as HTMLElement
       api.assert.ok(topHandle !== null, 'Top padding handle should exist')
 
-      const handleRect = topHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Drag towards 8 (token value m.pad) - move up slightly to decrease from 10 to ~8
-      topHandle.dispatchEvent(
-        new MouseEvent('mousedown', { bubbles: true, clientX: startX, clientY: startY })
-      )
-      // Move up by 2px to get closer to 8
-      document.dispatchEvent(
-        new MouseEvent('mousemove', { bubbles: true, clientX: startX, clientY: startY - 2 })
-      )
-      await api.utils.delay(100)
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      // Drag up by 2px → padding should snap from 10 to 8 (token m.pad).
+      await dragHandleBy(topHandle, 0, -2)
 
       await api.utils.waitForCompile()
       await api.utils.delay(100)
@@ -410,19 +383,8 @@ export const paddingTokenSnappingTests: TestCase[] = describe('Padding Token Sna
       const topHandle = document.querySelector('.padding-handle-top') as HTMLElement
       api.assert.ok(topHandle !== null, 'Top padding handle should exist')
 
-      const handleRect = topHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Drag down by 2px (increase padding to 22)
-      topHandle.dispatchEvent(
-        new MouseEvent('mousedown', { bubbles: true, clientX: startX, clientY: startY })
-      )
-      document.dispatchEvent(
-        new MouseEvent('mousemove', { bubbles: true, clientX: startX, clientY: startY + 2 })
-      )
-      await api.utils.delay(100)
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      // Drag down by 2px (increase padding to 22 — outside snap threshold).
+      await dragHandleBy(topHandle, 0, 2)
 
       await api.utils.waitForCompile()
       await api.utils.delay(100)
@@ -462,19 +424,8 @@ export const marginTokenSnappingTests: TestCase[] = describe('Margin Token Snapp
       const topHandle = document.querySelector('.margin-handle-top') as HTMLElement
       api.assert.ok(topHandle !== null, 'Top margin handle should exist')
 
-      const handleRect = topHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Drag up slightly to increase margin towards 8
-      topHandle.dispatchEvent(
-        new MouseEvent('mousedown', { bubbles: true, clientX: startX, clientY: startY })
-      )
-      document.dispatchEvent(
-        new MouseEvent('mousemove', { bubbles: true, clientX: startX, clientY: startY - 2 })
-      )
-      await api.utils.delay(100)
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      // Drag up by 2px — margin grows outward, should snap to 8.
+      await dragHandleBy(topHandle, 0, -2)
 
       await api.utils.waitForCompile()
       await api.utils.delay(100)
@@ -518,19 +469,8 @@ export const gapTokenSnappingTests: TestCase[] = describe('Gap Token Snapping', 
       const gapHandle = document.querySelector('.gap-handle') as HTMLElement
       api.assert.ok(gapHandle !== null, 'Gap handle should exist')
 
-      const handleRect = gapHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Drag to increase gap towards 8
-      gapHandle.dispatchEvent(
-        new MouseEvent('mousedown', { bubbles: true, clientX: startX, clientY: startY })
-      )
-      document.dispatchEvent(
-        new MouseEvent('mousemove', { bubbles: true, clientX: startX + 2, clientY: startY })
-      )
-      await api.utils.delay(100)
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      // Drag right by 2px → horizontal gap should snap to 8 (token).
+      await dragHandleBy(gapHandle, 2, 0)
 
       await api.utils.waitForCompile()
       await api.utils.delay(100)
@@ -573,19 +513,8 @@ export const resizeGridSnappingTests: TestCase[] = describe('Resize Grid Snappin
       const eastHandle = document.querySelector('.resize-handle[data-position="e"]') as HTMLElement
       api.assert.ok(eastHandle !== null, 'East resize handle should exist')
 
-      const handleRect = eastHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Drag right by 2px (102 + 2 = 104, should snap to 104 which is multiple of 8)
-      eastHandle.dispatchEvent(
-        new MouseEvent('mousedown', { bubbles: true, clientX: startX, clientY: startY })
-      )
-      document.dispatchEvent(
-        new MouseEvent('mousemove', { bubbles: true, clientX: startX + 2, clientY: startY })
-      )
-      await api.utils.delay(100)
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      // Drag right by 2px (102 + 2 = 104, should snap to grid multiple of 8).
+      await dragHandleBy(eastHandle, 2, 0)
 
       await api.utils.waitForCompile()
       await api.utils.delay(100)
@@ -622,19 +551,8 @@ export const resizeGridSnappingTests: TestCase[] = describe('Resize Grid Snappin
       const southHandle = document.querySelector('.resize-handle[data-position="s"]') as HTMLElement
       api.assert.ok(southHandle !== null, 'South resize handle should exist')
 
-      const handleRect = southHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Drag down by 2px (106 + 2 = 108, but snap should adjust to 112)
-      southHandle.dispatchEvent(
-        new MouseEvent('mousedown', { bubbles: true, clientX: startX, clientY: startY })
-      )
-      document.dispatchEvent(
-        new MouseEvent('mousemove', { bubbles: true, clientX: startX, clientY: startY + 6 })
-      )
-      await api.utils.delay(100)
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      // Drag down by 6px (106 + 6 = 112, exact snap to grid multiple of 8).
+      await dragHandleBy(southHandle, 0, 6)
 
       await api.utils.waitForCompile()
       await api.utils.delay(100)
@@ -676,34 +594,11 @@ export const snappingBypassTests: TestCase[] = describe('Snapping Bypass (Cmd/Ct
       const topHandle = document.querySelector('.padding-handle-top') as HTMLElement
       api.assert.ok(topHandle !== null, 'Top padding handle should exist')
 
-      const handleRect = topHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Drag with metaKey (Cmd) held - should bypass snapping
-      topHandle.dispatchEvent(
-        new MouseEvent('mousedown', {
-          bubbles: true,
-          clientX: startX,
-          clientY: startY,
-          metaKey: true,
-        })
-      )
-      document.dispatchEvent(
-        new MouseEvent('mousemove', {
-          bubbles: true,
-          clientX: startX,
-          clientY: startY + 1,
-          metaKey: true,
-        })
-      )
-      await api.utils.delay(100)
-      document.dispatchEvent(
-        new MouseEvent('mouseup', {
-          bubbles: true,
-          metaKey: true,
-        })
-      )
+      // Drag down by 1px with Cmd (meta) held — modifier bypasses snap.
+      // Trusted CDP modifier object: `{ meta: true }`.
+      await trustedInteractions.dragHandle(coordsOfElement(topHandle), 0, 1, {
+        modifiers: { meta: true },
+      })
 
       await api.utils.waitForCompile()
       await api.utils.delay(100)
@@ -739,34 +634,10 @@ export const snappingBypassTests: TestCase[] = describe('Snapping Bypass (Cmd/Ct
       const eastHandle = document.querySelector('.resize-handle[data-position="e"]') as HTMLElement
       api.assert.ok(eastHandle !== null, 'East resize handle should exist')
 
-      const handleRect = eastHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Drag with ctrlKey held - should bypass snapping
-      eastHandle.dispatchEvent(
-        new MouseEvent('mousedown', {
-          bubbles: true,
-          clientX: startX,
-          clientY: startY,
-          ctrlKey: true,
-        })
-      )
-      document.dispatchEvent(
-        new MouseEvent('mousemove', {
-          bubbles: true,
-          clientX: startX + 5,
-          clientY: startY,
-          ctrlKey: true,
-        })
-      )
-      await api.utils.delay(100)
-      document.dispatchEvent(
-        new MouseEvent('mouseup', {
-          bubbles: true,
-          ctrlKey: true,
-        })
-      )
+      // Drag right by 5px with Ctrl held — bypasses snap; expect 105 exact.
+      await trustedInteractions.dragHandle(coordsOfElement(eastHandle), 5, 0, {
+        modifiers: { ctrl: true },
+      })
 
       await api.utils.waitForCompile()
       await api.utils.delay(100)
@@ -801,17 +672,14 @@ export const snapIndicatorTests: TestCase[] = describe('Snap Indicator Visual Fe
       const topHandle = document.querySelector('.padding-handle-top') as HTMLElement
       api.assert.ok(topHandle !== null, 'Top padding handle should exist')
 
-      const handleRect = topHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Start drag towards token value 8
-      topHandle.dispatchEvent(
-        new MouseEvent('mousedown', { bubbles: true, clientX: startX, clientY: startY })
-      )
-      document.dispatchEvent(
-        new MouseEvent('mousemove', { bubbles: true, clientX: startX, clientY: startY + 1 })
-      )
+      // Manual drag split — need to inspect the snap-indicator DURING
+      // the drag, before mouseup completes. Trusted CDP mouseDown +
+      // mouseMove, then assert, then mouseUp.
+      const start = coordsOfElement(topHandle)
+      const end = { x: start.x, y: start.y + 1 }
+      await trustedInteractions.mouseMove(start)
+      await trustedInteractions.mouseDown(start)
+      await trustedInteractions.mouseMove(end)
 
       await api.utils.delay(150)
 
@@ -828,7 +696,7 @@ export const snapIndicatorTests: TestCase[] = describe('Snap Indicator Visual Fe
       }
 
       // Clean up - finish drag
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      await trustedInteractions.mouseUp(end)
       await api.utils.delay(100)
     }
   ),
@@ -848,17 +716,14 @@ export const snapIndicatorTests: TestCase[] = describe('Snap Indicator Visual Fe
       const topHandle = document.querySelector('.padding-handle-top') as HTMLElement
       api.assert.ok(topHandle !== null, 'Top padding handle should exist')
 
-      const handleRect = topHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Drag to trigger snap
-      topHandle.dispatchEvent(
-        new MouseEvent('mousedown', { bubbles: true, clientX: startX, clientY: startY })
-      )
-      document.dispatchEvent(
-        new MouseEvent('mousemove', { bubbles: true, clientX: startX, clientY: startY + 1 })
-      )
+      // Drag split — same pattern as previous test (mid-drag style
+      // inspection requires mouseDown + mouseMove, then assert, then
+      // mouseUp at the end).
+      const start = coordsOfElement(topHandle)
+      const end = { x: start.x, y: start.y + 1 }
+      await trustedInteractions.mouseMove(start)
+      await trustedInteractions.mouseDown(start)
+      await trustedInteractions.mouseMove(end)
 
       await api.utils.delay(150)
 
@@ -887,7 +752,7 @@ export const snapIndicatorTests: TestCase[] = describe('Snap Indicator Visual Fe
       }
 
       // Clean up
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      await trustedInteractions.mouseUp(end)
       await api.utils.delay(100)
     }
   ),
@@ -907,17 +772,13 @@ export const snapIndicatorTests: TestCase[] = describe('Snap Indicator Visual Fe
       const topHandle = document.querySelector('.padding-handle-top') as HTMLElement
       api.assert.ok(topHandle !== null, 'Top padding handle should exist')
 
-      const handleRect = topHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Start drag
-      topHandle.dispatchEvent(
-        new MouseEvent('mousedown', { bubbles: true, clientX: startX, clientY: startY })
-      )
-      document.dispatchEvent(
-        new MouseEvent('mousemove', { bubbles: true, clientX: startX, clientY: startY + 1 })
-      )
+      // Mid-drag indicator check — manual split (Trusted mouseDown +
+      // mouseMove, observe, mouseUp).
+      const start = coordsOfElement(topHandle)
+      const end = { x: start.x, y: start.y + 1 }
+      await trustedInteractions.mouseMove(start)
+      await trustedInteractions.mouseDown(start)
+      await trustedInteractions.mouseMove(end)
       await api.utils.delay(100)
 
       // Verify indicator appears
@@ -925,7 +786,7 @@ export const snapIndicatorTests: TestCase[] = describe('Snap Indicator Visual Fe
       api.assert.ok(indicator !== null, 'Indicator should appear during drag')
 
       // End drag
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      await trustedInteractions.mouseUp(end)
       await api.utils.delay(200) // Wait for hide animation
 
       // Verify indicator is hidden
@@ -966,19 +827,8 @@ export const gridSnappingFallbackTests: TestCase[] = describe('Grid Snapping Fal
       const topHandle = document.querySelector('.padding-handle-top') as HTMLElement
       api.assert.ok(topHandle !== null, 'Top padding handle should exist')
 
-      const handleRect = topHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Drag slightly - since no tokens exist, should snap to grid
-      topHandle.dispatchEvent(
-        new MouseEvent('mousedown', { bubbles: true, clientX: startX, clientY: startY })
-      )
-      document.dispatchEvent(
-        new MouseEvent('mousemove', { bubbles: true, clientX: startX, clientY: startY - 1 })
-      )
-      await api.utils.delay(100)
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      // Drag up by 1px — no tokens, should snap to grid (8px multiple).
+      await dragHandleBy(topHandle, 0, -1)
 
       await api.utils.waitForCompile()
       await api.utils.delay(100)
@@ -1015,19 +865,8 @@ export const gridSnappingFallbackTests: TestCase[] = describe('Grid Snapping Fal
       const topHandle = document.querySelector('.padding-handle-top') as HTMLElement
       api.assert.ok(topHandle !== null, 'Top padding handle should exist')
 
-      const handleRect = topHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Drag slightly - tokens exist so NO grid fallback should happen
-      topHandle.dispatchEvent(
-        new MouseEvent('mousedown', { bubbles: true, clientX: startX, clientY: startY })
-      )
-      document.dispatchEvent(
-        new MouseEvent('mousemove', { bubbles: true, clientX: startX, clientY: startY + 1 })
-      )
-      await api.utils.delay(100)
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      // Drag down by 1px — tokens defined, no grid fallback expected.
+      await dragHandleBy(topHandle, 0, 1)
 
       await api.utils.waitForCompile()
       await api.utils.delay(100)
@@ -1071,19 +910,8 @@ export const tokenPriorityTests: TestCase[] = describe('Token Priority over Grid
       const topHandle = document.querySelector('.padding-handle-top') as HTMLElement
       api.assert.ok(topHandle !== null, 'Top padding handle should exist')
 
-      const handleRect = topHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Drag towards 12 (which is within threshold of 4 from 10)
-      topHandle.dispatchEvent(
-        new MouseEvent('mousedown', { bubbles: true, clientX: startX, clientY: startY })
-      )
-      document.dispatchEvent(
-        new MouseEvent('mousemove', { bubbles: true, clientX: startX, clientY: startY + 2 })
-      )
-      await api.utils.delay(100)
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      // Drag down by 2px (towards 12 — within snap threshold of 4 from 10).
+      await dragHandleBy(topHandle, 0, 2)
 
       await api.utils.waitForCompile()
       await api.utils.delay(100)
