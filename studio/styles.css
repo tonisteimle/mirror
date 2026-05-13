@@ -2123,6 +2123,47 @@
       box-shadow: var(--focus-ring);
     }
 
+    /* Swatch variant — the colored circle IS the button (used in
+       Color section). Name shows on hover via the title attribute.
+       Background is inlined per-element from the token value, so the
+       :hover/.active styles must not override it. */
+    .pp-content .token-btn-swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid var(--border-default);
+      padding: 0;
+      text-transform: none;
+      box-shadow: none;
+    }
+
+    .pp-content .token-btn-swatch:hover {
+      background: inherit;
+      border-color: var(--border-strong);
+      transform: scale(1.08);
+    }
+
+    .pp-content .token-btn-swatch.active {
+      background: inherit;
+      color: inherit;
+      box-shadow:
+        0 0 0 1px var(--bg-panel),
+        0 0 0 3px var(--color-primary);
+    }
+
+    /* Swatch in dropdown items — small chip beside the label so users
+       scanning a list can still match name → color. */
+    .pp-content .token-dropdown-swatch {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid var(--border-default);
+      margin-right: 6px;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
     /* Token More Dropdown */
     .pp-content .token-more-container {
       position: relative;

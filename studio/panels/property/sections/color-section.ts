@@ -145,6 +145,7 @@ export class ColorSection extends BaseSection {
             activeValue: value,
             propKey: prop,
             tokens: tokenItems,
+            swatchMode: true,
           })}</div>`
         : ''
 

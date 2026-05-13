@@ -65,6 +65,13 @@ export interface RenderTokenButtonsConfig {
    * outer wrapper). Border uses this for its 999/full-radius button.
    */
   trailingHtml?: string
+  /**
+   * When true, each button renders as a colored swatch (no label text)
+   * with the token name shown on hover. Used by the Color section —
+   * labels like "primary" / "accent" carry no quick-scan value when
+   * the swatch is right there. Default false.
+   */
+  swatchMode?: boolean
 }
 
 /**
@@ -103,10 +110,16 @@ function renderButton(
   token: TokenButtonItem,
   active: boolean,
   propKey: string,
-  direction?: string
+  direction?: string,
+  swatchMode?: boolean
 ): string {
-  const cls = `token-btn${active ? ' active' : ''}`
+  const cls = `token-btn${active ? ' active' : ''}${swatchMode ? ' token-btn-swatch' : ''}`
   const title = token.tokenRef ? `${token.tokenRef}: ${token.value}` : token.value
+  if (swatchMode) {
+    // Body intentionally empty — the colored swatch IS the button. Name
+    // shows on hover via the title attribute.
+    return `<button class="${cls}" ${buildAttrs(propKey, token, direction)} title="${title}" style="background:${token.value}"></button>`
+  }
   return `<button class="${cls}" ${buildAttrs(propKey, token, direction)} title="${title}">${token.label}</button>`
 }
 
@@ -114,19 +127,29 @@ function renderDropdownItem(
   token: TokenButtonItem,
   active: boolean,
   propKey: string,
-  direction?: string
+  direction?: string,
+  swatchMode?: boolean
 ): string {
   const cls = `token-dropdown-item${active ? ' active' : ''}`
+  if (swatchMode) {
+    // Dropdown row stays labelled (the swatch alone isn't enough when
+    // the user is comparing 5+ similar tokens in a list).
+    return `<button class="${cls}" ${buildAttrs(propKey, token, direction)}>
+      <span class="token-dropdown-swatch" style="background:${token.value}"></span>
+      ${token.label}
+    </button>`
+  }
   return `<button class="${cls}" ${buildAttrs(propKey, token, direction)}>${token.label} <span class="token-dropdown-value">${token.value}</span></button>`
 }
 
 export function renderTokenButtonGroup(config: RenderTokenButtonsConfig): string {
-  const { activeValue, tokens, propKey, direction, dropdownClass, trailingHtml } = config
+  const { activeValue, tokens, propKey, direction, dropdownClass, trailingHtml, swatchMode } =
+    config
 
   if (tokens.length === 0) return trailingHtml ?? ''
 
   const buttons = tokens.map(t =>
-    renderButton(t, isTokenActive(t, activeValue), propKey, direction)
+    renderButton(t, isTokenActive(t, activeValue), propKey, direction, swatchMode)
   )
   const trailing = trailingHtml ?? ''
 
@@ -140,7 +163,7 @@ export function renderTokenButtonGroup(config: RenderTokenButtonsConfig): string
   const activeInHidden = hidden.some(t => isTokenActive(t, activeValue))
 
   const dropdownItems = hidden
-    .map(t => renderDropdownItem(t, isTokenActive(t, activeValue), propKey, direction))
+    .map(t => renderDropdownItem(t, isTokenActive(t, activeValue), propKey, direction, swatchMode))
     .join('')
 
   const moreClass = `token-btn token-more-btn${activeInHidden ? ' has-active' : ''}`
