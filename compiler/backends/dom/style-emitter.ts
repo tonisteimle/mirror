@@ -14,6 +14,7 @@ import {
 } from '../../schema/parser-helpers'
 import {
   needsPxUnit as needsPxUnitFromSchema,
+  getTokenUnit,
   tokenToCSSVarName as tokenToCSSVarNameFromSchema,
   stripDollar,
   getSuffix,
@@ -369,17 +370,20 @@ function emitCustomTokens(ctx: StyleEmitterContext): void {
     }
 
     let value: string | number | boolean = token.value
-    if (needsPxUnit(token.name)) {
+    const unit = getTokenUnit(token.name)
+    if (unit !== '') {
       if (typeof value === 'number') {
-        value = `${value}px`
+        value = `${value}${unit}`
       } else if (typeof value === 'string') {
-        // Single integer (`"16"`) → `"16px"`; multi-value shorthand
+        // Single numeric token (`"16"`) → `"16px"`; multi-value shorthand
         // (`"10 16"` from `btn.pad: 10 16`) → `"10px 16px"`. Each numeric
-        // segment gets its own unit; non-numeric segments (like CSS keywords
-        // or already-suffixed values) are left alone.
+        // segment gets its own unit; non-numeric segments (CSS keywords or
+        // already-suffixed values) are left alone. Same logic applies for
+        // `em` (letter-spacing tokens) — multi-segment ls is unusual but the
+        // pipeline supports it for consistency.
         value = value
           .split(/\s+/)
-          .map(part => (/^\d+(\.\d+)?$/.test(part) ? `${part}px` : part))
+          .map(part => (/^-?\d+(\.\d+)?$/.test(part) ? `${part}${unit}` : part))
           .join(' ')
       }
     }

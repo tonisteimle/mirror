@@ -97,7 +97,7 @@ export const PROPERTY_TO_TOKEN_SUFFIX: Record<string, string> = {
   y: '.y',
 }
 
-/** Suffixes that carry size semantics (numeric values get a `px` unit). */
+/** Suffixes that carry size semantics with `px` unit on numeric values. */
 const SIZE_SUFFIXES = new Set([
   '.pad',
   '.gap',
@@ -110,14 +110,31 @@ const SIZE_SUFFIXES = new Set([
   '.minh',
   '.maxh',
   '.fs',
-  '.line',
-  '.ls',
   '.is',
   // Slice 6 V-4: `row-height` carries px semantics (grid-auto-rows). `.grid`,
   // `.x`, `.y` are unitless counts (column count, grid-line indices) and
   // intentionally NOT in this set — they're classified numeric below.
   '.rh',
 ])
+
+/**
+ * Suffixes that carry size semantics but emit values **without a unit**.
+ *
+ *   `.line` (line-height): CSS expects a unitless multiplier so the line-box
+ *   scales with font-size. Emitting `1.05px` produces a 1.05-pixel-tall
+ *   line-box — overlapping text. Original bug: `.line` lived in SIZE_SUFFIXES
+ *   and inherited the blanket `px` append in style-emitter.
+ */
+const UNITLESS_SIZE_SUFFIXES = new Set(['.line'])
+
+/**
+ * Suffixes that carry size semantics and emit values with an `em` unit.
+ *
+ *   `.ls` (letter-spacing): the property emitter (`property-schema.ts`)
+ *   already uses `em` for inline literals. Token values must match — emitting
+ *   `-0.025px` instead of `-0.025em` made tracking effectively zero.
+ */
+const EM_SIZE_SUFFIXES = new Set(['.ls'])
 
 /**
  * Suffixes that are numeric counts/indices (no `px` suffix), but still
@@ -178,6 +195,8 @@ export function getCompatibleProperties(suffix: string): string[] {
  */
 export function inferTokenTypeFromSuffix(suffix: string): TokenType | undefined {
   if (SIZE_SUFFIXES.has(suffix)) return 'size'
+  if (UNITLESS_SIZE_SUFFIXES.has(suffix)) return 'size'
+  if (EM_SIZE_SUFFIXES.has(suffix)) return 'size'
   if (COUNT_SUFFIXES.has(suffix)) return 'size'
   if (FONT_SUFFIXES.has(suffix)) return 'font'
   if (COLOR_SUFFIXES.has(suffix)) return 'color'
@@ -191,12 +210,37 @@ export function inferTokenTypeFromSuffix(suffix: string): TokenType | undefined 
  *   needsPxUnit('btn.pad')      → true
  *   needsPxUnit('primary.bg')   → false
  *   needsPxUnit('container.w')  → true
+ *   needsPxUnit('heading.line') → false  (unitless)
+ *   needsPxUnit('tracking.ls')  → false  (em — see getTokenUnit)
  */
 export function needsPxUnit(tokenName: string): boolean {
   const dotIndex = tokenName.lastIndexOf('.')
   if (dotIndex < 0) return false
   const suffix = tokenName.slice(dotIndex)
   return SIZE_SUFFIXES.has(suffix)
+}
+
+/**
+ * Return the CSS unit to append to numeric token values for this token name:
+ *   - `'px'`  for size suffixes (padding, width, font-size, …)
+ *   - `'em'`  for letter-spacing (.ls)
+ *   - `''`    for line-height (.line) and everything else
+ *
+ * Single source of truth for unit-emission across backends. Replaces the
+ * binary `needsPxUnit` for code paths that have to distinguish unit types.
+ *
+ *   getTokenUnit('btn.pad')      → 'px'
+ *   getTokenUnit('tracking.ls')  → 'em'
+ *   getTokenUnit('heading.line') → ''
+ *   getTokenUnit('primary.bg')   → ''
+ */
+export function getTokenUnit(tokenName: string): 'px' | 'em' | '' {
+  const dotIndex = tokenName.lastIndexOf('.')
+  if (dotIndex < 0) return ''
+  const suffix = tokenName.slice(dotIndex)
+  if (SIZE_SUFFIXES.has(suffix)) return 'px'
+  if (EM_SIZE_SUFFIXES.has(suffix)) return 'em'
+  return ''
 }
 
 /**

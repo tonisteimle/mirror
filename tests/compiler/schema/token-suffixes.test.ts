@@ -12,6 +12,7 @@ import {
   getCompatibleProperties,
   inferTokenTypeFromSuffix,
   needsPxUnit,
+  getTokenUnit,
   getSuffix,
   stripDollar,
   tokenToCSSVarName,
@@ -73,6 +74,7 @@ describe('inferTokenTypeFromSuffix', () => {
     expect(inferTokenTypeFromSuffix('.rad')).toBe('size')
     expect(inferTokenTypeFromSuffix('.fs')).toBe('size')
     expect(inferTokenTypeFromSuffix('.line')).toBe('size')
+    expect(inferTokenTypeFromSuffix('.ls')).toBe('size')
     expect(inferTokenTypeFromSuffix('.is')).toBe('size')
   })
 
@@ -100,9 +102,55 @@ describe('needsPxUnit', () => {
     expect(needsPxUnit('heading.font')).toBe(false)
   })
 
+  it('returns false for line-height tokens (unitless)', () => {
+    // Regression: `.line` used to live in SIZE_SUFFIXES which made tokens emit
+    // `--solid-line: 1.05px;` — that produces a 1-pixel-tall line-box and
+    // overlaps multi-line headings. CSS line-height must be unitless so it
+    // scales with font-size.
+    expect(needsPxUnit('solid.line')).toBe(false)
+    expect(needsPxUnit('heading.line')).toBe(false)
+  })
+
+  it('returns false for letter-spacing tokens (em unit, not px)', () => {
+    // Regression: `.ls` used to live in SIZE_SUFFIXES which emitted
+    // `--tracking-tighter-ls: -0.025px;` — basically zero tracking. Inline
+    // letter-spacing values use `em` (see property-schema.ts); tokens must
+    // match.
+    expect(needsPxUnit('tracking.ls')).toBe(false)
+    expect(needsPxUnit('headline.ls')).toBe(false)
+  })
+
   it('returns false for tokens without a suffix', () => {
     expect(needsPxUnit('primary')).toBe(false)
     expect(needsPxUnit('')).toBe(false)
+  })
+})
+
+describe('getTokenUnit', () => {
+  it('returns px for size-suffixed token names', () => {
+    expect(getTokenUnit('btn.pad')).toBe('px')
+    expect(getTokenUnit('container.w')).toBe('px')
+    expect(getTokenUnit('heading.fs')).toBe('px')
+    expect(getTokenUnit('card.rad')).toBe('px')
+    expect(getTokenUnit('row.rh')).toBe('px')
+  })
+
+  it('returns em for letter-spacing tokens', () => {
+    expect(getTokenUnit('tracking.ls')).toBe('em')
+    expect(getTokenUnit('headline.ls')).toBe('em')
+  })
+
+  it('returns empty (unitless) for line-height tokens', () => {
+    expect(getTokenUnit('solid.line')).toBe('')
+    expect(getTokenUnit('body.line')).toBe('')
+  })
+
+  it('returns empty for color/font/unknown tokens', () => {
+    expect(getTokenUnit('primary.bg')).toBe('')
+    expect(getTokenUnit('heading.font')).toBe('')
+    expect(getTokenUnit('weight.weight')).toBe('')
+    expect(getTokenUnit('primary')).toBe('')
+    expect(getTokenUnit('')).toBe('')
   })
 })
 

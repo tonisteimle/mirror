@@ -81,13 +81,41 @@
 }
 
 .export-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
   background: var(--color-bg-2, #2a2a2a);
   color: var(--color-text-primary, #fff);
   border: 1px solid var(--color-border, #333);
   border-radius: var(--radius-md, 6px);
-  padding: 8px 10px;
+  padding: 10px 36px 10px 12px;
   font-size: 13px;
   font-family: inherit;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  /* Custom chevron — inline SVG (currentColor doesn't work in
+     background-image, so the colour is baked in as the muted text). */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b8b94' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+.export-field select:hover {
+  border-color: var(--color-border-hover, #555);
+  background-color: var(--color-bg-2-hover, #303034);
+}
+
+.export-field select:focus {
+  border-color: var(--color-primary, #2271c1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, #2271c1) 25%, transparent);
+}
+
+.export-field select option {
+  background: var(--color-bg-1, #1a1a1a);
+  color: var(--color-text-primary, #fff);
 }
 
 .export-field-checkbox {
