@@ -7,6 +7,7 @@
 
 import { test, testSkip, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
+import { trustedInteractions, coordsOfElement } from '../../trusted-interactions'
 
 // Demo project tokens (for tokens.tok file)
 const DEMO_TOKENS_FILE = `// Design Tokens
@@ -307,10 +308,15 @@ export const colorPickerTests: TestCase[] = describe('Color Picker', [
     api.assert.ok(opened, 'Should be able to open color picker')
     api.assert.ok(isColorPickerVisible(), 'Color picker should be visible')
 
-    // Click outside the picker (on the preview area)
+    // Click outside the picker (on the preview area) — Trusted mousedown
+    // so the click-outside-listener (which attaches with `pointerdown`
+    // or `mousedown` on document) actually fires through the real event
+    // pipeline. Synthetic `dispatchEvent` on a child element would bubble
+    // but skip capture-phase listeners and ignore composedPath quirks.
     const preview = document.getElementById('preview') as HTMLElement
     if (preview) {
-      preview.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+      await trustedInteractions.mouseDown(coordsOfElement(preview))
+      await trustedInteractions.mouseUp(coordsOfElement(preview))
     }
     await api.utils.delay(300)
 

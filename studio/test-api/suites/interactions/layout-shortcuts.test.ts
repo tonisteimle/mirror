@@ -9,6 +9,7 @@
 
 import type { TestCase, TestAPI } from '../../types'
 import { describe, testWithSetup } from '../../index'
+import { trustedInteractions, coordsOfElement } from '../../trusted-interactions'
 
 // =============================================================================
 // H Key - Horizontal Layout
@@ -253,16 +254,15 @@ export const focusManagementTests: TestCase[] = describe('Focus Management', [
       await api.interact.click('node-1')
       await api.utils.delay(100)
 
-      // Now focus the editor by simulating mousedown and focus events
-      // This should set editorHasFocus = true
-      const editorContainer = document.querySelector('#editor-container') as HTMLElement
-      if (editorContainer) {
-        editorContainer.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
-      }
+      // Focus the editor via Trusted CDP click — sets `editorHasFocus`
+      // through the real focus pipeline (capture-phase focusin, native
+      // selection establishment, keymap routing). Synthetic mousedown
+      // + .focus() + dispatchEvent('focusin') tried to fake the same
+      // sequence but missed the `isTrusted` guard that some keymap
+      // hooks check before consuming a keystroke.
       const cmContent = document.querySelector('.cm-content') as HTMLElement
       if (cmContent) {
-        cmContent.focus()
-        cmContent.dispatchEvent(new FocusEvent('focusin', { bubbles: true }))
+        await trustedInteractions.click(coordsOfElement(cmContent))
       }
       await api.utils.delay(150)
 

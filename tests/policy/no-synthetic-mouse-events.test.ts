@@ -56,14 +56,10 @@ const SUITES_DIR = path.join(repoRoot, 'studio/test-api/suites')
 const ALLOWED_LEGACY = new Set<string>([
   'interactions/margin-handlers.test.ts',
   'interactions/snapping.test.ts',
-  'interactions/layout-shortcuts.test.ts',
   'interactions/gap-handlers.test.ts',
   'interactions/padding-handlers.test.ts',
   'tutorial/overlays-deep.test.ts',
-  'property-panel/color-picker.test.ts',
-  'drag/grid-cell-insert.test.ts',
   'states/system-states.test.ts',
-  'editor/linter.test.ts',
 ])
 
 /** Regex matches both `new MouseEvent('click', ...)` constructor

@@ -17,6 +17,7 @@
 
 import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
+import { trustedInteractions, coordsOfElement } from '../../trusted-interactions'
 
 // =============================================================================
 // Fixtures
@@ -90,18 +91,12 @@ function findCellHitRect(gridId: string, gridX: number, gridY: number): SVGRectE
   return best
 }
 
-function clickRect(el: SVGRectElement): void {
-  const r = el.getBoundingClientRect()
-  const cx = r.left + r.width / 2
-  const cy = r.top + r.height / 2
-  el.dispatchEvent(
-    new MouseEvent('click', {
-      bubbles: true,
-      cancelable: true,
-      clientX: cx,
-      clientY: cy,
-    })
-  )
+async function clickRect(el: SVGRectElement): Promise<void> {
+  // Trusted click via CDP so the grid-hit-rect's listener (which uses
+  // pointerdown + composedPath) sees a real input event. SVG element
+  // hits are particularly sensitive to event-source: some browsers
+  // route synthetic SVG events through a different dispatch path.
+  await trustedInteractions.click(coordsOfElement(el as unknown as Element))
 }
 
 // =============================================================================
@@ -127,7 +122,7 @@ export const gridCellInsertTests: TestCase[] = describe('Grid Cell Insert (Phase
       api.assert.ok(hit, 'Cell (2,1) hit-rect must exist')
 
       const before = api.editor.getCode()
-      clickRect(hit!)
+      await clickRect(hit!)
       await api.utils.waitForIdle()
 
       const after = api.editor.getCode()
@@ -187,7 +182,7 @@ export const gridCellInsertTests: TestCase[] = describe('Grid Cell Insert (Phase
 
       const hit = findCellHitRect(gridId, 3, 1)
       api.assert.ok(hit, 'Cell (3,1) hit-rect must exist')
-      clickRect(hit!)
+      await clickRect(hit!)
       await api.utils.waitForIdle()
 
       // Source should now have a 3rd child (the inserted Frame),

@@ -12,6 +12,7 @@
 
 import { test, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
+import { trustedInteractions, coordsOfElement } from '../../trusted-interactions'
 
 // =============================================================================
 // Helper Functions
@@ -114,21 +115,21 @@ function countLintMarkers(type: 'error' | 'warning'): number {
 }
 
 /**
- * Hover over a lint marker to trigger tooltip
+ * Hover over a lint marker to trigger tooltip — Trusted CDP mousemove
+ * so CodeMirror's hover-tooltip-plugin sees a real input event
+ * (`isTrusted=true`). The plugin attaches its listener with
+ * `{ passive: true }` and ignores synthetic mousemoves on some
+ * builds; the Trusted path is the only safe contract.
  */
 async function hoverLintMarker(): Promise<void> {
   const view = getEditorView()
   if (!view) return
 
-  const marker = view.dom.querySelector('.cm-lintRange-error, .cm-lintRange-warning')
+  const marker = view.dom.querySelector(
+    '.cm-lintRange-error, .cm-lintRange-warning'
+  ) as HTMLElement | null
   if (marker) {
-    const rect = marker.getBoundingClientRect()
-    const mouseEvent = new MouseEvent('mousemove', {
-      clientX: rect.left + rect.width / 2,
-      clientY: rect.top + rect.height / 2,
-      bubbles: true,
-    })
-    marker.dispatchEvent(mouseEvent)
+    await trustedInteractions.hover(coordsOfElement(marker))
     await new Promise(resolve => setTimeout(resolve, 100))
   }
 }
