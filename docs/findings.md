@@ -122,16 +122,15 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 >    Container-Queries, Lane-Doc steht
 > 3. Tutorial-Demos + Test-Runner — OWNER-EXKLUSIV (toni)
 > 4. Tutorial-Loop-Infrastruktur insgesamt — Owner-Entscheidung
-> 5. `studio/compile/compile-service.ts` Cluster — Architektur-Entscheid
-> 6. `studio/app.ts` Bootstrap-Decomp (#8) — ongoing decomposition
-> 7. `compiler/backends/dom/ops/resolve-templates.ts:resolveConditionalExpression`
+> 5. `studio/app.ts` Bootstrap-Decomp — ongoing decomposition
+> 6. `compiler/backends/dom/ops/resolve-templates.ts:resolveConditionalExpression`
 >    — Smell ohne Bug
 >
 > Alle anderen Einträge unter „Offen" tragen bereits Status:
 > **erledigt** oder **abgewiesen** und gehören eigentlich nach
 > „Erledigt"; sie verbleiben hier als historischer Kontext (Audit-
 > Notiz + Commit-Hash). Vor dem nächsten Hunt-Rollup migrieren —
-> bis dahin: erst auf die obigen 7 Einträge scannen.
+> bis dahin: erst auf die obigen 6 Einträge scannen.
 
 - **Wo:** `studio/editor/triggers/trigger-controller.ts` (659 LOC),
   `studio/editor/triggers/ports.ts` (450 LOC),
@@ -805,13 +804,21 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
   (b) Cluster + parallele Tests als dead code löschen, (c) Lane-Doc
   unter `docs/refactoring/` schreiben weil die Entscheidung größer
   als ein Findings-Eintrag ist.
-  **Status:** offen — Architektur-Entscheid + Lane-Doc nötig
-  **Notiz:** Entdeckt 2026-05-11 beim Versuch, `app.ts:compile()`
-  weiter zu zerlegen (Finding #8). Tests pinnen die abandoned
-  Pipeline gegen sich selbst, also CI-grün bedeutet hier nicht
-  Production-grün. Ohne Owner-Entscheidung kein Code-Move — sonst
-  riskiert man dass parallel jemand an genau dieser Wiring-Arbeit
-  sitzt.
+  **Status:** erledigt (`a6f84657` — Race: Code-Delete in einen
+  parallel-session Slice-E-Commit gebündelt; Commit-Message ist
+  irreführend, Diff zeigt nur diese 10 Cluster-Files mit ~2100 LOC
+  Reduktion). Option (b) gewählt: Cluster gelöscht. Begründung: real
+  zerlegender Pfad ist `app.ts:compile()`-Slices (wrap-layout,
+  augment-local-components, execute-mirror-js, prelude-definitions,
+  preview-redirect, resolve-compile-source) — die extrahieren in
+  testbare Module, die app.ts WIRKLICH ruft. Der dormante Cluster
+  war vestigial; seine Tests gaben falsche Sicherheit.
+  Files raus: 6× src in `studio/compile/` + 2× tests + Barrel-
+  Einträge in `studio/compile/index.ts` und `studio/index.ts`
+  (load-bearing Namen `collectPrelude`/`collectAllProjectSource`/
+  `collectTokensSource`/`createAutoCreateFiles`/`getPreludeLineOffset`
+  behalten). tsc clean, 5595/5595 studio Tests grün.
+  Restoration via `git show a6f84657^:studio/compile/<file>.ts`.
 
 - **Wo:** `studio/app.ts` (heute 2456 LOC, vor Refactor 2557)
   **Was:** Bootstrap-Sprawl: 30+ globale Konstanten, 5 Extensions, 8
@@ -1120,21 +1127,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                        **Status-Update:** erledigt — alle drei Slices landen:
-                                        Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                        inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                        Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                        (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                        `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                        (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                        — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                        hat per `git add .` die uncommittete compiler-Side mit
-                                        aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                        `hasZagChildren` (children-Shape), `isZagComponentName`
-                                        (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                        IRZagNode-Discriminator-Property `isZagComponent: true`
-                                        bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                        81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                            **Status-Update:** erledigt — alle drei Slices landen:
+                                            Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                            inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                            Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                            (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                            `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                            (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                            — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                            hat per `git add .` die uncommittete compiler-Side mit
+                                            aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                            `hasZagChildren` (children-Shape), `isZagComponentName`
+                                            (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                            IRZagNode-Discriminator-Property `isZagComponent: true`
+                                            bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                            81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
@@ -1148,6 +1155,27 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### 2026-05-13 — Slice E: alle `eslint-disable no-explicit-any` in compiler/ weg
+
+- **Wo:** `compiler/runtime/mirror-runtime.ts` (2× weg, MirrorProps
+  Index-Signatur `[k: string]: any` → `unknown` + 3 Call-Sites narrowed
+  via `as Action | Action[]` cast),
+  `compiler/ir/ops/instance-ops.ts` (1× weg, `instance: Instance | Each | any`
+  → `Instance | Each | ConditionalNode | Slot` — die Branches narrowen
+  direkt zu Each/Conditional/Slot vor dem Instance-Body),
+  `compiler/runtime/charts.ts` (8× weg, alle `Record<string, any>` →
+  `Record<string, unknown>` mit `as Record<string, unknown>`-Casts in
+  den drei navigate/setFinal-Helpern, die Chart.js-Config-Objekte
+  inkrementell aufbauen).
+  **Was:** 11 `eslint-disable @typescript-eslint/no-explicit-any` in
+  Production-Code aufgespürt nach dem Sweep, der die compiler/-`as any`-
+  Zahl bereits auf 0 brachte. Diese 11 Stellen verwendeten zwar nicht
+  `as any` direkt, aber Typ-Parameter mit `any` (Index-Signatur, Union-
+  Type, Generic-Argument) — gleicher Type-Escape. Alle ersetzt durch
+  `unknown` + lokale Narrowing-Casts an den Schreibstellen. 7794/7795
+  vitest grün (1 pre-existing skipped).
+  **Status:** erledigt
 
 ### 2026-05-12 — Dead Feature 6 (Measurement Overlays) gelöscht (~837 LOC)
 
