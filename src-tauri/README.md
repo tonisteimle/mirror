@@ -65,7 +65,6 @@ registrieren.
 | `delete_path`             | `{ path }`          | `()` (handled für Datei + Ordner)       |
 | `rename_path`             | `{ from, to }`      | `()`                                    |
 | `path_exists`             | `{ path }`          | `bool`                                  |
-| `get_file_info`           | `{ path }`          | `{ path, size, is_dir, is_file }`       |
 | `open_project`            | `{ path }`          | `()` — setzt basePath, schreibt Recents |
 | `create_project`          | `{ name, path }`    | `String` (neuer Projekt-Pfad)           |
 | `get_recent_projects`     | —                   | `Vec<String>`                           |

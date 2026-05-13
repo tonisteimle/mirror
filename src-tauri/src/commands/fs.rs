@@ -64,6 +64,9 @@ pub async fn write_file(
             .await
             .map_err(|e| format!("create parent dirs: {e}"))?;
     }
+    // Tell the file-watcher to ignore the upcoming change event for this
+    // path — otherwise our own write echoes back as an "external edit".
+    crate::commands::watch::mark_self_write(&state.self_writes(), &resolved);
     tokio::fs::write(&resolved, content)
         .await
         .map_err(|e| format!("write_file({path}): {e}"))

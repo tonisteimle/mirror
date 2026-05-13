@@ -33,6 +33,9 @@
     "icon": [],
     "category": "DeveloperTool",
     "shortDescription": "Mirror Studio Desktop",
-    "longDescription": "Mirror Studio — die Sprache für AI-unterstütztes UI-Design."
+    "longDescription": "Mirror Studio — die Sprache für AI-unterstütztes UI-Design.",
+    "macOS": {
+      "minimumSystemVersion": "11.0"
+    }
   }
 }

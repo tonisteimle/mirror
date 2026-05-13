@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
+
+use crate::commands::watch::{SelfWriteMap, WatcherHandle};
 
 const RECENTS_FILE: &str = "recents.json";
 const RECENTS_MAX: usize = 10;
@@ -9,6 +11,8 @@ const RECENTS_MAX: usize = 10;
 pub struct AppState {
     base_path: Mutex<Option<PathBuf>>,
     recents: Mutex<Vec<PathBuf>>,
+    watcher: Mutex<Option<WatcherHandle>>,
+    self_writes: SelfWriteMap,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -86,6 +90,24 @@ impl AppState {
         let json = serde_json::to_string_pretty(&body)
             .map_err(|e| format!("serialize recents: {e}"))?;
         std::fs::write(&file, json).map_err(|e| format!("write recents: {e}"))
+    }
+
+    /// Install or replace the file watcher. Dropping the old handle stops
+    /// its underlying threads cleanly.
+    pub fn set_watcher(&self, handle: WatcherHandle) {
+        *self.watcher.lock().unwrap() = Some(handle);
+    }
+
+    /// Drop the file watcher (e.g. on project close).
+    pub fn clear_watcher(&self) {
+        *self.watcher.lock().unwrap() = None;
+    }
+
+    /// Map of recently-self-written paths — shared with the watcher
+    /// callback so events triggered by our own `write_file` calls can
+    /// be filtered out before reaching the frontend.
+    pub fn self_writes(&self) -> SelfWriteMap {
+        Arc::clone(&self.self_writes)
     }
 }
 

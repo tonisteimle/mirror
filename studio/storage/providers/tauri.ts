@@ -14,6 +14,12 @@ const log = createLogger('TauriProvider')
 // TauriBridge Storage Type
 // =============================================================================
 
+export interface ExternalFileChange {
+  path: string
+  relative: string
+  kind: 'created' | 'modified' | 'removed' | string
+}
+
 interface TauriBridgeStorage {
   fs: {
     readFile(path: string): Promise<string>
@@ -25,6 +31,9 @@ interface TauriBridgeStorage {
     deletePath(path: string): Promise<void>
     renamePath(from: string, to: string): Promise<void>
     pathExists(path: string): Promise<boolean>
+    startWatching?(path: string): Promise<void>
+    stopWatching?(): Promise<void>
+    onExternalChange?(callback: (payload: ExternalFileChange) => void): Promise<() => void>
   }
   dialog: {
     openFolder(): Promise<string | null>
@@ -50,6 +59,8 @@ export class TauriProvider implements StorageProvider {
 
   private basePath: string | null = null
   private bridge: TauriBridgeStorage
+  private externalChangeUnsubscribe: (() => void) | null = null
+  private externalChangeListeners = new Set<(change: ExternalFileChange) => void>()
 
   constructor() {
     // TauriBridge exposes storage APIs (fs, dialog, etc.)
@@ -130,10 +141,66 @@ App bg #18181b, pad 24
     } catch {
       // Ignorieren falls setTitle nicht verfügbar
     }
+
+    // File-Watcher starten — wird in older Tauri-Builds das optionale
+    // Bridge-Feld nicht haben, deswegen ?. Aufruf.
+    await this.startWatcher(id)
   }
 
   async closeProject(): Promise<void> {
+    await this.stopWatcher()
     this.basePath = null
+  }
+
+  private async startWatcher(path: string): Promise<void> {
+    if (!this.bridge.fs.startWatching || !this.bridge.fs.onExternalChange) return
+    try {
+      await this.bridge.fs.startWatching(path)
+      this.externalChangeUnsubscribe = await this.bridge.fs.onExternalChange(change => {
+        // Fan-out an alle Studio-Listener. Bewusst kein Filtern auf
+        // Mirror-Extensions hier — der Konsument entscheidet selbst.
+        for (const listener of this.externalChangeListeners) {
+          try {
+            listener(change)
+          } catch (error) {
+            log.error('External change listener threw:', error)
+          }
+        }
+      })
+    } catch (error) {
+      log.warn('Failed to start file watcher:', error)
+    }
+  }
+
+  private async stopWatcher(): Promise<void> {
+    if (this.externalChangeUnsubscribe) {
+      try {
+        this.externalChangeUnsubscribe()
+      } catch {
+        // Ignorieren
+      }
+      this.externalChangeUnsubscribe = null
+    }
+    if (this.bridge.fs.stopWatching) {
+      try {
+        await this.bridge.fs.stopWatching()
+      } catch (error) {
+        log.warn('Failed to stop file watcher:', error)
+      }
+    }
+  }
+
+  /**
+   * Subscribe to external file changes (edits made outside the studio:
+   * vim, git checkout, another editor, etc.). Listener fires AFTER the
+   * self-write filter Rust-side, so the studio's own writes don't show
+   * up here. Returns an unsubscribe function.
+   *
+   * No-op (returns inert unsubscribe) outside Tauri.
+   */
+  onExternalChange(listener: (change: ExternalFileChange) => void): () => void {
+    this.externalChangeListeners.add(listener)
+    return () => this.externalChangeListeners.delete(listener)
   }
 
   // ===========================================================================

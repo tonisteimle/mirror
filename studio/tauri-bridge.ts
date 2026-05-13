@@ -108,6 +108,40 @@ export const TauriFS = {
     if (!core) throw new Error('Not running in Tauri')
     return core.invoke<boolean>('path_exists', { path })
   },
+
+  async startWatching(path: string): Promise<void> {
+    const core = await getTauriCore()
+    if (!core) throw new Error('Not running in Tauri')
+    return core.invoke('start_watching', { path })
+  },
+
+  async stopWatching(): Promise<void> {
+    const core = await getTauriCore()
+    if (!core) return
+    return core.invoke('stop_watching')
+  },
+
+  /**
+   * Subscribe to external file changes. Fires for every change inside the
+   * watched project that DIDN'T originate from this app's own write_file
+   * (self-writes are filtered Rust-side via mark_self_write).
+   *
+   * Payload: `{ path: <absolute>, relative: <project-relative>, kind:
+   * 'created'|'modified'|'removed' }`.
+   *
+   * Returns an unsubscribe function. No-op outside Tauri.
+   */
+  async onExternalChange(
+    callback: (payload: { path: string; relative: string; kind: string }) => void
+  ): Promise<() => void> {
+    const event = await getTauriEvent()
+    if (!event) return () => {}
+    const unlisten = await event.listen<{ path: string; relative: string; kind: string }>(
+      'file:changed',
+      e => callback(e.payload)
+    )
+    return unlisten
+  },
 }
 
 // =============================================================================

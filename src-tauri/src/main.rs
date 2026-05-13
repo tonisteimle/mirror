@@ -99,6 +99,9 @@ fn main() {
             commands::agent::check_claude_cli,
             commands::agent::run_agent,
             commands::agent::cancel_agent,
+            // File watcher
+            commands::watch::start_watching,
+            commands::watch::stop_watching,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
