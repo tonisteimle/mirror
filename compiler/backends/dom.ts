@@ -30,7 +30,7 @@ import {
   emitIconSetup,
   emitSlotSetup,
   emitBaseStyles,
-  emitContainerType,
+  emitContainerWrapper,
   emitLayoutType,
   emitStateStyles,
   emitVisibleWhen,
@@ -526,8 +526,12 @@ export class DOMGenerator {
     // Apply base styles (excluding state-specific and size-state styles)
     const baseStyles = emitBaseStyles(nodeCtx, node, varName)
 
-    // Set container-type for size-states (CSS Container Queries)
-    emitContainerType(nodeCtx, node, varName)
+    // Synthetic outer-wrapper for size-state containers (Lane A —
+    // see docs/refactoring/container-queries.md). Null for frames
+    // without size-states (most frames). When present, the wrapper
+    // is what we append to the original parent below; the frame
+    // becomes a child of the wrapper so `@container` queries match.
+    const wrapperVar = emitContainerWrapper(nodeCtx, node, varName)
 
     // Set data-layout for drop strategy detection
     emitLayoutType(nodeCtx, node, varName)
@@ -624,8 +628,16 @@ export class DOMGenerator {
     // Auto-set parent to relative if this element is absolute positioned
     emitAbsolutePositioning(nodeCtx, baseStyles, varName, parentVar)
 
-    // Append to parent
-    emitAppendToParent(nodeCtx, varName, parentVar)
+    // Append to parent. If we created a synthetic container-wrapper for
+    // this frame, the frame goes into the wrapper and the wrapper goes
+    // into the original parent (so `@container` queries match against
+    // the wrapper's inline-size).
+    if (wrapperVar) {
+      nodeCtx.emit(`${wrapperVar}.appendChild(${varName})`)
+      emitAppendToParent(nodeCtx, wrapperVar, parentVar)
+    } else {
+      emitAppendToParent(nodeCtx, varName, parentVar)
+    }
   }
 
   // emitEachLoop: migrated to compiler/backends/dom/loop-emitter.ts

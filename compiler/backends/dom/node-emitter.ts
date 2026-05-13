@@ -322,21 +322,32 @@ export function emitBaseStyles(ctx: NodeEmitterContext, node: IRNode, varName: s
 }
 
 /**
- * Emit container type for size-states.
+ * Emit a synthetic outer-wrapper for size-state containers (Lane A from
+ * `docs/refactoring/container-queries.md`). On-demand: only when
+ * `node.needsContainer` is true.
  *
- * KNOWN BUG: `container-type` is set on the SAME element that owns the
- * size-state styles, but CSS `@container` matches against the
- * container-ancestor — not the element's own width. The frame therefore
- * doesn't react to its own width. See `docs/refactoring/container-queries.md`
- * (Lane A: synthetic outer-wrapper as container, on-demand via
- * `needsContainer`). Browser tests pinning the bug are skipped at
- * `studio/test-api/suites/responsive/{basic,layout}.test.ts:73,88`.
- * Workaround today: put size-states on an Inner child of the frame.
+ * Why a wrapper? CSS `@container` matches against the *container-
+ * ancestor*, not the element's own width. A frame that declared
+ * `container-type: inline-size` on itself could not react to its own
+ * width. The wrapper sits one level above the frame and carries the
+ * container-type; the frame is then a descendant and the `@container`
+ * rule against `[data-mirror-id^="<frame-id>"]` matches.
+ *
+ * Returns the wrapper var name (caller appends the frame into it and
+ * then appends the wrapper to the original parent), or `null` for
+ * frames without size-states.
  */
-export function emitContainerType(ctx: NodeEmitterContext, node: IRNode, varName: string): void {
-  if (node.needsContainer) {
-    ctx.emit(`${varName}.style.containerType = 'inline-size'`)
-  }
+export function emitContainerWrapper(
+  ctx: NodeEmitterContext,
+  node: IRNode,
+  varName: string
+): string | null {
+  if (!node.needsContainer) return null
+  const wrapperVar = `${varName}_w`
+  ctx.emit(`const ${wrapperVar} = document.createElement('div')`)
+  ctx.emit(`${wrapperVar}.dataset.mirrorWrapper = '${node.id}'`)
+  ctx.emit(`${wrapperVar}.style.containerType = 'inline-size'`)
+  return wrapperVar
 }
 
 /**

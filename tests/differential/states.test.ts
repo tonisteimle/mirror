@@ -183,13 +183,14 @@ describe('States — React folds initial-state props into inline style', () => {
 //
 // Tests below are `.skip`-marked until the lane lands. When unskipped they
 // become the contract for "Lane A is wired in this backend".
-describe('Size-states — Container-Queries Lane A contract (skipped until fix)', () => {
+describe('Size-states — Container-Queries Lane A contract', () => {
   const SIZE_STATE_SRC = `Frame bg #333\n  compact:\n    bg #ef4444\n  wide:\n    bg #10b981`
 
-  it.skip('DOM: synthetic outer-wrapper carries container-type, frame does not', () => {
+  it('DOM: synthetic outer-wrapper carries container-type, frame does not', () => {
     const dom = generateDOM(parse(SIZE_STATE_SRC))
-    // Wrapper: data-mirror-wrapper="<frame-id>", container-type on wrapper
-    expect(dom).toMatch(/data-mirror-wrapper/)
+    // Wrapper: `dataset.mirrorWrapper = '<frame-id>'` in the emitted JS
+    // (the runtime DOM attribute becomes `data-mirror-wrapper`).
+    expect(dom).toMatch(/dataset\.mirrorWrapper/)
     expect(dom).toContain("containerType = 'inline-size'")
     // Frame itself should NOT carry container-type after the fix (the
     // wrapper takes that role). Counts how many distinct elements set
@@ -198,7 +199,7 @@ describe('Size-states — Container-Queries Lane A contract (skipped until fix)'
     expect(containerTypeMatches.length).toBe(1)
   })
 
-  it.skip('DOM: @container selector resolves against frame as descendant of wrapper', () => {
+  it('DOM: @container selector resolves against frame as descendant of wrapper', () => {
     const dom = generateDOM(parse(SIZE_STATE_SRC))
     // Selector still targets the frame's mirror-id (the wrapper exists
     // purely to provide an ancestor container).
@@ -222,9 +223,9 @@ describe('Size-states — Container-Queries Lane A contract (skipped until fix)'
     expect(fw).toMatch(/@container .*\(max-width:/)
   })
 
-  it.skip('Frame without size-states emits no wrapper (on-demand)', () => {
+  it('Frame without size-states emits no wrapper (on-demand)', () => {
     const dom = generateDOM(parse(`Frame bg #333\n  Text "no size-states"`))
-    expect(dom).not.toMatch(/data-mirror-wrapper/)
+    expect(dom).not.toMatch(/dataset\.mirrorWrapper/)
     expect(dom).not.toContain("containerType = 'inline-size'")
   })
 
