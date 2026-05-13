@@ -99,6 +99,13 @@ export function parseComponentDefinition(this: Parser, name: Token): ComponentDe
     nodeId: this.generateNodeId(),
   }
 
+  // Attach buffered @directives (if any) and clear the buffer so the
+  // next component starts clean.
+  if (this.pendingMetadata) {
+    component.metadata = this.pendingMetadata
+    this.pendingMetadata = null
+  }
+
   // Parse inline properties (including implicit onclick events)
   this.parseInlineProperties(component.properties, component.events)
 
@@ -154,6 +161,11 @@ export function parseComponentInheritance(this: Parser, name: Token): ComponentD
     nodeId: this.generateNodeId(),
   }
 
+  if (this.pendingMetadata) {
+    component.metadata = this.pendingMetadata
+    this.pendingMetadata = null
+  }
+
   this.parseInlineProperties(component.properties, component.events)
 
   // Extract bind from properties if present (bind varName on same line as definition)
@@ -204,6 +216,13 @@ export function parseComponentDefinitionWithDefaultPrimitive(
     line: name.line,
     column: name.column,
     nodeId: this.generateNodeId(),
+  }
+
+  // Attach buffered @directives (if any) and clear the buffer so the
+  // next component starts clean.
+  if (this.pendingMetadata) {
+    component.metadata = this.pendingMetadata
+    this.pendingMetadata = null
   }
 
   // Parse inline properties (including implicit onclick events)

@@ -12,6 +12,8 @@ import type {
   ComponentDragData,
 } from './types'
 import { getComponentIcon } from '../../icons'
+import { loadIcon } from '../../../compiler/runtime/icons'
+import type { MirrorElement } from '../../../compiler/runtime/types'
 import { createSectionHeader } from '../../components/section-header'
 
 // =============================================================================
@@ -57,31 +59,52 @@ interface ParsedComponent {
   basePrimitive?: string
   properties?: string
   line: number
+  /** Lucide icon name from `@icon <name>` directive */
+  icon?: string
+  /** Section label from `@group <name>` directive */
+  group?: string
+  /** `@hidden` flag — caller should drop this component from the palette */
+  hidden?: boolean
 }
+
+const DIRECTIVE_LINE = /^@(icon|group|hidden)(?:\s+([^\s].*))?$/
 
 /**
  * Parse component definitions from .com file content
- * Filters out system components (built-in components from Component Panel)
+ * Filters out system components (built-in components from Component Panel).
+ * Recognises `@icon` / `@group` / `@hidden` directives on lines preceding
+ * a component definition (whitelist must match the parser's directive set).
  */
 function parseComFile(content: string, filename: string): ParsedComponent[] {
   const components: ParsedComponent[] = []
   const lines = content.split('\n')
 
+  let pending: { icon?: string; group?: string; hidden?: boolean } = {}
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     const trimmed = line.trim()
 
-    // Skip empty lines and comments
+    // Skip empty lines and comments — pending directives survive.
     if (!trimmed || trimmed.startsWith('//')) continue
 
+    // Directive line — buffer for the next component.
+    const dirMatch = trimmed.match(DIRECTIVE_LINE)
+    if (dirMatch) {
+      const [, name, value] = dirMatch
+      if (name === 'hidden') pending.hidden = true
+      else if (name === 'icon' && value) pending.icon = value.trim()
+      else if (name === 'group' && value) pending.group = value.trim()
+      continue
+    }
+
     // Component definition: Name: or Name as Base: (with optional inline properties)
-    // Examples: "App:", "Button as button:", "Card: bg $surface, pad $l"
     const match = trimmed.match(/^([A-Z][a-zA-Z0-9_-]*)(?:\s+as\s+([a-zA-Z][a-zA-Z0-9_-]*))?:/)
     if (match) {
       const componentName = match[1]
 
-      // Skip system components (built-in from Component Panel)
       if (SYSTEM_COMPONENTS.has(componentName)) {
+        pending = {}
         continue
       }
 
@@ -89,8 +112,17 @@ function parseComFile(content: string, filename: string): ParsedComponent[] {
         name: componentName,
         basePrimitive: match[2],
         line: i + 1,
+        icon: pending.icon,
+        group: pending.group,
+        hidden: pending.hidden,
       })
+      pending = {}
+      continue
     }
+
+    // Non-directive, non-component line — drop stale buffer so it doesn't
+    // attach to a later, unrelated component.
+    pending = {}
   }
 
   return components
@@ -122,31 +154,39 @@ export class UserComponentsPanel {
   }
 
   /**
-   * Build sections from .com files
+   * Build sections from .com files.
+   *
+   * Section assignment per component:
+   *   1. `@group <name>` directive (per-component override)
+   *   2. Filename without extension (default behaviour)
+   *
+   * Components marked with `@hidden` are dropped entirely.
    */
   private buildSections(): void {
     this.sections = []
 
     const comFiles = this.config.getComFiles()
+    const sectionByName = new Map<string, ComponentSection>()
+
+    const ensureSection = (name: string): ComponentSection => {
+      const existing = sectionByName.get(name)
+      if (existing) return existing
+      const section: ComponentSection = { name, isExpanded: true, items: [] }
+      sectionByName.set(name, section)
+      this.sections.push(section)
+      return section
+    }
 
     for (const file of comFiles) {
       const components = parseComFile(file.content, file.name)
+      const defaultSection = file.name.replace(/\.(com|components)$/, '')
 
-      if (components.length > 0) {
-        // Use filename without extension as section name
-        const sectionName = file.name.replace(/\.(com|components)$/, '')
-
-        this.sections.push({
-          name: sectionName,
-          isExpanded: true,
-          items: components.map(comp => this.createComponentItem(comp, file.name)),
-        })
+      for (const comp of components) {
+        if (comp.hidden) continue
+        const sectionName = comp.group ?? defaultSection
+        const item = this.createComponentItem(comp, file.name)
+        ensureSection(sectionName).items.push(item)
       }
-    }
-
-    // If no sections, add empty state info
-    if (this.sections.length === 0) {
-      // Will show empty state in render
     }
   }
 
@@ -157,10 +197,10 @@ export class UserComponentsPanel {
     return {
       id: `user-${comp.name.toLowerCase()}`,
       name: comp.name,
-      category: 'User',
-      // Template is just the component name - creates an instance
+      category: comp.group ?? 'User',
       template: comp.name,
       icon: 'custom',
+      customIconName: comp.icon,
       isUserDefined: true,
       description: comp.basePrimitive
         ? `${comp.name} (extends ${comp.basePrimitive})`
@@ -314,10 +354,18 @@ export class UserComponentsPanel {
     itemEl.dataset.id = item.id
     itemEl.draggable = true
 
-    // Icon
+    // Icon — `@icon <name>` directive (Lucide) wins; fallback to the
+    // built-in COMPONENT_ICONS for the generic `custom` cube.
     const iconEl = document.createElement('span')
     iconEl.className = 'user-components-panel-item-icon'
-    iconEl.innerHTML = getComponentIcon(item.icon)
+    if (item.customIconName) {
+      // Seed with the generic icon so the row doesn't visibly flicker
+      // empty while Lucide fetches.
+      iconEl.innerHTML = getComponentIcon(item.icon)
+      void loadIcon(iconEl as unknown as MirrorElement, item.customIconName)
+    } else {
+      iconEl.innerHTML = getComponentIcon(item.icon)
+    }
     itemEl.appendChild(iconEl)
 
     // Name

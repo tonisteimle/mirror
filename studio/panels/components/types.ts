@@ -147,6 +147,12 @@ export interface ComponentItem {
   dataBlock?: ComponentDataBlock
   /** Source line of the component definition (used for section grouping). */
   line?: number
+  /**
+   * Lucide icon name supplied via `@icon` directive in the .com source.
+   * Overrides the generic `custom` icon when present. Loaded async via
+   * the runtime's icon-fetcher to avoid bundling all 1000+ Lucide SVGs.
+   */
+  customIconName?: string
 }
 
 /**

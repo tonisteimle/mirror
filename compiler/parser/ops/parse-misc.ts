@@ -314,3 +314,66 @@ export function parseCanvas(this: Parser): CanvasDefinition {
 
   return canvas
 }
+
+/**
+ * Parse a single `@directive` line and accumulate it into the parser's
+ * pending metadata buffer. Format: `@<name> [value]` followed by NEWLINE.
+ * Whitelist:
+ *   `@icon <ident-or-string>`   Lucide icon name for the components panel
+ *   `@group <ident-or-string>`  Section label in the components panel
+ *   `@hidden`                   Hide from the components palette
+ *
+ * Unknown directives raise a parse error but don't abort — the parser
+ * advances to the next newline and keeps going. The collected buffer
+ * is attached to the next ComponentDefinition; if a non-component
+ * definition follows, the buffer is dropped silently.
+ */
+const DIRECTIVE_NAMES = new Set(['icon', 'group', 'hidden'])
+
+export function parseComponentDirective(this: Parser): void {
+  this.advance() // consume '@'
+
+  if (!this.check('IDENTIFIER')) {
+    this.addError(
+      `Expected directive name after '@'`,
+      `Use @icon, @group, or @hidden`,
+      'invalid-directive'
+    )
+    while (!this.check('NEWLINE') && !this.isAtEnd()) this.advance()
+    return
+  }
+
+  const nameToken = this.advance()
+  const directive = nameToken.value
+
+  if (!DIRECTIVE_NAMES.has(directive)) {
+    this.addError(
+      `Unknown directive '@${directive}'`,
+      `Supported directives: @icon <name>, @group <name>, @hidden`,
+      'unknown-directive'
+    )
+    while (!this.check('NEWLINE') && !this.isAtEnd()) this.advance()
+    return
+  }
+
+  const metadata = this.pendingMetadata ?? {}
+
+  if (directive === 'hidden') {
+    metadata.hidden = true
+  } else {
+    if (this.check('IDENTIFIER') || this.check('STRING')) {
+      const value = this.advance().value
+      if (directive === 'icon') metadata.icon = value
+      else if (directive === 'group') metadata.group = value
+    } else {
+      this.addError(
+        `Directive '@${directive}' expects a value`,
+        `Example: @${directive} ${directive === 'icon' ? 'home' : 'Forms'}`,
+        'directive-missing-value'
+      )
+    }
+  }
+
+  this.pendingMetadata = metadata
+  while (!this.check('NEWLINE') && !this.isAtEnd()) this.advance()
+}

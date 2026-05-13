@@ -68,6 +68,15 @@ export class Parser {
    */
   proseComponentPrelude?: ReadonlySet<string>
 
+  /**
+   * Buffered `@directives` (e.g. `@icon home`, `@group Forms`, `@hidden`)
+   * parsed at the top level. Attached to the next component definition
+   * encountered, then cleared. If a non-component definition follows
+   * (e.g. token, instance), the buffer is dropped silently — caller's
+   * mistake, not a parse error.
+   */
+  pendingMetadata: import('./ast').ComponentMetadata | null = null
+
   constructor(tokens: Token[], source: string = '') {
     this.tokens = tokens
     this.source = source
@@ -155,6 +164,7 @@ export class Parser {
   parseZagComponentWithContext = parse_misc.parseZagComponentWithContext
   parseAnimationDefinitionWithContext = parse_misc.parseAnimationDefinitionWithContext
   parseCanvas = parse_misc.parseCanvas
+  parseComponentDirective = parse_misc.parseComponentDirective
 
   parse(): AST {
     const program: Program = {
@@ -179,11 +189,24 @@ export class Parser {
     // Track current section for tokens
     let currentSection: string | undefined = undefined
 
+    // Track whether the previous iteration consumed an `@directive` line.
+    // Used to detect a stale metadata buffer: if a non-component statement
+    // (token, data block, instance at top level) appears between an
+    // `@directive` line and a component definition, the buffer must be
+    // dropped so it doesn't attach to a later, unrelated component.
+    let prevWasDirective = false
+
     let iterations = 0
     while (!this.isAtEnd() && iterations++ < MAX_ITERATIONS) {
       this.skipNewlines()
 
       if (this.isAtEnd()) break
+
+      const curIsDirective = this.check('AT')
+      if (!prevWasDirective && !curIsDirective && this.pendingMetadata) {
+        this.pendingMetadata = null
+      }
+      prevWasDirective = curIsDirective
 
       // Canvas may also appear after token/component definitions, e.g. in a
       // multi-file Studio compile where tokens.tok is prepended as a prelude
@@ -397,6 +420,13 @@ export class Parser {
             continue
           }
         }
+      }
+
+      // Component-metadata directive: @icon <name> | @group <name> | @hidden
+      // Buffer is attached to the next component definition.
+      if (this.check('AT')) {
+        this.parseComponentDirective()
+        continue
       }
 
       // Each loop: each item in collection

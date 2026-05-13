@@ -45,86 +45,77 @@ const PRIMITIVES = new Set([
 export function parseComponentSections(ast: AST, source?: string): ComponentSection[] {
   const sections: ComponentSection[] = []
 
-  // Build component items from AST, filtering out primitives
+  // Build component items from AST, filtering out primitives + `@hidden`
+  // (internal helper components like RoutineRow that only make sense
+  // inside their parent — author can hide them from the palette).
   const componentItems: ComponentItem[] = ast.components
     .filter(component => !PRIMITIVES.has(component.name.toLowerCase()))
+    .filter(component => component.metadata?.hidden !== true)
     .map(component => ({
       id: `user-${component.name}`,
       name: component.name,
-      category: 'Components',
+      // `@group <name>` directive overrides comment-section grouping.
+      category: component.metadata?.group ?? 'Components',
       template: component.name,
       icon: 'custom' as const,
       isUserDefined: true,
       description: `User-defined component`,
       line: component.line,
+      customIconName: component.metadata?.icon,
     }))
 
-  // If source is provided, try to group components by sections
-  if (source && componentItems.length > 0) {
-    const lines = source.split('\n')
+  // Group precedence:
+  //   1. `@group <name>` directive (per-component override)
+  //   2. `--- Section Name ---` comment boundary in source
+  //   3. default "Components" section
+  if (componentItems.length > 0) {
+    // Pre-pass: find comment-based section boundaries (only when source given)
     const sectionBoundaries: Array<{ name: string; startLine: number }> = []
-
-    // First pass: find all section headers and their line numbers
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim()
-      const sectionMatch = line.match(SECTION_PATTERN)
-
-      if (sectionMatch) {
-        sectionBoundaries.push({
-          name: sectionMatch[1],
-          startLine: i + 1, // 1-indexed
-        })
+    if (source) {
+      const lines = source.split('\n')
+      for (let i = 0; i < lines.length; i++) {
+        const sectionMatch = lines[i].trim().match(SECTION_PATTERN)
+        if (sectionMatch) {
+          sectionBoundaries.push({ name: sectionMatch[1], startLine: i + 1 })
+        }
       }
     }
 
-    // If we found sections, group components into them
-    if (sectionBoundaries.length > 0) {
-      for (const item of componentItems) {
-        const itemLine = item.line ?? 0
+    const addToSection = (groupName: string, item: ComponentItem): void => {
+      let section = sections.find(s => s.name === groupName)
+      if (!section) {
+        section = { name: groupName, items: [], isExpanded: true }
+        sections.push(section)
+      }
+      section.items.push(item)
+    }
 
-        // Find which section this component belongs to
-        let belongsToSection: string | null = null
+    for (const item of componentItems) {
+      // 1. `@group` wins.
+      if (item.category && item.category !== 'Components') {
+        addToSection(item.category, item)
+        continue
+      }
+      // 2. Comment-based section by line range.
+      if (sectionBoundaries.length > 0) {
+        let belongsTo: string | null = null
+        const itemLine = item.line ?? 0
         for (let i = sectionBoundaries.length - 1; i >= 0; i--) {
           if (itemLine >= sectionBoundaries[i].startLine) {
-            belongsToSection = sectionBoundaries[i].name
+            belongsTo = sectionBoundaries[i].name
             break
           }
         }
-
-        if (belongsToSection) {
-          // Find or create the section
-          let section = sections.find(s => s.name === belongsToSection)
-          if (!section) {
-            section = { name: belongsToSection, items: [], isExpanded: true }
-            sections.push(section)
-          }
-          section.items.push(item)
+        if (belongsTo) {
+          addToSection(belongsTo, item)
+          continue
         }
       }
-
-      // Add remaining components (before any section) to default "Components" section
-      const assignedIds = new Set(sections.flatMap(s => s.items.map(i => i.id)))
-      const unassigned = componentItems.filter(c => !assignedIds.has(c.id))
-
-      if (unassigned.length > 0) {
-        sections.push({
-          name: 'Components',
-          items: unassigned,
-          isExpanded: true,
-        })
-      }
-
-      return sections
+      // 3. Default catchall.
+      addToSection('Components', item)
     }
-  }
 
-  // No sections found or no source - create default section if we have components
-  if (componentItems.length > 0) {
-    sections.push({
-      name: 'Components',
-      items: componentItems,
-      isExpanded: true,
-    })
+    return sections
   }
 
   return sections

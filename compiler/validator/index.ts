@@ -57,6 +57,9 @@ const PARSER_CODE_MAP: Record<ParseErrorCode, string> = {
   'missing-colon': ERROR_CODES.MISSING_COLON,
   'unexpected-token': ERROR_CODES.UNEXPECTED_TOKEN,
   'unrecognized-definition': ERROR_CODES.PARSER_ERROR,
+  'invalid-directive': ERROR_CODES.PARSER_ERROR,
+  'unknown-directive': ERROR_CODES.PARSER_ERROR,
+  'directive-missing-value': ERROR_CODES.PARSER_ERROR,
 }
 
 /**

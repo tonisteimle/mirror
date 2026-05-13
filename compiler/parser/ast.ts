@@ -33,7 +33,13 @@ export interface BaseNode {
  * Stable category for a parser error. Lets the validator (or any consumer)
  * map errors to its own coding scheme without string-matching the message.
  */
-export type ParseErrorCode = 'missing-colon' | 'unexpected-token' | 'unrecognized-definition'
+export type ParseErrorCode =
+  | 'missing-colon'
+  | 'unexpected-token'
+  | 'unrecognized-definition'
+  | 'invalid-directive'
+  | 'unknown-directive'
+  | 'directive-missing-value'
 
 export interface ParseError {
   message: string
@@ -183,6 +189,18 @@ export interface DataBlock {
   line: number
 }
 
+/**
+ * Studio-side component metadata. Captured via `@directives` preceding
+ * a component definition. Pure presentational hints — does not affect
+ * IR or any backend. Today's whitelist: icon (Lucide name), group
+ * (panel category), hidden (skip in component palette).
+ */
+export interface ComponentMetadata {
+  icon?: string
+  group?: string
+  hidden?: boolean
+}
+
 export interface ComponentDefinition extends BaseNode {
   type: 'Component'
   name: string
@@ -198,6 +216,7 @@ export interface ComponentDefinition extends BaseNode {
   bind?: string // bind active exclusive() child: "bind value" → bind: "value"
   visibleWhen?: string // state-based visibility: "if (open)" → visibleWhen: "open"
   route?: string // navigation target: "route Home" → route: "Home"
+  metadata?: ComponentMetadata // Studio-only: @icon / @group / @hidden directives
 }
 
 export interface Instance extends BaseNode {
