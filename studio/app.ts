@@ -336,6 +336,34 @@ const fileSwitchAnnotation = Annotation.define()
 const files: Record<string, string> = {}
 let currentFile = 'app.mir'
 
+// Linter target — when set to a non-DOM backend, the validator emits
+// W130 BACKEND_UNSUPPORTED warnings for properties the chosen backend
+// silently drops (e.g. `mask` on react/svelte). Persisted via
+// localStorage so the choice survives reloads. Empty string disables
+// the check (the editor behaves like pre-Hebel-3). Declared at module
+// top so the toolbar wiring (below) and the compile() validate-call
+// (further down) both see the same binding.
+type LinterTarget = '' | 'dom' | 'react' | 'framework' | 'vue' | 'svelte' | 'vanilla'
+const LINTER_TARGET_KEY = 'mirror.linter-target'
+let linterTarget: LinterTarget = (() => {
+  try {
+    const v = localStorage.getItem(LINTER_TARGET_KEY)
+    if (
+      v === 'dom' ||
+      v === 'react' ||
+      v === 'framework' ||
+      v === 'vue' ||
+      v === 'svelte' ||
+      v === 'vanilla'
+    ) {
+      return v
+    }
+  } catch {
+    // localStorage unavailable (private mode / tests) — fall through.
+  }
+  return ''
+})()
+
 // ============================================
 // Playground Mode (URL parameter ?code=)
 // ============================================
@@ -1035,6 +1063,30 @@ resetDemoBtn?.addEventListener('click', async () => {
   }
 })
 
+// Linter target picker — wires the toolbar <select> to `linterTarget`,
+// persists across reloads via localStorage, and triggers a re-compile so
+// W130 diagnostics refresh against the new target. Default "" (DOM) hides
+// W130 entirely (same as the export pipeline's no-target call).
+const linterTargetEl = document.getElementById('linter-target') as HTMLSelectElement | null
+if (linterTargetEl) {
+  linterTargetEl.value = linterTarget
+  linterTargetEl.dataset.active = linterTarget && linterTarget !== 'dom' ? 'true' : 'false'
+  linterTargetEl.addEventListener('change', () => {
+    const v = linterTargetEl.value as LinterTarget
+    linterTarget = v
+    try {
+      if (v) localStorage.setItem(LINTER_TARGET_KEY, v)
+      else localStorage.removeItem(LINTER_TARGET_KEY)
+    } catch {
+      // localStorage unavailable — keep in-memory value, lose on reload.
+    }
+    linterTargetEl.dataset.active = v && v !== 'dom' ? 'true' : 'false'
+    // Re-compile to surface W130 diagnostics against the new target.
+    const src = editor?.state?.doc?.toString() ?? ''
+    compile(src)
+  })
+}
+
 // Editor file tabs — Multi-File-Roadmap Komponente 7: dynamic tabs
 // rendered from the actual file set. Tabs are sorted by phase
 // (data → tokens → components → layout) so the load-order is visually
@@ -1470,31 +1522,6 @@ let currentPreludeLineOffset = 0 // Line offset of prelude (for indent correctio
 let resolvedSource = '' // Full resolved source (prelude + user code)
 let isWrappedWithApp = false // Whether user code was wrapped with App and indented
 let testModeActive = false // When true, normal compile() skips prelude offset updates
-
-// Linter target — when set to a non-DOM backend, the validator emits W130
-// BACKEND_UNSUPPORTED warnings for properties that the chosen backend
-// silently drops (e.g. `mask` on react/svelte). Persisted via localStorage
-// so the choice survives reloads. Empty string disables the check.
-type LinterTarget = '' | 'dom' | 'react' | 'framework' | 'vue' | 'svelte' | 'vanilla'
-const LINTER_TARGET_KEY = 'mirror.linter-target'
-const linterTarget: LinterTarget = (() => {
-  try {
-    const v = localStorage.getItem(LINTER_TARGET_KEY)
-    if (
-      v === 'dom' ||
-      v === 'react' ||
-      v === 'framework' ||
-      v === 'vue' ||
-      v === 'svelte' ||
-      v === 'vanilla'
-    ) {
-      return v
-    }
-  } catch {
-    // localStorage unavailable (private mode / tests) — fall through.
-  }
-  return ''
-})()
 
 // Global function to reset prelude offset for testing
 // When setting test code directly without going through file loading,
