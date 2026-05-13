@@ -182,8 +182,7 @@ function parseObjectArray(
 // CONFIG HELPERS
 // ============================================
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function setNestedValue(obj: Record<string, any>, path: string, value: unknown): void {
+function setNestedValue(obj: Record<string, unknown>, path: string, value: unknown): void {
   const parts = path.split('.')
   let current = obj
 
@@ -194,8 +193,7 @@ function setNestedValue(obj: Record<string, any>, path: string, value: unknown):
   setFinalValue(current, parts[parts.length - 1], value)
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function navigateToPath(current: Record<string, any>, part: string): Record<string, any> {
+function navigateToPath(current: Record<string, unknown>, part: string): Record<string, unknown> {
   const arrayMatch = part.match(/^(\w+)\[(\d+)\]$/)
 
   if (arrayMatch) {
@@ -203,28 +201,27 @@ function navigateToPath(current: Record<string, any>, part: string): Record<stri
   }
 
   if (!(part in current)) current[part] = {}
-  return current[part]
+  return current[part] as Record<string, unknown>
 }
 
 function navigateArrayPath(
-  current: Record<string, any>,
+  current: Record<string, unknown>,
   arrayName: string,
   index: number
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Record<string, any> {
+): Record<string, unknown> {
   if (!(arrayName in current)) current[arrayName] = []
-  if (!current[arrayName][index]) current[arrayName][index] = {}
-  return current[arrayName][index]
+  const arr = current[arrayName] as Record<string, unknown>[]
+  if (!arr[index]) arr[index] = {}
+  return arr[index]
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function setFinalValue(current: Record<string, any>, part: string, value: unknown): void {
+function setFinalValue(current: Record<string, unknown>, part: string, value: unknown): void {
   const arrayMatch = part.match(/^(\w+)\[(\d+)\]$/)
 
   if (arrayMatch) {
     const [, arrayName, indexStr] = arrayMatch
     if (!(arrayName in current)) current[arrayName] = []
-    current[arrayName][parseInt(indexStr, 10)] = value
+    ;(current[arrayName] as unknown[])[parseInt(indexStr, 10)] = value
   } else {
     current[part] = value
   }
@@ -267,8 +264,7 @@ function createChartCanvas(wrapper: HTMLDivElement): HTMLCanvasElement {
   return canvas
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildChartConfig(config: ChartConfig): Record<string, any> {
+function buildChartConfig(config: ChartConfig): Record<string, unknown> {
   const { labels, values } = parseChartData(config.data, config.type, config.xField, config.yField)
   const colors = config.colors || DEFAULT_CHART_COLORS
   const isPieType = config.type === 'pie' || config.type === 'doughnut'
@@ -286,8 +282,7 @@ function buildDataConfig(
   colors: string[],
   isPieType: boolean,
   config: ChartConfig
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Record<string, any> {
+): Record<string, unknown> {
   return {
     labels,
     datasets: [
@@ -303,8 +298,7 @@ function buildDataConfig(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildOptionsConfig(config: ChartConfig, isPieType: boolean): Record<string, any> {
+function buildOptionsConfig(config: ChartConfig, isPieType: boolean): Record<string, unknown> {
   return {
     responsive: true,
     maintainAspectRatio: false,
@@ -316,8 +310,7 @@ function buildOptionsConfig(config: ChartConfig, isPieType: boolean): Record<str
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildScalesConfig(config: ChartConfig): Record<string, any> {
+function buildScalesConfig(config: ChartConfig): Record<string, unknown> {
   return {
     x: {
       display: config.axes ?? true,
@@ -331,7 +324,7 @@ function buildScalesConfig(config: ChartConfig): Record<string, any> {
   }
 }
 
-function applySlotConfigs(chartConfig: Record<string, any>, slots?: ChartSlotConfig[]): void {
+function applySlotConfigs(chartConfig: Record<string, unknown>, slots?: ChartSlotConfig[]): void {
   if (!slots?.length) return
   slots.forEach(slot =>
     Object.entries(slot.config).forEach(([path, value]) => {

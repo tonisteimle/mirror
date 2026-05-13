@@ -125,12 +125,19 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 > 5. `studio/app.ts` Bootstrap-Decomp — ongoing decomposition
 > 6. `compiler/backends/dom/ops/resolve-templates.ts:resolveConditionalExpression`
 >    — Smell ohne Bug
+> 7. Skipped-Tests Inventory (Slice F, 2026-05-13) — siehe Eintrag
+>    weiter unten, kategorisiert in (a) Container-Queries (in #2 enthalten),
+>    (b) Stacked-Drag Pure-Mirror-x/y-Propagation, (c) Padding/Margin
+>    Zero-State Zones, (d) Context-aware Autocomplete (3 Feature-Lücken),
+>    (e) Dynamic-Token-File Prelude-Rebuild, (f) Reorder-Siblings ohne
+>    Synthetic-Root, (g) Resize-Handle Full-Width-Position-Design,
+>    (h) Hover+State Test-Timing, plus Tutorial-Lane (#4-respektierte).
 >
 > Alle anderen Einträge unter „Offen" tragen bereits Status:
 > **erledigt** oder **abgewiesen** und gehören eigentlich nach
 > „Erledigt"; sie verbleiben hier als historischer Kontext (Audit-
 > Notiz + Commit-Hash). Vor dem nächsten Hunt-Rollup migrieren —
-> bis dahin: erst auf die obigen 6 Einträge scannen.
+> bis dahin: erst auf die obigen 7 Einträge scannen.
 
 - **Wo:** `studio/editor/triggers/trigger-controller.ts` (659 LOC),
   `studio/editor/triggers/ports.ts` (450 LOC),
@@ -367,6 +374,120 @@ token-trigger.ts:85` zur AST-Variante. Einziger direkter
   in `compiler/ir/types.ts`. 7349/7349 compiler tests pass.
   **Notiz:** Audit in
   `docs/refactoring/21-komponenten.md` Section 3 (V-1).
+
+### Skipped-Tests Inventory (Slice F, 2026-05-13)
+
+Audit der 79 `testWithSetupSkip`/`testSkip`-Marker in `studio/test-api/suites/`
+und `tests/responsive/`. Kategorisiert + getrackt für späteren Hunt.
+**Owner-Lane** (`tutorial/*`, `ui-builder/*`) ist hier explizit nicht
+gelistet — gehört zu Befund #4 oben.
+
+#### (a) Container-Queries (already tracked via #2 above)
+
+- `studio/test-api/suites/responsive/{basic,layout}.test.ts:78,92`
+  (2 markers) — `@container` matcht eigenes Element nicht. Lane-Doc:
+  `docs/refactoring/container-queries.md`. Plus 4 markers in
+  `tests/responsive/{components,complex}.test.ts` für dieselbe Klasse.
+- **Status:** offen — wartet auf Fix per Container-Queries-Lane.
+
+#### (b) Pure-Mirror-Component x/y-Propagation in Stacked Containers
+
+- `studio/test-api/suites/stacked-drag/zag-stacked.test.ts:13,26,39,52,74`
+  (5 markers, Checkbox/Switch/Slider in stacked frames), plus
+  `complex-mixed.test.ts:55`.
+  **Was:** Pure Mirror Components (Checkbox, Switch, Slider) — die seit
+  dem Zag→PureMirror-Refactor (`docs/archive/concepts/pure-mirror-components.md`)
+  als DSL-Templates expandiert werden — propagieren bei Drop in
+  `stacked`-Containers KEINE `x N, y N`-Position. Der `PureComponentHandler`
+  emittiert die Component-Defaults ohne Position-Properties.
+  Bug-Klasse: Drop-Handler-Pfad für Pure-Mirror unterscheidet sich vom
+  Zag-/Primitive-Pfad — letzterer setzt x/y auf stacked-targets.
+  **Status:** offen — echter Bug, fix-Pfad: PureComponentHandler sollte
+  bei stacked-target die Drop-Position aufnehmen wie der allgemeine
+  drag-controller-drop-Pfad.
+
+#### (c) Padding/Margin Zero-State Zones
+
+- `studio/test-api/suites/interactions/padding.test.ts:108`
+  („getPaddingZones returns empty when element has no padding"),
+  `studio/test-api/suites/interactions/margin.test.ts:213`
+  („getMarginZones returns empty when element has no margin"),
+  `studio/test-api/suites/interactions/margin-handlers.test.ts:96`
+  („Behavior changed — element without margin no longer auto-adds margin
+  on M key").
+  **Was:** Spacing-Manager (Padding/Margin) emittiert `.padding-area` /
+  `.margin-area` Overlays NUR wenn der Element bereits Padding/Margin
+  > 0 hat. Shift+Drag zum Hinzufügen von uniformen Padding aus dem
+  > Zero-State funktioniert dadurch nicht. Plus: M-Key-Behavior-Change
+  > unklar (auto-add-on-M wurde entfernt?).
+  > **Status:** offen — Owner-Entscheidung: ist das beabsichtigtes
+  > Verhalten (nur sichtbare Zones für visible Padding) oder ein Regression?
+
+#### (d) Context-aware Autocomplete (Feature-Lücken)
+
+- `studio/test-api/suites/autocomplete/properties.test.ts:43,55`
+  (Icon-spezifische / Input-spezifische Property-Completions),
+  `studio/test-api/suites/autocomplete/states.test.ts:10`
+  (State-Completions like `hover:`).
+  **Was:** Autocomplete-Engine bietet alle Properties an, nicht
+  primitive-spezifisch. State-Completions (`hover:`/`focus:`/...) sind
+  nicht wired für den `:` Trigger.
+  **Status:** offen — Feature-Lücke, nicht Bug. Eintrag im Roadmap
+  für „Context-aware Autocomplete v2".
+
+#### (e) Dynamic Token-File Prelude-Rebuild
+
+- `studio/test-api/suites/property-panel/color-picker.test.ts:138,179,207,231`
+  (4 markers).
+  **Was:** Test-Setup injiziert Token-Files dynamisch via `window.files`,
+  aber das Prelude-Build wird nicht re-getriggert. Color-Picker sieht
+  daher die Token-Farben nicht.
+  **Status:** offen — Test-Infrastructure-Issue, könnte mit
+  `__compileTestCode`-API gefixt werden (setze tokens als zweiten
+  parameter, baue prelude neu).
+
+#### (f) Reorder-Siblings ohne Synthetic-Root
+
+- `studio/test-api/suites/preview-cdp/02-move/reorder-siblings.test.ts:23`
+  (1 marker).
+  **Was:** Top-level Frames im Suite-Test-Setup haben KEINEN gemeinsamen
+  `data-mirror-id`-Parent. `moveElement` braucht aber einen `targetSel`.
+  Verwandt zu Empty-Canvas-Drop-Bug (gefixt in `d3115504`), aber Move
+  hat einen anderen Pfad als Drop-from-Palette.
+  **Status:** offen — `mirror-actions` braucht root-target-support
+  oder Studio-Drag-Pipeline akzeptiert reorder-drops ohne expliziten
+  Target-Container.
+
+#### (g) Resize-Handle Full-Width-Position-Design
+
+- `studio/test-api/suites/interactions/resize-handle-drag.test.ts:1022`
+  (1 marker, „Full-width/height elements have handles at container edge
+  — needs design decision").
+  **Was:** Bei `w full`/`h full`-Elementen liegt das Resize-Handle am
+  Container-Edge, was Edge-Drags am Container statt am Element
+  ambiguous macht. Design-Frage.
+  **Status:** offen — Design-Entscheidung.
+
+#### (h) Hover+State Test-Timing
+
+- `studio/test-api/suites/integration/component-state.test.ts:193,375`
+  (2 markers, „click doesn't maintain hover state" / „Flaky test —
+  passes when run alone, fails intermittently").
+  **Was:** Test-Environment-Timing-Issues. Möglicherweise pre-existing
+  jsdom-vs-CDP-Diskrepanz oder Race in Test-Runner.
+  **Status:** offen — Test-Infra-Befund, nicht Production-Bug.
+
+#### (i) Sonstige einzelne Skip-Marker
+
+- `studio/test-api/suites/primitives/basic.test.ts:213` (Spacer als div)
+  — vermutlich Test-Setup-Issue.
+- `studio/test-api/suites/primitives/table.test.ts:329` („Zebra striping
+  mit modulo — ternary mit `%` operator not supported") — DSL-Feature-
+  Lücke, könnte als Feature-Request getrackt werden.
+
+**Status:** Tracker, kein Code-Fix nötig per Slice. Findings dient als
+Map für künftige Hunt-Sessions, welche Skip-Marker echte Bugs vs.
+Feature-Lücken vs. Test-Infra sind.
 
 ### Studio Sync/State (Hunt 2026-05-10)
 
@@ -1127,21 +1248,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                            **Status-Update:** erledigt — alle drei Slices landen:
-                                            Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                            inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                            Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                            (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                            `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                            (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                            — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                            hat per `git add .` die uncommittete compiler-Side mit
-                                            aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                            `hasZagChildren` (children-Shape), `isZagComponentName`
-                                            (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                            IRZagNode-Discriminator-Property `isZagComponent: true`
-                                            bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                            81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                                **Status-Update:** erledigt — alle drei Slices landen:
+                                                Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                                inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                                Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                                (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                                `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                                (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                                — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                                hat per `git add .` die uncommittete compiler-Side mit
+                                                aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                                `hasZagChildren` (children-Shape), `isZagComponentName`
+                                                (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                                IRZagNode-Discriminator-Property `isZagComponent: true`
+                                                bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                                81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees

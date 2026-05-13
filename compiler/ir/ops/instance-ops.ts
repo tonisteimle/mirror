@@ -209,15 +209,13 @@ export function transformChartPrimitive(
  */
 export function transformInstance(
   this: IRTransformer,
-  // Loose union: callers actually pass Instance | Each | ConditionalNode | Slot.
-  // Slice 1 (ConditionalBlock-vs-ConditionalNode) konvergiert. Verbleibende
-  // Mismatches: extractInlineStatesAndEvents ((Instance | Text)[] vs the
-  // broader children list) und Slot-Dispatch in EachChild-Pfad — beides
-  // dead code (Probe `tools/probes/slot-in-each.ts` zeigt: Parser
-  // produziert Slot nie in Each/Conditional-Children). Tracker im
-  // Findings-Doc.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  instance: Instance | Each | any,
+  // Callers actually pass Instance | Each | ConditionalNode | Slot.
+  // Each/Conditional/Slot are dispatched out at the top of the function
+  // (transformEach / transformConditional / transformSlot); the rest of
+  // the body assumes Instance. `instance.type === 'Each' | 'Conditional'`
+  // checks below narrow the union, and an `isSlot(...)` guard handles
+  // Slot. Tracker for the slot-in-each path in the findings doc.
+  instance: Instance | Each | ConditionalNode | Slot,
   parentId?: string,
   isEachTemplate?: boolean,
   isConditional?: boolean,

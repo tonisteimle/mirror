@@ -187,9 +187,10 @@ export interface MirrorProps {
   [key: `onkeydown ${string}`]: Action | Action[]
   [key: `onkeyup ${string}`]: Action | Action[]
 
-  // Slot fills (dynamic keys for component slots)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [slotName: string]: any
+  // Slot fills (dynamic keys for component slots).
+  // `unknown` keeps the type stricter than `any`; consumers must
+  // narrow before use (e.g. via Array.isArray for child arrays).
+  [slotName: string]: unknown
 }
 
 /** Action - exactly as in Mirror: "toggle", "select", "highlight next" */
@@ -365,15 +366,16 @@ export function M(
     'onclick-outside',
   ])
 
-  // Dynamic property assignment requires any cast due to index signature conflicts
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const propsRecord = cleanProps as Record<string, any>
+  // Dynamic property assignment — value comes from MirrorProps' index
+  // signature (`unknown`). Cast to a generic Record for write access;
+  // the original property types on cleanProps stay intact for readers.
+  const propsRecord = cleanProps as Record<string, unknown>
   for (const [key, value] of Object.entries(props)) {
     if (knownProps.has(key) || key.startsWith('onkeydown') || key.startsWith('onkeyup')) {
       propsRecord[key] = value
     } else if (/^[A-Z]/.test(key)) {
       // Uppercase key = slot fill
-      slots[key] = value
+      slots[key] = value as string | MirrorNode
     } else {
       // Unknown prop - pass through
       propsRecord[key] = value
@@ -819,12 +821,12 @@ function applyEvents(el: HTMLElement, props: MirrorProps): void {
     const keyMatch = key.match(/^onkeydown\s+(.+)$/)
     if (keyMatch) {
       const keyName = keyMatch[1]
-      attachKeyEvent(el, 'keydown', keyName, normalizeActions(value))
+      attachKeyEvent(el, 'keydown', keyName, normalizeActions(value as Action | Action[]))
     }
     const keyUpMatch = key.match(/^onkeyup\s+(.+)$/)
     if (keyUpMatch) {
       const keyName = keyUpMatch[1]
-      attachKeyEvent(el, 'keyup', keyName, normalizeActions(value))
+      attachKeyEvent(el, 'keyup', keyName, normalizeActions(value as Action | Action[]))
     }
   }
 }
@@ -1447,7 +1449,7 @@ function eventsToMirror(props: MirrorProps, indent: number): string[] {
     const match = key.match(/^(onkeydown|onkeyup)\s+(.+)$/)
     if (match) {
       const [, eventType, keyName] = match
-      const actionStr = normalizeActions(value).join(', ')
+      const actionStr = normalizeActions(value as Action | Action[]).join(', ')
       lines.push(`${spaces}${eventType} ${keyName}: ${actionStr}`)
     }
   }
