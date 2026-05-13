@@ -196,15 +196,24 @@ service.ts`-Cluster, Eintrag #5). Letzte feature-relevante
   Pipeline. Letzte Code-Aktivität 2026-04 (~55 Tage). Owner-exklusiver
   Demo-File `studio/test-api/suites/demos/visual-inference.demo.ts`
   referenziert das System; Demo-Lane ist owner-territory.
-  **Status:** offen — Owner-Entscheidung. Deletion-Versuch in dieser
-  Hunt-Session wurde durch externe Restoration (parallel-session
-  oder lint-staged) automatisch zurückgesetzt; system-reminder
-  markierte den Zustand als „intentional". Daher hier dokumentiert
-  statt gelöscht.
-  **Notiz:** Wenn Deletion gewünscht: 872 LOC src + 2 Test-Files +
-  4 Zeilen events.ts. Bei Beibehaltung: an Demo-Workflow
-  wiring nachholen, damit die Subsystem-Events real konsumiert
-  werden (sonst bleibt die Dormanz das Problem).
+  **Status:** erledigt (2026-05-13) — Owner-OK explizit erteilt
+  („tutorials lassen wir aus" während des Hunts, layout-inference
+  ist Studio-Subsystem, nicht Tutorial-Code). Option (b) gewählt
+  — Pattern wie compile-service-Cluster: dormant + voll-getestet-
+  gegen-sich-selbst + 0 Production-Consumer. Files raus:
+  6× src in `studio/visual/layout-inference/` (alignment-detector,
+  index, inference-indicator, layout-converter, manager, types — 872
+  LOC) + 2× Tests (`visual-alignment-detector.test.ts`,
+  `visual-layout-converter.test.ts`) + 4 Zeilen aus
+  `studio/core/events.ts` (AlignmentGroup-Import + 3 Event-Type-
+  Deklarationen). Build + 5591/5591 studio Tests grün.
+  **Notiz:** Owner-exklusiver Demo-File
+  `studio/test-api/suites/demos/visual-inference.demo.ts` BLEIBT
+  (Tutorial-Lane). Audit: er nutzt keine layout-inference-API,
+  nur `editor.setCode(BEFORE→AFTER)` als Vorher/Nachher-Mockup
+  — gleiches Fake-Pattern wie die Picker-Demos. Tutorial-Owner
+  entscheidet, ob ein Demo für ein nicht-mehr-existierendes Feature
+  weitergepflegt wird.
 
 - **Wo:** `compiler/backends/dom/style-emitter.ts:emitNodeSizeStateCSS`,
   `compiler/backends/dom/node-emitter.ts:emitContainerType`,
@@ -1177,21 +1186,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                                    **Status-Update:** erledigt — alle drei Slices landen:
-                                                    Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                                    inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                                    Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                                    (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                                    `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                                    (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                                    — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                                    hat per `git add .` die uncommittete compiler-Side mit
-                                                    aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                                    `hasZagChildren` (children-Shape), `isZagComponentName`
-                                                    (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                                    IRZagNode-Discriminator-Property `isZagComponent: true`
-                                                    bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                                    81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                                        **Status-Update:** erledigt — alle drei Slices landen:
+                                                        Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                                        inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                                        Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                                        (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                                        `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                                        (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                                        — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                                        hat per `git add .` die uncommittete compiler-Side mit
+                                                        aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                                        `hasZagChildren` (children-Shape), `isZagComponentName`
+                                                        (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                                        IRZagNode-Discriminator-Property `isZagComponent: true`
+                                                        bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                                        81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
