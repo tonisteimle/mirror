@@ -51,10 +51,7 @@ import {
 } from './init'
 import { debounce } from './core/debounce'
 import { renderEmptyPreview, resetSelectionForEmptyCode } from './compile/empty-state'
-import {
-  findUninstancedComponents,
-  appendImplicitInstances,
-} from './compile/augment-local-components'
+import { augmentForPreview } from './compile/augment-pipeline'
 import { executeMirrorJS } from './compile/execute-mirror-js'
 import { collectPreludeDefinitions } from './compile/prelude-definitions'
 import { buildComponentPrimitives } from './compile/component-primitives'
@@ -62,6 +59,7 @@ import { resolvePreviewRedirect } from './compile/preview-redirect'
 import { resolveCompileSource } from './compile/resolve-compile-source'
 import { computeCompileStateUpdate } from './compile/compile-state-update'
 import { extractRootElement } from './compile/extract-root-element'
+import { logSlowCompile } from './compile/log-slow-compile'
 
 // New architecture imports
 import {
@@ -1342,7 +1340,7 @@ function compile(code: string) {
         irResult,
         parse: code => MirrorLang.parse(code),
         generateDOM: a => MirrorLang.generateDOM(a),
-        toIR: (a, sm) => MirrorLang.toIR(a, sm),
+        toIR: a => MirrorLang.toIR(a, true),
       })
       const finalJsCode = aug.finalJsCode
       irResult.ir = aug.ir
@@ -1394,45 +1392,9 @@ function compile(code: string) {
       forceLinting(editor)
     }
 
-    // Log compile timings
-    const compileEnd = performance.now()
-    const totalTime = compileEnd - compileStart
-    if (totalTime > 50) {
-      // Only log slow compiles
-      log.debug('[CompilePerf] ========== SLOW COMPILE ==========')
-      // All `timings.*` reads use `?? 0` so the perf log degrades gracefully
-      // if a phase never ran (e.g. early-return when preview was empty); the
-      // outer gate `timings.execEnd` already keeps the exec block coherent.
-      const t = (v: number | undefined) => v ?? 0
-      log.debug(`[CompilePerf] Total: ${totalTime.toFixed(1)}ms`)
-      log.debug(`[CompilePerf] Prelude: ${(t(timings.preludeEnd) - compileStart).toFixed(1)}ms`)
-      log.debug(
-        `[CompilePerf] Parse: ${(t(timings.parseEnd) - t(timings.preludeEnd)).toFixed(1)}ms`
-      )
-      log.debug(`[CompilePerf] IR: ${(t(timings.irEnd) - t(timings.parseEnd)).toFixed(1)}ms`)
-      log.debug(`[CompilePerf] Codegen: ${(t(timings.codegenEnd) - t(timings.irEnd)).toFixed(1)}ms`)
-      if (timings.execEnd) {
-        log.debug(
-          `[CompilePerf] Exec: ${(t(timings.execEnd) - t(timings.prepExecStart)).toFixed(1)}ms`
-        )
-        log.debug(
-          `[CompilePerf] UpdateStudio: ${(t(timings.updateStudioEnd) - t(timings.execEnd)).toFixed(1)}ms`
-        )
-        log.debug(
-          `[CompilePerf] DOM Append: ${(t(timings.domAppendEnd) - t(timings.updateStudioEnd)).toFixed(1)}ms`
-        )
-        log.debug(
-          `[CompilePerf] Draggables: ${(t(timings.draggablesEnd) - t(timings.domAppendEnd)).toFixed(1)}ms`
-        )
-        log.debug(
-          `[CompilePerf] Refresh: ${(t(timings.refreshEnd) - t(timings.draggablesEnd)).toFixed(1)}ms`
-        )
-        log.debug(
-          `[CompilePerf] Sync: ${(t(timings.syncEnd) - t(timings.refreshEnd)).toFixed(1)}ms`
-        )
-      }
-      log.debug('[CompilePerf] ================================')
-    }
+    // Log slow compiles (over 50ms) to log.debug. Delegated to a pure
+    // helper so the compile() body stays focused on the actual pipeline.
+    logSlowCompile(timings, compileStart, performance.now())
 
     // Test hook — bump generation so waitForCompile() can detect that a new
     // compile has landed since the test snapshotted it.
