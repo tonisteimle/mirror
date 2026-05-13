@@ -1386,7 +1386,13 @@ function compile(code: string) {
     const preludeForValidation = getPreludeCode(currentFile)
     const preludeAst = preludeForValidation ? MirrorLang.parse(preludeForValidation) : null
     const { preludeTokens, preludeComponents } = collectPreludeDefinitions(preludeAst)
-    const validationResult = validateCode(code, { preludeTokens, preludeComponents })
+    const validationResult = validateCode(code, {
+      preludeTokens,
+      preludeComponents,
+      // linterTarget '' = disabled (no W130 warnings). Anything else
+      // narrows to a valid BackendTarget for the validator.
+      target: linterTarget || undefined,
+    })
     currentDiagnostics = toCodeMirrorDiagnostics(validationResult, code)
     if (editor) {
       forceLinting(editor)
@@ -1464,6 +1470,31 @@ let currentPreludeLineOffset = 0 // Line offset of prelude (for indent correctio
 let resolvedSource = '' // Full resolved source (prelude + user code)
 let isWrappedWithApp = false // Whether user code was wrapped with App and indented
 let testModeActive = false // When true, normal compile() skips prelude offset updates
+
+// Linter target — when set to a non-DOM backend, the validator emits W130
+// BACKEND_UNSUPPORTED warnings for properties that the chosen backend
+// silently drops (e.g. `mask` on react/svelte). Persisted via localStorage
+// so the choice survives reloads. Empty string disables the check.
+type LinterTarget = '' | 'dom' | 'react' | 'framework' | 'vue' | 'svelte' | 'vanilla'
+const LINTER_TARGET_KEY = 'mirror.linter-target'
+const linterTarget: LinterTarget = (() => {
+  try {
+    const v = localStorage.getItem(LINTER_TARGET_KEY)
+    if (
+      v === 'dom' ||
+      v === 'react' ||
+      v === 'framework' ||
+      v === 'vue' ||
+      v === 'svelte' ||
+      v === 'vanilla'
+    ) {
+      return v
+    }
+  } catch {
+    // localStorage unavailable (private mode / tests) — fall through.
+  }
+  return ''
+})()
 
 // Global function to reset prelude offset for testing
 // When setting test code directly without going through file loading,
