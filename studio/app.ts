@@ -2381,6 +2381,21 @@ setupDesktopMenuHandler({
   alert,
 })
 
+// App Menubar (Web). In Tauri the OS-native menubar takes over —
+// the CSS rule `body.tauri-desktop #app-menubar { display: none }`
+// hides the in-app bar, so we just need the class set early.
+if (isTauriDesktop()) {
+  document.body.classList.add('tauri-desktop')
+}
+{
+  const menubarMount = document.getElementById('app-menubar')
+  if (menubarMount) {
+    void import('./ui/menubar').then(({ renderMenubar }) => {
+      renderMenubar(menubarMount)
+    })
+  }
+}
+
 // Expose for debugging
 window.editor = editor
 window.studioSelectionManager = studioSelectionManager

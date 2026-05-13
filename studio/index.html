@@ -23,12 +23,16 @@
 
   <!-- Tom Select CSS -->
   <link rel="stylesheet" href="https://esm.sh/tom-select@2.4.3/dist/css/tom-select.default.min.css">
-  <link rel="stylesheet" href="styles.css?v=244">
+  <link rel="stylesheet" href="styles.css?v=245">
   <!-- Mirror Default Styles (for preview) -->
   <link rel="stylesheet" href="dist/mirror-defaults.css?v=1">
 </head>
 <body>
   <div class="container">
+    <!-- App Menubar (Web). Hidden in Tauri (CSS via body.tauri-desktop)
+         because the native macOS menubar takes over there. -->
+    <div id="app-menubar"></div>
+
     <!-- Hidden View Menu (controlled by native menu) -->
     <div id="view-menu" class="view-menu" style="display: none;">
       <label class="view-menu-item" data-panel="code"><input type="checkbox" checked><span>Code</span></label>
@@ -197,6 +201,6 @@
   <script type="module" src="dist/dialog.js?v=2"></script>
   <script type="module" src="dist/tauri-bridge.js?v=2"></script>
   <script type="module" src="dist/desktop-files.js?v=2"></script>
-  <script type="module" src="dist/app.js?v=33"></script>
+  <script type="module" src="dist/app.js?v=34"></script>
 </body>
 </html>

@@ -1,0 +1,114 @@
+/* =============================================
+   App Menubar (Web-only — hidden in Tauri shell)
+   ============================================= */
+
+#app-menubar {
+  display: flex;
+  align-items: stretch;
+  height: 28px;
+  padding: 0 8px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-default);
+  font-family: var(--font-sans);
+  font-size: var(--font-base);
+  color: var(--text-primary);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+/* Hidden when running inside the Tauri shell — native macOS / Windows
+   menubar takes over. Body.tauri-desktop is set in studio/app.ts on boot. */
+body.tauri-desktop #app-menubar {
+  display: none;
+}
+
+.app-menubar-trigger {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.app-menubar-trigger:hover,
+.app-menubar-trigger.is-open {
+  background: var(--bg-hover);
+}
+
+.app-menubar-trigger.is-open {
+  background: var(--accent);
+  color: var(--text-inverse);
+}
+
+/* Dropdown (portalled into body, so positioning is fixed via JS) */
+.app-menubar-dropdown {
+  min-width: 220px;
+  padding: 4px 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.25),
+    0 8px 24px rgba(0, 0, 0, 0.35);
+  font-family: var(--font-sans);
+  font-size: var(--font-base);
+  color: var(--text-primary);
+  z-index: 9999;
+}
+
+.app-menubar-item {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  align-items: center;
+  width: 100%;
+  padding: 5px 12px 5px 6px;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.app-menubar-item:hover {
+  background: var(--accent);
+  color: var(--text-inverse);
+}
+
+.app-menubar-check {
+  display: inline-block;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-primary);
+}
+
+.app-menubar-item:hover .app-menubar-check {
+  color: var(--text-inverse);
+}
+
+.app-menubar-label {
+  white-space: nowrap;
+}
+
+.app-menubar-shortcut {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  margin-left: 12px;
+}
+
+.app-menubar-item:hover .app-menubar-shortcut {
+  color: var(--text-inverse);
+  opacity: 0.85;
+}
+
+.app-menubar-separator {
+  height: 1px;
+  margin: 4px 8px;
+  background: var(--border-default);
+}
