@@ -8,6 +8,7 @@
 
 import type { TestCase, TestAPI } from '../../types'
 import { describe, testWithSetup } from '../../index'
+import { trustedInteractions, coordsOfElement } from '../../trusted-interactions'
 
 // =============================================================================
 // Helper Functions
@@ -449,20 +450,11 @@ export const paddingHandleDragTests: TestCase[] = describe('Padding Handle Drag'
       const topHandle = document.querySelector('.padding-handle-top') as HTMLElement
       api.assert.ok(topHandle !== null, 'Top padding handle should exist')
 
-      // Get handle position for drag
-      const handleRect = topHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Simulate drag down (increases top padding)
-      topHandle.dispatchEvent(
-        new MouseEvent('mousedown', { bubbles: true, clientX: startX, clientY: startY })
-      )
-      document.dispatchEvent(
-        new MouseEvent('mousemove', { bubbles: true, clientX: startX, clientY: startY + 10 })
-      )
-      await api.utils.delay(100)
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      // Drag DOWN by 10px via Trusted CDP — inward direction grows
+      // padding (padding polarity is opposite of margin; see
+      // `studio/visual/spacing-handle-math.ts`). Interpolated
+      // mousemoves let the snap-service + indicator observe the path.
+      await trustedInteractions.dragHandle(coordsOfElement(topHandle), 0, 10)
 
       // Wait for code update
       await api.utils.waitForCompile()

@@ -54,12 +54,8 @@ const SUITES_DIR = path.join(repoRoot, 'studio/test-api/suites')
  * the migration completion signal.
  */
 const ALLOWED_LEGACY = new Set<string>([
-  'interactions/margin-handlers.test.ts',
   'interactions/snapping.test.ts',
-  'interactions/gap-handlers.test.ts',
-  'interactions/padding-handlers.test.ts',
   'tutorial/overlays-deep.test.ts',
-  'states/system-states.test.ts',
 ])
 
 /** Regex matches both `new MouseEvent('click', ...)` constructor

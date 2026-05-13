@@ -13,6 +13,7 @@
 
 import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
+import { trustedInteractions, coordsOfElement } from '../../trusted-interactions'
 
 // =============================================================================
 // Focus State Tests
@@ -268,25 +269,35 @@ export const activeStateTests: TestCase[] = describe('Active State', [
       // Initial state
       api.assert.hasStyle('node-1', 'backgroundColor', 'rgb(34, 113, 193)')
 
-      // Simulate mousedown (active state)
-      button.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+      // Trusted mousedown — CSS `:active` only matches when the
+      // pointer was pressed via a real input pipeline; synthetic
+      // `dispatchEvent` skipped this gate and the old assertion below
+      // was a tautology (`true`) that masked the silent failure.
+      const btnPt = coordsOfElement(button)
+      await trustedInteractions.mouseDown(btnPt)
       await api.utils.delay(50)
 
-      // Check if active styling applies
-      // Note: CSS :active requires real mouse interaction - checking transform
-      const transform = window.getComputedStyle(button).transform
+      // Now `:active` styling should apply. The test fixture sets
+      // bg #1a5490 and scale 0.98 in the `active:` block.
       const bg = window.getComputedStyle(button).backgroundColor
-
-      // Active state might not trigger via JS events alone
-      // Log what we observe
+      const transform = window.getComputedStyle(button).transform
       api.assert.ok(
-        true,
-        `Active state: bg=${bg}, transform=${transform} (CSS :active may require real click)`
+        bg === 'rgb(26, 84, 144)',
+        `Active bg should be #1a5490 (rgb(26, 84, 144)) while pressed, got ${bg}`
+      )
+      api.assert.ok(
+        transform.includes('matrix') || transform.includes('scale'),
+        `Active transform should reflect scale 0.98 while pressed, got ${transform}`
       )
 
-      // Release
-      button.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      // Release — `:active` should clear, base style returns.
+      await trustedInteractions.mouseUp(btnPt)
       await api.utils.delay(50)
+      const bgAfter = window.getComputedStyle(button).backgroundColor
+      api.assert.ok(
+        bgAfter === 'rgb(34, 113, 193)',
+        `Base bg should be back to #2271C1 (rgb(34, 113, 193)) after release, got ${bgAfter}`
+      )
     }
   ),
 

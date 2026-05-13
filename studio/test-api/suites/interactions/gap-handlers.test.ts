@@ -14,6 +14,18 @@
 
 import type { TestCase, TestAPI } from '../../types'
 import { describe, testWithSetup } from '../../index'
+import { trustedInteractions, coordsOfElement } from '../../trusted-interactions'
+
+/**
+ * Local helper: drag a gap handle by (deltaX, deltaY) px via Trusted
+ * CDP events. Wraps the standard `coordsOfElement` + `dragHandle`
+ * idiom so the per-test bodies stay scannable. Polarity matches
+ * `studio/visual/gap-handle-math.ts`: positive deltaX grows horizontal
+ * gap, positive deltaY grows vertical gap.
+ */
+async function dragGapHandle(handle: HTMLElement, deltaX: number, deltaY: number): Promise<void> {
+  await trustedInteractions.dragHandle(coordsOfElement(handle), deltaX, deltaY)
+}
 
 // =============================================================================
 // G Key - Toggle Gap Mode
@@ -653,33 +665,8 @@ export const gapHandleDragTests: TestCase[] = describe('Gap Handle Drag', [
       const gapHandle = document.querySelector('.gap-handle') as HTMLElement
       api.assert.ok(gapHandle !== null, 'Gap handle should exist')
 
-      // Get handle position
-      const handleRect = gapHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Simulate drag right (increase gap for horizontal layout)
-      const mousedown = new MouseEvent('mousedown', {
-        bubbles: true,
-        clientX: startX,
-        clientY: startY,
-      })
-      gapHandle.dispatchEvent(mousedown)
-
-      // Move right by 10px (gap should increase from 16 to ~26)
-      const mousemove = new MouseEvent('mousemove', {
-        bubbles: true,
-        clientX: startX + 10,
-        clientY: startY,
-      })
-      document.dispatchEvent(mousemove)
-
-      // Wait for RAF
-      await api.utils.delay(100)
-
-      // Release
-      const mouseup = new MouseEvent('mouseup', { bubbles: true })
-      document.dispatchEvent(mouseup)
+      // Drag right by 10px → gap grows from 16 to ~26.
+      await dragGapHandle(gapHandle, 10, 0)
 
       // Wait for compile
       await api.utils.waitForCompile()
@@ -717,30 +704,8 @@ export const gapHandleDragTests: TestCase[] = describe('Gap Handle Drag', [
       const gapHandle = document.querySelector('.gap-handle') as HTMLElement
       api.assert.ok(gapHandle !== null, 'Gap handle should exist')
 
-      const handleRect = gapHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Simulate drag down (increase gap for vertical layout)
-      const mousedown = new MouseEvent('mousedown', {
-        bubbles: true,
-        clientX: startX,
-        clientY: startY,
-      })
-      gapHandle.dispatchEvent(mousedown)
-
-      // Move down by 10px (gap should increase from 16 to ~26)
-      const mousemove = new MouseEvent('mousemove', {
-        bubbles: true,
-        clientX: startX,
-        clientY: startY + 10,
-      })
-      document.dispatchEvent(mousemove)
-
-      await api.utils.delay(100)
-
-      const mouseup = new MouseEvent('mouseup', { bubbles: true })
-      document.dispatchEvent(mouseup)
+      // Drag down by 10px → vertical gap grows from 16 to ~26.
+      await dragGapHandle(gapHandle, 0, 10)
 
       await api.utils.waitForCompile()
 
@@ -777,29 +742,8 @@ export const gapHandleDragTests: TestCase[] = describe('Gap Handle Drag', [
       const gapHandle = document.querySelector('.gap-handle') as HTMLElement
       api.assert.ok(gapHandle !== null, 'Gap handle should exist')
 
-      const handleRect = gapHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Drag left by 15px (decrease gap from 30 to ~15)
-      const mousedown = new MouseEvent('mousedown', {
-        bubbles: true,
-        clientX: startX,
-        clientY: startY,
-      })
-      gapHandle.dispatchEvent(mousedown)
-
-      const mousemove = new MouseEvent('mousemove', {
-        bubbles: true,
-        clientX: startX - 15,
-        clientY: startY,
-      })
-      document.dispatchEvent(mousemove)
-
-      await api.utils.delay(100)
-
-      const mouseup = new MouseEvent('mouseup', { bubbles: true })
-      document.dispatchEvent(mouseup)
+      // Drag left by 15px → horizontal gap shrinks from 30 to ~15.
+      await dragGapHandle(gapHandle, -15, 0)
 
       await api.utils.waitForCompile()
 
@@ -836,30 +780,8 @@ export const gapHandleDragTests: TestCase[] = describe('Gap Handle Drag', [
       const gapHandle = document.querySelector('.gap-handle') as HTMLElement
       api.assert.ok(gapHandle !== null, 'Gap handle should exist')
 
-      const handleRect = gapHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Try to drag left far (decrease gap to below 0)
-      const mousedown = new MouseEvent('mousedown', {
-        bubbles: true,
-        clientX: startX,
-        clientY: startY,
-      })
-      gapHandle.dispatchEvent(mousedown)
-
-      // Move left by -50px (should result in gap 0, not negative)
-      const mousemove = new MouseEvent('mousemove', {
-        bubbles: true,
-        clientX: startX - 50,
-        clientY: startY,
-      })
-      document.dispatchEvent(mousemove)
-
-      await api.utils.delay(100)
-
-      const mouseup = new MouseEvent('mouseup', { bubbles: true })
-      document.dispatchEvent(mouseup)
+      // Try to drag left far — applyGapDelta clamps to 0.
+      await dragGapHandle(gapHandle, -50, 0)
 
       await api.utils.waitForCompile()
 
@@ -892,27 +814,8 @@ export const gapHandleDragTests: TestCase[] = describe('Gap Handle Drag', [
       const gapHandle = document.querySelector('.gap-handle') as HTMLElement
       api.assert.ok(gapHandle !== null, 'Gap handle should exist')
 
-      // First drag: increase by 10
-      let handleRect = gapHandle.getBoundingClientRect()
-      let startX = handleRect.left + handleRect.width / 2
-      let startY = handleRect.top + handleRect.height / 2
-
-      gapHandle.dispatchEvent(
-        new MouseEvent('mousedown', {
-          bubbles: true,
-          clientX: startX,
-          clientY: startY,
-        })
-      )
-      document.dispatchEvent(
-        new MouseEvent('mousemove', {
-          bubbles: true,
-          clientX: startX + 10,
-          clientY: startY,
-        })
-      )
-      await api.utils.delay(100)
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      // First drag: increase by 10 (gap 20 → ~30).
+      await dragGapHandle(gapHandle, 10, 0)
       await api.utils.waitForCompile()
 
       // Check first result (should be ~30)
@@ -921,30 +824,10 @@ export const gapHandleDragTests: TestCase[] = describe('Gap Handle Drag', [
       const gap1 = parseInt(gapMatch![1], 10)
       api.assert.ok(gap1 >= 28 && gap1 <= 32, `After first drag, gap should be ~30, got ${gap1}`)
 
-      // Second drag: decrease by 5
-      // Need to get fresh handle position after first drag
+      // Second drag: decrease by 5 (re-query handle as it re-renders).
       await api.utils.delay(100)
       const gapHandle2 = document.querySelector('.gap-handle') as HTMLElement
-      handleRect = gapHandle2.getBoundingClientRect()
-      startX = handleRect.left + handleRect.width / 2
-      startY = handleRect.top + handleRect.height / 2
-
-      gapHandle2.dispatchEvent(
-        new MouseEvent('mousedown', {
-          bubbles: true,
-          clientX: startX,
-          clientY: startY,
-        })
-      )
-      document.dispatchEvent(
-        new MouseEvent('mousemove', {
-          bubbles: true,
-          clientX: startX - 5,
-          clientY: startY,
-        })
-      )
-      await api.utils.delay(100)
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }))
+      await dragGapHandle(gapHandle2, -5, 0)
       await api.utils.waitForCompile()
 
       // Check second result (should be ~25)

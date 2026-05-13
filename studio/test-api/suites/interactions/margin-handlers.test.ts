@@ -13,6 +13,7 @@
 
 import type { TestCase, TestAPI } from '../../types'
 import { describe, testWithSetup, testWithSetupSkip } from '../../index'
+import { trustedInteractions, coordsOfElement } from '../../trusted-interactions'
 
 // =============================================================================
 // M Key - Toggle Margin Mode
@@ -362,7 +363,8 @@ export const marginHandlePositionTests: TestCase[] = describe('Margin Handle Pos
 
       // Fuchsia is #D946EF which is rgba(217, 70, 239, 0.15)
       api.assert.ok(
-        bgColor.includes('rgba') && (bgColor.includes('217') || bgColor.includes('70') || bgColor.includes('239')),
+        bgColor.includes('rgba') &&
+          (bgColor.includes('217') || bgColor.includes('70') || bgColor.includes('239')),
         `Margin area should have fuchsia rgba background, got: ${bgColor}`
       )
     }
@@ -395,38 +397,14 @@ export const marginHandleDragTests: TestCase[] = describe('Margin Handle Drag', 
       const topHandle = document.querySelector('.margin-handle-top') as HTMLElement
       api.assert.ok(topHandle !== null, 'Top margin handle should exist')
 
-      // Get handle position
-      const handleRect = topHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
+      // Drag UP by 8px via Trusted CDP events — outward direction
+      // grows margin (see `studio/visual/spacing-handle-math.ts`
+      // polarity rules). Interpolated mousemoves fire dragover-like
+      // updates that the snap-service + raf-throttle observe in
+      // production. Synthetic single-jump dispatch missed those.
+      await trustedInteractions.dragHandle(coordsOfElement(topHandle), 0, -8)
 
-      // Simulate drag UP (away from element to increase margin)
-      const mousedown = new MouseEvent('mousedown', {
-        bubbles: true,
-        clientX: startX,
-        clientY: startY,
-      })
-      topHandle.dispatchEvent(mousedown)
-
-      // Move up by 8px (outward = increase margin)
-      const mousemove = new MouseEvent('mousemove', {
-        bubbles: true,
-        clientX: startX,
-        clientY: startY - 8,
-      })
-      document.dispatchEvent(mousemove)
-
-      // Wait for RAF
-      await api.utils.delay(100)
-
-      // Release
-      const mouseup = new MouseEvent('mouseup', { bubbles: true })
-      document.dispatchEvent(mouseup)
-
-      // Wait for compile
       await api.utils.waitForCompile()
-
-      // Verify margin was updated
       api.assert.codeContains(/\bmar\s+\d+/)
     }
   ),
@@ -448,32 +426,11 @@ export const marginHandleDragTests: TestCase[] = describe('Margin Handle Drag', 
       const leftHandle = document.querySelector('.margin-handle-left') as HTMLElement
       api.assert.ok(leftHandle !== null, 'Left margin handle should exist')
 
-      const handleRect = leftHandle.getBoundingClientRect()
-      const startX = handleRect.left + handleRect.width / 2
-      const startY = handleRect.top + handleRect.height / 2
-
-      // Simulate drag LEFT (away from element to increase margin)
-      const mousedown = new MouseEvent('mousedown', {
-        bubbles: true,
-        clientX: startX,
-        clientY: startY,
-      })
-      leftHandle.dispatchEvent(mousedown)
-
-      const mousemove = new MouseEvent('mousemove', {
-        bubbles: true,
-        clientX: startX - 8, // Left = outward
-        clientY: startY,
-      })
-      document.dispatchEvent(mousemove)
-
-      await api.utils.delay(100)
-
-      const mouseup = new MouseEvent('mouseup', { bubbles: true })
-      document.dispatchEvent(mouseup)
+      // Drag LEFT by 8px via Trusted CDP — outward (= grows margin
+      // per spacing-handle-math polarity).
+      await trustedInteractions.dragHandle(coordsOfElement(leftHandle), -8, 0)
 
       await api.utils.waitForCompile()
-
       api.assert.codeContains(/\bmar\s+\d+/)
     }
   ),
