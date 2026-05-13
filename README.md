@@ -63,15 +63,15 @@ const jsCode = compile(`
 
 ## Dokumentation
 
-| Datei                                                                | Inhalt                                                    |
-| -------------------------------------------------------------------- | --------------------------------------------------------- |
-| **[docs/MIRROR-TUTORIAL-FULL.md](./docs/MIRROR-TUTORIAL-FULL.md)**   | Vollständige DSL-Referenz mit Beispielen (auto-generiert) |
-| [docs/generated/dsl-reference.md](./docs/generated/dsl-reference.md) | Compact Schema-Reference (Primitives, Properties)         |
-| [docs/generated/properties.md](./docs/generated/properties.md)       | Alle Properties mit Werten und Aliases                    |
-| [docs/TEST-FRAMEWORK.md](./docs/TEST-FRAMEWORK.md)                   | Test-Framework (CDP-basiert, kein Playwright)             |
-| [CLAUDE.md](./CLAUDE.md)                                             | Kompakte Kurzreferenz (für AI-Tools optimiert)            |
-| [CONTRIBUTING.md](./CONTRIBUTING.md)                                 | Beitragen, Code-Style, Testing                            |
-| [CHANGELOG.md](./CHANGELOG.md)                                       | Versions-Historie                                         |
+| Datei                                                                | Inhalt                                                                                                             |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **[docs/MIRROR-TUTORIAL-FULL.md](./docs/MIRROR-TUTORIAL-FULL.md)**   | Vollständige DSL-Referenz mit Beispielen (auto-generiert via `npm run generate:claude`)                            |
+| [docs/generated/dsl-reference.md](./docs/generated/dsl-reference.md) | Compact Schema-Reference (Primitives, Properties, Events, Actions, States) (auto-generiert via `npm run generate`) |
+| [docs/TEST-FRAMEWORK.md](./docs/TEST-FRAMEWORK.md)                   | Test-Framework (CDP-basiert, kein Playwright)                                                                      |
+| [docs/audit/](./docs/audit/)                                         | Datierte umfassende Repo-Audits                                                                                    |
+| [CLAUDE.md](./CLAUDE.md)                                             | Kompakte Kurzreferenz (für AI-Tools optimiert)                                                                     |
+| [CONTRIBUTING.md](./CONTRIBUTING.md)                                 | Beitragen, Code-Style, Testing                                                                                     |
+| [CHANGELOG.md](./CHANGELOG.md)                                       | Versions-Historie                                                                                                  |
 
 Historische Projekt-Dokumente sind unter [`docs/archive/`](./docs/archive/) abgelegt.
 
@@ -81,10 +81,10 @@ Historische Projekt-Dokumente sind unter [`docs/archive/`](./docs/archive/) abge
 compiler/    Core-Compiler (Lexer, Parser, IR, Backends, Runtime, Validator, Schema)
 studio/      Visual Editor (Property Panel, Pickers, Preview, SourceMap)
 tests/       Test-Suite (Vitest + CDP-Browser-Tests)
-tools/       CLI-Tools (Test-Runner, Demo-Runner, Image-to-Mirror)
-packages/    NPM-Pakete (mirror-lang, mcp-server, …)
-examples/    Beispiel-Apps (hospital-dashboard, task-app)
-docs/        Aktive Dokumentation (Tutorial, Generated Reference)
+tools/       CLI-Tools (Test-Runner, Export-Pipeline, Probes)
+scripts/     Eval-Drivers + Doc-Generatoren
+examples/    Beispiel-Apps (hospital-dashboard, task-app, personas-informatik, …)
+docs/        Aktive Dokumentation (Tutorial, Generated Reference, Audits, Refactor-Lanes)
 ```
 
 ## Lizenz

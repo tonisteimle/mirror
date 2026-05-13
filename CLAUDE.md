@@ -81,8 +81,9 @@ tools/                 # CLI Tools
 
 docs/                  # Dokumentation
 ├── concepts/          # Feature-Konzepte (in Entwicklung)
-└── generated/         # Auto-generierte Referenz
-packages/mirror-lang/  # NPM Package
+├── refactoring/       # Lane-Docs für laufende Refactors
+├── audit/             # Datierte umfassende Audits
+└── generated/         # Auto-generierte DSL-Referenz (`npm run generate`)
 dist/                  # Build Output
 ```
 
@@ -1216,56 +1217,56 @@ Mappings (hardcoded v1): bare → `BodyTxt`, `-` → `DashItem` + `BodyTxtCompac
 
 ### Primitives
 
-| Primitive | HTML         | Aliases |
-| --------- | ------------ | ------- |
-| Frame     | `<div>`      | Box     |
-| Text      | `<span>`     | -       |
-| Button    | `<button>`   | -       |
-| Input     | `<input>`    | -       |
-| Textarea  | `<textarea>` | -       |
-| Label     | `<label>`    | -       |
-| Image     | `<img>`      | Img     |
-| Icon      | `<span>`     | -       |
-| Link      | `<a>`        | -       |
-| Slot      | `<div>`      | -       |
-| Divider   | `<hr>`       | -       |
-| Spacer    | `<div>`      | -       |
-| Header    | `<header>`   | -       |
-| Nav       | `<nav>`      | -       |
-| Main      | `<main>`     | -       |
-| Section   | `<section>`  | -       |
-| Article   | `<article>`  | -       |
-| Aside     | `<aside>`    | -       |
-| Footer    | `<footer>`   | -       |
-| H1        | `<h1>`       | -       |
-| H2        | `<h2>`       | -       |
-| H3        | `<h3>`       | -       |
-| H4        | `<h4>`       | -       |
-| H5        | `<h5>`       | -       |
-| H6        | `<h6>`       | -       |
+| Primitive       | HTML         | Aliases |
+| --------------- | ------------ | ------- |
+| Frame           | `<div>`      | Box     |
+| Text            | `<span>`     | -       |
+| Button          | `<button>`   | -       |
+| Input           | `<input>`    | -       |
+| Textarea        | `<textarea>` | -       |
+| Label           | `<label>`    | -       |
+| Image           | `<img>`      | Img     |
+| Icon            | `<span>`     | -       |
+| Link            | `<a>`        | -       |
+| Slot            | `<div>`      | -       |
+| Divider         | `<hr>`       | -       |
+| Spacer          | `<div>`      | -       |
+| Header          | `<header>`   | -       |
+| Nav             | `<nav>`      | -       |
+| Main            | `<main>`     | -       |
+| Section         | `<section>`  | -       |
+| Article         | `<article>`  | -       |
+| Aside           | `<aside>`    | -       |
+| Footer          | `<footer>`   | -       |
+| H1              | `<h1>`       | -       |
+| H2              | `<h2>`       | -       |
+| H3              | `<h3>`       | -       |
+| H4              | `<h4>`       | -       |
+| H5              | `<h5>`       | -       |
+| H6              | `<h6>`       | -       |
+| Table           | `<div>`      | -       |
+| TableHeader     | `<div>`      | -       |
+| TableRow        | `<div>`      | -       |
+| TableFooter     | `<div>`      | -       |
+| TableCell       | `<div>`      | -       |
+| TableHeaderCell | `<div>`      | -       |
 
 ### Zag Primitives (Behavior Components)
 
-> Mirror nutzt nur **eine einzige** Zag-Komponente: **DatePicker**. Alle
-> früheren Zag-Komponenten (Select, Checkbox, Switch, RadioGroup, Slider,
-> Tabs, SideNav, Dialog, Tooltip, …) sind heute **Pure-Mirror-Templates**
-> in `studio/panels/components/component-templates.ts` — d.h. sie sind als
-> Mirror-DSL definiert (Frame/Slot/Icon/State) und kommen ohne
-> Zag-Runtime aus. Verwendung im Code (`Checkbox "Newsletter"`,
-> `Dialog`, `Select`, …) bleibt identisch; intern wird das Template
-> expandiert. Historische Details: `docs/archive/concepts/pure-mirror-components.md`.
+> Note: Select, Checkbox, Radio are now Zag components with full accessibility and keyboard navigation.
 
-| Component  | Machine     | Slots                    | Description          |
-| ---------- | ----------- | ------------------------ | -------------------- |
-| DatePicker | date-picker | Root, Label, Control +20 | Date picker calendar |
-
-### Compound Primitives (Layout Components)
-
-> Pre-built layout components for rapid prototyping. Fully customizable.
-
-| Component | Slots                              | Nested Slots | Description                                                    |
-| --------- | ---------------------------------- | ------------ | -------------------------------------------------------------- |
-| Table     | Column, Header, Row, Footer, Group |              | Data-driven table with auto-generated columns from data schema |
+| Component                 | Machine     | Slots                    | Description          |
+| ------------------------- | ----------- | ------------------------ | -------------------- |
+| **Selection & Dropdowns** |             |                          |                      |
+| **Menus**                 |             |                          |                      |
+| **Form Controls**         |             |                          |                      |
+| **Date & Time**           |             |                          |                      |
+| DatePicker                | date-picker | Root, Label, Control +20 | Date picker calendar |
+| **Overlays & Modals**     |             |                          |                      |
+| **Navigation**            |             |                          |                      |
+| **Media & Files**         |             |                          |                      |
+| **Feedback & Status**     |             |                          |                      |
+| **Utility**               |             |                          |                      |
 
 ### Properties
 
@@ -1274,6 +1275,7 @@ Mappings (hardcoded v1): bare → `BodyTxt`, `-` → `DashItem` + `BodyTxtCompac
 | width              | w                    | full, hug, <number>, $token                                                                                                                                                  |
 | height             | h                    | full, hug, <number>, $token                                                                                                                                                  |
 | size               | -                    | full, hug, <number>, $token                                                                                                                                                  |
+| device             | -                    | mobile, tablet, desktop                                                                                                                                                      |
 | min-width          | minw                 | <number>, $token                                                                                                                                                             |
 | max-width          | maxw                 | <number>, $token                                                                                                                                                             |
 | min-height         | minh                 | <number>, $token                                                                                                                                                             |
@@ -1293,6 +1295,7 @@ Mappings (hardcoded v1): bare → `BodyTxt`, `-` → `DashItem` + `BodyTxtCompac
 | bottom-center      | bc                   | _(standalone)_                                                                                                                                                               |
 | bottom-right       | br                   | _(standalone)_                                                                                                                                                               |
 | wrap               | -                    | _(standalone)_                                                                                                                                                               |
+| prose              | -                    | _(standalone)_                                                                                                                                                               |
 | stacked            | -                    | _(standalone)_                                                                                                                                                               |
 | grid               | -                    | auto, <number>                                                                                                                                                               |
 | dense              | -                    | _(standalone)_                                                                                                                                                               |
@@ -1308,14 +1311,15 @@ Mappings (hardcoded v1): bare → `BodyTxt`, `-` → `DashItem` + `BodyTxtCompac
 | bottom             | -                    | _(standalone)_                                                                                                                                                               |
 | hor-center         | -                    | _(standalone)_                                                                                                                                                               |
 | ver-center         | -                    | _(standalone)_                                                                                                                                                               |
+| ver-baseline       | -                    | _(standalone)_                                                                                                                                                               |
 | padding            | pad, p               | <number>, $token                                                                                                                                                             |
+| margin             | mar, m               | <number>, $token                                                                                                                                                             |
 | pad-x              | px                   | <number>, $token                                                                                                                                                             |
 | pad-y              | py                   | <number>, $token                                                                                                                                                             |
 | pad-t              | pt                   | <number>, $token                                                                                                                                                             |
 | pad-r              | pr                   | <number>, $token                                                                                                                                                             |
 | pad-b              | pb                   | <number>, $token                                                                                                                                                             |
 | pad-l              | pl                   | <number>, $token                                                                                                                                                             |
-| margin             | mar, m               | <number>, $token                                                                                                                                                             |
 | mar-x              | mx                   | <number>, $token                                                                                                                                                             |
 | mar-y              | my                   | <number>, $token                                                                                                                                                             |
 | mar-t              | mt                   | <number>, $token                                                                                                                                                             |
@@ -1332,9 +1336,10 @@ Mappings (hardcoded v1): bare → `BodyTxt`, `-` → `DashItem` + `BodyTxtCompac
 | border-right       | bor-r, borr          | <number>, $token                                                                                                                                                             |
 | radius             | rad                  | <number>, $token                                                                                                                                                             |
 | font-size          | fs                   | <number>, $token                                                                                                                                                             |
-| weight             | -                    | thin, light, normal, medium, semibold, bold, black, <number>                                                                                                                 |
-| line               | -                    | <number>, $token                                                                                                                                                             |
-| font               | -                    | sans, serif, mono, roboto, $token                                                                                                                                            |
+| weight             | font-weight          | thin, light, normal, medium, semibold, bold, black, <number>                                                                                                                 |
+| line               | line-height          | <number>, $token                                                                                                                                                             |
+| letter-spacing     | ls, tracking, letter | <number>, $token                                                                                                                                                             |
+| font               | font-family          | sans, serif, mono, roboto, $token                                                                                                                                            |
 | text-align         | -                    | left, center, right, justify                                                                                                                                                 |
 | italic             | -                    | _(standalone)_                                                                                                                                                               |
 | underline          | -                    | _(standalone)_                                                                                                                                                               |
@@ -1365,7 +1370,7 @@ Mappings (hardcoded v1): bare → `BodyTxt`, `-` → `DashItem` + `BodyTxtCompac
 | href               | -                    | -                                                                                                                                                                            |
 | src                | -                    | -                                                                                                                                                                            |
 | placeholder        | -                    | -                                                                                                                                                                            |
-| mask               | -                    | Input mask pattern (# = digit, A = letter, \* = alphanumeric)                                                                                                                |
+| mask               | -                    | -                                                                                                                                                                            |
 | focusable          | -                    | _(standalone)_                                                                                                                                                               |
 | editable           | -                    | _(standalone)_                                                                                                                                                               |
 | keyboard-nav       | keynav               | _(standalone)_                                                                                                                                                               |
@@ -1377,6 +1382,9 @@ Mappings (hardcoded v1): bare → `BodyTxt`, `-` → `DashItem` + `BodyTxtCompac
 | name               | -                    | -                                                                                                                                                                            |
 | value              | -                    | -                                                                                                                                                                            |
 | checked            | -                    | _(standalone)_                                                                                                                                                               |
+| min                | -                    | -                                                                                                                                                                            |
+| max                | -                    | -                                                                                                                                                                            |
+| step               | -                    | -                                                                                                                                                                            |
 | text               | -                    | -                                                                                                                                                                            |
 | icon-size          | is                   | <number>, $token                                                                                                                                                             |
 | icon-color         | ic                   | <color>, $token                                                                                                                                                              |
@@ -1393,27 +1401,19 @@ Mappings (hardcoded v1): bare → `BodyTxt`, `-` → `DashItem` + `BodyTxtCompac
 | hover-border-color | hover-boc            | <color>, $token                                                                                                                                                              |
 | hover-radius       | hover-rad            | <number>                                                                                                                                                                     |
 
-### Zag Behavior Properties (DatePicker)
+### Zag Behavior Properties
 
-> Component-specific behavior properties. Da nur DatePicker als Zag-Komponente
-> bleibt, listen wir hier nur dessen Properties. Pure-Mirror-Komponenten
-> (Checkbox/Switch/Slider/etc.) verwenden direkte Mirror-Properties statt
-> Zag-Properties.
+> Component-specific behavior properties for Zag components.
 
-| Property        | Type    | Default        | Description                                    |
-| --------------- | ------- | -------------- | ---------------------------------------------- |
-| `selectionMode` | enum    | `single`       | `single` / `multiple` / `range`                |
-| `fixedWeeks`    | boolean | `false`        | Always show 6 weeks                            |
-| `closeOnSelect` | boolean | `true`         | Close after selection                          |
-| `startOfWeek`   | number  | `0`            | First day of week (0=Sun, 1=Mon)               |
-| `positioning`   | enum    | `bottom-start` | `bottom`/`bottom-start`/`bottom-end`/`top`/... |
-| `value`         | string  | —              | Selected date(s)                               |
-| `defaultValue`  | string  | —              | Initial date(s)                                |
-| `disabled`      | boolean | `false`        | Disable interaction                            |
-| `readOnly`      | boolean | `false`        | Read-only state                                |
-| `min`           | string  | —              | Min selectable date                            |
-| `max`           | string  | —              | Max selectable date                            |
-| `locale`        | string  | `en-US`        | Locale identifier                              |
+_1 components with 5 behavior properties total._
+
+**Boolean:** closeOnSelect, fixedWeeks
+
+**Enum:** positioning, selectionMode
+
+**Number:** startOfWeek
+
+**String:**
 
 ### Events
 
@@ -1440,62 +1440,66 @@ Mappings (hardcoded v1): bare → `BodyTxt`, `-` → `DashItem` + `BodyTxtCompac
 
 ### Actions
 
-| Action         | Targets                 |
-| -------------- | ----------------------- |
-| show           | -                       |
-| hide           | -                       |
-| toggle         | -                       |
-| open           | -                       |
-| close          | -                       |
-| select         | -                       |
-| highlight      | next, prev, first, last |
-| activate       | -                       |
-| deactivate     | -                       |
-| page           | -                       |
-| call           | -                       |
-| assign         | -                       |
-| focus          | -                       |
-| blur           | -                       |
-| submit         | -                       |
-| reset          | -                       |
-| navigate       | -                       |
-| showAt         | -                       |
-| showBelow      | -                       |
-| showAbove      | -                       |
-| showLeft       | -                       |
-| showRight      | -                       |
-| showModal      | -                       |
-| dismiss        | -                       |
-| scrollTo       | -                       |
-| scrollBy       | -                       |
-| scrollToTop    | -                       |
-| scrollToBottom | -                       |
-| get            | -                       |
-| set            | -                       |
-| increment      | -                       |
-| decrement      | -                       |
-| copy           | -                       |
-| add            | -                       |
-| remove         | -                       |
-| create         | -                       |
-| save           | -                       |
-| revert         | -                       |
-| delete         | -                       |
+| Action            | Targets                 |
+| ----------------- | ----------------------- |
+| show              | -                       |
+| hide              | -                       |
+| toggle            | -                       |
+| open              | -                       |
+| close             | -                       |
+| select            | -                       |
+| deselect          | -                       |
+| highlight         | next, prev, first, last |
+| activate          | -                       |
+| deactivate        | -                       |
+| page              | -                       |
+| call              | -                       |
+| assign            | -                       |
+| focus             | -                       |
+| blur              | -                       |
+| submit            | -                       |
+| reset             | -                       |
+| navigate          | -                       |
+| showAt            | -                       |
+| showBelow         | -                       |
+| showAbove         | -                       |
+| showLeft          | -                       |
+| showRight         | -                       |
+| showModal         | -                       |
+| dismiss           | -                       |
+| scrollTo          | -                       |
+| scrollBy          | -                       |
+| scrollToTop       | -                       |
+| scrollToBottom    | -                       |
+| get               | -                       |
+| set               | -                       |
+| increment         | -                       |
+| decrement         | -                       |
+| copy              | -                       |
+| create            | -                       |
+| save              | -                       |
+| revert            | -                       |
+| delete            | -                       |
+| add               | -                       |
+| remove            | -                       |
+| toast             | -                       |
+| back              | -                       |
+| forward           | -                       |
+| openUrl           | -                       |
+| clear             | -                       |
+| setError          | -                       |
+| clearError        | -                       |
+| selectText        | -                       |
+| highlightNext     | -                       |
+| highlightPrev     | -                       |
+| selectHighlighted | -                       |
+| exclusive         | -                       |
 
 ### States
 
-**System:** hover, focus, active, disabled
+**System:** hover, focus, focus-visible, focus-within, active, disabled, visited, checked, placeholder, placeholder-shown, first-child, last-child, empty
 
-**Custom:** selected, highlighted, expanded, collapsed, on, off, open, closed, filled, valid, invalid, loading, error
-
-**Size-States (CSS Container Queries):** compact, regular, wide
-
-| Size-State | Default Threshold  | Token Override                         |
-| ---------- | ------------------ | -------------------------------------- |
-| `compact:` | < 400px            | `compact.max: N`                       |
-| `regular:` | 400-800px          | `regular.min: N`, `regular.max: N`     |
-| `wide:`    | > 800px            | `wide.min: N`                          |
-| Custom     | Defined via tokens | `statename.min: N`, `statename.max: N` |
+**Custom:** selected, highlighted, expanded, collapsed, on, off, open, closed, filled, valid, invalid, loading, error, copied, saved
 
 ### Keyboard Keys
 
