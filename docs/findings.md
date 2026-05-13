@@ -374,21 +374,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                                                                                **Status-Update:** erledigt — alle drei Slices landen:
-                                                                                                Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                                                                                inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                                                                                Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                                                                                (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                                                                                `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                                                                                (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                                                                                — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                                                                                hat per `git add .` die uncommittete compiler-Side mit
-                                                                                                aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                                                                                `hasZagChildren` (children-Shape), `isZagComponentName`
-                                                                                                (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                                                                                IRZagNode-Discriminator-Property `isZagComponent: true`
-                                                                                                bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                                                                                81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                                                                                    **Status-Update:** erledigt — alle drei Slices landen:
+                                                                                                    Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                                                                                    inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                                                                                    Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                                                                                    (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                                                                                    `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                                                                                    (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                                                                                    — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                                                                                    hat per `git add .` die uncommittete compiler-Side mit
+                                                                                                    aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                                                                                    `hasZagChildren` (children-Shape), `isZagComponentName`
+                                                                                                    (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                                                                                    IRZagNode-Discriminator-Property `isZagComponent: true`
+                                                                                                    bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                                                                                    81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
@@ -1112,10 +1112,15 @@ svelte-spike/`-Spikes und Memory `project_llm_pipeline.md`).
     14 unit tests pinnen disabled / DOM-OK / React-warns / Vue+Svelte+
     Vanilla-warns / Cross-backend-no-warn / Line+Column / Multi-Warning-
     Aggregation. 15032/15032 Tests grün.
-    **Notiz:** Nächster Slice — `tools/export.ts` muss `target` an
-    `validate()` durchreichen, damit der Export-Run die Warnings
-    tatsächlich anzeigt. Studio-Linter könnte ebenfalls aus `state.target`
-    lesen (heute aber kein Target-Picker im Studio — separate UX-Lane).
+    **Notiz:** Export-Wiring erledigt — `tools/export.ts` validiert
+    jetzt jedes Source-File mit dem `--target` und druckt W130-Warnings
+    vor dem Bundle-Finalize (`68f0788c`, Commit-Race mit Tests-Audit;
+    Diff enthält die 49 LOC `reportBackendWarnings()`-Helper).
+    Verifiziert auf `examples/swiss-form.mirror --target svelte`:
+    6 W130-Warnings für `mask`-Properties, wie erwartet.
+    Verbleibend (separate UX-Lane): Studio-Linter könnte aus
+    `state.target` lesen — braucht aber erst einen Target-Picker
+    im Studio.
 
 ### 2026-05-13 — Pure-Mirror x/y-Propagation in Stacked Containers — Skip-Notiz stale
 
