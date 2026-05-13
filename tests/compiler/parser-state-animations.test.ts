@@ -46,7 +46,18 @@ Tab
     })
 
     it('should parse various animation presets', () => {
-      const presets = ['fade-in', 'fade-out', 'slide-in', 'slide-out', 'scale-in', 'scale-out', 'bounce', 'pulse', 'shake', 'spin']
+      const presets = [
+        'fade-in',
+        'fade-out',
+        'slide-in',
+        'slide-out',
+        'scale-in',
+        'scale-out',
+        'bounce',
+        'pulse',
+        'shake',
+        'spin',
+      ]
 
       for (const preset of presets) {
         const source = `
