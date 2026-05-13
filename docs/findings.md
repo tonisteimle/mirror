@@ -374,21 +374,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                                                                                        **Status-Update:** erledigt — alle drei Slices landen:
-                                                                                                        Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                                                                                        inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                                                                                        Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                                                                                        (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                                                                                        `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                                                                                        (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                                                                                        — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                                                                                        hat per `git add .` die uncommittete compiler-Side mit
-                                                                                                        aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                                                                                        `hasZagChildren` (children-Shape), `isZagComponentName`
-                                                                                                        (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                                                                                        IRZagNode-Discriminator-Property `isZagComponent: true`
-                                                                                                        bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                                                                                        81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                                                                                            **Status-Update:** erledigt — alle drei Slices landen:
+                                                                                                            Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                                                                                            inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                                                                                            Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                                                                                            (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                                                                                            `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                                                                                            (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                                                                                            — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                                                                                            hat per `git add .` die uncommittete compiler-Side mit
+                                                                                                            aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                                                                                            `hasZagChildren` (children-Shape), `isZagComponentName`
+                                                                                                            (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                                                                                            IRZagNode-Discriminator-Property `isZagComponent: true`
+                                                                                                            bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                                                                                            81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
@@ -402,6 +402,13 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
 ## Erledigt
 
 Chronologisch absteigend (neueste zuerst).
+
+### Tauri Desktop — Distribution-Readiness + File-Watcher (`d309b5b5`)
+
+- **Wo:** `package.json`, `src-tauri/{Cargo.toml,DISTRIBUTION.md,README.md,tauri.conf.json}`, `src-tauri/src/commands/{watch.rs,fs.rs,mod.rs}`, `src-tauri/src/{main.rs,state.rs}`, `studio/{tauri-bridge.ts,storage/providers/tauri.ts}`
+  **Was:** 4 Lücken in der Tauri-Desktop-Vorbereitung geschlossen. (1) `@tauri-apps/cli` + `concurrently` waren nicht in devDeps installiert — die README versprach `npm run tauri:dev` aber das Binary fehlte. (2) `src-tauri/README.md` listete `get_file_info` im Command-Vertrag, das in `commands/fs.rs:161` schon mit Begründung entfernt war. (3) Bundle-Distribution war komplett undokumentiert — kein DISTRIBUTION.md, kein `minimumSystemVersion`, keine Schritte zu Icons/Signing/Notarization. (4) Externe File-Edits (vim, git checkout) wurden vom Studio still überschrieben, weil kein File-Watcher lief.
+  **Status:** erledigt (`d309b5b5`)
+  **Notiz:** File-Watcher mit `notify` + `notify-debouncer-full`; Self-Write-Filter via 500ms-Grace-Map verhindert Echo-Loop bei eigenen `write_file`-Calls. 4 Rust-Unit-Tests pinnen den Filter. `TauriProvider.openProject` startet den Watcher automatisch, `closeProject` stoppt ihn; Studio-Code abonniert via `onExternalChange`. DISTRIBUTION.md führt durch Icon-Generation (`npx tauri icon`), macOS-Signing (Developer ID + Notarization), Windows-Signing, Offline-First-Hardening (`@tauri-apps/api` lokal bündeln statt esm.sh) und Auto-Updater.
 
 ### Migrated from Offen on 2026-05-13 (Hebel 5 — Audit-Follow-up)
 
