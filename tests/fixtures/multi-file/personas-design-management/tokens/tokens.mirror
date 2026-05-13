@@ -1,0 +1,14 @@
+// Personas Design &amp; Management — Tokens
+// Extracted from the target HTML's `:root` block.
+// Compiled by the multi-file fixture-runner along with components/ and
+// layouts/.
+
+// ─── Farben ───
+yellow.bg: #FDE70E
+soft.bg: #F4F4F4
+ink.col: #000
+white.col: #fff
+
+// ─── Layout ───
+content.maxw: 1280
+pad-min.pad: 24

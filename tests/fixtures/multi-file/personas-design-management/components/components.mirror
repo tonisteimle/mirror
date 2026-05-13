@@ -1,0 +1,16 @@
+// Personas Design &amp; Management — Components
+//
+// The four persona articles (Jan, Selina, Mirko, Lara) plus the
+// topbar / hero / "warum" / "offene Punkte" sections share components
+// with examples/personas-informatik/components.com. When this project
+// is built up, copy or adapt the relevant component definitions here:
+//
+//   - Topbar, Logo, LogoMark
+//   - Hero, HeroVessel, HeroSub
+//   - PersonaBlock (with persona-number + titleblock + body)
+//   - Dim (dimension card)
+//   - OffeneList / OffenePunkt
+//   - FooterFrame (if footer is rendered)
+//
+// Empty for now — fixture-runner will produce mismatched expected.html
+// until populated.

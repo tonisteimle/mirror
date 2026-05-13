@@ -1,0 +1,989 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Personas — Design und Management</title>
+<meta name="description" content="Proto-Personas für die Studienrichtung Design und Management (Bachelor Informatik, FHNW) — mit Bezug zur Eintrittsstatistik 2023/24 verankert.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&family=Spectral:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #000;
+  --white: #fff;
+  --yellow: #FDE70E;
+  --soft: #F4F4F4;
+  --content-max: 1280px;
+  --pad-min: 24px;
+  --pad-x: max(var(--pad-min), calc(50vw - var(--content-max) / 2));
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--black);
+  background: var(--white);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+a { color: inherit; }
+
+/* ─── Topbar ─────────────────────────────────────────────────────────── */
+.topbar {
+  background: var(--white);
+  display: flex; align-items: center;
+  padding-top: clamp(20px, 2.5vw, 32px);
+  padding-bottom: clamp(16px, 2vw, 24px);
+  padding-left: var(--pad-x);
+  padding-right: var(--pad-x);
+}
+.logo {
+  display: flex; align-items: center; gap: 14px;
+  text-decoration: none;
+}
+.logo-mark {
+  display: inline-flex; align-items: baseline;
+  font-size: 28px; line-height: 1;
+}
+.logo-mark .n { font-family: 'Inter'; font-weight: 700; }
+.logo-mark .bar {
+  display: inline-block;
+  width: 1.5px; height: 24px;
+  background: var(--black);
+  margin: 0 4px;
+  transform: translateY(2px);
+}
+.logo-mark .w { font-family: 'Spectral'; font-style: italic; font-weight: 700; font-size: 30px; }
+.logo-text {
+  font-size: 11px; line-height: 1.25; font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+/* ─── Hero ───────────────────────────────────────────────────────────── */
+.hero {
+  position: relative;
+  min-height: 60vh;
+  padding-top: clamp(48px, 6vw, 96px);
+  padding-bottom: clamp(64px, 7vw, 96px);
+  padding-left: var(--pad-x);
+  padding-right: var(--pad-x);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: clamp(40px, 6vw, 80px);
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: var(--pad-x);
+  width: calc((100vw - 2 * var(--pad-x)) * 0.9375);
+  height: 14px;
+  background: var(--yellow);
+}
+.hero-eyebrow {
+  font-size: 13px;
+  font-weight: 400;
+  align-self: start;
+}
+.hero-vessel {
+  background: var(--yellow);
+  padding: clamp(28px, 4vw, 56px) clamp(28px, 4vw, 56px) clamp(24px, 3vw, 40px);
+  max-width: min(820px, 100%);
+  align-self: end;
+  position: relative;
+}
+.hero h1 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(38px, 7vw, 96px);
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+  margin-bottom: 18px;
+}
+.hero-sub {
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-size: clamp(18px, 1.8vw, 22px);
+  line-height: 1.45;
+  margin-bottom: clamp(20px, 2.5vw, 28px);
+  max-width: 60ch;
+}
+.hero-meta {
+  display: flex; flex-wrap: wrap; gap: 10px 32px;
+  font-size: 13px;
+  font-weight: 400;
+  margin-top: clamp(8px, 1vw, 14px);
+}
+.hero-meta dt { font-weight: 700; font-size: 12px; }
+.hero-meta div { display: flex; flex-direction: column; gap: 2px; }
+.hero-domain {
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: clamp(20px, 2.5vw, 32px);
+}
+
+/* ─── Section frames ─────────────────────────────────────────────────── */
+.section-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  margin-bottom: 14px;
+  color: var(--black);
+}
+.implikationen-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(24px, 2.8vw, 32px);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  margin-bottom: clamp(24px, 3vw, 36px);
+}
+
+/* ─── TOC ────────────────────────────────────────────────────────────── */
+.toc {
+  padding: clamp(48px, 7vw, 96px) var(--pad-x);
+}
+.toc-inner { max-width: var(--content-max); margin: 0 auto; }
+.toc h2 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(28px, 3.6vw, 44px);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin-bottom: clamp(28px, 4vw, 48px);
+  max-width: 760px;
+}
+.toc h2 em {
+  font-family: 'Inter', sans-serif;
+  font-style: normal;
+  font-weight: 300;
+}
+.toc ol { list-style: none; }
+.toc a {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  gap: clamp(20px, 4vw, 56px);
+  align-items: baseline;
+  padding: clamp(10px, 1.4vw, 16px) 8px;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(22px, 2.8vw, 34px);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  transition: background 0.12s ease;
+}
+.toc a:hover { background: var(--yellow); }
+.toc-num {
+  font-weight: 300;
+  font-size: clamp(18px, 1.6vw, 22px);
+}
+.toc-tag {
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-size: clamp(14px, 1.3vw, 17px);
+  text-align: right;
+  max-width: 320px;
+  line-height: 1.35;
+}
+@media (max-width: 720px) {
+  .toc a { grid-template-columns: 56px 1fr; }
+  .toc-tag { display: none; }
+}
+
+/* ─── Prose sections ─────────────────────────────────────────────────── */
+.prose {
+  padding: clamp(56px, 8vw, 112px) var(--pad-x);
+}
+.prose-inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+@media (min-width: 980px) {
+  .prose-inner { grid-template-columns: 280px 1fr; gap: 64px; }
+}
+.prose h2 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(28px, 3.6vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 18px;
+  max-width: 24ch;
+}
+.prose-body { max-width: 64ch; }
+.prose-body p {
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.65;
+  margin-bottom: 18px;
+}
+.prose-body p strong { font-weight: 700; }
+.prose-body em {
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+.prose-body ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 12px 0 24px;
+}
+.prose-body ul ul { margin-left: 24px; margin-top: 8px; margin-bottom: 8px; }
+.prose-body li {
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.6;
+  padding-left: 24px;
+  position: relative;
+  margin-bottom: 8px;
+}
+.prose-body li::before {
+  content: "—"; position: absolute; left: 0; top: 0;
+  font-weight: 400;
+}
+.prose-body li strong { font-weight: 700; }
+.prose-body li ul li::before { content: "·"; font-size: 22px; line-height: 1; top: -2px; }
+
+.callout {
+  background: var(--soft);
+  padding: 18px 22px;
+  margin: 28px 0;
+}
+.callout p { margin: 0; }
+.callout strong { font-weight: 700; }
+
+/* ─── Persona ────────────────────────────────────────────────────────── */
+.persona {
+  padding: 0 var(--pad-x) clamp(48px, 6vw, 80px);
+  position: relative;
+  scroll-margin-top: 0;
+}
+.persona-header {
+  background: var(--yellow);
+  margin: 0 calc(-1 * var(--pad-x)) clamp(48px, 6vw, 80px);
+  padding-top: clamp(40px, 5vw, 72px);
+  padding-bottom: clamp(36px, 5vw, 64px);
+  padding-left: var(--pad-x);
+  padding-right: var(--pad-x);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+@media (min-width: 720px) {
+  .persona-header {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "number title"
+      "steckbrief steckbrief";
+    column-gap: clamp(28px, 4vw, 56px);
+    row-gap: clamp(28px, 3.5vw, 44px);
+    align-items: end;
+  }
+  .persona-header .persona-number { grid-area: number; }
+  .persona-header .persona-titleblock { grid-area: title; }
+  .persona-header .steckbrief { grid-area: steckbrief; }
+}
+.persona-number {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(56px, 14vw, 200px);
+  line-height: 0.82;
+  letter-spacing: -0.04em;
+}
+.persona-titleblock h2 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(28px, 3.6vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.persona-titleblock h2 em {
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+.persona-titleblock .persona-tagline {
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-size: clamp(18px, 1.8vw, 22px);
+  line-height: 1.4;
+  max-width: 60ch;
+  margin-top: 10px;
+}
+.persona-body {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(40px, 5vw, 64px);
+}
+
+.steckbrief {
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.6;
+  max-width: 80ch;
+  margin: 0;
+}
+
+.warum { max-width: 920px; }
+.warum h3 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 19px;
+  margin-bottom: 16px;
+  letter-spacing: -0.005em;
+}
+.warum p {
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.6;
+}
+.warum p strong { font-weight: 700; }
+
+.dim-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(32px, 3vw, 48px) clamp(40px, 4vw, 64px);
+}
+@media (min-width: 720px) { .dim-grid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1180px) { .dim-grid { grid-template-columns: 1fr 1fr 1fr 1fr; } }
+
+.dim-grid--two { grid-template-columns: 1fr; }
+@media (min-width: 720px) { .dim-grid--two { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1180px) { .dim-grid--two { grid-template-columns: 1fr 1fr; } }
+
+.dim-grid--three { grid-template-columns: 1fr; }
+@media (min-width: 720px) { .dim-grid--three { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1180px) { .dim-grid--three { grid-template-columns: 1fr 1fr 1fr; } }
+
+.implikationen { margin-top: clamp(40px, 5vw, 72px); }
+
+.dim h3 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 19px;
+  margin-bottom: 18px;
+  letter-spacing: -0.005em;
+}
+.dim p, .dim ul {
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.6;
+}
+.dim ul { list-style: none; padding-left: 0; }
+.dim li {
+  padding-left: 20px;
+  position: relative;
+  margin-bottom: 10px;
+}
+.dim li::before {
+  content: "—"; position: absolute; left: 0; top: 0; font-weight: 400;
+}
+.dim li strong { font-weight: 700; }
+
+/* ─── Innere Stimme ─────────────────────────────────────────────────── */
+.innere-stimme {
+  background: var(--soft);
+  max-width: var(--content-max);
+  margin: clamp(48px, 6vw, 80px) auto 0;
+  padding: 22px 24px;
+  position: relative;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.is-inner {
+  display: grid; grid-template-columns: 1fr;
+  gap: clamp(32px, 4vw, 56px);
+}
+@media (min-width: 920px) { .is-inner { grid-template-columns: 280px 1fr; gap: 64px; } }
+.is-meta { font-family: 'Inter', sans-serif; }
+.is-meta h3 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(24px, 2.8vw, 32px);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  margin-bottom: 12px;
+}
+.is-meta h3 em {
+  font-family: inherit;
+  font-weight: inherit;
+  font-style: normal;
+}
+.is-meta p {
+  font-size: 17px; font-weight: 300;
+  line-height: 1.6;
+  max-width: 32ch;
+}
+.quotes { list-style: none; padding: 0; }
+.quotes li {
+  font-family: 'Spectral', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(18px, 1.95vw, 23px);
+  line-height: 1.45;
+  padding: 6px 0;
+  margin-bottom: 14px;
+  max-width: 60ch;
+}
+
+/* ─── Offene Punkte ──────────────────────────────────────────────────── */
+.offene {
+  padding: clamp(56px, 8vw, 112px) var(--pad-x);
+}
+.offene-inner { max-width: var(--content-max); margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 40px; }
+@media (min-width: 980px) { .offene-inner { grid-template-columns: 280px 1fr; gap: 64px; } }
+.offene h2 {
+  font-family: 'Inter', sans-serif; font-weight: 700;
+  font-size: clamp(28px, 3.6vw, 44px); line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.offene ol {
+  list-style: none;
+  counter-reset: offen;
+}
+.offene li {
+  counter-increment: offen;
+  padding: clamp(14px, 1.8vw, 22px) 0 clamp(14px, 1.8vw, 22px) 56px;
+  position: relative;
+}
+.offene li::before {
+  content: counter(offen, decimal-leading-zero);
+  position: absolute; left: 0; top: clamp(20px, 2.5vw, 28px);
+  font-family: 'Inter', sans-serif; font-weight: 300;
+  font-size: 14px;
+}
+.offene li strong { font-weight: 700; }
+
+/* ─── Footer ─────────────────────────────────────────────────────────── */
+footer {
+  background: var(--black);
+  color: var(--white);
+  padding: clamp(48px, 6vw, 88px) var(--pad-x) clamp(24px, 3vw, 40px);
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 300;
+}
+.footer-inner { max-width: var(--content-max); margin: 0 auto; }
+.footer-mark {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: clamp(40px, 5vw, 64px);
+}
+.footer-mark .logo-mark { color: var(--white); }
+.footer-mark .logo-mark .bar { background: var(--white); }
+.footer-mark .logo-text { color: var(--white); }
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  margin-bottom: 48px;
+}
+@media (min-width: 720px) { .footer-grid { grid-template-columns: 2fr 1fr; } }
+.footer-grid h4 {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 14px;
+}
+.footer-grid p, .footer-grid li { font-size: 14px; line-height: 1.55; font-weight: 300; }
+.footer-grid ul { list-style: none; padding: 0; }
+.footer-grid li { margin-bottom: 6px; }
+.footer-base {
+  display: flex; flex-wrap: wrap; gap: 12px 24px;
+  margin-top: clamp(28px, 3.5vw, 40px);
+  font-size: 12px;
+  color: var(--white);
+}
+
+/* ─── Print ──────────────────────────────────────────────────────────── */
+@media print {
+  .hero { min-height: auto; }
+  .toc { page-break-after: always; }
+  .persona { page-break-before: always; padding-top: 24pt; }
+  .innere-stimme {
+    page-break-inside: avoid; break-inside: avoid;
+    margin-left: 0; margin-right: 0;
+  }
+  body { font-size: 10.5pt; }
+  footer { background: var(--white); color: var(--black); }
+  .footer-grid h4 { color: var(--black); }
+  .footer-mark .logo-mark { color: var(--black); }
+  .footer-mark .logo-mark .bar { background: var(--black); }
+  .footer-mark .logo-text { color: var(--black); }
+  .footer-base { color: var(--black); }
+}
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="#top" class="logo" aria-label="FHNW Hochschule für Informatik">
+    <span class="logo-mark" aria-hidden="true"><span class="n">n</span><span class="bar"></span><span class="w">w</span></span>
+    <span class="logo-text">Fachhochschule Nordwestschweiz<br><strong>Hochschule für Informatik</strong></span>
+  </a>
+</header>
+
+<main id="top">
+
+<section class="hero">
+  <div class="hero-eyebrow">Internes Arbeitsdokument</div>
+  <div class="hero-vessel">
+    <h1>Personas — Design und Management</h1>
+    <div class="hero-sub">Studienrichtung Design und Management im Bachelor Informatik — vier Profile, die den realen Eintrittsraum aufspannen.</div>
+    <dl class="hero-meta"><div><dt>Hochschule</dt><dd>Hochschule für Informatik</dd></div><div><dt>Stand</dt><dd>12. Mai 2026</dd></div><div><dt>Status</dt><dd>Proto-Personas</dd></div><div><dt>Scope</dt><dd>Studienrichtung Design und Management</dd></div></dl>
+    <div class="hero-domain">www.fhnw.ch / informatik / design-und-management</div>
+  </div>
+</section>
+
+<nav class="toc" aria-label="Inhaltsverzeichnis">
+  <div class="toc-inner">
+    <h2>Vier Personas, die zusammen den Entscheidungsraum <em>aufspannen</em>.</h2>
+    <ol>
+      <li><a href="#jan"><span class="toc-num">01</span><span>Jan</span><span class="toc-tag">der weiterstrebende Informatiker</span></a></li>
+      <li><a href="#selina"><span class="toc-num">02</span><span>Selina</span><span class="toc-tag">die suchende Wirtschaftsabsolventin</span></a></li>
+      <li><a href="#mirko"><span class="toc-num">03</span><span>Mirko</span><span class="toc-tag">der pragmatische Mediamatik-Hybrid</span></a></li>
+      <li><a href="#lara"><span class="toc-num">04</span><span>Lara</span><span class="toc-tag">die suchende Maturandin</span></a></li>
+    </ol>
+  </div>
+</nav>
+
+<section id="warum-diese-vier-personas" class="prose">
+  <div class="prose-inner">
+    <div><h2>Warum diese vier Personas?</h2></div>
+    <div class="prose-body">
+      <p>Wir haben vier Personas gewählt — genug, um den realen Eintrittsraum aufzuspannen, wenig genug, um sie im Alltag wirklich zu nutzen. Die Auswahl folgt zwei Achsen: <strong>Vorbildung</strong> (Tech-Lehre, nicht-technische Lehre, Maturität) und <strong>Lebenslage</strong> (berufstätig vs. frisch nach Schulabschluss).</p>
+<ul>
+<li><strong>Jan und Mirko</strong> stehen für die berufsbegleitenden EFZ-Absolvent:innen — Jan reine Tech-Lehre (Informatik EFZ), Mirko hybride Tech-Gestaltungs-Lehre (Mediamatik EFZ). Sie tragen die stabilste Hälfte der Studienrichtung: Menschen, die wissen, was Programmieren ist, und die Studium und Beruf parallel managen.</li>
+<li><strong>Selina</strong> verkörpert die Quereinsteigerin aus der kaufmännischen Welt. Quantitativ ein grosser Strom, qualitativ der riskanteste — sie macht sichtbar, was passiert, wenn Marketing eine Erwartung erzeugt, die die Studienrealität nicht halten kann.</li>
+<li><strong>Lara</strong> steht für die Vollzeit-Gymi-Maturand:innen im offenen Suchmodus. Kleiner als die Berufsbegleitenden, aber mit dem grössten ungenutzten Wachstumspotenzial — und mit dem schwierigsten Eltern- und Status-Kontext.</li>
+</ul>
+<p>Bewusst <em>nicht</em> eigene Personas: der hochkompetente Top-Tech-Gymi (vgl. «Lukas» im Studiengang-Doc), der Game-Spezialist (vgl. «Tim») und internationale Bewerber:innen. Die ersten beiden wandern nach Beobachtung nicht in die Studienrichtung — sie landen in Software Engineering oder Game Entwicklung. Internationale Bewerber:innen sind ein Querschnittsthema mit eigener Problemlage (Anerkennung, Sprache, Erwartungsmanagement) und werden separat behandelt.</p>
+<p>Zusammen decken die vier Personas vier Achsen ab: <strong>Tech-Vorbildung</strong> (vorhanden/nicht vorhanden), <strong>Klarheit der Wahl</strong> (entschieden/suchend), <strong>Lebenslage</strong> (berufstätig/frisch ab Schule) und <strong>Treiber</strong> (Vertiefung/Quereinstieg).</p>
+<p><strong>Datengrundlage:</strong> Die Personas sind an der Eintrittsstatistik 2023/24 (88 Studienjahrgangs-Eintritte über zwei Jahre) verankert. Wo die Empirie eine Persona trägt oder ein Risiko sichtbar macht, fliesst das in die Argumentation ein — aber die Personas erstarren nicht in Zahlen-Sprache.</p>
+    </div>
+  </div>
+</section>
+
+<article id="jan" class="persona">
+  <header class="persona-header">
+    <div class="persona-number">01</div>
+    <div class="persona-titleblock">
+      <h2>Jan, <em>der weiterstrebende Informatiker</em></h2>
+    </div>
+    <p class="steckbrief">24, Informatiker EFZ Applikationsentwicklung (4-jährige Lehre), Berufsmaturität Technik lehrbegleitend. Arbeitet als Junior Software Developer 80 % bei einer mittelständischen Digitalagentur in der Region Aargau. Wohnt in einer 3er-WG in Aarau, Partnerin (24) studiert HGK Visual Communication an der ZHdK. Programmiert seit der Lehre täglich (TypeScript/React, etwas Python), hat ein aufgeräumtes, eher privates GitHub mit kleinen Tooling-Projekten. Vater Bauingenieur, Mutter Primarlehrerin.</p>
+  </header>
+  <div class="persona-body">
+    <div class="warum">
+      <h3>Warum diese Persona?</h3>
+      <p>Jan verkörpert das <strong>historische Kernsegment der Fachhochschule</strong> auf der Tech-Seite: Berufsleute, die ihre Informatik-Lehre erfolgreich abgeschlossen, die Berufsmaturität gemacht und sich bewusst für ein Studium neben dem Job entschieden haben. Dieses Segment trägt die Studienrichtung in der Tiefe — Studierende, die wissen, was sie tun, und die in der Vorlesung selten unangenehm überrascht werden. Wer Jan nicht erreicht, kommuniziert an der DNA der FH vorbei.</p>
+<p>Jan zwingt uns zur zentralen Positionierungsfrage: «Warum D&amp;M und nicht Software Engineering oder DevOps?» Wenn unsere Webseite darauf keine klare Antwort gibt, wirken wir wie eine «Light-Variante» der Engineering-Richtungen — und Jan wechselt zu Software Engineering, wo er sich verstanden fühlt.</p>
+    </div>
+    <div class="dim-grid dim-grid--three">
+      <div class="dim">
+        <h3>Situation</h3>
+        <p>Vor zwei Jahren EFZ abgeschlossen, BM Technik lehrbegleitend mitgemacht. Spürt seit einigen Monaten, dass der reine Engineering-Pfad sich anfühlt wie ein langer Korridor: zuerst Junior, dann Mid-Level, dann Senior — alles in derselben Tätigkeit. Sieht im Daily Standup, dass die Designer:innen und Product Owner über Nutzer:innen, Marktnischen und Akzeptanz reden — er nickt mit, versteht meistens nur die technische Hälfte. Hat sich beim FHNW-Infoabend mit den Studienrichtungen befasst, schwankt zwischen Software Engineering, DevOps und D&amp;M.</p>
+      </div>
+      <div class="dim">
+        <h3>Ziel</h3>
+        <p>In den kommenden Jahren mehr als «Tickets gut abarbeiten» werden — eine Rolle, in der er bei Produktentscheidungen mitreden kann, Designer:innen und Stakeholder versteht, und in der die KI-Welle nicht zur Bedrohung, sondern zum Werkzeug wird. Langfristig sieht er sich entweder als Tech-Co-Founder eines kleinen Studios oder als Senior Product Engineer in einer Firma mit echter Produktkultur.</p>
+      </div>
+      <div class="dim">
+        <h3>Herausforderung</h3>
+        <ul>
+<li><strong>Verbau-Sorge</strong>: Wenn er D&amp;M wählt und später doch tief in Engineering will — kann er das noch, oder hat er sich verbaut?</li>
+<li><strong>Statusfrage im Umfeld</strong>: Klingt «Design und Management» für seinen Chef und seine technischen Kolleg:innen nach Karriereschritt oder nach «Karriere weg vom Code»?</li>
+<li><strong>Belastung</strong>: 80 % arbeiten + Studium + Beziehung — geht das ohne, dass etwas davon kaputt geht?</li>
+<li><strong>Mathe</strong>: Die FH-Mathematik (Lineare Algebra, Statistik) ist neu. In der Lehre hatte er Anwendungsmathematik, aber kein Beweisniveau.</li>
+</ul>
+      </div>
+      <div class="dim">
+        <h3>Needs</h3>
+        <ul>
+<li>Klare Aussage: «Was kann ich nach D&amp;M, das ich nach Software Engineering nicht kann — und umgekehrt?»</li>
+<li>Konkrete Modul-Inhalte, die zeigen, dass D&amp;M <em>technisch fundiert</em> ist und nicht «Wirtschaftsinformatik light»</li>
+<li>Karrierebeispiele aus der Praxis: Alumni mit EFZ + D&amp;M — wo arbeiten sie, in welchen Rollen?</li>
+<li>Realistische Wochenstunden-Übersicht für berufsbegleitend</li>
+<li>Anrechnung von EFZ-Inhalten und BM, inkl. möglicher Beschleunigung</li>
+<li>Eine ehrliche Antwort zur AI-Frage: was bleibt, was verändert sich, was lehrt D&amp;M, das in fünf Jahren noch trägt?</li>
+</ul>
+      </div>
+      <div class="dim">
+        <h3>D&amp;M, oder doch was anderes?</h3>
+        <ul>
+<li><strong>Nicht Software Engineering</strong>, weil Jan schon coden kann — er sucht <em>Breite</em>, nicht mehr Tiefe in dem, was er ohnehin macht.</li>
+<li><strong>Nicht DevOps</strong>, weil Infrastruktur ihn nicht zieht — sein Interesse ist beim Nutzer und Produkt, nicht bei Pipelines.</li>
+<li><strong>Nicht HGK / ZHdK Interaction Design</strong>, weil er nicht primär Designer werden will und keinen gestalterischen Bewerbungspfad hat.</li>
+<li><strong>Sondern D&amp;M</strong>, weil er die <em>Schnittstelle</em> sucht: technisch sattelfest bleiben, aber Designer:innen und Stakeholder verstehen können — und in einer Zeit, in der KI viel Routine-Coding übernimmt, dort Wert schaffen, wo Mensch, Produkt und Technik zusammen gedacht werden müssen.</li>
+</ul>
+      </div>
+      <div class="dim">
+        <h3>Risiko &amp; ehrliche Kommunikation</h3>
+        <p>Jan ist Studierender mit niedrigem Abbruchrisiko — er weiss, was Programmieren ist, was berufsbegleitendes Studium heisst, hat realistische Erwartungen. Die Risiken bei Jan sind nicht statistisch, sondern subtiler.</p>
+<ul>
+<li><em>Erwartungsfalle</em>: Wenn die Webseite D&amp;M wirkungsvoll, aber unspezifisch positioniert («Schnittstelle zwischen Design und Engineering»), kann er nach dem ersten Semester denken, er hätte besser SE gewählt.</li>
+<li><em>Statusangst</em>: Aus seinem Umfeld können Signale kommen, dass «Design und Management» als Karriere-Abstieg gelesen wird. Wenn wir die Komplementarität zu Software Engineering und DevOps nicht klar machen, lassen wir ihn allein.</li>
+</ul>
+<p>Was wir ehrlich sagen müssen: «Du wirst hier kein Vollzeit-Designer. Du wirst auch nicht primär Software Engineer. Du lernst, das Verbindungsglied zu sein — und du wirst mehr als heute über Nutzer:innen, Geschäftslogik und Produktentscheidungen reden. Mathematik ist Pflicht, kein Bonus.»</p>
+      </div>
+    </div>
+    <section class="innere-stimme">
+      <div class="is-inner">
+        <div class="is-meta">
+          <h3>Innere Stimme — <em>was wirklich im Kopf sitzt</em></h3>
+          <p>O-Ton-Fragen, die Jan sich selbst stellt — beim Pendeln, im Daily, abends auf dem Sofa.</p>
+        </div>
+        <ul class="quotes">
+          <li>Ich mach jetzt seit zwei Jahren Tickets. Will ich das die nächsten 30 Jahre?</li>
+          <li>Im Daily reden die Designer über Nutzer. Ich nick mit, aber versteh nur die Hälfte.</li>
+          <li>Wenn KI in fünf Jahren das meiste Routine-Coding macht — was bleibt mir dann?</li>
+          <li>D&amp;M oder Software Engineering — beide klingen nach «mehr». Aber «mehr» wovon?</li>
+          <li>Wenn ich D&amp;M mache und in drei Jahren doch wieder tief in Engineering will — hab ich mich verbaut?</li>
+          <li>Wie reagiert mein Chef, wenn ich sage «ich mach Design und Management»? Hört der «weniger Tech»?</li>
+          <li>Lineare Algebra an der FH — wie hart wird das wirklich? In der Lehre hatte ich das nie.</li>
+          <li>Wenn ich 80 Prozent arbeite und studiere — was mach ich noch mit meiner Partnerin?</li>
+          <li>Was kann ich nach D&amp;M konkret, das ich heute nicht kann? Konkret, nicht in Marketing-Sprache.</li>
+          <li>Bin ich an der FH unter lauter 19-Jährigen, oder gibt es andere wie mich?</li>
+          <li>Lerne ich Designtools wirklich — Figma, User Research — oder ist das alles oberflächlich?</li>
+          <li>Bezahlt mir das nachher 10'000 mehr im Jahr, oder ist es eher Lebens-Investition?</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</article>
+
+<article id="selina" class="persona">
+  <header class="persona-header">
+    <div class="persona-number">02</div>
+    <div class="persona-titleblock">
+      <h2>Selina, <em>die suchende Wirtschaftsabsolventin</em></h2>
+    </div>
+    <p class="steckbrief">23, KV-Lehre M-Profil (BM Wirtschaft lehrbegleitend), seit drei Jahren Sachbearbeiterin bei einer Krankenversicherung in Olten. Hat in der Lehre angefangen, mit Excel-Makros und Power Automate Auswertungen zu automatisieren — und gemerkt, dass ihr das mehr Spass macht als die Sachbearbeitung selbst. Wohnt noch bei den Eltern in Solothurn, ca. 35'000 CHF Erspartes, keine Programmierer:innen im engeren Umfeld. Vater Treuhänder, Mutter Sekundarlehrerin.</p>
+  </header>
+  <div class="persona-body">
+    <div class="warum">
+      <h3>Warum diese Persona?</h3>
+      <p>Selina ist die unbequemste der vier Personas — weil sie ein Problem sichtbar macht, das wir nicht wegerklären können. Die Studienrichtung zieht regelmässig Wirtschafts-Quereinsteiger:innen wie sie an. Viele bewerben sich aus der Erwartung, D&amp;M sei «Wirtschaftsinformatik mit Design-Anteil» oder ein «weicher Einstieg» ins Tech-Studium. Beides ist es nicht — und genau dort, in der Differenz zwischen Erwartung und Realität, brechen Selina-Profile auffallend häufig ab.</p>
+<p>Die strategische Aufgabe ist <em>nicht</em>, weniger Selinas anzuziehen, sondern <em>die richtigen</em> Selinas. Eine ehrliche Persona ist die Voraussetzung dafür: Wer Selinas Imposter-Sorgen, Mathe-Selbstzweifel und Erwartungshorizont ernst nimmt, kommuniziert klarer und filtert vorab — was kurzfristig Bewerbungen kostet und mittelfristig die Abbruchquote spürbar senkt.</p>
+    </div>
+    <div class="dim-grid dim-grid--three">
+      <div class="dim">
+        <h3>Situation</h3>
+        <p>Hat im letzten Jahr berufsbegleitend angefangen, Python-Kurse online zu machen — kommt voran, ist aber überrascht, wie steil die Lernkurve wirklich ist. Eltern unterstützen die Studienidee grundsätzlich, fragen aber immer wieder: «Bist du dir sicher, dass das wirklich was für dich ist?» Beste Freundin findet's mutig, im erweiterten Umfeld eher Skepsis. Sie hat noch nie eine Vorlesung von innen gesehen. Schwankt zwischen FHNW Wirtschaftsinformatik (HSW), FHNW D&amp;M und einem CAS in Digital Business an einer privaten Schule.</p>
+      </div>
+      <div class="dim">
+        <h3>Ziel</h3>
+        <p>Aus der Sachbearbeitung herauskommen und in eine Rolle wechseln, in der sie aktiv an digitalen Produkten oder Services mitarbeitet — ohne sich finanziell und emotional zu überfordern. Will <em>wirklich verstehen</em>, was sie tut, statt weiterhin Excel-Hacks und Tutorial-Wissen aneinanderzureihen.</p>
+      </div>
+      <div class="dim">
+        <h3>Herausforderung</h3>
+        <ul>
+<li><strong>Mathematik-Selbstzweifel</strong>: Mathe liegt drei Jahre zurück, im KV-Alltag kaum gebraucht. Sie weiss nicht, was Hochschulniveau wirklich heisst.</li>
+<li><strong>Imposter-Sorge</strong>: Sie nimmt an, dass «alle anderen schon programmieren können».</li>
+<li><strong>Falscher Studiengang?</strong>: Wirtschaftsinformatik wäre nach Ausweis-Logik der näherliegende Pfad. Warum D&amp;M? Sie kann das selbst nicht ganz klar artikulieren.</li>
+<li><strong>Finanzielles Risiko</strong>: Wechsel vom 100 % Lohn auf 60 % + Studium ist ein realer Einschnitt.</li>
+<li><strong>Abbruch-Angst</strong>: Was bleibt, wenn es nach zwei Semestern nicht klappt?</li>
+</ul>
+      </div>
+      <div class="dim">
+        <h3>Needs</h3>
+        <ul>
+<li>Ehrliche Voraussetzungen: was Mathematik auf FH-Niveau wirklich heisst, mit Beispielaufgaben — nicht beschönigt</li>
+<li>Klare Abgrenzung D&amp;M ↔ Wirtschaftsinformatik (HSW) — keine «beide gehen»-Position, sondern echte Wegweisung</li>
+<li>Vorkurs / Brückenangebot: Mathematik-Vorkurs, Programmier-Einstieg — prominent, nicht im FAQ versteckt</li>
+<li>Quereinsteiger:innen-Porträts: echte Menschen mit KV-Hintergrund, die D&amp;M erfolgreich abgeschlossen haben — und ehrliche Stimmen derer, die abgebrochen haben</li>
+<li>Studienmodelle: berufsbegleitend, Wochenrhythmus, mögliche Pensen</li>
+<li>Eltern-Material: FH-Status, Karriere-Aussichten, Verdienst-Perspektiven</li>
+<li>Klar formulierte Abbruch-Optionen: was bleibt ihr, wenn sie nach einem Semester aussteigt?</li>
+</ul>
+      </div>
+      <div class="dim">
+        <h3>D&amp;M, oder doch was anderes?</h3>
+        <ul>
+<li><strong>Nicht Wirtschaftsinformatik (HSW)</strong>, wenn sie ehrlich ist: weil «Design» für sie attraktiv klingt — sie hat schon ihre Excel-Makros gestalten, schöne Reports machen, irgendwie «kreativ» sein wollen.</li>
+<li><strong>Nicht reines Software Engineering</strong>, weil das nach «Coden im Keller» klingt — und ihre Erwartung an Tech ist die der gestaltbaren, sichtbaren Anwendung.</li>
+<li><strong>Sondern D&amp;M</strong>, weil sie <em>etwas Konkretes erschaffen</em> will, das Menschen nutzen — und weil die Gestaltungs-Komponente sie weniger einschüchtert als ein reines Informatik-Studium.</li>
+</ul>
+<p>Achtung: Diese Begründung enthält teilweise eine <em>falsche Erwartung</em>. Selina kommt häufig in der Annahme, D&amp;M sei «weicher» als Wirtschaftsinformatik. Das ist nicht so — D&amp;M ist ein vollwertiges Informatik-Studium. Genau hier sitzt das Abbruchrisiko.</p>
+      </div>
+      <div class="dim">
+        <h3>Risiko &amp; ehrliche Kommunikation</h3>
+        <p>Selina ist die Persona mit dem höchsten Abbruchrisiko. Wer Selinas mit der Verheissung «weicher Tech-Einstieg» anzieht, sieht in der Praxis regelmässig, wie zwei von dreien das Studium nicht zu Ende führen. Das ist kein Studierschwäche-Problem — das ist ein Erwartungsproblem.</p>
+<p>Was wir ehrlich sagen müssen:</p>
+<ul>
+<li>D&amp;M ist ein Informatik-Studium. Du wirst programmieren, Mathematik machen, Algorithmen verstehen.</li>
+<li>Der «Design»-Anteil ist <em>kein Ersatz</em> für die Informatik, sondern eine zusätzliche Dimension auf ihrer Grundlage.</li>
+<li>Wenn dich das Kaufmännische, Wirtschaftliche mehr interessiert als das Technische, ist Wirtschaftsinformatik (HSW) wahrscheinlich der bessere Pfad — und das ist keine Schwäche, sondern eine ehrliche Studienwahl.</li>
+<li>Hier ist ein Schnuppertag, ein Vorkurs, eine Selbsteinschätzung — schau bevor du dich bewirbst, ob es wirklich zu dir passt.</li>
+</ul>
+<p>Diese Klarheit kostet kurzfristig Bewerbungen — und senkt mittelfristig die Abbruchquote auf ein gesundes Niveau.</p>
+      </div>
+    </div>
+    <section class="innere-stimme">
+      <div class="is-inner">
+        <div class="is-meta">
+          <h3>Innere Stimme — <em>was wirklich im Kopf sitzt</em></h3>
+        </div>
+        <ul class="quotes">
+          <li>Wenn ich da bin und alle können schon programmieren — wie fühlt sich das an?</li>
+          <li>Ich habe Excel-Makros geschrieben. Reicht das, oder ist das Spielzeug?</li>
+          <li>Wenn ich es nicht schaffe, was sag ich dann? Allen? Mir?</li>
+          <li>Schaffe ich die Mathematik? Ich hatte zuletzt vor vier Jahren Mathe.</li>
+          <li>Wirtschaftsinformatik oder D&amp;M? Was ist überhaupt der Unterschied?</li>
+          <li>Mein Vater fragt immer wieder, ob ich mir das gut überlegt habe. Hat er recht?</li>
+          <li>Ich will eigentlich was Kreatives. Ist D&amp;M dafür der richtige Weg, oder bin ich am Ende doch Programmiererin?</li>
+          <li>Was wenn nach einem Semester klar wird, es war ein Fehler — habe ich dann ein Jahr verloren?</li>
+          <li>Ich verdiene jetzt 75'000 brutto. Wie lange will ich auf das verzichten?</li>
+          <li>Werden die anderen mich für naiv halten, wenn ich Grundlagenfragen stelle?</li>
+          <li>Bin ich überhaupt «der Typ» für ein Informatikstudium? Klingt schon das schräg?</li>
+          <li>Gibt es einen Schnuppertag oder einen Test, der mir zeigt, ob ich das wirklich mag — bevor ich mich bewerbe?</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</article>
+
+<article id="mirko" class="persona">
+  <header class="persona-header">
+    <div class="persona-number">03</div>
+    <div class="persona-titleblock">
+      <h2>Mirko, <em>der pragmatische Mediamatik-Hybrid</em></h2>
+    </div>
+    <p class="steckbrief">22, Mediamatik EFZ (4-jährige Lehre bei einer Marketing- und Web-Agentur in Bern), Berufsmaturität Technik lehrbegleitend. Hat in der Lehre Webseiten gebaut (HTML/CSS/JS, etwas Vue), Videos geschnitten, Kampagnen-Briefings mitgeschrieben. Arbeitet weiter 80 % in derselben Agentur — betreut kleinere Kund:innen-Webseiten, erstellt UX-Konzepte, hilft bei Pitches. Hobbies: Fotografie, lokale Musikszene, Vinyl. Wohnt in einer 4er-WG in Bern.</p>
+  </header>
+  <div class="persona-body">
+    <div class="warum">
+      <h3>Warum diese Persona?</h3>
+      <p>Mirko ist der «stille Glücksgriff» — die kleinste, aber passgenauste Gruppe der Studienrichtung. Mediamatik EFZ ist der einzige Schweizer Lehrberuf, in dem Tech, Gestaltung, Kommunikation und Wirtschaft schon <em>in der Lehre</em> systematisch zusammenkommen. Das Hybrid-Profil, das wir theoretisch für D&amp;M suchen, existiert empirisch in dieser Berufsgruppe. Wer aus der Mediamatik in die Studienrichtung wechselt, bringt schon alle vier Säulen mit — die Vertiefung passt nahtlos, der Studienabbruch ist die Ausnahme.</p>
+<p>Strategisch ist Mirko ein Wachstumshebel mit hohem ROI: Mediamatik-Abgänger:innen haben in der Schweiz wenig natürliche FH-Anschluss-Pfade — HGK und ZHdK sind zu reines Design, Wirtschaftsinformatik zu reine Wirtschaft. D&amp;M ist der natürliche Vertiefungs-Pfad. Hier hilft die Studienrichtung dort, wo die Berufsbiografie sonst stagniert.</p>
+    </div>
+    <div class="dim-grid dim-grid--three">
+      <div class="dim">
+        <h3>Situation</h3>
+        <p>Hat vor zwei Jahren die Lehre abgeschlossen, arbeitet seither in derselben Agentur und merkt, dass er auf einem Plateau angekommen ist. Die Senior:innen in der Agentur sind entweder reine Designer:innen, reine Entwickler:innen oder Projektleitende — die «Hybriden» wie er gehen entweder den Designer-Pfad (oft mit ZHdK-Anschluss) oder werden technischer (mit FH oder Selbststudium). Mirko spürt: er ist gut, aber ohne Vertiefung wird er in fünf Jahren noch dasselbe machen.</p>
+      </div>
+      <div class="dim">
+        <h3>Ziel</h3>
+        <p>Eine Vertiefung, die seine Hybrid-Identität nicht aufgibt, sondern systematisch ausbaut. Er will weder Designer noch Entwickler werden — er will <em>Produktverantwortung</em>, am Schnittpunkt arbeiten, langfristig vielleicht ein eigenes kleines Studio aufbauen oder als Senior Product Lead in einem mittelgrossen Studio arbeiten.</p>
+      </div>
+      <div class="dim">
+        <h3>Herausforderung</h3>
+        <ul>
+<li><strong>Identitätsbestätigung</strong>: Die Berufsumgebung drängt zur Spezialisierung. Studien-Optionen scheinen das fortzusetzen (HGK = Design pur; SE = Tech pur). Wo ist die Bestätigung, dass «Hybrid» eine eigenständige Disziplin sein kann?</li>
+<li><strong>Tech-Tiefe-Sorge</strong>: Er kennt Code, aber nicht systematisch. Wie ist die FH-Mathematik für jemanden mit Mediamatik-Hintergrund?</li>
+<li><strong>Anteile-Frage</strong>: Wie viel Design, wie viel Wirtschaft, wie viel Technik im Studium? Sucht nicht «ein bisschen von allem», sondern eine echte Gewichtung mit Tiefe.</li>
+<li><strong>Berufliche Kontinuität</strong>: Will den Agentur-Job behalten und vertiefen — geht das?</li>
+</ul>
+      </div>
+      <div class="dim">
+        <h3>Needs</h3>
+        <ul>
+<li>Klare Aussage, was D&amp;M anders macht als HGK Interaction Design oder Wirtschaftsinformatik</li>
+<li>Mediamatik-Anrechnung: welche Lehrinhalte werden anerkannt?</li>
+<li>Modul-Überblick mit Gewichtung Tech / Design / Wirtschaft / Methoden</li>
+<li>Praxis-Sichtbarkeit: studentische Projekte, Industrie-Anbindung, Praktika</li>
+<li>Alumni-Stories Mediamatik → D&amp;M → was kommt danach?</li>
+<li>AI-Position: wie verändert sich die Agentur- und Produktwelt — und was lehrt D&amp;M, das in fünf Jahren noch trägt?</li>
+</ul>
+      </div>
+      <div class="dim">
+        <h3>D&amp;M, oder doch was anderes?</h3>
+        <ul>
+<li><strong>Nicht HGK / ZHdK Interaction Design</strong>, weil reines Design ohne Tech-Tiefe ihn nicht reizt — er will auch <em>bauen können</em>, was er konzipiert.</li>
+<li><strong>Nicht Wirtschaftsinformatik</strong>, weil das zu wirtschaftslastig wäre und der gestalterische Anteil zu klein.</li>
+<li><strong>Nicht Software Engineering</strong>, weil reines Engineering die Gestaltungs- und Kommunikations-Komponente seines Berufsalltags verliert.</li>
+<li><strong>Sondern D&amp;M</strong>, weil hier die Mediamatik-Logik fortgesetzt und vertieft wird — Design + Tech + Wirtschaft in einer ernsthaften, integrierten Vertiefung statt in einer Spezialisierungs-Schublade.</li>
+</ul>
+      </div>
+      <div class="dim">
+        <h3>Risiko &amp; ehrliche Kommunikation</h3>
+        <p>Mirko hat ein sehr niedriges Abbruchrisiko. Er weiss, was Tech ist, was Design ist, was berufsbegleitendes Lernen heisst. Das einzige reale Risiko ist, dass er sich für ein anderes Studium entscheidet, weil er D&amp;M gar nicht findet oder dessen Differenzierung gegenüber HGK oder Wirtschaftsinformatik nicht erkennt.</p>
+<p>Was wir ehrlich sagen müssen:</p>
+<ul>
+<li>D&amp;M ist nicht «ein bisschen von allem». D&amp;M ist Informatik-Studium mit systematischer Designkompetenz und Produktverständnis.</li>
+<li>Wenn du dich primär als Designer:in siehst, ist HGK der richtigere Pfad. Wenn du dich primär als Wirtschaftsperson siehst, ist Wirtschaftsinformatik der richtigere Pfad. Wenn du beides nicht willst und das <em>Hybride als eigenständige Identität</em> leben willst — bist du bei uns richtig.</li>
+<li>Deine Mediamatik-Lehre ist hier ein echter Vorteil, nicht ein «Es-reicht-knapp».</li>
+</ul>
+      </div>
+    </div>
+    <section class="innere-stimme">
+      <div class="is-inner">
+        <div class="is-meta">
+          <h3>Innere Stimme — <em>was wirklich im Kopf sitzt</em></h3>
+        </div>
+        <ul class="quotes">
+          <li>Ich kann beides — gestalten und entwickeln. Aber in der Agentur wollen sie, dass ich mich entscheide.</li>
+          <li>Die Senior-Designer:innen wollen, dass ich mehr Figma mache. Die Senior-Devs wollen, dass ich mehr Code schreibe. Ich will eigentlich was Drittes.</li>
+          <li>Wenn ich nicht studiere, mache ich in fünf Jahren noch dasselbe.</li>
+          <li>ZHdK Interaction Design — schön. Aber ich will auch wirklich was bauen, nicht nur Prototyping.</li>
+          <li>Reicht meine Mathe-BM für die FH wirklich? Ich war kein Mathe-Genie.</li>
+          <li>Was lerne ich an der FH, was mir die Agentur nicht in fünf Jahren learning-by-doing beibringen würde?</li>
+          <li>Wenn KI Layouts und Code generiert — wo bin ich dann noch gefragt?</li>
+          <li>Bin ich an der FH unter lauter Informatiker-Lehrer-Söhnen? Oder gibt es andere wie mich?</li>
+          <li>Wie wird D&amp;M wirklich gewichtet — Tech, Design, Wirtschaft? Oder ist das alles ein Sammelsurium?</li>
+          <li>Kann ich nebenbei in der Agentur bleiben — die Erfahrung ist auch was wert.</li>
+          <li>Werde ich nach dem Bachelor mehr verdienen, oder hauptsächlich klüger?</li>
+          <li>Habe ich mit Mediamatik-EFZ irgendwo einen Bonus, oder fang ich wieder bei null an?</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</article>
+
+<article id="lara" class="persona">
+  <header class="persona-header">
+    <div class="persona-number">04</div>
+    <div class="persona-titleblock">
+      <h2>Lara, <em>die suchende Maturandin</em></h2>
+    </div>
+    <p class="steckbrief">19, Gymnasium (Schwerpunkt Wirtschaft &amp; Recht, Notenschnitt 4.9). Schreibt für die Schülerzeitung, war zwei Sommer als Hilfskraft bei einer kleinen Marketingagentur und hat dort mehr gemacht als nur Bilder sortieren — kleine Social-Posts mitkonzipiert, an Briefings mitgehört. Liest Newsletter über Design und Tech, hat schon mit Figma rumgespielt, aber nicht systematisch. Eltern: Vater Treuhänder, Mutter Sekundarlehrerin. Beste Freundin geht an die Uni Bern (Soziologie); die Klassengruppe ist Uni-orientiert.</p>
+  </header>
+  <div class="persona-body">
+    <div class="warum">
+      <h3>Warum diese Persona?</h3>
+      <p>Lara verkörpert die Vollzeit-Gymi-Klientel — kleinerer Anteil als die Berufsbegleitenden, aber an entscheidender Stelle in der Schweizer Bildungslandschaft. Maturand:innen wie Lara, die mit gemischten Schwerpunkten (Wirtschaft, Sprachen, Kreatives) aus dem Gymi kommen, wissen häufig, <em>dass</em> es Informatik-Studien gibt; sie wissen, <em>dass</em> es Design-Studien gibt; sie wissen aber nicht, dass eine Disziplin existiert, die das systematisch verbindet. Hier liegt das grösste ungenutzte Wachstumspotenzial der Studienrichtung — sofern wir es schaffen, in Laras Sprache zu erklären, was wir sind.</p>
+<p>Lara zwingt uns zusätzlich, den FH-vs-Uni-Diskurs und die Eltern-Frage ernst zu nehmen. Wer ihr nicht ehrlich begegnet — und auch ihrem Vater im Treuhandbüro nicht — verliert sie an die Uni, lange bevor sie sich überhaupt bewirbt.</p>
+    </div>
+    <div class="dim-grid dim-grid--three">
+      <div class="dim">
+        <h3>Situation</h3>
+        <p>Sechs Monate vor der Matura, weiss noch nicht, was sie studieren soll. War bei einer Berufsmesse am FHNW-Stand stehengeblieben — eigentlich auf der Suche nach BWL-Studiengängen — hat dort von D&amp;M gehört und war kurz interessiert. Hat danach die Webseite besucht und nicht wirklich verstanden, was sie da angeklickt hat. Klassenkamerad:innen wollen an die Uni (Recht, Wirtschaft, einige Lehramt). Eltern wären stolz auf eine «klassische» Studienwahl, sind aber offen.</p>
+      </div>
+      <div class="dim">
+        <h3>Ziel</h3>
+        <p>Eine Studienwahl treffen, die sich in zehn Jahren noch richtig anfühlt — eine, in der sie Konkretes erschaffen kann (anders als BWL-Theorie), die aber nicht den ganzen Tag im Keller programmieren bedeutet. Sucht «etwas mit Sinn», «etwas mit Wirkung», nicht nur «etwas mit Job-Aussichten».</p>
+      </div>
+      <div class="dim">
+        <h3>Herausforderung</h3>
+        <ul>
+<li><strong>Orientierungslosigkeit</strong>: Keine klare Vorstellung von Informatik, Data Science, D&amp;M. Webseiten klingen für sie alle ähnlich.</li>
+<li><strong>Status-Frage</strong>: FH oder Uni? In ihrem Umfeld ist Uni Default — FH muss «begründet» werden.</li>
+<li><strong>Klischee-Sorge</strong>: «Sind da nur Nerds?» — sie hat das Bild aus Filmen und Klassenkamerad:innen-Witzen.</li>
+<li><strong>Eltern-Erwartungen</strong>: Vater Treuhänder, sieht BWL als sicheren Weg. D&amp;M klingt für ihn nach «Marketingstudium mit Technik».</li>
+<li><strong>Mathe-Sorge</strong>: Wirtschafts-Schwerpunkt heisst nicht «Mathe-Profi». Sie ist solide, aber unsicher gegenüber FH-Niveau.</li>
+<li><strong>Praxis-Hunger</strong>: Will nicht «noch drei Jahre Schule». Will was Konkretes, möglichst früh.</li>
+</ul>
+      </div>
+      <div class="dim">
+        <h3>Needs</h3>
+        <ul>
+<li>Verständliche Erklärung, was D&amp;M ist — in der Sprache einer 19-Jährigen, nicht in Studiengangs-Jargon</li>
+<li>Direktvergleiche D&amp;M ↔ Wirtschaftsinformatik ↔ BWL (Uni) ↔ Uni-Informatik ↔ HGK Interaction Design — ehrlich, nicht werbend</li>
+<li>Eltern-Material zu FH-Status, Karrieren, Verdienst</li>
+<li>Studierenden-Stimmen, die ihrer Lebenswelt entsprechen — Frauen, Wirtschafts-Hintergrund, Sprach-Schwerpunkt — nicht nur Top-Tech-Profile</li>
+<li>Selbsteinschätzung, Schnuppertag, Probesemester — etwas, das ihr hilft, sich selbst zu prüfen, ohne sich gleich zu bewerben</li>
+<li>Zeigbare Studien-Outcomes: «Ein Tag im Leben einer D&amp;M-Studentin im 4. Semester»</li>
+<li>Frauenanteil und Atmosphäre sichtbar (echte Bilder, keine Stockfotos)</li>
+<li>Klare Aussage zu Wechselmöglichkeiten und Sicherheitsnetzen</li>
+</ul>
+      </div>
+      <div class="dim">
+        <h3>D&amp;M, oder doch was anderes?</h3>
+        <ul>
+<li><strong>Nicht BWL (Uni)</strong>, weil ihr der Theorie-Schwerpunkt zu abstrakt klingt — sie will Konkretes machen, nicht nur lesen und diskutieren.</li>
+<li><strong>Nicht Uni-Informatik</strong>, weil sie nicht «die Tech-Type» ist und kein klar definiertes Tech-Interesse mitbringt.</li>
+<li><strong>Nicht HGK Interaction Design</strong>, weil ihr klassischer gestalterischer Bewerbungspfad fehlt und sie sich auch nicht primär als Gestalterin sieht.</li>
+<li><strong>Nicht Wirtschaftsinformatik (HSW)</strong>, weil das nach «BWL mit IT» klingt — und sie eigentlich auch was <em>Gestaltbares</em> will.</li>
+<li><strong>Sondern D&amp;M</strong>, weil das die Kombination aus Konkretem (Produkte), Gestaltbarem (Design), Wirkungsorientiertem (Management) und Tech-Fundament (Informatik) ist, die sie sucht — <em>wenn sie es denn so erklärt bekommt</em>.</li>
+</ul>
+      </div>
+      <div class="dim">
+        <h3>Risiko &amp; ehrliche Kommunikation</h3>
+        <p>Lara hat ein mittleres Abbruchrisiko. Es ist <em>nicht</em> Studierschwäche — sondern eine Kombination aus drei Faktoren: Sie kommt mit unklarer Vorstellung, was D&amp;M ist; sie hat keine starke Tech-Erfahrung, die das Studium von Anfang an trägt; und das Umfeld zieht eher zur Uni, was eine spätere Korrektur («doch lieber Uni») begünstigt.</p>
+<p>Was wir ehrlich sagen müssen:</p>
+<ul>
+<li>D&amp;M ist ein Informatik-Studium — Mathematik, Programmieren, Algorithmen. Du wirst das lernen müssen.</li>
+<li>D&amp;M ist <em>nicht</em> «BWL light mit Design». Es ist eine eigene Disziplin auf Informatik-Fundament.</li>
+<li>Wenn du dich vor dem Tech-Anteil fürchtest: probier den Vorkurs, den Schnuppertag, ein Studierenden-Gespräch. Wir helfen dir herauszufinden, ob es passt — bevor du dich bewirbst.</li>
+<li>FH ist <em>nicht</em> «die zweite Wahl unter Uni», sondern ein anderer, praxisnaher Weg. Was du hier lernst, ist nicht weniger wertvoll, sondern anders aufgebaut.</li>
+</ul>
+      </div>
+    </div>
+    <section class="innere-stimme">
+      <div class="is-inner">
+        <div class="is-meta">
+          <h3>Innere Stimme — <em>was wirklich im Kopf sitzt</em></h3>
+        </div>
+        <ul class="quotes">
+          <li>Was ist «Design und Management» eigentlich? Ich versteh's, wenn ich auf der Webseite bin — und dann wieder nicht.</li>
+          <li>BWL fühlt sich an wie «nichts Konkretes». Informatik fühlt sich an wie «nichts für mich». Und dazwischen?</li>
+          <li>Wenn ich an die FH gehe — wird mein Vater das als Karriereverlust lesen?</li>
+          <li>Ich war nie «die Mathe-Type». Reicht mein Schul-Mathe für FH-Niveau?</li>
+          <li>Auf der Webseite stehen lauter Männer auf den Fotos. Bin ich da als Frau allein?</li>
+          <li>Wenn KI in zehn Jahren alles macht — was soll ich überhaupt studieren?</li>
+          <li>Meine Klasse geht an die Uni. Ich wäre dort die Aussenseiterin.</li>
+          <li>Was ist der Unterschied zwischen Wirtschaftsinformatik und Design und Management? Beides klingt ähnlich.</li>
+          <li>Ich will was machen, was man sieht — eine App, ein Service. Aber rein gestalterisch reicht mir nicht.</li>
+          <li>Gibt es einen Schnuppertag, einen Test, irgendwas, was mir zeigt, ob das zu mir passt?</li>
+          <li>Kann ich nach einem Jahr wechseln, wenn ich merke, es ist falsch?</li>
+          <li>Was sagt meine beste Freundin, wenn ich nicht an die Uni gehe?</li>
+          <li>Wer studiert das eigentlich? Wenn ich Bilder sehe, sind das alles 25-jährige Männer.</li>
+          <li>Soll ich vielleicht ein Zwischenjahr machen, anstatt jetzt schon zu entscheiden?</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</article>
+
+<section id="offene-punkte" class="offene">
+  <div class="offene-inner">
+    <h2>Offene Punkte / nächste Schritte</h2>
+    <div>
+      <ol>
+<li><strong>User Research</strong> — diese Proto-Personas mit echten Studierenden validieren: aktuelle D&amp;M-Studierende interviewen, Studienberatung-Daten auswerten, Bewerbungsgespräche systematisch protokollieren. Frage: Stimmt die innere Stimme? Welche Fragen fehlen? Welche Persona kommt so gar nicht vor?</li>
+<li><strong>Abbruch-Interviews</strong> — gezielt mit Personen sprechen, die in den letzten zwei Jahren D&amp;M abgebrochen haben (besonders aus der Wirtschafts-Schiene). Was hat nicht gepasst? Welche Erwartung war falsch? Welche Kommunikation hätte sie geschützt?</li>
+<li><strong>Eltern als Co-Persona</strong> — vor allem für Lara entscheidungsrelevant. Eigener Persona-Block oder eigenes Material, klar getrennt von der Studierenden-Sicht.</li>
+<li><strong>Internationale Bewerber:innen</strong> — Querschnittsthema mit eigener Problemlage (Anerkennung, Sprache, Erwartungsmanagement). Eigene Analyse, möglicherweise eigene Persona-Sammlung später.</li>
+<li><strong>Komplementarität sichtbar machen</strong> — gemeinsam mit den verantwortlichen Personen der Schwester-Richtungen ein Vergleichsraster entwickeln: Was unterscheidet uns wirklich — und wo arbeiten wir später zusammen?</li>
+<li><strong>Repositionierungs-Kommunikation</strong> — Webseite, Studienberatung, Infoveranstaltungen schrittweise umstellen, weg von «Designstudium mit Tech» hin zu «Produktentwicklung auf Informatik-Basis».</li>
+<li><strong>Implikationen pro Persona</strong> — pro Persona ableiten, was das konkret für Webseite und Infoveranstaltung heisst. Bewusst nicht in diesem Dokument, sondern als separate Ableitungsschritt — sobald die Personas durch User Research geschärft sind.</li>
+</ol>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-mark">
+      <span class="logo-mark"><span class="n">n</span><span class="bar"></span><span class="w">w</span></span>
+      <span class="logo-text">Fachhochschule Nordwestschweiz<br><strong>Hochschule für Informatik</strong></span>
+    </div>
+    <div class="footer-grid">
+      <div>
+        <h4>Über dieses Dokument</h4>
+        <p>Internes Arbeitsdokument zur Persona-Arbeit für die Studienrichtung Design und Management. Proto-Personas, hypothesenbasiert, mit Bezug zur Eintrittsstatistik 2023/24 verankert. Bewusst dafür gemacht, durch User Research validiert oder verworfen zu werden.</p>
+      </div>
+      <div>
+        <h4>Status</h4>
+        <ul>
+          <li>Stand: 12. Mai 2026</li>
+          <li>Version: v1</li>
+          <li>Scope: Studienrichtung Design und Management</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-base">
+      <span>© Fachhochschule Nordwestschweiz · Hochschule für Informatik</span>
+      <span>Internes Arbeitsdokument · nicht zur externen Verbreitung</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+// Personas — Design und Management (FHNW HSI)
+// Target shape: tests/fixtures/multi-file/personas-design-management/expected.html
+//
+// Section outline (to be filled in):
+//   1. Topbar          (<section class="topbar">)
+//   2. Hero            (<section class="hero">)
+//   3. "Warum …"       (<section id="warum-diese-vier-personas" class="prose">)
+//   4. Persona Jan     (<article id="jan">)
+//   5. Persona Selina  (<article id="selina">)
+//   6. Persona Mirko   (<article id="mirko">)
+//   7. Persona Lara    (<article id="lara">)
+//   8. Offene Punkte   (<section id="offene-punkte">)
+//   9. Footer
+//
+// Skeleton placeholder — fixture-runner will report a large diff in
+// expected.html until populated. Replace this canvas block with the
+// real layout as it's built.
+
+canvas desktop, bg #fff, font sans, fs 17
+
+Text "Personas — Design und Management (skeleton)"

@@ -155,6 +155,10 @@ function listFixtures(): Fixture[] {
     .filter(name => {
       const full = join(FIXTURES_DIR, name)
       if (!statSync(full).isDirectory()) return false
+      // Skip fixtures marked as work-in-progress with a `.todo` sentinel.
+      // Lets a fixture-dir exist (target HTML pinned, skeleton sources in
+      // place) without failing CI until the Mirror project is built up.
+      if (existsSync(join(full, '.todo'))) return false
       // A fixture has at least a layouts/ subdir with a .mirror file
       const layouts = join(full, 'layouts')
       if (!existsSync(layouts)) return false
