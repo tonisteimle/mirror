@@ -128,6 +128,16 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 >    (g) Resize-Handle Full-Width-Position-Design,
 >    (h) Hover+State Test-Timing.
 >    (a/b/f erledigt 2026-05-13.)
+> 5. **Direct-Manipulation Test-Migration** (2026-05-13 Audit) —
+>    Phase-1 (forcing function `tests/policy/no-synthetic-mouse-events
+.test.ts` + gap-math Unit-Tests) ✅ in `7714e42d`. Phase-2 Setup
+>    (Trusted-API: `hover`/`dragHandle`/migration-guide) ✅ in
+>    `da257a5c`. Phase-3 Wave-3 Slice-1 (nest-into-sibling-child) ✅
+>    in `2cc22454`. Verbleibend: 10 Allowlist-Files migrieren
+>    (Phase-2 file-by-file, je 1 Session), 5–6 weitere Wave-3
+>    Tests + Wave 4–13 (Phase-3), optional Phase-4 (cursor-shape
+>    via nut-js-Extension). Plan: `docs/refactoring/synthetic-events-
+migration.md`.
 >
 > Alle anderen Einträge unter „Offen" tragen bereits Status:
 > **erledigt** oder **abgewiesen** und gehören eigentlich nach
@@ -374,21 +384,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                                                                                            **Status-Update:** erledigt — alle drei Slices landen:
-                                                                                                            Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                                                                                            inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                                                                                            Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                                                                                            (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                                                                                            `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                                                                                            (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                                                                                            — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                                                                                            hat per `git add .` die uncommittete compiler-Side mit
-                                                                                                            aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                                                                                            `hasZagChildren` (children-Shape), `isZagComponentName`
-                                                                                                            (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                                                                                            IRZagNode-Discriminator-Property `isZagComponent: true`
-                                                                                                            bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                                                                                            81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                                                                                                **Status-Update:** erledigt — alle drei Slices landen:
+                                                                                                                Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                                                                                                inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                                                                                                Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                                                                                                (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                                                                                                `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                                                                                                (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                                                                                                — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                                                                                                hat per `git add .` die uncommittete compiler-Side mit
+                                                                                                                aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                                                                                                `hasZagChildren` (children-Shape), `isZagComponentName`
+                                                                                                                (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                                                                                                IRZagNode-Discriminator-Property `isZagComponent: true`
+                                                                                                                bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                                                                                                81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
