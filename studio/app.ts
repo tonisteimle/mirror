@@ -51,7 +51,6 @@ import {
 } from './init'
 import { debounce } from './core/debounce'
 import { renderEmptyPreview, resetSelectionForEmptyCode } from './compile/empty-state'
-import { preludeLineOffset } from './compile/wrap-layout'
 import {
   findUninstancedComponents,
   appendImplicitInstances,
@@ -61,6 +60,7 @@ import { collectPreludeDefinitions } from './compile/prelude-definitions'
 import { buildComponentPrimitives } from './compile/component-primitives'
 import { resolvePreviewRedirect } from './compile/preview-redirect'
 import { resolveCompileSource } from './compile/resolve-compile-source'
+import { computeCompileStateUpdate } from './compile/compile-state-update'
 
 // New architecture imports
 import {
@@ -1277,26 +1277,19 @@ function compile(code: string) {
     // Update state with resolved source and prelude offsets for Commands.
     // - preludeOffset: CHARACTER count (for change position adjustment)
     // - preludeLineOffset: LINE count (for selection resolution)
-    // In test mode the offsets were computed in the test-aware branch
-    // above, so a unified update applies here too.
-    if (studio?.state && !testModeActive) {
-      currentPreludeLineOffset = preludeLineOffset(resolvedCode, currentPreludeOffset)
-      studio.state.set({
-        resolvedSource: resolvedCode,
+    // Pure decision delegated to computeCompileStateUpdate (see file
+    // header for the production vs test-mode divergence rationale).
+    if (studio?.state) {
+      const update = computeCompileStateUpdate({
+        resolvedCode,
         preludeOffset: currentPreludeOffset,
         preludeLineOffset: currentPreludeLineOffset,
-        isWrappedWithApp: isWrappedWithApp,
+        isWrappedWithApp,
+        testMode: testModeActive,
       })
-    } else if (studio?.state) {
-      // In test mode, push the just-computed prelude offsets so editor →
-      // sourceMap line resolution in tests matches the resolved source.
-      studio.state.set({
-        resolvedSource: resolvedCode,
-        preludeOffset: currentPreludeOffset,
-        preludeLineOffset: currentPreludeLineOffset,
-        isWrappedWithApp: false,
-      })
-      if (studio?.sync?.lineOffset) {
+      currentPreludeLineOffset = update.newPreludeLineOffset
+      studio.state.set(update.payload)
+      if (update.pushSyncOffset && studio?.sync?.lineOffset) {
         studio.sync.lineOffset.setOffset(currentPreludeLineOffset)
       }
     }
