@@ -25,6 +25,7 @@ import type { Instance, Conditional, TokenDefinition } from '../../../parser/ast
 import { matchesCanonical } from '../../../schema/parser-helpers'
 import { animationShorthand } from '../../animations'
 import { rewriteIdentifiersToTokens } from './text'
+import { CONDITIONAL_PREFIX, LOOP_VAR_PREFIX } from '../../../utils/mirror-attrs'
 
 /**
  * MirrorIcon runtime component source. Embedded once per React file
@@ -39,7 +40,7 @@ const _MIRROR_FALLBACK_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="
 
 function _mirrorSanitizeIconName(name) {
   if (!name || typeof name !== 'string') return null
-  if (name.startsWith('__loopVar:') || name.startsWith('__conditional:')) return null
+  if (name.startsWith(LOOP_VAR_PREFIX) || name.startsWith(CONDITIONAL_PREFIX)) return null
   if (!/^[a-z0-9\\-]+$/.test(name)) return null
   if (name.length > 50) return null
   return name

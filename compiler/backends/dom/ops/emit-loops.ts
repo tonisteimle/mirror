@@ -9,6 +9,7 @@ import type { IRNode, IREach, IRConditional } from '../../../ir/types'
 import * as LoopEmitter from '../../dom/loop-emitter'
 import { ICON_DEFAULTS } from '../../../schema/primitives'
 import type { DOMGenerator } from '../../dom'
+import { CONDITIONAL_PREFIX } from '../../../utils/mirror-attrs'
 
 export function emitEachLoop(this: DOMGenerator, each: IREach, parentVar: string): void {
   const ctx = this.createLoopEmitterContext()
@@ -69,7 +70,7 @@ export function emitConditionalTemplateNode(
     if (prop.name === 'textContent') {
       const propValue = String(prop.value)
       // Handle conditional text content: __conditional:condition?thenValue:elseValue
-      if (propValue.includes('__conditional:')) {
+      if (propValue.includes(CONDITIONAL_PREFIX)) {
         const resolved = this.parseTopLevelConditional(propValue)
         this.emit(`${varName}.textContent = ${resolved}`)
       } else {

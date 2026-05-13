@@ -8,6 +8,7 @@
 import type { IRNode, IRStyle, IRProperty } from '../../ir/types'
 import { isLayoutPrimitive } from '../../schema/dsl'
 import { SYSTEM_STATES } from '../../schema/parser-helpers'
+import { CONDITIONAL_PREFIX } from '../../utils/mirror-attrs'
 
 // ============================================
 // TYPES
@@ -170,7 +171,7 @@ function emitAttribute(ctx: NodeEmitterContext, prop: IRProperty, varName: strin
 function formatAttributeValue(ctx: NodeEmitterContext, value: string | number | boolean): string {
   if (typeof value === 'string') {
     // Handle conditional attribute values
-    if (value.includes('__conditional:')) {
+    if (value.includes(CONDITIONAL_PREFIX)) {
       return ctx.resolveContentValue(value)
     }
     return `"${ctx.escapeString(value)}"`

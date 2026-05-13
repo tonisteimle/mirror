@@ -7,6 +7,7 @@
 
 import { sanitizeVarName as sanitizeVarNameUtil } from '../../dom/utils'
 import type { DOMGenerator } from '../../dom'
+import { CONDITIONAL_PREFIX, LOOP_VAR_PREFIX } from '../../../utils/mirror-attrs'
 
 export function sanitizeVarName(this: DOMGenerator, id: string): string {
   return sanitizeVarNameUtil(id)
@@ -23,14 +24,14 @@ export function sanitizeVarName(this: DOMGenerator, id: string): string {
 export function resolveContentValue(this: DOMGenerator, value: string | number | boolean): string {
   if (typeof value === 'string') {
     // Check for loop variable reference (marked by IR)
-    if (value.startsWith('__loopVar:')) {
-      const varName = value.slice('__loopVar:'.length)
+    if (value.startsWith(LOOP_VAR_PREFIX)) {
+      const varName = value.slice(LOOP_VAR_PREFIX.length)
       return varName // Return unquoted - it's a JS variable reference
     }
 
     // Check for conditional expression (marked by IR)
     // Format: __conditional:condition?thenValue:elseValue
-    if (value.includes('__conditional:')) {
+    if (value.includes(CONDITIONAL_PREFIX)) {
       return this.parseTopLevelConditional(value)
     }
 
@@ -45,7 +46,7 @@ export function resolveContentValue(this: DOMGenerator, value: string | number |
       value.includes(' / ')
     const hasQuotedParts = /^"[^"]*"/.test(value) || /" [+\-*/] /.test(value)
     const hasDollarVars = /\$[a-zA-Z_]/.test(value)
-    const hasLoopVarMarkers = value.includes('__loopVar:')
+    const hasLoopVarMarkers = value.includes(LOOP_VAR_PREFIX)
 
     if (hasOperators && (hasQuotedParts || hasDollarVars || hasLoopVarMarkers)) {
       // This is a computed expression - replace $varName with $get("varName")

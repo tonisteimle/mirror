@@ -6,6 +6,7 @@
  */
 
 import type { DOMGenerator } from '../../dom'
+import { CONDITIONAL_PREFIX, LOOP_VAR_PREFIX } from '../../../utils/mirror-attrs'
 
 export function resolveTemplateValue(
   this: DOMGenerator,
@@ -19,12 +20,12 @@ export function resolveTemplateValue(
     // survives stripping and lands as bare JS in the output (e.g.
     // `textContent = __conditional:member.status == "online"?...` — a
     // SyntaxError at module load).
-    if (value.includes('__conditional:')) {
+    if (value.includes(CONDITIONAL_PREFIX)) {
       return this.resolveConditionalExpression(value, itemVar)
     }
     // Check for __loopVar: markers (set by IR for loop variable references)
     // Use regex replacement for ALL occurrences (handles multiple markers in expressions)
-    if (value.includes('__loopVar:')) {
+    if (value.includes(LOOP_VAR_PREFIX)) {
       // e.g., "__loopVar:user.name" -> user.name (unquoted)
       // e.g., "__loopVar:index + 1" -> index + 1
       // e.g., "__loopVar:team.name + __loopVar:team.members.length" -> team.name + team.members.length
@@ -107,12 +108,12 @@ export function resolveTemplateStyleValue(
 ): string {
   // Handle __conditional: markers (ternary expressions from IR)
   // Format: __conditional:condition?thenValue:elseValue
-  if (value.includes('__conditional:')) {
+  if (value.includes(CONDITIONAL_PREFIX)) {
     return this.resolveConditionalExpression(value, itemVar)
   }
 
   // Handle __loopVar: markers
-  if (value.includes('__loopVar:')) {
+  if (value.includes(LOOP_VAR_PREFIX)) {
     const resolved = value.replace(/__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*(?:\[\d+\])?)/g, '$1')
     // Wrap in parentheses if it's an expression
     if (resolved.includes(' ')) {
@@ -145,13 +146,13 @@ export function resolveConditionalExpression(
   // Parse __conditional:condition?then:else pattern
   // Note: 'else' part may itself be another __conditional (nested ternary)
   const parseConditional = (str: string): string => {
-    if (!str.startsWith('__conditional:')) {
+    if (!str.startsWith(CONDITIONAL_PREFIX)) {
       // Not a conditional - resolve as a value
       return this.resolveConditionalValue(str, itemVar)
     }
 
     // Remove __conditional: prefix
-    const content = str.slice('__conditional:'.length)
+    const content = str.slice(CONDITIONAL_PREFIX.length)
 
     // Find the ? that separates condition from then/else
     // Need to be careful with nested conditionals
@@ -183,13 +184,16 @@ export function resolveConditionalExpression(
     let inConditional = false
     for (let i = 0; i < rest.length; i++) {
       const char = rest[i]
-      if (rest.slice(i).startsWith('__conditional:')) {
+      if (rest.slice(i).startsWith(CONDITIONAL_PREFIX)) {
         inConditional = true
       }
       // Skip the colon that belongs to a marker prefix like `__loopVar:`
       // or `__conditional:`. `__loopVar:accent:__loopVar:danger` must not
       // split at the first internal colon.
-      if (rest.slice(i).startsWith('__loopVar:') || rest.slice(i).startsWith('__conditional:')) {
+      if (
+        rest.slice(i).startsWith(LOOP_VAR_PREFIX) ||
+        rest.slice(i).startsWith(CONDITIONAL_PREFIX)
+      ) {
         i += rest.slice(i).indexOf(':')
         continue
       }
@@ -252,7 +256,7 @@ export function resolveConditionalValue(
   itemVar: string
 ): string {
   // Handle __loopVar: markers
-  if (value.includes('__loopVar:')) {
+  if (value.includes(LOOP_VAR_PREFIX)) {
     return this.resolveLoopVarMarkers(value, itemVar)
   }
 
@@ -309,7 +313,7 @@ export function resolveStyleValueForTopLevel(
   this: DOMGenerator,
   value: string
 ): { code: string; needsEval: boolean } {
-  if (!value.includes('__conditional:')) {
+  if (!value.includes(CONDITIONAL_PREFIX)) {
     return { code: `'${value}'`, needsEval: false }
   }
 
@@ -319,11 +323,11 @@ export function resolveStyleValueForTopLevel(
 }
 
 export function parseTopLevelConditional(this: DOMGenerator, str: string): string {
-  if (!str.startsWith('__conditional:')) {
+  if (!str.startsWith(CONDITIONAL_PREFIX)) {
     return this.resolveTopLevelValue(str)
   }
 
-  const content = str.slice('__conditional:'.length)
+  const content = str.slice(CONDITIONAL_PREFIX.length)
 
   // Find the ? that separates condition from then/else
   let questionPos = -1
@@ -367,13 +371,13 @@ export function parseTopLevelConditional(this: DOMGenerator, str: string): strin
       inString = char
       continue
     }
-    if (rest.slice(i).startsWith('__conditional:')) {
+    if (rest.slice(i).startsWith(CONDITIONAL_PREFIX)) {
       inConditional = true
     }
     // Skip the colon that belongs to a marker prefix like `__loopVar:`
     // or `__conditional:`. Without this, `__loopVar:accent:__loopVar:danger`
     // would split at the first internal `:` and produce invalid JS.
-    if (rest.slice(i).startsWith('__loopVar:') || rest.slice(i).startsWith('__conditional:')) {
+    if (rest.slice(i).startsWith(LOOP_VAR_PREFIX) || rest.slice(i).startsWith(CONDITIONAL_PREFIX)) {
       // jump past the marker name + the colon
       i += rest.slice(i).indexOf(':')
       continue
@@ -480,7 +484,7 @@ export function resolveTopLevelValue(this: DOMGenerator, value: string): string 
       (value.startsWith("'") && value.endsWith("'")))
   ) {
     const inner = value.slice(1, -1)
-    if (inner.includes('__loopVar:')) {
+    if (inner.includes(LOOP_VAR_PREFIX)) {
       // Rewrite into a template literal: `Items: ${$get("count")}`
       const tpl = inner.replace(
         /__loopVar:([a-zA-Z_][a-zA-Z0-9_.]*)/g,
@@ -499,8 +503,8 @@ export function resolveTopLevelValue(this: DOMGenerator, value: string): string 
     return value
   }
   // Handle bare `__loopVar:name` — at top-level this is a $get() reference.
-  if (value.startsWith('__loopVar:')) {
-    return `$get("${value.slice('__loopVar:'.length)}")`
+  if (value.startsWith(LOOP_VAR_PREFIX)) {
+    return `$get("${value.slice(LOOP_VAR_PREFIX.length)}")`
   }
   // Handle named colors and other values
   return `"${value}"`

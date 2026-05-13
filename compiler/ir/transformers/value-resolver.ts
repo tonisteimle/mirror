@@ -25,6 +25,7 @@ import type { IRProperty } from '../types'
 import { PROPERTY_TO_TOKEN_SUFFIX } from '../../schema/token-suffixes'
 import { ICON_DEFAULTS } from '../../schema/primitives'
 import { buildExpressionString } from './expression-transformer'
+import { LOOP_VAR_PREFIX } from '../../utils/mirror-attrs'
 
 /**
  * Context for token resolution
@@ -338,7 +339,7 @@ export function extractHTMLProperties(
       if (prop.values && prop.values.length > 0) {
         const bindingValue = resolveContentValue(prop.values)
         // If it's a loop variable binding (e.g., __loopVar:todo.done), preserve it
-        if (bindingValue.includes('__loopVar:') || bindingValue.includes('.')) {
+        if (bindingValue.includes(LOOP_VAR_PREFIX) || bindingValue.includes('.')) {
           htmlProps.push({ name: 'checked', value: bindingValue })
         } else {
           htmlProps.push({ name: 'checked', value: true })

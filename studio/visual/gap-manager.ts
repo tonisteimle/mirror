@@ -19,6 +19,7 @@ import { getSpacingSnapService, shouldBypassSnapping, type SpacingSnapResult } f
 import { SnapIndicator, createSnapIndicator } from './snap-indicator'
 import { RafMouseThrottle } from './raf-mouse-throttle'
 import { ObserverPack } from './observer-pack'
+import { MIRROR_ID_ATTR } from '../../compiler/utils/mirror-attrs'
 
 // Visual constants
 const HANDLE_VISUAL_SIZE = 2 // Visible line: 2px
@@ -152,7 +153,7 @@ export class GapManager {
 
     // Get children with data-mirror-id (only Mirror elements)
     const children = Array.from(element.children).filter(
-      child => child instanceof HTMLElement && child.hasAttribute('data-mirror-id')
+      child => child instanceof HTMLElement && child.hasAttribute(MIRROR_ID_ATTR)
     ) as HTMLElement[]
 
     if (children.length < 2) {
@@ -484,7 +485,7 @@ export class GapManager {
     if (display !== 'flex' && display !== 'grid' && display !== 'inline-flex') return
 
     const children = Array.from(element.children).filter(
-      child => child instanceof HTMLElement && child.hasAttribute('data-mirror-id')
+      child => child instanceof HTMLElement && child.hasAttribute(MIRROR_ID_ATTR)
     ) as HTMLElement[]
 
     if (children.length < 2) return

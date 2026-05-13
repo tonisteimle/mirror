@@ -26,6 +26,7 @@ import { GapManager, createGapManager } from '../visual/gap-manager'
 import { initSpacingSnapService, resetSpacingSnapService } from '../visual/snap'
 import { SlotVisibilityService, createSlotVisibilityService } from './slot-visibility'
 import { DragPreview, createDragPreview } from './drag-preview'
+import { MIRROR_ID_ATTR } from '../../compiler/utils/mirror-attrs'
 
 // Re-export renderer
 export {
@@ -194,7 +195,7 @@ export class PreviewController {
       container: config.container,
       selectedClass: config.selectedClass ?? 'studio-selected',
       hoverClass: config.hoverClass ?? 'studio-hover',
-      nodeIdAttribute: config.nodeIdAttribute ?? 'data-mirror-id',
+      nodeIdAttribute: config.nodeIdAttribute ?? MIRROR_ID_ATTR,
       enableSelection: config.enableSelection ?? true,
       enableHover: config.enableHover ?? true,
       enableHandles: config.enableHandles ?? true,

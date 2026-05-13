@@ -8,6 +8,7 @@
 import type { ChildInfo } from './types'
 import type { CacheReport, Reportable } from './reporter/types'
 import { createLogger } from '../../../compiler/utils/logger'
+import { MIRROR_ID_ATTR } from '../../../compiler/utils/mirror-attrs'
 
 const log = createLogger('LayoutCache')
 
@@ -30,7 +31,7 @@ export class LayoutCache implements Reportable<CacheReport> {
   private cacheAllRects(container: HTMLElement): void {
     const elements = container.querySelectorAll('[data-mirror-id]')
     for (const el of elements) {
-      const nodeId = el.getAttribute('data-mirror-id')
+      const nodeId = el.getAttribute(MIRROR_ID_ATTR)
       if (nodeId && el instanceof HTMLElement) {
         const rect = el.getBoundingClientRect()
         this.rects.set(nodeId, rect)
@@ -48,7 +49,7 @@ export class LayoutCache implements Reportable<CacheReport> {
 
   /** Add element to its parent's children list */
   private addToParent(el: Element): void {
-    const nodeId = el.getAttribute('data-mirror-id')
+    const nodeId = el.getAttribute(MIRROR_ID_ATTR)
     const rect = nodeId ? this.rects.get(nodeId) : null
     if (!nodeId || !rect) return
 
@@ -62,7 +63,7 @@ export class LayoutCache implements Reportable<CacheReport> {
   /** Get data-mirror-id of nearest parent container */
   private getParentId(el: Element): string | null {
     const parent = el.parentElement?.closest('[data-mirror-id]')
-    return parent?.getAttribute('data-mirror-id') ?? null
+    return parent?.getAttribute(MIRROR_ID_ATTR) ?? null
   }
 
   /** Sort all children by position (top-to-bottom, left-to-right) */
@@ -130,7 +131,7 @@ export class LayoutCache implements Reportable<CacheReport> {
       elementCount: this.rects.size,
       containerCount: this.children.size,
       isEmpty: this.rects.size === 0,
-      containerElement: this.containerElement?.getAttribute('data-mirror-id') ?? null,
+      containerElement: this.containerElement?.getAttribute(MIRROR_ID_ATTR) ?? null,
     }
   }
 }

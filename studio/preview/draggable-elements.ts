@@ -1,3 +1,5 @@
+import { MIRROR_ID_ATTR } from '../../compiler/utils/mirror-attrs'
+
 /**
  * Draggable Preview Elements Manager
  *
@@ -59,7 +61,7 @@ export function createDraggableElementsManager(
     if (!container) return
 
     container.querySelectorAll('[data-mirror-id]').forEach(el => {
-      const nodeId = el.getAttribute('data-mirror-id')
+      const nodeId = el.getAttribute(MIRROR_ID_ATTR)
       if (!nodeId) return
       if (initialized.has(el)) return
       // The Mirror root cannot be dragged out of itself; allow its

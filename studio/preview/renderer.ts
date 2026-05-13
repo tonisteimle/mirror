@@ -5,6 +5,7 @@
  */
 
 import type { AST, TokenDefinition, ComponentDefinition } from '../../compiler/parser/ast'
+import { MIRROR_ID_ATTR } from '../../compiler/utils/mirror-attrs'
 
 export type PreviewMode = 'tokens' | 'component' | 'layout'
 
@@ -26,7 +27,7 @@ export abstract class BaseRenderer {
 
   constructor(config: RendererConfig) {
     this.container = config.container
-    this.nodeIdAttribute = config.nodeIdAttribute ?? 'data-mirror-id'
+    this.nodeIdAttribute = config.nodeIdAttribute ?? MIRROR_ID_ATTR
   }
 
   abstract render(data: unknown): void
@@ -40,7 +41,7 @@ export class PreviewRenderer {
 
   constructor(config: RendererConfig) {
     this.container = config.container
-    this.nodeIdAttribute = config.nodeIdAttribute ?? 'data-mirror-id'
+    this.nodeIdAttribute = config.nodeIdAttribute ?? MIRROR_ID_ATTR
   }
 
   render(data: PreviewData): void {

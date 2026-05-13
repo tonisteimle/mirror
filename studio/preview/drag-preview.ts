@@ -27,6 +27,7 @@ const log = createLogger('DragPreview')
 // We store the data globally when drag starts and read it here.
 
 import type { ComponentDragData } from '../panels/components/types'
+import { MIRROR_ID_ATTR } from '../../compiler/utils/mirror-attrs'
 export type { ComponentDragData }
 
 /** Full component item for rendering */
@@ -212,7 +213,7 @@ export class DragPreview {
    */
   private handleCanvasDragStart(e: DragEvent): void {
     const target = e.target as HTMLElement
-    const nodeId = target.getAttribute('data-mirror-id')
+    const nodeId = target.getAttribute(MIRROR_ID_ATTR)
 
     if (!nodeId || !e.dataTransfer) return
 

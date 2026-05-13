@@ -51,6 +51,7 @@ import {
 } from './keyboard/position-arrow'
 import { handleSpacingArrow } from './keyboard/spacing-arrow'
 import { createLogger } from '../../compiler/utils/logger'
+import { MIRROR_ID_ATTR } from '../../compiler/utils/mirror-attrs'
 
 const log = createLogger('KeyboardHandler')
 
@@ -73,7 +74,7 @@ export class KeyboardHandler {
     this.container = config.container
     this.boundHandleKeyDown = this.handleKeyDown.bind(this)
     this.getCommandContext = config.getCommandContext || (() => null)
-    this.nodeIdAttribute = config.nodeIdAttribute || 'data-mirror-id'
+    this.nodeIdAttribute = config.nodeIdAttribute || MIRROR_ID_ATTR
   }
 
   attach(): void {

@@ -14,6 +14,7 @@ import type { Point, HitResult, FlexLayout, LayoutType } from './types'
 import type { LayoutCache } from './layout-cache'
 import type { HitReport, EscapeZoneReport, Reportable } from './reporter/types'
 import { createLogger } from '../../../compiler/utils/logger'
+import { MIRROR_ID_ATTR } from '../../../compiler/utils/mirror-attrs'
 
 const log = createLogger('HitDetector')
 
@@ -65,7 +66,7 @@ export class HitDetector implements Reportable<HitReport> {
       this.lastResult = null
       return null
     }
-    this.lastElementAtPoint = element.getAttribute('data-mirror-id')
+    this.lastElementAtPoint = element.getAttribute(MIRROR_ID_ATTR)
     const result = this.findValidContainer(element, cache, cursor, options)
     this.lastResult = result
     if (!result) log.debug('No valid container at', cursor.x, cursor.y)
@@ -181,7 +182,7 @@ export class HitDetector implements Reportable<HitReport> {
 
   /** Try to build HitResult for element */
   private tryBuildHitResult(el: Element, cache: LayoutCache): HitResult | null {
-    const nodeId = el.getAttribute('data-mirror-id')
+    const nodeId = el.getAttribute(MIRROR_ID_ATTR)
     if (!nodeId) return null
 
     const style = getComputedStyle(el)

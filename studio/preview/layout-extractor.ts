@@ -13,6 +13,7 @@
 
 import { actions, type LayoutRect } from '../core/state'
 import { createLogger } from '../../compiler/utils/logger'
+import { MIRROR_ID_ATTR } from '../../compiler/utils/mirror-attrs'
 
 const log = createLogger('LayoutExtractor')
 
@@ -30,7 +31,7 @@ export function extractLayoutInfo(container: HTMLElement): Map<string, LayoutRec
   const elements = container.querySelectorAll('[data-mirror-id]')
 
   for (const element of elements) {
-    const nodeId = element.getAttribute('data-mirror-id')
+    const nodeId = element.getAttribute(MIRROR_ID_ATTR)
     if (!nodeId) continue
 
     const rect = extractElementLayout(element as HTMLElement, containerRect)
@@ -59,7 +60,7 @@ export function extractElementLayout(
 
     // Get parent nodeId
     const parentElement = element.parentElement?.closest('[data-mirror-id]')
-    const parentId = parentElement?.getAttribute('data-mirror-id') ?? null
+    const parentId = parentElement?.getAttribute(MIRROR_ID_ATTR) ?? null
 
     // Parse padding values
     const padding = {

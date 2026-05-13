@@ -23,6 +23,7 @@ import {
 } from './grid-overlay/grid-detector'
 import { readGridPlacement, resizeToCells, type GridPlacement } from './grid-overlay/grid-resize'
 import { RafMouseThrottle } from './raf-mouse-throttle'
+import { MIRROR_ID_ATTR } from '../../compiler/utils/mirror-attrs'
 
 export type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
 
@@ -1104,7 +1105,7 @@ export class ResizeManager {
     // Subtract sibling space (need DOM for ID-based exclusion)
     const siblings = parent.querySelectorAll(':scope > [data-mirror-id]')
     siblings.forEach(sibling => {
-      const siblingId = sibling.getAttribute('data-mirror-id')
+      const siblingId = sibling.getAttribute(MIRROR_ID_ATTR)
       if (siblingId === excludeId) return
       const siblingLayout = layoutService?.getLayout(siblingId!)
       const siblingWidth =

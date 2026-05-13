@@ -12,6 +12,7 @@
  */
 
 import { state, actions } from './index'
+import { MIRROR_ID_ATTR } from '../../compiler/utils/mirror-attrs'
 
 export interface LayoutReadOptions {
   /** If true, skip cache and always read from DOM */
@@ -62,7 +63,7 @@ export class LayoutService {
 
   constructor(config: { container: HTMLElement; nodeIdAttribute?: string }) {
     this.container = config.container
-    this.nodeIdAttribute = config.nodeIdAttribute || 'data-mirror-id'
+    this.nodeIdAttribute = config.nodeIdAttribute || MIRROR_ID_ATTR
   }
 
   /**

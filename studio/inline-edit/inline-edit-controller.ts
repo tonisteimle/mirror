@@ -10,6 +10,7 @@ import { InlineEditSession, createInlineEditSession } from './inline-edit-sessio
 import { isEditableType, type InlineEditConfig, type InlineEditResult } from './types'
 import type { SourceMap } from '../../compiler/ir/source-map'
 import { createLogger } from '../../compiler/utils/logger'
+import { MIRROR_ID_ATTR } from '../../compiler/utils/mirror-attrs'
 
 const log = createLogger('InlineEdit')
 
@@ -38,7 +39,7 @@ export class InlineEditController {
 
   constructor(config: InlineEditConfig) {
     this.container = config.container
-    this.nodeIdAttribute = config.nodeIdAttribute ?? 'data-mirror-id'
+    this.nodeIdAttribute = config.nodeIdAttribute ?? MIRROR_ID_ATTR
     this.onEditStart = config.onEditStart
     this.onEditEnd = config.onEditEnd
 

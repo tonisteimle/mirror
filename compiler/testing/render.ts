@@ -9,6 +9,7 @@ import { toIR } from '../ir'
 import { generateDOM } from '../backends/dom'
 import type { RenderContext } from './types'
 import type { IR } from '../ir/types'
+import { MIRROR_ID_ATTR } from '../utils/mirror-attrs'
 
 // =============================================================================
 // RENDER FUNCTION
@@ -56,14 +57,14 @@ export function renderMirror(code: string, container?: HTMLElement): RenderConte
   const elements = new Map<string, HTMLElement>()
   const allElements = Array.from(root.querySelectorAll('[data-mirror-id]'))
   for (const el of allElements) {
-    const nodeId = el.getAttribute('data-mirror-id')
+    const nodeId = el.getAttribute(MIRROR_ID_ATTR)
     if (nodeId) {
       elements.set(nodeId, el as HTMLElement)
     }
   }
 
   // Also add root if it has a data-mirror-id
-  const rootId = root.getAttribute('data-mirror-id')
+  const rootId = root.getAttribute(MIRROR_ID_ATTR)
   if (rootId) {
     elements.set(rootId, root)
   }

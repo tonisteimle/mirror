@@ -22,6 +22,7 @@ import type {
 } from '../ports'
 import { state, actions, events } from '../../core'
 import type { SourceMap } from '../../../compiler'
+import { MIRROR_ID_ATTR } from '../../../compiler/utils/mirror-attrs'
 
 // ============================================
 // Production Event Bus Port
@@ -76,7 +77,7 @@ export function createDOMQueryPort(config: DOMQueryPortConfig = {}): DOMQueryPor
       const rootElement = document.querySelector(`${previewSelector} [data-mirror-id]`)
       if (!rootElement) return null
 
-      const nodeId = rootElement.getAttribute('data-mirror-id')
+      const nodeId = rootElement.getAttribute(MIRROR_ID_ATTR)
       if (!nodeId) return null
 
       return { nodeId }
@@ -99,7 +100,7 @@ export function createDOMQueryPort(config: DOMQueryPortConfig = {}): DOMQueryPor
       let current: Element | null = domElement.parentElement
 
       while (current) {
-        const mirrorId = current.getAttribute('data-mirror-id')
+        const mirrorId = current.getAttribute(MIRROR_ID_ATTR)
         if (mirrorId) {
           return {
             nodeId: mirrorId,

@@ -9,6 +9,7 @@
 import type { ExtractedElementInfo, PropertyModificationResult, TokenInfo } from './test-api-types'
 import type { BrowserTestRunner } from './test-runner'
 import type { Point } from './types'
+import { MIRROR_ID_ATTR } from '../../../compiler/utils/mirror-attrs'
 
 export class MirrorStudioControl {
   /**
@@ -209,7 +210,7 @@ export class MirrorStudioControl {
     const preview = document.getElementById('preview')
     if (!preview) return []
     const elements = preview.querySelectorAll('[data-mirror-id]')
-    return Array.from(elements).map(el => el.getAttribute('data-mirror-id')!)
+    return Array.from(elements).map(el => el.getAttribute(MIRROR_ID_ATTR)!)
   }
 
   /**

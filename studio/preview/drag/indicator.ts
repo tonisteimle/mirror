@@ -10,6 +10,7 @@
 
 import type { Point } from './types'
 import type { IndicatorReport, Reportable } from './reporter/types'
+import { MIRROR_ID_ATTR } from '../../../compiler/utils/mirror-attrs'
 
 const INDICATOR_ID = 'drag-insertion-indicator'
 const CONTAINER_HIGHLIGHT_ID = 'drag-container-highlight'
@@ -166,7 +167,7 @@ export class Indicator implements Reportable<IndicatorReport> {
   /** Update ghost content with a clone of the source element */
   private updateGhostContent(ghost: HTMLDivElement, sourceElement: HTMLElement): void {
     // Only update if content changed (avoid flicker)
-    const sourceId = sourceElement.getAttribute('data-mirror-id')
+    const sourceId = sourceElement.getAttribute(MIRROR_ID_ATTR)
     if (ghost.dataset.sourceId === sourceId) return
     ghost.dataset.sourceId = sourceId || ''
 
