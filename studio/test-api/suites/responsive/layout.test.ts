@@ -2,7 +2,7 @@
  * Responsive Layout — direction, sidebar widths, grid columns
  */
 
-import { testWithSetup, testWithSetupSkip, describe, type TestCase } from '../../test-runner'
+import { testWithSetup, describe, type TestCase } from '../../test-runner'
 import type { TestAPI } from '../../types'
 import { getStyle, setContainerSize } from './_helpers'
 
@@ -85,11 +85,11 @@ export const responsiveLayoutTests: TestCase[] = describe('Responsive Layout', [
     }
   ),
 
-  // SKIP: Container-Query-Architektur (siehe basic.test.ts). Children
-  // mit `compact:`/`regular:`/`wide:` reagieren erst dann, wenn sie in
-  // einem Outer-Container mit `container-type` stehen — nicht der
-  // gleiche Container, der die States deklariert. Lane-Doc nötig.
-  testWithSetupSkip(
+  // Un-skipped 2026-05-13 — Container-Queries Lane A landed. Children
+  // get their own outer wrapper now; their size-states resolve against
+  // their wrapper (the wrapper is the container ancestor for the inner
+  // element). See docs/refactoring/container-queries.md.
+  testWithSetup(
     'Grid columns adapt to container size',
     `Frame w 800, h 300, wrap, gap 8, pad 16, bg #1a1a1a
   Frame bg #333, rad 4, h 80

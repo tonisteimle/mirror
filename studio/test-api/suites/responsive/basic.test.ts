@@ -70,12 +70,12 @@ export const basicResponsiveTests: TestCase[] = describe('Basic Responsive State
     }
   ),
 
-  // SKIP: Container-Query-Architektur. Test schreibt size-states auf
-  // demselben Element, das `container-type: inline-size` deklariert —
-  // CSS @container matcht aber gegen den *Container-Ancestor*, nicht
-  // gegen die eigene Breite. Siehe docs/findings.md „Container-Queries
-  // auf eigenem Element". Workaround: Size-States auf Inner-Child.
-  testWithSetupSkip(
+  // Un-skipped 2026-05-13 — Container-Queries Lane A landed: DOM emits
+  // a synthetic outer-wrapper with container-type, the @container query
+  // matches against the wrapper (not the frame itself). Frame now
+  // reacts to its own width as designers expect.
+  // See docs/refactoring/container-queries.md.
+  testWithSetup(
     'states change when container is resized',
     `Frame w full, h 200, bg #333, pad 16
   compact:
