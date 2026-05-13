@@ -56,6 +56,20 @@ Frame w 200, h 200, bg #27272a, pad 16`,
   /** Frame with a Text child — for nested inline-edit and selection tests. */
   frameWithText: `Frame w 240, h 80, bg #1a1a1a, pad 16
   Text "Hello", col white`,
+
+  /**
+   * Two siblings + an inner empty Frame inside one of them — for
+   * drag-nesting tests. Drag the orange sibling INTO the empty inner
+   * container to verify a one-level nest works end-to-end with
+   * Trusted Events.
+   *
+   *   outerDark (#1a1a1a)
+   *     innerLight (#27272a)  ← drop target
+   *     orangeSibling (#f59e0b)  ← drag source
+   */
+  twoSiblingsWithInnerTarget: `Frame w 320, h 200, bg #1a1a1a, pad 16, gap 12
+  Frame w 120, h 80, bg #27272a
+  Frame w 60, h 60, bg #f59e0b`,
 } as const
 
 export type FixtureName = keyof typeof FIXTURES
