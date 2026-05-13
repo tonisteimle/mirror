@@ -253,10 +253,40 @@ function emitSlotLabelElement(ctx: NodeEmitterContext, varName: string, slotLabe
 // ============================================
 
 /**
- * Emit base styles (excluding state and size-state styles)
+ * CSS properties that move from the frame to the synthetic outer-wrapper
+ * when both `needsContainer` and `position: absolute|fixed` are present.
+ * The wrapper takes over offset-parent semantics so the frame can use
+ * `position: static` and still appear at the intended viewport spot.
+ * Lane A in `docs/refactoring/container-queries.md`.
+ */
+const POSITION_FORWARDING_PROPS = new Set(['position', 'left', 'top', 'right', 'bottom'])
+
+function nodeHasPositionalLayout(node: IRNode): boolean {
+  if (!node.needsContainer) return false
+  for (const s of node.styles) {
+    if (s.state || s.sizeState) continue
+    if (s.property === 'position' && (s.value === 'absolute' || s.value === 'fixed')) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * Emit base styles (excluding state and size-state styles).
+ *
+ * When the node has both a size-state container AND `position: absolute|
+ * fixed`, the position-related properties are forwarded to the wrapper
+ * (see emitContainerWrapper) and skipped on the frame to avoid
+ * double-positioning.
  */
 export function emitBaseStyles(ctx: NodeEmitterContext, node: IRNode, varName: string): IRStyle[] {
-  const baseStyles = node.styles.filter(s => !s.state && !s.sizeState)
+  const forwardingActive = nodeHasPositionalLayout(node)
+  const baseStyles = node.styles.filter(s => {
+    if (s.state || s.sizeState) return false
+    if (forwardingActive && POSITION_FORWARDING_PROPS.has(s.property)) return false
+    return true
+  })
   if (baseStyles.length === 0) return baseStyles
 
   // Separate static and conditional styles
@@ -348,6 +378,27 @@ export function emitContainerWrapper(
   ctx.emit(`const ${wrapperVar} = document.createElement('div')`)
   ctx.emit(`${wrapperVar}.dataset.mirrorWrapper = '${node.id}'`)
   ctx.emit(`${wrapperVar}.style.containerType = 'inline-size'`)
+
+  // Position-Forwarding (Lane A step 2): when the frame has
+  // `position: absolute|fixed`, forward the position-related styles
+  // to the wrapper. Otherwise the wrapper would become the new
+  // offset-parent and the frame's position would be relative to the
+  // wrapper (≈ no offset) instead of the original ancestor.
+  if (nodeHasPositionalLayout(node)) {
+    for (const s of node.styles) {
+      if (s.state || s.sizeState) continue
+      if (!POSITION_FORWARDING_PROPS.has(s.property)) continue
+      // Resolve values that need runtime eval (e.g. token refs) via the
+      // context's resolver; static values get emitted directly.
+      const resolved = ctx.resolveStyleValue(s.value)
+      if (resolved.needsEval) {
+        ctx.emit(`${wrapperVar}.style['${s.property}'] = ${resolved.code}`)
+      } else {
+        ctx.emit(`${wrapperVar}.style['${s.property}'] = '${String(s.value)}'`)
+      }
+    }
+  }
+
   return wrapperVar
 }
 

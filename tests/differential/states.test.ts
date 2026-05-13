@@ -227,12 +227,27 @@ describe('Size-states — Container-Queries Lane A contract', () => {
     expect(dom).not.toContain("containerType = 'inline-size'")
   })
 
-  it.skip('Frame with position:absolute forwards positioning to wrapper', () => {
+  it('Frame with position:absolute forwards positioning to wrapper', () => {
     const dom = generateDOM(parse(`Frame abs, x 10, y 20\n  compact:\n    bg red`))
-    // Lane A step 2: wrapper inherits position-properties so the frame
-    // doesn't lose its offset-parent semantics.
-    expect(dom).toMatch(/data-mirror-wrapper/)
-    // The wrapper, not the frame, should carry the absolute positioning.
-    expect(dom).toMatch(/data-mirror-wrapper[^>]*position[^>]*absolute/i)
+    // Lane A step 2: wrapper inherits position properties so the frame
+    // doesn't lose its offset-parent semantics — see
+    // `emitContainerWrapper` in `compiler/backends/dom/node-emitter.ts`.
+    expect(dom).toMatch(/dataset\.mirrorWrapper/)
+    // The wrapper (var name ends with `_w`) carries the absolute position
+    // and the offsets. The frame itself no longer emits those.
+    expect(dom).toMatch(/\w+_w\.style\['position'\]\s*=\s*'absolute'/)
+    expect(dom).toMatch(/\w+_w\.style\['left'\]\s*=\s*'10px'/)
+    expect(dom).toMatch(/\w+_w\.style\['top'\]\s*=\s*'20px'/)
+    // The frame's own style record (before _w) must not carry position
+    // or left/top — they were forwarded to the wrapper.
+    const frameAssignBlock = dom.match(/Object\.assign\((\w+)\.style, \{[\s\S]*?\}\)/g)
+    if (frameAssignBlock) {
+      for (const block of frameAssignBlock) {
+        if (block.includes('_w.style')) continue
+        expect(block).not.toMatch(/'position':\s*'absolute'/)
+        expect(block).not.toMatch(/'left':\s*'10px'/)
+        expect(block).not.toMatch(/'top':\s*'20px'/)
+      }
+    }
   })
 })
