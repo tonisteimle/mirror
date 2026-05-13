@@ -1,16 +1,20 @@
 /**
  * Pure Mirror UI components (Checkbox/Switch/Slider) Stacked.
  *
- * NOTE: All skipped — Pure Mirror components don't propagate x/y from the
- * PureComponentHandler when dropped into stacked containers (known limitation).
+ * Previously skipped — claimed Pure Mirror components didn't propagate x/y
+ * from PureComponentHandler in stacked containers. PureComponentHandler
+ * gained `placement === 'absolute'` x/y emission in `1325549f` (2026-04-22);
+ * skip notice was stale. Pinned by jsdom test
+ * `tests/studio/drop-handlers.test.ts` "absolute placement: appends rounded
+ * x/y to instance properties" (passes). Un-skipped 2026-05-13.
  * (Historical name "zag-stacked" preserved for compat.)
  */
 
-import { testWithSetupSkip, describe } from '../../test-runner'
+import { testWithSetup, describe } from '../../test-runner'
 import type { TestCase, TestAPI } from '../../types'
 
 export const zagStackedTests: TestCase[] = describe('Zag Components Stacked', [
-  testWithSetupSkip(
+  testWithSetup(
     'Drop Checkbox at position',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
     async (api: TestAPI) => {
@@ -23,7 +27,7 @@ export const zagStackedTests: TestCase[] = describe('Zag Components Stacked', [
     }
   ),
 
-  testWithSetupSkip(
+  testWithSetup(
     'Drop Switch at position',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
     async (api: TestAPI) => {
@@ -36,7 +40,7 @@ export const zagStackedTests: TestCase[] = describe('Zag Components Stacked', [
     }
   ),
 
-  testWithSetupSkip(
+  testWithSetup(
     'Drop Slider at position',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
     async (api: TestAPI) => {
@@ -49,7 +53,7 @@ export const zagStackedTests: TestCase[] = describe('Zag Components Stacked', [
     }
   ),
 
-  testWithSetupSkip(
+  testWithSetup(
     'Settings panel: multiple Switches',
     'Frame stacked, w 400, h 300, bg #1a1a1a',
     async (api: TestAPI) => {
@@ -71,7 +75,7 @@ export const zagStackedTests: TestCase[] = describe('Zag Components Stacked', [
     }
   ),
 
-  testWithSetupSkip(
+  testWithSetup(
     'Form: Checkbox + Slider + Button',
     'Frame stacked, w 400, h 350, bg #1a1a1a',
     async (api: TestAPI) => {

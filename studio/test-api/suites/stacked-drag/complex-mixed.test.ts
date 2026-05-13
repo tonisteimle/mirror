@@ -2,7 +2,7 @@
  * Complex Mixed Stacked (4+ components) — dashboards, cards, contact forms
  */
 
-import { testWithSetup, testWithSetupSkip, describe } from '../../test-runner'
+import { testWithSetup, describe } from '../../test-runner'
 import type { TestCase, TestAPI } from '../../types'
 
 export const complexStackedMixedTests: TestCase[] = describe(
@@ -51,8 +51,9 @@ export const complexStackedMixedTests: TestCase[] = describe(
       }
     ),
 
-    // SKIPPED: Pure Mirror components don't get x/y in stacked containers
-    testWithSetupSkip(
+    // Un-skipped 2026-05-13 — PureComponentHandler x/y emission added in
+    // 1325549f (2026-04-22); pinned by tests/studio/drop-handlers.test.ts.
+    testWithSetup(
       'Settings: Text + Switch + Checkbox + Slider + Button',
       'Frame stacked, w 400, h 400, bg #1a1a1a',
       async (api: TestAPI) => {

@@ -400,19 +400,17 @@ gelistet — gehört zu Befund #4 oben.
 
 #### (b) Pure-Mirror-Component x/y-Propagation in Stacked Containers
 
-- `studio/test-api/suites/stacked-drag/zag-stacked.test.ts:13,26,39,52,74`
-  (5 markers, Checkbox/Switch/Slider in stacked frames), plus
-  `complex-mixed.test.ts:55`.
-  **Was:** Pure Mirror Components (Checkbox, Switch, Slider) — die seit
-  dem Zag→PureMirror-Refactor (`docs/archive/concepts/pure-mirror-components.md`)
-  als DSL-Templates expandiert werden — propagieren bei Drop in
-  `stacked`-Containers KEINE `x N, y N`-Position. Der `PureComponentHandler`
-  emittiert die Component-Defaults ohne Position-Properties.
-  Bug-Klasse: Drop-Handler-Pfad für Pure-Mirror unterscheidet sich vom
-  Zag-/Primitive-Pfad — letzterer setzt x/y auf stacked-targets.
-  **Status:** offen — echter Bug, fix-Pfad: PureComponentHandler sollte
-  bei stacked-target die Drop-Position aufnehmen wie der allgemeine
-  drag-controller-drop-Pfad.
+- `studio/test-api/suites/stacked-drag/zag-stacked.test.ts` (5 tests),
+  `complex-mixed.test.ts:55` (1 test).
+  **Was:** Skip-Notiz claimt der `PureComponentHandler` emittiere bei
+  Drop in `stacked`-Containers keine `x N, y N`-Position.
+  **Status:** erledigt 2026-05-13 — Audit zeigt: PureComponentHandler
+  hat seit `1325549f` (2026-04-22) x/y-Emission im
+  `placement === 'absolute' && absolutePosition`-Branch (`pure-component.ts:106-109,140-144`).
+  Skip-Notiz war stale (Test wurde nach dem Fix nie un-skipped). Pinned
+  durch jsdom-Test in `tests/studio/drop-handlers.test.ts` „absolute
+  placement: appends rounded x/y to instance properties" (81/81 grün).
+  6 Tests un-skipped. Verifikation erfolgt im nächsten CDP-Browser-Lauf.
 
 #### (c) Padding/Margin Zero-State Zones
 
@@ -1196,21 +1194,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                                            **Status-Update:** erledigt — alle drei Slices landen:
-                                                            Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                                            inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                                            Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                                            (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                                            `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                                            (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                                            — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                                            hat per `git add .` die uncommittete compiler-Side mit
-                                                            aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                                            `hasZagChildren` (children-Shape), `isZagComponentName`
-                                                            (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                                            IRZagNode-Discriminator-Property `isZagComponent: true`
-                                                            bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                                            81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                                                **Status-Update:** erledigt — alle drei Slices landen:
+                                                                Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                                                inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                                                Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                                                (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                                                `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                                                (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                                                — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                                                hat per `git add .` die uncommittete compiler-Side mit
+                                                                aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                                                `hasZagChildren` (children-Shape), `isZagComponentName`
+                                                                (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                                                IRZagNode-Discriminator-Property `isZagComponent: true`
+                                                                bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                                                81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
