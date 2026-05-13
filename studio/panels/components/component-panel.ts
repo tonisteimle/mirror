@@ -16,6 +16,8 @@ import type {
   ComponentChild,
 } from './types'
 import { getComponentIcon } from '../../icons'
+import { loadIcon } from '../../../compiler/runtime/icons'
+import type { MirrorElement } from '../../../compiler/runtime/types'
 import { LAYOUT_SECTION, COMPONENTS_SECTION } from './layout-presets'
 import { setCurrentDragData, clearCurrentDragData } from '../../preview/drag-preview'
 import { isPrimitive } from '../../../compiler/schema'
@@ -30,7 +32,20 @@ interface ParsedComponent {
   basePrimitive?: string
   hasChildren: boolean
   line: number
+  /** Lucide icon name from `@icon <name>` directive */
+  icon?: string
+  /** Section label from `@group <name>` directive */
+  group?: string
+  /** `@hidden` flag — caller should drop this component from the palette */
+  hidden?: boolean
 }
+
+/**
+ * Match a single directive token: `@<name> [<value>]`. Value is greedy
+ * up to (but not including) the next `,` or end-of-string, so the inline
+ * comma form `@icon home, @group Forms` splits cleanly into two tokens.
+ */
+const DIRECTIVE_SCAN = /@(icon|group|hidden)(?:\s+([^,\n]+?))?(?=\s*,|\s*$)/g
 
 /**
  * Get indentation level of a line (number of leading spaces)
@@ -80,12 +95,28 @@ function parseComFile(content: string): ParsedComponent[] {
   const components: ParsedComponent[] = []
   const lines = content.split('\n')
 
+  let pending: { icon?: string; group?: string; hidden?: boolean } = {}
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     const trimmed = line.trim()
 
-    // Skip empty lines and comments
+    // Skip empty lines and comments — pending directives survive.
     if (!trimmed || trimmed.startsWith('//')) continue
+
+    // Directive line — buffer `@icon` / `@group` / `@hidden` for the
+    // next component. Both multi-line and inline-comma forms supported.
+    if (trimmed.startsWith('@')) {
+      DIRECTIVE_SCAN.lastIndex = 0
+      let m: RegExpExecArray | null
+      while ((m = DIRECTIVE_SCAN.exec(trimmed)) !== null) {
+        const [, name, value] = m
+        if (name === 'hidden') pending.hidden = true
+        else if (name === 'icon' && value) pending.icon = value.trim()
+        else if (name === 'group' && value) pending.group = value.trim()
+      }
+      continue
+    }
 
     // Component definition: Name: or Name as Base:
     const match = trimmed.match(/^([A-Z][a-zA-Z0-9_-]*)(?:\s+as\s+([a-zA-Z][a-zA-Z0-9_-]*))?:/)
@@ -93,14 +124,18 @@ function parseComFile(content: string): ParsedComponent[] {
       const name = match[1]
       const basePrimitive = match[2]
 
-      // Skip tokens (names containing .)
-      if (name.includes('.')) continue
-
-      // Skip built-in primitives to avoid duplicates in the panel
-      if (isPrimitive(name)) continue
-
-      // Skip built-in presets to avoid duplicates
-      if (PRESET_NAMES.has(name)) continue
+      if (name.includes('.')) {
+        pending = {}
+        continue
+      }
+      if (isPrimitive(name)) {
+        pending = {}
+        continue
+      }
+      if (PRESET_NAMES.has(name)) {
+        pending = {}
+        continue
+      }
 
       const hasChildren = hasChildContent(lines, i)
 
@@ -109,8 +144,16 @@ function parseComFile(content: string): ParsedComponent[] {
         basePrimitive,
         hasChildren,
         line: i + 1,
+        icon: pending.icon,
+        group: pending.group,
+        hidden: pending.hidden,
       })
+      pending = {}
+      continue
     }
+
+    // Non-directive, non-component line — drop stale buffer.
+    pending = {}
   }
 
   return components
@@ -173,15 +216,33 @@ export class ComponentPanel {
       })
     }
 
-    // 3. My Components section (user-defined from .com files)
+    // 3. User-defined components from `.com` / `.mir` files
+    //
+    // Grouping:
+    //   - `@group <name>` directive (per-component override) → group name
+    //   - no @group → bundled under default "My Components" section
+    //
+    // Hiding:
+    //   - `@hidden` directive drops the component entirely
+    //
+    // Icons:
+    //   - `@icon <lucide-name>` overrides the generic `custom` cube
+    //     (async-loaded via runtime/icons.loadIcon in renderItem)
     if (this.config.getComFiles) {
       const comFiles = this.config.getComFiles()
-      const userItems: ComponentItem[] = []
+      const userSections = new Map<string, ComponentItem[]>()
+
+      const addItem = (groupName: string, item: ComponentItem): void => {
+        const bucket = userSections.get(groupName) ?? []
+        bucket.push(item)
+        userSections.set(groupName, bucket)
+      }
 
       for (const file of comFiles) {
         const components = parseComFile(file.content)
         for (const comp of components) {
-          // Build description based on component type
+          if (comp.hidden) continue
+
           let description: string
           if (comp.basePrimitive) {
             description = `Extends ${comp.basePrimitive}`
@@ -191,24 +252,24 @@ export class ComponentPanel {
             description = 'Style preset'
           }
 
-          userItems.push({
+          const item: ComponentItem = {
             id: `user-${comp.name.toLowerCase()}`,
             name: comp.name,
-            category: 'User',
+            category: comp.group ?? 'User',
             template: comp.name,
             icon: 'custom',
+            customIconName: comp.icon,
             isUserDefined: true,
             description,
-          })
+          }
+
+          addItem(comp.group ?? 'My Components', item)
         }
       }
 
-      if (userItems.length > 0) {
-        this.sections.push({
-          name: 'My Components',
-          items: userItems,
-          isExpanded: true,
-        })
+      for (const [name, items] of userSections) {
+        if (items.length === 0) continue
+        this.sections.push({ name, items, isExpanded: true })
       }
     }
   }
@@ -346,10 +407,15 @@ export class ComponentPanel {
     itemEl.dataset.id = item.id
     itemEl.draggable = true
 
-    // Icon (innerHTML is safe here - icons are from trusted source)
+    // Icon — `@icon <lucide-name>` wins; fallback to built-in COMPONENT_ICONS.
+    // Seed with the generic icon so the row doesn't flicker empty while
+    // Lucide fetches async from the CDN.
     const iconEl = document.createElement('span')
     iconEl.className = 'component-panel-item-icon'
     iconEl.innerHTML = getComponentIcon(item.icon)
+    if (item.customIconName) {
+      void loadIcon(iconEl as unknown as MirrorElement, item.customIconName)
+    }
     itemEl.appendChild(iconEl)
 
     // Name
