@@ -240,17 +240,22 @@ service.ts`-Cluster, Eintrag #5). Letzte feature-relevante
   einen synthetischen Inner-Wrapper-Child emittieren. Beides ist
   DOM-strukturell invasiv (Frame-Identität ändert sich, andere CSS
   inkl. flex/grid-Layout muss sich nicht miterklären).
-  **Status:** offen — Lane-Doc steht (`docs/refactoring/container-queries.md`,
-  2026-05-11), wartet auf Owner-Sign-off zum Code-Fix. Empfehlung:
-  Pfad A (Outer-Wrapper, on-demand via `needsContainer`-Flag) — Frame
-  behält Identität, Style-Aufteilung trivial, Roll-out inkrementell
-  möglich. Sekundär-Befund in der Lane-Doc dokumentiert: React- und
-  Framework-Backend droppen `sizeState`-Styles und `needsContainer`
-  komplett silent — Differential-Test-Lücke, parallel zu fixen.
-  **Notiz:** Browser-Tests in `responsive/{basic,layout}.test.ts:73,88`
-  bleiben `testWithSetupSkip` mit aktualisierten Kommentaren bis Fix
-  da ist. `Frame > Inner` mit Size-States auf `Inner` funktioniert
-  _heute_ schon (Inner reagiert auf Frame-Container) — Workaround.
+  **Status:** teilweise erledigt — DOM-Backend in `9ebafdf2` (Lane A,
+  Owner-OK „ja gerne" während des Hunts erteilt). `emitContainerType`
+  in `node-emitter.ts` zu `emitContainerWrapper` umgebaut; Wrapper-
+  Emission on-demand via `needsContainer`. Append-Site in
+  `compiler/backends/dom.ts:emitNode` rewired. 3 von 6 Lane-A-Contract-
+  Tests un-skipped (DOM Outer-Wrapper, Selector-Resolution, on-demand).
+  15005/15005 Tests grün. Verbleibend in eigenen Slices:
+  - React-Backend (silent-drop `sizeState`)
+  - Framework-Backend (silent-drop)
+  - Position-Forwarding (Frame mit `abs|fixed` → Wrapper übernimmt)
+  - Browser-Tests in `responsive/{basic,layout}.test.ts:73,88`
+    un-skippen nach React/Framework-Slices.
+    **Notiz:** Browser-Tests in `responsive/{basic,layout}.test.ts:73,88`
+    bleiben `testWithSetupSkip` mit aktualisierten Kommentaren bis Fix
+    da ist. `Frame > Inner` mit Size-States auf `Inner` funktioniert
+    _heute_ schon (Inner reagiert auf Frame-Container) — Workaround.
 
 - **Wo:** `compiler/ir/ops/instance-ops.ts`, `compiler/ir/ops/properties-ops.ts`,
   `compiler/backends/react.ts`
@@ -1194,21 +1199,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                                                **Status-Update:** erledigt — alle drei Slices landen:
-                                                                Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                                                inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                                                Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                                                (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                                                `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                                                (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                                                — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                                                hat per `git add .` die uncommittete compiler-Side mit
-                                                                aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                                                `hasZagChildren` (children-Shape), `isZagComponentName`
-                                                                (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                                                IRZagNode-Discriminator-Property `isZagComponent: true`
-                                                                bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                                                81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                                                    **Status-Update:** erledigt — alle drei Slices landen:
+                                                                    Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                                                    inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                                                    Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                                                    (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                                                    `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                                                    (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                                                    — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                                                    hat per `git add .` die uncommittete compiler-Side mit
+                                                                    aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                                                    `hasZagChildren` (children-Shape), `isZagComponentName`
+                                                                    (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                                                    IRZagNode-Discriminator-Property `isZagComponent: true`
+                                                                    bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                                                    81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
