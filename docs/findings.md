@@ -138,6 +138,319 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 > Notiz + Commit-Hash). Vor dem nächsten Hunt-Rollup migrieren —
 > bis dahin: erst auf die obigen 7 Einträge scannen.
 
+- **Wo:** `compiler/backends/dom/style-emitter.ts:emitNodeSizeStateCSS`,
+  `compiler/backends/dom/node-emitter.ts:emitContainerType`,
+  `studio/test-api/suites/responsive/{basic,layout}.test.ts`
+  **Was:** Architektur-Befund aus dem Runtime-Bug-Bucket. Mirror lässt
+  Designer schreiben:
+
+  ```mirror
+  Frame w full
+    compact: bg #ef4444
+    wide:    bg #10b981
+  ```
+
+  und compiled das zu (a) `container-type: inline-size` AUF dem Frame
+  selbst plus (b) `@container (max-width: 400px) { [data-mirror-id^=
+"node-1"] { background: #ef4444 !important } }` — wo das
+  Selector-Target _derselbe_ Frame ist. Per CSS-Spec matcht
+  `@container` aber gegen die _Container-Ancestor_-Größe, nicht gegen
+  die eigene des deklarierenden Elements. Folge: Frame reagiert nicht
+  auf seine eigene Breite. Probe `tools/probes/container-queries.ts`
+  zeigt das Emit-Pattern; CDP-Tests bleiben skipped.
+  Zwei Fix-Pfade: (A) synthetischen Outer-Wrapper als Container
+  emittieren, Size-States aufs Frame anwenden; (B) Size-States auf
+  einen synthetischen Inner-Wrapper-Child emittieren. Beides ist
+  DOM-strukturell invasiv (Frame-Identität ändert sich, andere CSS
+  inkl. flex/grid-Layout muss sich nicht miterklären).
+  **Status:** teilweise erledigt — DOM-Backend in `9ebafdf2` (Lane A,
+  Owner-OK „ja gerne" während des Hunts erteilt). `emitContainerType`
+  in `node-emitter.ts` zu `emitContainerWrapper` umgebaut; Wrapper-
+  Emission on-demand via `needsContainer`. Append-Site in
+  `compiler/backends/dom.ts:emitNode` rewired. 3 von 6 Lane-A-Contract-
+  Tests un-skipped (DOM Outer-Wrapper, Selector-Resolution, on-demand).
+  15005/15005 Tests grün. Verbleibend in eigenen Slices:
+  - React-Backend (silent-drop `sizeState`)
+  - Framework-Backend (silent-drop)
+  - Position-Forwarding (Frame mit `abs|fixed` → Wrapper übernimmt)
+  - Browser-Tests in `responsive/{basic,layout}.test.ts:73,88`
+    un-skippen nach React/Framework-Slices.
+    **Notiz:** Browser-Tests in `responsive/{basic,layout}.test.ts:73,88`
+    bleiben `testWithSetupSkip` mit aktualisierten Kommentaren bis Fix
+    da ist. `Frame > Inner` mit Size-States auf `Inner` funktioniert
+    _heute_ schon (Inner reagiert auf Frame-Container) — Workaround.
+
+- **Wo:** Tutorial-Demos + Test-Runner — **OWNER-EXKLUSIV (toni)**
+  **Was:** Bereiche `studio/test-api/suites/demos/`,
+  `docs/tutorial/videos/*.webm`, `tools/test-runner/recording.ts`,
+  `tools/test-runner/os-mouse*.ts` und alles rundherum (Demo-
+  Pipeline, --os-mouse-Bridge, Tutorial-Recording-Workflow) werden
+  vom Owner direkt gepflegt — **keine Claude-Sessions hier
+  auseinandersetzen, keine Findings aufmachen, keine PRs vorbereiten,
+  keine Recordings anstoßen.** Stand 2026-05-10: 6 von 8 Videos
+  committed (`d3115504` tut-01, `7790b2b8` tut-02, `99f47eec` tut-03,
+  `a29aaa00` tut-04, `554b51c8` tut-05, `1b416c30` tut-06). tut-07
+  - tut-08 macht der Owner.
+    **Status:** offen — Owner-Lane, nicht Claude-Lane
+    **Notiz:** Wenn ein Bug in `studio/test-api/` (Test-Framework
+    selbst, nicht `suites/demos/`) durch andere Hunt-Arbeit auffällt,
+    Befund hier eintragen UND warten — nicht selbst fixen, weil der
+    Owner gerade aktiv am Recording-Workflow ist und parallele Edits
+    am Test-API-Stack die Demo-Aufnahmen brechen können.
+
+### Tutorial-Blocking Gaps (2026-05-10, per `docs/concepts/studio-tutorial.md`)
+
+Hunting durch das Tutorial-Konzept `docs/concepts/studio-tutorial.md`
+ergibt eine kleine Anzahl konkreter Lücken, die produktion-blocking sind
+für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
+
+> **Status der Sektion (2026-05-10 ~19:05):** Drei der vier ursprünglichen
+> Einträge sind stale geworden, weil `8e81387f` das gesamte demo-runner +
+> step-runner-Subsystem gerippt hat (`tools/test-runner/demo/`,
+> `studio/test-api/step-runner/`). Tutorial-Vollausbau braucht nun einen
+> neuen Architektur-Entscheid (eigene Lane-Doc), nicht mehr punktuelle
+> Inkremente in einem nicht mehr existierenden System. Siehe neuer
+> Eintrag „Tutorial-Loop-Infrastruktur" weiter unten.
+
+- **Wo:** Tutorial-Loop-Infrastruktur insgesamt
+  **Was:** Nach dem Demo-Runner-Rip-Out (`8e81387f`, 2026-05-10) gibt
+  es kein laufendes System mehr für die Tutorial-Loop-Videos
+  (`docs/concepts/studio-tutorial.md` Kapitel 19–24). Vor weiterem
+  Tutorial-Build muss eine Architektur-Entscheidung fallen: (a)
+  CDP-basierten Test-Runner um Cursor/Pacing/Recording erweitern
+  (sauber, aber Aufwand), (b) eigenständiges Tutorial-Recording-Tool
+  bauen (separate Toolchain), (c) Tutorial-Konzept einstellen oder
+  vereinfachen (nur statische Screenshots/Videos via externer Tools).
+  **Status:** offen — Owner-Entscheidung
+  **Notiz:** Wenn (a) gewählt wird, eigene Lane-Doc unter
+  `docs/refactoring/` bevor Code geschrieben wird (Größe + Cross-
+  System-Touchpoints). Findings-Eintrag-Größe gesprengt.
+
+### Studio Struktur — God-Objects & Duplikation (Hunt 2026-05-10)
+
+- **Wo:** `studio/visual/{resize,padding,margin,gap}-manager.ts`
+  **Was:** 3931 LOC über vier nahezu identische Manager-Klassen (Handles,
+  Drag-State, Observer, RAF-Throttling, Snap-Logik) — massive Duplikation
+  im größten Subsystem.
+  **Status:** Steps 1 + 2 erledigt — (1) RAF-Mouse-Throttle in
+  `studio/visual/raf-mouse-throttle.ts` als `RafMouseThrottle`-Klasse
+  extrahiert (in allen 4 Managern verwendet); (2) Resize-/Mutation-
+  Observer + Scroll- + Window-Resize-Listener in
+  `studio/visual/observer-pack.ts` als `ObserverPack`-Klasse extrahiert
+  (Padding/Margin/Gap; ResizeManager hat keine Observer). 3931 → 3766
+  LOC (–165 LOC, –4.2 %). 565/565 visual tests pass.
+  **Notiz:** Verbleibender Schritt (3) `SpacingHandleManagerBase` für
+  Padding/Margin/Gap mit gleicher Modifier-Logik / Snap / Overlay-
+  Pattern. ResizeManager bleibt eigenständig (8 Handles, Multi-
+  Selection, Grid, Sizing-Mode, double-click).
+  Tests: nur ResizeManager hat Unit-Tests
+  (`tests/studio/visual-resize-manager.test.ts`,
+  `visual/resize-manager-multi.test.ts`); Padding/Margin/Gap nur durch
+  Browser-Tests gedeckt — Step 3 braucht sorgfältige headed-
+  Verification.
+
+- **Wo:** `studio/panels/property/view.ts` (1037 LOC → 776 LOC)
+  **Was:** PANEL_CONFIG mit 100+ Primitive-Typen + 12 Section-Creators in
+  einer Datei — God-Objekt mit dichtem Repeat-Pattern.
+  **Status:** teilweise erledigt — `PANEL_CONFIG`,
+  `DEFAULT_PANEL_CONFIG`, `PanelConfig`-Interface und `getPanelConfig()`
+  in eigenes Modul `studio/panels/property/panel-config.ts`
+  ausgelagert (261 LOC). View ist 25 % kleiner und Config testbar
+  ohne View-Instanz. 679/679 property-panel tests pass.
+  **Notiz:** Bleibt: 12 Section-Creator-Aufrufe + `renderSections`-Switch
+  in `view.ts` — könnte über Section-Registry weiter geschrumpft werden,
+  aber Code ist bereits lesbar.
+
+- **Wo:** `studio/app.ts` (heute 2456 LOC, vor Refactor 2557)
+  **Was:** Bootstrap-Sprawl: 30+ globale Konstanten, 5 Extensions, 8
+  Manager-Inits inline. Sieben Phasen nach `studio/init/` extrahiert:
+  `init-notifications`, `init-sync`, `init-grid-overlay`,
+  `init-draw-manager`, `init-inline-edit`, `file-tabs`,
+  `init-editor-dispatch` (`8b92ae7a`). `compile()`-Decomposition
+  läuft als pure-helper-Slices: `wrap-layout` (`e79184f5`),
+  `augment-local-components` (`514807d6`), `execute-mirror-js`
+  (`87237522`), `prelude-definitions` (`544234e3`) — jede mit
+  eigenen Unit-Tests. Verbleibend in `compile()`: testMode-/
+  preview-Redirect-Branch (resolvedCode-Build), State-Update-Block,
+  componentPrimitives-Map-Aufbau, Render-Pipe (uninstanced-augment
+  - ui-execute + rootEl-extract); daneben `updateStudio()`,
+    `handleStudioCodeChange()`, plus File-IO und Ext-Wiring.
+    **Status:** offen — ongoing decomposition. Drei Slices 2026-05-12
+    erledigt:
+    - **Slice 5** `componentPrimitives-Map-Aufbau` (`22b340a1` —
+      Commit-Race, Message irreführend) →
+      `studio/compile/component-primitives.ts`, 7 Tests. Pin: Parser-
+      Default `primitive='Frame'` für Definitions ohne `as`; Fallback
+      `name.toLowerCase()` greift nur für manuell konstruierte
+      ComponentDefinitions mit `primitive: null`.
+    - **Slice 6** `preview-redirect` (`7db368a7`) →
+      `studio/compile/preview-redirect.ts`, 7 Tests. Pin: 5-Wege-
+      Entscheidung (Layout-Editor / no-previewFile / self-pin /
+      non-layout-previewFile / Layout-previewFile).
+    - **Slice 7** `testMode/Layout source-resolution` (`49fbf07e`) →
+      `studio/compile/resolve-compile-source.ts`, 8 Tests. Pin: 4-Wege-
+      Branch (testMode×fileType) mit Partial-Result für Branch 4
+      Passthrough (currentPreludeOffset/isWrappedWithApp bleiben stale).
+      Drops `prependPrelude`/`wrapLayoutForCompile` aus app.ts-Imports.
+    - **Slice 8** `render-pipe augment-for-preview` (`3d22bfd8`) →
+      `studio/compile/augment-pipeline.ts`, 4 Tests. Pin: 2-Wege (no-
+      augment Pass-through vs. augment-branch mit Re-parse + Re-DOM +
+      Re-IR). Helper-API droppt `withSourceMap`-Parameter — augmentForPreview
+      braucht immer den SourceMap, Caller wired das einmal an der
+      Injection-Site. Drops `findUninstancedComponents` +
+      `appendImplicitInstances` aus app.ts-Imports (jetzt nur intern).
+    - **State-Update-Block** (`5489a805`, Parallel-Session) →
+      `studio/compile/compile-state-update.ts`. Auch erledigt.
+    - **rootEl-extract** (Parallel-Session) →
+      `studio/compile/extract-root-element.ts`. Auch erledigt.
+      **Notiz:** Strategie: pure-helper-Slices mit Unit-Tests, Sub-Slice
+      pro Commit, kein Big-Bang. Reduziert Closure-Pressure inkrementell.
+      Verbleibend in `compile()`: YAML-Injection, executeMirrorJS-Wiring,
+      DOM-Append + Refresh-Cascade, Validator-Diagnostics, perf-Logger.
+      Alle haben Side-Effects gegen DOM/Editor/State und sind keine
+      pure-helper-Kandidaten — Decomposition-Ziel hier ist erreicht.
+
+### Compiler Backends (Hunt 2026-05-10)
+
+- **Wo:** `compiler/backends/dom/ops/resolve-templates.ts:132-220`
+  `resolveConditionalExpression`
+  **Was:** Hand-rolled String-Position-Parser mit `inConditional`-Flag,
+  Depth-Counter und Marker-Lookahead (`__conditional:`, `__loopVar:`).
+  Funktioniert, aber jeder neue Marker oder Edge-Case (String-Literal mit
+  `:`, Token-Reference im else-Zweig) zwingt einen weiteren Sonderfall in
+  die Loop. Smell, kein gemeldeter Bug.
+  **Status:** offen
+  **Notiz:** Re-Open bei nächster Marker-Erweiterung oder
+  Conditional-Bug.
+
+### Bug-Patterns & Type-Escapes (Hunt 2026-05-10)
+
+- **Wo:** `studio/storage/project-actions.ts` (`tauriNewProject` &c)
+  **Was:** Die vier Tauri-Helfer lasen `window.__TAURI_BRIDGE__`, das
+  produktiv nirgends gesetzt wurde — nur Tests injizierten. Runtime hat
+  `window.TauriBridge` (anderer Name, andere Form, siehe
+  `studio/tauri-bridge.ts:412`). API-Shapes passen auch nicht zusammen
+  (`newProject(type)` vs. `TauriProject.createProject(name, path)`).
+  **Status:** teilweise erledigt — `__TAURI_BRIDGE__`-Indirektion komplett
+  raus: vier Stubs sind jetzt explizit als „not implemented for Tauri
+  desktop yet" markiert (loggen `log.warn`, no-op). `loadDemo` nutzt den
+  bisher schon vorhandenen `getStorage().writeFile`-Pfad als Default.
+  `TauriBridgeShim` aus `window-globals.d.ts` raus, sechs Tests, die
+  den toten Bridge-Path stubsten, durch vier Tests ersetzt, die das
+  echte Stub-Verhalten pinnen. Echte Wiring an
+  `TauriBridge.project.{open,create}Project` bleibt offen — braucht
+  Native-Dialog-Plumbing für Path-Auswahl.
+  **Notiz:** Tracker für die Wiring-Arbeit:
+  - `tauriNewProject` → `TauriDialog.open(directory: true)` +
+    `TauriProject.createProject(name, path)` + `loadProject(path)`.
+  - `tauriImportProject` → analog `TauriDialog.open` +
+    `TauriProject.openProject`.
+  - `tauriExportProject` → no-op (Tauri auto-saves) oder `TauriDialog.save`.
+    Schätzung ~150 LOC + Dialog-UX. Wird vor dem ersten Tauri-Release
+    gebraucht.
+
+- **Wo:** Repo-weit
+  **Was:** Aggregat: 105× `as any` (53 in `studio/`, 44 in `tools/`, 8 in
+  `compiler/`), 7× `@ts-expect-error` (5 davon in `tauri-bridge.ts`), 1×
+  `any[]` Parameter in `compiler/ir/ops/` Layout.
+  **Status:** weitgehend erledigt — Stand 2026-05-12:
+  - `compiler/`: **0 verbleibend** — letzter Cast (`animations.ts:262`,
+    motion-Lib-API-Shape-Mismatch) weg, weil `motionAnimate` selbst
+    dead-Code war und mit dem Slice-A-Dead-Export-Sweep gelöscht wurde.
+  - `studio/` Production-Code (ohne `test-api/`/`test-runner`):
+    **0 echte Casts**. Verbleibende 5 grep-Treffer sind Kommentare /
+    Doku-Strings, die das Wort "as any" erwähnen — keine echten
+    Type-Escapes.
+  - `studio/test-api/` + Browser-Test-Infrastruktur: ~110 Casts,
+    bewusst gelassen (Test-Surface-Fakes, opaque Window-Globals).
+  - `tools/`: 37 (war 44; 7 weg via `skipPrelude`-Cleanup
+    `19682af2`). Probes/Diagnostik, nicht Produktionspfad.
+  - `@ts-expect-error`: alle 5 in `tauri-bridge.ts` weg
+    (`4606e8c6`); 1× `@ts-ignore` für EyeDropper weg (`3e206764`).
+    **Notiz:** Production-Code-Ziel ist erreicht; weitere Reduktion
+    betrifft Test-Infra (geringerer Wert).
+
+### Hunt 2026-05-12 (Iter-N+3) — fünf neue Befunde
+
+- **Wo:** `studio/zag/index.ts:59`,
+  `studio/autocomplete/schema-completions.ts:881`,
+  `studio/preview/drag/test-api/fixtures/zag-components.ts:173`,
+  `compiler/parser/ast.ts:756`
+  **Was:** Vier `isZagComponent`-Funktionen mit **vier verschiedenen
+  Signaturen und Konzepten**:
+  - `studio/zag/index.ts:59` — `(children: ZagChild[] | undefined): boolean`
+    — strukturelle Children-Inspektion.
+  - `studio/autocomplete/schema-completions.ts:881` —
+    `(name: string): boolean` — Name-Lookup gegen Zag-Component-Liste.
+  - `studio/preview/drag/test-api/fixtures/zag-components.ts:173` —
+    `(name: string): boolean` — Duplikat zur autocomplete-Variante,
+    aber im Test-Fixture-Bereich.
+  - `compiler/parser/ast.ts:756` — `(node: unknown): node is ZagNode` —
+    TypeScript-Type-Guard auf AST-Knoten.
+
+  Vier Funktionen, drei verschiedene Konzepte (Children-Check vs.
+  Name-Check vs. Type-Guard), gleicher Symbol-Name. Auto-Import
+  verwirrt zuverlässig. Test-Fixture-Variante ist auch schlicht
+  Duplikation der autocomplete-Variante.
+  **Status:** teilweise erledigt — Slice 1 (Test-Fixture-Duplikat
+  raus) ist drin: `isZagComponent` aus
+  `studio/preview/drag/test-api/fixtures/zag-components.ts:173`
+  - Re-Export aus `fixtures/index.ts:22` gelöscht (0 Konsumenten).
+    Code-Diff landete in `f4215bf0` (Bündel-Commit der parallelen
+    Session — Race-Condition zwischen zwei Claude-Sessions; Inhalt
+    korrekt, Commit-Message irreführend, dokumentiert hier statt
+    Force-Push). Damit 4 → 3 Implementations.
+    **Notiz:** Verbleibende Slices sind echte Renames mit Cross-File-
+    Cascading: (a) `studio/zag/index.ts:59` → `hasZagChildren` plus
+    `ZagDeps.isZagComponent` Field-Rename + alle drop-Konsumenten +
+    drop-handlers.test.ts mocks; (b) `studio/autocomplete/schema-
+completions.ts:881` → `isZagComponentName` plus autocomplete-
+    Konsument; (c) `compiler/parser/ast.ts:756` → `isZagNode` plus
+    IR-Konsumenten (4 Caller-Sites + Re-Export-Barrel + Test). Der
+    IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
+    anderes Konzept und bleibt unverändert.
+
+                                                                            **Status-Update:** erledigt — alle drei Slices landen:
+                                                                            Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                                                            inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                                                            Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                                                            (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                                                            `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                                                            (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                                                            — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                                                            hat per `git add .` die uncommittete compiler-Side mit
+                                                                            aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                                                            `hasZagChildren` (children-Shape), `isZagComponentName`
+                                                                            (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                                                            IRZagNode-Discriminator-Property `isZagComponent: true`
+                                                                            bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                                                            81 drop-handlers + 113 parser-ast-guards Tests grün.
+
+  **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
+  paralleler Claude-Sessions kann bei überlappenden Working-Trees
+  Inhalte in den falschen Commit ziehen. Mitigation für künftige
+  Multi-Session-Slices: vor `git commit` ein `git diff --cached
+--stat` checken; wenn unerwartete Files drin sind, `git reset HEAD`
+  - selektiv re-staging.
+
+---
+
+## Erledigt
+
+Chronologisch absteigend (neueste zuerst).
+
+### Migrated from Offen on 2026-05-13 (Hebel 5 — Audit-Follow-up)
+
+Per `docs/audit/2026-05-13-comprehensive.md` Hebel 5: the Offen section
+had accumulated entries carrying `Status: erledigt` / `abgewiesen` that
+were never moved here. Audit estimated ~150; real count was 41 (audit
+over by 3.5×). They are consolidated here so future Hunt-Rollups can
+scan the truly-open list without filtering. Original subsection
+grouping is preserved below as nested subheadings for traceability.
+Entries with `teilweise erledigt`, `weitgehend erledigt`, or step-wise
+multi-status descriptions were intentionally LEFT in Offen — they still
+carry actionable remainders.
+
 - **Wo:** `studio/editor/triggers/trigger-controller.ts` (659 LOC),
   `studio/editor/triggers/ports.ts` (450 LOC),
   `studio/editor/triggers/adapters/mock-adapters.ts` (939 LOC),
@@ -215,48 +528,6 @@ service.ts`-Cluster, Eintrag #5). Letzte feature-relevante
   entscheidet, ob ein Demo für ein nicht-mehr-existierendes Feature
   weitergepflegt wird.
 
-- **Wo:** `compiler/backends/dom/style-emitter.ts:emitNodeSizeStateCSS`,
-  `compiler/backends/dom/node-emitter.ts:emitContainerType`,
-  `studio/test-api/suites/responsive/{basic,layout}.test.ts`
-  **Was:** Architektur-Befund aus dem Runtime-Bug-Bucket. Mirror lässt
-  Designer schreiben:
-
-  ```mirror
-  Frame w full
-    compact: bg #ef4444
-    wide:    bg #10b981
-  ```
-
-  und compiled das zu (a) `container-type: inline-size` AUF dem Frame
-  selbst plus (b) `@container (max-width: 400px) { [data-mirror-id^=
-"node-1"] { background: #ef4444 !important } }` — wo das
-  Selector-Target _derselbe_ Frame ist. Per CSS-Spec matcht
-  `@container` aber gegen die _Container-Ancestor_-Größe, nicht gegen
-  die eigene des deklarierenden Elements. Folge: Frame reagiert nicht
-  auf seine eigene Breite. Probe `tools/probes/container-queries.ts`
-  zeigt das Emit-Pattern; CDP-Tests bleiben skipped.
-  Zwei Fix-Pfade: (A) synthetischen Outer-Wrapper als Container
-  emittieren, Size-States aufs Frame anwenden; (B) Size-States auf
-  einen synthetischen Inner-Wrapper-Child emittieren. Beides ist
-  DOM-strukturell invasiv (Frame-Identität ändert sich, andere CSS
-  inkl. flex/grid-Layout muss sich nicht miterklären).
-  **Status:** teilweise erledigt — DOM-Backend in `9ebafdf2` (Lane A,
-  Owner-OK „ja gerne" während des Hunts erteilt). `emitContainerType`
-  in `node-emitter.ts` zu `emitContainerWrapper` umgebaut; Wrapper-
-  Emission on-demand via `needsContainer`. Append-Site in
-  `compiler/backends/dom.ts:emitNode` rewired. 3 von 6 Lane-A-Contract-
-  Tests un-skipped (DOM Outer-Wrapper, Selector-Resolution, on-demand).
-  15005/15005 Tests grün. Verbleibend in eigenen Slices:
-  - React-Backend (silent-drop `sizeState`)
-  - Framework-Backend (silent-drop)
-  - Position-Forwarding (Frame mit `abs|fixed` → Wrapper übernimmt)
-  - Browser-Tests in `responsive/{basic,layout}.test.ts:73,88`
-    un-skippen nach React/Framework-Slices.
-    **Notiz:** Browser-Tests in `responsive/{basic,layout}.test.ts:73,88`
-    bleiben `testWithSetupSkip` mit aktualisierten Kommentaren bis Fix
-    da ist. `Frame > Inner` mit Size-States auf `Inner` funktioniert
-    _heute_ schon (Inner reagiert auf Frame-Container) — Workaround.
-
 - **Wo:** `compiler/ir/ops/instance-ops.ts`, `compiler/ir/ops/properties-ops.ts`,
   `compiler/backends/react.ts`
   **Was:** Lane 2, Inkrement 2 — Folge-Refactor zu Inkrement 1.
@@ -296,24 +567,6 @@ service.ts`-Cluster, Eintrag #5). Letzte feature-relevante
   Studio-Side, hatte sie nicht). Drift war Studio-Picker-Side. `scroll-*`
   ist nicht zu konsolidieren — sind 4 verschiedene Properties für 4
   verschiedene CSS-Targets, keine Aliase.
-
-- **Wo:** Tutorial-Demos + Test-Runner — **OWNER-EXKLUSIV (toni)**
-  **Was:** Bereiche `studio/test-api/suites/demos/`,
-  `docs/tutorial/videos/*.webm`, `tools/test-runner/recording.ts`,
-  `tools/test-runner/os-mouse*.ts` und alles rundherum (Demo-
-  Pipeline, --os-mouse-Bridge, Tutorial-Recording-Workflow) werden
-  vom Owner direkt gepflegt — **keine Claude-Sessions hier
-  auseinandersetzen, keine Findings aufmachen, keine PRs vorbereiten,
-  keine Recordings anstoßen.** Stand 2026-05-10: 6 von 8 Videos
-  committed (`d3115504` tut-01, `7790b2b8` tut-02, `99f47eec` tut-03,
-  `a29aaa00` tut-04, `554b51c8` tut-05, `1b416c30` tut-06). tut-07
-  - tut-08 macht der Owner.
-    **Status:** offen — Owner-Lane, nicht Claude-Lane
-    **Notiz:** Wenn ein Bug in `studio/test-api/` (Test-Framework
-    selbst, nicht `suites/demos/`) durch andere Hunt-Arbeit auffällt,
-    Befund hier eintragen UND warten — nicht selbst fixen, weil der
-    Owner gerade aktiv am Recording-Workflow ist und parallele Edits
-    am Test-API-Stack die Demo-Aufnahmen brechen können.
 
 - **Wo:** Studio dupliziert Compiler-Pfade
   - `studio/pickers/token/types.ts:parseTokens` — eigener Token-Parser
@@ -388,120 +641,7 @@ token-trigger.ts:85` zur AST-Variante. Einziger direkter
   **Notiz:** Audit in
   `docs/refactoring/21-komponenten.md` Section 3 (V-1).
 
-### Skipped-Tests Inventory (Slice F, 2026-05-13)
-
-Audit der 79 `testWithSetupSkip`/`testSkip`-Marker in `studio/test-api/suites/`
-und `tests/responsive/`. Kategorisiert + getrackt für späteren Hunt.
-**Owner-Lane** (`tutorial/*`, `ui-builder/*`) ist hier explizit nicht
-gelistet — gehört zu Befund #4 oben.
-
-#### (a) Container-Queries (already tracked via #2 above)
-
-- `studio/test-api/suites/responsive/{basic,layout}.test.ts:78,92`
-  (2 markers) — `@container` matcht eigenes Element nicht. Lane-Doc:
-  `docs/refactoring/container-queries.md`. Plus 4 markers in
-  `tests/responsive/{components,complex}.test.ts` für dieselbe Klasse.
-- **Status:** offen — wartet auf Fix per Container-Queries-Lane.
-
-#### (b) Pure-Mirror-Component x/y-Propagation in Stacked Containers
-
-- `studio/test-api/suites/stacked-drag/zag-stacked.test.ts` (5 tests),
-  `complex-mixed.test.ts:55` (1 test).
-  **Was:** Skip-Notiz claimt der `PureComponentHandler` emittiere bei
-  Drop in `stacked`-Containers keine `x N, y N`-Position.
-  **Status:** erledigt 2026-05-13 — Audit zeigt: PureComponentHandler
-  hat seit `1325549f` (2026-04-22) x/y-Emission im
-  `placement === 'absolute' && absolutePosition`-Branch (`pure-component.ts:106-109,140-144`).
-  Skip-Notiz war stale (Test wurde nach dem Fix nie un-skipped). Pinned
-  durch jsdom-Test in `tests/studio/drop-handlers.test.ts` „absolute
-  placement: appends rounded x/y to instance properties" (81/81 grün).
-  6 Tests un-skipped. Verifikation erfolgt im nächsten CDP-Browser-Lauf.
-
-#### (c) Padding/Margin Zero-State Zones
-
-- `studio/test-api/suites/interactions/padding.test.ts:108`
-  („getPaddingZones returns empty when element has no padding"),
-  `studio/test-api/suites/interactions/margin.test.ts:213`
-  („getMarginZones returns empty when element has no margin"),
-  `studio/test-api/suites/interactions/margin-handlers.test.ts:96`
-  („Behavior changed — element without margin no longer auto-adds margin
-  on M key").
-  **Was:** Spacing-Manager (Padding/Margin) emittiert `.padding-area` /
-  `.margin-area` Overlays NUR wenn der Element bereits Padding/Margin
-  > 0 hat. Shift+Drag zum Hinzufügen von uniformen Padding aus dem
-  > Zero-State funktioniert dadurch nicht. Plus: M-Key-Behavior-Change
-  > unklar (auto-add-on-M wurde entfernt?).
-  > **Status:** offen — Owner-Entscheidung: ist das beabsichtigtes
-  > Verhalten (nur sichtbare Zones für visible Padding) oder ein Regression?
-
-#### (d) Context-aware Autocomplete (Feature-Lücken)
-
-- `studio/test-api/suites/autocomplete/properties.test.ts:43,55`
-  (Icon-spezifische / Input-spezifische Property-Completions),
-  `studio/test-api/suites/autocomplete/states.test.ts:10`
-  (State-Completions like `hover:`).
-  **Was:** Autocomplete-Engine bietet alle Properties an, nicht
-  primitive-spezifisch. State-Completions (`hover:`/`focus:`/...) sind
-  nicht wired für den `:` Trigger.
-  **Status:** offen — Feature-Lücke, nicht Bug. Eintrag im Roadmap
-  für „Context-aware Autocomplete v2".
-
-#### (e) Dynamic Token-File Prelude-Rebuild
-
-- `studio/test-api/suites/property-panel/color-picker.test.ts:138,179,207,231`
-  (4 markers).
-  **Was:** Test-Setup injiziert Token-Files dynamisch via `window.files`,
-  aber das Prelude-Build wird nicht re-getriggert. Color-Picker sieht
-  daher die Token-Farben nicht.
-  **Status:** offen — Test-Infrastructure-Issue, könnte mit
-  `__compileTestCode`-API gefixt werden (setze tokens als zweiten
-  parameter, baue prelude neu).
-
-#### (f) Reorder-Siblings ohne Synthetic-Root
-
-- `studio/test-api/suites/preview-cdp/02-move/reorder-siblings.test.ts`
-  **Was:** Original-Test versuchte top-level Frame-Reorder, scheiterte
-  am fehlenden synthetic-root im Suite-Test-Setup
-  (`__compileTestCode` wraps nie mit App, `studio/app.ts:1585`).
-  **Status:** erledigt 2026-05-13 — Test umgeschrieben auf
-  `twoChildrenVertical`-Fixture (Container mit 2 Kindern, validen
-  targetSel-Pfad), un-skipped. Pinnt jetzt den realistischen
-  Contained-Reorder-User-Pfad. Top-Level-Reorder bleibt
-  separater Edge-Case (Production-Code wraps mit App, in Tests
-  fehlt das per Design — vertretbar).
-
-#### (g) Resize-Handle Full-Width-Position-Design
-
-- `studio/test-api/suites/interactions/resize-handle-drag.test.ts:1022`
-  (1 marker, „Full-width/height elements have handles at container edge
-  — needs design decision").
-  **Was:** Bei `w full`/`h full`-Elementen liegt das Resize-Handle am
-  Container-Edge, was Edge-Drags am Container statt am Element
-  ambiguous macht. Design-Frage.
-  **Status:** offen — Design-Entscheidung.
-
-#### (h) Hover+State Test-Timing
-
-- `studio/test-api/suites/integration/component-state.test.ts:193,375`
-  (2 markers, „click doesn't maintain hover state" / „Flaky test —
-  passes when run alone, fails intermittently").
-  **Was:** Test-Environment-Timing-Issues. Möglicherweise pre-existing
-  jsdom-vs-CDP-Diskrepanz oder Race in Test-Runner.
-  **Status:** offen — Test-Infra-Befund, nicht Production-Bug.
-
-#### (i) Sonstige einzelne Skip-Marker
-
-- `studio/test-api/suites/primitives/basic.test.ts:213` (Spacer als div)
-  — vermutlich Test-Setup-Issue.
-- `studio/test-api/suites/primitives/table.test.ts:329` („Zebra striping
-  mit modulo — ternary mit `%` operator not supported") — DSL-Feature-
-  Lücke, könnte als Feature-Request getrackt werden.
-
-**Status:** Tracker, kein Code-Fix nötig per Slice. Findings dient als
-Map für künftige Hunt-Sessions, welche Skip-Marker echte Bugs vs.
-Feature-Lücken vs. Test-Infra sind.
-
-### Studio Sync/State (Hunt 2026-05-10)
+#### Studio Sync/State (Hunt 2026-05-10)
 
 - **Wo:** `studio/core/state.ts:328-331`
   **Was:** `setSelection()` schreibt im Defer-Pfad gleichzeitig
@@ -587,7 +727,7 @@ Feature-Lücken vs. Test-Infra sind.
   zur Bootzeit normalerweise keine Events feuern, kann der Handler
   jetzt unmöglich vor dem Context aufgerufen werden.
 
-### Studio Hunt — Type-Duplikate (2026-05-10 Iter-N)
+#### Studio Hunt — Type-Duplikate (2026-05-10 Iter-N)
 
 - **Wo:** Studio, fünf duplizierte Value-Types
   **Was:** `Rect` (6×), `Point` (3× exportiert), `LineInfo` (3×),
@@ -601,11 +741,7 @@ Feature-Lücken vs. Test-Infra sind.
   Andere Files haben nur `export type { ... } from '<canonical>'` —
   alle Import-Pfade bleiben gültig. 5856/5856 studio tests pass.
 
-### Dead-Export-Sweep (2026-05-10 Iter-N+1)
-
-Repo-weiter Audit auf Top-Level-Exports mit **0 Konsumenten** (geprüft
-über `*.ts`, `*.tsx`, `*.js`, `*.json`, `*.md` — also incl. Tests, Docs,
-Packages, NPM bin entries, beide compiler/index.ts und der Studio-Build):
+#### Dead-Export-Sweep (2026-05-10 Iter-N+1)
 
 - **Wo:** `compiler/schema/{dsl,ir-helpers,layout-defaults}.ts`
   **Was:** 18 dead exports (`isReservedKeyword`, `getReservedKeywords`,
@@ -687,10 +823,7 @@ overlay.ts`, 134 LOC, ersetzt vor langem durch
   Prettier hat zusätzlich den `ToastPosition`-Union auf eine Zeile
   zusammengezogen — kosmetisch.
 
-### Naming-Collision-Smells (2026-05-10 Iter-N+2)
-
-Drei Stellen, wo derselbe Symbolname unterschiedliche Semantik hat —
-echte Drift-Fallen, aber Behebung braucht Owner-Entscheidung.
+#### Naming-Collision-Smells (2026-05-10 Iter-N+2)
 
 - **Wo:** `studio/visual/{models/coordinate.ts, models/coordinate-
 calculator.ts, snap/alignment-snap.ts}` — drei `snapPointToGrid`-
@@ -745,7 +878,7 @@ calculator.ts, snap/alignment-snap.ts}` — drei `snapPointToGrid`-
   module-private Variante in app.ts bleibt — kann nicht falsch
   importiert werden.
 
-### Type-Dedupe Round 2 (2026-05-10 Iter-N+2)
+#### Type-Dedupe Round 2 (2026-05-10 Iter-N+2)
 
 - **Wo:** `studio/{autocomplete,sync,editor,editor/triggers,panels/property}/ports.ts`
   **Was:** `CleanupFn = () => void` 5× identisch, `SelectionOrigin`-
@@ -754,7 +887,7 @@ calculator.ts, snap/alignment-snap.ts}` — drei `snapPointToGrid`-
   `studio/core/state-types.ts` als kanonische Quelle, Re-Exports.
   5913/5913 studio tests pass.
 
-### Schema-Direction-Sharing (2026-05-10 Iter-N+2)
+#### Schema-Direction-Sharing (2026-05-10 Iter-N+2)
 
 - **Wo:** `compiler/ir/transformers/property-{transformer,utils-transformer}.ts`
   **Was:** 15-Entry direction-Liste 2× inline in `property-transformer.ts`
@@ -767,7 +900,7 @@ calculator.ts, snap/alignment-snap.ts}` — drei `snapPointToGrid`-
   Konstanten in `property-utils-transformer.ts`. Padding/Margin nutzen
   jetzt explizit `EDGE_DIRECTIONS`.
 
-### Property-Section-Registry (2026-05-10 Iter-N+2)
+#### Property-Section-Registry (2026-05-10 Iter-N+2)
 
 - **Wo:** `studio/panels/property/view.ts` → `sections/index.ts`
   **Was:** Section-Hinzufügen erforderte Edits in 2 Dateien (Import
@@ -777,19 +910,7 @@ calculator.ts, snap/alignment-snap.ts}` — drei `snapPointToGrid`-
     **Status:** erledigt (`ba615bad`) — view.ts –16 LOC, 868/868
     panel tests pass.
 
-### Tutorial-Blocking Gaps (2026-05-10, per `docs/concepts/studio-tutorial.md`)
-
-Hunting durch das Tutorial-Konzept `docs/concepts/studio-tutorial.md`
-ergibt eine kleine Anzahl konkreter Lücken, die produktion-blocking sind
-für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
-
-> **Status der Sektion (2026-05-10 ~19:05):** Drei der vier ursprünglichen
-> Einträge sind stale geworden, weil `8e81387f` das gesamte demo-runner +
-> step-runner-Subsystem gerippt hat (`tools/test-runner/demo/`,
-> `studio/test-api/step-runner/`). Tutorial-Vollausbau braucht nun einen
-> neuen Architektur-Entscheid (eigene Lane-Doc), nicht mehr punktuelle
-> Inkremente in einem nicht mehr existierenden System. Siehe neuer
-> Eintrag „Tutorial-Loop-Infrastruktur" weiter unten.
+#### Tutorial-Blocking Gaps (2026-05-10, per `docs/concepts/studio-tutorial.md`)
 
 - **Wo:** Studio-Keyboard
   **Was:** Cmd+P-Quick-Switch (Fuzzy-Search-File-Palette) ist im
@@ -803,21 +924,7 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
   case-insensitive. 19 Unit-Tests in jsdom pinnen Lifecycle, Filter,
   Keyboard, Maus, Error-Handling. 5953/5953 studio tests pass.
 
-- **Wo:** Tutorial-Loop-Infrastruktur insgesamt
-  **Was:** Nach dem Demo-Runner-Rip-Out (`8e81387f`, 2026-05-10) gibt
-  es kein laufendes System mehr für die Tutorial-Loop-Videos
-  (`docs/concepts/studio-tutorial.md` Kapitel 19–24). Vor weiterem
-  Tutorial-Build muss eine Architektur-Entscheidung fallen: (a)
-  CDP-basierten Test-Runner um Cursor/Pacing/Recording erweitern
-  (sauber, aber Aufwand), (b) eigenständiges Tutorial-Recording-Tool
-  bauen (separate Toolchain), (c) Tutorial-Konzept einstellen oder
-  vereinfachen (nur statische Screenshots/Videos via externer Tools).
-  **Status:** offen — Owner-Entscheidung
-  **Notiz:** Wenn (a) gewählt wird, eigene Lane-Doc unter
-  `docs/refactoring/` bevor Code geschrieben wird (Größe + Cross-
-  System-Touchpoints). Findings-Eintrag-Größe gesprengt.
-
-### Compiler/CLI Hunt (2026-05-10 Iter-N)
+#### Compiler/CLI Hunt (2026-05-10 Iter-N)
 
 - **Wo:** `compiler/build-cli.ts`, `compiler/validator/cli.ts`,
   `compiler/cli/output.ts`
@@ -840,40 +947,7 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
   keine hardcoded Primitive-Liste mehr im Runtime; Schema (`dsl.ts`) ist
   Single Source of Truth.
 
-### Studio Struktur — God-Objects & Duplikation (Hunt 2026-05-10)
-
-- **Wo:** `studio/visual/{resize,padding,margin,gap}-manager.ts`
-  **Was:** 3931 LOC über vier nahezu identische Manager-Klassen (Handles,
-  Drag-State, Observer, RAF-Throttling, Snap-Logik) — massive Duplikation
-  im größten Subsystem.
-  **Status:** Steps 1 + 2 erledigt — (1) RAF-Mouse-Throttle in
-  `studio/visual/raf-mouse-throttle.ts` als `RafMouseThrottle`-Klasse
-  extrahiert (in allen 4 Managern verwendet); (2) Resize-/Mutation-
-  Observer + Scroll- + Window-Resize-Listener in
-  `studio/visual/observer-pack.ts` als `ObserverPack`-Klasse extrahiert
-  (Padding/Margin/Gap; ResizeManager hat keine Observer). 3931 → 3766
-  LOC (–165 LOC, –4.2 %). 565/565 visual tests pass.
-  **Notiz:** Verbleibender Schritt (3) `SpacingHandleManagerBase` für
-  Padding/Margin/Gap mit gleicher Modifier-Logik / Snap / Overlay-
-  Pattern. ResizeManager bleibt eigenständig (8 Handles, Multi-
-  Selection, Grid, Sizing-Mode, double-click).
-  Tests: nur ResizeManager hat Unit-Tests
-  (`tests/studio/visual-resize-manager.test.ts`,
-  `visual/resize-manager-multi.test.ts`); Padding/Margin/Gap nur durch
-  Browser-Tests gedeckt — Step 3 braucht sorgfältige headed-
-  Verification.
-
-- **Wo:** `studio/panels/property/view.ts` (1037 LOC → 776 LOC)
-  **Was:** PANEL_CONFIG mit 100+ Primitive-Typen + 12 Section-Creators in
-  einer Datei — God-Objekt mit dichtem Repeat-Pattern.
-  **Status:** teilweise erledigt — `PANEL_CONFIG`,
-  `DEFAULT_PANEL_CONFIG`, `PanelConfig`-Interface und `getPanelConfig()`
-  in eigenes Modul `studio/panels/property/panel-config.ts`
-  ausgelagert (261 LOC). View ist 25 % kleiner und Config testbar
-  ohne View-Instanz. 679/679 property-panel tests pass.
-  **Notiz:** Bleibt: 12 Section-Creator-Aufrufe + `renderSections`-Switch
-  in `view.ts` — könnte über Section-Registry weiter geschrumpft werden,
-  aber Code ist bereits lesbar.
+#### Studio Struktur — God-Objects & Duplikation (Hunt 2026-05-10)
 
 - **Wo:** `studio/compile/{compile-service,prelude-builder,code-generator,preview-renderer,studio-updater,perf-logger}.ts`
   **Was:** Parallele Compile-Pipeline (CompileService + 5 Helper-
@@ -909,55 +983,6 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
   behalten). tsc clean, 5595/5595 studio Tests grün.
   Restoration via `git show a6f84657^:studio/compile/<file>.ts`.
 
-- **Wo:** `studio/app.ts` (heute 2456 LOC, vor Refactor 2557)
-  **Was:** Bootstrap-Sprawl: 30+ globale Konstanten, 5 Extensions, 8
-  Manager-Inits inline. Sieben Phasen nach `studio/init/` extrahiert:
-  `init-notifications`, `init-sync`, `init-grid-overlay`,
-  `init-draw-manager`, `init-inline-edit`, `file-tabs`,
-  `init-editor-dispatch` (`8b92ae7a`). `compile()`-Decomposition
-  läuft als pure-helper-Slices: `wrap-layout` (`e79184f5`),
-  `augment-local-components` (`514807d6`), `execute-mirror-js`
-  (`87237522`), `prelude-definitions` (`544234e3`) — jede mit
-  eigenen Unit-Tests. Verbleibend in `compile()`: testMode-/
-  preview-Redirect-Branch (resolvedCode-Build), State-Update-Block,
-  componentPrimitives-Map-Aufbau, Render-Pipe (uninstanced-augment
-  - ui-execute + rootEl-extract); daneben `updateStudio()`,
-    `handleStudioCodeChange()`, plus File-IO und Ext-Wiring.
-    **Status:** offen — ongoing decomposition. Drei Slices 2026-05-12
-    erledigt:
-    - **Slice 5** `componentPrimitives-Map-Aufbau` (`22b340a1` —
-      Commit-Race, Message irreführend) →
-      `studio/compile/component-primitives.ts`, 7 Tests. Pin: Parser-
-      Default `primitive='Frame'` für Definitions ohne `as`; Fallback
-      `name.toLowerCase()` greift nur für manuell konstruierte
-      ComponentDefinitions mit `primitive: null`.
-    - **Slice 6** `preview-redirect` (`7db368a7`) →
-      `studio/compile/preview-redirect.ts`, 7 Tests. Pin: 5-Wege-
-      Entscheidung (Layout-Editor / no-previewFile / self-pin /
-      non-layout-previewFile / Layout-previewFile).
-    - **Slice 7** `testMode/Layout source-resolution` (`49fbf07e`) →
-      `studio/compile/resolve-compile-source.ts`, 8 Tests. Pin: 4-Wege-
-      Branch (testMode×fileType) mit Partial-Result für Branch 4
-      Passthrough (currentPreludeOffset/isWrappedWithApp bleiben stale).
-      Drops `prependPrelude`/`wrapLayoutForCompile` aus app.ts-Imports.
-    - **Slice 8** `render-pipe augment-for-preview` (`3d22bfd8`) →
-      `studio/compile/augment-pipeline.ts`, 4 Tests. Pin: 2-Wege (no-
-      augment Pass-through vs. augment-branch mit Re-parse + Re-DOM +
-      Re-IR). Helper-API droppt `withSourceMap`-Parameter — augmentForPreview
-      braucht immer den SourceMap, Caller wired das einmal an der
-      Injection-Site. Drops `findUninstancedComponents` +
-      `appendImplicitInstances` aus app.ts-Imports (jetzt nur intern).
-    - **State-Update-Block** (`5489a805`, Parallel-Session) →
-      `studio/compile/compile-state-update.ts`. Auch erledigt.
-    - **rootEl-extract** (Parallel-Session) →
-      `studio/compile/extract-root-element.ts`. Auch erledigt.
-      **Notiz:** Strategie: pure-helper-Slices mit Unit-Tests, Sub-Slice
-      pro Commit, kein Big-Bang. Reduziert Closure-Pressure inkrementell.
-      Verbleibend in `compile()`: YAML-Injection, executeMirrorJS-Wiring,
-      DOM-Append + Refresh-Cascade, Validator-Diagnostics, perf-Logger.
-      Alle haben Side-Effects gegen DOM/Editor/State und sind keine
-      pure-helper-Kandidaten — Decomposition-Ziel hier ist erreicht.
-
 - **Wo:** Fünf `mock-adapters.ts` (`studio/editor/triggers/adapters/`,
   `studio/editor/adapters/`, `studio/panels/property/adapters/`,
   `studio/autocomplete/adapters/`, `studio/sync/adapters/`)
@@ -978,20 +1003,7 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
   Cross-File-Engine. ~40 LOC gemeinsamer Input/Keydown/Click-Outside-
   Pattern zu wenig für geteilte Abstraktion.
 
-### Compiler Backends (Hunt 2026-05-10)
-
-- **Wo:** `compiler/backends/dom/ops/resolve-templates.ts:132-220`
-  `resolveConditionalExpression`
-  **Was:** Hand-rolled String-Position-Parser mit `inConditional`-Flag,
-  Depth-Counter und Marker-Lookahead (`__conditional:`, `__loopVar:`).
-  Funktioniert, aber jeder neue Marker oder Edge-Case (String-Literal mit
-  `:`, Token-Reference im else-Zweig) zwingt einen weiteren Sonderfall in
-  die Loop. Smell, kein gemeldeter Bug.
-  **Status:** offen
-  **Notiz:** Re-Open bei nächster Marker-Erweiterung oder
-  Conditional-Bug.
-
-### Bug-Patterns & Type-Escapes (Hunt 2026-05-10)
+#### Bug-Patterns & Type-Escapes (Hunt 2026-05-10)
 
 - **Wo:** `studio/agent/generation-pipeline.ts:335`
   **Was:** Workaround filtert phantom Token-Refs aus String-Literalen.
@@ -1049,30 +1061,6 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
   `JSZipInstance` in `window-globals.d.ts`; Casts entfernt; Script-Load-Race
   durch Existenz-Check vor `resolve()` geschlossen.
 
-- **Wo:** `studio/storage/project-actions.ts` (`tauriNewProject` &c)
-  **Was:** Die vier Tauri-Helfer lasen `window.__TAURI_BRIDGE__`, das
-  produktiv nirgends gesetzt wurde — nur Tests injizierten. Runtime hat
-  `window.TauriBridge` (anderer Name, andere Form, siehe
-  `studio/tauri-bridge.ts:412`). API-Shapes passen auch nicht zusammen
-  (`newProject(type)` vs. `TauriProject.createProject(name, path)`).
-  **Status:** teilweise erledigt — `__TAURI_BRIDGE__`-Indirektion komplett
-  raus: vier Stubs sind jetzt explizit als „not implemented for Tauri
-  desktop yet" markiert (loggen `log.warn`, no-op). `loadDemo` nutzt den
-  bisher schon vorhandenen `getStorage().writeFile`-Pfad als Default.
-  `TauriBridgeShim` aus `window-globals.d.ts` raus, sechs Tests, die
-  den toten Bridge-Path stubsten, durch vier Tests ersetzt, die das
-  echte Stub-Verhalten pinnen. Echte Wiring an
-  `TauriBridge.project.{open,create}Project` bleibt offen — braucht
-  Native-Dialog-Plumbing für Path-Auswahl.
-  **Notiz:** Tracker für die Wiring-Arbeit:
-  - `tauriNewProject` → `TauriDialog.open(directory: true)` +
-    `TauriProject.createProject(name, path)` + `loadProject(path)`.
-  - `tauriImportProject` → analog `TauriDialog.open` +
-    `TauriProject.openProject`.
-  - `tauriExportProject` → no-op (Tauri auto-saves) oder `TauriDialog.save`.
-    Schätzung ~150 LOC + Dialog-UX. Wird vor dem ersten Tauri-Release
-    gebraucht.
-
 - **Wo:** `studio/core/events.ts:493-494`
   **Was:** `(middleware as any).getStats = …` — Instrumentation an
   untyped middleware angehängt; keine Validierung dass Event-System
@@ -1081,28 +1069,7 @@ Compile-Time-Check, Runtime-Read über`as { type?: string }`mit`?? 'unknown'`-Fa
   Funktions-Return-Type beim Konstruktions-Cast festgelegt, Property-
   Zuweisungen sind jetzt typed (kein `as any` mehr).
 
-- **Wo:** Repo-weit
-  **Was:** Aggregat: 105× `as any` (53 in `studio/`, 44 in `tools/`, 8 in
-  `compiler/`), 7× `@ts-expect-error` (5 davon in `tauri-bridge.ts`), 1×
-  `any[]` Parameter in `compiler/ir/ops/` Layout.
-  **Status:** weitgehend erledigt — Stand 2026-05-12:
-  - `compiler/`: **0 verbleibend** — letzter Cast (`animations.ts:262`,
-    motion-Lib-API-Shape-Mismatch) weg, weil `motionAnimate` selbst
-    dead-Code war und mit dem Slice-A-Dead-Export-Sweep gelöscht wurde.
-  - `studio/` Production-Code (ohne `test-api/`/`test-runner`):
-    **0 echte Casts**. Verbleibende 5 grep-Treffer sind Kommentare /
-    Doku-Strings, die das Wort "as any" erwähnen — keine echten
-    Type-Escapes.
-  - `studio/test-api/` + Browser-Test-Infrastruktur: ~110 Casts,
-    bewusst gelassen (Test-Surface-Fakes, opaque Window-Globals).
-  - `tools/`: 37 (war 44; 7 weg via `skipPrelude`-Cleanup
-    `19682af2`). Probes/Diagnostik, nicht Produktionspfad.
-  - `@ts-expect-error`: alle 5 in `tauri-bridge.ts` weg
-    (`4606e8c6`); 1× `@ts-ignore` für EyeDropper weg (`3e206764`).
-    **Notiz:** Production-Code-Ziel ist erreicht; weitere Reduktion
-    betrifft Test-Infra (geringerer Wert).
-
-### Hunt 2026-05-12 (Iter-N+3) — fünf neue Befunde
+#### Hunt 2026-05-12 (Iter-N+3) — fünf neue Befunde
 
 - **Wo:** `studio/react-converter/` (599 LOC src + 55-Test-Suite)
   **Was:** Dormant Modul, gleicher Befund-Typ wie der dokumentierte
@@ -1161,73 +1128,6 @@ svelte-spike/`-Spikes und Memory `project_llm_pipeline.md`).
     (private) → `isProjectImportFile`. studio/index.ts:92-99
     Ambiguitäts-Workaround ersatzlos raus (kein Symbol-Name-Konflikt
     mehr). zag/index.ts deps-Parameter mit umbenannt.
-
-- **Wo:** `studio/zag/index.ts:59`,
-  `studio/autocomplete/schema-completions.ts:881`,
-  `studio/preview/drag/test-api/fixtures/zag-components.ts:173`,
-  `compiler/parser/ast.ts:756`
-  **Was:** Vier `isZagComponent`-Funktionen mit **vier verschiedenen
-  Signaturen und Konzepten**:
-  - `studio/zag/index.ts:59` — `(children: ZagChild[] | undefined): boolean`
-    — strukturelle Children-Inspektion.
-  - `studio/autocomplete/schema-completions.ts:881` —
-    `(name: string): boolean` — Name-Lookup gegen Zag-Component-Liste.
-  - `studio/preview/drag/test-api/fixtures/zag-components.ts:173` —
-    `(name: string): boolean` — Duplikat zur autocomplete-Variante,
-    aber im Test-Fixture-Bereich.
-  - `compiler/parser/ast.ts:756` — `(node: unknown): node is ZagNode` —
-    TypeScript-Type-Guard auf AST-Knoten.
-
-  Vier Funktionen, drei verschiedene Konzepte (Children-Check vs.
-  Name-Check vs. Type-Guard), gleicher Symbol-Name. Auto-Import
-  verwirrt zuverlässig. Test-Fixture-Variante ist auch schlicht
-  Duplikation der autocomplete-Variante.
-  **Status:** teilweise erledigt — Slice 1 (Test-Fixture-Duplikat
-  raus) ist drin: `isZagComponent` aus
-  `studio/preview/drag/test-api/fixtures/zag-components.ts:173`
-  - Re-Export aus `fixtures/index.ts:22` gelöscht (0 Konsumenten).
-    Code-Diff landete in `f4215bf0` (Bündel-Commit der parallelen
-    Session — Race-Condition zwischen zwei Claude-Sessions; Inhalt
-    korrekt, Commit-Message irreführend, dokumentiert hier statt
-    Force-Push). Damit 4 → 3 Implementations.
-    **Notiz:** Verbleibende Slices sind echte Renames mit Cross-File-
-    Cascading: (a) `studio/zag/index.ts:59` → `hasZagChildren` plus
-    `ZagDeps.isZagComponent` Field-Rename + alle drop-Konsumenten +
-    drop-handlers.test.ts mocks; (b) `studio/autocomplete/schema-
-completions.ts:881` → `isZagComponentName` plus autocomplete-
-    Konsument; (c) `compiler/parser/ast.ts:756` → `isZagNode` plus
-    IR-Konsumenten (4 Caller-Sites + Re-Export-Barrel + Test). Der
-    IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
-    anderes Konzept und bleibt unverändert.
-
-                                                                        **Status-Update:** erledigt — alle drei Slices landen:
-                                                                        Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                                                        inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                                                        Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                                                        (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                                                        `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                                                        (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                                                        — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                                                        hat per `git add .` die uncommittete compiler-Side mit
-                                                                        aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                                                        `hasZagChildren` (children-Shape), `isZagComponentName`
-                                                                        (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                                                        IRZagNode-Discriminator-Property `isZagComponent: true`
-                                                                        bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                                                        81 drop-handlers + 113 parser-ast-guards Tests grün.
-
-  **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
-  paralleler Claude-Sessions kann bei überlappenden Working-Trees
-  Inhalte in den falschen Commit ziehen. Mitigation für künftige
-  Multi-Session-Slices: vor `git commit` ein `git diff --cached
---stat` checken; wenn unerwartete Files drin sind, `git reset HEAD`
-  - selektiv re-staging.
-
----
-
-## Erledigt
-
-Chronologisch absteigend (neueste zuerst).
 
 ### 2026-05-13 — Slice E: alle `eslint-disable no-explicit-any` in compiler/ weg
 
