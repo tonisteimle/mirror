@@ -47,7 +47,7 @@ studio/                # Studio Runtime (TypeScript) - Modulare Architektur
 ├── preview/           # Preview Controller & Renderer
 ├── compile/           # YAML/Component/Token-Renderer für Preview
 ├── drop/              # Drag-Drop-Strategy-Handlers
-├── visual/            # Drag/Resize/Snap, Smart-Guides, Layout-Inference (großes Subsystem)
+├── visual/            # Drag/Resize/Snap, Smart-Guides (großes Subsystem)
 ├── agent/             # LLM-Edit-Flow / Quality-Checks
 ├── storage/           # File-Abstraction + User-Settings
 ├── ui/                # Zag-Inputs (Inputs, Selects, Toggles)

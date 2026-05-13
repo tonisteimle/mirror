@@ -135,53 +135,6 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 > Notiz + Commit-Hash). Vor dem nächsten Hunt-Rollup migrieren —
 > bis dahin: erst auf die obigen 4 Einträge scannen.
 
-- **Wo:** `compiler/backends/dom/style-emitter.ts:emitNodeSizeStateCSS`,
-  `compiler/backends/dom/node-emitter.ts:emitContainerType`,
-  `studio/test-api/suites/responsive/{basic,layout}.test.ts`
-  **Was:** Architektur-Befund aus dem Runtime-Bug-Bucket. Mirror lässt
-  Designer schreiben:
-
-  ```mirror
-  Frame w full
-    compact: bg #ef4444
-    wide:    bg #10b981
-  ```
-
-  und compiled das zu (a) `container-type: inline-size` AUF dem Frame
-  selbst plus (b) `@container (max-width: 400px) { [data-mirror-id^=
-"node-1"] { background: #ef4444 !important } }` — wo das
-  Selector-Target _derselbe_ Frame ist. Per CSS-Spec matcht
-  `@container` aber gegen die _Container-Ancestor_-Größe, nicht gegen
-  die eigene des deklarierenden Elements. Folge: Frame reagiert nicht
-  auf seine eigene Breite. Probe `tools/probes/container-queries.ts`
-  zeigt das Emit-Pattern; CDP-Tests bleiben skipped.
-  Zwei Fix-Pfade: (A) synthetischen Outer-Wrapper als Container
-  emittieren, Size-States aufs Frame anwenden; (B) Size-States auf
-  einen synthetischen Inner-Wrapper-Child emittieren. Beides ist
-  DOM-strukturell invasiv (Frame-Identität ändert sich, andere CSS
-  inkl. flex/grid-Layout muss sich nicht miterklären).
-  **Status:** erledigt 2026-05-13 — Lane A wired in alle drei Backends:
-  - **DOM** (`9ebafdf2`): `emitContainerWrapper` + Wrapper-Append-Site,
-    on-demand via `needsContainer`. 3 von 6 Lane-A-Contract-Tests
-    grün.
-  - **React** (`d5937788`): `collectSizeStateGroups` +
-    `formatContainerQuery` Helpers, `wrapWithContainer` in `jsx.ts`.
-    Pinned: 4. von 6 (un-skip).
-  - **Framework** (`b93f4ff3`): `buildContainerRules` +
-    `wrapWithContainer` in `node-emit.ts`, sizeState aus baseStyles
-    filtern. Pinned: 5. von 6 (un-skip).
-  - **Browser-Tests** un-skipped in
-    `studio/test-api/suites/responsive/{basic,layout}.test.ts`.
-  - **jsdom-tests** in `tests/responsive/{components,complex}.test.ts`
-    bleiben skipped — jsdom evaluiert kein `@container`; durch CDP-
-    Browser-Tests abgedeckt.
-
-  Verbleibend offen: Position-Forwarding (Frame mit `abs|fixed` →
-  Wrapper übernimmt Position). Differential-Pin
-  `tests/differential/states.test.ts:230` skip-markiert. Separate
-  Iteration falls je benötigt — viele Mirror-Designs verwenden keine
-  size-states auf absolut-positionierten Elementen.
-
 - **Wo:** Tutorial-Demos + Test-Runner — **OWNER-EXKLUSIV (toni)**
   **Was:** Bereiche `studio/test-api/suites/demos/`,
   `docs/tutorial/videos/*.webm`, `tools/test-runner/recording.ts`,
@@ -421,21 +374,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                                                                    **Status-Update:** erledigt — alle drei Slices landen:
-                                                                                    Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                                                                    inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                                                                    Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                                                                    (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                                                                    `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                                                                    (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                                                                    — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                                                                    hat per `git add .` die uncommittete compiler-Side mit
-                                                                                    aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                                                                    `hasZagChildren` (children-Shape), `isZagComponentName`
-                                                                                    (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                                                                    IRZagNode-Discriminator-Property `isZagComponent: true`
-                                                                                    bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                                                                    81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                                                                        **Status-Update:** erledigt — alle drei Slices landen:
+                                                                                        Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                                                                        inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                                                                        Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                                                                        (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                                                                        `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                                                                        (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                                                                        — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                                                                        hat per `git add .` die uncommittete compiler-Side mit
+                                                                                        aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                                                                        `hasZagChildren` (children-Shape), `isZagComponentName`
+                                                                                        (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                                                                        IRZagNode-Discriminator-Property `isZagComponent: true`
+                                                                                        bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                                                                        81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
@@ -1140,6 +1093,33 @@ svelte-spike/`-Spikes und Memory `project_llm_pipeline.md`).
     Ambiguitäts-Workaround ersatzlos raus (kein Symbol-Name-Konflikt
     mehr). zag/index.ts deps-Parameter mit umbenannt.
 
+### 2026-05-13 — Pure-Mirror x/y-Propagation in Stacked Containers — Skip-Notiz stale
+
+- **Wo:** `studio/test-api/suites/stacked-drag/zag-stacked.test.ts`
+  (5 tests), `complex-mixed.test.ts:55` (1 test).
+  **Was:** Skip-Notiz behauptete `PureComponentHandler` emittiere bei
+  Drop in stacked containers keine x/y-Position für Pure-Mirror-
+  Components (Checkbox/Switch/Slider). Audit zeigt: x/y-Emission
+  existiert seit `1325549f` (2026-04-22), Skip-Notiz war nie
+  un-skipped nach dem Fix. Pinned durch existierenden jsdom-Test
+  `tests/studio/drop-handlers.test.ts` „absolute placement: appends
+  rounded x/y to instance properties" (81/81 grün). 6 Tests un-skipped
+  (`261a019b`).
+  **Status:** erledigt
+
+### 2026-05-13 — Reorder-Siblings: Test umgeschrieben auf contained-reorder
+
+- **Wo:** `studio/test-api/suites/preview-cdp/02-move/reorder-siblings.test.ts`
+  **Was:** Original-Test versuchte top-level Frame-Reorder, scheiterte
+  am fehlenden synthetic-root im Suite-Test-Setup (`__compileTestCode`
+  wraps nie mit App, `studio/app.ts:1585`). Top-level Frames haben damit
+  keinen gemeinsamen mirror-id Parent, `moveElement` hat keinen valid
+  targetSel. Test umgeschrieben auf `twoChildrenVertical`-Fixture
+  (Container mit 2 Kindern, valider targetSel-Pfad), un-skipped
+  (`89ee86b6`). Top-Level-Reorder bleibt separater Edge-Case —
+  Production-Code wraps mit App, in Tests fehlt das per Design.
+  **Status:** erledigt
+
 ### 2026-05-13 — Container-Queries Lane A erledigt (alle 3 Backends)
 
 - **Wo:** DOM, React, Framework Backends + Differential-Pin + Browser-
@@ -1163,21 +1143,23 @@ svelte-spike/`-Spikes und Memory `project_llm_pipeline.md`).
     `wrapWithContainer` in `node-emit.ts`. `M('Box', {'data-mirror-
 wrapper': id, style: 'container-type: inline-size', _cssRules:
 '...'}, [inner])`. sizeState aus baseStyles ausgeschlossen.
-  - **Slice 5:** Differential-Pins un-skipped (DOM 3/6, React 4/6,
-    Framework 5/6 — verbleibendes ist Position-Forwarding).
-    `studio/test-api/suites/responsive/{basic,layout}.test.ts:73,92`
+  - **Slice 5 (`eb062940`):** Differential-Pins un-skipped (DOM 3/6,
+    React 4/6, Framework 5/6). `studio/test-api/suites/responsive/{basic,layout}.test.ts:73,92`
     un-skipped. tests/responsive/{components,complex}.test.ts bleiben
     skipped (jsdom evaluiert kein `@container`; durch CDP-Browser-Tests
     abgedeckt).
+  - **Slice 6 (`f81b590d`):** Position-Forwarding für absolute Frames.
+    Bei `needsContainer + position:absolute|fixed` werden die position/
+    left/top/right/bottom-Styles vom Frame auf den Wrapper transferiert,
+    so dass der Frame nicht seinen offset-Parent-Kontext verliert.
+    `POSITION_FORWARDING_PROPS`-Set in `node-emitter.ts`, `emitBaseStyles`
+    filtert sie auf dem Frame raus wenn `nodeHasPositionalLayout` greift.
+    Letzter Differential-Pin (6/6) un-skipped.
     Plus probes: `tools/probes/probe-react-size-state.ts`,
-    `tools/probes/probe-framework-size-state.ts` (deterministisch via tsx
-    ausführbar). 7893/7900 vitest pass (7 pre-existing skipped).
+    `tools/probes/probe-framework-size-state.ts`,
+    `tools/probes/probe-abs-{dom,size-state}.ts` (deterministisch via tsx
+    ausführbar). 7903/7909 vitest pass (6 pre-existing skipped, unrelated).
     **Status:** erledigt
-    **Notiz:** Verbleibend offen: Position-Forwarding (Frame mit
-    `position:absolute|fixed` → Wrapper übernimmt die Position so dass
-    der Frame seinen offset-Parent-Kontext nicht verliert). Pin im
-    Differential `it.skip('Frame with position:absolute forwards
-positioning to wrapper')` markiert.
 
 ### 2026-05-13 — Slice E: alle `eslint-disable no-explicit-any` in compiler/ weg
 
