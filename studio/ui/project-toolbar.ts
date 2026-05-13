@@ -16,16 +16,6 @@ import { createLogger } from '../../compiler'
 
 const log = createLogger('ProjectToolbar')
 
-// Custom dialog module (loaded globally)
-declare const MirrorDialog: {
-  confirm: (message: string, options?: { title?: string }) => Promise<boolean>
-  choose: <T>(
-    message: string,
-    choices: Array<{ label: string; value: T; primary?: boolean }>,
-    options?: { title?: string; cancelLabel?: string }
-  ) => Promise<T | null>
-}
-
 // =============================================================================
 // Icons (16x16 SVG)
 // =============================================================================
@@ -100,13 +90,6 @@ export class ProjectToolbar {
 
   private async handleDemo(): Promise<void> {
     try {
-      if (
-        !(await MirrorDialog.confirm('Alle aktuellen Änderungen gehen verloren.', {
-          title: 'Demo-Projekt laden?',
-        }))
-      ) {
-        return
-      }
       await projectActions.demo()
     } catch (error) {
       log.error('Failed to load demo project:', error)

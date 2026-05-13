@@ -253,10 +253,6 @@ async function handleAction(item: MenuItem): Promise<void> {
     }
     case 'demo': {
       try {
-        const ok = await MirrorDialog.confirm('Alle aktuellen Änderungen gehen verloren.', {
-          title: 'Demo-Projekt laden?',
-        })
-        if (!ok) return
         await projectActions.demo()
       } catch (err) {
         log.error('demo load failed:', err)
