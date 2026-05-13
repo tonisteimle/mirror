@@ -117,15 +117,14 @@ Veränderung. Lane 1–3 können als Findings-Einträge laufen.
 
 > **Wirklich offene Befunde (Status: offen / aktiv):**
 >
-> 1. `studio/visual/layout-inference/` (6 Files, 872 LOC) — Owner-Entscheidung
-> 2. `compiler/backends/dom/style-emitter.ts:emitNodeSizeStateCSS` —
+> 1. `compiler/backends/dom/style-emitter.ts:emitNodeSizeStateCSS` —
 >    Container-Queries, Lane-Doc steht
-> 3. Tutorial-Demos + Test-Runner — OWNER-EXKLUSIV (toni)
-> 4. Tutorial-Loop-Infrastruktur insgesamt — Owner-Entscheidung
-> 5. `studio/app.ts` Bootstrap-Decomp — ongoing decomposition
-> 6. `compiler/backends/dom/ops/resolve-templates.ts:resolveConditionalExpression`
+> 2. Tutorial-Demos + Test-Runner — OWNER-EXKLUSIV (toni)
+> 3. Tutorial-Loop-Infrastruktur insgesamt — Owner-Entscheidung
+> 4. `studio/app.ts` Bootstrap-Decomp — ongoing decomposition
+> 5. `compiler/backends/dom/ops/resolve-templates.ts:resolveConditionalExpression`
 >    — Smell ohne Bug
-> 7. Skipped-Tests Inventory (Slice F, 2026-05-13) — siehe Eintrag
+> 6. Skipped-Tests Inventory (Slice F, 2026-05-13) — siehe Eintrag
 >    weiter unten, kategorisiert in (a) Container-Queries (in #2 enthalten),
 >    (b) Stacked-Drag Pure-Mirror-x/y-Propagation, (c) Padding/Margin
 >    Zero-State Zones, (d) Context-aware Autocomplete (3 Feature-Lücken),
@@ -518,17 +517,6 @@ Feature-Lücken vs. Test-Infra sind.
   `setCompileResult` hat zwei Zeilen statt drei nach dem Emit. 5832/5832
   studio tests pass.
 
-- **Wo:** `studio/core/state.ts:281-305`
-  **Was:** Race-Window: `state.get()` wird **nach** `compile:completed`
-  emittiert gelesen — Handler können Selection mutieren, `latestState` ist
-  dann veraltet.
-  **Status:** abgewiesen mit Teilfix — die `latestState`-Re-Read am Ende
-  war schon richtig (Kommentar erklärt es). Verwandte echte Lücke war
-  oben: `hasPending`/`hasDeferred` wurden vor dem Emit gesnapshotet —
-  Handler die während des Emits pending/deferred setzen, würden verpasst.
-  Beide Booleans werden jetzt **nach** dem `compile:completed` Emit
-  gelesen (`postEmitState`). 48/48 robustness tests pass.
-
 - **Wo:** `studio/core/state.ts:243-278`
   **Was:** Early-Returns bei pending/deferred Selection überspringen die
   Final-Selection-Validierung — invalide Selections aus Handlern können
@@ -543,13 +531,6 @@ Feature-Lücken vs. Test-Infra sind.
   `falls through to validate existing selection when pending resolution fails`
   pinnt das Verhalten.
 
-- **Wo:** `studio/core/state.ts:189-205`
-  **Was:** Multi-Selection-Validierung filtert Knoten still ohne
-  `multiselection:changed`-Emit — Listener sehen geänderte Auswahl erst beim
-  nächsten expliziten Set.
-  **Status:** abgewiesen — Befund stale, Code hat den Emit bereits in
-  `state.ts:209`.
-
 - **Wo:** `studio/core/state.ts:736-750` (`findFallbackSelection`)
   **Was:** Simplistischer Fallback (`roots[0].nodeId`) ohne Sibling/Parent-
   Tracking. `findFallbackWithInfo()` direkt nebenan macht es richtig.
@@ -557,13 +538,6 @@ Feature-Lücken vs. Test-Infra sind.
   unbenutzten Parameter entfernt, Doc-Comment auf `findFallbackWithInfo`
   als Smart-Variante zeigt. Echtes Sibling-Aware-Fallback (Caller müssen
   Info pre-computen) bleibt offen.
-
-- **Wo:** `studio/core/change-pipeline.ts:127`
-  **Was:** `(ctx.intent as any).nodeId`-Cast umgeht Type-Check auf
-  kritischem Pfad — Discriminated Union oder Type-Guard fehlt.
-  **Status:** abgewiesen — Cast ist bereits weg; nach den Type-Checks für
-  intent-Varianten ohne `nodeId` (Z. 115-123) ist die Union narrowed,
-  Direkt-Zugriff `ctx.intent.nodeId` typt korrekt.
 
 - **Wo:** `studio/sync/sync-coordinator-v2.ts:161`
   **Was:** `(... as SourceMapPortWithSetter).setSourceMap(sourceMap as any)`
@@ -804,13 +778,6 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
 > Inkremente in einem nicht mehr existierenden System. Siehe neuer
 > Eintrag „Tutorial-Loop-Infrastruktur" weiter unten.
 
-- **Wo:** `tools/test-runner/demo/types.ts` (DemoAction-Union)
-  **Was:** Vier in `studio/test-api/step-runner/types.ts` existierende
-  Test-Actions waren im Demo-Runner nicht verfügbar (extractComponent,
-  extractToken, batchReplace, switchFile mit Cmd+P).
-  **Status:** abgewiesen — Demo-Runner-Subsystem gelöscht in `8e81387f`,
-  Finding moot.
-
 - **Wo:** Studio-Keyboard
   **Was:** Cmd+P-Quick-Switch (Fuzzy-Search-File-Palette) ist im
   Tutorial Kapitel 24 als Loop geplant, existierte aber nicht im
@@ -822,18 +789,6 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
   close ohne Switch. Filter rankt startsWith vor contains, beide
   case-insensitive. 19 Unit-Tests in jsdom pinnen Lifecycle, Filter,
   Keyboard, Maus, Error-Handling. 5953/5953 studio tests pass.
-
-- **Wo:** `tools/test-runner/demo/types.ts` (PickColorAction)
-  **Was:** `pickColor` als einzige Picker-Action im Demo-Runner;
-  Tutorial Kapitel 19 plant 5-Picker-Loops.
-  **Status:** abgewiesen — Demo-Runner-Subsystem gelöscht in `8e81387f`,
-  Finding moot.
-
-- **Wo:** Tutorial-Mode-Setup, Selektoren
-  **Was:** Tutorial-Mode in `tools/test-runner/demo/fragments/tutorial-mode.ts`
-  versteckte Panels per Class-Toggle ohne Selektor-Versionierung.
-  **Status:** abgewiesen — Demo-Runner-Subsystem gelöscht in `8e81387f`,
-  Finding moot.
 
 - **Wo:** Tutorial-Loop-Infrastruktur insgesamt
   **Was:** Nach dem Demo-Runner-Rip-Out (`8e81387f`, 2026-05-10) gibt
@@ -983,48 +938,22 @@ für den geplanten MVP-Tutorial-Vollausbau (Kapitel 19/20/21/24).
 - **Wo:** Fünf `mock-adapters.ts` (`studio/editor/triggers/adapters/`,
   `studio/editor/adapters/`, `studio/panels/property/adapters/`,
   `studio/autocomplete/adapters/`, `studio/sync/adapters/`)
-  **Was:** ~2986 LOC über fünf Mock-Files. Audit zeigt: keine echte
-  Duplikation — jede Datei mockt scope-spezifische Port-Interfaces,
-  keine zwei Files exportieren dieselbe Factory. `createMockSelectionPort`,
-  `createMockSourceMapPort`, `createMockTriggerPort`, `createMockPickerPort`
-  etc. sind disjunkt. Das einzige was sich wiederholt sind triviale
-  `new Map()`-Initializer für Mock-State (3 / 23 / 17 / 7 / 1 Verwendungen).
-  Konsolidierung zu einer Datei würde Modularität verlieren ohne
-  meaningful Code-Reduktion.
-  **Status:** abgewiesen — keine Duplikation; jeder Mock ist
-  scope-spezifisch nötig. Ggf. extra-kleine Helper für Mock-State-
-  Storage in einem `mock-base.ts` (5-10 LOC), aber Aufwand/Nutzen
-  steht nicht im Verhältnis.
+  **Was:** ~2986 LOC mock-adapters in 5 Files. **Status:** abgewiesen —
+  keine Duplikation; jeder Mock ist scope-spezifisch nötig.
 
-- **Wo:** Studio-weit, `panels/`-Subsystem
-  **Was:** ~113 `.on()`/`addEventListener` Subscriptions vs. ~25
-  detektierbare Cleanups — Verdacht auf Memory-Leaks.
-  **Status:** abgewiesen — Audit zeigt: Metrik ist irreführend.
-  Tatsächliche Patterns sind solide: PropertyPanel trackt per
-  `eventCleanups[]` Array (re-bind pro render mit `cleanupEventListeners()`);
-  Controller pushed Event-Subs in `cleanups[]` mit dispose-chain;
-  ActivityBar nutzt `AbortController` mit abort in dispose; Settings
-  via `eventUnsubscribes[]`; Section-Dropdowns haben self-cleaning
-  click-outside Listeners (entfernen sich beim nächsten Click). Die
-  113-Zahl zählt DOM-Listener auf frisch erstellten Elementen, die
-  beim nächsten render via `innerHTML = ''` mit den Elementen
-  weggehen — kein Leak. Kleine Optimierung übrig: Section-Dropdown-
-  Listener via AbortController statt self-heal (akkumuliert max 5
-  stale Listener pro User-Session bis Click-Outside).
+- **Wo:** Studio-weit, `panels/`-Subsystem (~113 `.on()`/`addEventListener` vs ~25 Cleanups)
+  **Was:** Verdacht auf Memory-Leaks. **Status:** abgewiesen — Metrik
+  ist irreführend; tatsächliche Patterns sind solide (`eventCleanups[]`,
+  `AbortController`, `eventUnsubscribes[]`, self-cleaning click-outside).
+  Die 113-Zahl zählt DOM-Listener die beim nächsten render via
+  `innerHTML = ''` mit den Elementen weggehen.
 
 - **Wo:** `studio/inline-edit/` und `studio/rename/`
-  **Was:** Zwei nahezu identische Setup-Flows für simple Name/Value-Edits
-  (Editor + State-Management inline) ohne gemeinsame Factory.
-  **Status:** abgewiesen — Oberflächen-Ähnlichkeit (beide haben
-  Floating-Input + Enter/Escape) trügt. `inline-edit/` editiert
-  **Text-Content** eines Preview-DOM-Elements (Typografie-Inheritance,
-  Auto-Resize, Mouse-Drift-Detection, `state.inlineEditNodeId`).
-  `rename/` editiert **Symbol-Identifier** im Editor-Source (Label
-  „Rename component", Validation-Error-Display, Cross-File-Engine,
-  `executor.execute(RenameSymbolCommand)`). Die ~40 LOC gemeinsamer
-  Pattern (input + keydown + click-outside) sind zu wenig für eine
-  geteilte Abstraktion, und ein Forced-Common-Factory würde beide
-  Flows kompromittieren.
+  **Was:** Vermutete Setup-Flow-Duplikation. **Status:** abgewiesen —
+  Oberflächen-Ähnlichkeit trügt; `inline-edit/` editiert DOM-Text-Content
+  des Preview, `rename/` editiert Symbol-Identifier im Editor-Source mit
+  Cross-File-Engine. ~40 LOC gemeinsamer Input/Keydown/Click-Outside-
+  Pattern zu wenig für geteilte Abstraktion.
 
 ### Compiler Backends (Hunt 2026-05-10)
 
@@ -1248,21 +1177,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                                **Status-Update:** erledigt — alle drei Slices landen:
-                                                Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                                inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                                Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                                (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                                `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                                (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                                — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                                hat per `git add .` die uncommittete compiler-Side mit
-                                                aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                                `hasZagChildren` (children-Shape), `isZagComponentName`
-                                                (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                                IRZagNode-Discriminator-Property `isZagComponent: true`
-                                                bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                                81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                                    **Status-Update:** erledigt — alle drei Slices landen:
+                                                    Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                                    inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                                    Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                                    (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                                    `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                                    (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                                    — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                                    hat per `git add .` die uncommittete compiler-Side mit
+                                                    aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                                    `hasZagChildren` (children-Shape), `isZagComponentName`
+                                                    (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                                    IRZagNode-Discriminator-Property `isZagComponent: true`
+                                                    bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                                    81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
