@@ -27,6 +27,8 @@ import { fileURLToPath } from 'node:url'
 import { spawn, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { DSL_VERSION } from '../compiler/schema/dsl-version'
+import { validate } from '../compiler/validator'
+import type { BackendTarget } from '../compiler/schema/dsl'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(__dirname, '..')
@@ -283,6 +285,45 @@ export function buildTargetConfig(opts: Options): Record<string, unknown> {
   }
 }
 
+/**
+ * Walk each source file, validate against the configured target, and
+ * print a summary of backend-unsupported (W130) warnings. Non-blocking:
+ * surfaces silent-drop issues before the agent run consumes the bundle.
+ *
+ * The `dom` target is treated as a no-op — Mirror's DOM runtime is the
+ * full-feature surface; W130 only fires for export targets that bypass
+ * runtime features (react / framework / vue / svelte / vanilla).
+ */
+function reportBackendWarnings(
+  files: string[],
+  relPath: (f: string) => string,
+  target: BackendTarget
+): void {
+  const warnings: { file: string; line: number; column: number; message: string }[] = []
+  for (const f of files) {
+    let source: string
+    try {
+      source = readFileSync(f, 'utf-8')
+    } catch {
+      continue
+    }
+    const result = validate(source, { target })
+    for (const w of result.warnings) {
+      if (w.code !== 'W130') continue
+      warnings.push({ file: relPath(f), line: w.line, column: w.column, message: w.message })
+    }
+  }
+  if (warnings.length === 0) return
+  console.warn('')
+  console.warn(
+    `⚠ Backend-support: ${warnings.length} property usage(s) won't survive the ${target} target:`
+  )
+  for (const w of warnings) {
+    console.warn(`  ${w.file}:${w.line}:${w.column} ${w.message}`)
+  }
+  console.warn('')
+}
+
 export function buildBundle(opts: Options) {
   const projectAbs = resolve(opts.projectDir)
   if (!existsSync(projectAbs)) {
@@ -310,6 +351,14 @@ export function buildBundle(opts: Options) {
     ensureDir(dirname(dest))
     copyFileSync(f, dest)
   }
+
+  // Backend-support audit (W130): surface properties whose schema
+  // declares a `backends: [...]` set that excludes the chosen target
+  // (e.g. `mask` in a Svelte export). The agent silently drops those,
+  // so we tell the export-runner up front. Doesn't block the export —
+  // warnings are informational, the user decides whether to remove the
+  // property, swap targets, or accept the drop.
+  reportBackendWarnings(files, relPath, opts.target as BackendTarget)
 
   // Source hashes — always written, used by --incremental on next run
   const newHashes: Record<string, string> = {}
