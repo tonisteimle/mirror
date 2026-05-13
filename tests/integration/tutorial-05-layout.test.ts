@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, afterEach } from 'vitest'
-import { renderMirror } from '../helpers/test-api'
+import { renderMirror } from '../_infra/test-api'
 
 describe('Tutorial 05: Layout', () => {
   let cleanup: () => void
@@ -16,7 +16,11 @@ describe('Tutorial 05: Layout', () => {
 
   describe('Vertikales Layout', () => {
     it('Elemente sollten untereinander angeordnet werden', async () => {
-      const { api, container, cleanup: c } = await renderMirror(`
+      const {
+        api,
+        container,
+        cleanup: c,
+      } = await renderMirror(`
 Frame bg #1a1a1a, pad 16, rad 8, gap 8
   Text "Zeile 1", col white
   Text "Zeile 2", col white
@@ -34,7 +38,11 @@ Frame bg #1a1a1a, pad 16, rad 8, gap 8
 
   describe('Horizontales Layout', () => {
     it('Elemente sollten nebeneinander angeordnet werden', async () => {
-      const { api, container, cleanup: c } = await renderMirror(`
+      const {
+        api,
+        container,
+        cleanup: c,
+      } = await renderMirror(`
 Frame hor, bg #1a1a1a, pad 16, rad 8, gap 12
   Frame w 60, h 60, bg #2563eb, rad 6, center
     Text "1", col white

@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { createTestEnvironment, type DragSimulationResult } from '../helpers/test-environment'
+import { createTestEnvironment, type DragSimulationResult } from '../_infra/test-environment'
 
 // ============================================================================
 // Element Verschieben
@@ -29,7 +29,7 @@ App = Box pos, w 400, h 300
     // Drag simulieren: von Mitte des Buttons zu neuer Position
     const dragResult = env.simulateDrag({
       element: button!,
-      from: { x: 100, y: 70 },  // Mitte des Buttons (50+50, 50+20)
+      from: { x: 100, y: 70 }, // Mitte des Buttons (50+50, 50+20)
       to: { x: 200, y: 150 },
     })
 
@@ -38,8 +38,8 @@ App = Box pos, w 400, h 300
     expect(dragResult.delta.y).toBe(80)
 
     // Neue Position sollte alte + delta sein
-    expect(dragResult.absolutePosition?.x).toBe(150)  // 50 + 100
-    expect(dragResult.absolutePosition?.y).toBe(130)  // 50 + 80
+    expect(dragResult.absolutePosition?.x).toBe(150) // 50 + 100
+    expect(dragResult.absolutePosition?.y).toBe(130) // 50 + 80
 
     // Drop anwenden
     const success = env.applyDrop(dragResult)
@@ -86,9 +86,9 @@ App = Box pos, w 400, h 300
 
     // Beide Änderungen prüfen
     const code = env.getCode()
-    expect(code).toContain('y 130')  // Erster Button verschoben
-    expect(code).toContain('x 250')  // Zweiter Button: 200 + 50
-    expect(code).toContain('y 180')  // Zweiter Button: 50 + 130
+    expect(code).toContain('y 130') // Erster Button verschoben
+    expect(code).toContain('x 250') // Zweiter Button: 200 + 50
+    expect(code).toContain('y 180') // Zweiter Button: 50 + 130
   })
 })
 
@@ -126,9 +126,7 @@ App = Box pos, w 400, h 300
   Box x 10, y 10, w 50, h 50, bg #f00
 `)
 
-    const box = env.getElements().find(el =>
-      el.componentName === 'Box' && el.properties.x === 10
-    )
+    const box = env.getElements().find(el => el.componentName === 'Box' && el.properties.x === 10)
     expect(box).toBeDefined()
 
     // Alle Properties ändern
@@ -183,7 +181,7 @@ App = Box stacked, w 400, h 300
     // Verschieben innerhalb des Panels
     const drag = env.simulateDrag({
       element: button!,
-      from: { x: 140, y: 140 },  // Mitte des Buttons
+      from: { x: 140, y: 140 }, // Mitte des Buttons
       to: { x: 200, y: 200 },
     })
 
@@ -270,9 +268,7 @@ App = Box pos, w 800, h 600
     expect(elements.length).toBeGreaterThan(5)
 
     // Finde Button im Card
-    const button = elements.find(el =>
-      el.componentName === 'Button' && el.properties.x === 10
-    )
+    const button = elements.find(el => el.componentName === 'Button' && el.properties.x === 10)
     expect(button).toBeDefined()
 
     // Button sollte absolut bei: Content.x + Card.x + Button.x
@@ -343,13 +339,13 @@ App = Box w full, h full, pos
     const contentBox = env.getContainer('ContentBox')
     expect(contentBox).not.toBeNull()
     expect(contentBox!.isVertical).toBe(true)
-    expect(contentBox!.isPositioned).toBe(false)  // ver, nicht pos!
+    expect(contentBox!.isPositioned).toBe(false) // ver, nicht pos!
     expect(contentBox!.children.length).toBe(2)
 
     // Simuliere Palette-Drag: Neue Box in die ContentBox droppen
     // Position: Mitte der ContentBox
-    const dropX = 200  // Innerhalb ContentBox (50 + 150)
-    const dropY = 200  // Innerhalb ContentBox (50 + 150)
+    const dropX = 200 // Innerhalb ContentBox (50 + 150)
+    const dropY = 200 // Innerhalb ContentBox (50 + 150)
 
     const dropResult = env.simulatePaletteDrag({
       componentName: 'Box',
@@ -389,7 +385,7 @@ App = Box w full, h full, pos
     // Drop bei y=55 sollte vor Item1 sein
     const dropResult = env.simulatePaletteDrag({
       componentName: 'Box',
-      to: { x: 100, y: 55 },  // Ganz oben
+      to: { x: 100, y: 55 }, // Ganz oben
     })
 
     expect(dropResult.placement).toBe('inside')
@@ -410,11 +406,11 @@ App = Box w full, h full, pos
     // Drop ganz unten im Container
     const dropResult = env.simulatePaletteDrag({
       componentName: 'Box',
-      to: { x: 100, y: 300 },  // Weit unten
+      to: { x: 100, y: 300 }, // Weit unten
     })
 
     expect(dropResult.placement).toBe('inside')
-    expect(dropResult.insertionIndex).toBe(2)  // Nach den 2 existierenden Items
+    expect(dropResult.insertionIndex).toBe(2) // Nach den 2 existierenden Items
   })
 
   it('Drop zwischen Elementen berechnet korrekten insertionIndex', () => {
@@ -427,7 +423,10 @@ App = Box w full, h full, pos
 `)
 
     const list = env.getContainer('List')
-    console.log('Children:', list!.children.map(c => ({ name: c.componentName, y: c.rect.y, h: c.rect.height })))
+    console.log(
+      'Children:',
+      list!.children.map(c => ({ name: c.componentName, y: c.rect.y, h: c.rect.height }))
+    )
 
     // Items sind bei y=0, y=50, y=100 (laut unserem Mock ohne y-Stacking)
     // Da wir kein echtes Layout haben, sind die y-Werte 0 (kein y angegeben)

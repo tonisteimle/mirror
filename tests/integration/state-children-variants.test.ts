@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, afterEach } from 'vitest'
-import { renderMirror } from '../helpers/test-api'
+import { renderMirror } from '../_infra/test-api'
 
 describe('States with Different Children (Figma Variants)', () => {
   let cleanup: () => void
@@ -21,7 +21,11 @@ describe('States with Different Children (Figma Variants)', () => {
     // State children swapping: base children are replaced by state-specific children
     // when the state changes (similar to Figma Variants)
     // Syntax: "open toggle onclick:" combines state definition with trigger and children
-    const { api, container, cleanup: c } = await renderMirror(`
+    const {
+      api,
+      container,
+      cleanup: c,
+    } = await renderMirror(`
       Panel: bg #1a1a1a, rad 8, clip, cursor pointer
         Frame hor, spread, pad 16
           Text "Mehr anzeigen", col white, fs 14

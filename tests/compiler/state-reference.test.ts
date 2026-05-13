@@ -6,7 +6,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { parse } from '../../compiler/parser'
 import { toIR } from '../../compiler/ir'
-import { renderMirror } from '../helpers/test-api'
+import { renderMirror } from '../_infra/test-api'
 
 describe('State Reference Syntax', () => {
   let cleanup: () => void
@@ -70,9 +70,7 @@ Frame
     expect(labelNode?.stateMachine?.initial).toBe('default')
 
     // Should have transition to 'active' (not _trigger_on)
-    const whenTransition = labelNode?.stateMachine?.transitions?.find(
-      (t: any) => t.when
-    )
+    const whenTransition = labelNode?.stateMachine?.transitions?.find((t: any) => t.when)
     expect(whenTransition?.to).toBe('active')
     expect(whenTransition?.when).toEqual({ target: 'trigger', state: 'on' })
   })

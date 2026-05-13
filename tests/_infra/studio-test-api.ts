@@ -69,7 +69,7 @@ export class StudioTestHelper {
 
     // Otherwise wait for the event
     return this.page.evaluate(
-      (timeout) => (window as any).__STUDIO_TEST__.waitForPickerOpen(timeout),
+      timeout => (window as any).__STUDIO_TEST__.waitForPickerOpen(timeout),
       timeout
     )
   }
@@ -99,7 +99,7 @@ export class StudioTestHelper {
 
     // Otherwise wait for the event
     return this.page.evaluate(
-      (timeout) => (window as any).__STUDIO_TEST__.waitForPickerClose(timeout),
+      timeout => (window as any).__STUDIO_TEST__.waitForPickerClose(timeout),
       timeout
     )
   }
@@ -107,9 +107,13 @@ export class StudioTestHelper {
   /**
    * Wait for a specific trigger to activate
    */
-  async waitForTrigger(triggerId: string, timeout: number = 5000): Promise<{ triggerId: string; startPos: number }> {
+  async waitForTrigger(
+    triggerId: string,
+    timeout: number = 5000
+  ): Promise<{ triggerId: string; startPos: number }> {
     return this.page.evaluate(
-      ({ triggerId, timeout }) => (window as any).__STUDIO_TEST__.waitForTrigger(triggerId, timeout),
+      ({ triggerId, timeout }) =>
+        (window as any).__STUDIO_TEST__.waitForTrigger(triggerId, timeout),
       { triggerId, timeout }
     )
   }
@@ -117,9 +121,13 @@ export class StudioTestHelper {
   /**
    * Wait for a specific trigger to deactivate
    */
-  async waitForTriggerDeactivate(triggerId: string, timeout: number = 5000): Promise<{ triggerId: string }> {
+  async waitForTriggerDeactivate(
+    triggerId: string,
+    timeout: number = 5000
+  ): Promise<{ triggerId: string }> {
     return this.page.evaluate(
-      ({ triggerId, timeout }) => (window as any).__STUDIO_TEST__.waitForTriggerDeactivate(triggerId, timeout),
+      ({ triggerId, timeout }) =>
+        (window as any).__STUDIO_TEST__.waitForTriggerDeactivate(triggerId, timeout),
       { triggerId, timeout }
     )
   }
@@ -224,7 +232,10 @@ export class StudioTestHelper {
    * Type trigger character and wait for picker to open
    * Uses state polling to reliably detect when picker opens.
    */
-  async typeAndWaitForPicker(triggerChar: string, timeout: number = 5000): Promise<PickerOpenResult> {
+  async typeAndWaitForPicker(
+    triggerChar: string,
+    timeout: number = 5000
+  ): Promise<PickerOpenResult> {
     // Type the trigger character
     await this.page.keyboard.type(triggerChar)
 
@@ -318,7 +329,7 @@ export class StudioTestHelper {
    */
   async waitForCompile(timeout: number = 5000): Promise<void> {
     await this.page.evaluate(
-      (timeout) =>
+      timeout =>
         new Promise<void>((resolve, reject) => {
           const timeoutId = setTimeout(() => reject(new Error('Compile timeout')), timeout)
           const unsub = (window as any).__STUDIO_TEST__

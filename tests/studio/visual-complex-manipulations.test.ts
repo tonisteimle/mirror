@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { createTestEnvironment } from '../helpers/test-environment'
+import { createTestEnvironment } from '../_infra/test-environment'
 
 // ============================================================================
 // Elemente in Container ziehen
@@ -34,8 +34,8 @@ App = Box w full, h full, pos
       // Drag Source in Target (Mitte von Target)
       const dropResult = env.simulateDrag({
         element: source!,
-        from: { x: 90, y: 90 },  // Mitte von Source
-        to: { x: 350, y: 250 },  // Mitte von Target
+        from: { x: 90, y: 90 }, // Mitte von Source
+        to: { x: 350, y: 250 }, // Mitte von Target
       })
 
       // simulateDrag returns 'absolute' placement and calculates position
@@ -107,7 +107,7 @@ App = Box w full, h full, pos
 
       const dropResult = env.simulatePaletteDrag({
         componentName: 'Box',
-        to: { x: 100, y: 60 },  // Ganz oben im List
+        to: { x: 100, y: 60 }, // Ganz oben im List
         properties: 'w full, h 50, bg #f00',
       })
 
@@ -222,8 +222,8 @@ App = Box w full, h full, pos
     // Ziehe nach aussen (links vom Container)
     const dropResult = env.simulateDrag({
       element: inner,
-      from: { x: 290, y: 190 },  // Mitte von Inner
-      to: { x: 100, y: 200 },    // Ausserhalb Container
+      from: { x: 290, y: 190 }, // Mitte von Inner
+      to: { x: 100, y: 200 }, // Ausserhalb Container
     })
 
     // Sollte in App landen (root pos container)
@@ -246,7 +246,7 @@ App = Box w full, h full, pos
     const dropResult = env.simulateDrag({
       element: item1,
       from: { x: 400, y: 75 },
-      to: { x: 150, y: 150 },  // Mitte von Target
+      to: { x: 150, y: 150 }, // Mitte von Target
     })
 
     expect(dropResult.placement).toBe('absolute')
@@ -332,7 +332,7 @@ App = Box w full, h full, pos
       // Neue hor-Row in Column einfügen
       const dropResult = env.simulatePaletteDrag({
         componentName: 'Box',
-        to: { x: 150, y: 180 },  // Zwischen Header und Content
+        to: { x: 150, y: 180 }, // Zwischen Header und Content
         properties: 'w full, h 50, hor, gap 8',
       })
 
@@ -370,7 +370,7 @@ App = Box w full, h full, pos
       // Füge neues Element in Level3a (hor) ein
       const dropResult = env.simulatePaletteDrag({
         componentName: 'Box',
-        to: { x: 200, y: 110 },  // In Level3a
+        to: { x: 200, y: 110 }, // In Level3a
         properties: 'w 60, h full, bg #00f',
       })
 
@@ -480,8 +480,8 @@ App = Box w full, h full, pos
     env.recompile()
 
     const code = env.getCode()
-    expect(code).toContain('bg #1e293b')  // Sidebar
-    expect(code).toContain('bg #f8fafc')  // Content
+    expect(code).toContain('bg #1e293b') // Sidebar
+    expect(code).toContain('bg #f8fafc') // Content
   })
 
   it('Formular mit verschachtelten Gruppen', () => {
@@ -546,7 +546,7 @@ App = Box w full, h full, pos
     // Wenn wir es nach InProgress ziehen, sollte es dort eingefügt werden
     const dropResult = env.simulatePaletteDrag({
       componentName: 'Box',
-      to: { x: 350, y: 150 },  // In InProgress
+      to: { x: 350, y: 150 }, // In InProgress
       properties: 'w full, h 60, bg #fff, rad 4',
     })
 
@@ -554,7 +554,7 @@ App = Box w full, h full, pos
 
     env.applyDrop(dropResult)
     const code = env.getCode()
-    expect(code.match(/bg #fff/g)?.length).toBeGreaterThanOrEqual(4)  // Ursprüngliche 3 + neue
+    expect(code.match(/bg #fff/g)?.length).toBeGreaterThanOrEqual(4) // Ursprüngliche 3 + neue
   })
 
   it('Responsive Layout mit Breakpoints simulieren', () => {
@@ -578,7 +578,7 @@ App = Box w full, h full, pos
     // Füge Content-Elemente in verschachtelte Struktur ein
     const drop = env.simulatePaletteDrag({
       componentName: 'Box',
-      to: { x: 500, y: 200 },  // In Content
+      to: { x: 500, y: 200 }, // In Content
       properties: 'w full, h 200, bg #f1f5f9, rad 8',
     })
 
@@ -727,7 +727,7 @@ App = Box w full, h full, pos
     // (Dies ist ein Palette-Drop-ähnliches Szenario)
     const dropResult = env.simulatePaletteDrag({
       componentName: 'Box',
-      to: { x: 100, y: 90 },  // Zwischen Item1 und Item2
+      to: { x: 100, y: 90 }, // Zwischen Item1 und Item2
       properties: 'w full, h 50, bg #f00',
     })
 

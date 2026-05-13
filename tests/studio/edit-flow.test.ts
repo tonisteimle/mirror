@@ -9,7 +9,7 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach } from 'vitest'
-import { createMockTauriBridge, type MockTauriBridge } from '../helpers/mock-tauri-bridge'
+import { createMockTauriBridge, type MockTauriBridge } from '../_infra/mock-tauri-bridge'
 import { runEditFlow, type EditFlowAttemptEvent } from '../../studio/agent/edit-flow'
 import type { EditCaptureCtx } from '../../studio/agent/edit-prompts'
 

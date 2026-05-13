@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, afterEach } from 'vitest'
-import { renderMirror } from '../helpers/test-api'
+import { renderMirror } from '../_infra/test-api'
 
 describe('Spoiler Panel mit State Children', () => {
   let cleanup: () => void

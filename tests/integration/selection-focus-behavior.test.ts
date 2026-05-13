@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, afterEach } from 'vitest'
-import { renderMirror } from '../helpers/test-api'
+import { renderMirror } from '../_infra/test-api'
 
 describe('Selection & Focus Behavior', () => {
   let cleanup: () => void
@@ -154,7 +154,11 @@ describe('Selection & Focus Behavior', () => {
 
   describe('Input Focus States', () => {
     it('should handle focus and blur states', async () => {
-      const { api, container, cleanup: c } = await renderMirror(`
+      const {
+        api,
+        container,
+        cleanup: c,
+      } = await renderMirror(`
         MyInput: bg #1a1a1a, pad 12, bor 1 #333
           focused:
             bor 2 #2563eb

@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { renderMirror } from '../helpers/test-api'
+import { renderMirror } from '../_infra/test-api'
 
 describe('State Machine Behavior', () => {
   let cleanup: () => void
@@ -45,7 +45,11 @@ describe('State Machine Behavior', () => {
     })
 
     it('should apply correct styles in each state', async () => {
-      const { api, container, cleanup: c } = await renderMirror(`
+      const {
+        api,
+        container,
+        cleanup: c,
+      } = await renderMirror(`
         Btn: pad 12, bg #333333
           on:
             bg #2563eb
