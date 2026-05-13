@@ -1,41 +1,52 @@
 /**
- * Preview CDP — Move: reorder top-level siblings.
+ * Preview CDP — Move: reorder siblings inside a container.
  *
- * SKIPPED — gleiche Wurzel wie der Empty-Canvas-Drop (siehe
- * `frame-into-empty-canvas.test.ts`): top-level Frames im
- * Suite-Test-Setup haben KEINEN gemeinsamen `data-mirror-id`-Parent
- * (kein synthetic root). `moveElement` braucht aber einen target
- * container. Reorder via Maus-Drag über die Geschwister hinweg ist
- * der echte User-Pfad — der landet bei Studios `drag:dropped`-
- * Handler mit `target=null` und wird durch das `if (!target) return`
- * verworfen (gleiches Studio-Issue wie der Empty-Canvas-Drop-Bug).
+ * Note: Reorder of *top-level* Frames (no shared mirror-id parent) is a
+ * separate problem — see the original skip-notice in git history. In
+ * the suite test setup `__compileTestCode` never wraps with App
+ * (`studio/app.ts:1585`), so top-level Frames have no synthetic root
+ * and `moveElement` has no targetSel. That edge case stays open.
  *
- * Wird wieder grün, sobald Studios drag-pipeline auch ohne expliziten
- * Target-Container reorder-Drops am root akzeptiert.
+ * This test covers the *contained* reorder path: two siblings inside
+ * a Frame, the second drags into index 0 → ordering flips.
  */
 
-import { testWithSetupSkip, describe } from '../../../test-runner'
+import { testWithSetup, describe } from '../../../test-runner'
 import type { TestCase, TestAPI } from '../../../types'
 import { requireActions } from '../_shared/actions'
 import { FIXTURES } from '../_shared/fixtures'
 
+function findByBackground(rgb: string): HTMLElement {
+  const matches = Array.from(document.querySelectorAll('#preview [data-mirror-id]')).filter(el => {
+    return getComputedStyle(el as HTMLElement).backgroundColor === rgb
+  }) as HTMLElement[]
+  if (matches.length === 0) throw new Error(`No mirror element with background ${rgb}`)
+  if (matches.length > 1) throw new Error(`Multiple mirror elements with background ${rgb}`)
+  return matches[0]
+}
+
 export const reorderSiblingsTests: TestCase[] = describe('preview-cdp.move', [
-  testWithSetupSkip(
-    'Move red Frame to index 0 reorders siblings (red before blue)',
-    FIXTURES.twoFramesStacked,
+  testWithSetup(
+    'Move red Frame to index 0 reorders siblings inside container (red before blue)',
+    FIXTURES.twoChildrenVertical,
     async (api: TestAPI) => {
       const codeBefore = api.editor.getCode()
-      api.assert.matches(
-        codeBefore,
-        /Frame[^\n]*#2271C1[\s\S]*Frame[^\n]*#ef4444/,
-        'blue before red'
-      )
+      api.assert.matches(codeBefore, /bg #2271C1[\s\S]*bg #ef4444/, 'blue before red in source')
+
+      // Container: bg #1a1a1a → rgb(26, 26, 26)
+      // Blue child: bg #2271C1 → rgb(34, 113, 193)
+      // Red child:  bg #ef4444 → rgb(239, 68, 68)
+      const container = findByBackground('rgb(26, 26, 26)')
+      const red = findByBackground('rgb(239, 68, 68)')
+
+      const containerId = container.getAttribute('data-mirror-id') as string
+      const redId = red.getAttribute('data-mirror-id') as string
 
       const actions = requireActions()
-      // Without a synthetic root, no targetSel is available. Future
-      // implementation: drop near the very top of #preview.
-      void actions
-      api.assert.ok(false, 'pending: needs root-drop support in mirror-actions')
+      await actions.moveElement({ byId: redId }, { byId: containerId }, 0)
+
+      const codeAfter = api.editor.getCode()
+      api.assert.matches(codeAfter, /bg #ef4444[\s\S]*bg #2271C1/, 'red before blue after reorder')
     }
   ),
 ])

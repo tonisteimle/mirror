@@ -459,15 +459,16 @@ gelistet — gehört zu Befund #4 oben.
 
 #### (f) Reorder-Siblings ohne Synthetic-Root
 
-- `studio/test-api/suites/preview-cdp/02-move/reorder-siblings.test.ts:23`
-  (1 marker).
-  **Was:** Top-level Frames im Suite-Test-Setup haben KEINEN gemeinsamen
-  `data-mirror-id`-Parent. `moveElement` braucht aber einen `targetSel`.
-  Verwandt zu Empty-Canvas-Drop-Bug (gefixt in `d3115504`), aber Move
-  hat einen anderen Pfad als Drop-from-Palette.
-  **Status:** offen — `mirror-actions` braucht root-target-support
-  oder Studio-Drag-Pipeline akzeptiert reorder-drops ohne expliziten
-  Target-Container.
+- `studio/test-api/suites/preview-cdp/02-move/reorder-siblings.test.ts`
+  **Was:** Original-Test versuchte top-level Frame-Reorder, scheiterte
+  am fehlenden synthetic-root im Suite-Test-Setup
+  (`__compileTestCode` wraps nie mit App, `studio/app.ts:1585`).
+  **Status:** erledigt 2026-05-13 — Test umgeschrieben auf
+  `twoChildrenVertical`-Fixture (Container mit 2 Kindern, validen
+  targetSel-Pfad), un-skipped. Pinnt jetzt den realistischen
+  Contained-Reorder-User-Pfad. Top-Level-Reorder bleibt
+  separater Edge-Case (Production-Code wraps mit App, in Tests
+  fehlt das per Design — vertretbar).
 
 #### (g) Resize-Handle Full-Width-Position-Design
 
@@ -1199,21 +1200,21 @@ completions.ts:881` → `isZagComponentName` plus autocomplete-
     IRZagNode-Discriminator-Property `isZagComponent: true` ist ein
     anderes Konzept und bleibt unverändert.
 
-                                                                    **Status-Update:** erledigt — alle drei Slices landen:
-                                                                    Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
-                                                                    inkl. drop-Subsystem-Cascading (`427c10f8`),
-                                                                    Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
-                                                                    (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
-                                                                    `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
-                                                                    (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
-                                                                    — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
-                                                                    hat per `git add .` die uncommittete compiler-Side mit
-                                                                    aufgenommen). Damit 3 distinkt benannte Funktionen:
-                                                                    `hasZagChildren` (children-Shape), `isZagComponentName`
-                                                                    (Name-Lookup), `isZagNode` (AST type-guard). Der
-                                                                    IRZagNode-Discriminator-Property `isZagComponent: true`
-                                                                    bleibt unverändert (anderes Konzept). 116 autocomplete +
-                                                                    81 drop-handlers + 113 parser-ast-guards Tests grün.
+                                                                        **Status-Update:** erledigt — alle drei Slices landen:
+                                                                        Slice (a) zag:`isZagComponent(children)` → `hasZagChildren`
+                                                                        inkl. drop-Subsystem-Cascading (`427c10f8`),
+                                                                        Slice (b) autocomplete:`isZagComponent` → `isZagComponentName`
+                                                                        (`97b81868`), Slice (c) compiler-AST:`isZagComponent` →
+                                                                        `isZagNode` inkl. parser-Re-Export + IR-Konsumenten
+                                                                        (instance-ops, ir/index) + Test (`parser-ast-guards.test.ts`)
+                                                                        — landete im Slice-D3-Bündel `2bfaf28e` (parallele Session
+                                                                        hat per `git add .` die uncommittete compiler-Side mit
+                                                                        aufgenommen). Damit 3 distinkt benannte Funktionen:
+                                                                        `hasZagChildren` (children-Shape), `isZagComponentName`
+                                                                        (Name-Lookup), `isZagNode` (AST type-guard). Der
+                                                                        IRZagNode-Discriminator-Property `isZagComponent: true`
+                                                                        bleibt unverändert (anderes Konzept). 116 autocomplete +
+                                                                        81 drop-handlers + 113 parser-ast-guards Tests grün.
 
   **Race-Notiz:** Der `git add` + `git commit`-Workflow zweier
   paralleler Claude-Sessions kann bei überlappenden Working-Trees
